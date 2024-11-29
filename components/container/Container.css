@@ -1,0 +1,7 @@
+.body-container{
+    @apply grid grid-cols-12 
+}
+
+.container-item{
+    @apply col-start-2 col-span-10
+}
