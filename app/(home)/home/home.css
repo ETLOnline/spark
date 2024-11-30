@@ -1,0 +1,12 @@
+.hero{
+    @apply bg-[#F8FBFE] w-full flex  h-screen items-center justify-center
+}
+.Heading{
+    @apply w-5/12
+}
+.Main-Heading{
+    @apply text-[44px] font-bold
+}
+.avatars{
+    @apply w-1/2 relative
+}
