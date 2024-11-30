@@ -1,7 +1,7 @@
-.wrapper{
+.header{
     @apply flex py-2 px-4 shadow-sm
 }
-.Header{
+.header-nav{
     @apply flex  me-auto
 }
 .nav{

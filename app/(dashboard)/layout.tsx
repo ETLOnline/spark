@@ -1,16 +1,21 @@
-import React, { ReactNode } from 'react'
+import { AppSidebar } from "@/components/dashboard/app-sidebar"
+import Header from "@/components/dashboard/header"
+import {
+  SidebarInset,
+  SidebarProvider,
+} from "@/components/ui/sidebar"
+import { ReactNode } from "react"
 
-const DashboardLayout = ({children}:{children:ReactNode}) => {
+export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <>
-        <div>header</div>
-        <div>
-            <div>side bar</div>
-            <div>{children}</div>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <Header />
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          {children}
         </div>
-        <div>footer</div>
-    </>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
-
-export default DashboardLayout
