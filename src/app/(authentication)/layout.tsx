@@ -8,8 +8,8 @@ const Authticationlayout = ({ children }: { children: ReactNode }) => {
             </div>
             <div className='absolute w-full h-full grid grid-cols-12  items-center md:w-1/2 md:relative '>
                 <div className='col-start-3 col-span-8 md:col-start-2 md:col-span-10 '>
-                    <div className='bg-card py-10 px-6  md:flex md:flex-col items-center justify-center rounded-2xl'>
-                    {children}
+                    <div className=' md:flex md:flex-col items-center justify-center'>
+                        {children}
                     </div>
                 </div>
             </div>
