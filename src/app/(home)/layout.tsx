@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import React, { ReactNode } from 'react'
 import './home-layout.css'
-import { Button } from '@/src/components/ui/button'
 import { LinkAsButton } from '@/src/components/LinkAsButton/LinkAsButton'
+import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 
 const PublicLayout = ({ children }: { children: ReactNode }) => {
   return (
@@ -39,8 +39,13 @@ const PublicLayout = ({ children }: { children: ReactNode }) => {
         </div>
 
         <div className="button-wrapper">
-          <LinkAsButton href='/sign-up' className='button' variant={'ghost'}>Sign Up</LinkAsButton>
-          <LinkAsButton href='/sign-in' variant={'default'}>Log In</LinkAsButton>
+          <SignedIn>
+            <UserButton userProfileUrl='/profile'/>
+          </SignedIn>
+          <SignedOut>
+            <LinkAsButton href='/sign-up' className='button' variant={'ghost'}>Sign Up</LinkAsButton>
+            <LinkAsButton href='/sign-in' variant={'default'}>Log In</LinkAsButton>
+          </SignedOut>
         </div>
 
       </div>
