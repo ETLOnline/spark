@@ -1,11 +1,10 @@
-import Image from "next/image";
 import './home.css'
-import { Button } from "@/components/ui/button";
+import { Button } from "@/src/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem } from "@/src/components/ui/carousel";
 import LogoCards from "@/src/components/logocards";
-import { Heart } from "lucide-react";
 import MentorCard from "@/src/components/mentorcard";
+import SessionCard from '@/src/components/sessioncard';
 
 
 export default function Home() {
@@ -20,42 +19,42 @@ export default function Home() {
         </div>
 
         <div className="avatars relative">
-          <div className="absolute top-[-220px] left-[140px] ">
+          <div className="absolute md:top-[-260px] md:left-[20px] top-[-220px] left-[140px] ">
             <Avatar className="w-20 h-20">
               <AvatarImage src="/avatar1.jpg" />
               <AvatarFallback>avatar-1</AvatarFallback>
             </Avatar>
           </div>
 
-          <div className="absolute top-[-250px] left-[510px]">
+          <div className="absolute md:top-[-240px] left-[310px] lg:top-[-250px] lg:left-[510px]">
             <Avatar className="w-20 h-20">
               <AvatarImage src="/avatar2.jpg" />
               <AvatarFallback>avatar-1</AvatarFallback>
             </Avatar>
           </div>
 
-          <div className="absolute top-[-110px] left-[280px]">
+          <div className="absolute md:top-[-145px] md:left-[140px] lg:top-[-110px] lg:left-[280px]">
             <Avatar className="w-20 h-20">
               <AvatarImage src="/avatar3.jpg" />
               <AvatarFallback>avatar-1</AvatarFallback>
             </Avatar>
           </div>
 
-          <div className="absolute top-[140px] left-[180px]">
+          <div className="absolute md:top-[70px] left-[40px] lg:top-[140px] lg:left-[180px]">
             <Avatar className="w-20 h-20">
               <AvatarImage src="/avatar4.jpg" />
               <AvatarFallback>avatar-1</AvatarFallback>
             </Avatar>
           </div>
 
-          <div className="absolute top-[180px] left-[380px]">
+          <div className="absolute md:top-[140px] left-[250px] lg:top-[180px] lg:left-[380px]">
             <Avatar className="w-20 h-20">
               <AvatarImage src="/avatar5.jpg" />
               <AvatarFallback>avatar-1</AvatarFallback>
             </Avatar>
           </div>
 
-          <div className="absolute top-[20px] left-[600px]">
+          <div className="absolute md:top-[-25px] left-[280px] lg:top-[20px] lg:left-[600px]">
             <Avatar className="w-20 h-20">
               <AvatarImage src="/avatar6.jpg" />
               <AvatarFallback>avatar-1</AvatarFallback>
@@ -65,12 +64,12 @@ export default function Home() {
         </div>
       </div>
 
-      <h1 className="Mentors ml-8">
+      <h1 className="Mentors">
         Featured Mentors
       </h1>
 
       <Carousel>
-        <CarouselContent className="gap-8 ml-8">
+        <CarouselContent className='lg:gap-8 ml-4'>
           <CarouselItem>
             <MentorCard imgURL="mentor-image1.jpg" Tittle="Tom Jones" Duration="200+ hrs" />
           </CarouselItem>
@@ -130,6 +129,24 @@ export default function Home() {
         <LogoCards imgURL="next.png" imgALT="next" Tittle="react"></LogoCards>
         <LogoCards imgURL="node.png" imgALT="Nodejs" Tittle="Nodejs"></LogoCards>
         <LogoCards imgURL="graphic.png" imgALT="graphic" Tittle="Graphic Design"></LogoCards>
+      </div>
+
+      <div className="text-center mt-20 mb-8">
+        <h1 className='font-bold text-xl mb-4'>Upcoming Sessions</h1>
+        <p>Sign Up to one of our session and start your journey</p>
+      </div>
+
+      <div className='session-cards'>
+        <SessionCard imgURL='session-image1.jpg' Tittle='Everthing Design' />
+
+        <SessionCard imgURL='session-image2.jpg' Tittle='Coding Newbies' />
+
+        <SessionCard imgURL='session-image3.jpg' Tittle='Project planning' />
+
+        <SessionCard imgURL='session-image4.jpg' Tittle='Quality Assurence' />
+      </div>
+      <div className='text-center mt-8 mb-10'>
+        <Button variant={'secondary'}>Learn more</Button>
       </div>
 
     </>
