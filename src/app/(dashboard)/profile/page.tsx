@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Calendar } from "@/src/components/ui/calendar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Badge } from "@/src/components/ui/badge"
-import { Button } from "@/src/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
 import { CalendarIcon, StarIcon, TrophyIcon, UserIcon } from 'lucide-react'
