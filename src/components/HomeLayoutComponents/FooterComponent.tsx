@@ -3,12 +3,13 @@ import './footer.css'
 import Link from 'next/link'
 import { Facebook, Instagram, Linkedin, Twitter } from 'lucide-react'
 import { Separator } from '@/src/components/ui/separator'
-import Navbar from '../NavBar/navbar'
+import Navbar from '../NavBar/NavbarComponent'
+
 
 function Footer() {
     return (
-        <>
-            <div className='footer'>
+        <div className='footer'>
+            <div className='footer-navigation'>
 
                 <Navbar />
                 <div className="social-icons">
@@ -18,7 +19,7 @@ function Footer() {
                     <Link href={'#'}><Twitter /></Link>
                 </div>
             </div>
-            <div className=" bg-[#1C2D56] text-white px-8">
+            <div className="footer-bottom">
                 <Separator />
                 <div className="flex flex-row justify-between text-sm mt-1 pb-4">
                     <p>@2022 TheLearningDoa. All Right Reserved</p>
@@ -29,7 +30,7 @@ function Footer() {
 
 
 
-        </>
+        </div>
     )
 }
 

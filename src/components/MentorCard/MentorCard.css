@@ -1,15 +1,15 @@
 .Card{
     @apply relative h-[300px] w-[250px] overflow-hidden rounded-xl bg-white
 }
-.CardImage{
+.card-image{
     @apply h-auto w-auto object-contain
 }
-.CardContent{
+.card-content{
     @apply absolute left-0 top-0 flex h-full w-full flex-col justify-between bg-gradient-to-t from-black opacity-45
 }
-.CardIcon{
+.card-icon{
     @apply flex justify-end mr-2 mt-2 h-10 text-white 
 }
-.CardCaption{
-    @apply flex justify-between h-10  mx-2
+.card-caption{
+    @apply flex justify-between h-10  mx-2 text-white
 }

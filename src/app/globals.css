@@ -91,7 +91,4 @@ body {
   body {
     @apply bg-background text-foreground;
   }
-  h2{
-    @apply font-bold text-3xl
-  }
 }

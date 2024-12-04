@@ -11,16 +11,22 @@
 .avatars{
     @apply w-1/2 relative
 }
-.Mentors{
-    @apply text-3xl font-bold mt-10 mb-5 mx-8
+.section-title{
+    @apply text-3xl font-bold mt-10 mb-6 mx-8
 }
-.CarouselContent{
-    @apply lg:gap-8 ml-4
-}
-.statment{
-    @apply mt-10 pt-10 pb-8 text-center;
+.section-wrapper{
+    @apply mt-10 pt-8 pb-8 text-center;
     background-image: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
 }
-.session-cards{
-    @apply flex flex-row justify-between mx-8 gap-8
+.section-content{
+    @apply  mt-10
+}
+.section-content-wrapper{
+    @apply flex flex-row mt-10 mx-8
+}
+.section-button{
+    @apply  text-center mt-8
+}
+.carousel-content{
+    @apply lg:gap-8 ml-4
 }

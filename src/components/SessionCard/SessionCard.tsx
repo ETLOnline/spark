@@ -8,9 +8,9 @@ interface sessioncardprops {
 
 const SessionCard = ({ imgURL, title }: sessioncardprops) => {
   return (
-    <div className="sessioncard">
-      <img className="cardimage" src={imgURL} alt="" />
-      <div className="cardcontent">
+    <div className="session-card">
+      <img className="w-full md:h-32 lg:h-52 rounded-md" src={imgURL} alt="" />
+      <div className="flex flex-col md:gap-1 lg:gap-3 p-3">
         <div className="flex flex-row justify-between">
           <p className="text-sm text-[#8B8B8B]">200+ Attendes</p>
           <p className="text-sm text-[#8B8B8B]">6/11/2022-3pm</p>
