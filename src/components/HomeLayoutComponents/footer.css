@@ -1,14 +1,5 @@
-.nav-brand{
-    @apply font-bold bg-gray-100 flex items-center py-2 px-8 text-xl text-black
-}
-.nav{
-    @apply flex  items-center
-}
-.nav-items{
-    @apply mx-2     
-}
-.nav-link{
-    @apply hover:bg-gray-100 py-2 px-5 hover:text-black duration-100
+.footer{
+    @apply flex flex-row justify-between px-8 py-16 bg-[#1C2D56] text-white
 }
 .social-icons{
     @apply flex flex-row gap-3

@@ -2,9 +2,9 @@ import './home.css'
 import { Button } from "@/src/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
 import { Carousel, CarouselContent, CarouselItem } from "@/src/components/ui/carousel";
-import LogoCards from "@/src/components/logocards";
-import MentorCard from "@/src/components/mentorcard";
-import SessionCard from '@/src/components/sessioncard';
+import LogoCards from "@/src/components/SkillTag/SkillTag";
+import MentorCard from "@/src/components/MentorCard/MentorCard";
+import SessionCard from '@/src/components/SessionCard/SessionCard';
 
 
 export default function Home() {
@@ -69,81 +69,82 @@ export default function Home() {
       </h1>
 
       <Carousel>
-        <CarouselContent className='lg:gap-8 ml-4'>
+        <CarouselContent className="CarouselContent">
           <CarouselItem>
-            <MentorCard imgURL="mentor-image1.jpg" Tittle="Tom Jones" Duration="200+ hrs" />
+            <MentorCard imgURL="mentor-image1.jpg" title="Tom Jones" duration="200+ hrs" />
           </CarouselItem>
 
           <CarouselItem>
-            <MentorCard imgURL="mentor-image2.jpg" Tittle="Holly Fax" Duration="100+ hrs" />
+            <MentorCard imgURL="mentor-image2.jpg" title="Holly Fax" duration="100+ hrs" />
           </CarouselItem>
 
           <CarouselItem>
-            <MentorCard imgURL="mentor-image3.jpg" Tittle="Valerie" Duration="400+ hrs" />
+            <MentorCard imgURL="mentor-image3.jpg" title="Valerie" duration="400+ hrs" />
           </CarouselItem>
 
           <CarouselItem>
-            <MentorCard imgURL="mentor-image4.jpg" Tittle="James Dean" Duration="200+ hrs" />
+            <MentorCard imgURL="mentor-image4.jpg" title="James Dean" duration="200+ hrs" />
           </CarouselItem>
 
           <CarouselItem>
-            <MentorCard imgURL="mentor-image1.jpg" Tittle="Tom Jones" Duration="200+ hrs" />
+            <MentorCard imgURL="mentor-image1.jpg" title="Tom Jones" duration="200+ hrs" />
           </CarouselItem>
 
           <CarouselItem>
-            <MentorCard imgURL="mentor-image2.jpg" Tittle="Tom Jones" Duration="200+ hrs" />
+            <MentorCard imgURL="mentor-image2.jpg" title="Tom Jones" duration="200+ hrs" />
           </CarouselItem>
 
           <CarouselItem>
-            <MentorCard imgURL="mentor-image3.jpg" Tittle="Tom Jones" Duration="200+ hrs" />
+            <MentorCard imgURL="mentor-image3.jpg" title="Tom Jones" duration="200+ hrs" />
           </CarouselItem>
 
           <CarouselItem>
-            <MentorCard imgURL="mentor-image4.jpg" Tittle="Tom Jones" Duration="200+ hrs" />
+            <MentorCard imgURL="mentor-image4.jpg" title="Tom Jones" duration="200+ hrs" />
           </CarouselItem>
 
         </CarouselContent>
       </Carousel>
 
       <div className="statment">
-        <h1 className="font-bold text-3xl">Helping the world one mentor at a time</h1>
+        <h2>Helping the world one mentor at a time</h2>
         <p className="pt-4 pb-4">sifting through the overwhelming content on the internet will slow you down.break through the <br /> noise abd get specific advice directly from the experts.</p>
         <Button variant={'outline'}>Let's Find a Mentor</Button>
       </div>
 
-
-      <h1 className="font-bold text-xl text-center mt-6 mb-6">In Demand Skills</h1>
+      <div className="text-center mt-8 mb-6">
+        <h2>In Demand Skills</h2>
+      </div>
 
       <div className="flex flex-row justify-between mx-8">
-        <LogoCards imgURL="next.png" imgALT="next" Tittle="react"></LogoCards>
-        <LogoCards imgURL="node.png" imgALT="Nodejs" Tittle="Nodejs"></LogoCards>
-        <LogoCards imgURL="graphic.png" imgALT="graphic" Tittle="Graphic Design"></LogoCards>
+        <LogoCards imgURL="next.png" imgALT="next" title="react" />
+        <LogoCards imgURL="node.png" imgALT="Nodejs" title="Nodejs" />
+        <LogoCards imgURL="graphic.png" imgALT="graphic" title="Graphic Design" />
       </div>
 
       <div className=" mt-8 flex flex-row justify-around">
-        <LogoCards imgURL="java.jpg" imgALT="javascript" Tittle="JavaScript"></LogoCards>
-        <LogoCards imgURL="ux.svg" imgALT="ux" Tittle="Ux Design"></LogoCards>
+        <LogoCards imgURL="java.jpg" imgALT="javascript" title="JavaScript" />
+        <LogoCards imgURL="ux.svg" imgALT="ux" title="Ux Design" />
       </div>
 
       <div className="mt-8 flex flex-row justify-between mx-8">
-        <LogoCards imgURL="next.png" imgALT="next" Tittle="react"></LogoCards>
-        <LogoCards imgURL="node.png" imgALT="Nodejs" Tittle="Nodejs"></LogoCards>
-        <LogoCards imgURL="graphic.png" imgALT="graphic" Tittle="Graphic Design"></LogoCards>
+        <LogoCards imgURL="next.png" imgALT="next" title="react" />
+        <LogoCards imgURL="node.png" imgALT="Nodejs" title="Nodejs" />
+        <LogoCards imgURL="graphic.png" imgALT="graphic" title="Graphic Design" />
       </div>
 
-      <div className="text-center mt-20 mb-8">
-        <h1 className='font-bold text-xl mb-4'>Upcoming Sessions</h1>
+      <div className="flex flex-col gap-3 text-center mt-20 mb-8">
+        <h2>Upcoming Sessions</h2>
         <p>Sign Up to one of our session and start your journey</p>
       </div>
 
       <div className='session-cards'>
-        <SessionCard imgURL='session-image1.jpg' Tittle='Everthing Design' />
+        <SessionCard imgURL='session-image1.jpg' title='Everthing Design' />
 
-        <SessionCard imgURL='session-image2.jpg' Tittle='Coding Newbies' />
+        <SessionCard imgURL='session-image2.jpg' title='Coding Newbies' />
 
-        <SessionCard imgURL='session-image3.jpg' Tittle='Project planning' />
+        <SessionCard imgURL='session-image3.jpg' title='Project planning' />
 
-        <SessionCard imgURL='session-image4.jpg' Tittle='Quality Assurence' />
+        <SessionCard imgURL='session-image4.jpg' title='Quality Assurence' />
       </div>
       <div className='text-center mt-8 mb-10'>
         <Button variant={'secondary'}>Learn more</Button>

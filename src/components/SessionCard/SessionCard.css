@@ -1,0 +1,9 @@
+.sessioncard{
+    @apply bg-[#F4F4F4] w-1/4  rounded-md
+}
+.cardimage{
+    @apply w-full md:h-32 lg:h-52 rounded-md
+}
+.cardcontent{
+    @apply flex flex-col md:gap-1 lg:gap-3 p-3
+}

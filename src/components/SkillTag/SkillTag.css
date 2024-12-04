@@ -1,0 +1,6 @@
+.SkillTag{
+    @apply flex flex-row gap-1 border-2 rounded-md py-2 px-5
+}
+.Icon{
+    @apply h-[25px] w-[25px] rounded-full
+}

@@ -3,40 +3,12 @@ import Link from 'next/link'
 import './header.css'
 import { LinkAsButton } from '@/src/components/LinkAsButton/LinkAsButton'
 import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+import Navbar from '../NavBar/navbar'
 
 function Header() {
     return (
         <div className="header">
-
-
-            <div className='header-nav'>
-
-                <Link className='nav-brand' href="#">Spark</Link>
-
-                <ul className='nav'>
-                    <li className='nav-items'>
-                        <Link className='nav-link' href="/dashboard">
-                            Dashboard</Link>
-                    </li>
-                    <li className='nav-items'>
-                        <Link className='nav-link' href="#">
-                            Find a Mentor</Link>
-                    </li>
-                    <li className='nav-items'>
-                        <Link className='nav-link' href="#">
-                            About Us</Link>
-                    </li>
-                    <li className='nav-items'>
-                        <Link className='nav-link' href="#">
-                            Pricing</Link>
-                    </li>
-                    <li className='nav-items'>
-                        <Link className='nav-link' href="#">
-                            Become a Member</Link>
-                    </li>
-                </ul>
-            </div>
-
+            <Navbar />
             <div className="button-wrapper">
                 <SignedIn>
                     <UserButton userProfileUrl='/profile' />
@@ -46,7 +18,6 @@ function Header() {
                     <LinkAsButton href='/sign-in' variant={'default'}>Log In</LinkAsButton>
                 </SignedOut>
             </div>
-
         </div>
     )
 }

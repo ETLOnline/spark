@@ -1,0 +1,16 @@
+
+.navbar{
+    @apply flex  me-auto
+}
+.nav{
+    @apply flex  items-center
+}
+.nav-item{
+    @apply mx-2     
+}
+.nav-brand{
+    @apply font-bold text-black bg-gray-100 flex items-center py-2 px-8 text-xl
+}
+.nav-link{
+    @apply hover:bg-gray-100 py-2 px-5
+}

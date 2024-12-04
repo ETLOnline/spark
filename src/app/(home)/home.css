@@ -14,7 +14,9 @@
 .Mentors{
     @apply text-3xl font-bold mt-10 mb-5 mx-8
 }
-
+.CarouselContent{
+    @apply lg:gap-8 ml-4
+}
 .statment{
     @apply mt-10 pt-10 pb-8 text-center;
     background-image: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
