@@ -135,7 +135,7 @@ export default function Home() {
 
         <div className="section-content">
 
-          <div className="section-content-wrapper justify-between">
+          <div className="section-content-wrapper justify-around md:justify-between">
             <SkillTag imgURL="next.png" imgALT="next" title="react" />
             <SkillTag imgURL="node.png" imgALT="Nodejs" title="Nodejs" />
             <SkillTag imgURL="graphic.png" imgALT="graphic" title="Graphic Design" />
@@ -146,7 +146,7 @@ export default function Home() {
             <SkillTag imgURL="ux.svg" imgALT="ux" title="Ux Design" />
           </div>
 
-          <div className="section-content-wrapper justify-between ">
+          <div className="section-content-wrapper justify-around md:justify-between ">
             <SkillTag imgURL="next.png" imgALT="next" title="react" />
             <SkillTag imgURL="node.png" imgALT="Nodejs" title="Nodejs" />
             <SkillTag imgURL="graphic.png" imgALT="graphic" title="Graphic Design" />
@@ -168,7 +168,7 @@ export default function Home() {
 
 
         <div className='section-content'>
-          <div className="section-content-wrapper justify-between gap-8">
+          <div className="section-card">
             <SessionCard imgURL='session-image1.jpg' title='Everthing Design' />
 
             <SessionCard imgURL='session-image2.jpg' title='Coding Newbies' />

@@ -6,7 +6,7 @@ interface sessioncardprops {
   title: ReactNode
 }
 
-const SessionCard = ({ imgURL, title }: sessioncardprops) => {
+const SessionCard = ({ imgURL, title}: sessioncardprops) => {
   return (
     <div className="session-card">
       <img className="session-card-image" src={imgURL} alt="" />

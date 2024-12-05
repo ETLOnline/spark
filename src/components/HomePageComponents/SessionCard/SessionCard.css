@@ -1,8 +1,8 @@
 .session-card{
-    @apply bg-[#F4F4F4] w-1/2 md:w-1/4  rounded-md
+    @apply bg-[#F4F4F4] w-[47%] sm:w-[47%] md:w-[23%] rounded-md
 }
 .session-card-image{
-    @apply w-full md:h-32 lg:h-52 rounded-md
+    @apply w-full h-32 md:h-32 lg:h-52 rounded-md
 }
 .session-card-content{
     @apply flex flex-col md:gap-1 lg:gap-3 p-3

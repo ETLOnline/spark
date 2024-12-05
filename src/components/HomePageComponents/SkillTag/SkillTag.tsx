@@ -10,7 +10,7 @@ interface CardProps {
 const SkillTag = ({ imgURL, imgALT, title }: CardProps) => {
 
   return (
-    <div className="skill-tag">
+    <div className="skill-tag m-2">
       <img className="icon" src={imgURL} alt={imgALT} />
       <h1 className="font-bold">{title}</h1>
     </div>
