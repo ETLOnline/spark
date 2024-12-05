@@ -1,22 +1,23 @@
 .hero{
     @apply  w-full flex  h-screen items-center justify-center;
-    background-image: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+    background-image: linear-gradient(120deg, #9DD5C8 50%, #F8FBFE 100%);
 }
 .content{
-    @apply w-full sm:w-5/12 flex flex-col gap-8
+    @apply w-full md:w-5/12 flex flex-col gap-8
 }
 .Main-Heading{
     @apply text-[44px] font-bold
 }
 .avatars{
-    @apply w-1/2 relative
+    @apply w-1/2 relative hidden md:block
 }
+
 .section-title{
     @apply text-3xl font-bold mt-10 mb-6 mx-8
 }
 .section-wrapper{
     @apply mt-10 pt-8 pb-8 text-center;
-    background-image: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+    background-image: linear-gradient(120deg, #9DD5C8 50%, #F8FBFE 100%);
 }
 .section-content{
     @apply  mt-10
@@ -28,5 +29,5 @@
     @apply  text-center mt-8
 }
 .carousel-content{
-    @apply lg:gap-8 ml-4
+    @apply lg:gap-8 pl-8
 }

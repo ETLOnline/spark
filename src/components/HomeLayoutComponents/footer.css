@@ -1,12 +1,15 @@
 .footer{
-    @apply bg-[#1C2D56] text-white mt-6
+    @apply bg-footer-primary text-white mt-6
 }
 .footer-navigation{
-    @apply flex flex-row justify-between px-8 py-16 
+    @apply block md:block lg:flex flex-row justify-between px-8 py-16 
 }
 .social-icons{
     @apply flex flex-row gap-3 
 }
 .footer-bottom{
     @apply   px-8
+}
+.footer-bottom-text{
+    @apply flex flex-row justify-between text-sm mt-1 pb-4
 }

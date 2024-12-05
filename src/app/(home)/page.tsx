@@ -2,9 +2,9 @@ import './home.css'
 import { Button } from "@/src/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
 import { Carousel, CarouselContent, CarouselItem } from "@/src/components/ui/carousel";
-import SkillTag from "@/src/components/SkillTag/SkillTag";
-import MentorCard from "@/src/components/MentorCard/MentorCard";
-import SessionCard from '@/src/components/SessionCard/SessionCard';
+import SkillTag from "@/src/components/HomePageComponents/SkillTag/SkillTag";
+import MentorCard from "@/src/components/HomePageComponents/MentorCard/MentorCard";
+import SessionCard from '@/src/components/HomePageComponents/SessionCard/SessionCard';
 
 
 export default function Home() {
@@ -12,21 +12,21 @@ export default function Home() {
     <>
       <div className="hero">
 
-        <div className="content">
+        <div className="content px-8 sm:px-8 md:px-0">
           <h1 className="Main-Heading">Find and Book a Mentor for your 1:1 help today!</h1>
           <p>We have our 200 Mentor available, qualified in over 300 subjects</p>
           <Button size={'lg'} variant={'outline'} width={'fit'} >Find a Mentor</Button>
         </div>
 
         <div className="avatars relative">
-          <div className="absolute md:top-[-260px] md:left-[20px] top-[-220px] left-[140px] ">
+          <div className="absolute md:top-[-260px] md:left-[20px] top-[-220px] left-[140px]">
             <Avatar className="w-20 h-20">
               <AvatarImage src="/avatar1.jpg" />
               <AvatarFallback>avatar-1</AvatarFallback>
             </Avatar>
           </div>
 
-          <div className="absolute md:top-[-240px] left-[310px] lg:top-[-250px] lg:left-[510px]">
+          <div className="absolute md:top-[-240px] md:left-[330px] lg:top-[-250px] lg:left-[510px]">
             <Avatar className="w-20 h-20">
               <AvatarImage src="/avatar2.jpg" />
               <AvatarFallback>avatar-1</AvatarFallback>
@@ -54,7 +54,7 @@ export default function Home() {
             </Avatar>
           </div>
 
-          <div className="absolute md:top-[-25px] left-[280px] lg:top-[20px] lg:left-[600px]">
+          <div className="absolute md:top-[-25px] left-[365px] lg:top-[20px] lg:left-[600px]">
             <Avatar className="w-20 h-20">
               <AvatarImage src="/avatar6.jpg" />
               <AvatarFallback>avatar-1</AvatarFallback>

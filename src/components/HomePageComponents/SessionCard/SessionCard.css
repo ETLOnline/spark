@@ -1,0 +1,12 @@
+.session-card{
+    @apply bg-[#F4F4F4] w-1/2 md:w-1/4  rounded-md
+}
+.session-card-image{
+    @apply w-full md:h-32 lg:h-52 rounded-md
+}
+.session-card-content{
+    @apply flex flex-col md:gap-1 lg:gap-3 p-3
+}
+.session-card-text{
+    @apply text-gray-500
+}
