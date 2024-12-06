@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import { NavSecondary } from "./src/components/dashboard/nav-secondary";
 
 const config: Config = {
 	darkMode: ["class"],
@@ -9,6 +10,9 @@ const config: Config = {
 	],
 	theme: {
 		extend: {
+			backgroundImage: {
+				'home-secondary': 'linear-gradient(120deg, #9DD5C8 50%, #F8FBFE 100%); ',
+			},
 			colors: {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',

@@ -91,4 +91,13 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+  .section{
+    @apply  pt-8 pb-8
+  }
+  .section-title{
+      @apply text-3xl font-bold  mb-6 
+  }
+  .section-content{
+    @apply  mt-10
+  }
 }
