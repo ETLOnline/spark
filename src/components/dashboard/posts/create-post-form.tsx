@@ -16,7 +16,7 @@ import {
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import PostInput from "./create-post-input"
-import { Post, PostType, NewPost } from "@/src/app/(dashboard)/posts/page"
+import { Post, NewPost, PostType } from "./types/posts-types.d"
 import { useState } from "react"
 
 type Props = {
@@ -38,9 +38,7 @@ const CreatePostForm: React.FC<Props> = (props) => {
       type: newPost.type,
       likes: 0,
       comments: [],
-      hashtags: newPost.hashtags.filter(
-        (tag: string) => tag.trim() !== ""
-      ),
+      hashtags: newPost.hashtags.filter((tag: string) => tag.trim() !== ""),
       createdAt: new Date().toISOString(),
     }
     props.setPosts([newPostObj, ...props.posts])
@@ -61,33 +59,17 @@ const CreatePostForm: React.FC<Props> = (props) => {
             <TabsTrigger value="file">File</TabsTrigger>
           </TabsList>
           <TabsContent value="text">
-            <PostInput
-              type="text"
-              setNewPost={setNewPost}
-              newPost={newPost}
-            />
+            <PostInput type="text" setNewPost={setNewPost} newPost={newPost} />
           </TabsContent>
           <TabsContent value="image">
-            <PostInput
-              type="image"
-              setNewPost={setNewPost}
-              newPost={newPost}
-            />
+            <PostInput type="image" setNewPost={setNewPost} newPost={newPost} />
           </TabsContent>
           <TabsContent value="poll">
-            <PostInput
-              type="poll"
-              setNewPost={setNewPost}
-              newPost={newPost}
-            />
+            <PostInput type="poll" setNewPost={setNewPost} newPost={newPost} />
             {/* Add poll options here */}
           </TabsContent>
           <TabsContent value="file">
-            <PostInput
-              type="file"
-              setNewPost={setNewPost}
-              newPost={newPost}
-            />
+            <PostInput type="file" setNewPost={setNewPost} newPost={newPost} />
           </TabsContent>
         </Tabs>
         <div className="mt-4">

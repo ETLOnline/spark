@@ -3,35 +3,7 @@
 import { useState } from "react"
 import CreatePostForm from "@/src/components/dashboard/posts/create-post-form"
 import PostFeed from "@/src/components/dashboard/posts/post-feed"
-
-export type PostType = "text" | "image" | "poll" | "file"
-export type Post = {
-  id: string
-  author: {
-    name: string
-    avatar: string
-  }
-  content: string
-  type: PostType
-  likes: number
-  comments: Comment[]
-  hashtags: string[]
-  createdAt: string
-}
-export type NewPost = {
-  content: string
-  type: PostType
-  hashtags: string[]
-}
-export type Comment = {
-  id: string
-  author: {
-    name: string
-    avatar: string
-  }
-  content: string
-  createdAt: string
-}
+import { Post } from "@/src/components/dashboard/posts/types/posts-types.d"
 
 const samplePosts: Post[] = [
   {
@@ -55,7 +27,8 @@ const samplePosts: Post[] = [
   {
     id: "2",
     author: { name: "Bob Smith", avatar: "/avatars/02.png" },
-    content: "/images/coding-setup.jpg",
+    content:
+      "https://upload.wikimedia.org/wikipedia/en/7/7d/Lenna_%28test_image%29.png",
     type: "image",
     likes: 32,
     comments: [],
@@ -71,6 +44,7 @@ const samplePosts: Post[] = [
     comments: [],
     hashtags: ["Programming", "DevLife"],
     createdAt: "2023-04-13T09:15:00Z",
+    options: ["Python", "JavaScript"],
   },
 ]
 

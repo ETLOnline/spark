@@ -4,7 +4,7 @@ import { Button } from "@/src/components/ui/button"
 import { useState } from "react"
 import { Input } from "@/src/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import { Post, Comment } from "@/src/app/(dashboard)/posts/page"
+import { Post } from "./types/posts-types.d"
 
 type Props = {
   posts: Post[]
@@ -54,7 +54,11 @@ const PostCommentForm: React.FC<Props> = (props) => {
         }
         className="flex-1"
       />
-      <Button onClick={() => handleAddComment(props.postId)} size="sm" className="mt-4">
+      <Button
+        onClick={() => handleAddComment(props.postId)}
+        size="sm"
+        className="mt-4"
+      >
         Comment
       </Button>
     </div>

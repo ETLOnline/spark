@@ -1,6 +1,6 @@
 import { Textarea } from "@/src/components/ui/textarea"
 import { Input } from "@/src/components/ui/input"
-import { PostType, NewPost } from "@/src/app/(dashboard)/posts/page"
+import { NewPost, PostType } from "./types/posts-types.d"
 
 type Props = {
   type: PostType
