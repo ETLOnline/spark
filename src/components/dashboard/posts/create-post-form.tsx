@@ -78,7 +78,6 @@ const CreatePostForm: React.FC<Props> = (props) => {
           <Input
             id="hashtags"
             placeholder="Enter hashtags (e.g., coding webdev)"
-            value={newPost.hashtags}
             onChange={(e) =>
               setNewPost({
                 ...newPost,
