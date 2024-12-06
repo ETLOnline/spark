@@ -2,8 +2,6 @@
 
 import * as React from "react"
 import {
-  BookOpen,
-  Bot,
   Command,
   Frame,
   LifeBuoy,
@@ -11,7 +9,7 @@ import {
   PieChart,
   Send,
   Settings2,
-  SquareTerminal,
+  Newspaper,
   User,
 } from "lucide-react"
 
@@ -44,21 +42,26 @@ const data = {
       items: [
         {
           title: "Bio",
-          url: "#",
+          url: "/profile/?tab=basic",
         },
         {
           title: "Rewards",
-          url: "#",
-        },
-        {
-          title: "Schedule",
-          url: "#",
+          url: "/profile/?tab=rewards",
         },
         {
           title: "Activity",
-          url: "#",
+          url: "/profile/?tab=activity",
+        },
+        {
+          title: "Schedule",
+          url: "/profile/?tab=calendar",
         },
       ],
+    },
+    {
+      title: "Posts",
+      url: "/posts",
+      icon: Newspaper,
     },
     {
       title: "Settings",
