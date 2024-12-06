@@ -44,6 +44,7 @@ const PostFeed: React.FC<Props> = (props) => {
               type={post.type}
               content={post.content}
               options={post.options}
+              fileName={post.fileName}
             />
             <div className="mt-4 flex flex-wrap gap-2">
               {post.hashtags.map((tag) => (

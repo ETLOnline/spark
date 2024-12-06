@@ -40,6 +40,8 @@ const CreatePostForm: React.FC<Props> = (props) => {
       comments: [],
       hashtags: newPost.hashtags.filter((tag: string) => tag.trim() !== ""),
       createdAt: new Date().toISOString(),
+      fileName: newPost.fileName,
+      fileSize: newPost.fileSize,
     }
     props.setPosts([newPostObj, ...props.posts])
     setNewPost({ content: "", type: "text", hashtags: [] })
@@ -66,7 +68,6 @@ const CreatePostForm: React.FC<Props> = (props) => {
           </TabsContent>
           <TabsContent value="poll">
             <PostInput type="poll" setNewPost={setNewPost} newPost={newPost} />
-            {/* Add poll options here */}
           </TabsContent>
           <TabsContent value="file">
             <PostInput type="file" setNewPost={setNewPost} newPost={newPost} />

@@ -6,20 +6,24 @@ export type Post = {
     name: string
     avatar: string
   }
-  content: string
+  content: string | File
   type: PostType
   likes: number
   comments: Comment[]
   hashtags: string[]
   createdAt: string
   options?: string[]
+  fileName?: string
+  fileSize?: number
 }
 
 export type NewPost = {
-  content: string
+  content: string|File
   type: PostType
   hashtags: string[]
   options?: string[]
+  fileName?: string
+  fileSize?: number
 }
 
 export type Comment = {

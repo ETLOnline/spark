@@ -46,6 +46,17 @@ const samplePosts: Post[] = [
     createdAt: "2023-04-13T09:15:00Z",
     options: ["Python", "JavaScript"],
   },
+  {
+    id: "4",
+    author: { name: "Charlie Brown", avatar: "/avatars/03.png" },
+    content: "",
+    type: "file",
+    likes: 24,
+    comments: [],
+    hashtags: ["Programming", "DevLife"],
+    createdAt: "2023-04-13T09:15:00Z",
+    fileName: "brain.exe",
+  },
 ]
 
 const Posts: React.FC = () => {
@@ -53,9 +64,7 @@ const Posts: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-8 max-w-3xl">
-      {/* post creation form */}
       <CreatePostForm setPosts={setPosts} posts={posts} />
-      {/* Post Feed */}
       <PostFeed posts={posts} setPosts={setPosts} />
     </div>
   )
