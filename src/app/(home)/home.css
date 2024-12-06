@@ -1,13 +1,24 @@
 .hero{
-    @apply  w-full flex  h-screen items-center justify-center;
-    background-image: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+    @apply  w-full   h-screen  bg-home-secondary
 }
 .content{
-    @apply w-5/12 flex flex-col gap-8
+    @apply w-full text-center md:text-left md:w-5/12 flex flex-col gap-8
 }
 .Main-Heading{
-    @apply text-[44px] font-bold
+    @apply  text-4xl  md:text-[44px] font-bold
 }
 .avatars{
-    @apply w-1/2 relative
+    @apply w-1/2  hidden md:block
+}    
+.section-content-wrapper{
+    @apply flex flex-wrap mt-10
+}
+.section-button{
+    @apply  text-center mt-8
+}
+.carousel-content{
+    @apply lg:gap-8 pl-8
+}
+.section-card{
+    @apply  flex flex-wrap mt-10 justify-around md:justify-between gap-4
 }

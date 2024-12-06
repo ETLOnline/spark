@@ -1,0 +1,16 @@
+
+.navbar{
+    @apply flex flex-col md:flex-col lg:flex-row
+}
+.nav{
+    @apply flex flex-col mt-4 gap-4 md:flex-col md:mt-4 md:gap-4 lg:flex-row lg:mt-0 lg:gap-0  items-center
+}
+.nav-item{
+    @apply mx-2     
+}
+.nav-brand{
+    @apply font-bold text-black bg-gray-100 py-2 px-8 text-xl text-center mt-4 md:mt-4 lg:mt-0
+}
+.nav-link{
+    @apply hover:bg-gray-100 hover:text-black py-2 px-4
+}
