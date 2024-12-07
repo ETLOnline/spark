@@ -23,42 +23,42 @@ export default function Home() {
             <div className="avatars relative">
               <div className="absolute md:top-[-260px] md:left-[20px] top-[-220px] left-[140px]">
                 <Avatar className="w-16 h-16">
-                  <AvatarImage src="/avatar1.jpg" />
+                  <AvatarImage src="/images/home/avatar1.jpg" />
                   <AvatarFallback>avatar-1</AvatarFallback>
                 </Avatar>
               </div>
 
               <div className="absolute md:top-[-240px] md:left-[330px] lg:top-[-250px] lg:left-[500px]">
                 <Avatar className="w-16 h-16">
-                  <AvatarImage src="/avatar2.jpg" />
+                  <AvatarImage src="/images/home/avatar2.jpg" />
                   <AvatarFallback>avatar-1</AvatarFallback>
                 </Avatar>
               </div>
 
               <div className="absolute md:top-[-145px] md:left-[140px] lg:top-[-110px] lg:left-[280px]">
                 <Avatar className="w-16 h-16">
-                  <AvatarImage src="/avatar3.jpg" />
+                  <AvatarImage src="/images/home/avatar3.jpg" />
                   <AvatarFallback>avatar-1</AvatarFallback>
                 </Avatar>
               </div>
 
               <div className="absolute md:top-[70px] left-[40px] lg:top-[140px] lg:left-[180px]">
                 <Avatar className="w-16 h-16">
-                  <AvatarImage src="/avatar4.jpg" />
+                  <AvatarImage src="/images/home/avatar4.jpg" />
                   <AvatarFallback>avatar-1</AvatarFallback>
                 </Avatar>
               </div>
 
               <div className="absolute md:top-[140px] left-[250px] lg:top-[180px] lg:left-[380px]">
                 <Avatar className="w-16 h-16">
-                  <AvatarImage src="/avatar5.jpg" />
+                  <AvatarImage src="/images/home/avatar5.jpg" />
                   <AvatarFallback>avatar-1</AvatarFallback>
                 </Avatar>
               </div>
 
               <div className="absolute md:top-[-25px] left-[365px] lg:top-[20px] lg:left-[507px]">
                 <Avatar className="w-16 h-16">
-                  <AvatarImage src="/avatar6.jpg" />
+                  <AvatarImage src="/images/home/avatar6.jpg" />
                   <AvatarFallback>avatar-1</AvatarFallback>
                 </Avatar>
               </div>
@@ -79,35 +79,35 @@ export default function Home() {
           <Carousel>
             <CarouselContent className="carousel-content">
               <CarouselItem>
-                <MentorCard imgURL="mentor-image1.jpg" title="Tom Jones" duration="200+ hrs" />
+                <MentorCard imgURL="/images/home/mentor-image1.jpg" title="Tom Jones" duration="200+ hrs" />
               </CarouselItem>
 
               <CarouselItem>
-                <MentorCard imgURL="mentor-image2.jpg" title="Holly Fax" duration="100+ hrs" />
+                <MentorCard imgURL="/images/home/mentor-image2.jpg" title="Holly Fax" duration="100+ hrs" />
               </CarouselItem>
 
               <CarouselItem>
-                <MentorCard imgURL="mentor-image3.jpg" title="Valerie" duration="400+ hrs" />
+                <MentorCard imgURL="/images/home/mentor-image3.jpg" title="Valerie" duration="400+ hrs" />
               </CarouselItem>
 
               <CarouselItem>
-                <MentorCard imgURL="mentor-image4.jpg" title="James Dean" duration="200+ hrs" />
+                <MentorCard imgURL="/images/home/mentor-image4.jpg" title="James Dean" duration="200+ hrs" />
               </CarouselItem>
 
               <CarouselItem>
-                <MentorCard imgURL="mentor-image1.jpg" title="Tom Jones" duration="200+ hrs" />
+                <MentorCard imgURL="/images/home/mentor-image1.jpg" title="Tom Jones" duration="200+ hrs" />
               </CarouselItem>
 
               <CarouselItem>
-                <MentorCard imgURL="mentor-image2.jpg" title="Tom Jones" duration="200+ hrs" />
+                <MentorCard imgURL="/images/home/mentor-image2.jpg" title="Tom Jones" duration="200+ hrs" />
               </CarouselItem>
 
               <CarouselItem>
-                <MentorCard imgURL="mentor-image3.jpg" title="Tom Jones" duration="200+ hrs" />
+                <MentorCard imgURL="/images/home/mentor-image3.jpg" title="Tom Jones" duration="200+ hrs" />
               </CarouselItem>
 
               <CarouselItem>
-                <MentorCard imgURL="mentor-image4.jpg" title="Tom Jones" duration="200+ hrs" />
+                <MentorCard imgURL="/images/home/mentor-image4.jpg" title="Tom Jones" duration="200+ hrs" />
               </CarouselItem>
 
             </CarouselContent>
@@ -134,20 +134,20 @@ export default function Home() {
           <div className="section-content">
 
             <div className="section-content-wrapper justify-around md:justify-between">
-              <SkillTag imgURL="next.png" imgALT="next" title="react" />
-              <SkillTag imgURL="node.png" imgALT="Nodejs" title="Nodejs" />
-              <SkillTag imgURL="graphic.png" imgALT="graphic" title="Graphic Design" />
+              <SkillTag imgURL="/images/home/next.png" imgALT="next" title="react" />
+              <SkillTag imgURL="/images/home/node.png" imgALT="Nodejs" title="Nodejs" />
+              <SkillTag imgURL="/images/home/graphic.png" imgALT="graphic" title="Graphic Design" />
             </div>
 
             <div className="section-content-wrapper justify-around">
-              <SkillTag imgURL="java.jpg" imgALT="javascript" title="JavaScript" />
-              <SkillTag imgURL="ux.svg" imgALT="ux" title="Ux Design" />
+              <SkillTag imgURL="/images/home/java.jpg" imgALT="javascript" title="JavaScript" />
+              <SkillTag imgURL="/images/home/ux.svg" imgALT="ux" title="Ux Design" />
             </div>
 
             <div className="section-content-wrapper justify-around md:justify-between ">
-              <SkillTag imgURL="next.png" imgALT="next" title="react" />
-              <SkillTag imgURL="node.png" imgALT="Nodejs" title="Nodejs" />
-              <SkillTag imgURL="graphic.png" imgALT="graphic" title="Graphic Design" />
+              <SkillTag imgURL="/images/home/next.png" imgALT="next" title="react" />
+              <SkillTag imgURL="/images/home/node.png" imgALT="Nodejs" title="Nodejs" />
+              <SkillTag imgURL="/images/home/graphic.png" imgALT="graphic" title="Graphic Design" />
             </div>
 
           </div>
@@ -169,13 +169,13 @@ export default function Home() {
 
 
           <div className="section-card">
-            <SessionCard imgURL='session-image1.jpg' title='Everthing Design' />
+            <SessionCard imgURL='/images/home/session-image1.jpg' title='Everthing Design' />
 
-            <SessionCard imgURL='session-image2.jpg' title='Coding Newbies' />
+            <SessionCard imgURL='/images/home/session-image2.jpg' title='Coding Newbies' />
 
-            <SessionCard imgURL='session-image3.jpg' title='Project planning' />
+            <SessionCard imgURL='/images/home/session-image3.jpg' title='Project planning' />
 
-            <SessionCard imgURL='session-image4.jpg' title='Quality Assurence' />
+            <SessionCard imgURL='/images/home/session-image4.jpg' title='Quality Assurence' />
           </div>
           <div className='section-button'>
             <Button variant={'secondary'}>Learn more</Button>

@@ -17,7 +17,7 @@ const SessionCard = ({ imgURL, title}: sessioncardprops) => {
         </div>
         <h1 className="text-base md:text-lg">{title}</h1>
         <div className="flex flex-wrap gap-2">
-          <img src="/mentor-image4.jpg" className='w-8 h-8 rounded-full object-cover ' alt="" />
+          <img src="/images/home/mentor-image4.jpg" className='w-8 h-8 rounded-full object-cover ' alt="" />
           <p className="mt-1 session-card-text">James Dean</p>
         </div>
       </div>
