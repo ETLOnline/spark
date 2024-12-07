@@ -11,3 +11,10 @@ export async function SelectUserById(id: string) {
         where: eq(usersTable.external_auth_id, id)        
     });
 }
+
+export async function SelectUserByEmail(email: string) {
+    return await db.query.usersTable.findFirst({
+        where: eq(usersTable.email, email)    
+    });
+}
+
