@@ -8,10 +8,12 @@ import React, { ReactNode } from 'react'
 const PublicLayout = ({ children }: { children: ReactNode }) => {
   return (
     <>
-     <Header />
-      {children}
+      <Header />
+      <div className="content">
+        {children}
+      </div>
       <Footer />
-      
+
     </>
   )
 }
