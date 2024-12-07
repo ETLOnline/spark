@@ -16,11 +16,17 @@ import {
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import PostInput from "./create-post-input"
-import { Post, NewPost, PostType } from "./types/posts-types.d"
+import {
+  Post,
+  NewPost,
+  PostType,
+  PostPoll,
+  PostFile,
+} from "./types/posts-types.d"
 import { useState } from "react"
 
 type Props = {
-  setPosts: (posts: Post[]) => void
+  setPosts: (posts: (Post | PostFile | PostPoll)[]) => void
   posts: Post[]
 }
 
@@ -30,8 +36,9 @@ const CreatePostForm: React.FC<Props> = (props) => {
     type: "text" as PostType,
     hashtags: [],
   })
+
   const handleCreatePost = () => {
-    const newPostObj: Post = {
+    const newPostObj: Post | PostFile | PostPoll = {
       id: (props.posts.length + 1).toString(),
       author: { name: "Current User", avatar: "/avatars/04.png" },
       content: newPost.content,

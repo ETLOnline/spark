@@ -12,13 +12,14 @@ export type Post = {
   comments: Comment[]
   hashtags: string[]
   createdAt: string
-  options?: string[]
-  fileName?: string
-  fileSize?: number
 }
 
+export type PostFile = Post & { fileName: string; fileSize: number }
+
+export type PostPoll = Post & { options: string[] }
+
 export type NewPost = {
-  content: string|File
+  content: string | File
   type: PostType
   hashtags: string[]
   options?: string[]

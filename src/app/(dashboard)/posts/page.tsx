@@ -3,9 +3,13 @@
 import { useState } from "react"
 import CreatePostForm from "@/src/components/dashboard/posts/create-post-form"
 import PostFeed from "@/src/components/dashboard/posts/post-feed"
-import { Post } from "@/src/components/dashboard/posts/types/posts-types.d"
+import {
+  Post,
+  PostFile,
+  PostPoll,
+} from "@/src/components/dashboard/posts/types/posts-types.d"
 
-const samplePosts: Post[] = [
+const samplePosts: (Post | PostFile | PostPoll)[] = [
   {
     id: "1",
     author: { name: "Alice Johnson", avatar: "/avatars/01.png" },
@@ -60,7 +64,8 @@ const samplePosts: Post[] = [
 ]
 
 const Posts: React.FC = () => {
-  const [posts, setPosts] = useState<Post[]>(samplePosts)
+  const [posts, setPosts] =
+    useState<(Post | PostFile | PostPoll)[]>(samplePosts)
 
   return (
     <div className="container mx-auto p-4 space-y-8 max-w-3xl">
