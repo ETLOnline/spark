@@ -1,4 +1,4 @@
-import './home.css'
+import './style.css'
 import { Button } from "@/src/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
 import { Carousel, CarouselContent, CarouselItem } from "@/src/components/ui/carousel";
@@ -14,7 +14,7 @@ export default function Home() {
       <div className="hero">
         <Container>
           <div className='flex items-center justify-center h-screen w-full '>
-            <div className="content ">
+            <div className="hero-content ">
               <h1 className="Main-Heading">Find and Book a Mentor for your 1:1 help today!</h1>
               <p>We have our 200 Mentor available, qualified in over 300 subjects</p>
               <Button size={'lg'} variant={'outline'} width={'fit'} >Find a Mentor</Button>

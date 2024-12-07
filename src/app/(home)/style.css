@@ -1,7 +1,10 @@
+.content{
+    @apply w-full 
+}
 .hero{
     @apply  w-full   h-screen  bg-home-secondary
 }
-.content{
+.hero-content{
     @apply w-full text-center md:text-left md:w-5/12 flex flex-col gap-8
 }
 .Main-Heading{
