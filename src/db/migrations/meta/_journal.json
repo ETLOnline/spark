@@ -15,6 +15,13 @@
       "when": 1733053813606,
       "tag": "0001_same_aqueduct",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1733561966470,
+      "tag": "0002_glorious_turbo",
+      "breakpoints": true
     }
   ]
 }
