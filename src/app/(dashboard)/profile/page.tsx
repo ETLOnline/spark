@@ -1,30 +1,60 @@
 "use client"
 
-import { useState } from "react"
-import { Calendar } from "@/src/components/ui/calendar"
+import ProfileActivities from "@/src/components/dashboard/profile/profile-activities"
+import ProfileBio from "@/src/components/dashboard/profile/profile-bio"
+import ProfileCalendar from "@/src/components/dashboard/profile/profile-calendar"
+import ProfileRewards from "@/src/components/dashboard/profile/profile-rewards"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import { Badge } from "@/src/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
-import { CalendarIcon, StarIcon, TrophyIcon, UserIcon } from 'lucide-react'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/src/components/ui/tabs"
+import { CalendarIcon, StarIcon, TrophyIcon, UserIcon } from "lucide-react"
+import { useSearchParams } from "next/navigation"
+import { useEffect, useState } from "react"
 
 const skillTags = ["React", "Next.js", "TypeScript", "UI/UX", "Node.js"]
 const interests = ["Web Development", "AI", "Open Source", "Tech Writing"]
 const recommendations = [
-  { name: "Jane Doe", text: "An exceptional developer with a keen eye for detail." },
+  {
+    name: "Jane Doe",
+    text: "An exceptional developer with a keen eye for detail.",
+  },
   { name: "John Smith", text: "Always delivers high-quality work on time." },
 ]
 const rewards = [
-  { title: "Top Contributor", description: "Awarded for outstanding contributions to the team" },
-  { title: "Innovation Champion", description: "Recognized for implementing creative solutions" },
+  {
+    title: "Top Contributor",
+    description: "Awarded for outstanding contributions to the team",
+  },
+  {
+    title: "Innovation Champion",
+    description: "Recognized for implementing creative solutions",
+  },
 ]
 const activities = [
-  { date: "2023-04-01", description: "Completed the 'Advanced React Patterns' course" },
-  { date: "2023-03-15", description: "Contributed to open-source project 'awesome-ui-components'" },
+  {
+    date: "2023-04-01",
+    description: "Completed the 'Advanced React Patterns' course",
+  },
+  {
+    date: "2023-03-15",
+    description: "Contributed to open-source project 'awesome-ui-components'",
+  },
 ]
 
 export default function ProfileScreen() {
-  const [date, setDate] = useState<Date | undefined>(new Date())
+  const searchParams = useSearchParams()
+  const [activeTab, setActiveTab] = useState<string>("basic")
+
+  useEffect(() => {
+    const tab = searchParams.get("tab")
+    if (tab) {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
 
   return (
     <div className="container mx-auto p-6">
@@ -38,115 +68,48 @@ export default function ProfileScreen() {
           <p className="text-muted-foreground">Senior Frontend Engineer</p>
         </div>
       </div>
-
-      <Tabs defaultValue="basic" className="space-y-4">
+      <Tabs defaultValue="basic" className="space-y-4" value={activeTab}>
         <TabsList>
-          <TabsTrigger value="basic"><UserIcon className="mr-2 h-4 w-4" />Bio/Basic</TabsTrigger>
-          <TabsTrigger value="rewards"><TrophyIcon className="mr-2 h-4 w-4" />Rewards</TabsTrigger>
-          <TabsTrigger value="activity"><StarIcon className="mr-2 h-4 w-4" />Activity</TabsTrigger>
-          <TabsTrigger value="calendar"><CalendarIcon className="mr-2 h-4 w-4" />Calendar</TabsTrigger>
+          <TabsTrigger value="basic" onClick={() => setActiveTab("basic")}>
+            <UserIcon className="mr-2 h-4 w-4" />
+            Bio/Basic
+          </TabsTrigger>
+          <TabsTrigger value="rewards" onClick={() => setActiveTab("rewards")}>
+            <TrophyIcon className="mr-2 h-4 w-4" />
+            Rewards
+          </TabsTrigger>
+          <TabsTrigger
+            value="activity"
+            onClick={() => setActiveTab("activity")}
+          >
+            <StarIcon className="mr-2 h-4 w-4" />
+            Activity
+          </TabsTrigger>
+          <TabsTrigger
+            value="calendar"
+            onClick={() => setActiveTab("calendar")}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            Calendar
+          </TabsTrigger>
         </TabsList>
-
         <TabsContent value="basic">
-          <Card>
-            <CardHeader>
-              <CardTitle>Bio</CardTitle>
-              <CardDescription>Your professional summary and skills</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h3 className="mb-2 font-semibold">Skills</h3>
-                <div className="flex flex-wrap gap-2">
-                  {skillTags.map((skill) => (
-                    <Badge key={skill} variant="secondary">{skill}</Badge>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h3 className="mb-2 font-semibold">Interests</h3>
-                <div className="flex flex-wrap gap-2">
-                  {interests.map((interest) => (
-                    <Badge key={interest} variant="outline">{interest}</Badge>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h3 className="mb-2 font-semibold">Recommendations</h3>
-                <ul className="space-y-2">
-                  {recommendations.map((rec, index) => (
-                    <li key={index} className="rounded-lg border p-3">
-                      <p className="text-sm">&quot;{rec.text}&quot;</p>
-                      <p className="mt-1 text-xs text-muted-foreground">- {rec.name}</p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
+          <ProfileBio
+            skillTags={skillTags}
+            interests={interests}
+            recommendations={recommendations}
+          />
         </TabsContent>
-
         <TabsContent value="rewards">
-          <Card>
-            <CardHeader>
-              <CardTitle>Rewards</CardTitle>
-              <CardDescription>Your achievements and recognitions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-4">
-                {rewards.map((reward, index) => (
-                  <li key={index} className="flex items-start space-x-3">
-                    <TrophyIcon className="mt-0.5 h-5 w-5 text-yellow-500" />
-                    <div>
-                      <h3 className="font-semibold">{reward.title}</h3>
-                      <p className="text-sm text-muted-foreground">{reward.description}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          <ProfileRewards rewards={rewards} />
         </TabsContent>
-
         <TabsContent value="activity">
-          <Card>
-            <CardHeader>
-              <CardTitle>Activity</CardTitle>
-              <CardDescription>Your recent activities and achievements</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-4">
-                {activities.map((activity, index) => (
-                  <li key={index} className="flex items-start space-x-3">
-                    <StarIcon className="mt-0.5 h-5 w-5 text-blue-500" />
-                    <div>
-                      <p className="text-sm">{activity.description}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(activity.date).toLocaleDateString()}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          <ProfileActivities activities={activities} />
         </TabsContent>
-
         <TabsContent value="calendar">
-          <Card>
-            <CardHeader>
-              <CardTitle>Calendar</CardTitle>
-              <CardDescription>Your schedule and upcoming events</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                className="rounded-md border"
-              />
-            </CardContent>
-          </Card>
+          <ProfileCalendar />
         </TabsContent>
       </Tabs>
     </div>
   )
 }
-
