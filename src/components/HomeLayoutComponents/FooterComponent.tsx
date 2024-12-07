@@ -3,6 +3,7 @@ import './footer.css'
 import Link from 'next/link'
 import { Facebook, Instagram, Linkedin, Twitter } from 'lucide-react'
 import { Separator } from '@/src/components/ui/separator'
+import Navbaritems from '../NavBar/NAvbarItems'
 
 
 function Footer() {
@@ -10,33 +11,7 @@ function Footer() {
         <div className='footer'>
             <div className='footer-navigation'>
 
-                <div className='navbar'>
-
-                    <Link className='nav-brand' href="#">Spark</Link>
-
-                    <ul className='nav'>
-                        <li className='nav-item'>
-                            <Link className='nav-link' href="/dashboard">
-                                Dashboard</Link>
-                        </li>
-                        <li className='nav-item'>
-                            <Link className='nav-link' href="#">
-                                Find a Mentor</Link>
-                        </li>
-                        <li className='nav-item'>
-                            <Link className='nav-link' href="#">
-                                About Us</Link>
-                        </li>
-                        <li className='nav-item'>
-                            <Link className='nav-link' href="#">
-                                Pricing</Link>
-                        </li>
-                        <li className='nav-item'>
-                            <Link className='nav-link' href="#">
-                                Become a Member</Link>
-                        </li>
-                    </ul>
-                </div>
+                <Navbaritems />
                 <div className="social-icons justify-center mt-4">
                     <Link href={'#'}><Linkedin /></Link>
                     <Link href={'#'}><Facebook /></Link>

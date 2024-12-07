@@ -8,7 +8,7 @@ import Navbar from '../NavBar/NavbarComponent'
 function Header() {
     return (
         <div className="header">
-           <Navbar />
+            <Navbar />
             <div className="button-wrapper">
                 <SignedIn>
                     <UserButton userProfileUrl='/profile' />
