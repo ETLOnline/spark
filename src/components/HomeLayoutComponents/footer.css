@@ -1,5 +1,5 @@
 .footer{
-    @apply bg-gray-100 py-12 px-6
+    @apply bg-gray-900 py-12 px-6
 }
 .footer-content{
     @apply flex flex-wrap   w-full
@@ -17,7 +17,7 @@
     @apply flex flex-col gap-4 footer-section-text
 }
 .input{
-    @apply mt-4 flex
+    @apply mt-4 flex text-white
 }
 .icons{
     @apply flex flex-wrap gap-3 text-gray-600
