@@ -4,7 +4,7 @@ import './navbar.css'
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet'
 import { Button } from '../ui/button'
 import { HamIcon, Menu } from 'lucide-react'
-import Navbaritems from './NAvbarItems'
+import Navbaritems from './NavbarItem'
 
 function Navbar() {
 

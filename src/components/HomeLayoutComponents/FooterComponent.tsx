@@ -3,7 +3,7 @@ import './footer.css'
 import Link from 'next/link'
 import { Facebook, Instagram, Linkedin, Twitter } from 'lucide-react'
 import { Separator } from '@/src/components/ui/separator'
-import Navbaritems from '../NavBar/NAvbarItems'
+import Navbaritems from '../NavBar/NavbarItem'
 
 
 function Footer() {
