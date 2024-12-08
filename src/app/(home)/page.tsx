@@ -12,7 +12,7 @@ import StatCardList from '@/src/components/StatCard/StatCardList';
 export default function Home() {
   return (
     <>
-      <div className="hero h-screen">
+      <div className="hero">
         <Container>
           <div className='flex items-center justify-center h-screen w-full '>
             <div className="hero-content ">
@@ -116,7 +116,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className='hero'>
+      <div className='bg-hero-gradient'>
         <Container>
           <div className="section">
             <h1 className="section-title text-center">Helping the world one mentor at a time</h1>

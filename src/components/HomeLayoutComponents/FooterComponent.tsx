@@ -63,7 +63,7 @@ function Footer() {
             </div>
             <div className="footer-bottom">
                 <Separator />
-                <p className='footer-section-text text-center my-4'>2024 Mentor Platform. All right reserved</p>
+                <p className='footer-section-text text-center my-4'>2024 Spark. All right reserved</p>
             </div>
         </div>
     )

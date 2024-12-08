@@ -2,7 +2,7 @@
     @apply w-full 
 }
 .hero{
-    @apply  w-full bg-hero-gradient
+    @apply  w-full h-screen bg-hero-gradient
 
 }
 .hero-content{

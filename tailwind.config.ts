@@ -1,6 +1,4 @@
 import type { Config } from "tailwindcss";
-import { NavSecondary } from "./src/components/dashboard/nav-secondary";
-import { text } from "stream/consumers";
 
 const config: Config = {
 	darkMode: ["class"],
