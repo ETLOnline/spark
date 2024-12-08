@@ -1,5 +1,5 @@
 .session-card{
-    @apply bg-[#F4F4F4] w-[78%] sm:w-[47%] lg:w-[23%] rounded-md
+    @apply bg-[#F4F4F4] dark:bg-secondary w-[78%] sm:w-[47%] lg:w-[23%] rounded-md
 }
 .session-card-image{
     @apply w-full h-40 rounded-md

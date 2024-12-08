@@ -2,7 +2,7 @@ import React from 'react'
 import './navbar.css'
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet'
 import { Menu } from 'lucide-react'
-import Navbaritems from './NavbarItem'
+import Navbaritems from './NavbarItems'
 
 function Navbar() {
 

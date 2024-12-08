@@ -116,7 +116,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className='bg-home-secondary'>
+      <div className='bg-hero-gradient'>
         <Container>
           <div className="section">
             <h1 className="section-title text-center">Helping the world one mentor at a time</h1>

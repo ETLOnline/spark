@@ -5,5 +5,5 @@
     @apply mr-2 items-center
 }
 .button-wrapper{
-    @apply flex items-center ms-auto
+    @apply flex items-center ms-auto gap-2
 }
