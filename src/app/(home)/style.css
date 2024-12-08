@@ -2,7 +2,7 @@
     @apply w-full 
 }
 .hero{
-    @apply  w-full   h-screen  bg-home-secondary
+    @apply  w-full   h-screen  bg-home-secondary 
 }
 .hero-content{
     @apply w-full text-center md:text-left md:w-5/12 flex flex-col gap-8

@@ -66,7 +66,7 @@ const config: Config = {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				footer: {
-					default: 'hsl(var(--footer-background))',
+					default: 'var(--footer-background)',
 					
 				}
 			},

@@ -24,16 +24,16 @@ function Footer() {
                     <h1 className="footer-section-title">Quick Links</h1>
                     <ul className="footer-nav">
                         <li >
-                            <Link href='#'>Home</Link>
+                            <Link className='footer-nav-link' href='#'>Home</Link>
                         </li>
                         <li >
-                            <Link href='#'>About</Link>
+                            <Link className='footer-nav-link' href='#'>About</Link>
                         </li>
                         <li >
-                            <Link href='#'>contact</Link>
+                            <Link className='footer-nav-link' href='#'>contact</Link>
                         </li>
                         <li >
-                            <Link href='#'>FAQ</Link>
+                            <Link className='footer-nav-link' href='#'>FAQ</Link>
                         </li>
                     </ul>
                 </div>
@@ -49,7 +49,7 @@ function Footer() {
                         <Link href={'#'}>
                             <Instagram />
                         </Link>
-                        <Link href={'#'}>
+                        <Link href={'#'} >
                             <Linkedin />
                         </Link>
                     </div>
@@ -58,7 +58,7 @@ function Footer() {
                     <h1 className='footer-section-title'>Newsletter</h1>
                     <p className='footer-section-text'>Stay updated with our latest news and offers</p>
                     <form className='input'>
-                        <Input type='email' placeholder='Enter Your Email' className='rounded-r-none bg-white' />
+                        <Input type='email' className='rounded-r-none' />
                         <Button className='mt-4 rounded-l-none'>Subscribe</Button>
                     </form>
                 </div>

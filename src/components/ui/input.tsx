@@ -22,7 +22,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
 
             <Label
               data-for={props.id}
-              className=" pointer-events-none absolute left-[8px] top-[-8px] bg-white pl-1 pr-1 text-gray-500 transition-all duration-200 ease-in-out  peer-placeholder-shown:top-[10px] peer-placeholder-shown:text-gray-500 peer-focus:top-[-8px] peer-focus:bg-white "
+              className=" pointer-events-none absolute left-[8px] top-[-8px] bg-white dark:bg-inherit pl-1 pr-1 text-gray-500 transition-all duration-200 ease-in-out  peer-placeholder-shown:top-[10px] peer-placeholder-shown:text-gray-500 peer-focus:top-[-8px] peer-focus:bg-white dark:peer-focus:bg-black "
             >
               {props.placeholder}
             </Label>

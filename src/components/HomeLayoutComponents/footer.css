@@ -1,5 +1,5 @@
 .footer{
-    @apply bg-gray-900 py-12 px-6
+    @apply bg-footer-default py-12 px-6
 }
 .footer-content{
     @apply flex flex-wrap   w-full
@@ -8,21 +8,21 @@
     @apply w-full sm:w-1/2 md:w-1/2 lg:w-1/4 mt-6
 }
 .footer-section-title{
-    @apply text-lg font-semibold text-gray-900 mb-4
-}
-.footer-section-text{
-    @apply text-gray-600
+    @apply text-lg font-semibold text-gray-900 dark:text-white mb-4
 }
 .footer-nav{
-    @apply flex flex-col gap-4 footer-section-text
+    @apply flex flex-col gap-4 
 }
 .input{
-    @apply mt-4 flex text-white
+    @apply mt-4 flex dark:text-white
 }
 .icons{
-    @apply flex flex-wrap gap-3 text-gray-600
+    @apply flex flex-wrap gap-3
 }
 .footer-bottom{
     @apply mt-4
+}
+.footer-nav-link{
+    @apply hover:text-gray-900 dark:hover:text-white
 }
 
