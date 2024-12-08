@@ -12,7 +12,7 @@ const config: Config = {
 	theme: {
 		extend: {
 			backgroundImage: {
-				'home-secondary': 'linear-gradient(120deg, #9DD5C8 50%, #F8FBFE 100%); ',
+				'hero-gradient': 'var(--hero-gradient)'
 			},
 			colors: {
 				background: 'hsl(var(--background))',
@@ -67,7 +67,7 @@ const config: Config = {
 				},
 				footer: {
 					default: 'var(--footer-background)',
-					
+
 				}
 			},
 			borderRadius: {

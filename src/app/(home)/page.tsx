@@ -11,7 +11,7 @@ import Container from '@/src/components/container/Container';
 export default function Home() {
   return (
     <>
-      <div className="hero">
+      <div className="hero h-screen">
         <Container>
           <div className='flex items-center justify-center h-screen w-full '>
             <div className="hero-content ">
@@ -115,7 +115,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className='bg-home-secondary'>
+      <div className='hero'>
         <Container>
           <div className="section">
             <h1 className="section-title text-center">Helping the world one mentor at a time</h1>

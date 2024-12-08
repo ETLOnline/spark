@@ -48,6 +48,7 @@ body {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
     --footer-background: #f4f3f6;
+    --hero-gradient: linear-gradient(77deg, #9DD5C8 0%, #F8FBFE 100%);
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -83,6 +84,7 @@ body {
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
     --footer-background: #000000;
+    --hero-gradient: linear-gradient(77deg, #137a77 0%, #80d0c7 100%);
   }
 }
 
