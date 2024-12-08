@@ -6,6 +6,7 @@ import SkillTag from "@/src/components/HomePageComponents/SkillTag/SkillTag";
 import MentorCard from "@/src/components/HomePageComponents/MentorCard/MentorCard";
 import SessionCard from '@/src/components/HomePageComponents/SessionCard/SessionCard';
 import Container from '@/src/components/container/Container';
+import StatCardList from '@/src/components/StatCard/StatCardList';
 
 
 export default function Home() {
@@ -127,6 +128,14 @@ export default function Home() {
         </Container>
 
       </div>
+
+      <Container>
+        <div className="section">
+          <div className="section-content">
+          <StatCardList />
+          </div>
+        </div>
+      </Container>
 
       <Container>
         <div className="section">
