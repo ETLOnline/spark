@@ -9,10 +9,23 @@ type Props = {
 }
 
 const CreatePostInput: React.FC<Props> = (props) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      props.setNewPost({
+        ...props.newPost,
+        type: "file",
+        content: file,
+        fileName: file.name,
+        fileSize: file.size,
+      })
+    }
+  }
+
   return props.type === "text" ? (
     <Textarea
       placeholder="What's on your mind?"
-      value={props.newPost.content}
+      value={props.newPost.content as string}
       onChange={(e) =>
         props.setNewPost({
           ...props.newPost,
@@ -31,7 +44,7 @@ const CreatePostInput: React.FC<Props> = (props) => {
   ) : props.type === "poll" ? (
     <Textarea
       placeholder="Enter your poll question"
-      value={props.newPost.content}
+      value={props.newPost.content as string}
       onChange={(e) =>
         props.setNewPost({
           ...props.newPost,
@@ -42,12 +55,7 @@ const CreatePostInput: React.FC<Props> = (props) => {
       className="min-h-[100px]"
     />
   ) : (
-    props.type === "file" && (
-      <Input
-        type="file"
-        onChange={() => props.setNewPost({ ...props.newPost, type: "file" })}
-      />
-    )
+    props.type === "file" && <Input type="file" onChange={handleFileUpload} />
   )
 }
 

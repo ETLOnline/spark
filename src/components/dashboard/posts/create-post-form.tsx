@@ -16,11 +16,17 @@ import {
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import PostInput from "./create-post-input"
-import { Post, NewPost, PostType } from "./types/posts-types.d"
+import {
+  Post,
+  NewPost,
+  PostType,
+  PostPoll,
+  PostFile,
+} from "./types/posts-types.d"
 import { useState } from "react"
 
 type Props = {
-  setPosts: (posts: Post[]) => void
+  setPosts: (posts: (Post | PostFile | PostPoll)[]) => void
   posts: Post[]
 }
 
@@ -30,8 +36,9 @@ const CreatePostForm: React.FC<Props> = (props) => {
     type: "text" as PostType,
     hashtags: [],
   })
+
   const handleCreatePost = () => {
-    const newPostObj: Post = {
+    const newPostObj: Post | PostFile | PostPoll = {
       id: (props.posts.length + 1).toString(),
       author: { name: "Current User", avatar: "/avatars/04.png" },
       content: newPost.content,
@@ -40,6 +47,8 @@ const CreatePostForm: React.FC<Props> = (props) => {
       comments: [],
       hashtags: newPost.hashtags.filter((tag: string) => tag.trim() !== ""),
       createdAt: new Date().toISOString(),
+      fileName: newPost.fileName,
+      fileSize: newPost.fileSize,
     }
     props.setPosts([newPostObj, ...props.posts])
     setNewPost({ content: "", type: "text", hashtags: [] })
@@ -66,7 +75,6 @@ const CreatePostForm: React.FC<Props> = (props) => {
           </TabsContent>
           <TabsContent value="poll">
             <PostInput type="poll" setNewPost={setNewPost} newPost={newPost} />
-            {/* Add poll options here */}
           </TabsContent>
           <TabsContent value="file">
             <PostInput type="file" setNewPost={setNewPost} newPost={newPost} />
@@ -77,7 +85,6 @@ const CreatePostForm: React.FC<Props> = (props) => {
           <Input
             id="hashtags"
             placeholder="Enter hashtags (e.g., coding webdev)"
-            value={newPost.hashtags}
             onChange={(e) =>
               setNewPost({
                 ...newPost,

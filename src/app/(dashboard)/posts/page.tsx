@@ -3,9 +3,13 @@
 import { useState } from "react"
 import CreatePostForm from "@/src/components/dashboard/posts/create-post-form"
 import PostFeed from "@/src/components/dashboard/posts/post-feed"
-import { Post } from "@/src/components/dashboard/posts/types/posts-types.d"
+import {
+  Post,
+  PostFile,
+  PostPoll,
+} from "@/src/components/dashboard/posts/types/posts-types.d"
 
-const samplePosts: Post[] = [
+const samplePosts: (Post | PostFile | PostPoll)[] = [
   {
     id: "1",
     author: { name: "Alice Johnson", avatar: "/avatars/01.png" },
@@ -28,7 +32,7 @@ const samplePosts: Post[] = [
     id: "2",
     author: { name: "Bob Smith", avatar: "/avatars/02.png" },
     content:
-      "https://upload.wikimedia.org/wikipedia/en/7/7d/Lenna_%28test_image%29.png",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJkk-ipl11piZ92Mn50FEqLnJRF00-mcDRVg&s",
     type: "image",
     likes: 32,
     comments: [],
@@ -46,16 +50,26 @@ const samplePosts: Post[] = [
     createdAt: "2023-04-13T09:15:00Z",
     options: ["Python", "JavaScript"],
   },
+  {
+    id: "4",
+    author: { name: "Charlie Brown", avatar: "/avatars/03.png" },
+    content: "",
+    type: "file",
+    likes: 24,
+    comments: [],
+    hashtags: ["Programming", "DevLife"],
+    createdAt: "2023-04-13T09:15:00Z",
+    fileName: "brain.exe",
+  },
 ]
 
 const Posts: React.FC = () => {
-  const [posts, setPosts] = useState<Post[]>(samplePosts)
+  const [posts, setPosts] =
+    useState<(Post | PostFile | PostPoll)[]>(samplePosts)
 
   return (
     <div className="container mx-auto p-4 space-y-8 max-w-3xl">
-      {/* post creation form */}
       <CreatePostForm setPosts={setPosts} posts={posts} />
-      {/* Post Feed */}
       <PostFeed posts={posts} setPosts={setPosts} />
     </div>
   )
