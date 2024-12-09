@@ -3,7 +3,7 @@ import { TrendingTagsCard } from '@/src/components/dashboard/TrendingTagsCard/Tr
 import { Separator } from '@/src/components/ui/separator'
 import React, { ReactNode } from 'react'
 
-const PostFeedLayout = ({children}:{children:ReactNode}) => {
+const PostFeedLayout = ({ children }: { children: ReactNode }) => {
   return (
     <div className="flex border-t">
       <div className="flex-1 overflow-auto">

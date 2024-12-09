@@ -74,9 +74,9 @@ export default function Home() {
 
 			<div className='section'>
 
-				<h1 className="section-title ml-8">
+				<h2 className="section-title ml-8">
 					Featured Mentors
-				</h1>
+				</h2>
 
 				<div className="section-content">
 					<Carousel>
@@ -121,7 +121,7 @@ export default function Home() {
 			<div className='bg-hero-gradient'>
 				<Container>
 					<div className="section">
-						<h1 className="section-title text-center">Helping the world one mentor at a time</h1>
+						<h2 className="section-title text-center">Helping the world one mentor at a time</h2>
 						<div className="section-text text-center">
 							<p className='pb-4'>sifting through the overwhelming content on the internet will slow you down.break through the <br /> noise abd get specific advice directly from the experts.</p>
 							<Button variant={'outline'}>Let's Find a Mentor</Button>
@@ -141,7 +141,7 @@ export default function Home() {
 
 			<Container>
 				<div className="section">
-					<h1 className="section-title text-center ">In Demand Skills</h1>
+					<h2 className="section-title text-center ">In Demand Skills</h2>
 					<div className="section-content">
 
 						<div className="section-content-wrapper justify-around md:justify-between">
@@ -171,7 +171,7 @@ export default function Home() {
 				<div className="section">
 
 					<div className="section-title text-center">
-						<h1>Upcoming Sessions</h1>
+						<h2>Upcoming Sessions</h2>
 					</div>
 					<div className="section-text text-center">
 						<p>Sign Up to one of our session and start your journey</p>
@@ -197,7 +197,7 @@ export default function Home() {
 
 			<Container>
 				<div className="section">
-					<h1 className='section-title text-center'>Our Mission</h1>
+					<h2 className='section-title text-center'>Our Mission</h2>
 
 					<div className="section-content">
 						<MissionCardList />
