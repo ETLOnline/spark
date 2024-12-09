@@ -122,7 +122,7 @@ export default function Home() {
 				<Container>
 					<div className="section">
 						<h2 className="section-title text-center">Helping the world one mentor at a time</h2>
-						<div className="section-text text-center">
+						<div className="section-content text-center">
 							<p className='pb-4'>sifting through the overwhelming content on the internet will slow you down.break through the <br /> noise abd get specific advice directly from the experts.</p>
 							<Button variant={'outline'}>Let's Find a Mentor</Button>
 						</div>
@@ -173,7 +173,7 @@ export default function Home() {
 					<div className="section-title text-center">
 						<h2>Upcoming Sessions</h2>
 					</div>
-					<div className="section-text text-center">
+					<div className="text-center">
 						<p>Sign Up to one of our session and start your journey</p>
 					</div>
 
