@@ -7,23 +7,43 @@ import {
   CardHeader,
 } from "../../ui/card"
 import { Recommendation } from "./types/profile-types"
+import EditProfileModal from "./edit-profile-modal"
+import { useState } from "react"
 
 type Props = {
   recommendations: Recommendation[]
   skillTags: string[]
+  setSkillTags: (tags: string[]) => void
   interests: string[]
+  setInterests: (tags: string[]) => void
 }
 
 const ProfileBio: React.FC<Props> = (props) => {
+  const [bio, setBio] = useState<string>("hello world!")
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Bio</CardTitle>
-        <CardDescription>Your professional summary and skills</CardDescription>
+        <header className="profile-section-header flex justify-between">
+          <CardTitle>Bio</CardTitle>
+          <EditProfileModal
+            variant="bio"
+            profileValue={bio}
+            setProfileValue={setBio}
+          />
+        </header>
+        <CardDescription>{bio}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <h3 className="mb-2 font-semibold">Skills</h3>
+          <header className="profile-section-header flex justify-between">
+            <h3 className="mb-2 font-semibold">Skills</h3>
+            <EditProfileModal
+              variant="skills"
+              profileValue={props.skillTags.join(",")}
+              setProfileValue={props.setSkillTags}
+            />
+          </header>
           <div className="flex flex-wrap gap-2">
             {props.skillTags.map((skill: string) => (
               <Badge key={skill} variant="secondary">
@@ -33,7 +53,14 @@ const ProfileBio: React.FC<Props> = (props) => {
           </div>
         </div>
         <div>
-          <h3 className="mb-2 font-semibold">Interests</h3>
+          <div className="profile-section-header flex justify-between">
+            <h3 className="mb-2 font-semibold">Interests</h3>
+            <EditProfileModal
+              variant="skills"
+              profileValue={props.interests.join(",")}
+              setProfileValue={props.setInterests}
+            />
+          </div>
           <div className="flex flex-wrap gap-2">
             {props.interests.map((interest: string) => (
               <Badge key={interest} variant="outline">
