@@ -6,7 +6,7 @@ function Navbaritems() {
     return (
         <div className='navbar'>
 
-            <Link className='nav-brand' href="#">
+            <Link className='nav-brand' href="/">
                 <Image width={50} height={50} src="/logo/spark-logo-no-bg.png" alt='Spark logo' />
             </Link>
 
@@ -24,8 +24,8 @@ function Navbaritems() {
                         About Us</Link>
                 </li>
                 <li className='nav-item'>
-                    <Link className='nav-link' href="#">
-                        Pricing</Link>
+                    <Link className='nav-link' href="/contact-us">
+                        Contact Us</Link>
                 </li>
                 <li className='nav-item'>
                     <Link className='nav-link' href="#">

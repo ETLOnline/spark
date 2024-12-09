@@ -22,13 +22,13 @@ function Footer() {
                     <h1 className="footer-section-title">Quick Links</h1>
                     <ul className="footer-nav">
                         <li >
-                            <Link className='footer-nav-link' href='#'>Home</Link>
+                            <Link className='footer-nav-link' href='/'>Home</Link>
                         </li>
                         <li >
                             <Link className='footer-nav-link' href='#'>About</Link>
                         </li>
                         <li >
-                            <Link className='footer-nav-link' href='#'>contact</Link>
+                            <Link className='footer-nav-link' href='/contact-us'>contact</Link>
                         </li>
                         <li >
                             <Link className='footer-nav-link' href='#'>FAQ</Link>
