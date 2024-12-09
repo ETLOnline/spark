@@ -3,8 +3,8 @@ import Link from 'next/link'
 import React from 'react'
 
 function Navbaritems() {
-    return (
-        <div className='navbar'>
+	return (
+		<div className='navbar'>
 
             <Link className='nav-brand' href="/">
                 <Image width={50} height={50} src="/logo/spark-logo-no-bg.png" alt='Spark logo' />
