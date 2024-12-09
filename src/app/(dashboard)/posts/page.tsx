@@ -32,7 +32,7 @@ const samplePosts: (Post | PostFile | PostPoll)[] = [
     id: "2",
     author: { name: "Bob Smith", avatar: "/avatars/02.png" },
     content:
-      "https://upload.wikimedia.org/wikipedia/en/7/7d/Lenna_%28test_image%29.png",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJkk-ipl11piZ92Mn50FEqLnJRF00-mcDRVg&s",
     type: "image",
     likes: 32,
     comments: [],

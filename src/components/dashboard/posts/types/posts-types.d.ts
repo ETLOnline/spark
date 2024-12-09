@@ -6,7 +6,7 @@ export type Post = {
     name: string
     avatar: string
   }
-  content: string | File
+  content: string
   type: PostType
   likes: number
   comments: Comment[]
@@ -14,7 +14,11 @@ export type Post = {
   createdAt: string
 }
 
-export type PostFile = Post & { fileName: string; fileSize: number }
+export type PostFile = Post & {
+  content: File
+  fileName: string
+  fileSize: number
+}
 
 export type PostPoll = Post & { options: string[] }
 
