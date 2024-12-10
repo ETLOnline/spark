@@ -31,7 +31,7 @@ export default function Home() {
 								</Avatar>
 							</div>
 
-							<div className="absolute md:top-[-240px] md:left-[330px] lg:top-[-250px] lg:left-[500px]">
+							<div className="absolute md:top-[-240px] md:left-[316px] lg:top-[-250px] lg:left-[440px]">
 								<Avatar className="w-16 h-16">
 									<AvatarImage src="/images/home/avatar2.jpg" />
 									<AvatarFallback>avatar-1</AvatarFallback>
@@ -45,7 +45,7 @@ export default function Home() {
 								</Avatar>
 							</div>
 
-							<div className="absolute md:top-[70px] left-[40px] lg:top-[140px] lg:left-[180px]">
+							<div className="absolute md:top-[70px] left-[40px] lg:top-[115px] lg:left-[140px]">
 								<Avatar className="w-16 h-16">
 									<AvatarImage src="/images/home/avatar4.jpg" />
 									<AvatarFallback>avatar-1</AvatarFallback>
@@ -59,7 +59,7 @@ export default function Home() {
 								</Avatar>
 							</div>
 
-							<div className="absolute md:top-[-25px] left-[365px] lg:top-[20px] lg:left-[507px]">
+							<div className="absolute md:top-[-25px] left-[318px] lg:top-[30px] lg:left-[447px]">
 								<Avatar className="w-16 h-16">
 									<AvatarImage src="/images/home/avatar6.jpg" />
 									<AvatarFallback>avatar-1</AvatarFallback>
