@@ -15,6 +15,8 @@ import {
   Calendar,
   BetweenHorizontalStart,
   Lightbulb,
+  Beaker,
+  LayoutDashboard,
 } from "lucide-react"
 
 import { NavMain } from "@/src/components/dashboard/nav-main"
@@ -35,12 +37,12 @@ import Image from "next/image"
 import Link from "next/link"
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   navMain: [
+    {
+      title: "Analytics Dashboard",
+      url: "/dashboard",
+      icon: LayoutDashboard,
+    },
     {
       title: "Profile",
       url: "/profile",
@@ -113,6 +115,27 @@ const data = {
       ],
     },
   ],
+  testNav:[
+    {
+      title: "Test",
+      url: "#",
+      icon: Beaker,
+      items: [
+        {
+          title: "Team Collaboration",
+          url: "/test/team-collaboration",
+        },
+        {
+          title: "Learning Hub",
+          url: "/test/learning-hub",
+        },
+        {
+          title: "Marketplace",
+          url: "/test/marketplace",
+        }
+      ],
+    },
+  ],
   navSecondary: [
     {
       title: "Support",
@@ -123,23 +146,6 @@ const data = {
       title: "Feedback",
       url: "#",
       icon: Send,
-    },
-  ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
     },
   ],
 }
@@ -165,8 +171,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        <NavMain items={data.navMain} label="Platform" />
+        <NavMain items={data.testNav} label="Test" />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

@@ -11,6 +11,10 @@
   "dependencies": {
     "@clerk/nextjs": "^6.5.1",
     "@libsql/client": "^0.14.0",
+    "@nivo/bar": "^0.88.0",
+    "@nivo/core": "^0.88.0",
+    "@nivo/line": "^0.88.0",
+    "@nivo/pie": "^0.88.0",
     "@radix-ui/react-avatar": "^1.1.1",
     "@radix-ui/react-collapsible": "^1.1.1",
     "@radix-ui/react-dialog": "^1.1.2",
@@ -36,6 +40,7 @@
     "react": "^18",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18",
+    "recharts": "^2.14.1",
     "svix": "^1.43.0",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7"
