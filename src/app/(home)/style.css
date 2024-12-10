@@ -6,10 +6,10 @@
 
 }
 .hero-content{
-    @apply w-full text-center md:text-left md:w-5/12 flex flex-col gap-8
+    @apply w-full text-center md:text-left md:w-1/2 flex flex-col gap-8
 }
 .Main-Heading{
-    @apply  text-4xl  md:text-[44px] font-bold
+    @apply  text-4xl  md:text-5xl font-bold 
 }
 .avatars{
     @apply w-1/2  hidden md:block
