@@ -14,6 +14,7 @@ import {
   MessageSquare,
   Calendar,
   BetweenHorizontalStart,
+  Lightbulb,
 } from "lucide-react"
 
 import { NavMain } from "@/src/components/dashboard/nav-main"
@@ -80,6 +81,11 @@ const data = {
       title: "Spaces",
       url: "/spaces",
       icon: BetweenHorizontalStart,
+    },
+    {
+      title: "Project Incubator",
+      url: "/project-incubator",
+      icon: Lightbulb,
     },
     {
       title: "Settings",
