@@ -32,6 +32,7 @@ import {
 } from "@/src/components/ui/sidebar"
 import { SignedIn } from "@clerk/nextjs"
 import Image from "next/image"
+import Link from "next/link"
 
 const data = {
   user: {
@@ -150,15 +151,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="/">
+              <Link href="/">
                 <div className="flex aspect-square   items-center justify-center rounded-lg border  text-sidebar-primary-foreground">
-                  <Image src="/logo/spark-logo-no-bg.png" alt="spark-logo" width={40} height={40} />
+                  <Image sizes="8" src="/logo/spark-logo-no-bg.png" alt="spark-logo" width={40} height={40} />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Spark</span>
                   <span className="truncate text-xs">ETLOnline</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
