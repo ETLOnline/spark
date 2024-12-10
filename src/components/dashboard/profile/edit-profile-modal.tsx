@@ -53,8 +53,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
+          <div className="flex items-center gap-4">
+            <Label htmlFor="name" className="text-right mt-4">
               {props.variant}
             </Label>
             <Input
