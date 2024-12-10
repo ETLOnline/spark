@@ -11,6 +11,9 @@ import {
   Settings2,
   Newspaper,
   User,
+  MessageSquare,
+  Calendar,
+  BetweenHorizontalStart,
 } from "lucide-react"
 
 import { NavMain } from "@/src/components/dashboard/nav-main"
@@ -63,6 +66,21 @@ const data = {
       title: "Posts",
       url: "/posts",
       icon: Newspaper,
+    },
+    {
+      title: "Chat",
+      url: "/chat",
+      icon: MessageSquare,
+    },
+    {
+      title: "Events",
+      url: "/events",
+      icon: Calendar,
+    },
+    {
+      title: "Spaces",
+      url: "/spaces",
+      icon: BetweenHorizontalStart,
     },
     {
       title: "Settings",
