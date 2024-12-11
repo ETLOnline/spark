@@ -7,11 +7,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogTrigger
 } from "../../ui/dialog"
 import { Input } from "../../ui/input"
 import { Label } from "../../ui/label"
 import { Textarea } from "@/src/components/ui/textarea"
+import ChipsInput from "@/src/components/chips-input"
 
 type EditProfileModalProps = {
   bio: string
@@ -24,16 +25,17 @@ type EditProfileModalProps = {
 
 const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
   const [isOpen, setIsOpen] = useState(false)
-  const editedBio = useRef<string>("")
-  const editedSkills = useRef<string[]>([])
-  const editedInterests = useRef<string[]>([])
+  const [skillsCopy, setSkillsCopy] = useState<string[]>([...props.skills])
+  const [interestsCopy, setinterestsCopy] = useState<string[]>([
+    ...props.interests
+  ])
+  const editedBio = useRef<string>(props.bio)
 
   const updateProfileValue = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     editedBio.current.length && props.setBio(editedBio.current)
-    editedSkills.current.length && props.setSkills([...editedSkills.current])
-    editedInterests.current.length &&
-      props.setInterests([...editedSkills.current])
+    skillsCopy.length && props.setSkills([...skillsCopy])
+    interestsCopy.length && props.setInterests([...interestsCopy])
     setIsOpen(false)
   }
 
@@ -71,25 +73,19 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
                 <Label htmlFor="skills" className="edit-label">
                   Skills
                 </Label>
-                <Input
-                  id={"skills"}
-                  defaultValue={props.skills}
-                  className="w-full"
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    editedSkills.current.push(e.target.value)
-                  }
+                <ChipsInput
+                  tags={skillsCopy}
+                  updateTags={(skills: string[]) => setSkillsCopy([...skills])}
                 />
               </div>
               <div className="edit-interests w-full">
                 <Label htmlFor="interests" className="edit-label">
                   Interests
                 </Label>
-                <Input
-                  id={"interests"}
-                  defaultValue={props.interests}
-                  className="w-full"
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    editedInterests.current.push(e.target.value)
+                <ChipsInput
+                  tags={interestsCopy}
+                  updateTags={(interests: string[]) =>
+                    setinterestsCopy([...interests])
                   }
                 />
               </div>
