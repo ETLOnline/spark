@@ -27,9 +27,12 @@ const ProfileBio: React.FC<Props> = (props) => {
         <header className="profile-section-header flex justify-between">
           <CardTitle>Bio</CardTitle>
           <EditProfileModal
-            variant="bio"
-            profileValue={bio}
-            setProfileValue={setBio}
+            bio={bio}
+            setBio={setBio}
+            skills={props.skillTags}
+            setSkills={props.setSkillTags}
+            interests={props.interests}
+            setInterests={props.setInterests}
           />
         </header>
         <CardDescription>{bio}</CardDescription>
@@ -38,11 +41,6 @@ const ProfileBio: React.FC<Props> = (props) => {
         <div>
           <header className="profile-section-header flex justify-between">
             <h3 className="mb-2 font-semibold">Skills</h3>
-            <EditProfileModal
-              variant="skills"
-              profileValue={props.skillTags.join(",")}
-              setProfileValue={props.setSkillTags}
-            />
           </header>
           <div className="flex flex-wrap gap-2">
             {props.skillTags.map((skill: string) => (
@@ -55,11 +53,6 @@ const ProfileBio: React.FC<Props> = (props) => {
         <div>
           <div className="profile-section-header flex justify-between">
             <h3 className="mb-2 font-semibold">Interests</h3>
-            <EditProfileModal
-              variant="skills"
-              profileValue={props.interests.join(",")}
-              setProfileValue={props.setInterests}
-            />
           </div>
           <div className="flex flex-wrap gap-2">
             {props.interests.map((interest: string) => (
