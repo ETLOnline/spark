@@ -1,6 +1,5 @@
 "use client"
 
-import React, { useEffect } from "react"
 import { SidebarTrigger } from "../ui/sidebar"
 import { Separator } from "@radix-ui/react-separator"
 import {
@@ -9,17 +8,35 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbSeparator,
+  BreadcrumbSeparator
 } from "../ui/breadcrumb"
 import { ModeToggle } from "../ThemeProvider/ThemeToggle"
 import { usePathname } from "next/navigation"
+import { pageMeta, PageMeta } from "@/src/utils/constants"
 
 const Header = () => {
+  type Crumb = {
+    href: string
+    path: string
+  }
+
   const path: string = usePathname().substring(1)
-  const paths: string[] = path.split("/")
-  const hrefs: string[] = paths.map((pathName) =>
-    path.substring(0, path.indexOf(pathName) + pathName.length)
-  )
+  const hrefs: string[] = path
+    .split("/")
+    .map(
+      (pathName, i) =>
+        "/" + path.substring(0, path.indexOf(pathName) + pathName.length)
+    )
+  const crumbs: Crumb[] = (() => {
+    const tempCrumbs: Crumb[] = []
+    hrefs.forEach((href) => {
+      const meta = pageMeta.find((meta: PageMeta) => meta.url === href)
+      if (meta) {
+        tempCrumbs.push({ href, path: meta.title })
+      }
+    })
+    return [...tempCrumbs]
+  })()
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-2">
@@ -35,18 +52,17 @@ const Header = () => {
                 </BreadcrumbLink>
                 <BreadcrumbSeparator />
               </BreadcrumbItem>
-              {hrefs.map((href, i) => (
-                <BreadcrumbItem key={href}>
-                  <BreadcrumbLink href={href}>
-                    <BreadcrumbPage>{paths[i]}</BreadcrumbPage>
+              {crumbs.map((crumb, i) => (
+                <BreadcrumbItem key={crumb.href}>
+                  <BreadcrumbLink href={crumb.href}>
+                    <BreadcrumbPage>{crumb.path}</BreadcrumbPage>
                   </BreadcrumbLink>
-                  {i !== hrefs.length - 1 && <BreadcrumbSeparator />}
+                  {i !== crumbs.length - 1 && <BreadcrumbSeparator />}
                 </BreadcrumbItem>
               ))}
             </BreadcrumbList>
           </Breadcrumb>
         </div>
-
         <ModeToggle />
       </div>
     </header>
