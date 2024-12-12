@@ -12,10 +12,34 @@ export const pageMeta = [
     description: "user profiule containing bio, rewards, activity and schedule"
   },
   {
+    id: "events",
+    url: "/events",
+    title: "Events",
+    description: "events"
+  },
+  {
+    id: "chat",
+    url: "/chat",
+    title: "Chat",
+    description: "chat feed"
+  },
+  {
     id: "posts",
     url: "/posts",
     title: "Posts",
     description: "post feed"
+  },
+  {
+    id: "project-incubator",
+    url: "/project-incubator",
+    title: "Project Incubator",
+    description: "project incubator"
+  },
+  {
+    id: "spaces",
+    url: "/spaces",
+    title: "Spaces",
+    description: "spaces"
   },
   {
     id: "settings",
