@@ -1,0 +1,6 @@
+.section-text{
+  @apply text-muted-foreground mx-4
+}
+.contact-section-content{
+  @apply lg:grid lg:grid-cols-12 gap-5 mx-6 mt-4 lg:mt-8 mb-8
+}

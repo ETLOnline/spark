@@ -31,7 +31,7 @@ export default function Home() {
 								</Avatar>
 							</div>
 
-							<div className="absolute md:top-[-240px] md:left-[330px] lg:top-[-250px] lg:left-[500px]">
+							<div className="absolute md:top-[-240px] md:left-[316px] lg:top-[-250px] lg:left-[440px]">
 								<Avatar className="w-16 h-16">
 									<AvatarImage src="/images/home/avatar2.jpg" />
 									<AvatarFallback>avatar-1</AvatarFallback>
@@ -45,7 +45,7 @@ export default function Home() {
 								</Avatar>
 							</div>
 
-							<div className="absolute md:top-[70px] left-[40px] lg:top-[140px] lg:left-[180px]">
+							<div className="absolute md:top-[70px] left-[40px] lg:top-[115px] lg:left-[140px]">
 								<Avatar className="w-16 h-16">
 									<AvatarImage src="/images/home/avatar4.jpg" />
 									<AvatarFallback>avatar-1</AvatarFallback>
@@ -59,7 +59,7 @@ export default function Home() {
 								</Avatar>
 							</div>
 
-							<div className="absolute md:top-[-25px] left-[365px] lg:top-[20px] lg:left-[507px]">
+							<div className="absolute md:top-[-25px] left-[318px] lg:top-[30px] lg:left-[447px]">
 								<Avatar className="w-16 h-16">
 									<AvatarImage src="/images/home/avatar6.jpg" />
 									<AvatarFallback>avatar-1</AvatarFallback>
@@ -122,7 +122,7 @@ export default function Home() {
 				<Container>
 					<div className="section">
 						<h2 className="section-title text-center">Helping the world one mentor at a time</h2>
-						<div className="section-text text-center">
+						<div className="section-content text-center">
 							<p className='pb-4'>sifting through the overwhelming content on the internet will slow you down.break through the <br /> noise abd get specific advice directly from the experts.</p>
 							<Button variant={'outline'}>Let's Find a Mentor</Button>
 						</div>
@@ -173,7 +173,7 @@ export default function Home() {
 					<div className="section-title text-center">
 						<h2>Upcoming Sessions</h2>
 					</div>
-					<div className="section-text text-center">
+					<div className="text-center">
 						<p>Sign Up to one of our session and start your journey</p>
 					</div>
 

@@ -99,9 +99,9 @@ body {
     @apply  pt-8 pb-8
   }
   .section-title{
-      @apply text-3xl font-bold  mb-6 
+      @apply text-3xl font-bold  mb-5
   }
   .section-content{
-    @apply  mt-10
+    @apply  mt-8
   }
 }
