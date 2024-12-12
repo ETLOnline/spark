@@ -1,5 +1,5 @@
 import TagsInput from "react-tagsinput"
-import "react-tagsinput/react-tagsinput.css"
+import "./chips-input.css"
 
 type ChipsInputProps = {
   tags: string[]
