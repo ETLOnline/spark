@@ -46,6 +46,7 @@ export const chatRelations = relations(chatTable, ({ many }) => ({
 
 export type InsertChat = typeof chatTable.$inferInsert;
 export type SelectChat = typeof chatTable.$inferSelect;
+export type SelectChatWithRelation = typeof chatRelations.table.$inferSelect;
 
 export const messagesTable = sqliteTable("messages", {
   id: int().primaryKey({ autoIncrement: true }),
