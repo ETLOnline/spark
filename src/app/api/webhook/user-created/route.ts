@@ -71,7 +71,9 @@ export async function POST(req: Request) {
       first_name: userObj.first_name || '',
       last_name: userObj.last_name || '',
       email: userObj.email_addresses[0].email_address || '',
-      external_auth_id: userObj.id
+      external_auth_id: userObj.id,
+      profile_url: userObj.image_url || '',
+      meta: JSON.stringify(userObj)
     } 
     await CreateUser(newUser)
   }

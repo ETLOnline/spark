@@ -5,6 +5,7 @@ import {
   ClerkProvider
 } from '@clerk/nextjs'
 import { ThemeProvider } from "../components/ThemeProvider/ThemeProvider";
+import ClerkAuthListener from "../services/auth/ClerkAuthListner";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -29,6 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
+      <ClerkAuthListener />
       <html lang="en" suppressHydrationWarning>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}

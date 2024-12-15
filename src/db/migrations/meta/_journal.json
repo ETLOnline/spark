@@ -22,6 +22,13 @@
       "when": 1733561966470,
       "tag": "0002_glorious_turbo",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1734110607302,
+      "tag": "0003_careless_ghost_rider",
+      "breakpoints": true
     }
   ]
 }

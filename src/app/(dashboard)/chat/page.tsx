@@ -1,7 +1,7 @@
-import { Chat } from "@/src/components/dashboard/Chat";
+import { ChatScreen } from "@/src/components/dashboard/Chat";
 
 export default function ChatPage() {
-    return <Chat />
+    return <ChatScreen />
 }
 
 
