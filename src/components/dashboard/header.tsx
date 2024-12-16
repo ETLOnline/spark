@@ -24,7 +24,7 @@ const Header = () => {
   const hrefs: string[] = path
     .split("/")
     .map(
-      (pathName, i) =>
+      (pathName) =>
         "/" + path.substring(0, path.indexOf(pathName) + pathName.length)
     )
   const crumbs: Crumb[] = (() => {
@@ -39,7 +39,7 @@ const Header = () => {
   })()
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-2">
+    <header className="flex h-[12vh] shrink-0 items-center gap-2">
       <div className="flex items-center between justify-between w-full gap-2 px-4">
         <div className="flex items-center ">
           <SidebarTrigger className="-ml-1" />
