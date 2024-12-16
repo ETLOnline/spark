@@ -29,6 +29,13 @@
       "when": 1734110607302,
       "tag": "0003_careless_ghost_rider",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1734338944773,
+      "tag": "0004_clear_aaron_stack",
+      "breakpoints": true
     }
   ]
 }

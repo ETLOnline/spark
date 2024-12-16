@@ -114,11 +114,11 @@ export default async function ProfileScreen({ params: { id }, searchParams:{tab}
 					</Link>
         </TabsList>
         <TabsContent value="basic">
-          <ProfileBio
+          {/* <ProfileBio
             skillTags={skillTags}
             interests={interests}
             recommendations={recommendations}
-          />
+          /> */}
         </TabsContent>
         <TabsContent value="rewards">
           <ProfileRewards rewards={rewards} />
