@@ -9,7 +9,7 @@ import { ScrollBar } from "../../ui/scroll-area"
 import { Button } from "../../ui/button"
 import { useState } from "react"
 
-const Categories = () => {
+const CategorySelection = () => {
   const [categories, setCategories] = useState([
     "All",
     "Programming",
@@ -51,4 +51,4 @@ const Categories = () => {
   )
 }
 
-export default Categories
+export default CategorySelection

@@ -1,13 +1,13 @@
 import { Badge } from "../../ui/badge"
 import { Calendar } from "../../ui/calendar"
 import { Card, CardHeader, CardTitle, CardContent } from "../../ui/card"
-import { Event } from "./types/spaces.d"
+import { Event } from "./types/spaces"
 
 type UpcomingEventsProps = {
   events: Event[]
 }
 
-const UpcomingEvents: React.FC<UpcomingEventsProps> = (props) => {
+const UpcomingEventsCard: React.FC<UpcomingEventsProps> = (props) => {
   return (
     <Card>
       <CardHeader>
@@ -30,4 +30,4 @@ const UpcomingEvents: React.FC<UpcomingEventsProps> = (props) => {
   )
 }
 
-export default UpcomingEvents
+export default UpcomingEventsCard

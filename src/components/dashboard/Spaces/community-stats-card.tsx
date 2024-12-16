@@ -5,7 +5,7 @@ type CommunityStatsProps = {
   stats: Stat[]
 }
 
-const CommunityStats: React.FC<CommunityStatsProps> = (props) => {
+const CommunityStatsCard: React.FC<CommunityStatsProps> = (props) => {
   return (
     <Card>
       <CardHeader>
@@ -28,4 +28,4 @@ const CommunityStats: React.FC<CommunityStatsProps> = (props) => {
   )
 }
 
-export default CommunityStats
+export default CommunityStatsCard
