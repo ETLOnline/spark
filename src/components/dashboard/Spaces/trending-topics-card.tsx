@@ -10,7 +10,7 @@ type TendingTopicProps = {
   topics: Topic[]
 }
 
-const TrendingTopics: React.FC<TendingTopicProps> = (props) => {
+const TrendingTopicsCard: React.FC<TendingTopicProps> = (props) => {
   return (
     <Card>
       <CardHeader>
@@ -33,4 +33,4 @@ const TrendingTopics: React.FC<TendingTopicProps> = (props) => {
   )
 }
 
-export default TrendingTopics
+export default TrendingTopicsCard
