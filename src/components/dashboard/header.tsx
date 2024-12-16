@@ -50,8 +50,8 @@ const Header = () => {
                 <BreadcrumbLink href={"/"}>
                   <BreadcrumbPage>Spark</BreadcrumbPage>
                 </BreadcrumbLink>
-                <BreadcrumbSeparator />
               </BreadcrumbItem>
+              <BreadcrumbSeparator />
               {crumbs.map((crumb, i) => (
                 <BreadcrumbItem key={crumb.href}>
                   <BreadcrumbLink href={crumb.href}>
