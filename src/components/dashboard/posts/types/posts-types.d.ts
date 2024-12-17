@@ -12,9 +12,10 @@ export type Post = {
   comments: Comment[]
   hashtags: string[]
   createdAt: string
+  category?: string
 }
 
-export type PostFile = Post & {
+export type PostFile = Omit<Post, "content"> & {
   content: File
   fileName: string
   fileSize: number
@@ -29,6 +30,7 @@ export type NewPost = {
   options?: string[]
   fileName?: string
   fileSize?: number
+  category?: string
 }
 
 export type Comment = {

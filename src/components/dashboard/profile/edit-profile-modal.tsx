@@ -12,7 +12,7 @@ import {
 import { Input } from "../../ui/input"
 import { Label } from "../../ui/label"
 import { Textarea } from "@/src/components/ui/textarea"
-import ChipsInput from "@/src/components/chips-input"
+import ChipsInput from "@/src/components/ChipsInput"
 
 type EditProfileModalProps = {
   bio: string

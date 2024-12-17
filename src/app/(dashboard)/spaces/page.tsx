@@ -1,12 +1,19 @@
 "use client"
 
-import CreatePostForm from "@/src/components/dashboard/posts/create-post-form"
-import PostFeed from "@/src/components/dashboard/posts/post-feed"
+import CreatePostForm from "@/src/components/dashboard/Posts/create-post-form"
+import PostFeed from "@/src/components/dashboard/Posts/post-feed"
 import {
   Post,
   PostFile,
   PostPoll
-} from "@/src/components/dashboard/posts/types/posts-types.d"
+} from "@/src/components/dashboard/Posts/types/posts-types"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription
+} from "@/src/components/ui/card"
 import { useState } from "react"
 
 const samplePosts: (Post | PostFile | PostPoll)[] = [
@@ -66,11 +73,20 @@ const samplePosts: (Post | PostFile | PostPoll)[] = [
 const SpacesPage: React.FC = () => {
   const [posts, setPosts] =
     useState<(Post | PostFile | PostPoll)[]>(samplePosts)
+  const [activeCategory, setActiveCategory] = useState("All")
 
   return (
     <div className="container mx-auto space-y-8 max-w-3xl h-[88vh] overflow-auto pr-4">
-      <CreatePostForm setPosts={setPosts} posts={posts} />
-      <PostFeed posts={posts} setPosts={setPosts} />
+      <CreatePostForm setPosts={setPosts} posts={posts} variant="spaces" />
+      <Card>
+        <CardHeader>
+          <CardTitle>Feed</CardTitle>
+          <CardDescription>Latest posts from {activeCategory}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PostFeed posts={posts} setPosts={setPosts} />
+        </CardContent>
+      </Card>
     </div>
   )
 }

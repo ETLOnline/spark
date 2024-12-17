@@ -13,18 +13,18 @@ type Props = {
 const PostFeed: React.FC<Props> = (props) => {
   return (
     <div className="space-y-6">
-      {props.posts.map((post: Post) =>
+      {props.posts.map((post: Post | PostFile | PostPoll) =>
         post.type === "text" ? (
           <TextPost
             key={post.id}
-            post={post}
+            post={post as Post}
             posts={props.posts}
             setPosts={props.setPosts}
           />
         ) : post.type === "image" ? (
           <ImagePost
             key={post.id}
-            post={post}
+            post={post as Post}
             posts={props.posts}
             setPosts={props.setPosts}
           />
