@@ -31,7 +31,7 @@ const CategorySelection = () => {
         <CardTitle>Categories</CardTitle>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="w-full overflow-auto">
+        <ScrollArea className="w-full overflow-auto pb-3">
           <div className="flex w-[100px] space-x-2 p-1">
             {categories.map((category) => (
               <Button

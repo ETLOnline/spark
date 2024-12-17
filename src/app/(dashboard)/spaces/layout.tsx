@@ -7,7 +7,7 @@ const SpacesLayout = ({ children }: { children: React.ReactNode }) => {
       <section className="flex space-x-4 w-full">
         <CategorySelection />
       </section>
-      <div className="flex-grow flex justify-center items-start space-x-4">
+      <div className="flex-grow flex justify-center items-start space-x-4 pt-4">
         <main className="w-3/4 space-y-4 post-feed">{children}</main>
         <SpacesStats />
       </div>

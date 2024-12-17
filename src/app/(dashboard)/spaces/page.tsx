@@ -68,7 +68,7 @@ const SpacesPage: React.FC = () => {
     useState<(Post | PostFile | PostPoll)[]>(samplePosts)
 
   return (
-    <div className="container mx-auto space-y-8 max-w-3xl h-[88vh] overflow-auto">
+    <div className="container mx-auto space-y-8 max-w-3xl h-[88vh] overflow-auto pr-4">
       <CreatePostForm setPosts={setPosts} posts={posts} />
       <PostFeed posts={posts} setPosts={setPosts} />
     </div>
