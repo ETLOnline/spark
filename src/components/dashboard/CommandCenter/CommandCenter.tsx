@@ -26,15 +26,18 @@ import {
 import { Input } from "../../ui/input"
 import { useRouter } from "next/navigation"
 import { useDebounce, useDebouncedCallback } from 'use-debounce';
-import { FindUserWildCard } from "@/src/server-actions/User/FindUserWildCard"
+import { FindUserWildCardAction } from "@/src/server-actions/User/FindUserWildCardAction"
 import { SelectUser } from "@/src/db/schema"
 import { Avatar, AvatarImage } from "../../ui/avatar"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import Loader from "../../common/Loader/Loader"
 
 export function CommandCenter() {
   const [open, setOpen] = React.useState(false)
 	const router = useRouter()
 	const [inputValue ,  setInputValue] = React.useState<string>('')
 	const [peopleList, setPeopleList] = React.useState<SelectUser[]>([])
+  const { loading, state, error, execute:FindUserWildCard } = useServerAction(FindUserWildCardAction)
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -58,11 +61,15 @@ export function CommandCenter() {
       setPeopleList([]);
       return;
     }
-		const usersRes = await FindUserWildCard(value)
-		if(usersRes.success){
-			setPeopleList(usersRes.data)
-		}
+		await FindUserWildCard(value)
+		
 	}, 800)
+
+  React.useEffect(() => {
+    if (state?.success) {
+      setPeopleList(state.data)
+    }
+  }, [state])
 	
   return (
     <div>
@@ -73,11 +80,17 @@ export function CommandCenter() {
         <CommandInput placeholder="Type a command or search..." onValueChange={value => {handleInputValueChange(value); setInputValue(value)}} />
 				
         <CommandList>
+          {
+            loading && 
+            <div className="w-full flex justify-center p-2">
+              <Loader />
+            </div>
+          }
           <CommandEmpty>No results found.</CommandEmpty>
 					
 					<CommandGroup heading="Users" >
 						{peopleList.map((person) => (
-							<CommandItem value={person.first_name + ' ' + person.last_name} key={person.id} onSelect={()=> handleItemPress(`/profile/${person.unique_id}`)} >
+							<CommandItem value={`${person.first_name} ${person.last_name}`} key={person.id} onSelect={()=> handleItemPress(`/profile/${person.unique_id}`)} >
 								<Avatar>
 									<AvatarImage src={person?.profile_url || ''} alt={person.first_name} />
 								</Avatar>

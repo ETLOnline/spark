@@ -1,56 +1,39 @@
 'use server'
 
-import { db } from "@/src/db";
-import { userContactsTable, usersTable } from "@/src/db/schema";
-import { and, eq } from "drizzle-orm";
+import { CreateContact, DeleteContact, GetContact, GetContacts } from "@/src/db/data-access/contact/query";
+import { CreateServerAction } from "..";
 
-export const CreateContact = async (user_id: string, contact_id: string) => {
+export const CreateContactAction = CreateServerAction( true, async (user_id: string, contact_id: string) => {
     try{
-        await db.insert(userContactsTable).values({ user_id, contact_id });
+        await CreateContact(user_id, contact_id);
         return { success: true }
     }catch(error){
         return { error: error }
     }
-}
+})
 
-export const DeleteContact = async (user_id: string, contact_id: string) => {
+export const DeleteContactAction = CreateServerAction( true ,async (user_id: string, contact_id: string) => {
     try{
-        await db.delete(userContactsTable).where(
-            and(
-                eq(userContactsTable.contact_id, contact_id),
-                eq(userContactsTable.user_id, user_id)
-            )
-        );
+        await DeleteContact(user_id, contact_id);
         return { success: true }
     }catch(error){
         return { error: error }
     }
-}
+})
 
-export const GetContacts = async (user_id: string) => {
+export const GetContactsAction = CreateServerAction( true , async (user_id: string) => {
     try{
-        return await db.select().from(userContactsTable).where(eq(userContactsTable.user_id, user_id)).leftJoin(
-            usersTable,
-            eq(usersTable.id, userContactsTable.contact_id)
-        ).all();
+        return await GetContacts(user_id);
     }catch(error){
         return { error: error }
     }
-}
+})
 
-export const GetContact = async (user_id: string, contact_id: string) => {
+export const GetContactAction = CreateServerAction( true , async (user_id: string, contact_id: string) => {
     try{
-        const contact = await db.select().from(userContactsTable).where(
-            and(
-                eq(userContactsTable.user_id, user_id),
-                eq(userContactsTable.contact_id, contact_id)
-            )
-        ).leftJoin(
-            usersTable,
-            eq(usersTable.id, userContactsTable.contact_id)
-        ).get();
+        const contact = await GetContact(user_id, contact_id);
         return contact;
     }catch(error){
         return { error: error }
     }
-}
+})

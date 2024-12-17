@@ -13,7 +13,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/src/components/ui/tabs"
-import { FindUserByUniqueId } from "@/src/server-actions/User/FindUserByUniqueId"
+import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
 import { CalendarIcon, StarIcon, TrophyIcon, UserIcon } from "lucide-react"
 import Link from "next/link"
 
@@ -58,7 +58,7 @@ interface ProfileScreenProps {
 
 export default async function ProfileScreen({ params: { id }, searchParams:{tab} }: ProfileScreenProps) {
 
-	const userRes = await FindUserByUniqueId(id)
+	const userRes = await FindUserByUniqueIdAction(id)
 	if(userRes.error || !userRes.data){
 		return <NotFound />
 	}
@@ -114,11 +114,12 @@ export default async function ProfileScreen({ params: { id }, searchParams:{tab}
 					</Link>
         </TabsList>
         <TabsContent value="basic">
-          {/* <ProfileBio
+          <ProfileBio
             skillTags={skillTags}
             interests={interests}
             recommendations={recommendations}
-          /> */}
+            editable={false}
+          />
         </TabsContent>
         <TabsContent value="rewards">
           <ProfileRewards rewards={rewards} />
