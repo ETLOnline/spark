@@ -1,6 +1,4 @@
-import { db } from '@/src/db';
-import { chatTable, userChatsTable } from './../../db/schema';
-import { eq } from 'drizzle-orm';
+
 import { GetChatWithMessages, GetUserChats } from '@/src/db/data-access/chat/query';
 'use server'
 

@@ -1,7 +1,5 @@
 'use server'
 
-import { db } from "@/src/db";
-import { eq, like } from "drizzle-orm";
 import { CreateServerAction } from "..";
 import { FindUserWildCard } from "@/src/db/data-access/user/query";
 
