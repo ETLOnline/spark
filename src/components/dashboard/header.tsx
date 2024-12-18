@@ -13,12 +13,16 @@ import {
 import { ModeToggle } from "../ThemeProvider/ThemeToggle"
 import { usePathname } from "next/navigation"
 import { pageMeta, PageMeta } from "@/src/utils/constants"
+import { MAIN_WIDTH } from "@/src/components/ui/sidebar"
+import { useEffect, useRef } from "react"
+
+type Crumb = {
+  href: string
+  path: string
+}
 
 const Header = () => {
-  type Crumb = {
-    href: string
-    path: string
-  }
+  const headerRef = useRef<HTMLElement>(null)
 
   const path: string = usePathname().substring(1)
   const hrefs: string[] = path
@@ -38,8 +42,27 @@ const Header = () => {
     return [...tempCrumbs]
   })()
 
+  useEffect(() => {
+    if (headerRef.current) {
+      if (path.startsWith("spaces")) {
+        headerRef.current.style.position = "sticky"
+        headerRef.current.style.top = "0"
+      } else {
+        headerRef.current.style.position = "static"
+      }
+    }
+  }, [path])
+
   return (
-    <header className="flex h-[12vh] shrink-0 items-center gap-2">
+    <header
+      className="flex h-[12vh] w-[--main-width] shrink-0 items-center gap-2 bg-background z-10 rounded-lg"
+      style={
+        {
+          "--main-width": MAIN_WIDTH + "vw"
+        } as React.CSSProperties
+      }
+      ref={headerRef}
+    >
       <div className="flex items-center between justify-between w-full gap-2 px-4">
         <div className="flex items-center ">
           <SidebarTrigger className="-ml-1" />

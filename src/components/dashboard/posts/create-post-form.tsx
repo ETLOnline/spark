@@ -36,7 +36,7 @@ import { Textarea } from "../../ui/textarea"
 type Props = {
   setPosts: (posts: (Post | PostFile | PostPoll)[]) => void
   posts: (Post | PostFile | PostPoll)[]
-  variant: "posts" | "spaces"
+  variant?: "posts" | "spaces"
 }
 
 const categories = [

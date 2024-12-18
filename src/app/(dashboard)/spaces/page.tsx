@@ -76,7 +76,7 @@ const SpacesPage: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState("All")
 
   return (
-    <div className="container mx-auto space-y-8 max-w-3xl h-[88vh] overflow-auto pr-4">
+    <div className="container mx-auto space-y-8 max-w-3xl">
       <CreatePostForm setPosts={setPosts} posts={posts} variant="spaces" />
       <Card>
         <CardHeader>
