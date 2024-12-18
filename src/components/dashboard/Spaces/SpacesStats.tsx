@@ -44,7 +44,7 @@ const SpacesStats = () => {
 
   return (
     !isMobileOrTab && (
-      <aside className="w-1/4 space-y-4 space-info">
+      <aside className="space-y-4 space-info pt-[128px] mt-[-128px] sticky top-[16px]">
           <TrendingTopicsCard topics={trendingTopics} />
           <UpcomingEventsCard events={upcomingEvents} />
           <CommunityStatsCard stats={stats} />
