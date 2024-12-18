@@ -13,13 +13,14 @@ import {
 import { ModeToggle } from "../ThemeProvider/ThemeToggle"
 import { usePathname } from "next/navigation"
 import { pageMeta, PageMeta } from "@/src/utils/constants"
+import { CommandCenter } from "./CommandCenter/CommandCenter"
+import { SignedIn } from "@clerk/nextjs"
 
+type Crumb = {
+  href: string
+  path: string
+}
 const Header = () => {
-  type Crumb = {
-    href: string
-    path: string
-  }
-
   const path: string = usePathname().substring(1)
   const hrefs: string[] = path
     .split("/")
@@ -63,6 +64,9 @@ const Header = () => {
             </BreadcrumbList>
           </Breadcrumb>
         </div>
+        <SignedIn>
+          <CommandCenter />
+        </SignedIn>
         <ModeToggle />
       </div>
     </header>
