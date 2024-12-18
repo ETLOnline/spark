@@ -55,7 +55,7 @@ const Header = () => {
 
   return (
     <header
-      className="flex h-[12vh] w-[--main-width] shrink-0 items-center gap-2 bg-background z-10 rounded-lg"
+      className="flex h-[12vh] w-[--main-width] shrink-0 items-center gap-2 bg-background z-10 rounded-lg [@media(max-width:945px)]:w-full [@media(max-width:945px)]:h-[8vh]"
       style={
         {
           "--main-width": MAIN_WIDTH + "vw"
