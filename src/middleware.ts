@@ -13,6 +13,7 @@ export const config = {
     '/',
     '/contact-us',
     '/profile(.*)',
+    '/posts',
     // Always run for API routes
     // '/(api|trpc)(.*)',
     // '/sign-in(.*)',
