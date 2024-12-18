@@ -46,7 +46,6 @@ const Header = () => {
     if (headerRef.current) {
       if (path.startsWith("spaces")) {
         headerRef.current.style.position = "sticky"
-        headerRef.current.style.top = "0"
       } else {
         headerRef.current.style.position = "static"
       }
@@ -55,12 +54,7 @@ const Header = () => {
 
   return (
     <header
-      className="flex h-[12vh] w-[--main-width] shrink-0 items-center gap-2 bg-background z-10 rounded-lg [@media(max-width:945px)]:w-full [@media(max-width:945px)]:h-[8vh]"
-      style={
-        {
-          "--main-width": MAIN_WIDTH + "vw"
-        } as React.CSSProperties
-      }
+      className="flex h-[12vh] top-0 shrink-0 items-center gap-2 bg-background z-10 rounded-lg [@media(max-width:945px)]:w-full [@media(max-width:945px)]:h-[8vh]"
       ref={headerRef}
     >
       <div className="flex items-center between justify-between w-full gap-2 px-4">
