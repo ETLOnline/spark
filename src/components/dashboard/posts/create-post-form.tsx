@@ -65,20 +65,32 @@ const CreatePostForm: React.FC<Props> = ({
   })
 
   const handleCreatePost = () => {
-    const newPostObj: Post | PostFile | PostPoll = {
+    const tempNewPostObj: Post = {
       id: (posts.length + 1).toString(),
       author: { name: "Current User", avatar: "/avatars/04.png" },
-      content: newPost.fileName
-        ? (newPost.content as File)
-        : (newPost.content as string),
+      content: newPost.content as string,
       type: newPost.type,
       likes: 0,
       comments: [],
       hashtags: newPost.hashtags.filter((tag: string) => tag.trim() !== ""),
-      createdAt: new Date().toISOString(),
-      fileName: newPost.fileName as string,
-      fileSize: newPost.fileSize as number
+      createdAt: new Date().toISOString()
     }
+    const newPostObj: Post | PostFile | PostPoll = newPost.fileName
+      ? ({
+          ...tempNewPostObj,
+          content: newPost.content as File,
+          fileName: newPost.fileName as string,
+          fileSize: newPost.fileSize as number
+        } as PostFile)
+      : newPost.options
+      ? ({
+          ...tempNewPostObj,
+          options: newPost.options
+        } as PostPoll)
+      : ({
+          ...tempNewPostObj
+        } as Post)
+
     setPosts([newPostObj, ...posts])
     setNewPost({ content: "", type: "text", hashtags: [] })
   }
@@ -133,8 +145,8 @@ const CreatePostForm: React.FC<Props> = ({
               <Select
                 // id="category"
                 value={newPost.category}
-                onValueChange={(value) =>
-                  setNewPost({ ...newPost, category: value })
+                onValueChange={
+                  (value) => setNewPost({ ...newPost, category: value })
                   // TODO: set active category after state management is integrated
                 }
               >
