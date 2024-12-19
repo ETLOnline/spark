@@ -19,10 +19,9 @@ import {
   LayoutDashboard,
 } from "lucide-react"
 
-import { NavMain } from "@/src/components/dashboard/nav-main"
-import { NavProjects } from "@/src/components/dashboard/nav-projects"
-import { NavSecondary } from "@/src/components/dashboard/nav-secondary"
-import { NavUser } from "@/src/components/dashboard/nav-user"
+import NavMain from "@/src/components/dashboard/nav-main"
+import NavSecondary from "@/src/components/dashboard/nav-secondary"
+import NavUser from "@/src/components/dashboard/nav-user"
 import {
   Sidebar,
   SidebarContent,
@@ -150,7 +149,7 @@ const data = {
   ],
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export default function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>

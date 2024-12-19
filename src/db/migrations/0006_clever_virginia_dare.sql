@@ -1,0 +1,2 @@
+ALTER TABLE `user_contacts` ALTER COLUMN "user_id" TO "user_id" text NOT NULL REFERENCES users(unique_id) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `user_contacts` ALTER COLUMN "contact_id" TO "contact_id" text NOT NULL REFERENCES users(unique_id) ON DELETE no action ON UPDATE no action;

@@ -32,7 +32,7 @@ import {
 import { useRouter } from "next/navigation"
 import { SignOutButton, UserProfile, useUser } from "@clerk/nextjs"
 
-export function NavUser() {
+export default function NavUser() {
   const { isMobile } = useSidebar()
   const router = useRouter()
   const { user } = useUser()
