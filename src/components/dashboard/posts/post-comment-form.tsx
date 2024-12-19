@@ -4,7 +4,7 @@ import { Button } from "@/src/components/ui/button"
 import { useState } from "react"
 import { Input } from "@/src/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import { Post } from "./types/posts-types.d"
+import { Post } from "./types/posts-types"
 
 type Props = {
   posts: Post[]
@@ -26,9 +26,9 @@ const PostCommentForm: React.FC<Props> = (props) => {
               id: `c${post.comments.length + 1}`,
               author: { name: "Current User", avatar: "/avatars/04.png" },
               content: newComment[postId] || "",
-              createdAt: new Date().toISOString(),
-            },
-          ],
+              createdAt: new Date().toISOString()
+            }
+          ]
         }
       }
       return post
@@ -49,7 +49,7 @@ const PostCommentForm: React.FC<Props> = (props) => {
         onChange={(e) =>
           setNewComment({
             ...newComment,
-            [props.postId]: e.target.value,
+            [props.postId]: e.target.value
           })
         }
         className="flex-1"
