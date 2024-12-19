@@ -21,7 +21,7 @@ const ClerkAuthListener: React.FC = () => {
 
   useEffect(() => {
     if (isSignedIn && user) {
-      // handleSetUser(user)
+      handleSetUser(user)
         
     } else {
       setUser(null);

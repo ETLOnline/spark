@@ -3,7 +3,7 @@ import './header.css'
 import { LinkAsButton } from '@/src/components/LinkAsButton/LinkAsButton'
 import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import Navbar from '../NavBar/NavbarComponent'
-import { ModeToggle } from '../ThemeProvider/ThemeToggle'
+import ModeToggle  from '../ThemeProvider/ThemeToggle'
 
 function Header() {
 	return (

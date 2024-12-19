@@ -13,6 +13,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/src/components/ui/tabs"
+import { SelectUser } from "@/src/db/schema"
 import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
 import { CalendarIcon, StarIcon, TrophyIcon, UserIcon } from "lucide-react"
 import Link from "next/link"
@@ -60,12 +61,13 @@ export default async function ProfileScreen({ params: { id }, searchParams:{tab}
 
 	const userRes = await FindUserByUniqueIdAction(id)
 	if(userRes.error || !userRes.data){
-		return <NotFound />
+    return <NotFound />
 	}
 
 	const user = userRes.data
 
   return (
+    
     <div className="container mx-auto p-6">
       <div className="mb-6 flex items-center justify-between">
 				<div className="flex flex items-center space-x-4">
@@ -78,7 +80,7 @@ export default async function ProfileScreen({ params: { id }, searchParams:{tab}
 						<p className="text-muted-foreground">{user?.email}</p>
 					</div>
 				</div>
-				<ProfileFollowActions />
+				<ProfileFollowActions user={user} />
       </div>
       <Tabs defaultValue="basic" className="space-y-4" value={tab || 'basic'}>
         <TabsList>

@@ -20,7 +20,7 @@ import {
 } from "@/src/components/ui/sidebar"
 import Link from "next/link"
 
-export function NavMain({
+export default function NavMain({
   label,
   items,
 }: {

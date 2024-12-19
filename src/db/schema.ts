@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { relations, sql } from "drizzle-orm";
-import { int, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { foreignKey, int, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 
 const timestamps = {
@@ -22,6 +22,7 @@ export const usersTable = sqliteTable("users", {
 
 export const usersRelations = relations(usersTable, ({ many }) => ({
   userChats: many(userChatsTable),
+  userContacts: many(userContactsTable),
 }));
 
 export type InsertUser = typeof usersTable.$inferInsert ;
@@ -104,8 +105,22 @@ export const userContactsTable = sqliteTable("user_contacts", {
   is_accepted: int().notNull().default(0),
   is_blocked: int().notNull().default(0),
   is_following: int().notNull().default(0),
-  ...timestamps
-});
+  ...timestamps,
+  
+}, (t) => ({
+  pk: primaryKey({columns: [t.user_id, t.contact_id] }),
+}));
+
+export const useContactsRelations = relations(userContactsTable, ({ one }) => ({
+	user: one(usersTable, {
+		fields: [userContactsTable.user_id],
+		references: [usersTable.unique_id],
+	}),
+	contact: one(usersTable, {
+		fields: [userContactsTable.contact_id],
+		references: [usersTable.unique_id],
+	}),
+}));
 
 export type InsertUserContact = typeof userContactsTable.$inferInsert;
 export type SelectUserContact = typeof userContactsTable.$inferSelect;
