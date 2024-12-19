@@ -20,5 +20,5 @@ export function useServerAction<T, Args extends any[]>(
     }
   };
 
-  return { loading, state, error, execute };
+  return [ loading, state, error, execute ] as const;
 }

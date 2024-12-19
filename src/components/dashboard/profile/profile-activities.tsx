@@ -23,8 +23,8 @@ const ProfileActivities: React.FC<Props> = (props) => {
       </CardHeader>
       <CardContent>
         <ul className="space-y-4">
-          {props.activities.map((activity) => (
-            <li className="flex items-start space-x-3">
+          {props.activities.map((activity, i) => (
+            <li key={i} className="flex items-start space-x-3">
               <StarIcon className="mt-0.5 h-5 w-5 text-blue-500" />
               <div>
                 <p className="text-sm">{activity.description}</p>

@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import {
   Calculator,
   Calendar,
@@ -29,17 +28,19 @@ import { useDebounce, useDebouncedCallback } from 'use-debounce';
 import { FindUserWildCardAction } from "@/src/server-actions/User/FindUserWildCardAction"
 import { SelectUser } from "@/src/db/schema"
 import { Avatar, AvatarImage } from "../../ui/avatar"
-import { useServerAction } from "@/src/hooks/useServerAction"
+import {useServerAction}  from "@/src/hooks/useServerAction"
 import Loader from "../../common/Loader/Loader"
+import { useEffect, useState } from "react"
 
-export function CommandCenter() {
-  const [open, setOpen] = React.useState(false)
+export default function CommandCenter() {
+  const [open, setOpen] = useState(false)
 	const router = useRouter()
-	const [inputValue ,  setInputValue] = React.useState<string>('')
-	const [peopleList, setPeopleList] = React.useState<SelectUser[]>([])
-  const { loading, state, error, execute:FindUserWildCard } = useServerAction(FindUserWildCardAction)
+	const [inputValue ,  setInputValue] = useState<string>('')
+	const [peopleList, setPeopleList] = useState<SelectUser[]>([])
+  const [ loading, state, error, FindUserWildCard ] = useServerAction(FindUserWildCardAction)
 
-  React.useEffect(() => {
+  useEffect(() => {
+
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
@@ -65,7 +66,7 @@ export function CommandCenter() {
 		
 	}, 800)
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (state?.success) {
       setPeopleList(state.data)
     }
