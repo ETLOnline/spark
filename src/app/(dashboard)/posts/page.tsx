@@ -1,13 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import CreatePostForm from "@/src/components/dashboard/posts/create-post-form"
-import PostFeed from "@/src/components/dashboard/posts/post-feed"
+import PostFeed from "@/src/components/dashboard/post-feed"
 import {
   Post,
   PostFile,
-  PostPoll,
-} from "@/src/components/dashboard/posts/types/posts-types.d"
+  PostPoll
+} from "@/src/components/dashboard/Posts/types/posts-types"
+import CreatePostForm from "@/src/components/dashboard/create-post-form"
 
 const samplePosts: (Post | PostFile | PostPoll)[] = [
   {
@@ -22,11 +22,11 @@ const samplePosts: (Post | PostFile | PostPoll)[] = [
         id: "c1",
         author: { name: "Bob Smith", avatar: "/avatars/02.png" },
         content: "What's the book called?",
-        createdAt: "2023-04-15T11:30:00Z",
-      },
+        createdAt: "2023-04-15T11:30:00Z"
+      }
     ],
     hashtags: ["ArtificialIntelligence", "Reading"],
-    createdAt: "2023-04-15T10:30:00Z",
+    createdAt: "2023-04-15T10:30:00Z"
   },
   {
     id: "2",
@@ -37,7 +37,7 @@ const samplePosts: (Post | PostFile | PostPoll)[] = [
     likes: 32,
     comments: [],
     hashtags: ["CodingSetup", "WorkFromHome"],
-    createdAt: "2023-04-14T14:45:00Z",
+    createdAt: "2023-04-14T14:45:00Z"
   },
   {
     id: "3",
@@ -48,7 +48,7 @@ const samplePosts: (Post | PostFile | PostPoll)[] = [
     comments: [],
     hashtags: ["Programming", "DevLife"],
     createdAt: "2023-04-13T09:15:00Z",
-    options: ["Python", "JavaScript"],
+    options: ["Python", "JavaScript"]
   },
   {
     id: "4",
@@ -59,8 +59,8 @@ const samplePosts: (Post | PostFile | PostPoll)[] = [
     comments: [],
     hashtags: ["Programming", "DevLife"],
     createdAt: "2023-04-13T09:15:00Z",
-    fileName: "brain.exe",
-  },
+    fileName: "brain.exe"
+  }
 ]
 
 const Posts: React.FC = () => {
