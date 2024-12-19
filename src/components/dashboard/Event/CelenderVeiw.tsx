@@ -13,7 +13,6 @@ interface Event {
 
 interface Props {
   events: Event[];
-  setEvents: React.Dispatch<React.SetStateAction<Event[]>>;
 }
 
 function CelenderVeiw({ events }: Props) {

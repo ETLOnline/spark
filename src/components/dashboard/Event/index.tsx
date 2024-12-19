@@ -67,7 +67,7 @@ export function EventsScreen() {
           <UpComingEvent events={events} setEvents={setEvents} />
         </TabsContent>
         <TabsContent value="calendar" className="flex-1">
-          <CelenderVeiw events={events} setEvents={setEvents} />
+          <CelenderVeiw events={events} />
         </TabsContent>
       </Tabs>
     </div>
