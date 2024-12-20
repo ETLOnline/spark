@@ -92,6 +92,13 @@
       "when": 1734689333231,
       "tag": "0012_condemned_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1734690801429,
+      "tag": "0013_closed_toro",
+      "breakpoints": true
     }
   ]
 }

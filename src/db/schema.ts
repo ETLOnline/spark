@@ -19,14 +19,14 @@ export const usersTable = sqliteTable("users", {
   meta: text(),
 });
 
-// export const usersRelations = relations(usersTable, ({ many }) => ({
-//   chats: many(userChatsTable,{
-//     relationName: 'chats'
-//   }),
-//   contacts: many(userContactsTable,{
-//     relationName: 'contacts',
-//   }),
-// }));
+export const usersRelations = relations(usersTable, ({ many }) => ({
+  chats: many(userChatsTable,{
+    relationName: 'userToChat',
+  }),
+  contacts: many(userContactsTable,{
+    relationName: 'userToContact',
+  }),
+}));
 
 export type InsertUser = typeof usersTable.$inferInsert ;
 export type SelectUser = Omit<typeof usersTable.$inferSelect , 'meta'>;
@@ -43,14 +43,14 @@ export const chatsTable = sqliteTable("chats", {
   ...timestamps
 });
 
-// export const chatsRelations = relations(chatsTable, ({ many }) => ({
-// 	messages: many(messagesTable,{
-//     relationName: "messages"
-//   }),
-// }));
-// chat_users: many(userChatsTable,{
-//   relationName: "chat_users"
-// }),
+export const chatsRelations = relations(chatsTable, ({ many }) => ({
+	messages: many(messagesTable,{
+    relationName: "messageToChat"
+  }),
+  users: many(userChatsTable,{
+    relationName: "userToChat"
+  }),
+}));
 
 export type InsertChat = typeof chatsTable.$inferInsert;
 export type SelectChat = typeof chatsTable.$inferSelect;
@@ -67,8 +67,6 @@ export const messagesTable = sqliteTable("messages", {
 },
   (t) => ({
     pk: primaryKey({ columns: [t.id] }),
-    chat_id: foreignKey({ columns: [t.chat_id], foreignColumns: [chatsTable.id] }),
-    sender_id: foreignKey({ columns: [t.sender_id], foreignColumns: [usersTable.unique_id] })
   })
 );
 
@@ -76,12 +74,12 @@ export const messagesRelations = relations(messagesTable, ({ one }) => ({
 	chat: one(chatsTable, {
 		fields: [messagesTable.chat_id],
 		references: [chatsTable.id],
-    relationName: "chat"
+    relationName: "messageToChat"
 	}),
   sender: one(usersTable, {
     fields: [messagesTable.sender_id],
     references: [usersTable.unique_id],
-    relationName: "sender"
+    relationName: "messageToUser"
   })
 }));
 
@@ -99,7 +97,7 @@ export const userChatsRelations = relations(userChatsTable, ({ one }) => ({
   chat: one(chatsTable, {
     fields: [userChatsTable.chat_id],
     references: [chatsTable.id],
-    relationName: "chat"
+    relationName: "userToChat"
   }),
   user: one(usersTable, {
     fields: [userChatsTable.user_id],
@@ -136,12 +134,12 @@ export const userContactsRelations = relations(userContactsTable, ({ one }) => (
 	user: one(usersTable, {
 		fields: [userContactsTable.user_id],
 		references: [usersTable.unique_id],
-    relationName: "user"
+    relationName: "userToUser"
 	}),
 	contact: one(usersTable, {
 		fields: [userContactsTable.contact_id],
 		references: [usersTable.unique_id],
-    relationName: "contact"
+    relationName: "userToContact"
 	}),
 }));
 
