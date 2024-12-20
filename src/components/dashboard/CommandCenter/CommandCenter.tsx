@@ -91,7 +91,7 @@ export default function CommandCenter() {
 					
 					<CommandGroup heading="Users" >
 						{peopleList.map((person) => (
-							<CommandItem value={`${person.first_name} ${person.last_name}`} key={person.id} onSelect={()=> handleItemPress(`/profile/${person.unique_id}`)} >
+							<CommandItem value={`${person.first_name} ${person.last_name}`} key={person.unique_id} onSelect={()=> handleItemPress(`/profile/${person.unique_id}`)} >
 								<Avatar>
 									<AvatarImage src={person?.profile_url || ''} alt={person.first_name} />
 								</Avatar>
