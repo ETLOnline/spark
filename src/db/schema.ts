@@ -10,25 +10,28 @@ const timestamps = {
 }
 
 export const usersTable = sqliteTable("users", {
-  id: int().primaryKey({ autoIncrement: true }),
+  unique_id: text("unique_id", { length: 36 }).primaryKey().$defaultFn(() => randomUUID()),
   first_name: text().notNull(),
   last_name: text().notNull(),
   email: text().notNull().unique(),
   external_auth_id: text().notNull().unique(),
   profile_url: text(),
-  unique_id: text("unique_id", { length: 36 }).$defaultFn(() => randomUUID()),
   meta: text(),
 });
 
 export const usersRelations = relations(usersTable, ({ many }) => ({
-  userChats: many(userChatsTable),
-  userContacts: many(userContactsTable),
+  chats: many(userChatsTable,{
+    relationName: 'userToChat',
+  }),
+  contacts: many(userContactsTable,{
+    relationName: 'userToContact',
+  }),
 }));
 
 export type InsertUser = typeof usersTable.$inferInsert ;
 export type SelectUser = Omit<typeof usersTable.$inferSelect , 'meta'>;
 
-export const chatTable = sqliteTable("chat", {
+export const chatsTable = sqliteTable("chats", {
   id: int().primaryKey({ autoIncrement: true }),
   channel_id: text().notNull(),
   name: text(),
@@ -40,14 +43,18 @@ export const chatTable = sqliteTable("chat", {
   ...timestamps
 });
 
-export const chatRelations = relations(chatTable, ({ many }) => ({
-	messages: many(messagesTable),
-  chatUsers: many(userChatsTable),
+export const chatsRelations = relations(chatsTable, ({ many }) => ({
+	messages: many(messagesTable,{
+    relationName: "messageToChat"
+  }),
+  users: many(userChatsTable,{
+    relationName: "userToChat"
+  }),
 }));
 
-export type InsertChat = typeof chatTable.$inferInsert;
-export type SelectChat = typeof chatTable.$inferSelect;
-export type SelectChatWithRelation = typeof chatRelations.table.$inferSelect;
+export type InsertChat = typeof chatsTable.$inferInsert;
+export type SelectChat = typeof chatsTable.$inferSelect;
+// export type SelectChatWithRelation = typeof chatRelations.table.$inferSelect;
 
 export const messagesTable = sqliteTable("messages", {
   id: int().primaryKey({ autoIncrement: true }),
@@ -57,33 +64,45 @@ export const messagesTable = sqliteTable("messages", {
   message: text().notNull(),
   timestamp: int().notNull(),
   ...timestamps
-});
+},
+  (t) => ({
+    pk: primaryKey({ columns: [t.id] }),
+  })
+);
 
 export const messagesRelations = relations(messagesTable, ({ one }) => ({
-	chat: one(chatTable, {
+	chat: one(chatsTable, {
 		fields: [messagesTable.chat_id],
-		references: [chatTable.id],
+		references: [chatsTable.id],
+    relationName: "messageToChat"
 	}),
+  sender: one(usersTable, {
+    fields: [messagesTable.sender_id],
+    references: [usersTable.unique_id],
+    relationName: "messageToUser"
+  })
 }));
 
 export type InsertMessage = typeof messagesTable.$inferInsert;
 export type SelectMessage = typeof messagesTable.$inferSelect;
 
 export const userChatsTable = sqliteTable("user_chats", {
-  user_id: text().notNull().references(()=>usersTable.unique_id),
-  chat_id: int().notNull().references(()=>chatTable.id),
+  user_id: text().notNull(),
+  chat_id: int().notNull(),
 }, (t) => ({
   pk: primaryKey({columns: [t.user_id, t.chat_id]}),
 }));
 
 export const userChatsRelations = relations(userChatsTable, ({ one }) => ({
-  chat: one(chatTable, {
+  chat: one(chatsTable, {
     fields: [userChatsTable.chat_id],
-    references: [chatTable.id],
+    references: [chatsTable.id],
+    relationName: "userToChat"
   }),
   user: one(usersTable, {
     fields: [userChatsTable.user_id],
     references: [usersTable.unique_id],
+    relationName: "user"
   }),
 }));
 
@@ -111,14 +130,16 @@ export const userContactsTable = sqliteTable("user_contacts", {
   pk: primaryKey({columns: [t.user_id, t.contact_id] }),
 }));
 
-export const useContactsRelations = relations(userContactsTable, ({ one }) => ({
+export const userContactsRelations = relations(userContactsTable, ({ one }) => ({
 	user: one(usersTable, {
 		fields: [userContactsTable.user_id],
 		references: [usersTable.unique_id],
+    relationName: "userToUser"
 	}),
 	contact: one(usersTable, {
 		fields: [userContactsTable.contact_id],
 		references: [usersTable.unique_id],
+    relationName: "userToContact"
 	}),
 }));
 
