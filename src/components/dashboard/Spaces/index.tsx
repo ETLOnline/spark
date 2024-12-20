@@ -90,7 +90,7 @@ export function SpacesScreen() {
 
   return (
     <div className=" flex flex-col space-y-4">
-      <div className="flex space-x-4">
+      <div className="flex space-x-4 sticky top-0">
         <Card className="flex-grow">
           <CardHeader className="pb-2">
             <CardTitle>Categories</CardTitle>
@@ -202,7 +202,7 @@ export function SpacesScreen() {
           </Card>
         </div>
 
-        <div className="w-1/4 space-y-4">
+        <div className="w-1/4 space-y-4 fixed right-0">
           <Card>
             <CardHeader>
               <CardTitle>Trending Topics</CardTitle>

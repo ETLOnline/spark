@@ -1,6 +1,6 @@
 import { Textarea } from "@/src/components/ui/textarea"
 import { Input } from "@/src/components/ui/input"
-import { NewPost, PostType } from "./types/posts-types.d"
+import { NewPost, PostType } from "./types/posts-types"
 
 type Props = {
   type: PostType
@@ -17,7 +17,7 @@ const CreatePostInput: React.FC<Props> = (props) => {
         type: "file",
         content: file,
         fileName: file.name,
-        fileSize: file.size,
+        fileSize: file.size
       })
     }
   }
@@ -30,7 +30,7 @@ const CreatePostInput: React.FC<Props> = (props) => {
         props.setNewPost({
           ...props.newPost,
           content: e.target.value,
-          type: "text",
+          type: "text"
         })
       }
       className="min-h-[100px]"
@@ -49,7 +49,7 @@ const CreatePostInput: React.FC<Props> = (props) => {
         props.setNewPost({
           ...props.newPost,
           content: e.target.value,
-          type: "poll",
+          type: "poll"
         })
       }
       className="min-h-[100px]"

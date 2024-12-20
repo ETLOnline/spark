@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import { Comment } from "./types/posts-types.d"
+import { Comment } from "./types/posts-types"
 
 type Props = {
   comment: Comment
