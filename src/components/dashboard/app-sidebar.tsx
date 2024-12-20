@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   Command,
   Frame,
@@ -17,11 +17,11 @@ import {
   Lightbulb,
   Beaker,
   LayoutDashboard,
-} from "lucide-react"
+} from "lucide-react";
 
-import NavMain from "@/src/components/dashboard/nav-main"
-import NavSecondary from "@/src/components/dashboard/nav-secondary"
-import NavUser from "@/src/components/dashboard/nav-user"
+import NavMain from "@/src/components/dashboard/nav-main";
+import NavSecondary from "@/src/components/dashboard/nav-secondary";
+import NavUser from "@/src/components/dashboard/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -30,10 +30,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/src/components/ui/sidebar"
-import { SignedIn } from "@clerk/nextjs"
-import Image from "next/image"
-import Link from "next/link"
+} from "@/src/components/ui/sidebar";
+import { SignedIn } from "@clerk/nextjs";
+import Image from "next/image";
+import Link from "next/link";
 
 const data = {
   navMain: [
@@ -114,7 +114,7 @@ const data = {
       ],
     },
   ],
-  testNav:[
+  testNav: [
     {
       title: "Test",
       url: "#",
@@ -131,7 +131,7 @@ const data = {
         {
           title: "Marketplace",
           url: "/test/marketplace",
-        }
+        },
       ],
     },
   ],
@@ -147,9 +147,11 @@ const data = {
       icon: Send,
     },
   ],
-}
+};
 
-export default function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export default function AppSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -158,7 +160,13 @@ export default function AppSidebar({ ...props }: React.ComponentProps<typeof Sid
             <SidebarMenuButton size="lg" asChild>
               <Link href="/">
                 <div className="flex aspect-square   items-center justify-center rounded-lg border  text-sidebar-primary-foreground">
-                  <Image sizes="8" src="/logo/spark-logo-no-bg.png" alt="spark-logo" width={40} height={40} />
+                  <Image
+                    sizes="8"
+                    src="/logo/spark-logo-no-bg.png"
+                    alt="spark-logo"
+                    width={40}
+                    height={40}
+                  />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Spark</span>
@@ -180,5 +188,5 @@ export default function AppSidebar({ ...props }: React.ComponentProps<typeof Sid
         </SignedIn>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }
