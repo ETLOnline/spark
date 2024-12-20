@@ -29,7 +29,7 @@ export const GetContacts = async (user_id: string) => {
     try{
         return await db.select().from(userContactsTable).where(eq(userContactsTable.user_id, user_id)).leftJoin(
             usersTable,
-            eq(usersTable.id, userContactsTable.contact_id)
+            eq(usersTable.unique_id, userContactsTable.contact_id)
         ).all();
     }catch(error:any){
         throw new Error(error.message);
