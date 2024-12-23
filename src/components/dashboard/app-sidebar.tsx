@@ -16,7 +16,7 @@ import {
   BetweenHorizontalStart,
   Lightbulb,
   Beaker,
-  LayoutDashboard,
+  LayoutDashboard
 } from "lucide-react"
 
 import NavMain from "@/src/components/dashboard/nav-main"
@@ -29,7 +29,7 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarMenuItem
 } from "@/src/components/ui/sidebar"
 import { SignedIn } from "@clerk/nextjs"
 import Image from "next/image"
@@ -40,7 +40,7 @@ const data = {
     {
       title: "Analytics Dashboard",
       url: "/dashboard",
-      icon: LayoutDashboard,
+      icon: LayoutDashboard
     },
     {
       title: "Profile",
@@ -49,46 +49,46 @@ const data = {
       items: [
         {
           title: "Bio",
-          url: "/profile/?tab=basic",
+          url: "/Profile/?tab=basic"
         },
         {
           title: "Rewards",
-          url: "/profile/?tab=rewards",
+          url: "/Profile/?tab=rewards"
         },
         {
           title: "Activity",
-          url: "/profile/?tab=activity",
+          url: "/Profile/?tab=activity"
         },
         {
           title: "Schedule",
-          url: "/profile/?tab=calendar",
-        },
-      ],
+          url: "/Profile/?tab=calendar"
+        }
+      ]
     },
     {
       title: "Posts",
       url: "/posts",
-      icon: Newspaper,
+      icon: Newspaper
     },
     {
       title: "Chat",
       url: "/chat",
-      icon: MessageSquare,
+      icon: MessageSquare
     },
     {
       title: "Events",
       url: "/events",
-      icon: Calendar,
+      icon: Calendar
     },
     {
       title: "Spaces",
       url: "/spaces",
-      icon: BetweenHorizontalStart,
+      icon: BetweenHorizontalStart
     },
     {
       title: "Project Incubator",
       url: "/project-incubator",
-      icon: Lightbulb,
+      icon: Lightbulb
     },
     {
       title: "Settings",
@@ -97,24 +97,24 @@ const data = {
       items: [
         {
           title: "General",
-          url: "#",
+          url: "#"
         },
         {
           title: "Team",
-          url: "#",
+          url: "#"
         },
         {
           title: "Billing",
-          url: "#",
+          url: "#"
         },
         {
           title: "Limits",
-          url: "#",
-        },
-      ],
-    },
+          url: "#"
+        }
+      ]
+    }
   ],
-  testNav:[
+  testNav: [
     {
       title: "Test",
       url: "#",
@@ -122,34 +122,36 @@ const data = {
       items: [
         {
           title: "Team Collaboration",
-          url: "/test/team-collaboration",
+          url: "/test/team-collaboration"
         },
         {
           title: "Learning Hub",
-          url: "/test/learning-hub",
+          url: "/test/learning-hub"
         },
         {
           title: "Marketplace",
-          url: "/test/marketplace",
+          url: "/test/marketplace"
         }
-      ],
-    },
+      ]
+    }
   ],
   navSecondary: [
     {
       title: "Support",
       url: "#",
-      icon: LifeBuoy,
+      icon: LifeBuoy
     },
     {
       title: "Feedback",
       url: "#",
-      icon: Send,
-    },
-  ],
+      icon: Send
+    }
+  ]
 }
 
-export default function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export default function AppSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -158,7 +160,13 @@ export default function AppSidebar({ ...props }: React.ComponentProps<typeof Sid
             <SidebarMenuButton size="lg" asChild>
               <Link href="/">
                 <div className="flex aspect-square   items-center justify-center rounded-lg border  text-sidebar-primary-foreground">
-                  <Image sizes="8" src="/logo/spark-logo-no-bg.png" alt="spark-logo" width={40} height={40} />
+                  <Image
+                    sizes="8"
+                    src="/logo/spark-logo-no-bg.png"
+                    alt="spark-logo"
+                    width={40}
+                    height={40}
+                  />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Spark</span>

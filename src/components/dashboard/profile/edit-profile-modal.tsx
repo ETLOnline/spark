@@ -9,18 +9,30 @@ import {
   DialogTitle,
   DialogTrigger
 } from "../../ui/dialog"
-import { Input } from "../../ui/input"
 import { Label } from "../../ui/label"
 import { Textarea } from "@/src/components/ui/textarea"
 import ChipsInput from "@/src/components/chips-input"
+import {
+  AddSkillForUser,
+  DeleteSkillForUser,
+  SkillAdder,
+  SkillDeleter
+} from "@/src/server-actions/Skills/skills"
+import { useUser } from "@clerk/nextjs"
+import {
+  AddInterestForUser,
+  InterestAdder,
+  InterestDeleter
+} from "@/src/server-actions/Interests/Interests"
+import { UpdateBioForUser } from "@/src/server-actions/User/User"
 
 type EditProfileModalProps = {
   bio: string
-  setBio: (value: string) => void
+  setBio: (value: string | ((bio: string) => string)) => void
   interests: string[]
-  setInterests: (value: string[]) => void
+  setInterests: (tags: string[] | ((tags: string[]) => string[])) => void
   skills: string[]
-  setSkills: (value: string[]) => void
+  setSkills: (tags: string[] | ((tags: string[]) => string[])) => void
 }
 
 const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
@@ -30,13 +42,83 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
     ...props.interests
   ])
   const editedBio = useRef<string>(props.bio)
+  const { user } = useUser()
 
-  const updateProfileValue = (e: React.FormEvent<HTMLFormElement>) => {
+  const updateTags = async (
+    tagsCopy: string[],
+    tags: string[],
+    setTags: (tags: string[] | ((tags: string[]) => string[])) => void,
+    saveTagtoDB: SkillAdder | InterestAdder,
+    deleteTagFromDB: SkillDeleter | InterestDeleter
+  ) => {
+    if (!user) return
+    const newTags = tagsCopy.filter((tag) => !tags.includes(tag))
+    const removedTags = tags.filter((tag) => !tagsCopy.includes(tag))
+    let resAddedTags: PromiseSettledResult<
+      { success: boolean; data: unknown } | { error: unknown; success: boolean }
+    >[] = []
+    let resDeletedTags: PromiseSettledResult<
+      { success: boolean; data: unknown } | { error: unknown; success: boolean }
+    >[] = []
+    try {
+      resAddedTags = await Promise.allSettled(
+        newTags.map((tag: string) => saveTagtoDB({ user: user.id, name: tag }))
+      )
+      resDeletedTags = await Promise.allSettled(
+        removedTags.map((tag: string) => deleteTagFromDB(user.id, tag))
+      )
+    } catch (error) {
+      console.error(error)
+    } finally {
+      let savedTags: string[] = []
+      let deletedTags: string[] = []
+      resAddedTags.forEach((response, i) => {
+        if (response.status === "fulfilled") {
+          savedTags.push(newTags[i])
+        }
+      })
+      resDeletedTags.forEach((response, i) => {
+        if (response.status === "fulfilled") {
+          deletedTags.push(removedTags[i])
+        }
+      })
+      setTags((tags: string[]) => {
+        tags = tags.filter((tag) => !removedTags.includes(tag)) // remove deleted tags
+        return [...tags, ...savedTags]
+      })
+    }
+  }
+
+  const saveProfileChanges = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    editedBio.current.length && props.setBio(editedBio.current)
-    skillsCopy.length && props.setSkills([...skillsCopy])
-    interestsCopy.length && props.setInterests([...interestsCopy])
+    try {
+      if (editedBio.current.length && user) {
+        await UpdateBioForUser(user.id, editedBio.current)
+        props.setBio(editedBio.current)
+      }
+    } catch (error) {
+      console.error(error)
+    }
+    skillsCopy.length &&
+      (await updateTags(
+        skillsCopy,
+        props.skills,
+        props.setSkills,
+        AddSkillForUser,
+        DeleteSkillForUser
+      ))
+    interestsCopy.length &&
+      (await updateTags(
+        interestsCopy,
+        props.interests,
+        props.setInterests,
+        AddInterestForUser,
+        DeleteSkillForUser
+      ))
     setIsOpen(false)
+    setSkillsCopy([])
+    setinterestsCopy([])
+    editedBio.current = ""
   }
 
   return (
@@ -53,7 +135,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
             Make changes to your profile here. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={updateProfileValue} className="edit-profile-form">
+        <form onSubmit={saveProfileChanges} className="edit-profile-form">
           <div className="grid gap-4 py-4">
             <div className="flex flex-col gap-y-7">
               <div className="edit-bio w-full">

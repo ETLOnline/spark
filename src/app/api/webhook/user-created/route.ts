@@ -5,6 +5,7 @@ import { InsertUser } from '@/src/db/schema'
 import { CreateUser, SelectUserByEmail, SelectUserById } from '@/src/db/data-access/user/query'
 
 export async function POST(req: Request) {
+console.log("webhook user created");
 
   // You can find this in the Clerk Dashboard -> Webhooks -> choose the endpoint
   const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET

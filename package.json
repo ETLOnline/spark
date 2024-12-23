@@ -49,7 +49,8 @@
     "svix": "^1.43.0",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
-    "use-debounce": "^10.0.4"
+    "use-debounce": "^10.0.4",
+    "uuid": "^11.0.3"
   },
   "devDependencies": {
     "@types/node": "^20",

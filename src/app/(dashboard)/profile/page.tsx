@@ -1,9 +1,9 @@
 "use client"
 
-import ProfileActivities from "@/src/components/dashboard/profile/profile-activities"
-import ProfileBio from "@/src/components/dashboard/profile/profile-bio"
-import ProfileCalendar from "@/src/components/dashboard/profile/profile-calendar"
-import ProfileRewards from "@/src/components/dashboard/profile/profile-rewards"
+import ProfileActivities from "@/src/components/dashboard/Profile/profile-activities"
+import ProfileBio from "@/src/components/dashboard/Profile/profile-bio"
+import ProfileCalendar from "@/src/components/dashboard/Profile/profile-calendar"
+import ProfileRewards from "@/src/components/dashboard/Profile/profile-rewards"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   Tabs,
@@ -14,7 +14,7 @@ import {
 import { CalendarIcon, StarIcon, TrophyIcon, UserIcon } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
-import { Recommendation } from "@/src/components/dashboard/profile/types/profile-types"
+import { Recommendation } from "@/src/components/dashboard/Profile/types/profile-types"
 import { useUser } from "@clerk/nextjs"
 
 const rewards = [
@@ -62,6 +62,7 @@ export default function ProfileScreen() {
     { name: "John Smith", text: "Always delivers high-quality work on time." }
   ])
   const { user } = useUser()
+console.log("user", user);
 
   useEffect(() => {
     const tab = searchParams.get("tab")
@@ -75,7 +76,7 @@ export default function ProfileScreen() {
       <div className="mb-6 flex items-center space-x-4">
         <Avatar className="h-20 w-20">
           <AvatarImage src={user?.imageUrl} alt="Profile picture" />
-          <AvatarFallback>JD</AvatarFallback>
+          <AvatarFallback>Profile Image</AvatarFallback>
         </Avatar>
         <div>
           <h1 className="text-2xl font-bold">{user?.fullName}</h1>

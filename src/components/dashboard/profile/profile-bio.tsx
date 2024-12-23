@@ -1,11 +1,11 @@
-'use client'
+"use client"
 import { Badge } from "../../ui/badge"
 import {
   Card,
   CardTitle,
   CardDescription,
   CardContent,
-  CardHeader,
+  CardHeader
 } from "../../ui/card"
 import { Recommendation } from "./types/profile-types"
 import EditProfileModal from "./edit-profile-modal"
@@ -14,13 +14,20 @@ import { useState } from "react"
 type Props = {
   recommendations: Recommendation[]
   skillTags: string[]
-  setSkillTags?: (tags: string[]) => void
+  setSkillTags?: (tags: string[] | ((tags: string[]) => string[])) => void
   interests: string[]
-  setInterests?: (tags: string[]) => void
+  setInterests?: (tags: string[] | ((tags: string[]) => string[])) => void
   editable?: boolean
 }
 
-const ProfileBio: React.FC<Props> = ({recommendations, skillTags, setSkillTags, interests, setInterests, editable=true}) => {
+const ProfileBio: React.FC<Props> = ({
+  recommendations,
+  skillTags,
+  setSkillTags,
+  interests,
+  setInterests,
+  editable = true
+}) => {
   const [bio, setBio] = useState<string>("hello world!")
 
   return (
@@ -28,18 +35,16 @@ const ProfileBio: React.FC<Props> = ({recommendations, skillTags, setSkillTags, 
       <CardHeader>
         <header className="profile-section-header flex justify-between">
           <CardTitle>Bio</CardTitle>
-          {
-            editable && setSkillTags && setInterests && (
-              <EditProfileModal
-                bio={bio}
-                setBio={setBio}
-                skills={skillTags}
-                setSkills={setSkillTags}
-                interests={interests}
-                setInterests={setInterests}
-              />
-            )
-          }
+          {editable && setSkillTags && setInterests && (
+            <EditProfileModal
+              bio={bio}
+              setBio={setBio}
+              skills={skillTags}
+              setSkills={setSkillTags}
+              interests={interests}
+              setInterests={setInterests}
+            />
+          )}
         </header>
         <CardDescription>{bio}</CardDescription>
       </CardHeader>
@@ -71,7 +76,7 @@ const ProfileBio: React.FC<Props> = ({recommendations, skillTags, setSkillTags, 
         <div>
           <h3 className="mb-2 font-semibold">Recommendations</h3>
           <ul className="space-y-2">
-            {recommendations.map((recommendation: Recommendation,i) => (
+            {recommendations.map((recommendation: Recommendation, i) => (
               <li key={i} className="rounded-lg border p-3">
                 <p className="text-sm">&quot;{recommendation.text}&quot;</p>
                 <p className="mt-1 text-xs text-muted-foreground">
