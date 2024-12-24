@@ -14,7 +14,6 @@ import {
 import { CalendarIcon, StarIcon, TrophyIcon, UserIcon } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
-import { Recommendation } from "@/src/components/dashboard/Profile/types/profile-types"
 import { useUser } from "@clerk/nextjs"
 
 const rewards = [
@@ -41,28 +40,8 @@ const activities = [
 export default function ProfileScreen() {
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<string>("basic")
-  const [skillTags, setSkillTags] = useState<string[]>([
-    "Web Development",
-    "AI",
-    "Open Source",
-    "Tech Writing"
-  ])
-  const [interests, setInterests] = useState<string[]>([
-    "React",
-    "Next.js",
-    "TypeScript",
-    "UI/UX",
-    "Node.js"
-  ])
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([
-    {
-      name: "Jane Doe",
-      text: "An exceptional developer with a keen eye for detail."
-    },
-    { name: "John Smith", text: "Always delivers high-quality work on time." }
-  ])
+
   const { user } = useUser()
-console.log("user", user);
 
   useEffect(() => {
     const tab = searchParams.get("tab")
@@ -112,11 +91,6 @@ console.log("user", user);
         </TabsList>
         <TabsContent value="basic">
           <ProfileBio
-            skillTags={skillTags}
-            interests={interests}
-            setSkillTags={setSkillTags}
-            setInterests={setInterests}
-            recommendations={recommendations}
           />
         </TabsContent>
         <TabsContent value="rewards">

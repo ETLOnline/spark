@@ -12,69 +12,87 @@ import {
 import { Label } from "../../ui/label"
 import { Textarea } from "@/src/components/ui/textarea"
 import ChipsInput from "@/src/components/chips-input"
-import {
-  AddSkillForUser,
-  DeleteSkillForUser,
-  SkillAdder,
-  SkillDeleter
-} from "@/src/server-actions/Skills/skills"
+import { AddTagForUser, DeleteTagForUser } from "@/src/server-actions/Tags/Tags"
 import { useUser } from "@clerk/nextjs"
-import {
-  AddInterestForUser,
-  InterestAdder,
-  InterestDeleter
-} from "@/src/server-actions/Interests/Interests"
 import { UpdateBioForUser } from "@/src/server-actions/User/User"
+import { Tag } from "./types/profile-types"
+import { useServerAction } from "@/src/hooks/useServerAction"
 
 type EditProfileModalProps = {
   bio: string
   setBio: (value: string | ((bio: string) => string)) => void
-  interests: string[]
-  setInterests: (tags: string[] | ((tags: string[]) => string[])) => void
-  skills: string[]
-  setSkills: (tags: string[] | ((tags: string[]) => string[])) => void
+  interests: Tag[]
+  setInterests: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void
+  skills: Tag[]
+  setSkills: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void
 }
+
+type ApiSuccessResponse = { success: boolean; data: any }
+type ApiErrorResponse = { error: unknown; success: boolean }
 
 const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
   const [isOpen, setIsOpen] = useState(false)
-  const [skillsCopy, setSkillsCopy] = useState<string[]>([...props.skills])
-  const [interestsCopy, setinterestsCopy] = useState<string[]>([
+  const [skillsCopy, setSkillsCopy] = useState<Omit<Tag, "id">[]>([
+    ...props.skills
+  ])
+  const [interestsCopy, setinterestsCopy] = useState<Omit<Tag, "id">[]>([
     ...props.interests
   ])
+
   const editedBio = useRef<string>(props.bio)
+
   const { user } = useUser()
 
+  // const [addTagLoading, addedTagData, addTagError, addTag] =
+  //   useServerAction(AddTagForUser)
+  // const [deleteTagLoading, deletedTagData, deleteTagError, deleteTag] =
+  //   useServerAction(DeleteTagForUser)
+  const [updateBioLoading, updatedBioData, updateBioError, updateBio] =
+    useServerAction(UpdateBioForUser)
+
   const updateTags = async (
-    tagsCopy: string[],
-    tags: string[],
-    setTags: (tags: string[] | ((tags: string[]) => string[])) => void,
-    saveTagtoDB: SkillAdder | InterestAdder,
-    deleteTagFromDB: SkillDeleter | InterestDeleter
+    tagsCopy: Omit<Tag, "id">[],
+    tags: Tag[],
+    setTags: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void,
+    type: "skill" | "interest"
   ) => {
     if (!user) return
-    const newTags = tagsCopy.filter((tag) => !tags.includes(tag))
-    const removedTags = tags.filter((tag) => !tagsCopy.includes(tag))
+    const newTags: string[] = []
+    const tagNames = tags.map((tag: Tag) => tag.name)
+    tagsCopy.forEach((tag: Omit<Tag, "id">) => {
+      !tagNames.includes(tag.name) && newTags.push(tag.name)
+    })
+    const removedTags: Tag[] = []
+    tags.forEach((tag: Tag) => {
+      !tagsCopy.find((t: Omit<Tag, "id">) => t.name === tag.name) &&
+        removedTags.push(tag)
+    })
     let resAddedTags: PromiseSettledResult<
-      { success: boolean; data: unknown } | { error: unknown; success: boolean }
+      ApiErrorResponse | ApiSuccessResponse
     >[] = []
     let resDeletedTags: PromiseSettledResult<
-      { success: boolean; data: unknown } | { error: unknown; success: boolean }
+      ApiErrorResponse | ApiSuccessResponse
     >[] = []
     try {
       resAddedTags = await Promise.allSettled(
-        newTags.map((tag: string) => saveTagtoDB({ user: user.id, name: tag }))
+        newTags.map((tag: string) =>
+          AddTagForUser({ name: tag, type }, user.id)
+        )
       )
       resDeletedTags = await Promise.allSettled(
-        removedTags.map((tag: string) => deleteTagFromDB(user.id, tag))
+        removedTags.map((tag: Tag) => DeleteTagForUser(user.id, tag.id))
       )
     } catch (error) {
       console.error(error)
     } finally {
-      let savedTags: string[] = []
-      let deletedTags: string[] = []
+      let savedTags: Tag[] = []
+      let deletedTags: Tag[] = []
       resAddedTags.forEach((response, i) => {
         if (response.status === "fulfilled") {
-          savedTags.push(newTags[i])
+          savedTags.push({
+            name: newTags[i],
+            id: (response.value as ApiSuccessResponse).data.tag_id
+          })
         }
       })
       resDeletedTags.forEach((response, i) => {
@@ -82,7 +100,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
           deletedTags.push(removedTags[i])
         }
       })
-      setTags((tags: string[]) => {
+      setTags((tags: Tag[]) => {
         tags = tags.filter((tag) => !removedTags.includes(tag)) // remove deleted tags
         return [...tags, ...savedTags]
       })
@@ -91,29 +109,18 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
 
   const saveProfileChanges = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    try {
-      if (editedBio.current.length && user) {
-        await UpdateBioForUser(user.id, editedBio.current)
-        props.setBio(editedBio.current)
-      }
-    } catch (error) {
-      console.error(error)
+    if (editedBio.current.length && user) {
+      await updateBio(user.id, editedBio.current)
+      props.setBio(editedBio.current)
     }
     skillsCopy.length &&
-      (await updateTags(
-        skillsCopy,
-        props.skills,
-        props.setSkills,
-        AddSkillForUser,
-        DeleteSkillForUser
-      ))
+      (await updateTags(skillsCopy, props.skills, props.setSkills, "skill"))
     interestsCopy.length &&
       (await updateTags(
         interestsCopy,
         props.interests,
         props.setInterests,
-        AddInterestForUser,
-        DeleteSkillForUser
+        "interest"
       ))
     setIsOpen(false)
     setSkillsCopy([])
@@ -157,7 +164,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
                 </Label>
                 <ChipsInput
                   tags={skillsCopy}
-                  updateTags={(skills: string[]) => setSkillsCopy([...skills])}
+                  updateTags={(skills: Omit<Tag, "id">[]) =>
+                    setSkillsCopy([...skills])
+                  }
                 />
               </div>
               <div className="edit-interests w-full">
@@ -166,7 +175,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
                 </Label>
                 <ChipsInput
                   tags={interestsCopy}
-                  updateTags={(interests: string[]) =>
+                  updateTags={(interests: Omit<Tag, "id">[]) =>
                     setinterestsCopy([...interests])
                   }
                 />

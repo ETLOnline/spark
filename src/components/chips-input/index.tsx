@@ -1,9 +1,10 @@
 import TagsInput from "react-tagsinput"
 import "./chips-input.css"
+import { Tag } from "../dashboard/Profile/types/profile-types"
 
 type ChipsInputProps = {
-  tags: string[]
-  updateTags: (tags: string[]) => void
+  tags: Omit<Tag, "id">[]
+  updateTags: (tags: Omit<Tag, "id">[]) => void
 }
 
 const ChipsInput: React.FC<ChipsInputProps> = (props) => {
@@ -16,8 +17,10 @@ const ChipsInput: React.FC<ChipsInputProps> = (props) => {
             focus-within:ring-1 focus-within:ring-black dark:focus-within:ring-white"
     >
       <TagsInput
-        value={props.tags}
-        onChange={(tags) => props.updateTags(tags)}
+        value={props.tags.map((tag) => tag.name)}
+        onChange={(tags) =>
+          props.updateTags([...tags.map((tag) => ({ name: tag }))])
+        }
         addOnPaste
         inputProps={{
           className: "react-tagsinput-input",

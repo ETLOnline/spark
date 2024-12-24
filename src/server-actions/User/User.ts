@@ -12,10 +12,9 @@ export const UpdateBioForUser = CreateServerAction(
         success: true
       }
     } catch (error) {
-      console.error("Error updating user bio:", error)
       return {
         success: false,
-        error: "Failed to update bio"
+        error: error
       }
     }
   }

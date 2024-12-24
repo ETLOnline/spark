@@ -71,6 +71,20 @@
       "when": 1734934067170,
       "tag": "0009_silent_hammerhead",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1735031053673,
+      "tag": "0010_wild_triathlon",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1735031169827,
+      "tag": "0011_abandoned_leper_queen",
+      "breakpoints": true
     }
   ]
 }

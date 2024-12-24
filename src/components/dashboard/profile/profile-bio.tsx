@@ -7,42 +7,47 @@ import {
   CardContent,
   CardHeader
 } from "../../ui/card"
-import { Recommendation } from "./types/profile-types"
+import { Recommendation, Tag } from "./types/profile-types"
 import EditProfileModal from "./edit-profile-modal"
 import { useState } from "react"
 
 type Props = {
-  recommendations: Recommendation[]
-  skillTags: string[]
-  setSkillTags?: (tags: string[] | ((tags: string[]) => string[])) => void
-  interests: string[]
-  setInterests?: (tags: string[] | ((tags: string[]) => string[])) => void
   editable?: boolean
 }
 
 const ProfileBio: React.FC<Props> = ({
-  recommendations,
-  skillTags,
-  setSkillTags,
-  interests,
-  setInterests,
   editable = true
 }) => {
   const [bio, setBio] = useState<string>("hello world!")
+    const [skillTags, setSkillTags] = useState<Tag[]>([
+      { name: "React", id: 0 },
+      { name: "Next", id: 1 }
+    ])
+    const [interestTags, setInterestTags] = useState<Tag[]>([
+      { name: "Js", id: 0 },
+      { name: "Ts", id: 1 }
+    ])
+    const [recommendations, setRecommendations] = useState<Recommendation[]>([
+      {
+        name: "Jane Doe",
+        text: "An exceptional developer with a keen eye for detail."
+      },
+      { name: "John Smith", text: "Always delivers high-quality work on time." }
+    ])
 
   return (
     <Card>
       <CardHeader>
         <header className="profile-section-header flex justify-between">
           <CardTitle>Bio</CardTitle>
-          {editable && setSkillTags && setInterests && (
+          {editable && setSkillTags && setInterestTags && (
             <EditProfileModal
               bio={bio}
               setBio={setBio}
               skills={skillTags}
               setSkills={setSkillTags}
-              interests={interests}
-              setInterests={setInterests}
+              interests={interestTags}
+              setInterests={setInterestTags}
             />
           )}
         </header>
@@ -54,21 +59,21 @@ const ProfileBio: React.FC<Props> = ({
             <h3 className="mb-2 font-semibold">Skills</h3>
           </header>
           <div className="flex flex-wrap gap-2">
-            {skillTags.map((skill: string) => (
-              <Badge key={skill} variant="secondary">
-                {skill}
+            {skillTags.map((skill: Tag) => (
+              <Badge key={skill.id} variant="secondary">
+                {skill.name}
               </Badge>
             ))}
           </div>
         </div>
         <div>
           <div className="profile-section-header flex justify-between">
-            <h3 className="mb-2 font-semibold">Interests</h3>
+            <h3 className="mb-2 font-semibold">interestTags</h3>
           </div>
           <div className="flex flex-wrap gap-2">
-            {interests.map((interest: string) => (
-              <Badge key={interest} variant="outline">
-                {interest}
+            {interestTags.map((interest: Tag) => (
+              <Badge key={interest.id} variant="outline">
+                {interest.name}
               </Badge>
             ))}
           </div>

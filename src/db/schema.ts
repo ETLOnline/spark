@@ -113,16 +113,17 @@ export const useContactsRelations = relations(userContactsTable, ({ one }) => ({
   })
 }))
 
-export const skillsTable = sqliteTable("skills", {
+export const tagsTable = sqliteTable("tags", {
+  id: int().primaryKey({ autoIncrement: true }),
   name: text().notNull(),
-  user: text().notNull(),
+  type: text().notNull(),
   ...timestamps
 })
 
-export const interestsTable = sqliteTable("interests", {
-  name: text().notNull(),
-  user: text().notNull(),
-  ...timestamps
+export const userTagsTable = sqliteTable("user_tags", {
+  id: int().primaryKey({ autoIncrement: true }),
+  user_id: text().notNull(),
+  tag_id: int().notNull(),
 })
 
 export type InsertUser = typeof usersTable.$inferInsert
@@ -136,7 +137,7 @@ export type InsertUserChat = typeof userChatsTable.$inferInsert
 export type SelectUserChat = typeof userChatsTable.$inferSelect
 export type InsertUserContact = typeof userContactsTable.$inferInsert
 export type SelectUserContact = typeof userContactsTable.$inferSelect
-export type InsertSkill = typeof skillsTable.$inferInsert
-export type SelectSkill = typeof skillsTable.$inferSelect
-export type InsertInterest = typeof interestsTable.$inferInsert
-export type SelectInterest = typeof interestsTable.$inferSelect
+export type InsertTag = typeof tagsTable.$inferInsert
+export type SelectTag = typeof tagsTable.$inferSelect
+export type InsertUserTag = typeof userTagsTable.$inferInsert
+export type SelectUserTag = typeof userTagsTable.$inferSelect

@@ -8,7 +8,7 @@ export function useServerAction<T, Args extends any[]>(
   const [error, setError] = useState<Error | null>(null);
 
   const execute = async (...args: Args) => {
-    setLoading(true);
+    setLoading(true)
     setError(null);
     try {
       const result = await callback(...args);
