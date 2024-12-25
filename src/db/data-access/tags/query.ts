@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm"
+import { eq, inArray } from "drizzle-orm"
 import { db } from "../.."
 import { InsertTag, tagsTable } from "../../schema"
 
@@ -12,4 +12,12 @@ export const FindTagByName = async (name: string) => {
     .from(tagsTable)
     .where(eq(tagsTable.name, name))
   return results[0] ?? null
+}
+
+export const GetTagsById = async (ids: number[]) => {
+  const results = await db
+    .select()
+    .from(tagsTable)
+    .where(inArray(tagsTable.id, ids))
+  return results ?? []
 }

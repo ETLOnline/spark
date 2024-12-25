@@ -9,31 +9,58 @@ import {
 } from "../../ui/card"
 import { Recommendation, Tag } from "./types/profile-types"
 import EditProfileModal from "./edit-profile-modal"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { GetUserBioForUser } from "@/src/server-actions/User/User"
+import { useUser } from "@clerk/nextjs"
+import { GetTagsForUser } from "@/src/server-actions/Tags/Tags"
 
 type Props = {
   editable?: boolean
 }
 
-const ProfileBio: React.FC<Props> = ({
-  editable = true
-}) => {
+const ProfileBio: React.FC<Props> = ({ editable = true }) => {
   const [bio, setBio] = useState<string>("hello world!")
-    const [skillTags, setSkillTags] = useState<Tag[]>([
-      { name: "React", id: 0 },
-      { name: "Next", id: 1 }
-    ])
-    const [interestTags, setInterestTags] = useState<Tag[]>([
-      { name: "Js", id: 0 },
-      { name: "Ts", id: 1 }
-    ])
-    const [recommendations, setRecommendations] = useState<Recommendation[]>([
-      {
-        name: "Jane Doe",
-        text: "An exceptional developer with a keen eye for detail."
-      },
-      { name: "John Smith", text: "Always delivers high-quality work on time." }
-    ])
+  const [skillTags, setSkillTags] = useState<Tag[]>([])
+  const [interestTags, setInterestTags] = useState<Tag[]>([])
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([
+    {
+      name: "Jane Doe",
+      text: "An exceptional developer with a keen eye for detail."
+    },
+    { name: "John Smith", text: "Always delivers high-quality work on time." }
+  ])
+
+  const { user } = useUser()
+
+  const [getBioLoading, bioData, getBioError, getBio] =
+    useServerAction(GetUserBioForUser)
+  const [getTagsLoading, tagsData, getTagsError, getTags] =
+    useServerAction(GetTagsForUser)
+
+  useEffect(() => {
+    if (user) {
+      ;(async () => {
+        await getBio(user?.id)
+        await getTags(user?.id)
+      })()
+    }
+  }, [user])
+
+  useEffect(() => {
+    setBio(bioData?.data as string)
+  }, [bioData])
+
+  useEffect(() => {
+    if (tagsData?.data) {
+      const skillTags = tagsData?.data.filter((tag) => tag.type === "skill").map((tag) => ({ id: tag.id, name: tag.name }))
+      const interestTags = tagsData?.data.filter(
+        (tag) => tag.type === "interest"
+      ).map((tag) => ({ id: tag.id, name: tag.name }))
+      setSkillTags(skillTags)
+      setInterestTags(interestTags)
+    }
+  }, [tagsData]) 
 
   return (
     <Card>

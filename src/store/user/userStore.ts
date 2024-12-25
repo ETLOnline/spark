@@ -1,4 +1,3 @@
-
 import { SelectUser } from '@/src/db/schema'
 import { atom } from 'jotai'
 

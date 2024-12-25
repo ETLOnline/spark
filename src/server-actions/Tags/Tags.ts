@@ -2,8 +2,16 @@
 
 import { InsertTag } from "../../db/schema"
 import { CreateServerAction } from ".."
-import { AddTag, FindTagByName } from "@/src/db/data-access/tags/query"
-import { AddUserTag, DeleteUserTag } from "@/src/db/data-access/user-tags/query"
+import {
+  AddTag,
+  FindTagByName,
+  GetTagsById
+} from "@/src/db/data-access/tags/query"
+import {
+  AddUserTag,
+  DeleteUserTags,
+  GetUserTagIds
+} from "@/src/db/data-access/user-tags/query"
 
 export const AddTagForUser = CreateServerAction(
   false,
@@ -32,9 +40,9 @@ export const AddTagForUser = CreateServerAction(
 
 export const DeleteTagForUser = CreateServerAction(
   false,
-  async (userId: string, tagId: number) => {
+  async (userId: string, tagIds: number[]) => {
     try {
-      const data = await DeleteUserTag(userId, tagId)
+      const data = await DeleteUserTags(userId, tagIds)
       return { success: true, data }
     } catch (error) {
       return { success: false, error: error }
@@ -42,5 +50,15 @@ export const DeleteTagForUser = CreateServerAction(
   }
 )
 
-export type TagAdder = typeof AddTagForUser
-export type TagDeleter = typeof DeleteTagForUser
+export const GetTagsForUser = CreateServerAction(
+  false,
+  async (userId: string) => {
+    try {
+      const tagIds = await GetUserTagIds(userId)
+      const tags = await GetTagsById(tagIds)
+      return { success: true, data: tags }
+    } catch (error) {
+      return { success: false, error: error }
+    }
+  }
+)

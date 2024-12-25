@@ -68,7 +68,15 @@ export async function FindUserWildCard(wildcard: string) {
 }
 
 export async function UpdateUserBio(userId: string, bio: string) {
-  await db.update(usersTable)
+  await db
+    .update(usersTable)
     .set({ bio })
     .where(eq(usersTable.external_auth_id, userId))
+}
+
+export const GetUserBio = async (userId: string) => {
+  const user = await db.query.usersTable.findFirst({
+    where: eq(usersTable.external_auth_id, userId)
+  })
+  return user?.bio
 }

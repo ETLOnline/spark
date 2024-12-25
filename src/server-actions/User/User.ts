@@ -1,6 +1,6 @@
 "use server"
 
-import { UpdateUserBio } from "@/src/db/data-access/user/query"
+import { GetUserBio, UpdateUserBio } from "@/src/db/data-access/user/query"
 import { CreateServerAction } from ".."
 
 export const UpdateBioForUser = CreateServerAction(
@@ -10,6 +10,24 @@ export const UpdateBioForUser = CreateServerAction(
       await UpdateUserBio(userId, newBio)
       return {
         success: true
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error
+      }
+    }
+  }
+)
+
+export const GetUserBioForUser = CreateServerAction(
+  false,
+  async (userId: string) => {
+    try {
+      const user = await GetUserBio(userId)
+      return {
+        success: true,
+        data: user
       }
     } catch (error) {
       return {
