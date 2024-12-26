@@ -19,7 +19,6 @@ const ChipsInput: React.FC<ChipsInputProps> = ({
 }) => {
   const [suggestions, setSuggestions] = useState<Tag[]>([])
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false)
-  const [loading, setLoading] = useState<boolean>(false)
   const [timer, setTimer] = useState<NodeJS.Timeout | null>(null)
 
   const tagInput = useRef<HTMLInputElement>(null)
@@ -44,7 +43,6 @@ const ChipsInput: React.FC<ChipsInputProps> = ({
     if (timer) clearTimeout(timer)
     // Set new timer for debouncing
     if (e.target.value.length >= 2) {
-      setLoading(true)
       const newTimer = setTimeout(async () => {
         try {
           setShowSuggestions(true)
@@ -52,8 +50,6 @@ const ChipsInput: React.FC<ChipsInputProps> = ({
         } catch (error) {
           console.error("Error fetching suggestions:", error)
           setSuggestions([])
-        } finally {
-          setLoading(false)
         }
       }, 800)
       setTimer(newTimer)

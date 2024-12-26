@@ -101,7 +101,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
       )
       await addExistingTags(
         updatedSelectedTags.map((tag) => {
-          return { name: tag.name, type }
+          return { name: tag.name, id: tag.id, type }
         }),
         user.id
       )
