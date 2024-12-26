@@ -2,7 +2,7 @@ import { db } from "../.."
 import { and, eq, inArray } from "drizzle-orm"
 import { InsertUserTag, userTagsTable } from "../../schema"
 
-export const AddUserTag = async (data: InsertUserTag) => {
+export const AddUserTag = async (data: InsertUserTag[]) => {
   return await db.insert(userTagsTable).values(data).returning()
 }
 

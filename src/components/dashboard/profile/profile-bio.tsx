@@ -53,14 +53,24 @@ const ProfileBio: React.FC<Props> = ({ editable = true }) => {
 
   useEffect(() => {
     if (tagsData?.data) {
-      const skillTags = tagsData?.data.filter((tag) => tag.type === "skill").map((tag) => ({ id: tag.id, name: tag.name }))
-      const interestTags = tagsData?.data.filter(
-        (tag) => tag.type === "interest"
-      ).map((tag) => ({ id: tag.id, name: tag.name }))
+      const skillTags = tagsData?.data
+        .filter((tag) => tag.type === "skill")
+        .map((tag) => ({
+          id: tag.id,
+          name: tag.name,
+          status: "saved" as const
+        }))
+      const interestTags = tagsData?.data
+        .filter((tag) => tag.type === "interest")
+        .map((tag) => ({
+          id: tag.id,
+          name: tag.name,
+          status: "saved" as const
+        }))
       setSkillTags(skillTags)
       setInterestTags(interestTags)
     }
-  }, [tagsData]) 
+  }, [tagsData])
 
   return (
     <Card>

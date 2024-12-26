@@ -4,8 +4,8 @@ import { InsertTag } from "../../db/schema"
 import { CreateServerAction } from ".."
 import {
   AddTag,
-  FindTagByName,
-  GetTagsById
+  GetTagsById,
+  SearchTagsByName
 } from "@/src/db/data-access/tags/query"
 import {
   AddUserTag,
@@ -13,24 +13,16 @@ import {
   GetUserTagIds
 } from "@/src/db/data-access/user-tags/query"
 
-export const AddTagForUser = CreateServerAction(
+export const AddNewTagsForUser = CreateServerAction(
   false,
-  async (tagsData: InsertTag, user_id: string) => {
+  async (tagsData: InsertTag[], user_id: string) => {
     try {
-      let data
-      const searchedTag = await FindTagByName(tagsData.name)
-      if (!searchedTag) {
-        const tagData = await AddTag(tagsData)
-        data = await AddUserTag({
-          user_id,
-          tag_id: tagData[0].id
+      const insertedTags = await AddTag(tagsData)
+      const data = await AddUserTag(
+        insertedTags.map((tag) => {
+          return { user_id, tag_id: tag.id }
         })
-      } else {
-        data = await AddUserTag({
-          user_id,
-          tag_id: searchedTag.id
-        })
-      }
+      )
       return { success: true, data }
     } catch (error) {
       return { success: false, error: error }
@@ -38,7 +30,23 @@ export const AddTagForUser = CreateServerAction(
   }
 )
 
-export const DeleteTagForUser = CreateServerAction(
+export const AddExistingTagsForUser = CreateServerAction(
+  false,
+  async (tagsData: InsertTag[], user_id: string) => {
+    try {
+      const data = await AddUserTag(
+        tagsData.map((tag) => {
+          return { user_id, tag_id: tag.id as number }
+        })
+      )
+      return { success: true, data }
+    } catch (error) {
+      return { success: false, error: error }
+    }
+  }
+)
+
+export const DeleteTagsForUser = CreateServerAction(
   false,
   async (userId: string, tagIds: number[]) => {
     try {
@@ -56,6 +64,18 @@ export const GetTagsForUser = CreateServerAction(
     try {
       const tagIds = await GetUserTagIds(userId)
       const tags = await GetTagsById(tagIds)
+      return { success: true, data: tags }
+    } catch (error) {
+      return { success: false, error: error }
+    }
+  }
+)
+
+export const SearchTagsForSuggestions = CreateServerAction(
+  false,
+  async (name: string) => {
+    try {
+      const tags = await SearchTagsByName(name)
       return { success: true, data: tags }
     } catch (error) {
       return { success: false, error: error }

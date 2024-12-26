@@ -13,4 +13,8 @@ export type Activity = {
   description: string
 }
 
-export type Tag = { name: string; id: number }
+export type Tag = {
+  name: string
+  id?: number
+  status: "saved" | "selected" | "new"
+}
