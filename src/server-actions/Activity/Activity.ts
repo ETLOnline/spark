@@ -1,3 +1,5 @@
+"use server"
+
 import { InsertActivity, InsertUserActivity } from "@/src/db/schema"
 import { CreateServerAction } from ".."
 import {

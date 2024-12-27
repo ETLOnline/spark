@@ -1,5 +1,3 @@
-"use client"
-
 import { Badge } from "../../ui/badge"
 import {
   Card,

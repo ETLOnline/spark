@@ -1,3 +1,5 @@
+"use server"
+
 import { InsertReward, InsertUserReward } from "@/src/db/schema"
 import { CreateServerAction } from ".."
 import { AddReward, getRewardsById } from "@/src/db/data-access/reward/query"
