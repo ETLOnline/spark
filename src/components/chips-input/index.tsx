@@ -9,53 +9,53 @@ type ChipsInputProps = {
   updateSavedTags: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void
   updateNewTags: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void
   updateSelectedTags: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void
+  tagType: "interest" | "skill"
 }
 
 const ChipsInput: React.FC<ChipsInputProps> = ({
   tags,
   updateNewTags,
   updateSavedTags,
-  updateSelectedTags
+  updateSelectedTags,
+  tagType
 }) => {
-  const [suggestions, setSuggestions] = useState<Tag[]>([])
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false)
-  const [timer, setTimer] = useState<NodeJS.Timeout | null>(null)
+  const timer = useRef<NodeJS.Timeout | undefined>()
 
   const tagInput = useRef<HTMLInputElement>(null)
 
   const [searchTagsLoading, searchedTags, searchTagsError, searchTags] =
     useServerAction(SearchTagsForSuggestions)
 
+  const suggestions: Tag[] = searchedTags?.data
+    ? searchedTags.data.map((tag) => ({
+        name: tag.name,
+        id: tag.id,
+        status: "selected" as const
+      }))
+    : []
+
   useEffect(() => {
-    setSuggestions(
-      searchedTags?.data
-        ? searchedTags.data.map((tag) => ({
-            name: tag.name,
-            id: tag.id,
-            status: "selected" as const
-          }))
-        : []
-    )
-  }, [searchedTags])
+    return () => {
+      timer && clearTimeout(timer.current)
+    }
+  }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Clear existing timer
-    if (timer) clearTimeout(timer)
+    timer && clearTimeout(timer.current)
     // Set new timer for debouncing
     if (e.target.value.length >= 2) {
-      const newTimer = setTimeout(async () => {
+      timer.current = setTimeout(async () => {
         try {
           setShowSuggestions(true)
-          await searchTags(e.target.value)
+          await searchTags(e.target.value, tagType)
         } catch (error) {
           console.error("Error fetching suggestions:", error)
-          setSuggestions([])
         }
       }, 800)
-      setTimer(newTimer)
     } else {
       setShowSuggestions(false)
-      setSuggestions([])
     }
   }
 
@@ -73,7 +73,13 @@ const ChipsInput: React.FC<ChipsInputProps> = ({
         updateNewTags((tags: Tag[]) => [
           ...tags,
           {
-            name: (tagInput.current as HTMLInputElement).value.trim(),
+            name:
+              (tagInput.current as HTMLInputElement).value
+                .trim()[0]
+                .toUpperCase() +
+              (tagInput.current as HTMLInputElement).value
+                .substring(1)
+                .toLowerCase(),
             status: "new"
           }
         ])
@@ -109,12 +115,6 @@ const ChipsInput: React.FC<ChipsInputProps> = ({
     ;(tagInput.current as HTMLInputElement).value = ""
     setShowSuggestions(false)
   }
-
-  useEffect(() => {
-    return () => {
-      if (timer) clearTimeout(timer)
-    }
-  }, [timer])
 
   return (
     <div className="relative w-full">

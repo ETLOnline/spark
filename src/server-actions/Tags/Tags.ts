@@ -73,9 +73,9 @@ export const GetTagsForUser = CreateServerAction(
 
 export const SearchTagsForSuggestions = CreateServerAction(
   false,
-  async (name: string) => {
+  async (name: string, type: string) => {
     try {
-      const tags = await SearchTagsByName(name)
+      const tags = await SearchTagsByName(name, type)
       return { success: true, data: tags }
     } catch (error) {
       return { success: false, error: error }

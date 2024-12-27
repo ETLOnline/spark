@@ -112,44 +112,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
     } catch (error) {
       console.error(error)
     }
-    // const newTags: string[] = []
-    // const tagNames = tags.map((tag: Tag) => tag.name)
-    // tagsCopy.forEach((tag: Tag) => {
-    //   !tagNames.includes(tag.name) && newTags.push(tag.name)
-    // })
-    // const removedTags: Tag[] = []
-    // tags.forEach((tag: Tag) => {
-    //   !tagsCopy.find((t: Tag) => t.name === tag.name) &&
-    //     removedTags.push(tag)
-    // })
-    // let resAddedTags: PromiseSettledResult<
-    //   ApiErrorResponse | ApiSuccessResponse
-    // >[] = []
-    // try {
-    //   resAddedTags = await Promise.allSettled(
-    //     newTags.map((tag: string) =>
-    //       AddTagsForUser({ name: tag, type }, user.id)
-    //     )
-    //   )
-    //   const removedTagIds = removedTags.map((tag: Tag) => tag.id)
-    //   await deleteTag(user.id, removedTagIds)
-    // } catch (error) {
-    //   console.error(error)
-    // } finally {
-    //   let savedTags: Tag[] = []
-    //   resAddedTags.forEach((response, i) => {
-    //     if (response.status === "fulfilled") {
-    //       savedTags.push({
-    //         name: newTags[i],
-    //         id: (response.value as ApiSuccessResponse).data.tag_id
-    //       })
-    //     }
-    //   })
-    //   setTags((tags: Tag[]) => {
-    //     tags = tags.filter((tag) => !removedTags.includes(tag)) // remove deleted tags
-    //     return [...tags, ...savedTags]
-    //   })
-    // }
   }
 
   const saveProfileChanges = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -225,6 +187,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
                   updateSavedTags={setSavedSkills}
                   updateNewTags={setNewSkills}
                   updateSelectedTags={setSelectedtedSkills}
+                  tagType="skill"
                 />
               </div>
               <div className="edit-interests w-full">
@@ -236,6 +199,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
                   updateNewTags={setNewInterests}
                   updateSavedTags={setSavedInterests}
                   updateSelectedTags={setSelectedInterests}
+                  tagType="interest"
                 />
               </div>
             </div>

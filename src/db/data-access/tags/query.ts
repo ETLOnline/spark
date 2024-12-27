@@ -1,4 +1,4 @@
-import { eq, inArray, like } from "drizzle-orm"
+import { and, eq, inArray, like } from "drizzle-orm"
 import { db } from "../.."
 import { InsertTag, tagsTable } from "../../schema"
 
@@ -18,10 +18,10 @@ export const GetTagsById = async (ids: number[]) => {
   return results ?? []
 }
 
-export const SearchTagsByName = async (name: string) => {
+export const SearchTagsByName = async (name: string, type: string) => {
   const results = await db
     .select()
     .from(tagsTable)
-    .where(like(tagsTable.name, `%${name}%`))
+    .where(and(like(tagsTable.name, `%${name}%`), eq(tagsTable.type, type)))
   return results ?? []
 }
