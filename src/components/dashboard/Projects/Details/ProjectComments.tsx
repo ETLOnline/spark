@@ -1,19 +1,45 @@
-import React, { SetStateAction } from 'react'
+import React, { SetStateAction, useState } from 'react'
 import { ScrollArea } from '../../../ui/scroll-area'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '../../../ui/avatar'
 import { Textarea } from '../../../ui/textarea'
 import { Button } from '../../../ui/button'
-import { ProjectDetails } from './ProjectDetailView'
+import { ProjectDetails } from './ProjectDetailVeiw'
+
+
+
+interface Comment {
+  id: string
+  author: {
+    name: string
+    avatar: string
+  }
+  content: string
+  createdAt: string
+}
 
 interface Props {
   project: ProjectDetails
-  newComment: string
-  setNewComment: (value: SetStateAction<string>) => void
-  handleAddComment: () => void
+  updateProject: React.Dispatch<SetStateAction<ProjectDetails>>
 }
 
-function Comments({ project, newComment, setNewComment, handleAddComment }: Props) {
+
+
+function ProjectComments({ project, updateProject }: Props) {
+
+  const [newComment, setNewComment] = useState("")
+  const handleAddComment = () => {
+    if (newComment.trim() === "") return
+    const comment: Comment = {
+      id: `${project.comments.length + 1}`,
+      author: { name: "Current User", avatar: "/avatars/04.png" },
+      content: newComment,
+      createdAt: new Date().toISOString(),
+    }
+    updateProject({ ...project, comments: [...project.comments, comment] })
+    setNewComment("")
+  }
+
   return (
     <div>
       <h3 className="text-lg font-semibold mb-4">Comments</h3>
@@ -53,4 +79,4 @@ function Comments({ project, newComment, setNewComment, handleAddComment }: Prop
   )
 }
 
-export default Comments
+export default ProjectComments

@@ -6,7 +6,7 @@ interface Props {
   categories: string[]
 }
 
-function TopCatagories({ categories }: Props) {
+function ProjectTopCatagories({ categories }: Props) {
   return (
     <Card>
       <CardHeader>
@@ -28,4 +28,4 @@ function TopCatagories({ categories }: Props) {
   )
 }
 
-export default TopCatagories
+export default ProjectTopCatagories

@@ -1,10 +1,13 @@
 'use client'
 import { useState } from "react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
+import { ScrollArea } from "../../ui/scroll-area"
 import ProjectCards from "./ProjectCards"
-import IncubatorStats from "./IncubatorStats"
-import TopCatagories from "./TopCatagories"
-import Contribute from "./Contribute"
-import WelcomeCard from "./WelcomeCard"
+import Contribute from "./ProjectFAQ"
+import WelcomeCard from "./ProjectWelcomeCard"
+import ProjectTopCatagories from "./ProjectTopCatagories"
+import ProjectIncubatorStats from "./ProjectIncubatorStats"
+
 
 export interface ProjectProposal {
   id: string
@@ -101,13 +104,54 @@ export function ProjectIncubatorScreen() {
 
       <div className="flex-grow flex space-x-4">
         <div className="w-full lg:w-3/4">
-          <ProjectCards proposals={proposals} />
+          <Tabs defaultValue="all">
+            <TabsList className="w-full justify-around lg:w-auto">
+              <TabsTrigger value="all">All Proposals</TabsTrigger>
+              <TabsTrigger value="active">Active</TabsTrigger>
+              <TabsTrigger value="draft">Drafts</TabsTrigger>
+              <TabsTrigger value="completed">Completed</TabsTrigger>
+            </TabsList>
+            <TabsContent value="all">
+              <ScrollArea>
+                {proposals.map((proposal) => (
+                  <ProjectCards proposal={proposal} />
+                ))}
+              </ScrollArea>
+            </TabsContent>
+            <TabsContent value="active">
+              <ScrollArea>
+                {proposals
+                  .filter((p) => p.status === "active")
+                  .map((proposal) => (
+                    <ProjectCards proposal={proposal} />
+                  ))}
+              </ScrollArea>
+            </TabsContent>
+            <TabsContent value="draft">
+              <ScrollArea>
+                {proposals
+                  .filter((p) => p.status === "draft")
+                  .map((proposal) => (
+                    <ProjectCards proposal={proposal} />
+                  ))}
+              </ScrollArea>
+            </TabsContent>
+            <TabsContent value="completed">
+              <ScrollArea>
+                {proposals
+                  .filter((p) => p.status === "completed")
+                  .map((proposal) => (
+                    <ProjectCards proposal={proposal} />
+                  ))}
+              </ScrollArea>
+            </TabsContent>
+          </Tabs>
         </div>
 
         <div className="w-1/4 hidden lg:block space-y-4">
-          <IncubatorStats proposals={proposals} />
+          <ProjectIncubatorStats proposals={proposals} />
 
-          <TopCatagories categories={categories} />
+          <ProjectTopCatagories categories={categories} />
 
           <Contribute />
         </div>

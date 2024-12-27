@@ -1,21 +1,14 @@
 'use client'
 import { useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import { Badge } from "@/src/components/ui/badge"
-import { Button } from "@/src/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/src/components/ui/card"
-import { Input } from "@/src/components/ui/input"
-import { Progress } from "@/src/components/ui/progress"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
 import { Separator } from "@/src/components/ui/separator"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
-import { Textarea } from "@/src/components/ui/textarea"
-import { BookOpen, Calendar, FileText, Link, MessageSquare, ThumbsUp, Users } from 'lucide-react'
-import ProjectDetail from "./ProjectDetail"
-import Resources from "./Resources"
-import MainContent from "./MainContent"
-import Comments from "./Comments"
-import Contributers from "./Contributers"
+import ProjectDescriptionDetail from "./ProjectDescriptionDetail"
+import ProjectStatusAndTimeline from "./ProjectStatusAndTimeline"
+import ProjectContributers from "./ProjectContributers"
+import ProjectResources from "./ProjectResources"
+import ProjectComments from "./ProjectComments"
+
+
 
 export interface ProjectDetails {
   id: string
@@ -104,20 +97,7 @@ const sampleProject: ProjectDetails = {
 
 export function ProjectDetailView() {
   const [project, setProject] = useState<ProjectDetails>(sampleProject)
-  const [newComment, setNewComment] = useState("")
   const [newUpdate, setNewUpdate] = useState("")
-
-  const handleAddComment = () => {
-    if (newComment.trim() === "") return
-    const comment: Comment = {
-      id: `c${project.comments.length + 1}`,
-      author: { name: "Current User", avatar: "/avatars/04.png" },
-      content: newComment,
-      createdAt: new Date().toISOString(),
-    }
-    setProject({ ...project, comments: [...project.comments, comment] })
-    setNewComment("")
-  }
 
   const handleAddUpdate = () => {
     if (newUpdate.trim() === "") return
@@ -137,22 +117,22 @@ export function ProjectDetailView() {
       <ScrollArea className="w-full sm:w-1/3 lg:w-1/4  sm:border-r p-4 overflow-auto">
         <h2 className="text-2xl font-bold mb-4">{project.title}</h2>
         <div className="space-y-4">
-          <ProjectDetail project={project} />
+          <ProjectStatusAndTimeline project={project} />
           <Separator />
-          <Contributers project={project} />
+          <ProjectContributers contributors={project.contributors} />
           <Separator />
-          <Resources project={project} />
+          <ProjectResources resources={project.resources} />
         </div>
       </ScrollArea>
 
       {/* Main Content - Project Description and Updates */}
       <div className="w-full sm:w-2/3 lg:w-2/4  p-4 overflow-auto">
-        <MainContent project={project} handleAddUpdate={handleAddUpdate} newUpdate={newUpdate} setNewUpdate={setNewUpdate} />
+        <ProjectDescriptionDetail project={project} handleAddUpdate={handleAddUpdate} newUpdate={newUpdate} setNewUpdate={setNewUpdate} />
       </div>
 
       {/* Right Sidebar - Comments */}
       <ScrollArea className="w-full lg:w-1/4 lg:border-l p-4 overflow-auto">
-        <Comments project={project} newComment={newComment} setNewComment={setNewComment} handleAddComment={handleAddComment} />
+        <ProjectComments project={project} updateProject={setProject} />
       </ScrollArea>
     </div>
   )

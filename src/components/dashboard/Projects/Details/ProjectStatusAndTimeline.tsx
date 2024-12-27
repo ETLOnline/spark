@@ -2,14 +2,15 @@ import React from 'react'
 import { Badge } from '../../../ui/badge'
 import { Calendar } from 'lucide-react'
 import { Progress } from '../../../ui/progress'
-import { ProjectDetails } from './ProjectDetailView'
+import { ProjectDetails } from './ProjectDetailVeiw'
+
 
 
 interface Props {
   project: ProjectDetails
 }
 
-function ProjectDetail({ project }: Props) {
+function ProjectStatusAndTimeline({ project }: Props) {
   return (
     <div>
       <h3 className="text-lg font-semibold mb-2">Project Details</h3>
@@ -36,4 +37,4 @@ function ProjectDetail({ project }: Props) {
   )
 }
 
-export default ProjectDetail
+export default ProjectStatusAndTimeline

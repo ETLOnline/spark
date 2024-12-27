@@ -5,11 +5,12 @@ import { Separator } from '../../ui/separator'
 import { ProjectProposal } from '.'
 
 
+
 interface Props {
   proposals: ProjectProposal[]
 }
 
-function IncubatorStats({ proposals }: Props) {
+function ProjectIncubatorStats({ proposals }: Props) {
   return (
     <Card>
       <CardHeader>
@@ -52,4 +53,4 @@ function IncubatorStats({ proposals }: Props) {
   )
 }
 
-export default IncubatorStats
+export default ProjectIncubatorStats

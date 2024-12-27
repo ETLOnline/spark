@@ -1,17 +1,23 @@
 import { BookOpen, FileText, Link } from 'lucide-react'
 import React from 'react'
-import { ProjectDetails } from './ProjectDetailView'
 
-interface Props {
-  project: ProjectDetails
+interface Resource {
+  id: string
+  title: string
+  type: "document" | "link" | "image"
+  url: string
 }
 
-function Resources({ project }: Props) {
+interface Props {
+  resources: Resource[]
+}
+
+function ProjectResources({ resources }: Props) {
   return (
     <div>
       <h3 className="text-lg font-semibold mb-2">Resources</h3>
       <div className="space-y-2">
-        {project.resources.map((resource) => (
+        {resources.map((resource) => (
           <div key={resource.id} className="flex items-center">
             {resource.type === "document" && <FileText className="mr-2 h-4 w-4" />}
             {resource.type === "link" && <Link className="mr-2 h-4 w-4" />}
@@ -24,4 +30,4 @@ function Resources({ project }: Props) {
   )
 }
 
-export default Resources
+export default ProjectResources

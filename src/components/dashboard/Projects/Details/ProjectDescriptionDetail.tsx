@@ -4,7 +4,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../../../u
 import { Avatar, AvatarFallback, AvatarImage } from '../../../ui/avatar';
 import { Textarea } from '../../../ui/textarea';
 import { Button } from '../../../ui/button';
-import { ProjectDetails } from './ProjectDetailView';
+import { ProjectDetails } from './ProjectDetailVeiw';
+
 
 interface Props {
   project: ProjectDetails
@@ -13,7 +14,8 @@ interface Props {
   setNewUpdate: (value: SetStateAction<string>) => void
 }
 
-function MainContent({ project, handleAddUpdate, newUpdate, setNewUpdate }: Props) {
+function ProjectDescriptionDetail({ project, handleAddUpdate, newUpdate, setNewUpdate }: Props) {
+
   return (
     <Tabs defaultValue="description">
       <TabsList className='w-full justify-around'>
@@ -69,4 +71,4 @@ function MainContent({ project, handleAddUpdate, newUpdate, setNewUpdate }: Prop
   )
 }
 
-export default MainContent
+export default ProjectDescriptionDetail
