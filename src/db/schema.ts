@@ -1,6 +1,11 @@
 import { v4 as uuidv4 } from "uuid"
 import { relations, sql } from "drizzle-orm"
-import { int, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import {
+  int,
+  primaryKey,
+  sqliteTable,
+  text
+} from "drizzle-orm/sqlite-core"
 
 const timestamps = {
   updated_at: text("updated_at"),
@@ -123,7 +128,36 @@ export const tagsTable = sqliteTable("tags", {
 export const userTagsTable = sqliteTable("user_tags", {
   id: int().primaryKey({ autoIncrement: true }),
   user_id: text().notNull(),
-  tag_id: int().notNull(),
+  tag_id: int().notNull()
+})
+
+export const rewardsTable = sqliteTable("rewards", {
+  id: int().primaryKey({ autoIncrement: true }),
+  title: text().notNull(),
+  description: text().notNull(),
+  badge_type: text().notNull(),
+  ...timestamps
+})
+
+export const userRewardsTable = sqliteTable("user_rewards", {
+  id: int().primaryKey({ autoIncrement: true }),
+  user_id: text().notNull(),
+  reward_id: int().notNull()
+})
+
+export const activitiesTable = sqliteTable("activities", {
+  id: int().primaryKey({ autoIncrement: true }),
+  title: text().notNull(),
+  date: text().notNull(),
+  description: text().notNull(),
+  type: text().notNull(),
+  ...timestamps
+})
+
+export const userActivitiesTable = sqliteTable("user_activities", {
+  id: int().primaryKey({ autoIncrement: true }),
+  user_id: text().notNull(),
+  activity_id: int().notNull()
 })
 
 export type InsertUser = typeof usersTable.$inferInsert
@@ -141,3 +175,11 @@ export type InsertTag = typeof tagsTable.$inferInsert
 export type SelectTag = typeof tagsTable.$inferSelect
 export type InsertUserTag = typeof userTagsTable.$inferInsert
 export type SelectUserTag = typeof userTagsTable.$inferSelect
+export type InsertReward = typeof rewardsTable.$inferInsert
+export type SelectReward = typeof rewardsTable.$inferSelect
+export type InsertUserReward = typeof userRewardsTable.$inferInsert
+export type SelectUserReward = typeof userRewardsTable.$inferSelect
+export type InsertActivity = typeof activitiesTable.$inferInsert
+export type SelectActivity = typeof activitiesTable.$inferSelect
+export type InsertUserActivity = typeof userActivitiesTable.$inferInsert
+export type SelectUserActivity = typeof userActivitiesTable.$inferSelect

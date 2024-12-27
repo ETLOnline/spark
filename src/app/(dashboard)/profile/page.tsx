@@ -16,27 +16,6 @@ import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useUser } from "@clerk/nextjs"
 
-const rewards = [
-  {
-    title: "Top Contributor",
-    description: "Awarded for outstanding contributions to the team"
-  },
-  {
-    title: "Innovation Champion",
-    description: "Recognized for implementing creative solutions"
-  }
-]
-const activities = [
-  {
-    date: "2023-04-01",
-    description: "Completed the 'Advanced React Patterns' course"
-  },
-  {
-    date: "2023-03-15",
-    description: "Contributed to open-source project 'awesome-ui-components'"
-  }
-]
-
 export default function ProfileScreen() {
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<string>("basic")
@@ -90,14 +69,13 @@ export default function ProfileScreen() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="basic">
-          <ProfileBio
-          />
+          <ProfileBio />
         </TabsContent>
         <TabsContent value="rewards">
-          <ProfileRewards rewards={rewards} />
+          <ProfileRewards />
         </TabsContent>
         <TabsContent value="activity">
-          <ProfileActivities activities={activities} />
+          <ProfileActivities />
         </TabsContent>
         <TabsContent value="calendar">
           <ProfileCalendar />

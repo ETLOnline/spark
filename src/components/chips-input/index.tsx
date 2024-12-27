@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { X } from "lucide-react"
 import { Tag } from "../dashboard/Profile/types/profile-types"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { SearchTagsForSuggestions } from "@/src/server-actions/Tags/Tags"
+import { SearchTagsForSuggestions } from "@/src/server-actions/Tag/Tag"
 
 type ChipsInputProps = {
   tags: Tag[]
@@ -59,32 +59,29 @@ const ChipsInput: React.FC<ChipsInputProps> = ({
     }
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && (tagInput.current as HTMLInputElement).value) {
-      e.preventDefault()
+  const handleNewTag = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (
+      !tags.some(
+        (tag) =>
+          tag?.name.toLowerCase() ===
+          (tagInput.current as HTMLInputElement).value.toLowerCase()
+      )
+    ) {
+      updateNewTags((tags: Tag[]) => [
+        ...tags,
+        {
+          name:
+            (tagInput.current as HTMLInputElement).value
+              .trim()[0]
+              .toUpperCase() +
+            (tagInput.current as HTMLInputElement).value
+              .substring(1)
+              .toLowerCase(),
+          status: "new"
+        }
+      ])
       setShowSuggestions(false)
-      if (
-        !tags.some(
-          (tag) =>
-            tag?.name.toLowerCase() ===
-            (tagInput.current as HTMLInputElement).value.toLowerCase()
-        )
-      ) {
-        updateNewTags((tags: Tag[]) => [
-          ...tags,
-          {
-            name:
-              (tagInput.current as HTMLInputElement).value
-                .trim()[0]
-                .toUpperCase() +
-              (tagInput.current as HTMLInputElement).value
-                .substring(1)
-                .toLowerCase(),
-            status: "new"
-          }
-        ])
-        ;(tagInput.current as HTMLInputElement).value = ""
-      }
+      ;(tagInput.current as HTMLInputElement).value = ""
     }
   }
 
@@ -138,7 +135,6 @@ const ChipsInput: React.FC<ChipsInputProps> = ({
           type="text"
           ref={tagInput}
           onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
           className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
           placeholder={tags.length === 0 ? "Type to add tags..." : ""}
         />
@@ -148,8 +144,14 @@ const ChipsInput: React.FC<ChipsInputProps> = ({
           {searchTagsLoading ? (
             <div className="p-2 text-sm text-muted-foreground">Loading...</div>
           ) : suggestions.length === 0 ? (
-            <div className="p-2 text-sm text-muted-foreground">
-              No suggestions found
+            <div className="max-h-48 overflow-auto">
+              <button
+                type="button"
+                className="w-full rounded-sm px-2 py-1 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                onClick={handleNewTag}
+              >
+                {(tagInput.current as HTMLInputElement).value}
+              </button>
             </div>
           ) : (
             <div className="max-h-48 overflow-auto">

@@ -6,12 +6,12 @@ import {
   AddTag,
   GetTagsById,
   SearchTagsByName
-} from "@/src/db/data-access/tags/query"
+} from "@/src/db/data-access/tag/query"
 import {
   AddUserTag,
   DeleteUserTags,
   GetUserTagIds
-} from "@/src/db/data-access/user-tags/query"
+} from "@/src/db/data-access/user-tag/query"
 
 export const AddNewTagsForUser = CreateServerAction(
   false,

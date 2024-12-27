@@ -16,7 +16,7 @@ import {
   AddNewTagsForUser,
   AddExistingTagsForUser,
   DeleteTagsForUser
-} from "@/src/server-actions/Tags/Tags"
+} from "@/src/server-actions/Tag/Tag"
 import { useUser } from "@clerk/nextjs"
 import { UpdateBioForUser } from "@/src/server-actions/User/User"
 import { Tag } from "./types/profile-types"

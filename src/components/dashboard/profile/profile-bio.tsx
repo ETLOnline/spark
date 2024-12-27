@@ -1,4 +1,5 @@
 "use client"
+
 import { Badge } from "../../ui/badge"
 import {
   Card,
@@ -13,7 +14,7 @@ import { useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetUserBioForUser } from "@/src/server-actions/User/User"
 import { useUser } from "@clerk/nextjs"
-import { GetTagsForUser } from "@/src/server-actions/Tags/Tags"
+import { GetTagsForUser } from "@/src/server-actions/Tag/Tag"
 
 type Props = {
   editable?: boolean

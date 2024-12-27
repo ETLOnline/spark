@@ -85,6 +85,20 @@
       "when": 1735031169827,
       "tag": "0011_abandoned_leper_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1735292395680,
+      "tag": "0012_parched_sally_floyd",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1735304251636,
+      "tag": "0013_military_carnage",
+      "breakpoints": true
     }
   ]
 }
