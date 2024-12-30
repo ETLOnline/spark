@@ -21,19 +21,19 @@ import {
 import { UpdateBioForUser } from "@/src/server-actions/User/User"
 import { Tag, TagStatus, TagType } from "./types/profile-types.d"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { useAtomValue } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
+import { profileStore } from "@/src/store/profile/profileStore"
 
-type EditProfileModalProps = {
-  bio: string
-  setBio: (value: string | ((bio: string) => string)) => void
-  interests: Tag[]
-  setInterests: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void
-  skills: Tag[]
-  setSkills: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void
-}
+const EditProfileModal: React.FC = () => {
+  const user = useAtomValue(userStore.Iam)
+  const bio = useAtomValue(profileStore.bio)
+  const skills = useAtomValue(profileStore.skills)
+  const interests = useAtomValue(profileStore.interests)
+  const setInterests = useSetAtom(profileStore.interests)
+  const setSkills = useSetAtom(profileStore.skills)
+  const setBio = useSetAtom(profileStore.bio)
 
-const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
   const [isOpen, setIsOpen] = useState(false)
   const [savedSkills, setSavedSkills] = useState<Tag[]>([])
   const [savedInterests, setSavedInterests] = useState<Tag[]>([])
@@ -53,9 +53,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
     ...newSkills
   ]
 
-  const editedBio = useRef<string>(props.bio)
-
-  const user = useAtomValue(userStore.Iam)
+  const editedBio = useRef<string>(bio)
 
   const [addNewTagLoading, addedNewTagData, addNewTagError, addNewTags] =
     useServerAction(AddNewTagsForUser)
@@ -81,12 +79,12 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
     : []
 
   useEffect(() => {
-    setSavedInterests([...props.interests])
-  }, [props.interests])
+    setSavedInterests([...interests])
+  }, [interests])
 
   useEffect(() => {
-    setSavedSkills([...props.skills])
-  }, [props.skills])
+    setSavedSkills([...skills])
+  }, [skills])
 
   const updateTags = async (
     updatedSavedTags: Tag[],
@@ -128,17 +126,17 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
 
   const saveProfileChanges = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (editedBio.current.length && editedBio.current !== props.bio && user) {
+    if (editedBio.current.length && editedBio.current !== bio && user) {
       await updateBio(user.external_auth_id, editedBio.current)
-      props.setBio(editedBio.current)
+      setBio(editedBio.current)
     }
     updatedSkills.length &&
       (await updateTags(
         savedSkills,
         newSkills,
         selectedtedSkills,
-        props.skills,
-        props.setSkills,
+        skills,
+        setSkills,
         "skill"
       ))
     updatedInterests.length &&
@@ -146,13 +144,13 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
         savedInterests,
         newInterests,
         selectedInterests,
-        props.interests,
-        props.setInterests,
+        interests,
+        setInterests,
         "interest"
       ))
     setIsOpen(false)
-    setSavedSkills([...props.skills])
-    setSavedInterests([...props.interests])
+    setSavedSkills([...skills])
+    setSavedInterests([...interests])
     setSelectedInterests([])
     setSelectedtedSkills([])
     setNewInterests([])
@@ -183,7 +181,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
                 </Label>
                 <Textarea
                   id={"bio"}
-                  defaultValue={props.bio}
+                  defaultValue={bio}
                   className="min-h-[100px] w-full"
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                     (editedBio.current = e.target.value)

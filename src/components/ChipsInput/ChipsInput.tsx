@@ -4,7 +4,7 @@ import {
   Tag,
   TagStatus,
   TagType
-} from "../dashboard/Profile/types/profile-types"
+} from "../dashboard/Profile/types/profile-types.d"
 
 type ChipsInputProps = {
   tags: Tag[]

@@ -1,5 +1,5 @@
 
-const useUserProfile = () => {
+const useSelectedSkills = () => {
     
     return (
         <div>
@@ -8,4 +8,4 @@ const useUserProfile = () => {
     );
 };
 
-export default useUserProfile;
+export default useSelectedSkills;

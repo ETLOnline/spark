@@ -12,17 +12,15 @@ import { useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetUserBioForUser } from "@/src/server-actions/User/User"
 import { GetTagsForUser } from "@/src/server-actions/Tag/Tag"
-import { useAtomValue } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
+import { profileStore } from "@/src/store/profile/profileStore"
 
 type Props = {
   editable?: boolean
 }
 
 const ProfileBio: React.FC<Props> = ({ editable = true }) => {
-  const [bio, setBio] = useState<string>("hello world!")
-  const [skillTags, setSkillTags] = useState<Tag[]>([])
-  const [interestTags, setInterestTags] = useState<Tag[]>([])
   const [recommendations, setRecommendations] = useState<Recommendation[]>([
     {
       name: "Jane Doe",
@@ -32,6 +30,11 @@ const ProfileBio: React.FC<Props> = ({ editable = true }) => {
   ])
 
   const user = useAtomValue(userStore.Iam)
+  const setUserBio = useSetAtom(profileStore.bio)
+  const setUserSkills = useSetAtom(profileStore.skills)
+  const setUserInterests = useSetAtom(profileStore.interests)
+  const skills = useAtomValue(profileStore.skills)
+  const interests = useAtomValue(profileStore.interests)
 
   const [getBioLoading, bioData, getBioError, getBio] =
     useServerAction(GetUserBioForUser)
@@ -39,20 +42,7 @@ const ProfileBio: React.FC<Props> = ({ editable = true }) => {
     useServerAction(GetTagsForUser)
 
   useEffect(() => {
-    if (user) {
-      ;(async () => {
-        getBio(user?.external_auth_id)
-        getTags(user?.external_auth_id)
-      })()
-    }
-  }, [user])
-
-  useEffect(() => {
-    setBio(bioData?.data as string)
-  }, [bioData])
-
-  useEffect(() => {
-    if (tagsData?.data) {
+    if (tagsData && tagsData.data) {
       const skillTags = tagsData?.data
         .filter((tag) => tag.type === "skill")
         .map((tag) => ({
@@ -67,28 +57,32 @@ const ProfileBio: React.FC<Props> = ({ editable = true }) => {
           name: tag.name,
           status: TagStatus[1] as const
         }))
-      setSkillTags(skillTags)
-      setInterestTags(interestTags)
+      setUserInterests(interestTags)
+      setUserSkills(skillTags)
     }
   }, [tagsData])
+
+  useEffect(() => {
+    if (user) {
+      ;(async () => {
+        getBio(user?.external_auth_id)
+        getTags(user?.external_auth_id)
+      })()
+    }
+  }, [user])
+
+  useEffect(() => {
+    setUserBio(bioData?.data as string)
+  }, [bioData])
 
   return (
     <Card>
       <CardHeader>
         <header className="profile-section-header flex justify-between">
           <CardTitle>Bio</CardTitle>
-          {editable && setSkillTags && setInterestTags && (
-            <EditProfileModal
-              bio={bio}
-              setBio={setBio}
-              skills={skillTags}
-              setSkills={setSkillTags}
-              interests={interestTags}
-              setInterests={setInterestTags}
-            />
-          )}
+          {editable && <EditProfileModal />}
         </header>
-        <CardDescription>{bio}</CardDescription>
+        <CardDescription>{bioData?.data}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
@@ -96,7 +90,7 @@ const ProfileBio: React.FC<Props> = ({ editable = true }) => {
             <h3 className="mb-2 font-semibold">Skills</h3>
           </header>
           <div className="flex flex-wrap gap-2">
-            {skillTags.map((skill: Tag) => (
+            {skills.map((skill: Tag) => (
               <Badge key={skill.id} variant="secondary">
                 {skill.name}
               </Badge>
@@ -108,7 +102,7 @@ const ProfileBio: React.FC<Props> = ({ editable = true }) => {
             <h3 className="mb-2 font-semibold">interestTags</h3>
           </div>
           <div className="flex flex-wrap gap-2">
-            {interestTags.map((interest: Tag) => (
+            {interests.map((interest: Tag) => (
               <Badge key={interest.id} variant="outline">
                 {interest.name}
               </Badge>
