@@ -1,9 +1,9 @@
 "use client"
 
-import ProfileActivities from "@/src/components/dashboard/Profile/profile-activities"
-import ProfileBio from "@/src/components/dashboard/Profile/profile-bio"
-import ProfileCalendar from "@/src/components/dashboard/Profile/profile-calendar"
-import ProfileRewards from "@/src/components/dashboard/Profile/profile-rewards"
+import ProfileActivities from "@/src/components/dashboard/Profile/ProfileActivities"
+import ProfileBio from "@/src/components/dashboard/Profile/ProfileBio"
+import ProfileCalendar from "@/src/components/dashboard/Profile/ProfileCalendar"
+import ProfileRewards from "@/src/components/dashboard/Profile/ProfileRewards"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   Tabs,

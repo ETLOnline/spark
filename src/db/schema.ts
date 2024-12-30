@@ -1,11 +1,6 @@
-import { v4 as uuidv4 } from "uuid"
+import { randomUUID } from "crypto"
 import { relations, sql } from "drizzle-orm"
-import {
-  int,
-  primaryKey,
-  sqliteTable,
-  text
-} from "drizzle-orm/sqlite-core"
+import { int, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 const timestamps = {
   updated_at: text("updated_at"),
@@ -20,7 +15,7 @@ export const usersTable = sqliteTable("users", {
   email: text().notNull().unique(),
   external_auth_id: text().notNull().unique(),
   profile_url: text(),
-  unique_id: text("unique_id", { length: 36 }).$defaultFn(() => uuidv4()),
+  unique_id: text("unique_id", { length: 36 }).$defaultFn(() => randomUUID()),
   bio: text(),
   meta: text()
 })

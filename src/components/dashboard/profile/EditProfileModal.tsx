@@ -11,16 +11,18 @@ import {
 } from "../../ui/dialog"
 import { Label } from "../../ui/label"
 import { Textarea } from "@/src/components/ui/textarea"
-import ChipsInput from "@/src/components/chips-input"
+import ChipsInput from "@/src/components/ChipsInput/ChipsInput"
 import {
   AddNewTagsForUser,
   AddExistingTagsForUser,
-  DeleteTagsForUser
+  DeleteTagsForUser,
+  SearchTagsForSuggestions
 } from "@/src/server-actions/Tag/Tag"
-import { useUser } from "@clerk/nextjs"
 import { UpdateBioForUser } from "@/src/server-actions/User/User"
-import { Tag } from "./types/profile-types"
+import { Tag, TagStatus, TagType } from "./types/profile-types.d"
 import { useServerAction } from "@/src/hooks/useServerAction"
+import { useAtomValue } from "jotai"
+import { userStore } from "@/src/store/user/userStore"
 
 type EditProfileModalProps = {
   bio: string
@@ -53,7 +55,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
 
   const editedBio = useRef<string>(props.bio)
 
-  const { user } = useUser()
+  const user = useAtomValue(userStore.Iam)
 
   const [addNewTagLoading, addedNewTagData, addNewTagError, addNewTags] =
     useServerAction(AddNewTagsForUser)
@@ -67,6 +69,16 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
     useServerAction(DeleteTagsForUser)
   const [updateBioLoading, updatedBioData, updateBioError, updateBio] =
     useServerAction(UpdateBioForUser)
+  const [searchTagsLoading, searchedTags, searchTagsError, searchTags] =
+    useServerAction(SearchTagsForSuggestions)
+
+  const suggestions: Tag[] = searchedTags?.data
+    ? searchedTags.data.map((tag) => ({
+        name: tag.name,
+        id: tag.id,
+        status: TagStatus[2] as const
+      }))
+    : []
 
   useEffect(() => {
     setSavedInterests([...props.interests])
@@ -92,18 +104,18 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
             !updatedSavedTags.find((updatedTag) => tag.id === updatedTag.id)
         )
         .map((tag: Tag) => tag.id as number)
-      await deleteTags(user.id, deletedTagsIds)
+      await deleteTags(user.external_auth_id, deletedTagsIds)
       await addNewTags(
         updatedNewTags.map((tag) => {
           return { name: tag.name, type }
         }),
-        user.id
+        user.external_auth_id
       )
       await addExistingTags(
         updatedSelectedTags.map((tag) => {
           return { name: tag.name, id: tag.id, type }
         }),
-        user.id
+        user.external_auth_id
       )
       setTags((tags: Tag[]) => {
         tags = tags.filter((tag) => !deletedTagsIds.includes(tag.id as number)) // remove deleted tags
@@ -117,7 +129,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
   const saveProfileChanges = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (editedBio.current.length && editedBio.current !== props.bio && user) {
-      await updateBio(user.id, editedBio.current)
+      await updateBio(user.external_auth_id, editedBio.current)
       props.setBio(editedBio.current)
     }
     updatedSkills.length &&
@@ -187,7 +199,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
                   updateSavedTags={setSavedSkills}
                   updateNewTags={setNewSkills}
                   updateSelectedTags={setSelectedtedSkills}
-                  tagType="skill"
+                  tagType={TagType.skill}
+                  suggestions={suggestions}
+                  searchSuggestions={searchTags}
+                  loadingSuggestions={searchTagsLoading}
                 />
               </div>
               <div className="edit-interests w-full">
@@ -199,7 +214,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
                   updateNewTags={setNewInterests}
                   updateSavedTags={setSavedInterests}
                   updateSelectedTags={setSelectedInterests}
-                  tagType="interest"
+                  tagType={TagType.interest}
+                  suggestions={suggestions}
+                  searchSuggestions={searchTags}
+                  loadingSuggestions={searchTagsLoading}
                 />
               </div>
             </div>

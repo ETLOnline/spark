@@ -20,7 +20,7 @@ const ProfileActivities: React.FC = () => {
 
   useEffect(() => {
     ;(async () => {
-      user && (await getActivities(user?.external_auth_id))
+      user && (getActivities(user?.external_auth_id))
     })()
   }, [user])
 

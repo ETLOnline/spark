@@ -21,7 +21,7 @@ const ProfileRewards: React.FC = () => {
 
   useEffect(() => {
     ;(async () => {
-      user && (await getRewards(user?.external_auth_id))
+      user && getRewards(user?.external_auth_id)
     })()
   }, [user])
 
@@ -33,19 +33,21 @@ const ProfileRewards: React.FC = () => {
       </CardHeader>
       <CardContent>
         <ul className="space-y-4">
-          {rewards &&
-            rewards.data &&
-            rewards.data.map((reward) => (
-              <li key={reward.id} className="flex items-start space-x-3">
-                <TrophyIcon className="mt-0.5 h-5 w-5 text-yellow-500" />
-                <div>
-                  <h3 className="font-semibold">{reward.title}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {reward.description}
-                  </p>
-                </div>
-              </li>
-            ))}
+          {rewards
+            ? rewards.data
+              ? rewards.data.map((reward) => (
+                  <li key={reward.id} className="flex items-start space-x-3">
+                    <TrophyIcon className="mt-0.5 h-5 w-5 text-yellow-500" />
+                    <div>
+                      <h3 className="font-semibold">{reward.title}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {reward.description}
+                      </p>
+                    </div>
+                  </li>
+                ))
+              : null
+            : null}
         </ul>
       </CardContent>
     </Card>

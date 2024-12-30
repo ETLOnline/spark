@@ -16,5 +16,16 @@ export type Activity = {
 export type Tag = {
   name: string
   id?: number
-  status: "saved" | "selected" | "new"
+  status: TagStatus
+}
+
+export enum TagStatus {
+  1 = "saved",
+  2 = "selected",
+  3 = "new"
+}
+
+export enum TagType {
+  interest = "interest",
+  skill = "skill"
 }

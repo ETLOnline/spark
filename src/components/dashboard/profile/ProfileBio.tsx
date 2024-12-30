@@ -6,13 +6,14 @@ import {
   CardContent,
   CardHeader
 } from "../../ui/card"
-import { Recommendation, Tag } from "./types/profile-types"
-import EditProfileModal from "./edit-profile-modal"
+import { Recommendation, Tag, TagStatus } from "./types/profile-types.d"
+import EditProfileModal from "./EditProfileModal"
 import { useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetUserBioForUser } from "@/src/server-actions/User/User"
-import { useUser } from "@clerk/nextjs"
 import { GetTagsForUser } from "@/src/server-actions/Tag/Tag"
+import { useAtomValue } from "jotai"
+import { userStore } from "@/src/store/user/userStore"
 
 type Props = {
   editable?: boolean
@@ -30,7 +31,7 @@ const ProfileBio: React.FC<Props> = ({ editable = true }) => {
     { name: "John Smith", text: "Always delivers high-quality work on time." }
   ])
 
-  const { user } = useUser()
+  const user = useAtomValue(userStore.Iam)
 
   const [getBioLoading, bioData, getBioError, getBio] =
     useServerAction(GetUserBioForUser)
@@ -40,8 +41,8 @@ const ProfileBio: React.FC<Props> = ({ editable = true }) => {
   useEffect(() => {
     if (user) {
       ;(async () => {
-        await getBio(user?.id)
-        await getTags(user?.id)
+        getBio(user?.external_auth_id)
+        getTags(user?.external_auth_id)
       })()
     }
   }, [user])
@@ -57,14 +58,14 @@ const ProfileBio: React.FC<Props> = ({ editable = true }) => {
         .map((tag) => ({
           id: tag.id,
           name: tag.name,
-          status: "saved" as const
+          status: TagStatus[1] as const
         }))
       const interestTags = tagsData?.data
         .filter((tag) => tag.type === "interest")
         .map((tag) => ({
           id: tag.id,
           name: tag.name,
-          status: "saved" as const
+          status: TagStatus[1] as const
         }))
       setSkillTags(skillTags)
       setInterestTags(interestTags)

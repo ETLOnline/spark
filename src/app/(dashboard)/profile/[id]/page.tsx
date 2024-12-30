@@ -1,51 +1,19 @@
 import NotFound from "@/src/components/dashboard/NotFound/NotFound"
-import ProfileActivities from "@/src/components/dashboard/Profile/profile-activities"
-import ProfileBio from "@/src/components/dashboard/Profile/profile-bio"
-import ProfileCalendar from "@/src/components/dashboard/Profile/profile-calendar"
-import ProfileRewards from "@/src/components/dashboard/Profile/profile-rewards"
+import ProfileActivities from "@/src/components/dashboard/Profile/ProfileActivities"
+import ProfileBio from "@/src/components/dashboard/Profile/ProfileBio"
+import ProfileCalendar from "@/src/components/dashboard/Profile/ProfileCalendar"
+import ProfileRewards from "@/src/components/dashboard/Profile/ProfileRewards"
 import ProfileFollowActions from "@/src/components/dashboard/Profile/user/ProfileFollowActions"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import { Button } from "@/src/components/ui/button"
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger
 } from "@/src/components/ui/tabs"
-import { SelectUser } from "@/src/db/schema"
 import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
 import { CalendarIcon, StarIcon, TrophyIcon, UserIcon } from "lucide-react"
 import Link from "next/link"
-
-const skillTags = ["React", "Next.js", "TypeScript", "UI/UX", "Node.js"]
-const interests = ["Web Development", "AI", "Open Source", "Tech Writing"]
-const recommendations = [
-  {
-    name: "Jane Doe",
-    text: "An exceptional developer with a keen eye for detail."
-  },
-  { name: "John Smith", text: "Always delivers high-quality work on time." }
-]
-const rewards = [
-  {
-    title: "Top Contributor",
-    description: "Awarded for outstanding contributions to the team"
-  },
-  {
-    title: "Innovation Champion",
-    description: "Recognized for implementing creative solutions"
-  }
-]
-const activities = [
-  {
-    date: "2023-04-01",
-    description: "Completed the 'Advanced React Patterns' course"
-  },
-  {
-    date: "2023-03-15",
-    description: "Contributed to open-source project 'awesome-ui-components'"
-  }
-]
 
 interface ProfileScreenProps {
   params: {
@@ -117,18 +85,13 @@ export default async function ProfileScreen({
           </Link>
         </TabsList>
         <TabsContent value="basic">
-          <ProfileBio
-            skillTags={skillTags}
-            interests={interests}
-            recommendations={recommendations}
-            editable={false}
-          />
+          <ProfileBio editable={false} />
         </TabsContent>
         <TabsContent value="rewards">
-          <ProfileRewards rewards={rewards} />
+          <ProfileRewards />
         </TabsContent>
         <TabsContent value="activity">
-          <ProfileActivities activities={activities} />
+          <ProfileActivities />
         </TabsContent>
         <TabsContent value="calendar">
           <ProfileCalendar />

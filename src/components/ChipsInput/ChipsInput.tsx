@@ -1,15 +1,20 @@
 import { useState, useEffect, useRef } from "react"
 import { X } from "lucide-react"
-import { Tag } from "../dashboard/Profile/types/profile-types"
-import { useServerAction } from "@/src/hooks/useServerAction"
-import { SearchTagsForSuggestions } from "@/src/server-actions/Tag/Tag"
+import {
+  Tag,
+  TagStatus,
+  TagType
+} from "../dashboard/Profile/types/profile-types"
 
 type ChipsInputProps = {
   tags: Tag[]
   updateSavedTags: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void
   updateNewTags: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void
   updateSelectedTags: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void
-  tagType: "interest" | "skill"
+  tagType: TagType
+  suggestions: Tag[]
+  searchSuggestions: (name: string, type: string) => Promise<void>
+  loadingSuggestions: boolean
 }
 
 const ChipsInput: React.FC<ChipsInputProps> = ({
@@ -17,23 +22,15 @@ const ChipsInput: React.FC<ChipsInputProps> = ({
   updateNewTags,
   updateSavedTags,
   updateSelectedTags,
-  tagType
+  tagType,
+  suggestions,
+  loadingSuggestions,
+  searchSuggestions
 }) => {
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false)
   const timer = useRef<NodeJS.Timeout | undefined>()
 
   const tagInput = useRef<HTMLInputElement>(null)
-
-  const [searchTagsLoading, searchedTags, searchTagsError, searchTags] =
-    useServerAction(SearchTagsForSuggestions)
-
-  const suggestions: Tag[] = searchedTags?.data
-    ? searchedTags.data.map((tag) => ({
-        name: tag.name,
-        id: tag.id,
-        status: "selected" as const
-      }))
-    : []
 
   useEffect(() => {
     return () => {
@@ -49,7 +46,7 @@ const ChipsInput: React.FC<ChipsInputProps> = ({
       timer.current = setTimeout(async () => {
         try {
           setShowSuggestions(true)
-          await searchTags(e.target.value, tagType)
+          await searchSuggestions(e.target.value, tagType)
         } catch (error) {
           console.error("Error fetching suggestions:", error)
         }
@@ -77,7 +74,7 @@ const ChipsInput: React.FC<ChipsInputProps> = ({
             (tagInput.current as HTMLInputElement).value
               .substring(1)
               .toLowerCase(),
-          status: "new"
+          status: TagStatus[3]
         }
       ])
       setShowSuggestions(false)
@@ -141,7 +138,7 @@ const ChipsInput: React.FC<ChipsInputProps> = ({
       </div>
       {showSuggestions && (tagInput.current as HTMLInputElement).value && (
         <div className="absolute mt-1 w-full rounded-md border bg-popover p-1 shadow-md z-10">
-          {searchTagsLoading ? (
+          {loadingSuggestions ? (
             <div className="p-2 text-sm text-muted-foreground">Loading...</div>
           ) : suggestions.length === 0 ? (
             <div className="max-h-48 overflow-auto">
