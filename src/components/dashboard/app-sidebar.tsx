@@ -49,19 +49,19 @@ const data = {
       items: [
         {
           title: "Bio",
-          url: "/Profile/?tab=basic"
+          url: "/profile/?tab=basic"
         },
         {
           title: "Rewards",
-          url: "/Profile/?tab=rewards"
+          url: "/profile/?tab=rewards"
         },
         {
           title: "Activity",
-          url: "/Profile/?tab=activity"
+          url: "/profile/?tab=activity"
         },
         {
           title: "Schedule",
-          url: "/Profile/?tab=calendar"
+          url: "/profile/?tab=calendar"
         }
       ]
     },

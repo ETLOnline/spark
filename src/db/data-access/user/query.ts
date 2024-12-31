@@ -16,7 +16,7 @@ export async function CreateUser(data: InsertUser) {
   await db.insert(usersTable).values(data)
 }
 
-export async function SelectUserById(id: string) {
+export async function SelectUserByExternalId(id: string) {
   return await db.query.usersTable.findFirst({
     columns: {
       id: true,

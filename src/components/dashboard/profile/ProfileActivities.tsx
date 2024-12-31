@@ -6,23 +6,27 @@ import {
   CardHeader
 } from "../../ui/card"
 import { StarIcon } from "lucide-react"
-import { useAtomValue } from "jotai"
-import { userStore } from "@/src/store/user/userStore"
 import { GetActivitiessForUserAction } from "@/src/server-actions/Activity/Activity"
-import { useServerAction } from "@/src/hooks/useServerAction"
-import { useEffect } from "react"
 
-const ProfileActivities: React.FC = () => {
-  const user = useAtomValue(userStore.Iam)
+type ProfileActivitiesProps = {
+  userId: string
+}
 
-  const [activitiesLoading, activities, activitiesError, getActivities] =
-    useServerAction(GetActivitiessForUserAction)
-
-  useEffect(() => {
-    ;(async () => {
-      user && (getActivities(user?.external_auth_id))
-    })()
-  }, [user])
+const ProfileActivities: React.FC<ProfileActivitiesProps> = async ({
+  userId
+}) => {
+  let activities
+  
+  try {
+    const res = await GetActivitiessForUserAction(userId)
+    if (res.success) {
+      activities = res.data
+    } else {
+      throw res.error
+    }
+  } catch (error) {
+    console.error(error)
+  }
 
   return (
     <Card>
@@ -34,19 +38,17 @@ const ProfileActivities: React.FC = () => {
       </CardHeader>
       <CardContent>
         <ul className="space-y-4">
-          {activities &&
-            activities.data &&
-            activities?.data.map((activity) => (
-              <li key={activity.id} className="flex items-start space-x-3">
-                <StarIcon className="mt-0.5 h-5 w-5 text-blue-500" />
-                <div>
-                  <p className="text-sm">{activity.description}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(activity.date).toLocaleDateString()}
-                  </p>
-                </div>
-              </li>
-            ))}
+          {activities?.map((activity) => (
+            <li key={activity.id} className="flex items-start space-x-3">
+              <StarIcon className="mt-0.5 h-5 w-5 text-blue-500" />
+              <div>
+                <p className="text-sm">{activity.description}</p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(activity.date).toLocaleDateString()}
+                </p>
+              </div>
+            </li>
+          ))}
         </ul>
       </CardContent>
     </Card>

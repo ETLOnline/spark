@@ -4,7 +4,7 @@ import { useSetAtom } from "jotai"
 import { useAuth, useUser } from "@clerk/nextjs"
 import { SelectUser } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
-import { SelectUserById } from "@/src/db/data-access/user/query"
+import { SelectUserByExternalId } from "@/src/db/data-access/user/query"
 import { UserResource } from "@clerk/types"
 
 const ClerkAuthListener: React.FC = () => {
@@ -14,7 +14,7 @@ const ClerkAuthListener: React.FC = () => {
   const setIam = useSetAtom(userStore.Iam)
   const handleSetUser = async (user: UserResource | null | undefined) => {
     if (!user) return
-    const userRes = await SelectUserById(user.id)
+    const userRes = await SelectUserByExternalId(user.id)
     if (!userRes) return
     setUser(userRes)
     setIam(userRes)
