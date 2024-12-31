@@ -24,8 +24,3 @@ export enum TagStatus {
   2 = "selected",
   3 = "new"
 }
-
-export enum TagType {
-  interest = "interest",
-  skill = "skill"
-}

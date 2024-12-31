@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { Button } from "../../ui/button"
 import {
   Dialog,
@@ -11,118 +11,58 @@ import {
 } from "../../ui/dialog"
 import { Label } from "../../ui/label"
 import { Textarea } from "@/src/components/ui/textarea"
-import ChipsInput from "@/src/components/ChipsInput/ChipsInput"
-import {
-  AddNewTagsForUser,
-  AddExistingTagsForUser,
-  DeleteTagsForUser,
-  SearchTagsForSuggestions
-} from "@/src/server-actions/Tag/Tag"
+import TagsInput from "@/src/components/TagsInput/TagsInput"
 import { UpdateBioForUser } from "@/src/server-actions/User/User"
-import { Tag, TagStatus, TagType } from "./types/profile-types.d"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { profileStore } from "@/src/store/profile/profileStore"
+import useUserSkills from "./hooks/useUserSkills"
+import useUserInterests from "./hooks/useUserInterests"
 
 const EditProfileModal: React.FC = () => {
-  const user = useAtomValue(userStore.Iam)
   const bio = useAtomValue(profileStore.bio)
-  const skills = useAtomValue(profileStore.skills)
-  const interests = useAtomValue(profileStore.interests)
-  const setInterests = useSetAtom(profileStore.interests)
-  const setSkills = useSetAtom(profileStore.skills)
+  const user = useAtomValue(userStore.user)
   const setBio = useSetAtom(profileStore.bio)
 
   const [isOpen, setIsOpen] = useState(false)
-  const [savedSkills, setSavedSkills] = useState<Tag[]>([])
-  const [savedInterests, setSavedInterests] = useState<Tag[]>([])
-  const [selectedtedSkills, setSelectedtedSkills] = useState<Tag[]>([])
-  const [selectedInterests, setSelectedInterests] = useState<Tag[]>([])
-  const [newSkills, setNewSkills] = useState<Tag[]>([])
-  const [newInterests, setNewInterests] = useState<Tag[]>([])
-
-  const updatedInterests: Tag[] = [
-    ...savedInterests,
-    ...selectedInterests,
-    ...newInterests
-  ]
-  const updatedSkills: Tag[] = [
-    ...savedSkills,
-    ...selectedtedSkills,
-    ...newSkills
-  ]
 
   const editedBio = useRef<string>(bio)
 
-  const [addNewTagLoading, addedNewTagData, addNewTagError, addNewTags] =
-    useServerAction(AddNewTagsForUser)
-  const [
-    addExistingTagsLoading,
-    addedExistingTagsData,
-    addExistingTagsError,
-    addExistingTags
-  ] = useServerAction(AddExistingTagsForUser)
-  const [deleteTagLoading, deletedTagData, deleteTagError, deleteTags] =
-    useServerAction(DeleteTagsForUser)
   const [updateBioLoading, updatedBioData, updateBioError, updateBio] =
     useServerAction(UpdateBioForUser)
-  const [searchTagsLoading, searchedTags, searchTagsError, searchTags] =
-    useServerAction(SearchTagsForSuggestions)
 
-  const suggestions: Tag[] = searchedTags?.data
-    ? searchedTags.data.map((tag) => ({
-        name: tag.name,
-        id: tag.id,
-        status: TagStatus[2] as const
-      }))
-    : []
+  const [
+    skills,
+    setSkills,
+    newSkills,
+    setNewSkills,
+    selectedSkills,
+    setSelectedtedSkills,
+    savedSkills,
+    setSavedSkills,
+    updatedSkills,
+    skillSuggestions,
+    searchSkillsForUserInput,
+    searchSkillsLoading,
+    updateSkills
+  ] = useUserSkills()
 
-  useEffect(() => {
-    setSavedInterests([...interests])
-  }, [interests])
-
-  useEffect(() => {
-    setSavedSkills([...skills])
-  }, [skills])
-
-  const updateTags = async (
-    updatedSavedTags: Tag[],
-    updatedNewTags: Tag[],
-    updatedSelectedTags: Tag[],
-    tags: Tag[],
-    setTags: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void,
-    type: "skill" | "interest"
-  ) => {
-    if (!user) return
-    try {
-      const deletedTagsIds: number[] = tags
-        .filter(
-          (tag: Tag) =>
-            !updatedSavedTags.find((updatedTag) => tag.id === updatedTag.id)
-        )
-        .map((tag: Tag) => tag.id as number)
-      await deleteTags(user.external_auth_id, deletedTagsIds)
-      await addNewTags(
-        updatedNewTags.map((tag) => {
-          return { name: tag.name, type }
-        }),
-        user.external_auth_id
-      )
-      await addExistingTags(
-        updatedSelectedTags.map((tag) => {
-          return { name: tag.name, id: tag.id, type }
-        }),
-        user.external_auth_id
-      )
-      setTags((tags: Tag[]) => {
-        tags = tags.filter((tag) => !deletedTagsIds.includes(tag.id as number)) // remove deleted tags
-        return [...tags, ...updatedNewTags, ...updatedSelectedTags]
-      })
-    } catch (error) {
-      console.error(error)
-    }
-  }
+  const [
+    interests,
+    setInterests,
+    newInterests,
+    setNewInterests,
+    selectedInterests,
+    setSelectedtedInterests,
+    savedInterests,
+    setSavedInterests,
+    updatedInterests,
+    interestSuggestions,
+    searchInterestsForUserInput,
+    searchInterestsLoading,
+    updateInterests
+  ] = useUserInterests()
 
   const saveProfileChanges = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -130,31 +70,10 @@ const EditProfileModal: React.FC = () => {
       await updateBio(user.external_auth_id, editedBio.current)
       setBio(editedBio.current)
     }
-    updatedSkills.length &&
-      (await updateTags(
-        savedSkills,
-        newSkills,
-        selectedtedSkills,
-        skills,
-        setSkills,
-        "skill"
-      ))
+    updatedSkills.length && (await updateSkills())
     updatedInterests.length &&
-      (await updateTags(
-        savedInterests,
-        newInterests,
-        selectedInterests,
-        interests,
-        setInterests,
-        "interest"
-      ))
+      (await updateInterests())
     setIsOpen(false)
-    setSavedSkills([...skills])
-    setSavedInterests([...interests])
-    setSelectedInterests([])
-    setSelectedtedSkills([])
-    setNewInterests([])
-    setNewSkills([])
     editedBio.current = ""
   }
 
@@ -192,30 +111,28 @@ const EditProfileModal: React.FC = () => {
                 <Label htmlFor="skills" className="edit-label">
                   Skills
                 </Label>
-                <ChipsInput
+                <TagsInput
                   tags={updatedSkills}
                   updateSavedTags={setSavedSkills}
                   updateNewTags={setNewSkills}
                   updateSelectedTags={setSelectedtedSkills}
-                  tagType={TagType.skill}
-                  suggestions={suggestions}
-                  searchSuggestions={searchTags}
-                  loadingSuggestions={searchTagsLoading}
+                  suggestions={skillSuggestions}
+                  onChange={searchSkillsForUserInput}
+                  loadingSuggestions={searchSkillsLoading}
                 />
               </div>
               <div className="edit-interests w-full">
                 <Label htmlFor="interests" className="edit-label">
                   Interests
                 </Label>
-                <ChipsInput
+                <TagsInput
                   tags={updatedInterests}
                   updateNewTags={setNewInterests}
                   updateSavedTags={setSavedInterests}
-                  updateSelectedTags={setSelectedInterests}
-                  tagType={TagType.interest}
-                  suggestions={suggestions}
-                  searchSuggestions={searchTags}
-                  loadingSuggestions={searchTagsLoading}
+                  updateSelectedTags={setSelectedtedInterests}
+                  suggestions={interestSuggestions}
+                  onChange={searchInterestsForUserInput}
+                  loadingSuggestions={searchInterestsLoading}
                 />
               </div>
             </div>

@@ -2,30 +2,29 @@ import { useState, useEffect, useRef } from "react"
 import { X } from "lucide-react"
 import {
   Tag,
-  TagStatus,
-  TagType
+  TagStatus
 } from "../dashboard/Profile/types/profile-types.d"
 
-type ChipsInputProps = {
+type TagsInputProps = {
   tags: Tag[]
   updateSavedTags: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void
   updateNewTags: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void
   updateSelectedTags: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void
-  tagType: TagType
   suggestions: Tag[]
-  searchSuggestions: (name: string, type: string) => Promise<void>
+  onChange: (tagName: string) => void
   loadingSuggestions: boolean
+  autocomplete?: boolean
 }
 
-const ChipsInput: React.FC<ChipsInputProps> = ({
+const TagsInput: React.FC<TagsInputProps> = ({
   tags,
   updateNewTags,
   updateSavedTags,
   updateSelectedTags,
-  tagType,
   suggestions,
   loadingSuggestions,
-  searchSuggestions
+  onChange,
+  autocomplete = true
 }) => {
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false)
   const timer = useRef<NodeJS.Timeout | undefined>()
@@ -39,24 +38,28 @@ const ChipsInput: React.FC<ChipsInputProps> = ({
   }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Clear existing timer
-    timer && clearTimeout(timer.current)
-    // Set new timer for debouncing
-    if (e.target.value.length >= 2) {
-      timer.current = setTimeout(async () => {
-        try {
-          setShowSuggestions(true)
-          await searchSuggestions(e.target.value, tagType)
-        } catch (error) {
-          console.error("Error fetching suggestions:", error)
-        }
-      }, 800)
+    if (autocomplete) {
+      // Clear existing timer
+      timer && clearTimeout(timer.current)
+      // Set new timer for debouncing
+      if (e.target.value.length >= 2) {
+        timer.current = setTimeout(() => {
+          try {
+            setShowSuggestions(true)
+            onChange(e.target.value)
+          } catch (error) {
+            console.error("Error fetching suggestions:", error)
+          }
+        }, 800)
+      } else {
+        onChange(e.target.value)
+      }
     } else {
       setShowSuggestions(false)
     }
   }
 
-  const handleNewTag = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleNewTag = () => {
     if (
       !tags.some(
         (tag) =>
@@ -170,4 +173,4 @@ const ChipsInput: React.FC<ChipsInputProps> = ({
   )
 }
 
-export default ChipsInput
+export default TagsInput

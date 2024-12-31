@@ -35,6 +35,7 @@ const ProfileBio: React.FC<Props> = ({ editable = true }) => {
   const setUserInterests = useSetAtom(profileStore.interests)
   const skills = useAtomValue(profileStore.skills)
   const interests = useAtomValue(profileStore.interests)
+  const bio = useAtomValue(profileStore.bio)  
 
   const [getBioLoading, bioData, getBioError, getBio] =
     useServerAction(GetUserBioForUser)
@@ -82,7 +83,7 @@ const ProfileBio: React.FC<Props> = ({ editable = true }) => {
           <CardTitle>Bio</CardTitle>
           {editable && <EditProfileModal />}
         </header>
-        <CardDescription>{bioData?.data}</CardDescription>
+        <CardDescription>{bio}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
