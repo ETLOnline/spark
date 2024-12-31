@@ -2,9 +2,6 @@ import { Dispatch, useEffect, useState } from "react"
 import { Tag, TagStatus } from "../types/profile-types.d"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
-  AddExistingTagsForUser,
-  AddNewTagsForUser,
-  DeleteTagsForUser,
   SearchTagsForSuggestions
 } from "@/src/server-actions/Tag/Tag"
 import { SetStateAction, useAtomValue, useSetAtom } from "jotai"
@@ -24,7 +21,6 @@ type UseUserSkillsReturn = [
   suggestions: Tag[], // Search suggestions
   searchSkillsForUserInput: (name: string) => void, // Search function
   searchSkillsLoading: boolean, // Loading state
-  updateSkills: () => Promise<void> // Update function
 ]
 
 const useUserSkills = (): UseUserSkillsReturn => {
@@ -40,24 +36,6 @@ const useUserSkills = (): UseUserSkillsReturn => {
 
   const [searchSkillsLoading, searchedSkills, searchSkillsError, searchSkills] =
     useServerAction(SearchTagsForSuggestions)
-  const [
-    addNewSkillsLoading,
-    addedNewSkillsData,
-    addNewSkillsError,
-    addNewSkills
-  ] = useServerAction(AddNewTagsForUser)
-  const [
-    addExistingSkillsLoading,
-    addedExistingSkillsData,
-    addExistingSkillsError,
-    addExistingSkills
-  ] = useServerAction(AddExistingTagsForUser)
-  const [
-    deleteSkillsLoading,
-    deletedSkillsData,
-    deleteSkillsError,
-    deleteSkills
-  ] = useServerAction(DeleteTagsForUser)
 
   const suggestions: Tag[] = searchedSkills?.data
     ? searchedSkills.data.map((tag) => ({
@@ -70,42 +48,6 @@ const useUserSkills = (): UseUserSkillsReturn => {
   useEffect(() => {
     setSavedSkills([...skills])
   }, [skills])
-
-  const updateSkills = async () => {
-    if (!user) return
-    try {
-      const deletedSkillsIds: number[] = skills
-        .filter(
-          (tag: Tag) =>
-            !savedSkills.find((updatedTag) => tag.id === updatedTag.id)
-        )
-        .map((tag: Tag) => tag.id as number)
-      await deleteSkills(user.external_auth_id, deletedSkillsIds)
-      await addNewSkills(
-        newSkills.map((tag) => {
-          return { name: tag.name, type: "skill" }
-        }),
-        user.external_auth_id
-      )
-      await addExistingSkills(
-        selectedSkills.map((tag) => {
-          return { name: tag.name, id: tag.id, type: "skill" }
-        }),
-        user.external_auth_id
-      )
-      setSkills((skills: Tag[]) => {
-        skills = skills.filter(
-          (tag) => !deletedSkillsIds.includes(tag.id as number)
-        ) // remove deleted skills
-        return [...skills, ...newSkills, ...selectedSkills]
-      })
-      setSavedSkills([...skills])
-      setSelectedtedSkills([])
-      setNewSkills([])
-    } catch (error) {
-      console.error(error)
-    }
-  }
 
   const searchSkillsForUserInput = (name: string) => {
     try {
@@ -127,8 +69,7 @@ const useUserSkills = (): UseUserSkillsReturn => {
     updatedSkills,
     suggestions,
     searchSkillsForUserInput,
-    searchSkillsLoading,
-    updateSkills
+    searchSkillsLoading
   ]
 }
 

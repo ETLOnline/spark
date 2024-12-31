@@ -2,9 +2,6 @@ import { Dispatch, useEffect, useState } from "react"
 import { Tag, TagStatus } from "../types/profile-types.d"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
-  AddExistingTagsForUser,
-  AddNewTagsForUser,
-  DeleteTagsForUser,
   SearchTagsForSuggestions
 } from "@/src/server-actions/Tag/Tag"
 import { SetStateAction, useAtomValue, useSetAtom } from "jotai"
@@ -24,7 +21,6 @@ type UseUserInterestsReturn = [
   suggestions: Tag[], // Search suggestions
   searchInterestsForUserInput: (name: string) => void, // Search function
   searchInterestsLoading: boolean, // Loading state
-  updateInterests: () => Promise<void> // Update function
 ]
 
 const useUserInterests = (): UseUserInterestsReturn => {
@@ -48,24 +44,6 @@ const useUserInterests = (): UseUserInterestsReturn => {
     searchInterestsError,
     searchInterests
   ] = useServerAction(SearchTagsForSuggestions)
-  const [
-    addNewInterestsLoading,
-    addedNewInterestsData,
-    addNewInterestsError,
-    addNewInterests
-  ] = useServerAction(AddNewTagsForUser)
-  const [
-    addExistingInterestsLoading,
-    addedExistingInterestsData,
-    addExistingInterestsError,
-    addExistingInterests
-  ] = useServerAction(AddExistingTagsForUser)
-  const [
-    deleteInterestsLoading,
-    deletedInterestsData,
-    deleteInterestsError,
-    deleteInterests
-  ] = useServerAction(DeleteTagsForUser)
 
   const suggestions: Tag[] = searchedInterests?.data
     ? searchedInterests.data.map((tag) => ({
@@ -78,42 +56,7 @@ const useUserInterests = (): UseUserInterestsReturn => {
   useEffect(() => {
     setSavedInterests([...interests])
   }, [interests])
-
-  const updateInterests = async () => {
-    if (!user) return
-    try {
-      const deletedInterestsIds: number[] = interests
-        .filter(
-          (tag: Tag) =>
-            !savedInterests.find((updatedTag) => tag.id === updatedTag.id)
-        )
-        .map((tag: Tag) => tag.id as number)
-      await deleteInterests(user.external_auth_id, deletedInterestsIds)
-      await addNewInterests(
-        newInterests.map((tag) => {
-          return { name: tag.name, type: "Interest" }
-        }),
-        user.external_auth_id
-      )
-      await addExistingInterests(
-        selectedInterests.map((tag) => {
-          return { name: tag.name, id: tag.id, type: "Interest" }
-        }),
-        user.external_auth_id
-      )
-      setInterests((interests: Tag[]) => {
-        interests = interests.filter(
-          (tag) => !deletedInterestsIds.includes(tag.id as number)
-        ) // remove deleted Interests
-        return [...interests, ...newInterests, ...selectedInterests]
-      })
-      setSavedInterests([...interests])
-      setNewInterests([])
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
+  
   const searchInterestsForUserInput = (name: string) => {
     try {
       searchInterests(name, "interest")
@@ -134,8 +77,7 @@ const useUserInterests = (): UseUserInterestsReturn => {
     updatedInterests,
     suggestions,
     searchInterestsForUserInput,
-    searchInterestsLoading,
-    updateInterests
+    searchInterestsLoading
   ]
 }
 

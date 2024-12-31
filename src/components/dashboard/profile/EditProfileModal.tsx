@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "../../ui/button"
 import {
   Dialog,
@@ -12,13 +12,14 @@ import {
 import { Label } from "../../ui/label"
 import { Textarea } from "@/src/components/ui/textarea"
 import TagsInput from "@/src/components/TagsInput/TagsInput"
-import { UpdateBioForUser } from "@/src/server-actions/User/User"
+import { saveUserProfileAction } from "@/src/server-actions/User/User"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { profileStore } from "@/src/store/profile/profileStore"
 import useUserSkills from "./hooks/useUserSkills"
 import useUserInterests from "./hooks/useUserInterests"
+import { ProfileData, Tag } from "./types/profile-types"
 
 const EditProfileModal: React.FC = () => {
   const bio = useAtomValue(profileStore.bio)
@@ -26,11 +27,17 @@ const EditProfileModal: React.FC = () => {
   const setBio = useSetAtom(profileStore.bio)
 
   const [isOpen, setIsOpen] = useState(false)
+  const [bioError, setBioError] = useState<string>("")
+  const [skillsError, setSkillsError] = useState<string>("")
+  const [interestsError, setInterestsError] = useState<string>("")
+  const [editedBio, seteditedBio] = useState<string>(bio)
 
-  const editedBio = useRef<string>(bio)
-
-  const [updateBioLoading, updatedBioData, updateBioError, updateBio] =
-    useServerAction(UpdateBioForUser)
+  const [
+    updateProfileLoading,
+    updatedProfileData,
+    updateProfileError,
+    updateProfile
+  ] = useServerAction(saveUserProfileAction)
 
   const [
     skills,
@@ -44,8 +51,7 @@ const EditProfileModal: React.FC = () => {
     updatedSkills,
     skillSuggestions,
     searchSkillsForUserInput,
-    searchSkillsLoading,
-    updateSkills
+    searchSkillsLoading
   ] = useUserSkills()
 
   const [
@@ -60,21 +66,89 @@ const EditProfileModal: React.FC = () => {
     updatedInterests,
     interestSuggestions,
     searchInterestsForUserInput,
-    searchInterestsLoading,
-    updateInterests
+    searchInterestsLoading
   ] = useUserInterests()
+
+  useEffect(() => {
+    updatedSkills.length > 20
+      ? setSkillsError("You can only add a maximum of 20 skills")
+      : skillsError && setSkillsError("")
+  }, [updatedSkills])
+
+  useEffect(() => {
+    updatedInterests.length > 20
+      ? setInterestsError("You can only add a maximum of 20 interests")
+      : interestsError && setInterestsError("")
+  }, [updatedInterests])
+
+  const getDeletedIds = (tags: Tag[], savedTags: Tag[]) => [
+    ...tags
+      .filter(
+        (tag: Tag) => !savedTags.find((updatedTag) => tag.id === updatedTag.id)
+      )
+      .map((tag: Tag) => tag.id as number)
+  ]
 
   const saveProfileChanges = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (editedBio.current.length && editedBio.current !== bio && user) {
-      await updateBio(user.external_auth_id, editedBio.current)
-      setBio(editedBio.current)
+    const deletedSkillsIds: number[] = getDeletedIds(skills, savedSkills)
+    const deletedInterestsIds: number[] = getDeletedIds(
+      interests,
+      savedInterests
+    )
+    const updatedProfileData: ProfileData = {
+      userId: user?.external_auth_id as string,
+      bio: editedBio ? editedBio : bio,
+      newTags: [
+        ...newSkills.map((tag) => {
+          return { name: tag.name, type: "skill" }
+        }),
+        ...newInterests.map((tag) => {
+          return { name: tag.name, type: "interest" }
+        })
+      ],
+      existingTags: [
+        ...selectedSkills.map((tag) => {
+          return { name: tag.name, id: tag.id, type: "skill" }
+        }),
+        ...selectedInterests.map((tag) => {
+          return { name: tag.name, id: tag.id, type: "skill" }
+        })
+      ],
+      deletedTagsIds: [...deletedSkillsIds, ...deletedInterestsIds]
     }
-    updatedSkills.length && (await updateSkills())
-    updatedInterests.length &&
-      (await updateInterests())
+    await updateProfile(updatedProfileData)
+    setSkills((skills: Tag[]) => {
+      skills = skills.filter(
+        // remove deleted skills
+        (tag) => !deletedSkillsIds.includes(tag.id as number)
+      )
+      return [...skills, ...newSkills, ...selectedSkills]
+    })
+    setSavedSkills([...skills])
+    setSelectedtedSkills([])
+    setNewSkills([])
+    setInterests((interests: Tag[]) => {
+      interests = interests.filter(
+        // remove deleted Interests
+        (tag) => !deletedInterestsIds.includes(tag.id as number)
+      )
+      return [...interests, ...newInterests, ...selectedInterests]
+    })
+    setSavedInterests([...interests])
+    setNewInterests([])
+    setBio(editedBio)
     setIsOpen(false)
-    editedBio.current = ""
+    seteditedBio("")
+  }
+
+  const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    seteditedBio(e.target.value)
+    if (e.target.value.length <= 2000) {
+      bioError && setBioError("")
+    } else {
+      setBioError("Bio cannot exceed 2000 characters")
+    }
   }
 
   return (
@@ -102,10 +176,27 @@ const EditProfileModal: React.FC = () => {
                   id={"bio"}
                   defaultValue={bio}
                   className="min-h-[100px] w-full"
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                    (editedBio.current = e.target.value)
-                  }
+                  onChange={handleBioChange}
                 />
+                <div className="flex justify-between mt-1">
+                  <p
+                    className={`text-sm ${
+                      editedBio?.length > 2000
+                        ? "text-red-500"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    {editedBio?.length
+                      ? editedBio.length
+                      : bio?.length
+                      ? bio.length
+                      : 0}
+                    /2000 characters
+                  </p>
+                  {bioError && (
+                    <p className="text-sm text-red-500">{bioError}</p>
+                  )}
+                </div>
               </div>
               <div className="edit-skills w-full">
                 <Label htmlFor="skills" className="edit-label">
@@ -120,6 +211,20 @@ const EditProfileModal: React.FC = () => {
                   onChange={searchSkillsForUserInput}
                   loadingSuggestions={searchSkillsLoading}
                 />
+                <div className={"flex justify-between mt-1"}>
+                  <p
+                    className={`text-sm ${
+                      updatedSkills?.length > 20
+                        ? "text-red-500"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    {`${updatedSkills.length}/20 skills`}
+                  </p>
+                  {skillsError && (
+                    <p className="text-sm text-red-500">{skillsError}</p>
+                  )}
+                </div>
               </div>
               <div className="edit-interests w-full">
                 <Label htmlFor="interests" className="edit-label">
@@ -134,11 +239,34 @@ const EditProfileModal: React.FC = () => {
                   onChange={searchInterestsForUserInput}
                   loadingSuggestions={searchInterestsLoading}
                 />
+                <div className={"flex justify-between mt-1"}>
+                  <p
+                    className={`text-sm ${
+                      updatedInterests?.length > 20
+                        ? "text-red-500"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    {`${updatedInterests.length}/20 skills`}
+                  </p>
+                  {interestsError && (
+                    <p className="text-sm text-red-500">{interestsError}</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit">Save changes</Button>
+            <Button
+              type="submit"
+              disabled={
+                bioError.length > 0 ||
+                skillsError.length > 0 ||
+                interestsError.length > 0
+              }
+            >
+              Save changes
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

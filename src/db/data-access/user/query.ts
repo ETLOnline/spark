@@ -1,6 +1,6 @@
-import { ColumnsSelection, eq, getTableColumns, like } from "drizzle-orm"
+import { eq, like } from "drizzle-orm"
 import { db } from "../.."
-import { InsertUser, SelectUser, usersTable } from "../../schema"
+import { InsertUser, usersTable } from "../../schema"
 
 export const userTableColSelect = {
   id: true,
