@@ -12,7 +12,7 @@ import {
 import { Label } from "../../ui/label"
 import { Textarea } from "@/src/components/ui/textarea"
 import TagsInput from "@/src/components/TagsInput/TagsInput"
-import { saveUserProfileAction } from "@/src/server-actions/User/User"
+import { SaveUserProfileAction } from "@/src/server-actions/User/User"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
@@ -37,7 +37,7 @@ const EditProfileModal: React.FC = () => {
     updatedProfileData,
     updateProfileError,
     updateProfile
-  ] = useServerAction(saveUserProfileAction)
+  ] = useServerAction(SaveUserProfileAction)
 
   const [
     skills,

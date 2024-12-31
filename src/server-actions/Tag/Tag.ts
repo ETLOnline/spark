@@ -3,14 +3,12 @@
 import { CreateServerAction } from ".."
 import {
   GetTagsById,
-  SearchTagsByName
-} from "@/src/db/data-access/tag/query"
-import {
+  SearchTagsByName,
   GetUserTagIds
-} from "@/src/db/data-access/user-tag/query"
+} from "@/src/db/data-access/tag/query"
 
-export const GetTagsForUser = CreateServerAction(
-  false,
+export const GetTagsForUserAction = CreateServerAction(
+  true,
   async (userId: string) => {
     try {
       const tagIds = await GetUserTagIds(userId)
@@ -22,8 +20,8 @@ export const GetTagsForUser = CreateServerAction(
   }
 )
 
-export const SearchTagsForSuggestions = CreateServerAction(
-  false,
+export const SearchTagsForSuggestionsAction = CreateServerAction(
+  true,
   async (name: string, type: string) => {
     try {
       const tags = await SearchTagsByName(name, type)

@@ -12,8 +12,8 @@ import { Recommendation, Tag, TagStatus } from "./types/profile-types.d"
 import EditProfileModal from "./EditProfileModal"
 import { useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { GetUserBioForUser } from "@/src/server-actions/User/User"
-import { GetTagsForUser } from "@/src/server-actions/Tag/Tag"
+import { GetUserBioForUserAction } from "@/src/server-actions/User/User"
+import { GetTagsForUserAction } from "@/src/server-actions/Tag/Tag"
 import { useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { profileStore } from "@/src/store/profile/profileStore"
@@ -37,12 +37,13 @@ const ProfileBio: React.FC<Props> = ({ editable = true }) => {
   const setUserInterests = useSetAtom(profileStore.interests)
   const skills = useAtomValue(profileStore.skills)
   const interests = useAtomValue(profileStore.interests)
-  const bio = useAtomValue(profileStore.bio)  
+  const bio = useAtomValue(profileStore.bio)
 
-  const [getBioLoading, bioData, getBioError, getBio] =
-    useServerAction(GetUserBioForUser)
+  const [getBioLoading, bioData, getBioError, getBio] = useServerAction(
+    GetUserBioForUserAction
+  )
   const [getTagsLoading, tagsData, getTagsError, getTags] =
-    useServerAction(GetTagsForUser)
+    useServerAction(GetTagsForUserAction)
 
   useEffect(() => {
     if (tagsData && tagsData.data) {

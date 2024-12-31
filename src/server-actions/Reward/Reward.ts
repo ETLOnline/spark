@@ -6,10 +6,10 @@ import { AddReward, getRewardsById } from "@/src/db/data-access/reward/query"
 import {
   AddRewardForUser,
   GetRewardIdsForUser
-} from "@/src/db/data-access/user-reward/query"
+} from "@/src/db/data-access/reward/query"
 
 export const AddRewardAction = CreateServerAction(
-  false,
+  true,
   async (data: InsertReward[]) => {
     try {
       const insertedRewards = await AddReward(data)
@@ -21,7 +21,7 @@ export const AddRewardAction = CreateServerAction(
 )
 
 export const AddRewardForUserAction = CreateServerAction(
-  false,
+  true,
   async (data: InsertUserReward[]) => {
     try {
       const insertedRewards = await AddRewardForUser(data)
@@ -33,7 +33,7 @@ export const AddRewardForUserAction = CreateServerAction(
 )
 
 export const GetRewardsForUserAction = CreateServerAction(
-  false,
+  true,
   async (userId: string) => {
     try {
       const rewardIds = await GetRewardIdsForUser(userId)

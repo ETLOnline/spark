@@ -1,9 +1,7 @@
 import { Dispatch, useEffect, useState } from "react"
 import { Tag, TagStatus } from "../types/profile-types.d"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import {
-  SearchTagsForSuggestions
-} from "@/src/server-actions/Tag/Tag"
+import { SearchTagsForSuggestionsAction } from "@/src/server-actions/Tag/Tag"
 import { SetStateAction, useAtomValue, useSetAtom } from "jotai"
 import { profileStore } from "@/src/store/profile/profileStore"
 import { userStore } from "@/src/store/user/userStore"
@@ -20,7 +18,7 @@ type UseUserSkillsReturn = [
   updatedSkills: Tag[], // Combined skills array
   suggestions: Tag[], // Search suggestions
   searchSkillsForUserInput: (name: string) => void, // Search function
-  searchSkillsLoading: boolean, // Loading state
+  searchSkillsLoading: boolean // Loading state
 ]
 
 const useUserSkills = (): UseUserSkillsReturn => {
@@ -35,7 +33,7 @@ const useUserSkills = (): UseUserSkillsReturn => {
   const updatedSkills: Tag[] = [...savedSkills, ...selectedSkills, ...newSkills]
 
   const [searchSkillsLoading, searchedSkills, searchSkillsError, searchSkills] =
-    useServerAction(SearchTagsForSuggestions)
+    useServerAction(SearchTagsForSuggestionsAction)
 
   const suggestions: Tag[] = searchedSkills?.data
     ? searchedSkills.data.map((tag) => ({

@@ -20,6 +20,9 @@ export const usersTable = sqliteTable("users", {
   meta: text()
 })
 
+export type InsertUser = typeof usersTable.$inferInsert
+export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta">
+
 export const userChatsTable = sqliteTable(
   "user_chats",
   {
@@ -34,6 +37,9 @@ export const userChatsTable = sqliteTable(
     pk: primaryKey({ columns: [table.user_id, table.chat_id] })
   })
 )
+
+export type InsertChat = typeof chatTable.$inferInsert
+export type SelectChat = typeof chatTable.$inferSelect
 
 export const usersRelations = relations(usersTable, ({ many }) => ({
   userChats: many(userChatsTable)
@@ -56,6 +62,8 @@ export const chatRelations = relations(chatTable, ({ many }) => ({
   chatUsers: many(userChatsTable)
 }))
 
+export type SelectChatWithRelation = typeof chatRelations.table.$inferSelect
+
 export const messagesTable = sqliteTable("messages", {
   id: int().primaryKey({ autoIncrement: true }),
   chat_id: int().notNull(),
@@ -73,6 +81,9 @@ export const messagesRelations = relations(messagesTable, ({ one }) => ({
   })
 }))
 
+export type InsertMessage = typeof messagesTable.$inferInsert
+export type SelectMessage = typeof messagesTable.$inferSelect
+
 export const userChatsRelations = relations(userChatsTable, ({ one }) => ({
   chat: one(chatTable, {
     fields: [userChatsTable.chat_id],
@@ -83,6 +94,9 @@ export const userChatsRelations = relations(userChatsTable, ({ one }) => ({
     references: [usersTable.unique_id]
   })
 }))
+
+export type InsertUserChat = typeof userChatsTable.$inferInsert
+export type SelectUserChat = typeof userChatsTable.$inferSelect
 
 export const userContactsTable = sqliteTable(
   "user_contacts",
@@ -113,6 +127,9 @@ export const useContactsRelations = relations(userContactsTable, ({ one }) => ({
   })
 }))
 
+export type InsertUserContact = typeof userContactsTable.$inferInsert
+export type SelectUserContact = typeof userContactsTable.$inferSelect
+
 export const tagsTable = sqliteTable("tags", {
   id: int().primaryKey({ autoIncrement: true }),
   name: text().notNull(),
@@ -120,11 +137,17 @@ export const tagsTable = sqliteTable("tags", {
   ...timestamps
 })
 
+export type InsertTag = typeof tagsTable.$inferInsert
+export type SelectTag = typeof tagsTable.$inferSelect
+
 export const userTagsTable = sqliteTable("user_tags", {
   id: int().primaryKey({ autoIncrement: true }),
   user_id: text().notNull(),
   tag_id: int().notNull()
 })
+
+export type InsertUserTag = typeof userTagsTable.$inferInsert
+export type SelectUserTag = typeof userTagsTable.$inferSelect
 
 export const rewardsTable = sqliteTable("rewards", {
   id: int().primaryKey({ autoIncrement: true }),
@@ -134,11 +157,17 @@ export const rewardsTable = sqliteTable("rewards", {
   ...timestamps
 })
 
+export type InsertReward = typeof rewardsTable.$inferInsert
+export type SelectReward = typeof rewardsTable.$inferSelect
+
 export const userRewardsTable = sqliteTable("user_rewards", {
   id: int().primaryKey({ autoIncrement: true }),
   user_id: text().notNull(),
   reward_id: int().notNull()
 })
+
+export type InsertUserReward = typeof userRewardsTable.$inferInsert
+export type SelectUserReward = typeof userRewardsTable.$inferSelect
 
 export const activitiesTable = sqliteTable("activities", {
   id: int().primaryKey({ autoIncrement: true }),
@@ -149,32 +178,14 @@ export const activitiesTable = sqliteTable("activities", {
   ...timestamps
 })
 
+export type InsertActivity = typeof activitiesTable.$inferInsert
+export type SelectActivity = typeof activitiesTable.$inferSelect
+
 export const userActivitiesTable = sqliteTable("user_activities", {
   id: int().primaryKey({ autoIncrement: true }),
   user_id: text().notNull(),
   activity_id: int().notNull()
 })
 
-export type InsertUser = typeof usersTable.$inferInsert
-export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta">
-export type InsertChat = typeof chatTable.$inferInsert
-export type SelectChat = typeof chatTable.$inferSelect
-export type SelectChatWithRelation = typeof chatRelations.table.$inferSelect
-export type InsertMessage = typeof messagesTable.$inferInsert
-export type SelectMessage = typeof messagesTable.$inferSelect
-export type InsertUserChat = typeof userChatsTable.$inferInsert
-export type SelectUserChat = typeof userChatsTable.$inferSelect
-export type InsertUserContact = typeof userContactsTable.$inferInsert
-export type SelectUserContact = typeof userContactsTable.$inferSelect
-export type InsertTag = typeof tagsTable.$inferInsert
-export type SelectTag = typeof tagsTable.$inferSelect
-export type InsertUserTag = typeof userTagsTable.$inferInsert
-export type SelectUserTag = typeof userTagsTable.$inferSelect
-export type InsertReward = typeof rewardsTable.$inferInsert
-export type SelectReward = typeof rewardsTable.$inferSelect
-export type InsertUserReward = typeof userRewardsTable.$inferInsert
-export type SelectUserReward = typeof userRewardsTable.$inferSelect
-export type InsertActivity = typeof activitiesTable.$inferInsert
-export type SelectActivity = typeof activitiesTable.$inferSelect
 export type InsertUserActivity = typeof userActivitiesTable.$inferInsert
 export type SelectUserActivity = typeof userActivitiesTable.$inferSelect

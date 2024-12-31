@@ -9,10 +9,10 @@ import {
 import {
   AddActivityForUser,
   GetActivityIdsForUser
-} from "@/src/db/data-access/user-activity/query"
+} from "@/src/db/data-access/activity/query"
 
 export const AddActivityAction = CreateServerAction(
-  false,
+  true,
   async (data: InsertActivity[]) => {
     try {
       const insertedRewards = await AddActivity(data)
@@ -24,7 +24,7 @@ export const AddActivityAction = CreateServerAction(
 )
 
 export const AddActivityForUserAction = CreateServerAction(
-  false,
+  true,
   async (data: InsertUserActivity[]) => {
     try {
       const insertedRewards = await AddActivityForUser(data)
@@ -36,7 +36,7 @@ export const AddActivityForUserAction = CreateServerAction(
 )
 
 export const GetActivitiessForUserAction = CreateServerAction(
-  false,
+  true,
   async (userId: string) => {
     try {
       const activityIds = await GetActivityIdsForUser(userId)

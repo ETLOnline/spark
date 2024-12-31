@@ -3,11 +3,11 @@
 import { GetUserBio, UpdateUserBio } from "@/src/db/data-access/user/query"
 import { CreateServerAction } from ".."
 import { AddTag } from "@/src/db/data-access/tag/query"
-import { AddUserTag, DeleteUserTags } from "@/src/db/data-access/user-tag/query"
+import { AddUserTag, DeleteUserTags } from "@/src/db/data-access/tag/query"
 import { ProfileData } from "@/src/components/dashboard/Profile/types/profile-types"
 
-export const UpdateBioForUser = CreateServerAction(
-  false,
+export const UpdateBioForUserAction = CreateServerAction(
+  true,
   async (userId: string, newBio: string) => {
     try {
       await UpdateUserBio(userId, newBio)
@@ -23,8 +23,8 @@ export const UpdateBioForUser = CreateServerAction(
   }
 )
 
-export const GetUserBioForUser = CreateServerAction(
-  false,
+export const GetUserBioForUserAction = CreateServerAction(
+  true,
   async (userId: string) => {
     try {
       const user = await GetUserBio(userId)
@@ -41,8 +41,8 @@ export const GetUserBioForUser = CreateServerAction(
   }
 )
 
-export const saveUserProfileAction = CreateServerAction(
-  false,
+export const SaveUserProfileAction = CreateServerAction(
+  true,
   async (profileData: ProfileData) => {
     try {
       await UpdateUserBio(profileData.userId, profileData.bio)
