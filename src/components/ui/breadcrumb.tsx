@@ -3,6 +3,7 @@ import { Slot } from "@radix-ui/react-slot"
 import { ChevronRight, MoreHorizontal } from "lucide-react"
 
 import { cn } from "@/src/lib/utils"
+import Link from "next/link"
 
 const Breadcrumb = React.forwardRef<
   HTMLElement,
@@ -41,20 +42,33 @@ BreadcrumbItem.displayName = "BreadcrumbItem"
 
 const BreadcrumbLink = React.forwardRef<
   HTMLAnchorElement,
-  React.ComponentPropsWithoutRef<"a"> & {
-    asChild?: boolean
+  React.ComponentPropsWithoutRef<'a'> & {
+    asChild?: boolean;
+    href: string;
   }
->(({ asChild, className, ...props }, ref) => {
-  const Comp = asChild ? Slot : "a"
+>(({ asChild, className, href, ...props }, ref) => {
+  const Comp = asChild ? Slot : 'a';
+
+  if (asChild) {
+    return (
+      <Slot
+        ref={ref}
+        className={cn('transition-colors hover:text-foreground cursor-pointer', className)}
+        {...props}
+      />
+    );
+  }
 
   return (
-    <Comp
-      ref={ref}
-      className={cn("transition-colors hover:text-foreground", className)}
-      {...props}
-    />
-  )
-})
+    <Link href={href} passHref legacyBehavior className="cursor-pointer">
+      <a
+        ref={ref}
+        className={cn('transition-colors hover:text-foreground cursor-pointer', className)}
+        {...props}
+      />
+    </Link>
+  );
+});
 BreadcrumbLink.displayName = "BreadcrumbLink"
 
 const BreadcrumbPage = React.forwardRef<
@@ -66,7 +80,7 @@ const BreadcrumbPage = React.forwardRef<
     role="link"
     aria-disabled="true"
     aria-current="page"
-    className={cn("font-normal text-foreground", className)}
+    className={cn("font-normal text-foreground cursor-pointer", className)}
     {...props}
   />
 ))

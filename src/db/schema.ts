@@ -1,12 +1,13 @@
+
 import { randomUUID } from "crypto";
-import { relations, sql } from "drizzle-orm";
+import { InferSelectModel, relations, sql } from "drizzle-orm";
 import { foreignKey, int, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 
 const timestamps = {
-  updated_at: text("updated_at"),
+  updated_at: text("updated_at").$onUpdateFn(()=>sql`CURRENT_TIMESTAMP`),
   created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
-  deleted_at: text("deleted_at"),
+  deleted_at: text("deleted_at")
 }
 
 export const usersTable = sqliteTable("users", {
@@ -17,11 +18,14 @@ export const usersTable = sqliteTable("users", {
   external_auth_id: text().notNull().unique(),
   profile_url: text(),
   meta: text(),
-});
+},
+(t) => ({
+  pk: primaryKey({ columns: [t.unique_id] }),
+}));
 
 export const usersRelations = relations(usersTable, ({ many }) => ({
   chats: many(userChatsTable,{
-    relationName: 'userToChat',
+    relationName: 'UserChats',
   }),
   contacts: many(userContactsTable,{
     relationName: 'userToContact',
@@ -34,6 +38,7 @@ export type SelectUser = Omit<typeof usersTable.$inferSelect , 'meta'>;
 export const chatsTable = sqliteTable("chats", {
   id: int().primaryKey({ autoIncrement: true }),
   channel_id: text().notNull(),
+  chat_slug: text().notNull().$defaultFn(() => randomUUID()),
   name: text(),
   type: text(),
   avatar: text(),
@@ -48,21 +53,23 @@ export const chatsRelations = relations(chatsTable, ({ many }) => ({
     relationName: "messageToChat"
   }),
   users: many(userChatsTable,{
-    relationName: "userToChat"
+    relationName: "ChatUsers"
   }),
 }));
 
 export type InsertChat = typeof chatsTable.$inferInsert;
-export type SelectChat = typeof chatsTable.$inferSelect;
-// export type SelectChatWithRelation = typeof chatRelations.table.$inferSelect;
+export type SelectChat = InferSelectModel<typeof chatsTable> & {
+  messages?: SelectMessage[];
+  users?: SelectUserChat[];
+}; 
+export type SelectChatWithRelation = typeof chatsRelations;
 
 export const messagesTable = sqliteTable("messages", {
   id: int().primaryKey({ autoIncrement: true }),
   chat_id: int().notNull(),
   type: text().notNull(),
-  sender_id: int().notNull(),
+  sender_id: text().notNull(),
   message: text().notNull(),
-  timestamp: int().notNull(),
   ...timestamps
 },
   (t) => ({
@@ -97,17 +104,20 @@ export const userChatsRelations = relations(userChatsTable, ({ one }) => ({
   chat: one(chatsTable, {
     fields: [userChatsTable.chat_id],
     references: [chatsTable.id],
-    relationName: "userToChat"
+    relationName: "ChatUsers"
   }),
   user: one(usersTable, {
     fields: [userChatsTable.user_id],
     references: [usersTable.unique_id],
-    relationName: "user"
+    relationName: "UserChats"
   }),
 }));
 
 export type InsertUserChat = typeof userChatsTable.$inferInsert;
-export type SelectUserChat = typeof userChatsTable.$inferSelect;
+export type SelectUserChat = typeof userChatsTable.$inferSelect & {
+  user?: SelectUser;
+  chat?: SelectChat;
+};
 
 export const userMessagesTable = sqliteTable("user_messages", {
   user_id: text().notNull(),

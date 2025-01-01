@@ -3,7 +3,6 @@ import { db } from "../..";
 import { InsertUser, SelectUser, usersTable } from "../../schema";
 
 export const userTableColSelect = {
-    id: true,
     first_name: true,
     last_name: true,
     email: true,
@@ -16,10 +15,9 @@ export async function CreateUser(data: InsertUser) {
     await db.insert(usersTable).values(data);
 }
 
-export async function SelectUserById(id: string) {
+export async function SelectUserByExternalId(id: string) {
     return await db.query.usersTable.findFirst({
         columns: {
-            id: true,
             first_name: true,
             last_name: true,
             email: true,
@@ -49,7 +47,6 @@ export async function FindUserWildCard(wildcard: string) {
 
         const users = await db.query.usersTable.findMany({
             columns: {
-                id: true,
                 first_name: true,
                 last_name: true,
                 email: true,

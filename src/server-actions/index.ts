@@ -5,14 +5,14 @@ export function CreateServerAction<T, Args extends any[]>(
   callback: (...args: Args) => Promise<T>
 ) {
   return async (...args: Args): Promise<T> => {
-
 		if (shouldCheckAuth) {
       const user = await auth();
       if (!user.userId) {
         throw new Error("Unauthorized", { cause: 401 });
       }
     }
-
+    
     return await callback(...args);
+
   };
 }

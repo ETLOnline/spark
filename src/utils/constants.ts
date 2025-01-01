@@ -1,4 +1,4 @@
-export const pageMeta = [
+const pageMeta = [
   {
     id: "home",
     url: "/",
@@ -77,6 +77,8 @@ export const pageMeta = [
     title: "Projects",
     description: "projects"
   }
-]
+];
+
+export default pageMeta;
 
 export type PageMeta = typeof pageMeta[0]

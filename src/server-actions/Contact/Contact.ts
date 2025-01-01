@@ -1,11 +1,22 @@
 'use server'
 
-import { CreateContact, DeleteContact, GetContact, GetContacts } from "@/src/db/data-access/contact/query";
+import { CreateContact, DeleteContact, GetContact, GetContacts, UpdateContact } from "@/src/db/data-access/contact/query";
 import { CreateServerAction } from "..";
 
 export const CreateContactAction = CreateServerAction( true, async (user_id: string, contact_id: string) => {
     try{
         await CreateContact(user_id, contact_id);
+        return { success: true }
+    }catch(error){
+        return { error: error }
+    }
+})
+
+export const AcceptConnectionAction = CreateServerAction( true, async (user_id: string, contact_id: string) => {
+    try{
+        await UpdateContact(contact_id, user_id, {
+            is_accepted: 1
+        });
         return { success: true }
     }catch(error){
         return { error: error }

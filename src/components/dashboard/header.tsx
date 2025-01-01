@@ -12,9 +12,9 @@ import {
 } from "../ui/breadcrumb"
 import ModeToggle  from "../ThemeProvider/ThemeToggle"
 import { usePathname } from "next/navigation"
-import { pageMeta, PageMeta } from "@/src/utils/constants"
 import CommandCenter  from "./CommandCenter/CommandCenter"
 import { SignedIn } from "@clerk/nextjs"
+import pageMeta, { PageMeta } from "@/src/utils/constants"
 
 type Crumb = {
   href: string

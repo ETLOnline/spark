@@ -55,7 +55,7 @@ const topProjects = [
   { name: "Cybersecurity Toolkit", category: "Cybersecurity", contributors: 7, progress: 30 }
 ]
 
-export function AnalyticsDashboard() {
+export default function AnalyticsDashboard() {
   const [timeRange, setTimeRange] = useState("7d")
 
   return (
