@@ -5,7 +5,7 @@ import { CreateServerAction } from '..';
 import { InsertMessage, SelectUser } from '@/src/db/schema';
 import { AuthUserAction } from '../User/AuthUserAction';
 import { createChatMessage } from '@/src/db/data-access/chat/message/query';
-import ChatChannelHash from '@/src/components/dashboard/Chat/helper';
+import ChatChannelHash from '@/src/components/Dashboard/Chat/helper';
 import { AblyClientRest } from '@/src/services/realtime/AblyClient';
 
 export const CreatePrivateChatAction = CreateServerAction(true,

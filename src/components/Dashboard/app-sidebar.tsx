@@ -19,9 +19,9 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 
-import NavMain from "@/src/components/dashboard/nav-main";
-import NavSecondary from "@/src/components/dashboard/nav-secondary";
-import NavUser from "@/src/components/dashboard/nav-user";
+import NavMain from "@/src/components/Dashboard/nav-main";
+import NavSecondary from "@/src/components/Dashboard/nav-secondary";
+import NavUser from "@/src/components/Dashboard/nav-user";
 import {
   Sidebar,
   SidebarContent,

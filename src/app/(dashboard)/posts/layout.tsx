@@ -1,5 +1,5 @@
-import { PlatformSuggestionCard } from '@/src/components/dashboard/PlatformSuggestionCard/PlatformSuggestionCard'
-import { TrendingTagsCard } from '@/src/components/dashboard/TrendingTagsCard/TrendingTagsCard'
+import { PlatformSuggestionCard } from '@/src/components/Dashboard/PlatformSuggestionCard/PlatformSuggestionCard'
+import { TrendingTagsCard } from '@/src/components/Dashboard/TrendingTagsCard/TrendingTagsCard'
 import { Separator } from '@/src/components/ui/separator'
 import React, { ReactNode } from 'react'
 

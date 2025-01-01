@@ -2,11 +2,11 @@
 import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
 import { ScrollArea } from "../../ui/scroll-area"
-import ProjectCards from "./ProjectCards"
-import Contribute from "./ProjectFAQ"
 import WelcomeCard from "./ProjectWelcomeCard"
-import ProjectTopCatagories from "./ProjectTopCatagories"
+import ProjectCards from "./ProjectCards"
 import ProjectIncubatorStats from "./ProjectIncubatorStats"
+import ProjectTopCatagories from "./ProjectTopCatagories"
+import Contribute from "./ProjectFAQ"
 
 
 export interface ProjectProposal {
@@ -114,7 +114,7 @@ export function ProjectIncubatorScreen() {
             <TabsContent value="all">
               <ScrollArea>
                 {proposals.map((proposal) => (
-                  <ProjectCards proposal={proposal} />
+                  <ProjectCards key={proposal.id} proposal={proposal} />
                 ))}
               </ScrollArea>
             </TabsContent>
@@ -123,7 +123,7 @@ export function ProjectIncubatorScreen() {
                 {proposals
                   .filter((p) => p.status === "active")
                   .map((proposal) => (
-                    <ProjectCards proposal={proposal} />
+                    <ProjectCards key={proposal.id} proposal={proposal} />
                   ))}
               </ScrollArea>
             </TabsContent>
@@ -132,7 +132,7 @@ export function ProjectIncubatorScreen() {
                 {proposals
                   .filter((p) => p.status === "draft")
                   .map((proposal) => (
-                    <ProjectCards proposal={proposal} />
+                    <ProjectCards key={proposal.id} proposal={proposal} />
                   ))}
               </ScrollArea>
             </TabsContent>
@@ -141,7 +141,7 @@ export function ProjectIncubatorScreen() {
                 {proposals
                   .filter((p) => p.status === "completed")
                   .map((proposal) => (
-                    <ProjectCards proposal={proposal} />
+                    <ProjectCards key={proposal.id} proposal={proposal} />
                   ))}
               </ScrollArea>
             </TabsContent>

@@ -1,4 +1,3 @@
-import { Post, Comment, PostFile, PostPoll } from "./types/posts-types"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   Card,
@@ -14,6 +13,7 @@ import PostCommentForm from "./post-comment-form"
 import { RadioGroup } from "../../ui/radio-group"
 import { Label } from "../../ui/label"
 import { RadioGroupItem } from "../../ui/radio-group"
+import { Comment, Post, PostFile, PostPoll } from "./types/posts-types"
 
 type Props = {
   post: PostPoll
@@ -46,7 +46,7 @@ const PollPost: React.FC<Props> = (props) => {
           <p className="font-semibold mb-2">{props.post.content}</p>
           <RadioGroup>
             {props.post.options?.map((option) => (
-              <div className="flex items-center space-x-2">
+              <div key={option} className="flex items-center space-x-2">
                 <RadioGroupItem value={option} id={option} />
                 <Label htmlFor={option}>{option}</Label>
               </div>
