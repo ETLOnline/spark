@@ -1,5 +1,5 @@
-import CategorySelection from "@/src/components/oldDashboard/Spaces/CategorySelection"
-import SpacesStats from "@/src/components/oldDashboard/Spaces/SpacesStats"
+import CategorySelection from "@/src/components/Dashboard/Spaces/CategorySelection"
+import SpacesStats from "@/src/components/Dashboard/Spaces/SpacesStats"
 
 const SpacesLayout = ({ children }: { children: React.ReactNode }) => {
   return (

@@ -1,4 +1,4 @@
-import TeamCollaborationScreen from '@/src/components/oldDashboard/TestPage/TeamCollaborationScreen'
+import TeamCollaborationScreen from '@/src/components/Dashboard/TestPage/TeamCollaborationScreen'
 import React from 'react'
 
 const TeamCollaborationPage = () => {

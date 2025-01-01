@@ -1,4 +1,4 @@
-import LearningHubScreen from '@/src/components/oldDashboard/TestPage/LearningHubScreen'
+import LearningHubScreen from '@/src/components/Dashboard/TestPage/LearningHubScreen'
 import React from 'react'
 
 const LearningHubPage = () => {

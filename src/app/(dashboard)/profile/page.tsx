@@ -1,4 +1,4 @@
-import ProfileScreen from '@/src/components/oldDashboard/profile/ProfileScreen'
+import ProfileScreen from '@/src/components/Dashboard/profile/ProfileScreen'
 import React, { Suspense } from 'react'
 
 const page = () => {

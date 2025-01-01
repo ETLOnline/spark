@@ -1,9 +1,9 @@
 "use client"
 
-import ProfileActivities from "@/src/components/oldDashboard/profile/profile-activities"
-import ProfileBio from "@/src/components/oldDashboard/profile/profile-bio"
-import ProfileCalendar from "@/src/components/oldDashboard/profile/profile-calendar"
-import ProfileRewards from "@/src/components/oldDashboard/profile/profile-rewards"
+import ProfileActivities from "@/src/components/Dashboard/profile/profile-activities"
+import ProfileBio from "@/src/components/Dashboard/profile/profile-bio"
+import ProfileCalendar from "@/src/components/Dashboard/profile/profile-calendar"
+import ProfileRewards from "@/src/components/Dashboard/profile/profile-rewards"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   Tabs,
@@ -14,7 +14,7 @@ import {
 import { CalendarIcon, StarIcon, TrophyIcon, UserIcon } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
-import { Recommendation } from "@/src/components/oldDashboard/profile/types/profile-types"
+import { Recommendation } from "@/src/components/Dashboard/profile/types/profile-types"
 import { useUser } from "@clerk/nextjs"
 
 const rewards = [

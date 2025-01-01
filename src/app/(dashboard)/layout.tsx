@@ -1,5 +1,5 @@
-import AppSidebar  from "@/src/components/oldDashboard/app-sidebar"
-import Header from "@/src/components/oldDashboard/header"
+import AppSidebar  from "@/src/components/Dashboard/app-sidebar"
+import Header from "@/src/components/Dashboard/header"
 import {
   SidebarInset,
   SidebarProvider,

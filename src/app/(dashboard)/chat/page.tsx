@@ -1,4 +1,4 @@
-import { ChatScreen } from "@/src/components/oldDashboard/Chat";
+import { ChatScreen } from "@/src/components/Dashboard/Chat";
 import { SelectChat } from "@/src/db/schema";
 import { GetChatBySlugWithMessagesAction, GetUserChatsAction } from "@/src/server-actions/Chat/Chat";
 

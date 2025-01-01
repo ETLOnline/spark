@@ -1,4 +1,4 @@
-import { EventsScreen } from '@/src/components/oldDashboard/Event'
+import { EventsScreen } from '@/src/components/Dashboard/Event'
 import React from 'react'
 
 const EventPage = () => {
