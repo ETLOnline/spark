@@ -1,15 +1,10 @@
 import { useState, useEffect, useRef } from "react"
 import { X } from "lucide-react"
-import {
-  Tag,
-  TagStatus
-} from "../dashboard/Profile/types/profile-types.d"
+import { Tag, TagStatus } from "../dashboard/Profile/types/profile-types.d"
 
 type TagsInputProps = {
   tags: Tag[]
-  updateSavedTags: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void
-  updateNewTags: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void
-  updateSelectedTags: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void
+  updateTags: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void
   suggestions: Tag[]
   onChange: (tagName: string) => void
   loadingSuggestions: boolean
@@ -18,9 +13,7 @@ type TagsInputProps = {
 
 const TagsInput: React.FC<TagsInputProps> = ({
   tags,
-  updateNewTags,
-  updateSavedTags,
-  updateSelectedTags,
+  updateTags,
   suggestions,
   loadingSuggestions,
   onChange,
@@ -64,10 +57,11 @@ const TagsInput: React.FC<TagsInputProps> = ({
       !tags.some(
         (tag) =>
           tag?.name.toLowerCase() ===
-          (tagInput.current as HTMLInputElement).value.toLowerCase()
+            (tagInput.current as HTMLInputElement).value.toLowerCase() &&
+          !tag.deleted
       )
     ) {
-      updateNewTags((tags: Tag[]) => [
+      updateTags((tags: Tag[]) => [
         ...tags,
         {
           name:
@@ -86,28 +80,20 @@ const TagsInput: React.FC<TagsInputProps> = ({
   }
 
   const removeTag = (indexToRemove: number) => {
-    if (tags[indexToRemove]?.status === "saved") {
-      updateSavedTags((savedTags) =>
-        savedTags.filter((tag) => tag.name !== tags[indexToRemove].name)
-      )
-    } else if (tags[indexToRemove]?.status === "selected") {
-      updateSelectedTags((selectedTags) =>
-        selectedTags.filter((tag) => tag.name !== tags[indexToRemove].name)
-      )
-    } else {
-      updateNewTags((newTags) =>
-        newTags.filter((tag) => tag.name !== tags[indexToRemove].name)
-      )
-    }
+    updateTags((tags) =>
+      tags.with(indexToRemove, { ...tags[indexToRemove], deleted: true })
+    )
   }
 
   const selectSuggestion = (suggestion: Tag) => {
     if (
       !tags.some(
-        (tag) => tag?.name.toLowerCase() === suggestion.name.toLowerCase()
+        (tag) =>
+          tag?.name.toLowerCase() === suggestion.name.toLowerCase() &&
+          !tag.deleted
       )
     ) {
-      updateSelectedTags((tags: Tag[]) => [...tags, suggestion])
+      updateTags((tags: Tag[]) => [...tags, suggestion])
     }
     ;(tagInput.current as HTMLInputElement).value = ""
     setShowSuggestions(false)
@@ -116,21 +102,24 @@ const TagsInput: React.FC<TagsInputProps> = ({
   return (
     <div className="relative w-full">
       <div className="flex flex-wrap gap-2 rounded-md border border-input bg-transparent p-2 focus-within:ring-1 focus-within:ring-ring">
-        {tags.map((tag, i) => (
-          <span
-            key={tag?.id ?? tag?.name}
-            className="flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-sm"
-          >
-            {tag?.name}
-            <button
-              type="button"
-              onClick={() => removeTag(i)}
-              className="ml-1 rounded-full hover:bg-muted-foreground/20"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        ))}
+        {tags.map(
+          (tag, i) =>
+            !tag.deleted && (
+              <span
+                key={tag?.id ?? tag?.name}
+                className="flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-sm"
+              >
+                {tag?.name}
+                <button
+                  type="button"
+                  onClick={() => removeTag(i)}
+                  className="ml-1 rounded-full hover:bg-muted-foreground/20"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )
+        )}
         <input
           type="text"
           ref={tagInput}

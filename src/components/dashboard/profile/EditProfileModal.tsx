@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Button } from "../../ui/button"
 import {
   Dialog,
@@ -19,7 +19,7 @@ import { userStore } from "@/src/store/user/userStore"
 import { profileStore } from "@/src/store/profile/profileStore"
 import useUserSkills from "./hooks/useUserSkills"
 import useUserInterests from "./hooks/useUserInterests"
-import { ProfileData, Tag } from "./types/profile-types"
+import { ProfileData, Tag, TagStatus } from "./types/profile-types.d"
 
 const EditProfileModal: React.FC = () => {
   const bio = useAtomValue(profileStore.bio)
@@ -27,10 +27,7 @@ const EditProfileModal: React.FC = () => {
   const setBio = useSetAtom(profileStore.bio)
 
   const [isOpen, setIsOpen] = useState(false)
-  const [bioError, setBioError] = useState<string>("")
-  const [skillsError, setSkillsError] = useState<string>("")
-  const [interestsError, setInterestsError] = useState<string>("")
-  const [editedBio, seteditedBio] = useState<string>(bio)
+  const [editedBio, setEditedBio] = useState<string>(bio)
 
   const [
     updateProfileLoading,
@@ -42,113 +39,89 @@ const EditProfileModal: React.FC = () => {
   const [
     skills,
     setSkills,
-    newSkills,
-    setNewSkills,
-    selectedSkills,
-    setSelectedtedSkills,
-    savedSkills,
-    setSavedSkills,
-    updatedSkills,
     skillSuggestions,
-    searchSkillsForUserInput,
+    searchSkills,
     searchSkillsLoading
   ] = useUserSkills()
 
   const [
     interests,
     setInterests,
-    newInterests,
-    setNewInterests,
-    selectedInterests,
-    setSelectedtedInterests,
-    savedInterests,
-    setSavedInterests,
-    updatedInterests,
     interestSuggestions,
-    searchInterestsForUserInput,
+    searchInterests,
     searchInterestsLoading
   ] = useUserInterests()
 
-  useEffect(() => {
-    updatedSkills.length > 20
-      ? setSkillsError("You can only add a maximum of 20 skills")
-      : skillsError && setSkillsError("")
-  }, [updatedSkills])
-
-  useEffect(() => {
-    updatedInterests.length > 20
-      ? setInterestsError("You can only add a maximum of 20 interests")
-      : interestsError && setInterestsError("")
-  }, [updatedInterests])
-
-  const getDeletedIds = (tags: Tag[], savedTags: Tag[]) => [
-    ...tags
-      .filter(
-        (tag: Tag) => !savedTags.find((updatedTag) => tag.id === updatedTag.id)
-      )
-      .map((tag: Tag) => tag.id as number)
-  ]
+  const updatedSkillsLength: number = skills.filter(
+    (tag) => !tag.deleted
+  ).length
+  const updatedInterestsLength: number = interests.filter(
+    (tag) => !tag.deleted
+  ).length
+  const skillsError: string =
+    updatedSkillsLength > 20 ? "You can only add a maximum of 20 skills" : ""
+  const interestsError: string =
+    updatedInterestsLength > 3
+      ? "You can only add a maximum of 20 interests"
+      : ""
+  const bioError: string =
+    editedBio.length > 2000 ? "Bio cannot exceed 2000 characters" : ""
 
   const saveProfileChanges = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const deletedSkillsIds: number[] = getDeletedIds(skills, savedSkills)
-    const deletedInterestsIds: number[] = getDeletedIds(
-      interests,
-      savedInterests
-    )
+    const deletedSkillsIds: number[] = skills
+      .filter((skill) => skill.deleted && skill.status === TagStatus[1])
+      .map((skill) => skill.id as number)
+    const deletedInterestsIds: number[] = interests
+      .filter(
+        (interest) => interest.deleted && interest.status === TagStatus[1]
+      )
+      .map((interest) => interest.id as number)
     const updatedProfileData: ProfileData = {
       userId: user?.external_auth_id as string,
       bio: editedBio ? editedBio : bio,
       newTags: [
-        ...newSkills.map((tag) => {
-          return { name: tag.name, type: "skill" }
-        }),
-        ...newInterests.map((tag) => {
-          return { name: tag.name, type: "interest" }
-        })
+        ...skills
+          .filter((tag) => tag.status === TagStatus[3])
+          .map((tag) => {
+            return { name: tag.name, type: "skill" }
+          }),
+        ...interests
+          .filter((tag) => tag.status === TagStatus[3])
+          .map((tag) => {
+            return { name: tag.name, type: "interest" }
+          })
       ],
       existingTags: [
-        ...selectedSkills.map((tag) => {
-          return { name: tag.name, id: tag.id, type: "skill" }
-        }),
-        ...selectedInterests.map((tag) => {
-          return { name: tag.name, id: tag.id, type: "skill" }
-        })
+        ...skills
+          .filter((tag) => tag.status === TagStatus[2])
+          .map((tag) => {
+            return { name: tag.name, id: tag.id, type: "skill" }
+          }),
+        ...interests
+          .filter((tag) => tag.status === TagStatus[2])
+          .map((tag) => {
+            return { name: tag.name, id: tag.id, type: "interest" }
+          })
       ],
       deletedTagsIds: [...deletedSkillsIds, ...deletedInterestsIds]
     }
     await updateProfile(updatedProfileData)
-    setSkills((skills: Tag[]) => {
-      skills = skills.filter(
-        // remove deleted skills
-        (tag) => !deletedSkillsIds.includes(tag.id as number)
+    // remove deleted skills
+    setSkills((skills: Tag[]) =>
+      skills.filter(
+        (tag) => !deletedSkillsIds.includes(tag.id as number) && !tag.deleted
       )
-      return [...skills, ...newSkills, ...selectedSkills]
-    })
-    setSavedSkills([...skills])
-    setSelectedtedSkills([])
-    setNewSkills([])
-    setInterests((interests: Tag[]) => {
-      interests = interests.filter(
-        // remove deleted Interests
-        (tag) => !deletedInterestsIds.includes(tag.id as number)
+    )
+    // remove deleted Interests
+    setInterests((interests: Tag[]) =>
+      interests.filter(
+        (tag) => !deletedInterestsIds.includes(tag.id as number) && !tag.deleted
       )
-      return [...interests, ...newInterests, ...selectedInterests]
-    })
-    setSavedInterests([...interests])
-    setNewInterests([])
-    setBio(editedBio)
+    )
+    editedBio && setBio(editedBio)
     setIsOpen(false)
-    seteditedBio("")
-  }
-
-  const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    seteditedBio(e.target.value)
-    if (e.target.value.length <= 2000) {
-      bioError && setBioError("")
-    } else {
-      setBioError("Bio cannot exceed 2000 characters")
-    }
+    setEditedBio("")
   }
 
   return (
@@ -176,7 +149,7 @@ const EditProfileModal: React.FC = () => {
                   id={"bio"}
                   defaultValue={bio}
                   className="min-h-[100px] w-full"
-                  onChange={handleBioChange}
+                  onChange={(e) => setEditedBio(e.target.value)}
                 />
                 <div className="flex justify-between mt-1">
                   <p
@@ -203,23 +176,21 @@ const EditProfileModal: React.FC = () => {
                   Skills
                 </Label>
                 <TagsInput
-                  tags={updatedSkills}
-                  updateSavedTags={setSavedSkills}
-                  updateNewTags={setNewSkills}
-                  updateSelectedTags={setSelectedtedSkills}
+                  tags={skills}
+                  updateTags={setSkills}
                   suggestions={skillSuggestions}
-                  onChange={searchSkillsForUserInput}
+                  onChange={searchSkills}
                   loadingSuggestions={searchSkillsLoading}
                 />
                 <div className={"flex justify-between mt-1"}>
                   <p
                     className={`text-sm ${
-                      updatedSkills?.length > 20
+                      updatedSkillsLength > 20
                         ? "text-red-500"
                         : "text-gray-500"
                     }`}
                   >
-                    {`${updatedSkills.length}/20 skills`}
+                    {`${updatedSkillsLength}/20 skills`}
                   </p>
                   {skillsError && (
                     <p className="text-sm text-red-500">{skillsError}</p>
@@ -231,23 +202,21 @@ const EditProfileModal: React.FC = () => {
                   Interests
                 </Label>
                 <TagsInput
-                  tags={updatedInterests}
-                  updateNewTags={setNewInterests}
-                  updateSavedTags={setSavedInterests}
-                  updateSelectedTags={setSelectedtedInterests}
+                  tags={interests}
+                  updateTags={setInterests}
                   suggestions={interestSuggestions}
-                  onChange={searchInterestsForUserInput}
+                  onChange={searchInterests}
                   loadingSuggestions={searchInterestsLoading}
                 />
                 <div className={"flex justify-between mt-1"}>
                   <p
                     className={`text-sm ${
-                      updatedInterests?.length > 20
+                      updatedInterestsLength > 20
                         ? "text-red-500"
                         : "text-gray-500"
                     }`}
                   >
-                    {`${updatedInterests.length}/20 skills`}
+                    {`${updatedInterestsLength}/20 skills`}
                   </p>
                   {interestsError && (
                     <p className="text-sm text-red-500">{interestsError}</p>
