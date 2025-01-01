@@ -14,7 +14,7 @@ const CommunityStatsCard: React.FC<CommunityStatsProps> = (props) => {
       <CardContent>
         <div className="space-y-2">
           {props.stats.map((stat: Stat) => (
-            <div className="flex justify-between items-center">
+            <div key={stat.name} className="flex justify-between items-center">
               <span className="flex items-center">
                 {stat.icon}
                 {stat.name}

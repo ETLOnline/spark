@@ -11,8 +11,9 @@ export function useServerAction<T, Args extends any[]>(
     setLoading(true);
     setError(null);
     try {
-      const result = await callback(...args);
-      setState(result);
+      const result = await callback(...args)
+      setState(result)
+      return result
     } catch (err) {
       setError(err as Error);
     } finally {

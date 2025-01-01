@@ -4,8 +4,9 @@ import "./globals.css";
 import {
   ClerkProvider
 } from '@clerk/nextjs'
-import { ThemeProvider } from "../components/ThemeProvider/ThemeProvider";
 import ClerkAuthListener from "../services/auth/ClerkAuthListner";
+import ThemeProvider from "../components/ThemeProvider/ThemeProvider";
+import { Toaster } from "../components/ui/toaster";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -41,6 +42,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <Toaster/>
             {children}
           </ThemeProvider>
         </body>

@@ -119,7 +119,7 @@ const sampleMeetings: Meeting[] = [
   },
 ]
 
-export function TeamCollaborationScreen() {
+export default function TeamCollaborationScreen() {
   const [searchQuery, setSearchQuery] = useState("")
 
   return (

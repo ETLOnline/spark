@@ -2,15 +2,16 @@
 import React, { useState } from 'react';
 import * as Ably from 'ably';
 import { AblyProvider, ChannelProvider, useChannel, useConnectionStateListener } from 'ably/react';
-import AblyChannelProviderWrapper, { AblyClient } from '@/src/services/realtime/AblyClient';
+// import AblyChannelProviderWrapper, { AblyClient } from '@/src/services/realtime/AblyClient';
 
 // Connect to Ably using the AblyProvider component and your API key
 
 export default function TestChat() {
   return (
-    <AblyChannelProviderWrapper channelName="get-started">
-      <AblyPubSub />
-    </AblyChannelProviderWrapper>
+    // <AblyChannelProviderWrapper channelName="get-started">
+    //   <AblyPubSub />
+    // </AblyChannelProviderWrapper>
+    <></>
   );
 }
 

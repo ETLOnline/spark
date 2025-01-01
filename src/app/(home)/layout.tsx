@@ -10,9 +10,9 @@ const PublicLayout = ({ children }: { children: ReactNode }) => {
   return (
     <>
       <Header />
-      <div className="content">
-        {children}
-      </div>
+        <div className="content">
+          {children}
+        </div>
       <Footer />
 
     </>

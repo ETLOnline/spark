@@ -3,6 +3,7 @@ import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/src/lib/utils"
 import { PencilIcon } from "lucide-react"
+import Loader from "../common/Loader/Loader"
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
@@ -40,8 +41,12 @@ const buttonVariants = cva(
   }
 )
 
+interface CustomButtonProps {
+  loading ?: boolean
+}
+
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, CustomButtonProps,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean
 }
@@ -56,6 +61,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {variant === "edit" && <PencilIcon size={"10"} />}
+        {props.loading ? <Loader/> : null}
         {children}
       </Comp>
     )

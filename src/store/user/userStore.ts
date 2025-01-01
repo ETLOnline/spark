@@ -4,10 +4,10 @@ import { atom } from 'jotai'
 
 
 const Iam = atom<SelectUser | null>(null)
-const user = atom<SelectUser | null>(null)
+const AuthUser = atom<SelectUser | null>(null)
 
 export const userStore = {
     Iam,
-    user
+    AuthUser
 }
 

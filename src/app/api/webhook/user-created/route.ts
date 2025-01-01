@@ -2,7 +2,7 @@ import { Webhook } from 'svix'
 import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
 import { InsertUser } from '@/src/db/schema'
-import { CreateUser, SelectUserByEmail, SelectUserById } from '@/src/db/data-access/user/query'
+import { CreateUser, SelectUserByEmail, SelectUserByExternalId } from '@/src/db/data-access/user/query'
 
 export async function POST(req: Request) {
 
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
   if (evt.type === 'user.created') {
     const userObj = evt.data
 
-		const userById = await SelectUserById(userObj.id)
+		const userById = await SelectUserByExternalId(userObj.id)
 		const userByEmail = await SelectUserByEmail(userObj.email_addresses[0].email_address)
 
 		if (userById || userByEmail) {

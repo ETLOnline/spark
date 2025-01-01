@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import './header.css'
 import { LinkAsButton } from '@/src/components/LinkAsButton/LinkAsButton'
 import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
@@ -8,6 +8,8 @@ import ModeToggle  from '../ThemeProvider/ThemeToggle'
 function Header() {
 	return (
 		<div className="header">
+			<Suspense>
+
 			<Navbar />
 			<div className="button-wrapper">
 				<SignedIn>
@@ -19,6 +21,7 @@ function Header() {
 				</SignedOut>
 				<ModeToggle />
 			</div>
+			</Suspense>
 		</div>
 	)
 }

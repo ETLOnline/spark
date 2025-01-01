@@ -1,9 +1,11 @@
 // server component
-import FilePost from "@/src/components/dashboard/Posts/post-file"
-import ImagePost from "@/src/components/dashboard/Posts/post-image"
-import PollPost from "@/src/components/dashboard/Posts/post-poll"
-import TextPost from "@/src/components/dashboard/Posts/post-text"
-import { Post, PostFile, PostPoll } from "@/src/components/dashboard/Posts/types/posts-types"
+
+import FilePost from "./posts/post-file"
+import ImagePost from "./posts/post-image"
+import PollPost from "./posts/post-poll"
+import TextPost from "./posts/post-text"
+import { Post, PostFile, PostPoll } from "./posts/types/posts-types"
+
 
 type Props = {
   posts: (Post | PostFile | PostPoll)[]

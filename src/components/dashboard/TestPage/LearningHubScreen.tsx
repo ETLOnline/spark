@@ -80,7 +80,7 @@ const sampleWebinars: Webinar[] = [
   { id: "3", title: "Ethical Considerations in AI Development", date: "2023-05-25", time: "16:00", speaker: "Dr. Michael Johnson" },
 ]
 
-export function LearningHubScreen() {
+export default function LearningHubScreen() {
   const [searchQuery, setSearchQuery] = useState("")
 
   return (

@@ -4,19 +4,19 @@ import { Button } from "@/src/components/ui/button"
 import { useState } from "react"
 import { Input } from "@/src/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import { Post } from "./types/posts-types"
+import { Post, PostFile, PostPoll } from "./types/posts-types"
 
 type Props = {
-  posts: Post[]
+  posts: (Post | PostFile | PostPoll)[]
   setPosts: (posts: Post[]) => void
   postId: string
 }
 
-const PostCommentForm: React.FC<Props> = (props) => {
+const PostCommentForm: React.FC<Props> = ({posts, setPosts, postId}) => {
   const [newComment, setNewComment] = useState<{ [key: string]: string }>({})
 
   const handleAddComment = (postId: string) => {
-    const updatedPosts = props.posts.map((post: Post) => {
+    const updatedPosts = posts.map((post) => {
       if (post.id === postId) {
         return {
           ...post,
@@ -33,7 +33,7 @@ const PostCommentForm: React.FC<Props> = (props) => {
       }
       return post
     })
-    props.setPosts(updatedPosts)
+    setPosts(updatedPosts.filter((post): post is Post => 'content' in post && typeof post.content === 'string'))
     setNewComment({ ...newComment, [postId]: "" })
   }
 
@@ -45,17 +45,17 @@ const PostCommentForm: React.FC<Props> = (props) => {
       </Avatar>
       <Input
         placeholder="Add a comment..."
-        value={newComment[props.postId] || ""}
+        value={newComment[postId] || ""}
         onChange={(e) =>
           setNewComment({
             ...newComment,
-            [props.postId]: e.target.value
+            [postId]: e.target.value
           })
         }
         className="flex-1"
       />
       <Button
-        onClick={() => handleAddComment(props.postId)}
+        onClick={() => handleAddComment(postId)}
         size="sm"
         className="mt-4"
       >
