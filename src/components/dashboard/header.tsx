@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { SidebarTrigger } from "../ui/sidebar"
-import { Separator } from "@radix-ui/react-separator"
+import { SidebarTrigger } from "../ui/sidebar";
+import { Separator } from "@radix-ui/react-separator";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -40,7 +40,7 @@ const Header = () => {
   })()
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-2">
+    <header className="flex h-16 shrink-0 items-center gap-2 sticky top-0 bg-background z-10 rounded-xl border-b mb-4">
       <div className="flex items-center between justify-between w-full gap-2 px-4">
         <div className="flex items-center ">
           <SidebarTrigger className="-ml-1" />
@@ -70,7 +70,7 @@ const Header = () => {
         <ModeToggle />
       </div>
     </header>
-  )
-}
+  );
+};
 
-export default Header
+export default Header;
