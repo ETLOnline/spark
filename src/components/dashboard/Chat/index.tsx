@@ -7,15 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/src/comp
 import { Input } from "@/src/components/ui/input"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger } from "@/src/components/ui/sheet"
-import { Menu, Search, Send, Phone, Video, MoreVertical, SmileIcon } from 'lucide-react'
-import { Badge } from "@/src/components/ui/badge"
-import { getDefaultStore, useAtom, useAtomValue } from "jotai"
+import { Menu, Search, Send, SmileIcon } from 'lucide-react'
+import {  useAtom, useAtomValue } from "jotai"
 import { chatStore } from "@/src/store/chat/chatStore"
 import { InsertMessage, SelectChat, SelectMessage, SelectUser, SelectUserChat } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
 import { AblyClient } from "@/src/services/realtime/AblyClient"
 import ChatsList from "./ChatsList"
-import ChatChannelHash from "./helper"
 import { AddMessageToChatAction, GetChatWithMessagesAction } from "@/src/server-actions/Chat/Chat"
 import moment from 'moment-timezone'
 import Link from "next/link"
@@ -288,7 +286,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                 <CardContent className="flex-1 overflow-hidden p-4">
                   {
                     authUser && currentChat && !fetchingChatMessages ? (
-                      <ScrollArea className="h-[calc(100vh-16rem)] pr-4">
+                      <ScrollArea className="h-[calc(100svh-17rem)] pr-4">
                         {messages.map((message) => (
                           <div
                             key={message.id}

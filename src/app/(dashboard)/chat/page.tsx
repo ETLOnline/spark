@@ -11,20 +11,28 @@ interface ChatPageProps {
 export default async function ChatPage({ searchParams }: ChatPageProps) {
     let currentChat : SelectChat | undefined = undefined
     let allChats : SelectChat[] = []
+    let selectedCurrectChatSlug = null
 
     const chatsRes = await GetUserChatsAction()
     if(chatsRes?.success && chatsRes?.data){
         allChats = chatsRes.data
     }
 
+    if( allChats.length > 0  ){
+        
+        if(searchParams.active_chat){
+            selectedCurrectChatSlug = searchParams.active_chat
+        }else{
+            selectedCurrectChatSlug = allChats[0].chat_slug
+        }
 
-    if(searchParams.active_chat){
-        const currentChatRes = await GetChatBySlugWithMessagesAction(searchParams.active_chat)
+        const currentChatRes = await GetChatBySlugWithMessagesAction(selectedCurrectChatSlug)
         if(currentChatRes.success){
             currentChat = currentChatRes.data 
         }
     }
-    
+
+
     return (
         <ChatScreen allChatsSSR={allChats} currentChatSSR={currentChat} />
     )
