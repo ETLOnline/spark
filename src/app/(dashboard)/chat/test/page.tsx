@@ -1,4 +1,4 @@
-import TestChat from '@/src/components/dashboard/Chat/TestChat/TestChat'
+import TestChat from '@/src/components/oldDashboard/Chat/TestChat/TestChat'
 import React from 'react'
 
 const TestChatPage = () => {

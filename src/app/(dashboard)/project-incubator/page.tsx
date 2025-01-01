@@ -1,4 +1,4 @@
-import { ProjectIncubatorScreen } from '@/src/components/Dashboard/Projects'
+import { ProjectIncubatorScreen } from '@/src/components/oldDashboard/Projects'
 import React from 'react'
 
 const ProjectPage = () => {

@@ -23,19 +23,19 @@ type EditProfileModalProps = {
   setSkills: (value: string[]) => void
 }
 
-const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
+const EditProfileModal: React.FC<EditProfileModalProps> = ({setBio, setSkills, setInterests,skills, bio, interests }) => {
   const [isOpen, setIsOpen] = useState(false)
-  const [skillsCopy, setSkillsCopy] = useState<string[]>([...props.skills])
+  const [skillsCopy, setSkillsCopy] = useState<string[]>([...skills])
   const [interestsCopy, setinterestsCopy] = useState<string[]>([
-    ...props.interests
+    ...interests
   ])
-  const editedBio = useRef<string>(props.bio)
+  const editedBio = useRef<string>(bio)
 
   const updateProfileValue = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    editedBio.current.length && props.setBio(editedBio.current)
-    skillsCopy.length && props.setSkills([...skillsCopy])
-    interestsCopy.length && props.setInterests([...interestsCopy])
+    setBio(editedBio.current)
+    setSkills([...skillsCopy])
+    setInterests([...interestsCopy])
     setIsOpen(false)
   }
 
@@ -62,7 +62,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = (props) => {
                 </Label>
                 <Textarea
                   id={"bio"}
-                  defaultValue={props.bio}
+                  defaultValue={bio}
                   className="min-h-[100px] w-full"
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                     (editedBio.current = e.target.value)
