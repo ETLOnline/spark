@@ -1,4 +1,4 @@
-import { ProjectDetailView } from '@/src/components/dashboard/Projects/ProjectDetailView'
+import { ProjectDetailView } from '@/src/components/Dashboard/Projects/Details/ProjectDetailVeiw'
 import React from 'react'
 
 const ProjectDetailPage = () => {
