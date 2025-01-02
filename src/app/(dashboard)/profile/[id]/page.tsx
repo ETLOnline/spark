@@ -1,9 +1,9 @@
 import NotFound from "@/src/components/dashboard/NotFound/NotFound"
-import ProfileActivities from "@/src/components/dashboard/Profile/ProfileActivities"
-import ProfileBio from "@/src/components/dashboard/Profile/ProfileBio"
-import ProfileCalendar from "@/src/components/dashboard/Profile/ProfileCalendar"
-import ProfileRewards from "@/src/components/dashboard/Profile/ProfileRewards"
-import ProfileFollowActions from "@/src/components/dashboard/Profile/user/ProfileFollowActions"
+import ProfileActivities from "@/src/components/dashboard/profile/profile-activities"
+import ProfileBio from "@/src/components/dashboard/profile/profile-bio"
+import ProfileCalendar from "@/src/components/dashboard/profile/profile-calendar"
+import ProfileRewards from "@/src/components/dashboard/profile/profile-rewards"
+import ProfileFollowActions from "@/src/components/dashboard/profile/user/ProfileFollowActions"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   Tabs,
@@ -86,10 +86,10 @@ export default async function ProfileScreen({
           <ProfileBio editable={false} />
         </TabsContent>
         <TabsContent value="rewards">
-          <ProfileRewards />
+          <ProfileRewards userId={id} />
         </TabsContent>
         <TabsContent value="activity">
-          <ProfileActivities />
+          <ProfileActivities userId={id} />
         </TabsContent>
         <TabsContent value="calendar">
           <ProfileCalendar />

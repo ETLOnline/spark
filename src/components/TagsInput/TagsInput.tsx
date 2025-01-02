@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { X } from "lucide-react"
-import { Tag, TagStatus } from "../dashboard/Profile/types/profile-types.d"
+import { Tag, TagStatus } from "../dashboard/profile/types/profile-types.d"
 
 type TagsInputProps = {
   tags: Tag[]

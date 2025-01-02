@@ -8,8 +8,8 @@ import {
   CardContent,
   CardHeader
 } from "../../ui/card"
-import { Recommendation, Tag, TagStatus } from "./types/profile-types.d"
-import EditProfileModal from "./EditProfileModal"
+import { Recommendation, Tag, TagStatus } from "./types/profile-types"
+import EditProfileModal from "./edit-profile-modal"
 import { useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetUserBioForUserAction } from "@/src/server-actions/User/User"
