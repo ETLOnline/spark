@@ -1,12 +1,12 @@
 "use client"
 
-import CreatePostForm from "@/src/components/dashboard/create-post-form"
-import PostFeed from "@/src/components/dashboard/post-feed"
+import CreatePostForm from "@/src/components/Dashboard/create-post-form"
+import PostFeed from "@/src/components/Dashboard/post-feed"
 import {
   Post,
   PostFile,
   PostPoll
-} from "@/src/components/dashboard/Posts/types/posts-types"
+} from "@/src/components/Dashboard/Posts/types/posts-types"
 import {
   Card,
   CardContent,

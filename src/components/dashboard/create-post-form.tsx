@@ -15,14 +15,14 @@ import {
 } from "@/src/components/ui/card"
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
-import PostInput from "@/src/components/dashboard/Posts/create-post-input"
+import PostInput from "@/src/components/Dashboard/Posts/create-post-input"
 import {
   Post,
   NewPost,
   PostType,
   PostPoll,
   PostFile
-} from "@/src/components/dashboard/Posts/types/posts-types"
+} from "@/src/components/Dashboard/Posts/types/posts-types"
 import { useState } from "react"
 import {
   Select,

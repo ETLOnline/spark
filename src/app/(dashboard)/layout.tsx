@@ -1,9 +1,6 @@
-import AppSidebar  from "@/src/components/dashboard/app-sidebar"
-import Header from "@/src/components/dashboard/header"
-import {
-  SidebarInset,
-  SidebarProvider,
-} from "@/src/components/ui/sidebar"
+import AppSidebar from "@/src/components/Dashboard/app-sidebar"
+import Header from "@/src/components/Dashboard/header"
+import { SidebarInset, SidebarProvider } from "@/src/components/ui/sidebar"
 import { ReactNode } from "react"
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -12,9 +9,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <AppSidebar />
       <SidebarInset>
         <Header />
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          {children}
-        </div>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   )

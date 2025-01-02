@@ -1,10 +1,8 @@
-import { EventsScreen } from '@/src/components/dashboard/Event'
-import React from 'react'
+import { EventsScreen } from "@/src/components/Dashboard/Event"
+import React from "react"
 
 const EventPage = () => {
-  return (
-    <EventsScreen />
-  )
+  return <EventsScreen />
 }
 
 export default EventPage

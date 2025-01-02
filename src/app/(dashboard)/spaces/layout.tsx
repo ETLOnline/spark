@@ -1,5 +1,5 @@
-import CategorySelection from "@/src/components/dashboard/Spaces/CategorySelection"
-import SpacesStats from "@/src/components/dashboard/Spaces/SpacesStats"
+import CategorySelection from "@/src/components/Dashboard/Spaces/CategorySelection"
+import SpacesStats from "@/src/components/Dashboard/Spaces/SpacesStats"
 
 const SpacesLayout = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -8,9 +8,7 @@ const SpacesLayout = ({ children }: { children: React.ReactNode }) => {
         <CategorySelection />
       </section>
       <div className="flex-grow flex justify-center items-start space-x-4">
-        <main className="grow space-y-4 post-feed">
-          {children}
-        </main>
+        <main className="grow space-y-4 post-feed">{children}</main>
         <SpacesStats />
       </div>
     </div>

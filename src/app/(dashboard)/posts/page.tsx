@@ -1,13 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import PostFeed from "@/src/components/dashboard/post-feed"
+import PostFeed from "@/src/components/Dashboard/post-feed"
 import {
   Post,
   PostFile,
   PostPoll
-} from "@/src/components/dashboard/Posts/types/posts-types"
-import CreatePostForm from "@/src/components/dashboard/create-post-form"
+} from "@/src/components/Dashboard/Posts/types/posts-types"
+import CreatePostForm from "@/src/components/Dashboard/create-post-form"
 
 const samplePosts: (Post | PostFile | PostPoll)[] = [
   {
