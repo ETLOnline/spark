@@ -1,4 +1,4 @@
-import ProfileScreen from "@/src/components/Dashboard/profile/ProfileScreen"
+import ProfileScreen from "@/src/components/dashboard/profile/ProfileScreen"
 import { Suspense } from "react"
 
 interface ProfilePageProps {

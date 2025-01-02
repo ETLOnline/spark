@@ -6,11 +6,7 @@ import {
   CardHeader
 } from "../../ui/card"
 import { TrophyIcon } from "lucide-react"
-import { useAtomValue } from "jotai"
-import { userStore } from "@/src/store/user/userStore"
-import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetRewardsForUserAction } from "@/src/server-actions/Reward/Reward"
-import { useEffect } from "react"
 
 type ProfileActivitiesProps = {
   userId: string

@@ -61,7 +61,7 @@ const EditProfileModal: React.FC = () => {
   const skillsError: string =
     updatedSkillsLength > 20 ? "You can only add a maximum of 20 skills" : ""
   const interestsError: string =
-    updatedInterestsLength > 3
+    updatedInterestsLength > 20
       ? "You can only add a maximum of 20 interests"
       : ""
   const bioError: string =

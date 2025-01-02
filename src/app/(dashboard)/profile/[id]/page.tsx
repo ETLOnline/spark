@@ -1,9 +1,9 @@
-import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
-import ProfileActivities from "@/src/components/Dashboard/profile/profile-activities"
-import ProfileBio from "@/src/components/Dashboard/profile/profile-bio"
-import ProfileCalendar from "@/src/components/Dashboard/profile/profile-calendar"
-import ProfileRewards from "@/src/components/Dashboard/profile/profile-rewards"
-import ProfileFollowActions from "@/src/components/Dashboard/profile/user/ProfileFollowActions"
+import NotFound from "@/src/components/dashboard/NotFound/NotFound"
+import ProfileActivities from "@/src/components/dashboard/profile/profile-activities"
+import ProfileBio from "@/src/components/dashboard/profile/profile-bio"
+import ProfileCalendar from "@/src/components/dashboard/profile/profile-calendar"
+import ProfileRewards from "@/src/components/dashboard/profile/profile-rewards"
+import ProfileFollowActions from "@/src/components/dashboard/profile/user/ProfileFollowActions"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   Tabs,

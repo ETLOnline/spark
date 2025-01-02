@@ -1,4 +1,4 @@
-import { AnalyticsDashboard } from "@/src/components/Dashboard/AnalyticsDashboard"
+import { AnalyticsDashboard } from "@/src/components/dashboard/AnalyticsDashboard"
 import React from "react"
 
 const page = () => {
