@@ -6,14 +6,12 @@ import ProfileCalendar from "@/src/components/Dashboard/profile/profile-calendar
 import ProfileRewards from "@/src/components/Dashboard/profile/profile-rewards"
 import ProfileFollowActions from "@/src/components/Dashboard/profile/user/ProfileFollowActions"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import { Button } from "@/src/components/ui/button"
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/src/components/ui/tabs"
-import { SelectUser } from "@/src/db/schema"
 import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
 import { CalendarIcon, StarIcon, TrophyIcon, UserIcon } from "lucide-react"
 import Link from "next/link"
