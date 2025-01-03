@@ -1,4 +1,4 @@
-import { Tag } from "@/src/components/dashboard/Profile/types/profile-types.d"
+import { Tag } from "@/src/components/Dashboard/profile/types/profile-types.d"
 import { atom } from "jotai"
 
 const bio = atom<string>("")

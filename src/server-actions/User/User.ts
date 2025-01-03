@@ -4,7 +4,7 @@ import { GetUserBio, UpdateUserBio } from "@/src/db/data-access/user/query"
 import { CreateServerAction } from ".."
 import { AddTag } from "@/src/db/data-access/tag/query"
 import { AddUserTag, DeleteUserTags } from "@/src/db/data-access/tag/query"
-import { ProfileData } from "@/src/components/dashboard/Profile/types/profile-types.d"
+import { ProfileData } from "@/src/components/Dashboard/profile/types/profile-types.d"
 
 export const UpdateBioForUserAction = CreateServerAction(
   true,
@@ -47,18 +47,21 @@ export const SaveUserProfileAction = CreateServerAction(
     try {
       await UpdateUserBio(profileData.userId, profileData.bio)
       // add new tags
-      const insertedTags = await AddTag(profileData.newTags)
-      await AddUserTag(
-        insertedTags.map((tag) => {
-          return { user_id: profileData.userId, tag_id: tag.id }
-        })
-      )
+      if (profileData.newTags.length) {
+        const insertedTags = await AddTag(profileData.newTags)
+        await AddUserTag(
+          insertedTags.map((tag) => {
+            return { user_id: profileData.userId, tag_id: tag.id }
+          })
+        )
+      }
       // add existing tags
-      await AddUserTag(
-        profileData.existingTags.map((tag) => {
-          return { user_id: profileData.userId, tag_id: tag.id as number }
-        })
-      )
+      profileData.existingTags.length &&
+        (await AddUserTag(
+          profileData.existingTags.map((tag) => {
+            return { user_id: profileData.userId, tag_id: tag.id as number }
+          })
+        ))
       // delete tags
       await DeleteUserTags(profileData.userId, profileData.deletedTagsIds)
       return {

@@ -44,7 +44,7 @@ const ProfileBio: React.FC<Props> = ({ editable = true }) => {
   const [getBioLoading, bioData, getBioError, getBio] = useServerAction(
     GetUserBioForUserAction
   )
-  const [getTagsLoading, tagsData, getTagsError, getTags] =
+const [getTagsLoading, tagsData, getTagsError, getTags] =
     useServerAction(GetTagsForUserAction)
 
   useEffect(() => {
@@ -69,7 +69,7 @@ const ProfileBio: React.FC<Props> = ({ editable = true }) => {
   }, [tagsData])
 
   useEffect(() => {
-    if (user) {
+    if (user) {      
       getBio(user?.external_auth_id)
       getTags(user?.external_auth_id)
     }
