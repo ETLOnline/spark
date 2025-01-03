@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "../../ui/button"
 import {
   Dialog,
@@ -20,11 +20,13 @@ import { profileStore } from "@/src/store/profile/profileStore"
 import useUserSkills from "./hooks/useUserSkills"
 import useUserInterests from "./hooks/useUserInterests"
 import { ProfileData, Tag, TagStatus } from "./types/profile-types.d"
+import { useToast } from "@/src/hooks/use-toast"
 
 const EditProfileModal: React.FC = () => {
   const bio = useAtomValue(profileStore.bio)
   const user = useAtomValue(userStore.AuthUser)
   const setBio = useSetAtom(profileStore.bio)
+  const { toast } = useToast()
 
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const [editedBio, setEditedBio] = useState<string | undefined>(bio)
@@ -52,6 +54,17 @@ const EditProfileModal: React.FC = () => {
     searchInterestsLoading
   ] = useUserInterests()
 
+  useEffect(() => {
+    if (updateProfileError) {
+      toast({
+        variant: "destructive",
+        title: "Error updating profile",
+        description: "Something went wrong. Please try again.",
+        duration: 3000
+      })
+    }
+  }, [updateProfileError])
+
   const updatedSkillsLength: number = skills.filter(
     (tag) => !tag.deleted
   ).length
@@ -71,59 +84,75 @@ const EditProfileModal: React.FC = () => {
 
   const saveProfileChanges = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const deletedSkillsIds: number[] = skills
-      .filter((skill) => skill.deleted && skill.status === TagStatus[1])
-      .map((skill) => skill.id as number)
-    const deletedInterestsIds: number[] = interests
-      .filter(
-        (interest) => interest.deleted && interest.status === TagStatus[1]
+    try {
+      const deletedSkillsIds: number[] = skills
+        .filter((skill) => skill.deleted && skill.status === TagStatus[1])
+        .map((skill) => skill.id as number)
+      const deletedInterestsIds: number[] = interests
+        .filter(
+          (interest) => interest.deleted && interest.status === TagStatus[1]
+        )
+        .map((interest) => interest.id as number)
+      const updatedProfileData: ProfileData = {
+        userId: user?.external_auth_id as string,
+        bio: editedBio ? editedBio : bio,
+        newTags: [
+          ...skills
+            .filter((tag) => tag.status === TagStatus[3])
+            .map((tag) => {
+              return { name: tag.name, type: "skill" }
+            }),
+          ...interests
+            .filter((tag) => tag.status === TagStatus[3])
+            .map((tag) => {
+              return { name: tag.name, type: "interest" }
+            })
+        ],
+        existingTags: [
+          ...skills
+            .filter((tag) => tag.status === TagStatus[2])
+            .map((tag) => {
+              return { name: tag.name, id: tag.id, type: "skill" }
+            }),
+          ...interests
+            .filter((tag) => tag.status === TagStatus[2])
+            .map((tag) => {
+              return { name: tag.name, id: tag.id, type: "interest" }
+            })
+        ],
+        deletedTagsIds: [...deletedSkillsIds, ...deletedInterestsIds]
+      }
+      await updateProfile(updatedProfileData)
+      // remove deleted skills
+      setSkills((skills: Tag[]) =>
+        skills.filter(
+          (tag) => !deletedSkillsIds.includes(tag.id as number) && !tag.deleted
+        )
       )
-      .map((interest) => interest.id as number)
-    const updatedProfileData: ProfileData = {
-      userId: user?.external_auth_id as string,
-      bio: editedBio ? editedBio : bio,
-      newTags: [
-        ...skills
-          .filter((tag) => tag.status === TagStatus[3])
-          .map((tag) => {
-            return { name: tag.name, type: "skill" }
-          }),
-        ...interests
-          .filter((tag) => tag.status === TagStatus[3])
-          .map((tag) => {
-            return { name: tag.name, type: "interest" }
-          })
-      ],
-      existingTags: [
-        ...skills
-          .filter((tag) => tag.status === TagStatus[2])
-          .map((tag) => {
-            return { name: tag.name, id: tag.id, type: "skill" }
-          }),
-        ...interests
-          .filter((tag) => tag.status === TagStatus[2])
-          .map((tag) => {
-            return { name: tag.name, id: tag.id, type: "interest" }
-          })
-      ],
-      deletedTagsIds: [...deletedSkillsIds, ...deletedInterestsIds]
+      // remove deleted Interests
+      setInterests((interests: Tag[]) =>
+        interests.filter(
+          (tag) =>
+            !deletedInterestsIds.includes(tag.id as number) && !tag.deleted
+        )
+      )
+      editedBio && setBio(editedBio)
+      setIsOpen(false)
+      setEditedBio("")
+      toast({
+        title: "Profile updated",
+        description: "Your changes have been saved successfully.",
+        duration: 3000
+      })
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error updating profile",
+        description:
+          error instanceof Error ? error.message : "Something went wrong",
+        duration: 3000
+      })
     }
-    await updateProfile(updatedProfileData)
-    // remove deleted skills
-    setSkills((skills: Tag[]) =>
-      skills.filter(
-        (tag) => !deletedSkillsIds.includes(tag.id as number) && !tag.deleted
-      )
-    )
-    // remove deleted Interests
-    setInterests((interests: Tag[]) =>
-      interests.filter(
-        (tag) => !deletedInterestsIds.includes(tag.id as number) && !tag.deleted
-      )
-    )
-    editedBio && setBio(editedBio)
-    setIsOpen(false)
-    setEditedBio("")
   }
 
   return (
@@ -233,8 +262,10 @@ const EditProfileModal: React.FC = () => {
               disabled={
                 bioError.length > 0 ||
                 skillsError.length > 0 ||
-                interestsError.length > 0
+                interestsError.length > 0 ||
+                updateProfileLoading
               }
+              loading={updateProfileLoading}
             >
               Save changes
             </Button>
