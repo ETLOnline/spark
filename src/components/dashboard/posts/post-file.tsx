@@ -19,22 +19,22 @@ type Props = {
   setPosts: (posts: (Post | PostFile | PostPoll)[]) => void
 }
 
-const FilePost: React.FC<Props> = (props) => {
+const FilePost: React.FC<Props> = ({post, posts, setPosts}) => {
   return (
     <Card className="bg-background shadow-lg">
       <CardHeader>
         <div className="flex items-center space-x-4">
           <Avatar>
             <AvatarImage
-              src={props.post.author.avatar}
-              alt={props.post.author.name}
+              src={post.author.avatar}
+              alt={post.author.name}
             />
-            <AvatarFallback>{props.post.author.name[0]}</AvatarFallback>
+            <AvatarFallback>{post.author.name[0]}</AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-semibold">{props.post.author.name}</p>
+            <p className="font-semibold">{post.author.name}</p>
             <p className="text-sm text-muted-foreground">
-              {new Date(props.post.createdAt).toLocaleString()}
+              {new Date(post.createdAt).toLocaleString()}
             </p>
           </div>
         </div>
@@ -42,10 +42,10 @@ const FilePost: React.FC<Props> = (props) => {
       <CardContent>
         <div className="flex items-center space-x-2 bg-muted p-4 rounded-lg">
           <FileIcon className="h-8 w-8" />
-          <span className="font-medium">{props.post.fileName}</span>
+          <span className="font-medium">{post.fileName}</span>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
-          {props.post.hashtags.map((tag) => (
+          {post.hashtags.map((tag) => (
             <Badge key={tag} variant="secondary">
               #{tag}
             </Badge>
@@ -54,19 +54,19 @@ const FilePost: React.FC<Props> = (props) => {
       </CardContent>
       <CardFooter className="flex flex-col items-start space-y-4">
         <PostInteractions
-          likes={props.post.likes}
-          comments={props.post.comments.length}
+          likes={post.likes}
+          comments={post.comments.length}
         />
         <Separator />
         <div className="w-full space-y-4">
-          {props.post.comments.map((comment: Comment) => (
+          {post.comments.map((comment: Comment) => (
             <PostComments key={comment.id} comment={comment} />
           ))}
         </div>
         <PostCommentForm
-          posts={props.posts}
-          setPosts={props.setPosts}
-          postId={props.post.id}
+          posts={posts}
+          setPosts={setPosts}
+          postId={post.id}
         />
       </CardFooter>
     </Card>

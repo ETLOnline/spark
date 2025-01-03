@@ -1,12 +1,8 @@
-import { Webhook } from "svix"
-import { headers } from "next/headers"
-import { WebhookEvent } from "@clerk/nextjs/server"
-import { InsertUser } from "@/src/db/schema"
-import {
-  CreateUser,
-  SelectUserByEmail,
-  SelectUserByExternalId
-} from "@/src/db/data-access/user/query"
+import { Webhook } from 'svix'
+import { headers } from 'next/headers'
+import { WebhookEvent } from '@clerk/nextjs/server'
+import { InsertUser } from '@/src/db/schema'
+import { CreateUser, SelectUserByEmail, SelectUserByExternalId } from '@/src/db/data-access/user/query'
 
 export async function POST(req: Request) {
   // You can find this in the Clerk Dashboard -> Webhooks -> choose the endpoint
@@ -65,10 +61,8 @@ export async function POST(req: Request) {
   if (evt.type === "user.created") {
     const userObj = evt.data
 
-    const userById = await SelectUserByExternalId(userObj.id)
-    const userByEmail = await SelectUserByEmail(
-      userObj.email_addresses[0].email_address
-    )
+		const userById = await SelectUserByExternalId(userObj.id)
+		const userByEmail = await SelectUserByEmail(userObj.email_addresses[0].email_address)
 
     if (userById || userByEmail) {
       return new Response("", { status: 200 })

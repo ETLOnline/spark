@@ -1,5 +1,5 @@
-import { MarketplaceScreen } from "@/src/components/dashboard/TestPage/MarketplaceScreen"
-import React from "react"
+import MarketplaceScreen from '@/src/components/Dashboard/TestPage/MarketplaceScreen'
+import React from 'react'
 
 const MarketplacePage = () => {
   return <MarketplaceScreen />

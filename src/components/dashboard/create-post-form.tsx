@@ -15,14 +15,6 @@ import {
 } from "@/src/components/ui/card"
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
-import PostInput from "@/src/components/dashboard/Posts/create-post-input"
-import {
-  Post,
-  NewPost,
-  PostType,
-  PostPoll,
-  PostFile
-} from "@/src/components/dashboard/Posts/types/posts-types"
 import { useState } from "react"
 import {
   Select,
@@ -32,6 +24,8 @@ import {
   SelectValue
 } from "@/src/components/ui/select"
 import { Textarea } from "../ui/textarea"
+import { NewPost, Post, PostFile, PostPoll, PostType } from "./posts/types/posts-types"
+import CreatePostInput from "./posts/create-post-input"
 
 type Props = {
   setPosts: (posts: (Post | PostFile | PostPoll)[]) => void
@@ -110,28 +104,28 @@ const CreatePostForm: React.FC<Props> = ({
               <TabsTrigger value="file">File</TabsTrigger>
             </TabsList>
             <TabsContent value="text">
-              <PostInput
+              <CreatePostInput
                 type="text"
                 setNewPost={setNewPost}
                 newPost={newPost}
               />
             </TabsContent>
             <TabsContent value="image">
-              <PostInput
+              <CreatePostInput
                 type="image"
                 setNewPost={setNewPost}
                 newPost={newPost}
               />
             </TabsContent>
             <TabsContent value="poll">
-              <PostInput
+              <CreatePostInput
                 type="poll"
                 setNewPost={setNewPost}
                 newPost={newPost}
               />
             </TabsContent>
             <TabsContent value="file">
-              <PostInput
+              <CreatePostInput
                 type="file"
                 setNewPost={setNewPost}
                 newPost={newPost}

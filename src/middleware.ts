@@ -14,6 +14,9 @@ export const config = {
     '/contact-us',
     '/profile(.*)',
     '/posts',
+    '/chat',
+    '/events',
+    '/spaces',
     // Always run for API routes
     // '/(api|trpc)(.*)',
     // '/sign-in(.*)',

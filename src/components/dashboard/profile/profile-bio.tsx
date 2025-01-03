@@ -68,10 +68,8 @@ const ProfileBio: React.FC<Props> = ({ editable = true }) => {
 
   useEffect(() => {
     if (user) {
-      ;(async () => {
-        getBio(user?.external_auth_id)
-        getTags(user?.external_auth_id)
-      })()
+      getBio(user?.external_auth_id)
+      getTags(user?.external_auth_id)
     }
   }, [user])
 

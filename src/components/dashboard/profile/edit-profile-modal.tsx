@@ -23,11 +23,11 @@ import { ProfileData, Tag, TagStatus } from "./types/profile-types.d"
 
 const EditProfileModal: React.FC = () => {
   const bio = useAtomValue(profileStore.bio)
-  const user = useAtomValue(userStore.user)
+  const user = useAtomValue(userStore.AuthUser)
   const setBio = useSetAtom(profileStore.bio)
 
-  const [isOpen, setIsOpen] = useState(false)
-  const [editedBio, setEditedBio] = useState<string>(bio)
+  const [isOpen, setIsOpen] = useState<boolean>(false)
+  const [editedBio, setEditedBio] = useState<string | undefined>(bio)
 
   const [
     updateProfileLoading,
@@ -65,7 +65,9 @@ const EditProfileModal: React.FC = () => {
       ? "You can only add a maximum of 20 interests"
       : ""
   const bioError: string =
-    editedBio.length > 2000 ? "Bio cannot exceed 2000 characters" : ""
+    editedBio && editedBio?.length > 2000
+      ? "Bio cannot exceed 2000 characters"
+      : ""
 
   const saveProfileChanges = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -154,13 +156,13 @@ const EditProfileModal: React.FC = () => {
                 <div className="flex justify-between mt-1">
                   <p
                     className={`text-sm ${
-                      editedBio?.length > 2000
+                      editedBio && editedBio?.length > 2000
                         ? "text-red-500"
                         : "text-gray-500"
                     }`}
                   >
                     {editedBio?.length
-                      ? editedBio.length
+                      ? editedBio?.length
                       : bio?.length
                       ? bio.length
                       : 0}

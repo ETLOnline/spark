@@ -1,7 +1,7 @@
-import ProfileActivities from "@/src/components/dashboard/profile/profile-activities"
-import ProfileBio from "@/src/components/dashboard/profile/profile-bio"
-import ProfileCalendar from "@/src/components/dashboard/profile/profile-calendar"
-import ProfileRewards from "@/src/components/dashboard/profile/profile-rewards"
+import ProfileActivities from "@/src/components/Dashboard/profile/profile-activities"
+import ProfileBio from "@/src/components/Dashboard/profile/profile-bio"
+import ProfileCalendar from "@/src/components/Dashboard/profile/profile-calendar"
+import ProfileRewards from "@/src/components/Dashboard/profile/profile-rewards"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   Tabs,
@@ -11,7 +11,7 @@ import {
 } from "@/src/components/ui/tabs"
 import { CalendarIcon, StarIcon, TrophyIcon, UserIcon } from "lucide-react"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import NotFound from "@/src/components/dashboard/NotFound/NotFound"
+import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
 import Link from "next/link"
 
 type ProfileScreenProps = { tab?: string }
@@ -42,27 +42,27 @@ export default async function ProfileScreen({ tab }: ProfileScreenProps) {
         <TabsList>
           <Link href={`/profile/?tab=basic`}>
             <TabsTrigger value="basic">
-              <UserIcon className="mr-2 h-4 w-4" />
-              Bio/Basic
-            </TabsTrigger>
+            <UserIcon className="mr-2 h-4 w-4" />
+            Bio/Basic
+          </TabsTrigger>
           </Link>
           <Link href={`/profile/?tab=rewards`}>
             <TabsTrigger value="rewards">
-              <TrophyIcon className="mr-2 h-4 w-4" />
-              Rewards
-            </TabsTrigger>
+            <TrophyIcon className="mr-2 h-4 w-4" />
+            Rewards
+          </TabsTrigger>
           </Link>
           <Link href={`/profile/?tab=activity`}>
             <TabsTrigger value="activity">
-              <StarIcon className="mr-2 h-4 w-4" />
-              Activity
-            </TabsTrigger>
+            <StarIcon className="mr-2 h-4 w-4" />
+            Activity
+          </TabsTrigger>
           </Link>
           <Link href={`/profile/?tab=calendar`}>
             <TabsTrigger value="calendar">
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              Calendar
-            </TabsTrigger>
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            Calendar
+          </TabsTrigger>
           </Link>
         </TabsList>
         <TabsContent value="basic">

@@ -1,53 +1,44 @@
+
 import { randomUUID } from "crypto"
-import { relations, sql } from "drizzle-orm"
+import { InferSelectModel, relations, sql } from "drizzle-orm"
 import { int, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 const timestamps = {
-  updated_at: text("updated_at"),
+  updated_at: text("updated_at").$onUpdateFn(()=>sql`CURRENT_TIMESTAMP`),
   created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   deleted_at: text("deleted_at")
 }
 
 export const usersTable = sqliteTable("users", {
-  id: int().primaryKey({ autoIncrement: true }),
+  unique_id: text("unique_id", { length: 36 }).primaryKey().$defaultFn(() => randomUUID()),
   first_name: text().notNull(),
   last_name: text().notNull(),
   email: text().notNull().unique(),
   external_auth_id: text().notNull().unique(),
   profile_url: text(),
-  unique_id: text("unique_id", { length: 36 }).$defaultFn(() => randomUUID()),
-  bio: text(),
-  meta: text()
-})
-
-export type InsertUser = typeof usersTable.$inferInsert
-export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta">
-
-export const userChatsTable = sqliteTable(
-  "user_chats",
-  {
-    user_id: text()
-      .notNull()
-      .references(() => usersTable.unique_id),
-    chat_id: int()
-      .notNull()
-      .references(() => chatTable.id)
-  },
-  (table) => ({
-    pk: primaryKey({ columns: [table.user_id, table.chat_id] })
-  })
-)
-
-export type InsertChat = typeof chatTable.$inferInsert
-export type SelectChat = typeof chatTable.$inferSelect
+  meta: text(),
+  bio: text()
+},
+(t) => ({
+  pk: primaryKey({ columns: [t.unique_id] }),
+}));
 
 export const usersRelations = relations(usersTable, ({ many }) => ({
-  userChats: many(userChatsTable)
-}))
+  chats: many(userChatsTable,{
+    relationName: 'UserChats',
+  }),
+  contacts: many(userContactsTable,{
+    relationName: 'userToContact',
+  }),
+}));
 
-export const chatTable = sqliteTable("chat", {
+export type InsertUser = typeof usersTable.$inferInsert ;
+export type SelectUser = Omit<typeof usersTable.$inferSelect , 'meta'>;
+
+export const chatsTable = sqliteTable("chats", {
   id: int().primaryKey({ autoIncrement: true }),
   channel_id: text().notNull(),
+  chat_slug: text().notNull().$defaultFn(() => randomUUID()),
   name: text(),
   type: text(),
   avatar: text(),
@@ -57,46 +48,92 @@ export const chatTable = sqliteTable("chat", {
   ...timestamps
 })
 
-export const chatRelations = relations(chatTable, ({ many }) => ({
-  messages: many(messagesTable),
-  chatUsers: many(userChatsTable)
-}))
+export const chatsRelations = relations(chatsTable, ({ many }) => ({
+	messages: many(messagesTable,{
+    relationName: "messageToChat"
+  }),
+  users: many(userChatsTable,{
+    relationName: "ChatUsers"
+  }),
+}));
 
-export type SelectChatWithRelation = typeof chatRelations.table.$inferSelect
+export type InsertChat = typeof chatsTable.$inferInsert;
+export type SelectChat = InferSelectModel<typeof chatsTable> & {
+  messages?: SelectMessage[];
+  users?: SelectUserChat[];
+}; 
+export type SelectChatWithRelation = typeof chatsRelations;
 
 export const messagesTable = sqliteTable("messages", {
   id: int().primaryKey({ autoIncrement: true }),
   chat_id: int().notNull(),
   type: text().notNull(),
-  sender_id: int().notNull(),
+  sender_id: text().notNull(),
   message: text().notNull(),
-  timestamp: int().notNull(),
   ...timestamps
-})
+},
+  (t) => ({
+    pk: primaryKey({ columns: [t.id] }),
+  })
+);
 
 export const messagesRelations = relations(messagesTable, ({ one }) => ({
-  chat: one(chatTable, {
-    fields: [messagesTable.chat_id],
-    references: [chatTable.id]
+	chat: one(chatsTable, {
+		fields: [messagesTable.chat_id],
+		references: [chatsTable.id],
+    relationName: "messageToChat"
+	}),
+  sender: one(usersTable, {
+    fields: [messagesTable.sender_id],
+    references: [usersTable.unique_id],
+    relationName: "messageToUser"
   })
-}))
+}));
 
-export type InsertMessage = typeof messagesTable.$inferInsert
-export type SelectMessage = typeof messagesTable.$inferSelect
+export type InsertMessage = typeof messagesTable.$inferInsert;
+export type SelectMessage = typeof messagesTable.$inferSelect;
+
+export const userChatsTable = sqliteTable(
+  "user_chats",
+  {
+    user_id: text()
+      .notNull()
+      .references(() => usersTable.unique_id),
+    chat_id: int()
+      .notNull()
+      .references(() => chatsTable.id)
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.user_id, table.chat_id] })
+  })
+)
 
 export const userChatsRelations = relations(userChatsTable, ({ one }) => ({
-  chat: one(chatTable, {
+  chat: one(chatsTable, {
     fields: [userChatsTable.chat_id],
-    references: [chatTable.id]
+    references: [chatsTable.id],
+    relationName: "ChatUsers"
   }),
   user: one(usersTable, {
     fields: [userChatsTable.user_id],
-    references: [usersTable.unique_id]
-  })
-}))
+    references: [usersTable.unique_id],
+    relationName: "UserChats"
+  }),
+}));
 
-export type InsertUserChat = typeof userChatsTable.$inferInsert
-export type SelectUserChat = typeof userChatsTable.$inferSelect
+export type InsertUserChat = typeof userChatsTable.$inferInsert;
+export type SelectUserChat = typeof userChatsTable.$inferSelect & {
+  user?: SelectUser;
+  chat?: SelectChat;
+};
+
+export const userMessagesTable = sqliteTable("user_messages", {
+  user_id: text().notNull(),
+  message_id: int().notNull(),
+});
+
+export type InsertUserMessage = typeof userMessagesTable.$inferInsert;
+export type SelectUserMessage = typeof userMessagesTable.$inferSelect;
 
 export const userContactsTable = sqliteTable(
   "user_contacts",
@@ -114,18 +151,18 @@ export const userContactsTable = sqliteTable(
   })
 )
 
-export const useContactsRelations = relations(userContactsTable, ({ one }) => ({
-  user: one(usersTable, {
-    relationName: "userToContacts",
-    fields: [userContactsTable.user_id],
-    references: [usersTable.unique_id]
-  }),
-  contact: one(usersTable, {
-    relationName: "contactToUser",
-    fields: [userContactsTable.contact_id],
-    references: [usersTable.unique_id]
-  })
-}))
+export const userContactsRelations = relations(userContactsTable, ({ one }) => ({
+	user: one(usersTable, {
+		fields: [userContactsTable.user_id],
+		references: [usersTable.unique_id],
+    relationName: "userToUser"
+	}),
+	contact: one(usersTable, {
+		fields: [userContactsTable.contact_id],
+		references: [usersTable.unique_id],
+    relationName: "userToContact"
+	}),
+}));
 
 export type InsertUserContact = typeof userContactsTable.$inferInsert
 export type SelectUserContact = typeof userContactsTable.$inferSelect

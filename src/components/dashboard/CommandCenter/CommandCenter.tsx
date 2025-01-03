@@ -9,7 +9,7 @@ import {
   Search,
   Settings,
   Smile,
-  User
+  User,
 } from "lucide-react"
 
 import {
@@ -20,28 +20,27 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-  CommandShortcut
+  CommandShortcut,
 } from "@/src/components/ui/command"
 import { Input } from "../../ui/input"
 import { useRouter } from "next/navigation"
-import { useDebounce, useDebouncedCallback } from "use-debounce"
+import { useDebounce, useDebouncedCallback } from 'use-debounce';
 import { FindUserWildCardAction } from "@/src/server-actions/User/FindUserWildCardAction"
 import { SelectUser } from "@/src/db/schema"
 import { Avatar, AvatarImage } from "../../ui/avatar"
-import { useServerAction } from "@/src/hooks/useServerAction"
+import {useServerAction}  from "@/src/hooks/useServerAction"
 import Loader from "../../common/Loader/Loader"
 import { useEffect, useState } from "react"
 
 export default function CommandCenter() {
   const [open, setOpen] = useState(false)
-  const router = useRouter()
-  const [inputValue, setInputValue] = useState<string>("")
-  const [peopleList, setPeopleList] = useState<SelectUser[]>([])
-  const [loading, state, error, FindUserWildCard] = useServerAction(
-    FindUserWildCardAction
-  )
+	const router = useRouter()
+	const [inputValue ,  setInputValue] = useState<string>('')
+	const [peopleList, setPeopleList] = useState<SelectUser[]>([])
+  const [ loading, state, error, FindUserWildCard ] = useServerAction(FindUserWildCardAction)
 
   useEffect(() => {
+
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
@@ -53,70 +52,54 @@ export default function CommandCenter() {
     return () => document.removeEventListener("keydown", down)
   }, [])
 
-  const handleItemPress = (path: string) => {
-    router.push(path)
-    setOpen(false)
-  }
+	const handleItemPress = (path: string) => {
+		router.push(path)
+		setOpen(false)
+	}
 
-  const handleInputValueChange = useDebouncedCallback(async (value: string) => {
-    if (value.trim() === "") {
-      setPeopleList([])
-      return
+	const handleInputValueChange = useDebouncedCallback(async(value: string) => {
+		if (value.trim() === '') {
+      setPeopleList([]);
+      return;
     }
-    await FindUserWildCard(value)
-  }, 800)
+		await FindUserWildCard(value)
+		
+	}, 800)
 
   useEffect(() => {
     if (state?.success) {
       setPeopleList(state.data)
     }
   }, [state])
-
+	
   return (
     <div>
-      <div className="flex items-center gap-2">
-        <Input
-          size={30}
-          onClick={() => setOpen(true)}
-          placeholder="Press ⌘ + K or click to search"
-        />
-      </div>
+			<div className="flex items-center gap-2">
+        <Input size={30} onClick={() => setOpen(true)} placeholder="Press ⌘ + K or click to search" />
+			</div>
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput
-          placeholder="Type a command or search..."
-          onValueChange={(value) => {
-            handleInputValueChange(value)
-            setInputValue(value)
-          }}
-        />
-
+        <CommandInput placeholder="Type a command or search..." onValueChange={value => {handleInputValueChange(value); setInputValue(value)}} />
+				
         <CommandList>
-          {loading && (
+          {
+            loading && 
             <div className="w-full flex justify-center p-2">
               <Loader />
             </div>
-          )}
+          }
           <CommandEmpty>No results found.</CommandEmpty>
-
-          <CommandGroup heading="Users">
-            {peopleList.map((person) => (
-              <CommandItem
-                value={`${person.first_name} ${person.last_name}`}
-                key={person.id}
-                onSelect={() => handleItemPress(`/Profile/${person.unique_id}`)}
-              >
-                <Avatar>
-                  <AvatarImage
-                    src={person?.profile_url || ""}
-                    alt={person.first_name}
-                  />
-                </Avatar>
-                <span>
-                  {person.first_name} {person.last_name}
-                </span>
-              </CommandItem>
-            ))}
-          </CommandGroup>
+					
+					<CommandGroup heading="Users" >
+						{peopleList.map((person) => (
+							<CommandItem value={`${person.first_name} ${person.last_name}`} key={person.unique_id} onSelect={()=> handleItemPress(`/profile/${person.unique_id}`)} >
+								<Avatar>
+									<AvatarImage src={person?.profile_url || ''} alt={person.first_name} />
+								</Avatar>
+								<span>{person.first_name} {person.last_name}</span>
+							</CommandItem>
+						))}
+					</CommandGroup>
+					
 
           <CommandGroup heading="Suggestions">
             <CommandItem>
@@ -134,11 +117,11 @@ export default function CommandCenter() {
           </CommandGroup>
           <CommandSeparator />
           <CommandGroup heading="Quick Links">
-            <CommandItem onSelect={() => handleItemPress("/profile")}>
+            <CommandItem onSelect={()=> handleItemPress('/profile')} >
               <User />
               <span>Profile</span>
             </CommandItem>
-            <CommandItem onSelect={() => handleItemPress("/chat")}>
+            <CommandItem onSelect={()=> handleItemPress('/chat')}>
               <MessageSquare />
               <span>Chat</span>
             </CommandItem>

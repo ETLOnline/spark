@@ -112,7 +112,7 @@ const sampleTools: Tool[] = [
   },
 ]
 
-export function MarketplaceScreen() {
+export default function MarketplaceScreen() {
   const [searchQuery, setSearchQuery] = useState("")
 
   return (
