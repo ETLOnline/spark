@@ -17,6 +17,8 @@ import { GetTagsForUserAction } from "@/src/server-actions/Tag/Tag"
 import { useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { profileStore } from "@/src/store/profile/profileStore"
+import Loader from "../../common/Loader/Loader"
+import { LoaderSizes } from "../../common/Loader/loader-types.d"
 
 type Props = {
   editable?: boolean
@@ -86,44 +88,50 @@ const ProfileBio: React.FC<Props> = ({ editable = true }) => {
         </header>
         <CardDescription>{bio}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <header className="profile-section-header flex justify-between">
-            <h3 className="mb-2 font-semibold">Skills</h3>
-          </header>
-          <div className="flex flex-wrap gap-2">
-            {skills.map((skill: Tag) => (
-              <Badge key={skill.id} variant="secondary">
-                {skill.name}
-              </Badge>
-            ))}
-          </div>
-        </div>
-        <div>
-          <div className="profile-section-header flex justify-between">
-            <h3 className="mb-2 font-semibold">interestTags</h3>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {interests.map((interest: Tag) => (
-              <Badge key={interest.id} variant="outline">
-                {interest.name}
-              </Badge>
-            ))}
-          </div>
-        </div>
-        <div>
-          <h3 className="mb-2 font-semibold">Recommendations</h3>
-          <ul className="space-y-2">
-            {recommendations.map((recommendation: Recommendation, i) => (
-              <li key={i} className="rounded-lg border p-3">
-                <p className="text-sm">&quot;{recommendation.text}&quot;</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  - {recommendation.name}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </div>
+      <CardContent className={`space-y-4 ${getTagsLoading || getBioLoading ? "flex items-center justify-center" : ""}`}>
+        {getTagsLoading || getBioLoading ? (
+          <Loader size={LoaderSizes.xl} />
+        ) : (
+          <>
+            <div>
+              <header className="profile-section-header flex justify-between">
+                <h3 className="mb-2 font-semibold">Skills</h3>
+              </header>
+              <div className="flex flex-wrap gap-2">
+                {skills.map((skill: Tag) => (
+                  <Badge key={skill.id} variant="secondary">
+                    {skill.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="profile-section-header flex justify-between">
+                <h3 className="mb-2 font-semibold">interestTags</h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {interests.map((interest: Tag) => (
+                  <Badge key={interest.id} variant="outline">
+                    {interest.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h3 className="mb-2 font-semibold">Recommendations</h3>
+              <ul className="space-y-2">
+                {recommendations.map((recommendation: Recommendation, i) => (
+                  <li key={i} className="rounded-lg border p-3">
+                    <p className="text-sm">&quot;{recommendation.text}&quot;</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      - {recommendation.name}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   )

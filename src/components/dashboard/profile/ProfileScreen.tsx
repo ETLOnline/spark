@@ -40,25 +40,25 @@ export default async function ProfileScreen({ tab }: ProfileScreenProps) {
       </div>
       <Tabs defaultValue="basic" className="space-y-4" value={tab || "basic"}>
         <TabsList>
-          <Link href={`/profile/?tab=basic`}>
+          <Link href={`?tab=basic`}>
             <TabsTrigger value="basic">
             <UserIcon className="mr-2 h-4 w-4" />
             Bio/Basic
           </TabsTrigger>
           </Link>
-          <Link href={`/profile/?tab=rewards`}>
+          <Link href={`?tab=rewards`}>
             <TabsTrigger value="rewards">
             <TrophyIcon className="mr-2 h-4 w-4" />
             Rewards
           </TabsTrigger>
           </Link>
-          <Link href={`/profile/?tab=activity`}>
+          <Link href={`?tab=activity`}>
             <TabsTrigger value="activity">
             <StarIcon className="mr-2 h-4 w-4" />
             Activity
           </TabsTrigger>
           </Link>
-          <Link href={`/profile/?tab=calendar`}>
+          <Link href={`?tab=calendar`}>
             <TabsTrigger value="calendar">
             <CalendarIcon className="mr-2 h-4 w-4" />
             Calendar
