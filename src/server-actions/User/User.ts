@@ -4,7 +4,7 @@ import { GetUserBio, UpdateUserBio } from "@/src/db/data-access/user/query"
 import { CreateServerAction } from ".."
 import { AddTag } from "@/src/db/data-access/tag/query"
 import { AddUserTag, DeleteUserTags } from "@/src/db/data-access/tag/query"
-import { ProfileData } from "@/src/components/dashboard/Profile/types/profile-types"
+import { ProfileData } from "@/src/components/dashboard/Profile/types/profile-types.d"
 
 export const UpdateBioForUserAction = CreateServerAction(
   true,

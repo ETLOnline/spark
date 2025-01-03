@@ -5,7 +5,7 @@ import TrendingTopicsCard from "./TrendingTopicsCard"
 import UpcomingEventsCard from "./UpcomingEventsCard"
 import { useDetectBreakpoint } from "@/src/hooks/useBreakpoint"
 import { MessageCircle, Users } from "lucide-react"
-import { Event, Topic, Stat } from "./types/spaces-types"
+import { Event, Topic, Stat } from "./types/spaces-types.d"
 
 const upcomingEvents: Event[] = [
   { name: "TechConf 2023", date: "2023-09-15" },
@@ -45,9 +45,9 @@ const SpacesStats = () => {
   return (
     !isMobileOrTab && (
       <aside className="space-y-4 space-info pt-[128px] mt-[-128px] sticky top-[16px]">
-          <TrendingTopicsCard topics={trendingTopics} />
-          <UpcomingEventsCard events={upcomingEvents} />
-          <CommunityStatsCard stats={stats} />
+        <TrendingTopicsCard topics={trendingTopics} />
+        <UpcomingEventsCard events={upcomingEvents} />
+        <CommunityStatsCard stats={stats} />
       </aside>
     )
   )

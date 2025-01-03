@@ -1,4 +1,4 @@
-import { LoaderSizes } from "./types/loader-types"
+import { LoaderSizes } from "./types/loader-types.d"
 
 type LoaderProps = {
   size?: LoaderSizes

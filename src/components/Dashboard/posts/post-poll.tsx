@@ -3,7 +3,7 @@ import {
   Card,
   CardContent,
   CardFooter,
-  CardHeader,
+  CardHeader
 } from "@/src/components/ui/card"
 import { Badge } from "@/src/components/ui/badge"
 import { Separator } from "@/src/components/ui/separator"
@@ -13,7 +13,7 @@ import PostCommentForm from "./post-comment-form"
 import { RadioGroup } from "../../ui/radio-group"
 import { Label } from "../../ui/label"
 import { RadioGroupItem } from "../../ui/radio-group"
-import { Comment, Post, PostFile, PostPoll } from "./types/posts-types"
+import { Comment, Post, PostFile, PostPoll } from "./types/posts-types.d"
 
 type Props = {
   post: PostPoll

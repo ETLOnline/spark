@@ -1,10 +1,10 @@
-import { Post, Comment, PostFile, PostPoll } from "./types/posts-types"
+import { Post, Comment, PostFile, PostPoll } from "./types/posts-types.d"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   Card,
   CardContent,
   CardFooter,
-  CardHeader,
+  CardHeader
 } from "@/src/components/ui/card"
 import { Badge } from "@/src/components/ui/badge"
 import { Separator } from "@/src/components/ui/separator"

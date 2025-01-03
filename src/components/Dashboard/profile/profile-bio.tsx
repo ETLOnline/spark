@@ -18,7 +18,7 @@ import { useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { profileStore } from "@/src/store/profile/profileStore"
 import Loader from "../../common/Loader/Loader"
-import { LoaderSizes } from "../../common/Loader/loader-types.d"
+import { LoaderSizes } from "../../common/Loader/types/loader-types.d"
 
 type Props = {
   editable?: boolean

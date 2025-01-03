@@ -6,7 +6,7 @@ import {
   Post,
   PostFile,
   PostPoll
-} from "@/src/components/Dashboard/posts/types/posts-types"
+} from "@/src/components/Dashboard/posts/types/posts-types.d"
 import {
   Card,
   CardContent,
