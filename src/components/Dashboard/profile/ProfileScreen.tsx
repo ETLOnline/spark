@@ -66,7 +66,7 @@ export default async function ProfileScreen({ tab }: ProfileScreenProps) {
           </Link>
         </TabsList>
         <TabsContent value="basic">
-          <ProfileBio />
+          <ProfileBio userId={user.external_auth_id} />
         </TabsContent>
         <TabsContent value="rewards">
           <ProfileRewards userId={user.external_auth_id} />

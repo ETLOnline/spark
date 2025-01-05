@@ -81,7 +81,6 @@ const EditProfileModal: React.FC = () => {
     editedBio && editedBio?.length > 2000
       ? "Bio cannot exceed 2000 characters"
       : ""
-
   const saveProfileChanges = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
@@ -98,52 +97,61 @@ const EditProfileModal: React.FC = () => {
         bio: editedBio ? editedBio : bio,
         newTags: [
           ...skills
-            .filter((tag) => tag.status === TagStatus[3])
+            .filter((tag) => tag.status === TagStatus[3] && !tag.deleted)
             .map((tag) => {
               return { name: tag.name, type: "skill" }
             }),
           ...interests
-            .filter((tag) => tag.status === TagStatus[3])
+            .filter((tag) => tag.status === TagStatus[3] && !tag.deleted)
             .map((tag) => {
               return { name: tag.name, type: "interest" }
             })
         ],
         existingTags: [
           ...skills
-            .filter((tag) => tag.status === TagStatus[2])
+            .filter((tag) => tag.status === TagStatus[2] && !tag.deleted)
             .map((tag) => {
               return { name: tag.name, id: tag.id, type: "skill" }
             }),
           ...interests
-            .filter((tag) => tag.status === TagStatus[2])
+            .filter((tag) => tag.status === TagStatus[2] && !tag.deleted)
             .map((tag) => {
               return { name: tag.name, id: tag.id, type: "interest" }
             })
         ],
         deletedTagsIds: [...deletedSkillsIds, ...deletedInterestsIds]
       }
-      await updateProfile(updatedProfileData)
-      // remove deleted skills
-      setSkills((skills: Tag[]) =>
-        skills.filter(
-          (tag) => !deletedSkillsIds.includes(tag.id as number) && !tag.deleted
+      const res = await updateProfile(updatedProfileData)
+      if (res?.success) {
+        // remove deleted skills and update skills val in store
+        setSkills((skills: Tag[]) =>
+          skills
+            .filter(
+              (tag) =>
+                !deletedSkillsIds.includes(tag.id as number) && !tag.deleted
+            )
+            .map((tag) => ({ ...tag, status: TagStatus[1] }))
         )
-      )
-      // remove deleted Interests
-      setInterests((interests: Tag[]) =>
-        interests.filter(
-          (tag) =>
-            !deletedInterestsIds.includes(tag.id as number) && !tag.deleted
+        // remove deleted Interests and update interests val in store
+        setInterests((interests: Tag[]) =>
+          interests
+            .filter(
+              (tag) =>
+                !deletedInterestsIds.includes(tag.id as number) && !tag.deleted
+            )
+            .map((tag) => ({ ...tag, status: TagStatus[1] }))
         )
-      )
-      editedBio && setBio(editedBio)
-      setIsOpen(false)
-      setEditedBio("")
-      toast({
-        title: "Profile updated",
-        description: "Your changes have been saved successfully.",
-        duration: 3000
-      })
+        editedBio && setBio(editedBio)
+        setIsOpen(false)
+        setEditedBio("")
+        toast({
+          title: "Profile updated",
+          description: "Your changes have been saved successfully.",
+          duration: 3000
+        })
+      } else {
+        throw res?.error
+      }
     } catch (error) {
       toast({
         variant: "destructive",

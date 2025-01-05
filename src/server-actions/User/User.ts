@@ -23,7 +23,7 @@ export const UpdateBioForUserAction = CreateServerAction(
   }
 )
 
-export const GetUserBioForUserAction = CreateServerAction(
+export const GetBioForUserAction = CreateServerAction(
   true,
   async (userId: string) => {
     try {
