@@ -189,3 +189,14 @@ export const userActivitiesTable = sqliteTable("user_activities", {
 
 export type InsertUserActivity = typeof userActivitiesTable.$inferInsert
 export type SelectUserActivity = typeof userActivitiesTable.$inferSelect
+
+export const recommendationsTable = sqliteTable("recommendations", {
+  id: int().primaryKey({ autoIncrement: true }),
+  content: text().notNull(),
+  recommender_id: text().notNull(),
+  receiver_id: text().notNull(),
+  ...timestamps
+})
+
+export type InsertRecommendation = typeof recommendationsTable.$inferInsert
+export type SelectRecommendation = typeof recommendationsTable.$inferSelect

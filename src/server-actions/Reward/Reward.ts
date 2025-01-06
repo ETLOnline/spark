@@ -2,7 +2,7 @@
 
 import { InsertReward, InsertUserReward } from "@/src/db/schema"
 import { CreateServerAction } from ".."
-import { AddReward, getRewardsById } from "@/src/db/data-access/reward/query"
+import { AddReward, GetRewardsById } from "@/src/db/data-access/reward/query"
 import {
   AddRewardForUser,
   GetRewardIdsForUser
@@ -37,7 +37,7 @@ export const GetRewardsForUserAction = CreateServerAction(
   async (userId: string) => {
     try {
       const rewardIds = await GetRewardIdsForUser(userId)
-      const rewards = await getRewardsById(rewardIds)
+      const rewards = await GetRewardsById(rewardIds)
       return { success: true, data: rewards }
     } catch (error) {
       return { success: false, error: error }

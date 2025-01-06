@@ -1,4 +1,4 @@
-import { eq, like } from "drizzle-orm"
+import { eq, inArray, like } from "drizzle-orm"
 import { db } from "../.."
 import { InsertUser, usersTable } from "../../schema"
 
@@ -28,6 +28,23 @@ export async function SelectUserByExternalId(id: string) {
       unique_id: true
     },
     where: eq(usersTable.external_auth_id, id)
+  })
+}
+
+export async function GetUsersFullName(ids: string[]) {
+  const uniqueIds = [...new Set(ids)] // Get unique IDs for the query
+  const users = await db.query.usersTable.findMany({
+    columns: {
+      first_name: true,
+      last_name: true,
+      external_auth_id: true // Need this to match with input ids
+    },
+    where: (usersTable) => inArray(usersTable.external_auth_id, uniqueIds)
+  })
+  // Map over original ids array to maintain order and duplicates
+  return ids.map((id) => {
+    const user = users.find((u) => u.external_auth_id === id)
+    return user ? `${user.first_name} ${user.last_name}` : ""
   })
 }
 

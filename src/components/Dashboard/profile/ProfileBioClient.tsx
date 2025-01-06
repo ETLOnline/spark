@@ -1,3 +1,5 @@
+"use client"
+
 import EditProfileModal from "./edit-profile-modal"
 import { Badge } from "../../ui/badge"
 import { useAtomValue, useSetAtom } from "jotai"
@@ -6,9 +8,9 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetBioForUserAction } from "@/src/server-actions/User/User"
 import { GetTagsForUserAction } from "@/src/server-actions/Tag/Tag"
 import { useEffect } from "react"
-import { Tag, TagStatus } from "./types/profile-types"
+import { Tag, TagStatus } from "./types/profile-types.d"
 import Loader from "../../common/Loader/Loader"
-import { LoaderSizes } from "../../common/Loader/types/loader-types"
+import { LoaderSizes } from "../../common/Loader/types/loader-types.d"
 
 type ProfileBioClientProps = {
   editable?: boolean
@@ -64,7 +66,13 @@ const ProfileBioClient: React.FC<ProfileBioClientProps> = ({
   }, [bioData])
 
   return getTagsLoading || getBioLoading ? (
-    <Loader size={LoaderSizes.xl} />
+    <div
+      className={`${
+        (getTagsLoading || getBioLoading) && "flex items-center justify-center"
+      }`}
+    >
+      <Loader size={LoaderSizes.xl} />
+    </div>
   ) : (
     <>
       <div className="bio-summary">
@@ -72,18 +80,22 @@ const ProfileBioClient: React.FC<ProfileBioClientProps> = ({
           <h3 className="mb-2 font-semibold">Bio</h3>
           {editable && <EditProfileModal />}
         </header>
-        <p className="user-bio">{bio}</p>
+        <p className="user-bio">
+          {bio ?? "Time to shine ✨ Tell the world about yourself"}
+        </p>
       </div>
       <div className="skill-tags">
         <header className="profile-section-header flex justify-between">
           <h3 className="mb-2 font-semibold">Skills</h3>
         </header>
         <div className="flex flex-wrap gap-2">
-          {skills.map((skill: Tag) => (
-            <Badge key={skill.id} variant="secondary">
-              {skill.name}
-            </Badge>
-          ))}
+          {skills.length
+            ? skills.map((skill: Tag) => (
+                <Badge key={skill.id} variant="secondary">
+                  {skill.name}
+                </Badge>
+              ))
+            : "What are you great at? Don't be shy!"}
         </div>
       </div>
       <div className="interest-tags">
@@ -91,11 +103,13 @@ const ProfileBioClient: React.FC<ProfileBioClientProps> = ({
           <h3 className="mb-2 font-semibold">Interests</h3>
         </div>
         <div className="flex flex-wrap gap-2">
-          {interests.map((interest: Tag) => (
-            <Badge key={interest.id} variant="outline">
-              {interest.name}
-            </Badge>
-          ))}
+          {interests.length
+            ? interests.map((interest: Tag) => (
+                <Badge key={interest.id} variant="outline">
+                  {interest.name}
+                </Badge>
+              ))
+            : "Share your passions, hobbies, and guilty coding pleasures"}
         </div>
       </div>
     </>

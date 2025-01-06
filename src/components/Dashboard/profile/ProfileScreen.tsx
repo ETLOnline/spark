@@ -58,12 +58,12 @@ export default async function ProfileScreen({ tab }: ProfileScreenProps) {
               Activity
             </TabsTrigger>
           </Link>
-          <Link href={`?tab=calendar`}>
+          {/* <Link href={`?tab=calendar`}>
             <TabsTrigger value="calendar">
               <CalendarIcon className="mr-2 h-4 w-4" />
               Calendar
             </TabsTrigger>
-          </Link>
+          </Link> */}
         </TabsList>
         <TabsContent value="basic">
           <ProfileBio userId={user.external_auth_id} />
@@ -74,9 +74,9 @@ export default async function ProfileScreen({ tab }: ProfileScreenProps) {
         <TabsContent value="activity">
           <ProfileActivities userId={user.external_auth_id} />
         </TabsContent>
-        <TabsContent value="calendar">
+        {/* <TabsContent value="calendar">
           <ProfileCalendar />
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </div>
   )

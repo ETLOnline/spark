@@ -11,7 +11,7 @@ export const AddReward = async (data: InsertReward[]) => {
   return await db.insert(rewardsTable).values(data).returning()
 }
 
-export const getRewardsById = async (ids: number[]) => {
+export const GetRewardsById = async (ids: number[]) => {
   const results = await db
     .select()
     .from(rewardsTable)
