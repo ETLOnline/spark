@@ -8,7 +8,6 @@ type ProfileBioProps = {
 
 const ProfileBio: React.FC<ProfileBioProps> = async ({ userId }) => {
   const recommendations = await FetchUserRecommendationsAction(userId)
-  console.log(recommendations);
 
   return (
     <Card>

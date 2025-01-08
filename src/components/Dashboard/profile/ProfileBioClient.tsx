@@ -40,14 +40,14 @@ const ProfileBioClient: React.FC<ProfileBioClientProps> = ({
         .map((tag) => ({
           id: tag.id,
           name: tag.name,
-          status: TagStatus[1] as const
+          status: TagStatus.saved as const
         }))
       const interestTags = tagsData?.data
         .filter((tag) => tag.type === "interest")
         .map((tag) => ({
           id: tag.id,
           name: tag.name,
-          status: TagStatus[1] as const
+          status: TagStatus.saved as const
         }))
       setUserInterests(interestTags)
       setUserSkills(skillTags)
@@ -81,7 +81,11 @@ const ProfileBioClient: React.FC<ProfileBioClientProps> = ({
           {editable && <EditProfileModal />}
         </header>
         <p className="user-bio">
-          {bio ?? "Time to shine ✨ Tell the world about yourself"}
+          {bio ?? (
+            <span style={{ fontStyle: "italic" }}>
+              Time to shine ✨ Tell the world about yourself
+            </span>
+          )}
         </p>
       </div>
       <div className="skill-tags">
@@ -89,13 +93,17 @@ const ProfileBioClient: React.FC<ProfileBioClientProps> = ({
           <h3 className="mb-2 font-semibold">Skills</h3>
         </header>
         <div className="flex flex-wrap gap-2">
-          {skills.length
-            ? skills.map((skill: Tag) => (
-                <Badge key={skill.id} variant="secondary">
-                  {skill.name}
-                </Badge>
-              ))
-            : "What are you great at? Don't be shy!"}
+          {skills.length ? (
+            skills.map((skill: Tag) => (
+              <Badge key={skill.id} variant="secondary">
+                {skill.name}
+              </Badge>
+            ))
+          ) : (
+            <span style={{ fontStyle: "italic" }}>
+              HTML ninja? 🥷 Python wizard? 🪄 Show off your superpowers!
+            </span>
+          )}
         </div>
       </div>
       <div className="interest-tags">
@@ -103,13 +111,17 @@ const ProfileBioClient: React.FC<ProfileBioClientProps> = ({
           <h3 className="mb-2 font-semibold">Interests</h3>
         </div>
         <div className="flex flex-wrap gap-2">
-          {interests.length
-            ? interests.map((interest: Tag) => (
-                <Badge key={interest.id} variant="outline">
-                  {interest.name}
-                </Badge>
-              ))
-            : "Share your passions, hobbies, and guilty coding pleasures"}
+          {interests.length ? (
+            interests.map((interest: Tag) => (
+              <Badge key={interest.id} variant="outline">
+                {interest.name}
+              </Badge>
+            ))
+          ) : (
+            <span style={{ fontStyle: "italic" }}>
+              💿 Share your passions, hobbies, and guilty coding pleasures 💾
+            </span>
+          )}
         </div>
       </div>
     </>

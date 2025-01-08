@@ -23,9 +23,9 @@ export type Tag = {
 }
 
 export enum TagStatus {
-  1 = "saved",
-  2 = "selected",
-  3 = "new"
+  saved = "saved",
+  selected = "selected",
+  new = "new"
 }
 
 export type ProfileData = {

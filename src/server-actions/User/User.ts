@@ -63,7 +63,8 @@ export const SaveUserProfileAction = CreateServerAction(
           })
         ))
       // delete tags
-      await DeleteUserTags(profileData.userId, profileData.deletedTagsIds)
+      profileData.deletedTagsIds.length &&
+        (await DeleteUserTags(profileData.userId, profileData.deletedTagsIds))
       return {
         success: true
       }

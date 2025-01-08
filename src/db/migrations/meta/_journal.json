@@ -120,6 +120,20 @@
       "when": 1736149590544,
       "tag": "0016_slow_morlocks",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1736266440800,
+      "tag": "0017_thin_titania",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1736269431192,
+      "tag": "0018_calm_magus",
+      "breakpoints": true
     }
   ]
 }

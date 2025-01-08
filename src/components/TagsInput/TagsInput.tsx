@@ -71,7 +71,7 @@ const TagsInput: React.FC<TagsInputProps> = ({
             (tagInput.current as HTMLInputElement).value
               .substring(1)
               .toLowerCase(),
-          status: TagStatus[3]
+          status: TagStatus.new
         }
       ])
       setShowSuggestions(false)

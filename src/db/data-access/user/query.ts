@@ -19,7 +19,6 @@ export async function CreateUser(data: InsertUser) {
 export async function SelectUserByExternalId(id: string) {
   return await db.query.usersTable.findFirst({
     columns: {
-      id: true,
       first_name: true,
       last_name: true,
       email: true,
@@ -32,7 +31,7 @@ export async function SelectUserByExternalId(id: string) {
 }
 
 export async function GetUsersFullName(ids: string[]) {
-  const uniqueIds = [...new Set(ids)] // Get unique IDs for the query
+  const uniqueIds = Array.from(new Set(ids)) // Get unique IDs for the query
   const users = await db.query.usersTable.findMany({
     columns: {
       first_name: true,
@@ -64,7 +63,6 @@ export async function FindUserWildCard(wildcard: string) {
   try {
     const users = await db.query.usersTable.findMany({
       columns: {
-        id: true,
         first_name: true,
         last_name: true,
         email: true,

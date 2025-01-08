@@ -23,7 +23,7 @@ const useUserSkills = (): UseUserSkillsReturn => {
     ? searchedSkills.data.map((tag) => ({
         name: tag.name,
         id: tag.id,
-        status: TagStatus[2] as const
+        status: TagStatus.selected as const
       }))
     : []
 

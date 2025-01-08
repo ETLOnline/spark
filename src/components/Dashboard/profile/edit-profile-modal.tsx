@@ -85,11 +85,11 @@ const EditProfileModal: React.FC = () => {
     e.preventDefault()
     try {
       const deletedSkillsIds: number[] = skills
-        .filter((skill) => skill.deleted && skill.status === TagStatus[1])
+        .filter((skill) => skill.deleted && skill.status === TagStatus.saved)
         .map((skill) => skill.id as number)
       const deletedInterestsIds: number[] = interests
         .filter(
-          (interest) => interest.deleted && interest.status === TagStatus[1]
+          (interest) => interest.deleted && interest.status === TagStatus.saved
         )
         .map((interest) => interest.id as number)
       const updatedProfileData: ProfileData = {
@@ -97,24 +97,24 @@ const EditProfileModal: React.FC = () => {
         bio: editedBio ? editedBio : bio,
         newTags: [
           ...skills
-            .filter((tag) => tag.status === TagStatus[3] && !tag.deleted)
+            .filter((tag) => tag.status === TagStatus.new && !tag.deleted)
             .map((tag) => {
               return { name: tag.name, type: "skill" }
             }),
           ...interests
-            .filter((tag) => tag.status === TagStatus[3] && !tag.deleted)
+            .filter((tag) => tag.status === TagStatus.new && !tag.deleted)
             .map((tag) => {
               return { name: tag.name, type: "interest" }
             })
         ],
         existingTags: [
           ...skills
-            .filter((tag) => tag.status === TagStatus[2] && !tag.deleted)
+            .filter((tag) => tag.status === TagStatus.selected && !tag.deleted)
             .map((tag) => {
               return { name: tag.name, id: tag.id, type: "skill" }
             }),
           ...interests
-            .filter((tag) => tag.status === TagStatus[2] && !tag.deleted)
+            .filter((tag) => tag.status === TagStatus.selected && !tag.deleted)
             .map((tag) => {
               return { name: tag.name, id: tag.id, type: "interest" }
             })
@@ -130,7 +130,7 @@ const EditProfileModal: React.FC = () => {
               (tag) =>
                 !deletedSkillsIds.includes(tag.id as number) && !tag.deleted
             )
-            .map((tag) => ({ ...tag, status: TagStatus[1] }))
+            .map((tag) => ({ ...tag, status: TagStatus.saved }))
         )
         // remove deleted Interests and update interests val in store
         setInterests((interests: Tag[]) =>
@@ -139,7 +139,7 @@ const EditProfileModal: React.FC = () => {
               (tag) =>
                 !deletedInterestsIds.includes(tag.id as number) && !tag.deleted
             )
-            .map((tag) => ({ ...tag, status: TagStatus[1] }))
+            .map((tag) => ({ ...tag, status: TagStatus.saved }))
         )
         editedBio && setBio(editedBio)
         setIsOpen(false)
