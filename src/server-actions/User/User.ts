@@ -1,6 +1,6 @@
 "use server"
 
-import { GetUserBio, UpdateUserBio } from "@/src/db/data-access/user/query"
+import { UpdateUserBio } from "@/src/db/data-access/user/query"
 import { CreateServerAction } from ".."
 import { AddTag } from "@/src/db/data-access/tag/query"
 import { AddUserTag, DeleteUserTags } from "@/src/db/data-access/tag/query"
@@ -13,24 +13,6 @@ export const UpdateBioForUserAction = CreateServerAction(
       await UpdateUserBio(userId, newBio)
       return {
         success: true
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: error
-      }
-    }
-  }
-)
-
-export const GetBioForUserAction = CreateServerAction(
-  true,
-  async (userId: string) => {
-    try {
-      const user = await GetUserBio(userId)
-      return {
-        success: true,
-        data: user
       }
     } catch (error) {
       return {

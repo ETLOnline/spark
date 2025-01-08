@@ -5,7 +5,6 @@ import { Badge } from "../../ui/badge"
 import { useAtomValue, useSetAtom } from "jotai"
 import { profileStore } from "@/src/store/profile/profileStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { GetBioForUserAction } from "@/src/server-actions/User/User"
 import { GetTagsForUserAction } from "@/src/server-actions/Tag/Tag"
 import { useEffect } from "react"
 import { Tag, TagStatus } from "./types/profile-types.d"
@@ -15,11 +14,13 @@ import { LoaderSizes } from "../../common/Loader/types/loader-types.d"
 type ProfileBioClientProps = {
   editable?: boolean
   userId: string
+  userBio: string
 }
 
 const ProfileBioClient: React.FC<ProfileBioClientProps> = ({
   editable = true,
-  userId
+  userId,
+  userBio
 }) => {
   const setUserBio = useSetAtom(profileStore.bio)
   const setUserSkills = useSetAtom(profileStore.skills)
@@ -28,8 +29,6 @@ const ProfileBioClient: React.FC<ProfileBioClientProps> = ({
   const interests = useAtomValue(profileStore.interests)
   const bio = useAtomValue(profileStore.bio)
 
-  const [getBioLoading, bioData, getBioError, getBio] =
-    useServerAction(GetBioForUserAction)
   const [getTagsLoading, tagsData, getTagsError, getTags] =
     useServerAction(GetTagsForUserAction)
 
@@ -56,21 +55,16 @@ const ProfileBioClient: React.FC<ProfileBioClientProps> = ({
 
   useEffect(() => {
     if (userId) {
-      getBio(userId)
       getTags(userId)
     }
   }, [userId])
 
   useEffect(() => {
-    setUserBio(bioData?.data as string)
-  }, [bioData])
+    setUserBio(userBio)
+  }, [userBio])
 
-  return getTagsLoading || getBioLoading ? (
-    <div
-      className={`${
-        (getTagsLoading || getBioLoading) && "flex items-center justify-center"
-      }`}
-    >
+  return getTagsLoading ? (
+    <div className={`${getTagsLoading && "flex items-center justify-center"}`}>
       <Loader size={LoaderSizes.xl} />
     </div>
   ) : (

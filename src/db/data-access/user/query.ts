@@ -1,16 +1,6 @@
-import { eq, inArray, like } from "drizzle-orm"
+import { eq, like } from "drizzle-orm"
 import { db } from "../.."
 import { InsertUser, usersTable } from "../../schema"
-
-export const userTableColSelect = {
-  id: true,
-  first_name: true,
-  last_name: true,
-  email: true,
-  external_auth_id: true,
-  profile_url: true,
-  unique_id: true
-}
 
 export async function CreateUser(data: InsertUser) {
   await db.insert(usersTable).values(data)
@@ -24,26 +14,10 @@ export async function SelectUserByExternalId(id: string) {
       email: true,
       external_auth_id: true,
       profile_url: true,
-      unique_id: true
+      unique_id: true,
+      bio: true
     },
     where: eq(usersTable.external_auth_id, id)
-  })
-}
-
-export async function GetUsersFullName(ids: string[]) {
-  const uniqueIds = Array.from(new Set(ids)) // Get unique IDs for the query
-  const users = await db.query.usersTable.findMany({
-    columns: {
-      first_name: true,
-      last_name: true,
-      external_auth_id: true // Need this to match with input ids
-    },
-    where: (usersTable) => inArray(usersTable.external_auth_id, uniqueIds)
-  })
-  // Map over original ids array to maintain order and duplicates
-  return ids.map((id) => {
-    const user = users.find((u) => u.external_auth_id === id)
-    return user ? `${user.first_name} ${user.last_name}` : ""
   })
 }
 
@@ -87,11 +61,4 @@ export async function UpdateUserBio(userId: string, bio: string) {
     .update(usersTable)
     .set({ bio })
     .where(eq(usersTable.external_auth_id, userId))
-}
-
-export const GetUserBio = async (userId: string) => {
-  const user = await db.query.usersTable.findFirst({
-    where: eq(usersTable.external_auth_id, userId)
-  })
-  return user?.bio
 }
