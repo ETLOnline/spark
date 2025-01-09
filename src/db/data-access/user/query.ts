@@ -60,5 +60,5 @@ export async function UpdateUserBio(userId: string, bio: string) {
   await db
     .update(usersTable)
     .set({ bio })
-    .where(eq(usersTable.external_auth_id, userId))
+    .where(eq(usersTable.unique_id, userId))
 }

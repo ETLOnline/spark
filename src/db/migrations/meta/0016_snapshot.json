@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "73d1c429-570d-419b-92f2-f576a2a3cc88",
+  "id": "5d0c85db-057f-4087-af9b-71229f94d141",
   "prevId": "7b8ae6d9-e108-43af-8e92-8576a9e73faa",
   "tables": {
     "activities": {
@@ -71,8 +71,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "chat": {
-      "name": "chat",
+    "chats": {
+      "name": "chats",
       "columns": {
         "id": {
           "name": "id",
@@ -83,6 +83,13 @@
         },
         "channel_id": {
           "name": "channel_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "chat_slug": {
+          "name": "chat_slug",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -187,7 +194,7 @@
         },
         "sender_id": {
           "name": "sender_id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -195,13 +202,6 @@
         "message": {
           "name": "message",
           "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "timestamp": {
-          "name": "timestamp",
-          "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -458,34 +458,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "user_chats_user_id_users_unique_id_fk": {
-          "name": "user_chats_user_id_users_unique_id_fk",
-          "tableFrom": "user_chats",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "unique_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "user_chats_chat_id_chat_id_fk": {
-          "name": "user_chats_chat_id_chat_id_fk",
-          "tableFrom": "user_chats",
-          "tableTo": "chat",
-          "columnsFrom": [
-            "chat_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {
         "user_chats_user_id_chat_id_pk": {
           "columns": [
@@ -584,6 +557,30 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "user_messages": {
+      "name": "user_messages",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "message_id": {
+          "name": "message_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "user_rewards": {
       "name": "user_rewards",
       "columns": {
@@ -649,12 +646,12 @@
     "users": {
       "name": "users",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
+        "unique_id": {
+          "name": "unique_id",
+          "type": "text(36)",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "first_name": {
           "name": "first_name",
@@ -691,22 +688,15 @@
           "notNull": false,
           "autoincrement": false
         },
-        "unique_id": {
-          "name": "unique_id",
-          "type": "text(36)",
+        "meta": {
+          "name": "meta",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
         "bio": {
           "name": "bio",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "meta": {
-          "name": "meta",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

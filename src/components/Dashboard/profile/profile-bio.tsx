@@ -5,16 +5,17 @@ import ProfileBioClient from "./ProfileBioClient"
 type ProfileBioProps = {
   userId: string
   userBio: string
+  editable?: boolean
 }
 
-const ProfileBio: React.FC<ProfileBioProps> = async ({ userId, userBio }) => {
+const ProfileBio: React.FC<ProfileBioProps> = async ({ userId, userBio, editable }) => {
   const recommendations = await GetUserRecommendationsAction(userId)
 
   return (
     <Card>
       <CardContent className="space-y-4 pt-6">
         <>
-          <ProfileBioClient userId={userId} userBio={userBio} />
+          <ProfileBioClient userId={userId} userBio={userBio} editable={editable} />
           <div className="recommendations">
             <h3 className="mb-2 font-semibold">Recommendations</h3>
             <ul className="space-y-2">

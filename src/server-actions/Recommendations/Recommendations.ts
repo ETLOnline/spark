@@ -5,9 +5,9 @@ import { CreateServerAction } from ".."
 
 export const GetUserRecommendationsAction = CreateServerAction(
   true,
-  async (externalAuthId: string) => {
+  async (userId: string) => {
     try {
-      return await GetRecommendations(externalAuthId)
+      return await GetRecommendations(userId)
     } catch (error) {
       console.error("Error fetching recommendations:", error)
       throw error

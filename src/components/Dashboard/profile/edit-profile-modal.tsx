@@ -93,7 +93,7 @@ const EditProfileModal: React.FC = () => {
         )
         .map((interest) => interest.id as number)
       const updatedProfileData: ProfileData = {
-        userId: user?.external_auth_id as string,
+        userId: user?.unique_id as string,
         bio: editedBio ? editedBio : bio,
         newTags: [
           ...skills

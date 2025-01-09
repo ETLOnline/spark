@@ -18,7 +18,7 @@ export const GetRecommendations = async (id: string) => {
     .from(recommendationsTable)
     .innerJoin(
       usersTable,
-      eq(recommendationsTable.recommender_id, usersTable.external_auth_id)
+      eq(recommendationsTable.recommender_id, usersTable.unique_id)
     )
     .where(eq(recommendationsTable.receiver_id, id))
   return (

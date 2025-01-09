@@ -16,36 +16,6 @@ import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUn
 import { CalendarIcon, StarIcon, TrophyIcon, UserIcon } from "lucide-react"
 import Link from "next/link"
 
-const skillTags = ["React", "Next.js", "TypeScript", "UI/UX", "Node.js"]
-const interests = ["Web Development", "AI", "Open Source", "Tech Writing"]
-const recommendations = [
-  {
-    name: "Jane Doe",
-    text: "An exceptional developer with a keen eye for detail.",
-  },
-  { name: "John Smith", text: "Always delivers high-quality work on time." },
-]
-const rewards = [
-  {
-    title: "Top Contributor",
-    description: "Awarded for outstanding contributions to the team",
-  },
-  {
-    title: "Innovation Champion",
-    description: "Recognized for implementing creative solutions",
-  },
-]
-const activities = [
-  {
-    date: "2023-04-01",
-    description: "Completed the 'Advanced React Patterns' course",
-  },
-  {
-    date: "2023-03-15",
-    description: "Contributed to open-source project 'awesome-ui-components'",
-  },
-]
-
 interface ProfileScreenProps {
   params:{
 		id: string
@@ -80,56 +50,49 @@ export default async function ProfileScreen({ params: { id }, searchParams:{tab}
 				</div>
 				<ProfileFollowActions user={user} />
       </div>
-      <Tabs defaultValue="basic" className="space-y-4" value={tab || 'basic'}>
+      <Tabs defaultValue="basic" className="space-y-4" value={tab || "basic"}>
         <TabsList>
-					<Link href={`/profile/${id}/?tab=basic`}>
-						<TabsTrigger value="basic">
-							<UserIcon className="mr-2 h-4 w-4" />
-							Bio/Basic
-						</TabsTrigger>
-					</Link>
-					<Link href={`/profile/${id}/?tab=rewards`}>
-						<TabsTrigger value="rewards" >
-							<TrophyIcon className="mr-2 h-4 w-4" />
-							Rewards
-						</TabsTrigger>
-					</Link>
-
-					<Link href={`/profile/${id}/?tab=activity`}>
-						<TabsTrigger
-							value="activity"
-						>
-							<StarIcon className="mr-2 h-4 w-4" />
-							Activity
-						</TabsTrigger>
-					</Link>
-
-					<Link href={`/profile/${id}/?tab=calendar`}>
-						<TabsTrigger
-							value="calendar"
-						>
-							<CalendarIcon className="mr-2 h-4 w-4" />
-							Calendar
-						</TabsTrigger>
-					</Link>
+          <Link href={`?tab=basic`}>
+            <TabsTrigger value="basic">
+              <UserIcon className="mr-2 h-4 w-4" />
+              Bio/Basic
+            </TabsTrigger>
+          </Link>
+          <Link href={`?tab=rewards`}>
+            <TabsTrigger value="rewards">
+              <TrophyIcon className="mr-2 h-4 w-4" />
+              Rewards
+            </TabsTrigger>
+          </Link>
+          <Link href={`?tab=activity`}>
+            <TabsTrigger value="activity">
+              <StarIcon className="mr-2 h-4 w-4" />
+              Activity
+            </TabsTrigger>
+          </Link>
+          {/* <Link href={`?tab=calendar`}>
+            <TabsTrigger value="calendar">
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              Calendar
+            </TabsTrigger>
+          </Link> */}
         </TabsList>
         <TabsContent value="basic">
           <ProfileBio
-            skillTags={skillTags}
-            interests={interests}
-            recommendations={recommendations}
+            userId={user.unique_id}
+            userBio={user.bio as string}
             editable={false}
           />
         </TabsContent>
         <TabsContent value="rewards">
-          <ProfileRewards rewards={rewards} />
+          <ProfileRewards userId={user.unique_id} />
         </TabsContent>
         <TabsContent value="activity">
-          <ProfileActivities activities={activities} />
+          <ProfileActivities userId={user.unique_id} />
         </TabsContent>
-        <TabsContent value="calendar">
+        {/* <TabsContent value="calendar">
           <ProfileCalendar />
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </div>
   )
