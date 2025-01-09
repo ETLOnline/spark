@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react'
 import { Heart } from 'lucide-react'
 import './MentorCard.css'
+import Image from 'next/image'
 
 interface MentorCardprops {
   imgURL: string
@@ -11,7 +12,7 @@ interface MentorCardprops {
 const MentorCard = ({ imgURL, title, duration }: MentorCardprops) => {
   return (
     <div className="Card">
-      <img className="card-image" src={imgURL} alt="" />
+      <Image width={500} height={500} className="card-image" src={imgURL} alt="" />
 
       <div className="card-content">
         <div className="card-icon"><Heart /></div>
