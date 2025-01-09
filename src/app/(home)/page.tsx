@@ -82,7 +82,7 @@ export default function Home() {
 					<Carousel>
 						<CarouselContent className="carousel-content">
 							<CarouselItem>
-								<MentorCard imgURL="/images/home/menor-image1.jpg" imgALT='Tom Jones' title="Tom Jones" duration="200+ hrs" />
+								<MentorCard imgURL="/images/home/mentor-image1.jpg" imgALT='Tom Jones' title="Tom Jones" duration="200+ hrs" />
 							</CarouselItem>
 
 							<CarouselItem>
