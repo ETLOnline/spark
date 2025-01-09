@@ -4,13 +4,14 @@ import Image from 'next/image'
 
 interface sessioncardprops {
   imgURL: string
+  imgALT?: string
   title: ReactNode
 }
 
-const SessionCard = ({ imgURL, title }: sessioncardprops) => {
+const SessionCard = ({ imgURL, title, imgALT }: sessioncardprops) => {
   return (
     <div className="session-card">
-      <Image width={500} height={500} className="session-card-image" src={imgURL} alt="" />
+      <Image width={500} height={500} className="session-card-image" src={imgURL} alt='Sessions-Image' />
       <div className="session-card-content">
         <div className="flex flex-wrap justify-between">
           <p className=" session-card-text text-sm">200+ Attendes</p>
