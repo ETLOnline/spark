@@ -12,7 +12,9 @@ const SkillTag = ({ imgURL, title, imgALT }: CardProps) => {
 
   return (
     <div className="skill-tag m-2">
-      <Image width={500} height={500} className="icon" src={imgURL} alt={imgALT} />
+      <div className="icon-container">
+        <Image layout='fill' objectFit='cover' className="icon" src={imgURL} alt={imgALT} />
+      </div>
       <h3 className="font-bold">{title}</h3>
     </div>
   )

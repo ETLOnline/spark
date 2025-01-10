@@ -13,7 +13,7 @@ interface MentorCardprops {
 const MentorCard = ({ imgURL, title, duration, imgALT }: MentorCardprops) => {
   return (
     <div className="Card">
-      <Image width={500} height={500} className="card-image" src={imgURL} alt={imgALT} />
+      <Image layout='fill' objectFit='cover' className="card-image" src={imgURL} alt={imgALT} />
 
       <div className="card-content">
         <div className="card-icon"><Heart /></div>
