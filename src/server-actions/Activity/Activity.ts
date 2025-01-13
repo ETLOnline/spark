@@ -35,7 +35,7 @@ export const AddActivityForUserAction = CreateServerAction(
   }
 )
 
-export const GetActivitiessForUserAction = CreateServerAction(
+export const GetActivitiesForUserAction = CreateServerAction(
   true,
   async (userId: string) => {
     try {

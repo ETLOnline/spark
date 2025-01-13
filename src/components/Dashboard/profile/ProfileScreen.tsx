@@ -1,6 +1,8 @@
+"use client"
+
 import ProfileActivities from "@/src/components/Dashboard/profile/profile-activities"
 import ProfileBio from "@/src/components/Dashboard/profile/profile-bio"
-import ProfileCalendar from "@/src/components/Dashboard/profile/profile-calendar"
+// import ProfileCalendar from "@/src/components/Dashboard/profile/profile-calendar"
 import ProfileRewards from "@/src/components/Dashboard/profile/profile-rewards"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
@@ -10,20 +12,41 @@ import {
   TabsTrigger
 } from "@/src/components/ui/tabs"
 import { CalendarIcon, StarIcon, TrophyIcon, UserIcon } from "lucide-react"
-import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
 import Link from "next/link"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { GetUserProfileAction } from "@/src/server-actions/User/User"
+import { SelectActivity, SelectReward, SelectTag } from "@/src/db/schema"
+import { ExtendedRecommendations } from "./types/profile-types.d"
+import { LoaderSizes } from "../../common/Loader/types/loader-types.d"
+import Loader from "../../common/Loader/Loader"
+import { useAtomValue } from "jotai"
+import { userStore } from "@/src/store/user/userStore"
+import { useEffect } from "react"
 
 type ProfileScreenProps = { tab?: string }
 
 export default async function ProfileScreen({ tab }: ProfileScreenProps) {
-  const user = await AuthUserAction()
+  const user = useAtomValue(userStore.Iam)
+
+  const [profileLoading, profileData, profileDataError, getProfile] =
+    useServerAction(GetUserProfileAction)
 
   if (!user) {
     return <NotFound />
   }
 
-  return (
+  useEffect(() => {
+    console.log("err",profileDataError);
+    
+  }, [profileDataError])
+  
+
+  return profileLoading ? (
+    <div className={"flex items-center justify-center"}>
+      <Loader size={LoaderSizes.xl} />
+    </div>
+  ) : (
     <div className="container mx-auto p-6">
       <div className="mb-6 flex items-center space-x-4">
         <Avatar className="h-20 w-20">
@@ -67,15 +90,22 @@ export default async function ProfileScreen({ tab }: ProfileScreenProps) {
         </TabsList>
         <TabsContent value="basic">
           <ProfileBio
-            userId={user.unique_id}
             userBio={user.bio as string}
+            recommendations={
+              profileData?.data?.recommendations as ExtendedRecommendations
+            }
+            tags={profileData?.data?.tags as SelectTag[]}
           />
         </TabsContent>
         <TabsContent value="rewards">
-          <ProfileRewards userId={user.unique_id} />
+          <ProfileRewards
+            rewards={profileData?.data?.rewards as SelectReward[]}
+          />
         </TabsContent>
         <TabsContent value="activity">
-          <ProfileActivities userId={user.unique_id} />
+          <ProfileActivities
+            activities={profileData?.data?.activities as SelectActivity[]}
+          />
         </TabsContent>
         {/* <TabsContent value="calendar">
           <ProfileCalendar />

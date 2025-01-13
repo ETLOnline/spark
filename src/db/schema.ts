@@ -242,5 +242,16 @@ export const recommendationsTable = sqliteTable("recommendations", {
   ...timestamps
 })
 
+export const recommendationsRelations = relations(
+  recommendationsTable,
+  ({ one }) => ({
+    recommender: one(usersTable, {
+      fields: [recommendationsTable.recommender_id],
+      references: [usersTable.unique_id],
+      relationName: "recommendationToUser"
+    })
+  })
+)
+
 export type InsertRecommendation = typeof recommendationsTable.$inferInsert
 export type SelectRecommendation = typeof recommendationsTable.$inferSelect

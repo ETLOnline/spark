@@ -6,25 +6,27 @@ import {
   CardHeader
 } from "../../ui/card"
 import { TrophyIcon } from "lucide-react"
-import { GetRewardsForUserAction } from "@/src/server-actions/Reward/Reward"
+// import { GetRewardsForUserAction } from "@/src/server-actions/Reward/Reward"
+// import { Reward } from "./types/profile-types"
+import { SelectReward } from "@/src/db/schema"
 
 type ProfileActivitiesProps = {
-  userId: string
+  rewards: SelectReward[]
 }
 
-const ProfileRewards: React.FC<ProfileActivitiesProps> = async ({ userId }) => {
-  let rewards
+const ProfileRewards: React.FC<ProfileActivitiesProps> = async ({ rewards }) => {
+  // let rewards
 
-  try {
-    const res = await GetRewardsForUserAction(userId)
-    if (res.success) {
-      rewards = res.data
-    } else {
-      throw res.error
-    }
-  } catch (error) {
-    console.error(error)
-  }
+  // try {
+  //   const res = await GetRewardsForUserAction(userId)
+  //   if (res.success) {
+  //     rewards = res.data
+  //   } else {
+  //     throw res.error
+  //   }
+  // } catch (error) {
+  //   console.error(error)
+  // }
 
   return (
     <Card>
