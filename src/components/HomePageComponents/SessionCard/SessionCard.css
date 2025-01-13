@@ -4,6 +4,9 @@
 .session-card-image{
     @apply w-full h-40 rounded-md
 }
+.Image-container{
+    @apply relative h-40
+}
 .session-card-content{
     @apply flex flex-col md:gap-1 lg:gap-3 p-3
 }

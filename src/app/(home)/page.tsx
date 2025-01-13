@@ -82,35 +82,35 @@ export default function Home() {
 					<Carousel>
 						<CarouselContent className="carousel-content">
 							<CarouselItem>
-								<MentorCard imgURL="/images/home/mentor-image1.jpg" title="Tom Jones" duration="200+ hrs" />
+								<MentorCard imgURL="/images/home/Mentor-image1.jpg" imgALT='Tom Jones' title="Tom Jones" duration="200+ hrs" />
 							</CarouselItem>
 
 							<CarouselItem>
-								<MentorCard imgURL="/images/home/mentor-image2.jpg" title="Holly Fax" duration="100+ hrs" />
+								<MentorCard imgURL="/images/home/Mentor-image2.jpg" imgALT='Holly Fax' title="Holly Fax" duration="100+ hrs" />
 							</CarouselItem>
 
 							<CarouselItem>
-								<MentorCard imgURL="/images/home/mentor-image3.jpg" title="Valerie" duration="400+ hrs" />
+								<MentorCard imgURL="/images/home/Mentor-image3.jpg" imgALT='Valerie' title="Valerie" duration="400+ hrs" />
 							</CarouselItem>
 
 							<CarouselItem>
-								<MentorCard imgURL="/images/home/mentor-image4.jpg" title="James Dean" duration="200+ hrs" />
+								<MentorCard imgURL="/images/home/mentor-image4.jpg" imgALT='James Dean' title="James Dean" duration="200+ hrs" />
 							</CarouselItem>
 
 							<CarouselItem>
-								<MentorCard imgURL="/images/home/mentor-image1.jpg" title="Tom Jones" duration="200+ hrs" />
+								<MentorCard imgURL="/images/home/Mentor-image1.jpg" imgALT='Tom Jones' title="Tom Jones" duration="200+ hrs" />
 							</CarouselItem>
 
 							<CarouselItem>
-								<MentorCard imgURL="/images/home/mentor-image2.jpg" title="Tom Jones" duration="200+ hrs" />
+								<MentorCard imgURL="/images/home/Mentor-image2.jpg" imgALT='Holly Fax' title="Holly Fax" duration="200+ hrs" />
 							</CarouselItem>
 
 							<CarouselItem>
-								<MentorCard imgURL="/images/home/mentor-image3.jpg" title="Tom Jones" duration="200+ hrs" />
+								<MentorCard imgURL="/images/home/Mentor-image3.jpg" imgALT='Valerie' title="Valerie" duration="200+ hrs" />
 							</CarouselItem>
 
 							<CarouselItem>
-								<MentorCard imgURL="/images/home/mentor-image4.jpg" title="Tom Jones" duration="200+ hrs" />
+								<MentorCard imgURL="/images/home/mentor-image4.jpg" imgALT='James Dean' title="James Dean" duration="200+ hrs" />
 							</CarouselItem>
 
 						</CarouselContent>
@@ -145,7 +145,7 @@ export default function Home() {
 					<div className="section-content">
 
 						<div className="section-content-wrapper justify-around md:justify-between">
-							<SkillTag imgURL="/images/home/next.png" imgALT="next" title="react" />
+							<SkillTag imgURL="/images/home/next.png" imgALT="react" title="react" />
 							<SkillTag imgURL="/images/home/node.png" imgALT="Nodejs" title="Nodejs" />
 							<SkillTag imgURL="/images/home/graphic.png" imgALT="graphic" title="Graphic Design" />
 						</div>
@@ -156,7 +156,7 @@ export default function Home() {
 						</div>
 
 						<div className="section-content-wrapper justify-around md:justify-between ">
-							<SkillTag imgURL="/images/home/next.png" imgALT="next" title="react" />
+							<SkillTag imgURL="/images/home/next.png" imgALT="react" title="react" />
 							<SkillTag imgURL="/images/home/node.png" imgALT="Nodejs" title="Nodejs" />
 							<SkillTag imgURL="/images/home/graphic.png" imgALT="graphic" title="Graphic Design" />
 						</div>

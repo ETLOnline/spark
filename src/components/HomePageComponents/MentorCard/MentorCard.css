@@ -2,7 +2,7 @@
     @apply relative h-[300px] w-[250px] overflow-hidden rounded-xl bg-white
 }
 .card-image{
-    @apply h-auto w-auto object-contain
+    @apply h-full w-full
 }
 .card-content{
     @apply absolute left-0 top-0 flex h-full w-full flex-col justify-between bg-gradient-to-t from-black opacity-45
