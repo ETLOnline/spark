@@ -23,7 +23,7 @@ type ProfileBioProps = {
 
 const ProfileBio: React.FC<ProfileBioProps> = ({
   userBio,
-  editable,
+  editable = true,
   recommendations,
   tags
 }) => {
@@ -116,16 +116,17 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
           <div className="recommendations">
             <h3 className="mb-2 font-semibold">Recommendations</h3>
             <ul className="space-y-2">
-              {recommendations&&recommendations.map((recommendation, i) => (
-                <li key={i} className="rounded-lg border p-3">
-                  <p className="text-sm">
-                    &quot;{recommendation.content}&quot;
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    - {recommendation.recommender_full_name}
-                  </p>
-                </li>
-              ))}
+              {recommendations &&
+                recommendations.map((recommendation, i) => (
+                  <li key={i} className="rounded-lg border p-3">
+                    <p className="text-sm">
+                      &quot;{recommendation.content}&quot;
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      - {recommendation.recommender_full_name}
+                    </p>
+                  </li>
+                ))}
             </ul>
           </div>
         </>
