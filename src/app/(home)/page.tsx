@@ -82,15 +82,15 @@ export default function Home() {
 					<Carousel>
 						<CarouselContent className="carousel-content">
 							<CarouselItem>
-								<MentorCard imgURL="/images/home/mentor-image1.jpg" imgALT='Tom Jones' title="Tom Jones" duration="200+ hrs" />
+								<MentorCard imgURL="/images/home/Mentor-image1.jpg" imgALT='Tom Jones' title="Tom Jones" duration="200+ hrs" />
 							</CarouselItem>
 
 							<CarouselItem>
-								<MentorCard imgURL="/images/home/mentor-image2.jpg" imgALT='Holly Fax' title="Holly Fax" duration="100+ hrs" />
+								<MentorCard imgURL="/images/home/Mentor-image2.jpg" imgALT='Holly Fax' title="Holly Fax" duration="100+ hrs" />
 							</CarouselItem>
 
 							<CarouselItem>
-								<MentorCard imgURL="/images/home/mentor-image3.jpg" imgALT='Valerie' title="Valerie" duration="400+ hrs" />
+								<MentorCard imgURL="/images/home/Mentor-image3.jpg" imgALT='Valerie' title="Valerie" duration="400+ hrs" />
 							</CarouselItem>
 
 							<CarouselItem>
@@ -98,15 +98,15 @@ export default function Home() {
 							</CarouselItem>
 
 							<CarouselItem>
-								<MentorCard imgURL="/images/home/mentor-image1.jpg" imgALT='Tom Jones' title="Tom Jones" duration="200+ hrs" />
+								<MentorCard imgURL="/images/home/Mentor-image1.jpg" imgALT='Tom Jones' title="Tom Jones" duration="200+ hrs" />
 							</CarouselItem>
 
 							<CarouselItem>
-								<MentorCard imgURL="/images/home/mentor-image2.jpg" imgALT='Holly Fax' title="Holly Fax" duration="200+ hrs" />
+								<MentorCard imgURL="/images/home/Mentor-image2.jpg" imgALT='Holly Fax' title="Holly Fax" duration="200+ hrs" />
 							</CarouselItem>
 
 							<CarouselItem>
-								<MentorCard imgURL="/images/home/mentor-image3.jpg" imgALT='Valerie' title="Valerie" duration="200+ hrs" />
+								<MentorCard imgURL="/images/home/Mentor-image3.jpg" imgALT='Valerie' title="Valerie" duration="200+ hrs" />
 							</CarouselItem>
 
 							<CarouselItem>
