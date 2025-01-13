@@ -38,15 +38,19 @@ export const SaveUserProfileAction = CreateServerAction(
         )
       }
       // add existing tags
-      profileData.existingTags.length &&
-        (await AddUserTag(
+      if(profileData.existingTags.length) {
+        await AddUserTag(
           profileData.existingTags.map((tag) => {
             return { user_id: profileData.userId, tag_id: tag.id as number }
           })
-        ))
+        )
+      }
+
       // delete tags
-      profileData.deletedTagsIds.length &&
-        (await DeleteUserTags(profileData.userId, profileData.deletedTagsIds))
+      if(profileData.deletedTagsIds.length){
+        await DeleteUserTags(profileData.userId, profileData.deletedTagsIds)
+      }
+      
       return {
         success: true
       }
