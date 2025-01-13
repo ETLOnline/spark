@@ -26,14 +26,18 @@ const TagsInput: React.FC<TagsInputProps> = ({
 
   useEffect(() => {
     return () => {
-      timer && clearTimeout(timer.current)
+      if(timer){
+        clearTimeout(timer.current)
+      }
     }
   }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (autocomplete) {
       // Clear existing timer
-      timer && clearTimeout(timer.current)
+      if(timer){
+        clearTimeout(timer.current)
+      }
       // Set new timer for debouncing
       if (e.target.value.length >= 2) {
         timer.current = setTimeout(() => {

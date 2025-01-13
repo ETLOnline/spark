@@ -141,7 +141,9 @@ const EditProfileModal: React.FC = () => {
             )
             .map((tag) => ({ ...tag, status: TagStatus.saved }))
         )
-        editedBio && setBio(editedBio)
+        if(editedBio){
+          setBio(editedBio)
+        }
         setIsOpen(false)
         setEditedBio("")
         toast({

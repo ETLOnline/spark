@@ -42,7 +42,8 @@ export async function FindUserWildCard(wildcard: string) {
         email: true,
         external_auth_id: true,
         profile_url: true,
-        unique_id: true
+        unique_id: true,
+        bio: true
       },
       where: (usersTable, { or }) =>
         or(
