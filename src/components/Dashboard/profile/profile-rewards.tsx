@@ -14,7 +14,7 @@ type ProfileActivitiesProps = {
   rewards: SelectReward[]
 }
 
-const ProfileRewards: React.FC<ProfileActivitiesProps> = async ({ rewards }) => {
+const ProfileRewards: React.FC<ProfileActivitiesProps> = ({ rewards }) => {
   // let rewards
 
   // try {

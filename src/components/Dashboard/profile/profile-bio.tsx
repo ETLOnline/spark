@@ -21,7 +21,7 @@ type ProfileBioProps = {
   tags: SelectTag[]
 }
 
-const ProfileBio: React.FC<ProfileBioProps> = async ({
+const ProfileBio: React.FC<ProfileBioProps> = ({
   userBio,
   editable,
   recommendations,
