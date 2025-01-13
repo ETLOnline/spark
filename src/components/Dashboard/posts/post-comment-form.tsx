@@ -4,7 +4,7 @@ import { Button } from "@/src/components/ui/button"
 import { useState } from "react"
 import { Input } from "@/src/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import { Post, PostFile, PostPoll } from "./types/posts-types"
+import { Post, PostFile, PostPoll } from "./types/posts-types.d"
 
 type Props = {
   posts: (Post | PostFile | PostPoll)[]
@@ -12,7 +12,7 @@ type Props = {
   postId: string
 }
 
-const PostCommentForm: React.FC<Props> = ({posts, setPosts, postId}) => {
+const PostCommentForm: React.FC<Props> = ({ posts, setPosts, postId }) => {
   const [newComment, setNewComment] = useState<{ [key: string]: string }>({})
 
   const handleAddComment = (postId: string) => {
@@ -33,7 +33,12 @@ const PostCommentForm: React.FC<Props> = ({posts, setPosts, postId}) => {
       }
       return post
     })
-    setPosts(updatedPosts.filter((post): post is Post => 'content' in post && typeof post.content === 'string'))
+    setPosts(
+      updatedPosts.filter(
+        (post): post is Post =>
+          "content" in post && typeof post.content === "string"
+      )
+    )
     setNewComment({ ...newComment, [postId]: "" })
   }
 

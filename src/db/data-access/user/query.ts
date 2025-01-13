@@ -1,66 +1,64 @@
-import { ColumnsSelection, eq, getTableColumns, like } from "drizzle-orm";
-import { db } from "../..";
-import { InsertUser, SelectUser, usersTable } from "../../schema";
-
-export const userTableColSelect = {
-    first_name: true,
-    last_name: true,
-    email: true,
-    external_auth_id: true,
-    profile_url: true,
-    unique_id: true,
-}
+import { eq, like } from "drizzle-orm"
+import { db } from "../.."
+import { InsertUser, usersTable } from "../../schema"
 
 export async function CreateUser(data: InsertUser) {
-    await db.insert(usersTable).values(data);
+  await db.insert(usersTable).values(data)
 }
 
 export async function SelectUserByExternalId(id: string) {
-    return await db.query.usersTable.findFirst({
-        columns: {
-            first_name: true,
-            last_name: true,
-            email: true,
-            external_auth_id: true,
-            profile_url: true,
-            unique_id: true,
-        },
-        where: eq(usersTable.external_auth_id, id)        
-    });
+  return await db.query.usersTable.findFirst({
+    columns: {
+      first_name: true,
+      last_name: true,
+      email: true,
+      external_auth_id: true,
+      profile_url: true,
+      unique_id: true,
+      bio: true
+    },
+    where: eq(usersTable.external_auth_id, id)
+  })
 }
 
 export async function SelectUserByEmail(email: string) {
-    return await db.query.usersTable.findFirst({
-        where: eq(usersTable.email, email)    
-    });
+  return await db.query.usersTable.findFirst({
+    where: eq(usersTable.email, email)
+  })
 }
 
 export async function SelectUserByUniqueId(unique_id: string) {
-    return await db.query.usersTable.findFirst({
-        where: eq(usersTable.unique_id, unique_id)    
-    });
+  return await db.query.usersTable.findFirst({
+    where: eq(usersTable.unique_id, unique_id)
+  })
 }
 
-
 export async function FindUserWildCard(wildcard: string) {
-    try{
+  try {
+    const users = await db.query.usersTable.findMany({
+      columns: {
+        first_name: true,
+        last_name: true,
+        email: true,
+        external_auth_id: true,
+        profile_url: true,
+        unique_id: true
+      },
+      where: (usersTable, { or }) =>
+        or(
+          like(usersTable.first_name, `%${wildcard}%`),
+          like(usersTable.last_name, `%${wildcard}%`)
+        )
+    })
+    return users
+  } catch (error: any) {
+    throw new Error(error.message as string)
+  }
+}
 
-        const users = await db.query.usersTable.findMany({
-            columns: {
-                first_name: true,
-                last_name: true,
-                email: true,
-                external_auth_id: true,
-                profile_url: true,
-                unique_id: true,
-            },
-            where: (usersTable, { or }) => or(
-                like(usersTable.first_name, `%${wildcard}%`),
-                like(usersTable.last_name, `%${wildcard}%`),
-            )
-        });
-        return users
-    }catch(error:any){
-        throw new Error(error.message as string)
-    }
+export async function UpdateUserBio(userId: string, bio: string) {
+  await db
+    .update(usersTable)
+    .set({ bio })
+    .where(eq(usersTable.unique_id, userId))
 }
