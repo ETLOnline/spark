@@ -4,7 +4,7 @@ import { CardTitle } from "../../ui/card"
 import { CardContent } from "../../ui/card"
 import { Badge } from "../../ui/badge"
 import { TrendingUp } from "lucide-react"
-import { Topic } from "./types/spaces-types"
+import { Topic } from "./types/spaces-types.d"
 
 type TendingTopicProps = {
   topics: Topic[]

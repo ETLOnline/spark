@@ -1,12 +1,18 @@
-import ProfileScreen from '@/src/components/Dashboard/profile/ProfileScreen'
-import React, { Suspense } from 'react'
+import ProfileScreen from "@/src/components/Dashboard/profile/ProfileScreen"
+import { Suspense } from "react"
 
-const page = () => {
+interface ProfilePageProps {
+  searchParams: {
+    tab?: string
+  }
+}
+
+const ProfilePage: React.FC<ProfilePageProps> = ({ searchParams: { tab } }) => {
   return (
     <Suspense>
-      <ProfileScreen />
+      <ProfileScreen tab={tab} />
     </Suspense>
   )
 }
 
-export default page
+export default ProfilePage

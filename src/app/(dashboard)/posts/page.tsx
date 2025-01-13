@@ -3,7 +3,11 @@
 import { useState } from "react"
 import PostFeed from "@/src/components/Dashboard/post-feed"
 import CreatePostForm from "@/src/components/Dashboard/create-post-form"
-import { Post, PostFile, PostPoll } from "@/src/components/Dashboard/posts/types/posts-types"
+import {
+  Post,
+  PostFile,
+  PostPoll
+} from "@/src/components/Dashboard/posts/types/posts-types.d"
 
 const samplePosts: (Post | PostFile | PostPoll)[] = [
   {

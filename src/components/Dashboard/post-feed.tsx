@@ -4,8 +4,7 @@ import FilePost from "./posts/post-file"
 import ImagePost from "./posts/post-image"
 import PollPost from "./posts/post-poll"
 import TextPost from "./posts/post-text"
-import { Post, PostFile, PostPoll } from "./posts/types/posts-types"
-
+import { Post, PostFile, PostPoll } from "./posts/types/posts-types.d"
 
 type Props = {
   posts: (Post | PostFile | PostPoll)[]

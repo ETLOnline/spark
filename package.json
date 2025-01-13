@@ -53,7 +53,6 @@
     "react-day-picker": "^8.10.1",
     "react-dom": "^18",
     "react-element-to-jsx-string": "^15.0.0",
-    "react-tagsinput": "^3.20.3",
     "recharts": "^2.14.1",
     "svix": "^1.43.0",
     "tailwind-merge": "^2.5.5",

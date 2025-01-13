@@ -1,18 +1,31 @@
-import { Reward } from "./types/profile-types"
 import {
   Card,
   CardTitle,
   CardDescription,
   CardContent,
-  CardHeader,
+  CardHeader
 } from "../../ui/card"
 import { TrophyIcon } from "lucide-react"
+import { GetRewardsForUserAction } from "@/src/server-actions/Reward/Reward"
 
-type Props = {
-  rewards: Reward[]
+type ProfileActivitiesProps = {
+  userId: string
 }
 
-const ProfileRewards: React.FC<Props> = (props) => {
+const ProfileRewards: React.FC<ProfileActivitiesProps> = async ({ userId }) => {
+  let rewards
+
+  try {
+    const res = await GetRewardsForUserAction(userId)
+    if (res.success) {
+      rewards = res.data
+    } else {
+      throw res.error
+    }
+  } catch (error) {
+    console.error(error)
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -21,8 +34,8 @@ const ProfileRewards: React.FC<Props> = (props) => {
       </CardHeader>
       <CardContent>
         <ul className="space-y-4">
-          {props.rewards.map((reward: Reward,i) => (
-            <li key={i} className="flex items-start space-x-3">
+          {rewards?.map((reward) => (
+            <li key={reward.id} className="flex items-start space-x-3">
               <TrophyIcon className="mt-0.5 h-5 w-5 text-yellow-500" />
               <div>
                 <h3 className="font-semibold">{reward.title}</h3>

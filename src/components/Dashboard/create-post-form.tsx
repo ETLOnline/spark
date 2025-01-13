@@ -24,7 +24,13 @@ import {
   SelectValue
 } from "@/src/components/ui/select"
 import { Textarea } from "../ui/textarea"
-import { NewPost, Post, PostFile, PostPoll, PostType } from "./posts/types/posts-types"
+import {
+  NewPost,
+  Post,
+  PostFile,
+  PostPoll,
+  PostType
+} from "./posts/types/posts-types.d"
 import CreatePostInput from "./posts/create-post-input"
 
 type Props = {

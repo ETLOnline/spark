@@ -1,18 +1,33 @@
-import { Activity } from "./types/profile-types"
 import {
   Card,
   CardTitle,
   CardDescription,
   CardContent,
-  CardHeader,
+  CardHeader
 } from "../../ui/card"
 import { StarIcon } from "lucide-react"
+import { GetActivitiessForUserAction } from "@/src/server-actions/Activity/Activity"
 
-type Props = {
-  activities: Activity[]
+type ProfileActivitiesProps = {
+  userId: string
 }
 
-const ProfileActivities: React.FC<Props> = (props) => {
+const ProfileActivities: React.FC<ProfileActivitiesProps> = async ({
+  userId
+}) => {
+  let activities
+
+  try {
+    const res = await GetActivitiessForUserAction(userId)
+    if (res.success) {
+      activities = res.data
+    } else {
+      throw res.error
+    }
+  } catch (error) {
+    console.error(error)
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -23,8 +38,8 @@ const ProfileActivities: React.FC<Props> = (props) => {
       </CardHeader>
       <CardContent>
         <ul className="space-y-4">
-          {props.activities.map((activity, i) => (
-            <li key={i} className="flex items-start space-x-3">
+          {activities?.map((activity) => (
+            <li key={activity.id} className="flex items-start space-x-3">
               <StarIcon className="mt-0.5 h-5 w-5 text-blue-500" />
               <div>
                 <p className="text-sm">{activity.description}</p>
