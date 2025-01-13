@@ -27,7 +27,6 @@ const ProfileBio: React.FC<ProfileBioProps> = async ({
   recommendations,
   tags
 }) => {
-  // const recommendations = await GetUserRecommendationsAction(userId)
   const setUserBio = useSetAtom(profileStore.bio)
   const setUserSkills = useSetAtom(profileStore.skills)
   const setUserInterests = useSetAtom(profileStore.interests)
@@ -35,26 +34,25 @@ const ProfileBio: React.FC<ProfileBioProps> = async ({
   const interests = useAtomValue(profileStore.interests)
   const bio = useAtomValue(profileStore.bio)
 
-  // const [getTagsLoading, tagsData, getTagsError, getTags] =
-  //   useServerAction(GetTagsForUserAction)
-
   useEffect(() => {
-    const skillTags = tags
-      .filter((tag) => tag.type === "skill")
-      .map((tag) => ({
-        id: tag.id,
-        name: tag.name,
-        status: TagStatus.saved as const
-      }))
-    const interestTags = tags
-      .filter((tag) => tag.type === "interest")
-      .map((tag) => ({
-        id: tag.id,
-        name: tag.name,
-        status: TagStatus.saved as const
-      }))
-    setUserInterests(interestTags)
-    setUserSkills(skillTags)
+    if (tags) {
+      const skillTags = tags
+        .filter((tag) => tag.type === "skill")
+        .map((tag) => ({
+          id: tag.id,
+          name: tag.name,
+          status: TagStatus.saved as const
+        }))
+      const interestTags = tags
+        .filter((tag) => tag.type === "interest")
+        .map((tag) => ({
+          id: tag.id,
+          name: tag.name,
+          status: TagStatus.saved as const
+        }))
+      setUserInterests(interestTags)
+      setUserSkills(skillTags)
+    }
   }, [tags])
 
   useEffect(() => {
@@ -118,7 +116,7 @@ const ProfileBio: React.FC<ProfileBioProps> = async ({
           <div className="recommendations">
             <h3 className="mb-2 font-semibold">Recommendations</h3>
             <ul className="space-y-2">
-              {recommendations.map((recommendation, i) => (
+              {recommendations&&recommendations.map((recommendation, i) => (
                 <li key={i} className="rounded-lg border p-3">
                   <p className="text-sm">
                     &quot;{recommendation.content}&quot;
