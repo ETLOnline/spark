@@ -14,7 +14,7 @@ type ProfileActivitiesProps = {
   activities: SelectActivity[]
 }
 
-const ProfileActivities: React.FC<ProfileActivitiesProps> = async ({
+const ProfileActivities: React.FC<ProfileActivitiesProps> = ({
   activities
 }) => {
   // let activities
