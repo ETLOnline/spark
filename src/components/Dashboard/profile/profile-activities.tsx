@@ -6,27 +6,29 @@ import {
   CardHeader
 } from "../../ui/card"
 import { StarIcon } from "lucide-react"
-import { GetActivitiessForUserAction } from "@/src/server-actions/Activity/Activity"
+// import { GetActivitiesForUserAction } from "@/src/server-actions/Activity/Activity"
+// import { Activity } from "./types/profile-types"
+import { SelectActivity } from "@/src/db/schema"
 
 type ProfileActivitiesProps = {
-  userId: string
+  activities: SelectActivity[]
 }
 
 const ProfileActivities: React.FC<ProfileActivitiesProps> = async ({
-  userId
+  activities
 }) => {
-  let activities
+  // let activities
 
-  try {
-    const res = await GetActivitiessForUserAction(userId)
-    if (res.success) {
-      activities = res.data
-    } else {
-      throw res.error
-    }
-  } catch (error) {
-    console.error(error)
-  }
+  // try {
+  //   const res = await GetActivitiesForUserAction(userId)
+  //   if (res.success) {
+  //     activities = res.data
+  //   } else {
+  //     throw res.error
+  //   }
+  // } catch (error) {
+  //   console.error(error)
+  // }
 
   return (
     <Card>

@@ -5,6 +5,10 @@ export type Recommendation = {
   text: string
 }
 
+export type ExtendedRecommendations = SelectRecommendation & {
+  recommender_full_name: string
+}
+
 export type Reward = {
   title: string
   description: string
