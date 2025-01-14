@@ -1,3 +1,5 @@
+"use client"
+
 import { Card, CardContent } from "../../ui/card"
 import { useAtomValue, useSetAtom } from "jotai"
 import { profileStore } from "@/src/store/profile/profileStore"
