@@ -1,9 +1,6 @@
-// import { GetUserRecommendationsAction } from "@/src/server-actions/Recommendations/Recommendations"
 import { Card, CardContent } from "../../ui/card"
 import { useAtomValue, useSetAtom } from "jotai"
 import { profileStore } from "@/src/store/profile/profileStore"
-// import { useServerAction } from "@/src/hooks/useServerAction"
-// import { GetTagsForUserAction } from "@/src/server-actions/Tag/Tag"
 import { useEffect } from "react"
 import {
   ExtendedRecommendations,

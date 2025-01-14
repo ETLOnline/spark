@@ -83,7 +83,7 @@ export const GetUserProfileData = async (userId: string) => {
           tag: true
         }
       },
-      receivedRecommendations: {
+      recommendations: {
         with: {
           recommender: {
             columns: {
@@ -96,13 +96,7 @@ export const GetUserProfileData = async (userId: string) => {
     }
   })
   return {
-    recommendations:
-      result?.receivedRecommendations.map((recommendation) => {
-        return {
-          ...recommendation,
-          recommender_full_name: `${recommendation.recommender.first_name} ${recommendation.recommender.last_name}`
-        }
-      }) || [],
+    recommendations: result?.recommendations || [],
     activities: result?.userActivities.map((ua) => ua.activity) || [],
     rewards: result?.userRewards.map((ur) => ur.reward) || [],
     tags: result?.userTags.map((ut) => ut.tag) || []

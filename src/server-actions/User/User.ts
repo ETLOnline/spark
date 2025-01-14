@@ -41,7 +41,7 @@ export const SaveUserProfileAction = CreateServerAction(
         )
       }
       // add existing tags
-      if(profileData.existingTags.length) {
+      if (profileData.existingTags.length) {
         await AddUserTag(
           profileData.existingTags.map((tag) => {
             return { user_id: profileData.userId, tag_id: tag.id as number }
@@ -50,10 +50,10 @@ export const SaveUserProfileAction = CreateServerAction(
       }
 
       // delete tags
-      if(profileData.deletedTagsIds.length){
+      if (profileData.deletedTagsIds.length) {
         await DeleteUserTags(profileData.userId, profileData.deletedTagsIds)
       }
-      
+
       return {
         success: true
       }
@@ -71,6 +71,14 @@ export const GetUserProfileAction = CreateServerAction(
   async (userId: string) => {
     try {
       const profileData = await GetUserProfileData(userId)
+      profileData.recommendations = profileData.recommendations.map(
+        (recommendation) => {
+          return {
+            ...recommendation,
+            recommender_full_name: `${recommendation.recommender.first_name} ${recommendation.recommender.last_name}`
+          }
+        }
+      )
       return {
         data: profileData,
         success: true

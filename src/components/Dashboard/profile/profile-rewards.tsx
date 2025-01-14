@@ -6,8 +6,6 @@ import {
   CardHeader
 } from "../../ui/card"
 import { TrophyIcon } from "lucide-react"
-// import { GetRewardsForUserAction } from "@/src/server-actions/Reward/Reward"
-// import { Reward } from "./types/profile-types"
 import { SelectReward } from "@/src/db/schema"
 
 type ProfileActivitiesProps = {
@@ -15,19 +13,6 @@ type ProfileActivitiesProps = {
 }
 
 const ProfileRewards: React.FC<ProfileActivitiesProps> = ({ rewards }) => {
-  // let rewards
-
-  // try {
-  //   const res = await GetRewardsForUserAction(userId)
-  //   if (res.success) {
-  //     rewards = res.data
-  //   } else {
-  //     throw res.error
-  //   }
-  // } catch (error) {
-  //   console.error(error)
-  // }
-
   return (
     <Card>
       <CardHeader>

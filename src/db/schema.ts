@@ -43,7 +43,7 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   userTags: many(userTagsTable, {
     relationName: "userTagsToUser"
   }),
-  receivedRecommendations: many(recommendationsTable, {
+  recommendations: many(recommendationsTable, {
     relationName: "recommendationToReceiver"
   })
 }))
@@ -209,7 +209,7 @@ export const userTagsTable = sqliteTable("user_tags", {
 })
 
 export const userTagsRelations = relations(userTagsTable, ({ one }) => ({
-  tagIds: one(usersTable, {
+  user: one(usersTable, {
     fields: [userTagsTable.user_id],
     references: [usersTable.unique_id],
     relationName: "userTagsToUser"
@@ -248,7 +248,7 @@ export const userRewardsTable = sqliteTable("user_rewards", {
 })
 
 export const userRewardsRelations = relations(userRewardsTable, ({ one }) => ({
-  rewardIds: one(usersTable, {
+  user: one(usersTable, {
     fields: [userRewardsTable.user_id],
     references: [usersTable.unique_id],
     relationName: "userRewardsToUser"
@@ -290,7 +290,7 @@ export const userActivitiesTable = sqliteTable("user_activities", {
 export const userActivitiesRelations = relations(
   userActivitiesTable,
   ({ one }) => ({
-    activityIds: one(usersTable, {
+    user: one(usersTable, {
       fields: [userActivitiesTable.user_id],
       references: [usersTable.unique_id],
       relationName: "userActivitiesToUser"
