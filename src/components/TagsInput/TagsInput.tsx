@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef } from "react"
 import { X } from "lucide-react"
 import { Tag, TagStatus } from "../Dashboard/profile/types/profile-types.d"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem
+} from "@/src/components/ui/command"
+import { Input } from "@/src/components/ui/input"
+import { Button } from "@/src/components/ui/button"
 
 type TagsInputProps = {
   tags: Tag[]
@@ -10,6 +18,26 @@ type TagsInputProps = {
   loadingSuggestions: boolean
   autocomplete?: boolean
 }
+
+type SuggestionButtonProps = {
+  hover: boolean
+  children: string
+  onClick: () => void
+}
+
+const SuggestionButton: React.FC<SuggestionButtonProps> = ({
+  hover,
+  onClick,
+  children
+}) => (
+  <CommandItem
+    onSelect={() => onClick}
+    className={`w-full rounded-sm px-2 py-1 text-left text-sm hover:bg-accent hover:text-accent-foreground
+      ${hover ? "bg-accent text-accent-foreground" : ""}`}
+  >
+    {children}
+  </CommandItem>
+)
 
 const TagsInput: React.FC<TagsInputProps> = ({
   tags,
@@ -143,61 +171,50 @@ const TagsInput: React.FC<TagsInputProps> = ({
                 className="flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-sm"
               >
                 {tag?.name}
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => removeTag(i)}
-                  className="ml-1 rounded-full hover:bg-muted-foreground/20"
+                  className="h-4 w-4 p-0 hover:bg-muted-foreground/20"
                 >
                   <X className="h-3 w-3" />
-                </button>
+                </Button>
               </span>
             )
         )}
-        <input
+        <Input
           type="text"
           ref={tagInput}
           onChange={handleInputChange}
           onKeyDown={suggestionController}
-          className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+          className="flex-1 border-0 bg-transparent p-0 focus-visible:ring-0"
           placeholder={tags.length === 0 ? "Type to add tags..." : ""}
         />
       </div>
       {showSuggestions && (tagInput.current as HTMLInputElement).value && (
-        <div className="absolute mt-1 w-full rounded-md border bg-popover p-1 shadow-md z-10">
+        <Command className="absolute mt-1 w-full rounded-md border bg-popover shadow-md z-10">
           {loadingSuggestions ? (
-            <div className="p-2 text-sm text-muted-foreground">Loading...</div>
+            <CommandEmpty>Loading...</CommandEmpty>
           ) : suggestions.length === 0 ? (
-            <div className="max-h-48 overflow-auto">
-              <button
-                type="button"
-                className={`w-full rounded-sm px-2 py-1 text-left text-sm hover:bg-accent hover:text-accent-foreground ${
-                  selectNewTag ? "bg-accent text-accent-foreground" : ""
-                }`}
-                onClick={handleNewTag}
-              >
+            <CommandGroup>
+              <SuggestionButton hover={selectNewTag} onClick={handleNewTag}>
                 {(tagInput.current as HTMLInputElement).value}
-              </button>
-            </div>
+              </SuggestionButton>
+            </CommandGroup>
           ) : (
-            <div className="max-h-48 overflow-auto">
+            <CommandGroup className="max-h-48 overflow-auto">
               {suggestions.map((suggestion, index) => (
-                <button
-                  type="button"
+                <SuggestionButton
                   key={suggestion.id}
-                  id={`suggestion-${suggestion.id}`}
-                  className={`w-full rounded-sm px-2 py-1 text-left text-sm hover:bg-accent hover:text-accent-foreground ${
-                    index === selectedSuggestionIndex
-                      ? "bg-accent text-accent-foreground"
-                      : ""
-                  }`}
+                  hover={index === selectedSuggestionIndex}
                   onClick={() => selectSuggestion(suggestion)}
                 >
                   {suggestion.name}
-                </button>
+                </SuggestionButton>
               ))}
-            </div>
+            </CommandGroup>
           )}
-        </div>
+        </Command>
       )}
     </div>
   )
