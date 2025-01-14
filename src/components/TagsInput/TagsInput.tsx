@@ -31,8 +31,8 @@ const SuggestionButton: React.FC<SuggestionButtonProps> = ({
   children
 }) => (
   <CommandItem
-    onSelect={() => onClick}
-    className={`w-full rounded-sm px-2 py-1 text-left text-sm hover:bg-accent hover:text-accent-foreground
+    onSelect={onClick}
+    className={`w-full cursor-pointer rounded-sm px-2 py-1 text-left text-sm hover:bg-accent hover:text-accent-foreground
       ${hover ? "bg-accent text-accent-foreground" : ""}`}
   >
     {children}
