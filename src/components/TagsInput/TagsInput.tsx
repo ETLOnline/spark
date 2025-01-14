@@ -20,13 +20,16 @@ const TagsInput: React.FC<TagsInputProps> = ({
   autocomplete = true
 }) => {
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false)
-  const timer = useRef<NodeJS.Timeout | undefined>()
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] =
+    useState<number>(-1)
+  const [selectNewTag, setSelectNewTag] = useState<boolean>(false)
 
+  const timer = useRef<NodeJS.Timeout | undefined>()
   const tagInput = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     return () => {
-      if(timer){
+      if (timer) {
         clearTimeout(timer.current)
       }
     }
@@ -35,7 +38,7 @@ const TagsInput: React.FC<TagsInputProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (autocomplete) {
       // Clear existing timer
-      if(timer){
+      if (timer) {
         clearTimeout(timer.current)
       }
       // Set new timer for debouncing
@@ -101,6 +104,32 @@ const TagsInput: React.FC<TagsInputProps> = ({
     }
     ;(tagInput.current as HTMLInputElement).value = ""
     setShowSuggestions(false)
+    setSelectedSuggestionIndex(0)
+  }
+
+  const suggestionController = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      if (suggestions.length) {
+        if (selectedSuggestionIndex >= 0) {
+          selectSuggestion(suggestions[selectedSuggestionIndex])
+        }
+      } else {
+        if (tagInput.current?.value) {
+          handleNewTag()
+        }
+      }
+    } else if (e.key === "ArrowDown") {
+      suggestions.length
+        ? setSelectedSuggestionIndex((prev) => (prev + 1) % suggestions.length)
+        : setSelectNewTag(true)
+    } else if (e.key === "ArrowUp") {
+      if (suggestions.length) {
+        setSelectedSuggestionIndex(
+          (prev) => (prev - 1 + suggestions.length) % suggestions.length
+        )
+      }
+    }
   }
 
   return (
@@ -128,6 +157,7 @@ const TagsInput: React.FC<TagsInputProps> = ({
           type="text"
           ref={tagInput}
           onChange={handleInputChange}
+          onKeyDown={suggestionController}
           className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
           placeholder={tags.length === 0 ? "Type to add tags..." : ""}
         />
@@ -140,7 +170,9 @@ const TagsInput: React.FC<TagsInputProps> = ({
             <div className="max-h-48 overflow-auto">
               <button
                 type="button"
-                className="w-full rounded-sm px-2 py-1 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                className={`w-full rounded-sm px-2 py-1 text-left text-sm hover:bg-accent hover:text-accent-foreground ${
+                  selectNewTag ? "bg-accent text-accent-foreground" : ""
+                }`}
                 onClick={handleNewTag}
               >
                 {(tagInput.current as HTMLInputElement).value}
@@ -148,11 +180,16 @@ const TagsInput: React.FC<TagsInputProps> = ({
             </div>
           ) : (
             <div className="max-h-48 overflow-auto">
-              {suggestions.map((suggestion) => (
+              {suggestions.map((suggestion, index) => (
                 <button
                   type="button"
                   key={suggestion.id}
-                  className="w-full rounded-sm px-2 py-1 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                  id={`suggestion-${suggestion.id}`}
+                  className={`w-full rounded-sm px-2 py-1 text-left text-sm hover:bg-accent hover:text-accent-foreground ${
+                    index === selectedSuggestionIndex
+                      ? "bg-accent text-accent-foreground"
+                      : ""
+                  }`}
                   onClick={() => selectSuggestion(suggestion)}
                 >
                   {suggestion.name}
