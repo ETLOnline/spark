@@ -1,8 +1,6 @@
 "use client"
 
 import { Card, CardContent } from "../../ui/card"
-import { useAtomValue, useSetAtom } from "jotai"
-import { profileStore } from "@/src/store/profile/profileStore"
 import { useEffect } from "react"
 import {
   ExtendedRecommendations,
@@ -12,6 +10,7 @@ import {
 import EditProfileModal from "./edit-profile-modal"
 import { Badge } from "../../ui/badge"
 import { SelectTag } from "@/src/db/schema"
+import useUserProfile from "./hooks/useUserProfile"
 
 type ProfileBioProps = {
   userBio: string
@@ -26,12 +25,8 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
   recommendations,
   tags
 }) => {
-  const setUserBio = useSetAtom(profileStore.bio)
-  const setUserSkills = useSetAtom(profileStore.skills)
-  const setUserInterests = useSetAtom(profileStore.interests)
-  const skills = useAtomValue(profileStore.skills)
-  const interests = useAtomValue(profileStore.interests)
-  const bio = useAtomValue(profileStore.bio)
+  const [setUserBio, setUserSkills, setUserInterests, skills, interests, bio] =
+    useUserProfile()
 
   useEffect(() => {
     if (tags) {
