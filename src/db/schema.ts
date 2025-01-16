@@ -148,6 +148,7 @@ export const userContactsTable = sqliteTable(
     is_accepted: int().notNull().default(0),
     is_blocked: int().notNull().default(0),
     is_following: int().notNull().default(0),
+    is_followed_by: int().notNull().default(0),
     ...timestamps
   },
   (t) => ({
