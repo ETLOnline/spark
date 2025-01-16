@@ -120,6 +120,13 @@
       "when": 1736433761973,
       "tag": "0016_crazy_silver_sable",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1737027000808,
+      "tag": "0017_greedy_dragon_man",
+      "breakpoints": true
     }
   ]
 }
