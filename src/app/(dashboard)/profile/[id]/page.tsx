@@ -1,54 +1,67 @@
-
 import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
 import ProfileActivities from "@/src/components/Dashboard/profile/profile-activities"
 import ProfileBio from "@/src/components/Dashboard/profile/profile-bio"
-import ProfileCalendar from "@/src/components/Dashboard/profile/profile-calendar"
 import ProfileRewards from "@/src/components/Dashboard/profile/profile-rewards"
+import { ExtendedRecommendations } from "@/src/components/Dashboard/profile/types/profile-types"
 import ProfileFollowActions from "@/src/components/Dashboard/profile/user/ProfileFollowActions"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
+  TabsTrigger
 } from "@/src/components/ui/tabs"
+import {
+  SelectActivity,
+  SelectReward,
+  SelectTag,
+  SelectUser
+} from "@/src/db/schema"
 import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
+import { GetUserProfileAction } from "@/src/server-actions/User/User"
 import { CalendarIcon, StarIcon, TrophyIcon, UserIcon } from "lucide-react"
 import Link from "next/link"
 
 interface ProfileScreenProps {
-  params:{
-		id: string
-	},
-	searchParams: {
-		tab?: string
-	}
+  params: {
+    id: string
+  }
+  searchParams: {
+    tab?: string
+  }
 }
 
-export default async function ProfileScreen({ params: { id }, searchParams:{tab} }: ProfileScreenProps) {
+export default async function ProfileScreen({
+  params: { id },
+  searchParams: { tab }
+}: ProfileScreenProps) {
+  const userRes = await FindUserByUniqueIdAction(id)
+  const user = userRes.data
+  let profileData
 
-	const userRes = await FindUserByUniqueIdAction(id)
-	if(userRes.error || !userRes.data){
+  if (user) {
+    profileData = await GetUserProfileAction(user.unique_id)
+  }
+
+  if (userRes.error || !userRes.data) {
     return <NotFound />
-	}
-
-	const user = userRes.data
+  }
 
   return (
-    
     <div className="container mx-auto p-6">
-      <div className="mb-6 flex items-center justify-between">
-				<div className="flex flex items-center space-x-4">
-					<Avatar className="h-20 w-20">
-						<AvatarImage src={user?.profile_url || undefined} alt="Profile picture" />
-						<AvatarFallback></AvatarFallback>
-					</Avatar>
-					<div>
-						<h1 className="text-2xl font-bold">{user?.first_name} {user?.last_name}</h1>
-						<p className="text-muted-foreground">{user?.email}</p>
-					</div>
-				</div>
-				<ProfileFollowActions user={user} />
+      <div className="mb-6 flex items-center space-x-4">
+        <Avatar className="h-20 w-20">
+          <AvatarImage
+            src={user?.profile_url as string}
+            alt="Profile picture"
+          />
+          <AvatarFallback>Profile Image</AvatarFallback>
+        </Avatar>
+        <div>
+          <h1 className="text-2xl font-bold">{user?.first_name}</h1>
+          <p className="text-muted-foreground">{user?.email}</p>
+        </div>
+        <ProfileFollowActions user={user as SelectUser} />
       </div>
       <Tabs defaultValue="basic" className="space-y-4" value={tab || "basic"}>
         <TabsList>
@@ -71,28 +84,34 @@ export default async function ProfileScreen({ params: { id }, searchParams:{tab}
             </TabsTrigger>
           </Link>
           {/* <Link href={`?tab=calendar`}>
-            <TabsTrigger value="calendar">
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              Calendar
-            </TabsTrigger>
-          </Link> */}
+              <TabsTrigger value="calendar">
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                Calendar
+              </TabsTrigger>
+            </Link> */}
         </TabsList>
         <TabsContent value="basic">
           <ProfileBio
-            userId={user.unique_id}
-            userBio={user.bio as string}
-            editable={false}
+            userBio={user?.bio as string}
+            recommendations={
+              profileData?.data?.recommendations as ExtendedRecommendations
+            }
+            tags={profileData?.data?.tags as SelectTag[]}
           />
         </TabsContent>
         <TabsContent value="rewards">
-          <ProfileRewards userId={user.unique_id} />
+          <ProfileRewards
+            rewards={profileData?.data?.rewards as SelectReward[]}
+          />
         </TabsContent>
         <TabsContent value="activity">
-          <ProfileActivities userId={user.unique_id} />
+          <ProfileActivities
+            activities={profileData?.data?.activities as SelectActivity[]}
+          />
         </TabsContent>
         {/* <TabsContent value="calendar">
-          <ProfileCalendar />
-        </TabsContent> */}
+            <ProfileCalendar />
+          </TabsContent> */}
       </Tabs>
     </div>
   )

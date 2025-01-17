@@ -63,3 +63,42 @@ export async function UpdateUserBio(userId: string, bio: string) {
     .set({ bio })
     .where(eq(usersTable.unique_id, userId))
 }
+
+export const GetUserProfileData = async (userId: string) => {
+  const result = await db.query.usersTable.findFirst({
+    where: eq(usersTable.unique_id, userId),
+    with: {
+      userActivities: {
+        with: {
+          activity: true
+        }
+      },
+      userRewards: {
+        with: {
+          reward: true
+        }
+      },
+      userTags: {
+        with: {
+          tag: true
+        }
+      },
+      recommendations: {
+        with: {
+          recommender: {
+            columns: {
+              first_name: true,
+              last_name: true
+            }
+          }
+        }
+      }
+    }
+  })
+  return {
+    recommendations: result?.recommendations || [],
+    activities: result?.userActivities.map((ua) => ua.activity) || [],
+    rewards: result?.userRewards.map((ur) => ur.reward) || [],
+    tags: result?.userTags.map((ut) => ut.tag) || []
+  }
+}

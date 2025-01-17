@@ -5,9 +5,8 @@ import { Carousel, CarouselContent, CarouselItem } from "@/src/components/ui/car
 import SkillTag from "@/src/components/HomePageComponents/SkillTag/SkillTag";
 import MentorCard from "@/src/components/HomePageComponents/MentorCard/MentorCard";
 import SessionCard from '@/src/components/HomePageComponents/SessionCard/SessionCard';
-import Container from '@/src/components/container/Container';
+import Container from '@/src/components/Container/Container';
 import StatCardList from '@/src/components/StatCard/StatCardList';
-import { Card, CardContent } from '@/src/components/ui/card';
 import MissionCardList from '@/src/components/MissionCard/MissionCardList';
 
 

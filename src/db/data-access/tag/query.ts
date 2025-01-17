@@ -15,14 +15,6 @@ export const FindTagsByNames = async (names: string[]) => {
   return await db.select().from(tagsTable).where(inArray(tagsTable.name, names))
 }
 
-export const GetTagsById = async (ids: number[]) => {
-  const results = await db
-    .select()
-    .from(tagsTable)
-    .where(inArray(tagsTable.id, ids))
-  return results ?? []
-}
-
 export const SearchTagsByName = async (name: string, type: string) => {
   const results = await db
     .select()
@@ -45,12 +37,4 @@ export const DeleteUserTags = async (userId: string, tagIds: number[]) => {
       )
     )
     .returning()
-}
-
-export const GetUserTagIds = async (userId: string) => {
-  const results = await db
-    .select({ tagId: userTagsTable.tag_id })
-    .from(userTagsTable)
-    .where(eq(userTagsTable.user_id, userId))
-  return results.map((result) => result.tagId)
 }

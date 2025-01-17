@@ -1,10 +1,13 @@
 "use server"
 
-import { UpdateUserBio } from "@/src/db/data-access/user/query"
+import {
+  GetUserProfileData,
+  UpdateUserBio
+} from "@/src/db/data-access/user/query"
 import { CreateServerAction } from ".."
 import { AddTag } from "@/src/db/data-access/tag/query"
 import { AddUserTag, DeleteUserTags } from "@/src/db/data-access/tag/query"
-import { ProfileData } from "@/src/components/Dashboard/profile/types/profile-types.d"
+import { ProfileData } from "@/src/components/Dashboard/profile/types/profile-types"
 
 export const UpdateBioForUserAction = CreateServerAction(
   true,
@@ -38,7 +41,7 @@ export const SaveUserProfileAction = CreateServerAction(
         )
       }
       // add existing tags
-      if(profileData.existingTags.length) {
+      if (profileData.existingTags.length) {
         await AddUserTag(
           profileData.existingTags.map((tag) => {
             return { user_id: profileData.userId, tag_id: tag.id as number }
@@ -47,11 +50,37 @@ export const SaveUserProfileAction = CreateServerAction(
       }
 
       // delete tags
-      if(profileData.deletedTagsIds.length){
+      if (profileData.deletedTagsIds.length) {
         await DeleteUserTags(profileData.userId, profileData.deletedTagsIds)
       }
-      
+
       return {
+        success: true
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error
+      }
+    }
+  }
+)
+
+export const GetUserProfileAction = CreateServerAction(
+  true,
+  async (userId: string) => {
+    try {
+      const profileData = await GetUserProfileData(userId)
+      profileData.recommendations = profileData.recommendations.map(
+        (recommendation) => {
+          return {
+            ...recommendation,
+            recommender_full_name: `${recommendation.recommender.first_name} ${recommendation.recommender.last_name}`
+          }
+        }
+      )
+      return {
+        data: profileData,
         success: true
       }
     } catch (error) {

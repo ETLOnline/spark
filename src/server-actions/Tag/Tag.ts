@@ -1,24 +1,7 @@
 "use server"
 
 import { CreateServerAction } from ".."
-import {
-  GetTagsById,
-  SearchTagsByName,
-  GetUserTagIds
-} from "@/src/db/data-access/tag/query"
-
-export const GetTagsForUserAction = CreateServerAction(
-  true,
-  async (userId: string) => {
-    try {
-      const tagIds = await GetUserTagIds(userId)
-      const tags = await GetTagsById(tagIds)
-      return { success: true, data: tags }
-    } catch (error) {
-      return { success: false, error: error }
-    }
-  }
-)
+import { SearchTagsByName } from "@/src/db/data-access/tag/query"
 
 export const SearchTagsForSuggestionsAction = CreateServerAction(
   true,

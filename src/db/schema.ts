@@ -33,6 +33,18 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   }),
   contacts: many(userContactsTable, {
     relationName: "userToContact"
+  }),
+  userActivities: many(userActivitiesTable, {
+    relationName: "userActivitiesToUser"
+  }),
+  userRewards: many(userRewardsTable, {
+    relationName: "userRewardsToUser"
+  }),
+  userTags: many(userTagsTable, {
+    relationName: "userTagsToUser"
+  }),
+  recommendations: many(recommendationsTable, {
+    relationName: "recommendationToReceiver"
   })
 }))
 
@@ -181,6 +193,12 @@ export const tagsTable = sqliteTable("tags", {
   ...timestamps
 })
 
+export const tagsRelations = relations(tagsTable, ({ many }) => ({
+  tags: many(userTagsTable, {
+    relationName: "userTagsToActivity"
+  })
+}))
+
 export type InsertTag = typeof tagsTable.$inferInsert
 export type SelectTag = typeof tagsTable.$inferSelect
 
@@ -189,6 +207,19 @@ export const userTagsTable = sqliteTable("user_tags", {
   user_id: text().notNull(),
   tag_id: int().notNull()
 })
+
+export const userTagsRelations = relations(userTagsTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [userTagsTable.user_id],
+    references: [usersTable.unique_id],
+    relationName: "userTagsToUser"
+  }),
+  tag: one(tagsTable, {
+    fields: [userTagsTable.tag_id],
+    references: [tagsTable.id],
+    relationName: "userTagsToTag"
+  })
+}))
 
 export type InsertUserTag = typeof userTagsTable.$inferInsert
 export type SelectUserTag = typeof userTagsTable.$inferSelect
@@ -201,6 +232,12 @@ export const rewardsTable = sqliteTable("rewards", {
   ...timestamps
 })
 
+export const rewardsRelations = relations(rewardsTable, ({ many }) => ({
+  rewards: many(userRewardsTable, {
+    relationName: "userRewardsToRewards"
+  })
+}))
+
 export type InsertReward = typeof rewardsTable.$inferInsert
 export type SelectReward = typeof rewardsTable.$inferSelect
 
@@ -209,6 +246,19 @@ export const userRewardsTable = sqliteTable("user_rewards", {
   user_id: text().notNull(),
   reward_id: int().notNull()
 })
+
+export const userRewardsRelations = relations(userRewardsTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [userRewardsTable.user_id],
+    references: [usersTable.unique_id],
+    relationName: "userRewardsToUser"
+  }),
+  reward: one(rewardsTable, {
+    fields: [userRewardsTable.reward_id],
+    references: [rewardsTable.id],
+    relationName: "userRewardsToReward"
+  })
+}))
 
 export type InsertUserReward = typeof userRewardsTable.$inferInsert
 export type SelectUserReward = typeof userRewardsTable.$inferSelect
@@ -222,6 +272,12 @@ export const activitiesTable = sqliteTable("activities", {
   ...timestamps
 })
 
+export const activitiesRelations = relations(activitiesTable, ({ many }) => ({
+  activities: many(userActivitiesTable, {
+    relationName: "userActivitiesToActivity"
+  })
+}))
+
 export type InsertActivity = typeof activitiesTable.$inferInsert
 export type SelectActivity = typeof activitiesTable.$inferSelect
 
@@ -230,6 +286,22 @@ export const userActivitiesTable = sqliteTable("user_activities", {
   user_id: text().notNull(),
   activity_id: int().notNull()
 })
+
+export const userActivitiesRelations = relations(
+  userActivitiesTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [userActivitiesTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "userActivitiesToUser"
+    }),
+    activity: one(activitiesTable, {
+      fields: [userActivitiesTable.activity_id],
+      references: [activitiesTable.id],
+      relationName: "userActivitiesToActivity"
+    })
+  })
+)
 
 export type InsertUserActivity = typeof userActivitiesTable.$inferInsert
 export type SelectUserActivity = typeof userActivitiesTable.$inferSelect
@@ -241,6 +313,19 @@ export const recommendationsTable = sqliteTable("recommendations", {
   receiver_id: text().notNull(),
   ...timestamps
 })
+
+export const recommendationsRelations = relations(recommendationsTable, ({ one }) => ({
+  recommender: one(usersTable, {
+    fields: [recommendationsTable.recommender_id],
+    references: [usersTable.unique_id],
+    relationName: "recommendationToUser"
+  }),
+  receiver: one(usersTable, {
+    fields: [recommendationsTable.receiver_id],
+    references: [usersTable.unique_id],
+    relationName: "recommendationToReceiver"
+  })
+}))
 
 export type InsertRecommendation = typeof recommendationsTable.$inferInsert
 export type SelectRecommendation = typeof recommendationsTable.$inferSelect

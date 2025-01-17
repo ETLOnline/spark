@@ -1,3 +1,5 @@
+"use client"
+
 import {
   Card,
   CardTitle,
@@ -6,26 +8,13 @@ import {
   CardHeader
 } from "../../ui/card"
 import { TrophyIcon } from "lucide-react"
-import { GetRewardsForUserAction } from "@/src/server-actions/Reward/Reward"
+import { SelectReward } from "@/src/db/schema"
 
 type ProfileActivitiesProps = {
-  userId: string
+  rewards: SelectReward[]
 }
 
-const ProfileRewards: React.FC<ProfileActivitiesProps> = async ({ userId }) => {
-  let rewards
-
-  try {
-    const res = await GetRewardsForUserAction(userId)
-    if (res.success) {
-      rewards = res.data
-    } else {
-      throw res.error
-    }
-  } catch (error) {
-    console.error(error)
-  }
-
+const ProfileRewards: React.FC<ProfileActivitiesProps> = ({ rewards }) => {
   return (
     <Card>
       <CardHeader>
