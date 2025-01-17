@@ -52,7 +52,8 @@ export const GetContactsAction = CreateServerAction(
   true,
   async (user_id: string) => {
     try {
-      return await GetContacts(user_id)
+      const contacts = await GetContacts(user_id)
+      return { success: true, data: contacts }
     } catch (error) {
       return { error: error }
     }
