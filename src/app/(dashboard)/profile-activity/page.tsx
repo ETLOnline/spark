@@ -13,7 +13,6 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
 import { GetContactsAction } from "@/src/server-actions/Contact/Contact"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import { act } from "react"
 
 const ProfileActivityPage = async () => {
   const user = await AuthUserAction()
@@ -23,15 +22,17 @@ const ProfileActivityPage = async () => {
       const res = await GetContactsAction(user.unique_id)
       if (res.success) {
         activities = res.data.map((contact) => {
-          const type =
-            (contact.user_contacts.is_accepted &&
-              ActivityType.Connect_Accepted) ||
-            (contact.user_contacts.is_requested &&
-            contact.user_contacts.contact_id === user.unique_id
+          const type = contact.user_contacts.is_accepted
+            ? ActivityType.Connect_Accepted
+            : contact.user_contacts.is_requested
+            ? contact.user_contacts.contact_id === user.unique_id
               ? ActivityType.Connect_Received
-              : ActivityType.Connect_Sent) ||
-            (contact.user_contacts.is_following && ActivityType.Following) ||
-            (contact.user_contacts.is_followed_by && ActivityType.Followed)
+              : ActivityType.Connect_Sent
+            : contact.user_contacts.is_following
+            ? ActivityType.Following
+            : contact.user_contacts.is_followed_by
+            ? ActivityType.Followed
+            : ActivityType.Connect_Sent
           return {
             user_id: contact.user_contacts.user_id,
             contact_id: contact.user_contacts.contact_id,

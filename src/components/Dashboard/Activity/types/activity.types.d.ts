@@ -1,5 +1,5 @@
 export enum ActivityType {
-  Connect_Received = "req eceived",
+  Connect_Received = "req received",
   Connect_Sent = "req sent",
   Connect_Accepted = "req accepted",
   Visited = "visit",

@@ -32,14 +32,27 @@ export const UpdateContact = async (
   }
 }
 
-export const DeleteContact = async (user_id: string, contact_id: string) => {
+export const DeleteContact = async (
+  user_id: string,
+  contact_id: string,
+  contactType: string
+) => {
   try {
     return await db
       .delete(userContactsTable)
       .where(
         and(
           eq(userContactsTable.contact_id, contact_id),
-          eq(userContactsTable.user_id, user_id)
+          eq(userContactsTable.user_id, user_id),
+          contactType === "is_requested"
+            ? eq(userContactsTable.is_requested, 1)
+            : contactType === "is_accepted"
+            ? eq(userContactsTable.is_accepted, 1)
+            : contactType === "is_blocked"
+            ? eq(userContactsTable.is_blocked, 1)
+            : contactType === "is_following"
+            ? eq(userContactsTable.is_following, 1)
+            : eq(userContactsTable.is_followed_by, 1)
         )
       )
   } catch (error: any) {
