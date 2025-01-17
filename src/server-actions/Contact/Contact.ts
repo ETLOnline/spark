@@ -38,9 +38,9 @@ export const AcceptConnectionAction = CreateServerAction(
 
 export const DeleteContactAction = CreateServerAction(
   true,
-  async (user_id: string, contact_id: string) => {
+  async (user_id: string, contact_id: string, contactType: string) => {
     try {
-      await DeleteContact(user_id, contact_id)
+      await DeleteContact(user_id, contact_id, contactType)
       return { success: true }
     } catch (error) {
       return { error: error }

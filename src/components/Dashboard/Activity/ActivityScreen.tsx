@@ -8,8 +8,14 @@ import { TabsContent } from "@radix-ui/react-tabs"
 import NotificationItem from "../../NotificationItem/NotifictionItem"
 import { Button } from "../../ui/button"
 import { UserCheck, UserMinus, X } from "lucide-react"
-import { useSetAtom } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { activityStore } from "@/src/store/activity/activityStore"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import {
+  AcceptConnectionAction,
+  DeleteContactAction
+} from "@/src/server-actions/Contact/Contact"
+import { useEffect } from "react"
 
 type ActivityScreenProps = {
   activities: ProfileActivity[]
@@ -55,63 +61,125 @@ const UnfollowButton: React.FC<ActivityButtonProps> = ({ handler }) => (
 
 const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
   const setProfileActivities = useSetAtom(activityStore.profileActivities)
+  const profileActivities = useAtomValue(activityStore.profileActivities)
 
-  const handleAcceptRequest = (id: string) => {
-    // setProfileActivities(
-    //   activities.map((activity) =>
-    //     activity.id === id ? { ...activity, action:ActivityType.Following } : activity
-    //   )
-    // )
-    // Here you would typically send an API request to accept the connection
+  useEffect(() => {
+    setProfileActivities(activities)
+  }, [])
+
+  const [
+    deleteContactLoading,
+    deleteContactData,
+    deleteContactError,
+    deleteContact
+  ] = useServerAction(DeleteContactAction)
+  const [
+    acceptConnectionLoading,
+    acceptConnectionData,
+    acceptConnectionError,
+    acceptConnection
+  ] = useServerAction(AcceptConnectionAction)
+
+  const handleAcceptRequest = async (user_id: string, contact_id: string) => {
+    try {
+      await acceptConnection(user_id, contact_id)
+      setProfileActivities(
+        profileActivities.map((activity) => {
+          if (
+            activity.user_id === user_id &&
+            activity.contact_id === contact_id &&
+            activity.type === ActivityType.Connect_Received
+          ) {
+            return {
+              ...activity,
+              type: ActivityType.Connect_Accepted
+            }
+          }
+          return activity
+        })
+      )
+    } catch (error) {
+      console.error(error)
+    }
   }
 
-  const handleRejectRequest = (id: string) => {
-    // setProfileActivities(activities.filter((activity) => activity.id !== id))
-    // Here you would typically send an API request to reject the connection
+  const handleRejectRequest = async (user_id: string, contact_id: string) => {
+    try {
+      await deleteContact(user_id, contact_id, "is_requested")
+      await deleteContact(contact_id, user_id, "is_requested")
+      setProfileActivities(
+        activities.filter(
+          (activity) =>
+            activity.user_id !== user_id &&
+            activity.contact_id !== contact_id &&
+            activity.type !== ActivityType.Connect_Received
+        )
+      )
+    } catch (error) {
+      console.error(error)
+    }
   }
 
-  const handleCancelRequest = (id: string) => {
-    // setProfileActivities(activities.filter((activity) => activity.id !== id))
-    // Here you would typically send an API request to cancel the sent request
+  const handleCancelRequest = async (user_id: string, contact_id: string) => {
+    try {
+      await deleteContact(user_id, contact_id, "is_requested")
+      await deleteContact(contact_id, user_id, "is_requested")
+      setProfileActivities(
+        activities.filter(
+          (activity) =>
+            activity.user_id !== user_id &&
+            activity.contact_id !== contact_id &&
+            activity.type !== ActivityType.Connect_Sent
+        )
+      )
+    } catch (error) {
+      console.error(error)
+    }
   }
 
-  const handleUnfollow = (id: string) => {
-    // setProfileActivities(activities.filter((activity) => activity.id !== id))
-    // Here you would typically send an API request to cancel the sent request
+  const handleUnfollow = async (user_id: string, contact_id: string) => {
+    try {
+      await deleteContact(user_id, contact_id, "is_following")
+      await deleteContact(contact_id, user_id, "is_followed_by")
+      setProfileActivities(
+        activities.filter(
+          (activity) =>
+            activity.user_id !== user_id &&
+            activity.contact_id !== contact_id &&
+            activity.type !== ActivityType.Following
+        )
+      )
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   return (
     <>
       <TabsContent value="all">
         <div className="space-y-4">
-          {activities.map((activity) => (
+          {profileActivities.map((activity) => (
             <NotificationItem activity={activity}>
               {activity.type === ActivityType.Connect_Received ? (
                 <RequestButtonGroup
                   handler={() =>
-                    handleAcceptRequest(
-                      activity.contact_id + activity.contact_id
-                    )
+                    handleAcceptRequest(activity.user_id, activity.contact_id)
                   }
                   secondaryHandler={() =>
-                    handleRejectRequest(
-                      activity.contact_id + activity.contact_id
-                    )
+                    handleRejectRequest(activity.user_id, activity.contact_id)
                   }
                 />
               ) : activity.type === ActivityType.Connect_Sent ? (
                 <CancelRequestButton
                   handler={() =>
-                    handleCancelRequest(
-                      activity.contact_id + activity.contact_id
-                    )
+                    handleCancelRequest(activity.user_id, activity.contact_id)
                   }
                 />
               ) : (
                 activity.type === ActivityType.Following && (
                   <UnfollowButton
                     handler={() =>
-                      handleUnfollow(activity.contact_id + activity.contact_id)
+                      handleUnfollow(activity.user_id, activity.contact_id)
                     }
                   />
                 )
@@ -133,14 +201,10 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
                 {activity.type === ActivityType.Connect_Received ? (
                   <RequestButtonGroup
                     handler={() =>
-                      handleAcceptRequest(
-                        activity.contact_id + activity.contact_id
-                      )
+                      handleAcceptRequest(activity.user_id, activity.contact_id)
                     }
                     secondaryHandler={() =>
-                      handleRejectRequest(
-                        activity.contact_id + activity.contact_id
-                      )
+                      handleRejectRequest(activity.user_id, activity.contact_id)
                     }
                   />
                 ) : (
@@ -148,7 +212,8 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
                     <CancelRequestButton
                       handler={() =>
                         handleCancelRequest(
-                          activity.contact_id + activity.contact_id
+                          activity.user_id,
+                          activity.contact_id
                         )
                       }
                     />
@@ -180,7 +245,7 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
                 {activity.type === ActivityType.Following && (
                   <UnfollowButton
                     handler={() =>
-                      handleUnfollow(activity.contact_id + activity.contact_id)
+                      handleUnfollow(activity.user_id, activity.contact_id)
                     }
                   />
                 )}
