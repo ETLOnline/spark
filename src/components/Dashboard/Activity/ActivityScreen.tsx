@@ -16,6 +16,7 @@ import {
   RejectConnectionAction
 } from "@/src/server-actions/Contact/Contact"
 import { useEffect, useState } from "react"
+import { useToast } from "@/src/hooks/use-toast"
 
 type ActivityScreenProps = {
   activities: ProfileActivity[]
@@ -95,6 +96,8 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
     [key: string]: boolean
   }>({})
 
+  const { toast } = useToast()
+
   useEffect(() => {
     setProfileActivities(activities)
   }, [])
@@ -102,8 +105,9 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
   const handleAcceptRequest = async (user_id: string, contact_id: string) => {
     const key = `${user_id}-${contact_id}-accept`
     setLoadingStates((prev) => ({ ...prev, [key]: true }))
-    try {
-      await acceptConnection(user_id, contact_id)
+    const response = await acceptConnection(user_id, contact_id)
+    setLoadingStates((prev) => ({ ...prev, [key]: false }))
+    if (response?.success) {
       setProfileActivities(
         profileActivities.map((activity) => {
           if (
@@ -120,10 +124,15 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
           return activity
         })
       )
-    } catch (error) {
-      console.error(error)
-    } finally {
-      setLoadingStates((prev) => ({ ...prev, [key]: false }))
+      toast({ title: "Connection Accepted!", duration: 3000 })
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Unable to Accept Request!",
+        description:
+          "There was an issue performing the action please try again.",
+        duration: 3000
+      })
     }
   }
 
@@ -134,8 +143,9 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
   ) => {
     const key = `${user_id}-${contact_id}-reject`
     setLoadingStates((prev) => ({ ...prev, [key]: true }))
-    try {
-      await rejectConnection(user_id, contact_id)
+    const response = await rejectConnection(user_id, contact_id)
+    setLoadingStates((prev) => ({ ...prev, [key]: false }))
+    if (response?.success) {
       setProfileActivities(
         profileActivities.filter(
           (activity) =>
@@ -147,10 +157,20 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
                 : ActivityType.Connect_Sent)
         )
       )
-    } catch (error) {
-      console.error(error)
-    } finally {
-      setLoadingStates((prev) => ({ ...prev, [key]: false }))
+      toast({
+        title: type === "received" ? "Request Rejected!" : "Request Cancelled!",
+        duration: 3000
+      })
+    } else {
+      toast({
+        variant: "destructive",
+        title: `Unable to ${
+          type === "received" ? "Reject" : "Cancel"
+        } Request!`,
+        description:
+          "There was an issue performing the action please try again.",
+        duration: 3000
+      })
     }
   }
 
