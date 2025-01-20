@@ -1,4 +1,4 @@
-import { SelectChat, SelectUserChat } from "@/src/db/schema";
+import { SelectChat } from "@/src/db/schema";
 import { atom } from "jotai";
 
 

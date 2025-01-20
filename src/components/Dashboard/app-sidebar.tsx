@@ -1,12 +1,8 @@
-"use client";
+"use client"
 
-import * as React from "react";
+import * as React from "react"
 import {
-  Command,
-  Frame,
   LifeBuoy,
-  Map,
-  PieChart,
   Send,
   Settings2,
   Newspaper,
@@ -17,11 +13,12 @@ import {
   Lightbulb,
   Beaker,
   LayoutDashboard,
-} from "lucide-react";
+  UserRoundPlus
+} from "lucide-react"
 
-import NavMain from "@/src/components/Dashboard/nav-main";
-import NavSecondary from "@/src/components/Dashboard/nav-secondary";
-import NavUser from "@/src/components/Dashboard/nav-user";
+import NavMain from "@/src/components/Dashboard/nav-main"
+import NavSecondary from "@/src/components/Dashboard/nav-secondary"
+import NavUser from "@/src/components/Dashboard/nav-user"
 import {
   Sidebar,
   SidebarContent,
@@ -29,18 +26,18 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/src/components/ui/sidebar";
-import { SignedIn } from "@clerk/nextjs";
-import Image from "next/image";
-import Link from "next/link";
+  SidebarMenuItem
+} from "@/src/components/ui/sidebar"
+import { SignedIn } from "@clerk/nextjs"
+import Image from "next/image"
+import Link from "next/link"
 
 const data = {
   navMain: [
     {
       title: "Analytics Dashboard",
       url: "/dashboard",
-      icon: LayoutDashboard,
+      icon: LayoutDashboard
     },
     {
       title: "Profile",
@@ -49,46 +46,51 @@ const data = {
       items: [
         {
           title: "Bio",
-          url: "/profile/?tab=basic",
+          url: "/profile/?tab=basic"
         },
         {
           title: "Rewards",
-          url: "/profile/?tab=rewards",
+          url: "/profile/?tab=rewards"
         },
         {
           title: "Activity",
-          url: "/profile/?tab=activity",
+          url: "/profile/?tab=activity"
         },
         {
           title: "Schedule",
-          url: "/profile/?tab=calendar",
-        },
-      ],
+          url: "/profile/?tab=calendar"
+        }
+      ]
     },
     {
       title: "Posts",
       url: "/posts",
-      icon: Newspaper,
+      icon: Newspaper
     },
     {
       title: "Chat",
       url: "/chat",
-      icon: MessageSquare,
+      icon: MessageSquare
+    },
+    {
+      title: "Profile Activity",
+      url: "/profile-activity",
+      icon: UserRoundPlus
     },
     {
       title: "Events",
       url: "/events",
-      icon: Calendar,
+      icon: Calendar
     },
     {
       title: "Spaces",
       url: "/spaces",
-      icon: BetweenHorizontalStart,
+      icon: BetweenHorizontalStart
     },
     {
       title: "Project Incubator",
       url: "/project-incubator",
-      icon: Lightbulb,
+      icon: Lightbulb
     },
     {
       title: "Settings",
@@ -97,22 +99,22 @@ const data = {
       items: [
         {
           title: "General",
-          url: "#",
+          url: "#"
         },
         {
           title: "Team",
-          url: "#",
+          url: "#"
         },
         {
           title: "Billing",
-          url: "#",
+          url: "#"
         },
         {
           title: "Limits",
-          url: "#",
-        },
-      ],
-    },
+          url: "#"
+        }
+      ]
+    }
   ],
   testNav: [
     {
@@ -122,32 +124,32 @@ const data = {
       items: [
         {
           title: "Team Collaboration",
-          url: "/test/team-collaboration",
+          url: "/test/team-collaboration"
         },
         {
           title: "Learning Hub",
-          url: "/test/learning-hub",
+          url: "/test/learning-hub"
         },
         {
           title: "Marketplace",
-          url: "/test/marketplace",
-        },
-      ],
-    },
+          url: "/test/marketplace"
+        }
+      ]
+    }
   ],
   navSecondary: [
     {
       title: "Support",
       url: "#",
-      icon: LifeBuoy,
+      icon: LifeBuoy
     },
     {
       title: "Feedback",
       url: "#",
-      icon: Send,
-    },
-  ],
-};
+      icon: Send
+    }
+  ]
+}
 
 export default function AppSidebar({
   ...props
@@ -188,5 +190,5 @@ export default function AppSidebar({
         </SignedIn>
       </SidebarFooter>
     </Sidebar>
-  );
+  )
 }
