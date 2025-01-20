@@ -1,6 +1,7 @@
+import { usersTable } from "./../../schema"
 import { and, eq, or } from "drizzle-orm"
 import { db } from "../.."
-import { SelectUserContact, userContactsTable, usersTable } from "../../schema"
+import { SelectUserContact, userContactsTable } from "../../schema"
 
 export const CreateContact = async (user_id: string, contact_id: string) => {
   try {
@@ -60,32 +61,25 @@ export const DeleteContact = async (
   }
 }
 
-export const GetContacts = async (user_id: string) => {
-  try {
-    return await db
-      .select()
-      .from(userContactsTable)
-      .where(eq(userContactsTable.user_id, user_id))
-      .leftJoin(
-        usersTable,
-        eq(usersTable.unique_id, userContactsTable.contact_id)
-      )
-      .all()
-  } catch (error: any) {
-    throw new Error(error.message)
-  }
-}
-
 export const GetConnectionRequests = async (user_id: string) => {
   try {
-    return await db.query.usersTable.findMany({
+    return await db.query.usersTable.findFirst({
+      where: eq(usersTable.unique_id, user_id),
       with: {
         contacts: {
           where: and(
-            eq(userContactsTable.is_requested, 1),
-            eq(userContactsTable.is_accepted, 0),
-            eq(userContactsTable.contact_id, user_id)
-          )
+            or(
+              eq(userContactsTable.is_requested, 1),
+              eq(userContactsTable.is_accepted, 1)
+            ),
+            or(
+              eq(userContactsTable.contact_id, user_id),
+              eq(userContactsTable.user_id, user_id)
+            )
+          ),
+          with: {
+            user: true
+          }
         }
       }
     })
@@ -94,26 +88,24 @@ export const GetConnectionRequests = async (user_id: string) => {
   }
 }
 
-export const GetContact = async (user_id: string, contact_id: string) => {
-  try {
-    const contact = await db.query.userContactsTable.findFirst({
-      where: or(
-        and(
-          eq(userContactsTable.user_id, user_id),
-          eq(userContactsTable.contact_id, contact_id)
-        ),
-        and(
-          eq(userContactsTable.user_id, contact_id),
-          eq(userContactsTable.contact_id, user_id)
-        )
-      ),
-      with: {
-        contact: true,
-        user: true
-      }
-    })
-    return contact
-  } catch (error: any) {
-    throw new Error(error.message)
-  }
-}
+// export const GetConnectionRequestsSent = async (user_id: string) => {
+//   try {
+//     return await db.query.usersTable.findFirst({
+//       where: eq(usersTable.unique_id, user_id),
+//       with: {
+//         contacts: {
+//           where: and(
+//             eq(userContactsTable.is_requested, 1),
+//             eq(userContactsTable.is_accepted, 0),
+//             eq(userContactsTable.contact_id, user_id)
+//           ),
+//           with: {
+//             user: true
+//           }
+//         }
+//       }
+//     })
+//   } catch (error: any) {
+//     throw new Error(error.message)
+//   }
+// }

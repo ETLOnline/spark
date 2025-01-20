@@ -13,7 +13,7 @@ import { activityStore } from "@/src/store/activity/activityStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   AcceptConnectionAction,
-  DeleteContactAction
+  RejectConnectionAction
 } from "@/src/server-actions/Contact/Contact"
 import { useEffect } from "react"
 
@@ -63,22 +63,22 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
   const setProfileActivities = useSetAtom(activityStore.profileActivities)
   const profileActivities = useAtomValue(activityStore.profileActivities)
 
-  useEffect(() => {
-    setProfileActivities(activities)
-  }, [])
-
   const [
-    deleteContactLoading,
-    deleteContactData,
-    deleteContactError,
-    deleteContact
-  ] = useServerAction(DeleteContactAction)
+    rejectConnectionLoading,
+    rejectConnectionData,
+    rejectConnectionError,
+    rejectConnection
+  ] = useServerAction(RejectConnectionAction)
   const [
     acceptConnectionLoading,
     acceptConnectionData,
     acceptConnectionError,
     acceptConnection
   ] = useServerAction(AcceptConnectionAction)
+
+  useEffect(() => {
+    setProfileActivities(activities)
+  }, [])
 
   const handleAcceptRequest = async (user_id: string, contact_id: string) => {
     try {
@@ -88,7 +88,8 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
           if (
             activity.user_id === user_id &&
             activity.contact_id === contact_id &&
-            activity.type === ActivityType.Connect_Received
+            (activity.type === ActivityType.Connect_Received ||
+              activity.type === ActivityType.Connect_Sent)
           ) {
             return {
               ...activity,
@@ -105,25 +106,7 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
 
   const handleRejectRequest = async (user_id: string, contact_id: string) => {
     try {
-      await deleteContact(user_id, contact_id, "is_requested")
-      await deleteContact(contact_id, user_id, "is_requested")
-      setProfileActivities(
-        activities.filter(
-          (activity) =>
-            activity.user_id !== user_id &&
-            activity.contact_id !== contact_id &&
-            activity.type !== ActivityType.Connect_Received
-        )
-      )
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
-  const handleCancelRequest = async (user_id: string, contact_id: string) => {
-    try {
-      await deleteContact(user_id, contact_id, "is_requested")
-      await deleteContact(contact_id, user_id, "is_requested")
+      await rejectConnection(user_id, contact_id)
       setProfileActivities(
         activities.filter(
           (activity) =>
@@ -139,8 +122,6 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
 
   const handleUnfollow = async (user_id: string, contact_id: string) => {
     try {
-      await deleteContact(user_id, contact_id, "is_following")
-      await deleteContact(contact_id, user_id, "is_followed_by")
       setProfileActivities(
         activities.filter(
           (activity) =>
@@ -159,7 +140,7 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
       <TabsContent value="all">
         <div className="space-y-4">
           {profileActivities.map((activity) => (
-            <NotificationItem activity={activity}>
+            <NotificationItem activity={activity} key={activity.id}>
               {activity.type === ActivityType.Connect_Received ? (
                 <RequestButtonGroup
                   handler={() =>
@@ -172,7 +153,7 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
               ) : activity.type === ActivityType.Connect_Sent ? (
                 <CancelRequestButton
                   handler={() =>
-                    handleCancelRequest(activity.user_id, activity.contact_id)
+                    handleRejectRequest(activity.user_id, activity.contact_id)
                   }
                 />
               ) : (
@@ -197,7 +178,7 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
                 activity.type === ActivityType.Connect_Sent
             )
             .map((activity) => (
-              <NotificationItem activity={activity}>
+              <NotificationItem activity={activity} key={activity.id}>
                 {activity.type === ActivityType.Connect_Received ? (
                   <RequestButtonGroup
                     handler={() =>
@@ -211,7 +192,7 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
                   activity.type === ActivityType.Connect_Sent && (
                     <CancelRequestButton
                       handler={() =>
-                        handleCancelRequest(
+                        handleRejectRequest(
                           activity.user_id,
                           activity.contact_id
                         )
@@ -228,7 +209,7 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
           {activities
             .filter((activity) => activity.type === ActivityType.Visited)
             .map((activity) => (
-              <NotificationItem activity={activity} />
+              <NotificationItem activity={activity} key={activity.id} />
             ))}
         </div>
       </TabsContent>
@@ -241,7 +222,7 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
                 activity.type === ActivityType.Followed
             )
             .map((activity) => (
-              <NotificationItem activity={activity}>
+              <NotificationItem activity={activity} key={activity.id}>
                 {activity.type === ActivityType.Following && (
                   <UnfollowButton
                     handler={() =>
