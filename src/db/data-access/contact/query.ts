@@ -1,4 +1,3 @@
-import { usersTable } from "./../../schema"
 import { and, eq, or } from "drizzle-orm"
 import { db } from "../.."
 import { SelectUserContact, userContactsTable } from "../../schema"
@@ -63,49 +62,23 @@ export const DeleteContact = async (
 
 export const GetConnectionRequests = async (user_id: string) => {
   try {
-    return await db.query.usersTable.findFirst({
-      where: eq(usersTable.unique_id, user_id),
+    return await db.query.userContactsTable.findMany({
+      where: and(
+        or(
+          eq(userContactsTable.is_accepted, 1),
+          eq(userContactsTable.is_requested, 1)
+        ),
+        or(
+          eq(userContactsTable.user_id, user_id),
+          eq(userContactsTable.contact_id, user_id)
+        )
+      ),
       with: {
-        contacts: {
-          where: and(
-            or(
-              eq(userContactsTable.is_requested, 1),
-              eq(userContactsTable.is_accepted, 1)
-            ),
-            or(
-              eq(userContactsTable.contact_id, user_id),
-              eq(userContactsTable.user_id, user_id)
-            )
-          ),
-          with: {
-            user: true
-          }
-        }
+        user: true,
+        contact: true
       }
     })
   } catch (error: any) {
     throw new Error(error.message)
   }
 }
-
-// export const GetConnectionRequestsSent = async (user_id: string) => {
-//   try {
-//     return await db.query.usersTable.findFirst({
-//       where: eq(usersTable.unique_id, user_id),
-//       with: {
-//         contacts: {
-//           where: and(
-//             eq(userContactsTable.is_requested, 1),
-//             eq(userContactsTable.is_accepted, 0),
-//             eq(userContactsTable.contact_id, user_id)
-//           ),
-//           with: {
-//             user: true
-//           }
-//         }
-//       }
-//     })
-//   } catch (error: any) {
-//     throw new Error(error.message)
-//   }
-// }

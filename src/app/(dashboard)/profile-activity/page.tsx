@@ -21,8 +21,7 @@ const ProfileActivityPage = async () => {
     try {
       const res = await GetConnectionRequestsAction(user.unique_id)
       if (res.success && res.data) {
-        console.log(res.data.contacts)
-        activities = res.data.contacts.map((contact) => {
+        activities = res.data.map((contact) => {
           const type = contact.is_accepted
             ? ActivityType.Connect_Accepted
             : contact.is_requested
@@ -41,8 +40,8 @@ const ProfileActivityPage = async () => {
             user_id: contact.user_id,
             contact_id: contact.contact_id,
             name:
-              contact.user?.first_name + " " + contact.user?.last_name || "",
-            avatar: contact.user?.profile_url || "",
+              contact.otherUser?.first_name + " " + contact.otherUser?.last_name || "",
+            avatar: contact.otherUser?.profile_url || "",
             timestamp: contact.created_at || "",
             type
           }
