@@ -15,7 +15,7 @@ import {
   AcceptConnectionAction,
   RejectConnectionAction
 } from "@/src/server-actions/Contact/Contact"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 
 type ActivityScreenProps = {
   activities: ProfileActivity[]
@@ -23,37 +23,52 @@ type ActivityScreenProps = {
 
 type ActivityButtonProps = {
   handler: () => void
+  actionLoading: boolean
 }
 
 type ActivityButtonGroupProps = ActivityButtonProps & {
   secondaryHandler: () => void
+  secondaryActionLoading: boolean
 }
 
 const RequestButtonGroup: React.FC<ActivityButtonGroupProps> = ({
   handler,
-  secondaryHandler
+  secondaryHandler,
+  actionLoading,
+  secondaryActionLoading
 }) => (
   <div className="flex space-x-2">
-    <Button size="sm" onClick={handler}>
+    <Button size="sm" onClick={handler} loading={actionLoading}>
       <UserCheck className="h-4 w-4 mr-2" />
       Accept
     </Button>
-    <Button size="sm" variant="outline" onClick={secondaryHandler}>
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={secondaryHandler}
+      loading={secondaryActionLoading}
+    >
       <X className="h-4 w-4 mr-2" />
       Reject
     </Button>
   </div>
 )
 
-const CancelRequestButton: React.FC<ActivityButtonProps> = ({ handler }) => (
-  <Button size="sm" variant="outline" onClick={handler}>
+const CancelRequestButton: React.FC<ActivityButtonProps> = ({
+  handler,
+  actionLoading
+}) => (
+  <Button size="sm" variant="outline" onClick={handler} loading={actionLoading}>
     <X className="h-4 w-4 mr-2" />
     Cancel
   </Button>
 )
 
-const UnfollowButton: React.FC<ActivityButtonProps> = ({ handler }) => (
-  <Button size="sm" variant="outline" onClick={handler}>
+const UnfollowButton: React.FC<ActivityButtonProps> = ({
+  handler,
+  actionLoading
+}) => (
+  <Button size="sm" variant="outline" onClick={handler} loading={actionLoading}>
     <UserMinus className="h-4 w-4 mr-2" />
     Unfollow
   </Button>
@@ -76,11 +91,17 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
     acceptConnection
   ] = useServerAction(AcceptConnectionAction)
 
+  const [loadingStates, setLoadingStates] = useState<{
+    [key: string]: boolean
+  }>({})
+
   useEffect(() => {
     setProfileActivities(activities)
   }, [])
 
   const handleAcceptRequest = async (user_id: string, contact_id: string) => {
+    const key = `${user_id}-${contact_id}-accept`
+    setLoadingStates((prev) => ({ ...prev, [key]: true }))
     try {
       await acceptConnection(user_id, contact_id)
       setProfileActivities(
@@ -101,29 +122,44 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
       )
     } catch (error) {
       console.error(error)
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, [key]: false }))
     }
   }
 
-  const handleRejectRequest = async (user_id: string, contact_id: string) => {
+  const handleDeleteRequest = async (
+    user_id: string,
+    contact_id: string,
+    type: "sent" | "received"
+  ) => {
+    const key = `${user_id}-${contact_id}-reject`
+    setLoadingStates((prev) => ({ ...prev, [key]: true }))
     try {
       await rejectConnection(user_id, contact_id)
       setProfileActivities(
-        activities.filter(
+        profileActivities.filter(
           (activity) =>
             activity.user_id !== user_id &&
             activity.contact_id !== contact_id &&
-            activity.type !== ActivityType.Connect_Sent
+            activity.type !==
+              (type === "received"
+                ? ActivityType.Connect_Received
+                : ActivityType.Connect_Sent)
         )
       )
     } catch (error) {
       console.error(error)
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, [key]: false }))
     }
   }
 
   const handleUnfollow = async (user_id: string, contact_id: string) => {
+    const key = `${user_id}-${contact_id}-unfollow`
+    setLoadingStates((prev) => ({ ...prev, [key]: true }))
     try {
       setProfileActivities(
-        activities.filter(
+        profileActivities.filter(
           (activity) =>
             activity.user_id !== user_id &&
             activity.contact_id !== contact_id &&
@@ -132,6 +168,8 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
       )
     } catch (error) {
       console.error(error)
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, [key]: false }))
     }
   }
 
@@ -147,13 +185,36 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
                     handleAcceptRequest(activity.user_id, activity.contact_id)
                   }
                   secondaryHandler={() =>
-                    handleRejectRequest(activity.user_id, activity.contact_id)
+                    handleDeleteRequest(
+                      activity.user_id,
+                      activity.contact_id,
+                      "received"
+                    )
+                  }
+                  actionLoading={
+                    loadingStates[
+                      `${activity.user_id}-${activity.contact_id}-accept`
+                    ] || false
+                  }
+                  secondaryActionLoading={
+                    loadingStates[
+                      `${activity.user_id}-${activity.contact_id}-reject`
+                    ] || false
                   }
                 />
               ) : activity.type === ActivityType.Connect_Sent ? (
                 <CancelRequestButton
                   handler={() =>
-                    handleRejectRequest(activity.user_id, activity.contact_id)
+                    handleDeleteRequest(
+                      activity.user_id,
+                      activity.contact_id,
+                      "sent"
+                    )
+                  }
+                  actionLoading={
+                    loadingStates[
+                      `${activity.user_id}-${activity.contact_id}-reject`
+                    ] || false
                   }
                 />
               ) : (
@@ -161,6 +222,11 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
                   <UnfollowButton
                     handler={() =>
                       handleUnfollow(activity.user_id, activity.contact_id)
+                    }
+                    actionLoading={
+                      loadingStates[
+                        `${activity.user_id}-${activity.contact_id}-unfollow`
+                      ] || false
                     }
                   />
                 )
@@ -171,7 +237,7 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
       </TabsContent>
       <TabsContent value="requests">
         <div className="space-y-4">
-          {activities
+          {profileActivities
             .filter(
               (activity) =>
                 activity.type === ActivityType.Connect_Received ||
@@ -185,17 +251,37 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
                       handleAcceptRequest(activity.user_id, activity.contact_id)
                     }
                     secondaryHandler={() =>
-                      handleRejectRequest(activity.user_id, activity.contact_id)
+                      handleDeleteRequest(
+                        activity.user_id,
+                        activity.contact_id,
+                        "received"
+                      )
+                    }
+                    actionLoading={
+                      loadingStates[
+                        `${activity.user_id}-${activity.contact_id}-accept`
+                      ] || false
+                    }
+                    secondaryActionLoading={
+                      loadingStates[
+                        `${activity.user_id}-${activity.contact_id}-reject`
+                      ] || false
                     }
                   />
                 ) : (
                   activity.type === ActivityType.Connect_Sent && (
                     <CancelRequestButton
                       handler={() =>
-                        handleRejectRequest(
+                        handleDeleteRequest(
                           activity.user_id,
-                          activity.contact_id
+                          activity.contact_id,
+                          "sent"
                         )
+                      }
+                      actionLoading={
+                        loadingStates[
+                          `${activity.user_id}-${activity.contact_id}-reject`
+                        ] || false
                       }
                     />
                   )
@@ -206,7 +292,7 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
       </TabsContent>
       <TabsContent value="visits">
         <div className="space-y-4">
-          {activities
+          {profileActivities
             .filter((activity) => activity.type === ActivityType.Visited)
             .map((activity) => (
               <NotificationItem activity={activity} key={activity.id} />
@@ -215,7 +301,7 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
       </TabsContent>
       <TabsContent value="following">
         <div className="space-y-4">
-          {activities
+          {profileActivities
             .filter(
               (activity) =>
                 activity.type === ActivityType.Following ||
@@ -227,6 +313,11 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
                   <UnfollowButton
                     handler={() =>
                       handleUnfollow(activity.user_id, activity.contact_id)
+                    }
+                    actionLoading={
+                      loadingStates[
+                        `${activity.user_id}-${activity.contact_id}-unfollow`
+                      ] || false
                     }
                   />
                 )}

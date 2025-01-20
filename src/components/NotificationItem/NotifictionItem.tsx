@@ -33,7 +33,10 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
             "Sent you a connection request"}
           {activity.type === ActivityType.Visited && "Viewed your profile"}
           {activity.type === ActivityType.Connect_Sent &&
-            "You sent a connection request"}
+            `You sent ${activity.name.substring(
+              0,
+              activity.name.indexOf(" ")
+            )} a connection request`}
           {activity.type === ActivityType.Following && "You are following"}
           {activity.type === ActivityType.Followed && "Is following you"}
           {activity.type === ActivityType.Connect_Accepted &&

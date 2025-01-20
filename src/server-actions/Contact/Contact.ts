@@ -65,7 +65,16 @@ export const GetConnectionRequestsAction = CreateServerAction(
   true,
   async (user_id: string) => {
     try {
-      const connectionReqs = await GetConnectionRequests(user_id)
+      const connectionReqs = (await GetConnectionRequests(user_id)).map(
+        (connectionReq) => ({
+          ...connectionReq,
+          // Normalize the direction - always return the other user
+          otherUser:
+            connectionReq.user_id === user_id
+              ? connectionReq.contact
+              : connectionReq.user
+        })
+      )
       return { success: true, data: connectionReqs }
     } catch (error) {
       return { error: error, success: false }
