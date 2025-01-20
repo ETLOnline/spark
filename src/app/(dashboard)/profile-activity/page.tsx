@@ -11,7 +11,7 @@ import {
   CardTitle
 } from "@/src/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
-import { GetContactsAction } from "@/src/server-actions/Contact/Contact"
+import { GetConnectionRequestsAction } from "@/src/server-actions/Contact/Contact"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 
 const ProfileActivityPage = async () => {
@@ -19,27 +19,31 @@ const ProfileActivityPage = async () => {
   let activities: ProfileActivity[] = []
   if (user) {
     try {
-      const res = await GetContactsAction(user.unique_id)
-      if (res.success) {
-        activities = res.data.map((contact) => {
-          const type = contact.user_contacts.is_accepted
+      const res = await GetConnectionRequestsAction(user.unique_id)
+      if (res.success && res.data) {
+        console.log(res.data.contacts)
+        activities = res.data.contacts.map((contact) => {
+          const type = contact.is_accepted
             ? ActivityType.Connect_Accepted
-            : contact.user_contacts.is_requested
-            ? contact.user_contacts.contact_id === user.unique_id
+            : contact.is_requested
+            ? contact.contact_id === user.unique_id
               ? ActivityType.Connect_Received
               : ActivityType.Connect_Sent
-            : contact.user_contacts.is_following
+            : contact.is_following
             ? ActivityType.Following
-            : contact.user_contacts.is_followed_by
+            : contact.is_followed_by
             ? ActivityType.Followed
-            : ActivityType.Connect_Sent
+            : contact.is_accepted
+            ? ActivityType.Connect_Accepted
+            : ActivityType.Null
           return {
-            user_id: contact.user_contacts.user_id,
-            contact_id: contact.user_contacts.contact_id,
+            id: contact.user_id + contact.contact_id,
+            user_id: contact.user_id,
+            contact_id: contact.contact_id,
             name:
-              contact.users?.first_name + " " + contact.users?.last_name || "",
-            avatar: contact.users?.profile_url || "",
-            timestamp: contact.user_contacts.created_at || "",
+              contact.user?.first_name + " " + contact.user?.last_name || "",
+            avatar: contact.user?.profile_url || "",
+            timestamp: contact.created_at || "",
             type
           }
         })

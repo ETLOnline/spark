@@ -4,10 +4,12 @@ export enum ActivityType {
   Connect_Accepted = "req accepted",
   Visited = "visit",
   Following = "following",
-  Followed = "followed"
+  Followed = "followed",
+  Null = ""
 }
 
 export interface ProfileActivity {
+  id: string
   user_id: string
   contact_id: string
   name: string

@@ -4,8 +4,6 @@ import {
   CreateContact,
   DeleteContact,
   GetConnectionRequests,
-  GetContact,
-  GetContacts,
   UpdateContact
 } from "@/src/db/data-access/contact/query"
 import { CreateServerAction } from ".."
@@ -26,8 +24,23 @@ export const AcceptConnectionAction = CreateServerAction(
   true,
   async (user_id: string, contact_id: string) => {
     try {
-      await UpdateContact(contact_id, user_id, {
-        is_accepted: 1
+      await UpdateContact(user_id, contact_id, {
+        is_accepted: 1,
+        is_requested: 0
+      })
+      return { success: true }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const RejectConnectionAction = CreateServerAction(
+  true,
+  async (user_id: string, contact_id: string) => {
+    try {
+      await UpdateContact(user_id, contact_id, {
+        is_requested: 0
       })
       return { success: true }
     } catch (error) {
@@ -44,30 +57,6 @@ export const DeleteContactAction = CreateServerAction(
       return { success: true }
     } catch (error) {
       return { error: error }
-    }
-  }
-)
-
-export const GetContactsAction = CreateServerAction(
-  true,
-  async (user_id: string) => {
-    try {
-      const contacts = await GetContacts(user_id)
-      return { success: true, data: contacts }
-    } catch (error) {
-      return { error: error }
-    }
-  }
-)
-
-export const GetContactAction = CreateServerAction(
-  true,
-  async (user_id: string, contact_id: string) => {
-    try {
-      const contact = await GetContact(user_id, contact_id)
-      return { success: true, data: contact }
-    } catch (error) {
-      return { error: error, data: null }
     }
   }
 )
