@@ -8,7 +8,7 @@ import { TabsContent } from "@radix-ui/react-tabs"
 import NotificationItem from "../../NotificationItem/NotifictionItem"
 import { Button } from "../../ui/button"
 import { UserCheck, UserMinus, X } from "lucide-react"
-import { useAtomValue, useSetAtom } from "jotai"
+import { useAtom } from "jotai"
 import { activityStore } from "@/src/store/activity/activityStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
@@ -76,8 +76,9 @@ const UnfollowButton: React.FC<ActivityButtonProps> = ({
 )
 
 const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
-  const setProfileActivities = useSetAtom(activityStore.profileActivities)
-  const profileActivities = useAtomValue(activityStore.profileActivities)
+  const [profileActivities, setProfileActivities] = useAtom(
+    activityStore.profileActivities
+  )
 
   const [
     rejectConnectionLoading,
