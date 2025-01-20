@@ -14,7 +14,7 @@ import { Textarea } from "@/src/components/ui/textarea"
 import TagsInput from "@/src/components/TagsInput/TagsInput"
 import { SaveUserProfileAction } from "@/src/server-actions/User/User"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { useAtomValue, useSetAtom } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { profileStore } from "@/src/store/profile/profileStore"
 import useUserSkills from "./hooks/useUserSkills"
@@ -23,10 +23,8 @@ import { ProfileData, Tag, TagStatus } from "./types/profile-types.d"
 import { useToast } from "@/src/hooks/use-toast"
 
 const EditProfileModal: React.FC = () => {
-  const bio = useAtomValue(profileStore.bio)
+  const [bio,setBio] = useAtom(profileStore.bio)
   const user = useAtomValue(userStore.AuthUser)
-
-  const setBio = useSetAtom(profileStore.bio)
 
   const { toast } = useToast()
 
