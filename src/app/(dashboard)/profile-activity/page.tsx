@@ -40,7 +40,9 @@ const ProfileActivityPage = async () => {
             user_id: contact.user_id,
             contact_id: contact.contact_id,
             name:
-              contact.otherUser?.first_name + " " + contact.otherUser?.last_name || "",
+              contact.otherUser?.first_name +
+                " " +
+                contact.otherUser?.last_name || "",
             avatar: contact.otherUser?.profile_url || "",
             timestamp: contact.created_at || "",
             type

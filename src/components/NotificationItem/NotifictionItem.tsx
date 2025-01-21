@@ -15,7 +15,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   activity,
   children
 }) => {
-  const user = useAtomValue(userStore.Iam)
+  const user = useAtomValue(userStore.AuthUser)
   return (
     <div className="flex items-center space-x-4 p-4 border-b last:border-b-0">
       <Avatar className="h-12 w-12">
