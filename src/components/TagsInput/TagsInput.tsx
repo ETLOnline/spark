@@ -148,9 +148,12 @@ const TagsInput: React.FC<TagsInputProps> = ({
         }
       }
     } else if (e.key === "ArrowDown") {
-      suggestions.length
-        ? setSelectedSuggestionIndex((prev) => (prev + 1) % suggestions.length)
-        : setSelectNewTag(true)
+      if(suggestions.length){
+        setSelectedSuggestionIndex((prev) => (prev + 1) % suggestions.length)
+      }else{
+        setSelectNewTag(true)
+      }
+       
     } else if (e.key === "ArrowUp") {
       if (suggestions.length) {
         setSelectedSuggestionIndex(
