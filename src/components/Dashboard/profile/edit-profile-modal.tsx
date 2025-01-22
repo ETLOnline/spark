@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Button } from "../../ui/button"
 import {
   Dialog,
@@ -23,7 +23,7 @@ import { ProfileData, Tag, TagStatus } from "./types/profile-types.d"
 import { useToast } from "@/src/hooks/use-toast"
 
 const EditProfileModal: React.FC = () => {
-  const [bio,setBio] = useAtom(profileStore.bio)
+  const [bio, setBio] = useAtom(profileStore.bio)
   const user = useAtomValue(userStore.AuthUser)
 
   const { toast } = useToast()
@@ -75,22 +75,53 @@ const EditProfileModal: React.FC = () => {
     }
   }, [updateProfileError])
 
-  const updatedSkillsLength: number = editedSkills.filter(
-    (tag) => !tag.deleted
-  ).length
-  const updatedInterestsLength: number = editedInterests.filter(
-    (tag) => !tag.deleted
-  ).length
-  const skillsError: string =
-    updatedSkillsLength > 20 ? "You can only add a maximum of 20 skills" : ""
-  const interestsError: string =
-    updatedInterestsLength > 20
-      ? "You can only add a maximum of 20 interests"
-      : ""
-  const bioError: string =
-    editedBio && editedBio?.length > 2000
-      ? "Bio cannot exceed 2000 characters"
-      : ""
+  const updatedSkillsLength = useMemo(
+    () => editedSkills.filter((tag) => !tag.deleted).length,
+    [editedSkills]
+  )
+
+  const updatedInterestsLength = useMemo(
+    () => editedInterests.filter((tag) => !tag.deleted).length,
+    [editedInterests]
+  )
+
+  const skillsError = useMemo(
+    () =>
+      updatedSkillsLength > 20 ? "You can only add a maximum of 20 skills" : "",
+    [updatedSkillsLength]
+  )
+
+  const interestsError = useMemo(
+    () =>
+      updatedInterestsLength > 20
+        ? "You can only add a maximum of 20 interests"
+        : "",
+    [updatedInterestsLength]
+  )
+
+  const bioError = useMemo(
+    () =>
+      editedBio && editedBio?.length > 2000
+        ? "Bio cannot exceed 2000 characters"
+        : "",
+    [editedBio]
+  )
+
+  const filterTags = (tags: Tag[], type: string, key: TagStatus) =>
+    tags
+      .filter((tag) => tag.status === key && !tag.deleted)
+      .map((tag) =>
+        key === TagStatus.new
+          ? { name: tag.name, type }
+          : { name: tag.name, id: tag.id, type }
+      )
+
+  const deleteTags = (tags: Tag[], deletedTagsIds?: number[]) =>
+    tags
+      .filter(
+        (tag) => !deletedTagsIds?.includes(tag.id as number) && !tag.deleted
+      )
+      .map((tag) => ({ ...tag, status: TagStatus.saved }))
 
   const saveProfileChanges = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -107,51 +138,23 @@ const EditProfileModal: React.FC = () => {
         userId: user?.unique_id as string,
         bio: editedBio ? editedBio : bio,
         newTags: [
-          ...editedSkills
-            .filter((tag) => tag.status === TagStatus.new && !tag.deleted)
-            .map((tag) => {
-              return { name: tag.name, type: "skill" }
-            }),
-          ...editedInterests
-            .filter((tag) => tag.status === TagStatus.new && !tag.deleted)
-            .map((tag) => {
-              return { name: tag.name, type: "interest" }
-            })
+          ...filterTags(editedSkills, "skill", TagStatus.new),
+          ...filterTags(editedInterests, "interest", TagStatus.new)
         ],
         existingTags: [
-          ...editedSkills
-            .filter((tag) => tag.status === TagStatus.selected && !tag.deleted)
-            .map((tag) => {
-              return { name: tag.name, id: tag.id, type: "skill" }
-            }),
-          ...editedInterests
-            .filter((tag) => tag.status === TagStatus.selected && !tag.deleted)
-            .map((tag) => {
-              return { name: tag.name, id: tag.id, type: "interest" }
-            })
+          ...filterTags(editedSkills, "skill", TagStatus.selected),
+          ...filterTags(editedInterests, "interest", TagStatus.selected)
         ],
         deletedTagsIds: [...deletedSkillsIds, ...deletedInterestsIds]
       }
       const res = await updateProfile(updatedProfileData)
       if (res?.success) {
         // remove deleted skills and update skills val in store
-        setSkills(() =>
-          editedSkills
-            .filter(
-              (tag) =>
-                !deletedSkillsIds.includes(tag.id as number) && !tag.deleted
-            )
-            .map((tag) => ({ ...tag, status: TagStatus.saved }))
-        )
+        setSkills(() => [...deleteTags(editedSkills, deletedSkillsIds)])
         // remove deleted Interests and update interests val in store
-        setInterests(() =>
-          editedInterests
-            .filter(
-              (tag) =>
-                !deletedInterestsIds.includes(tag.id as number) && !tag.deleted
-            )
-            .map((tag) => ({ ...tag, status: TagStatus.saved }))
-        )
+        setInterests(() => [
+          ...deleteTags(editedInterests, deletedInterestsIds)
+        ])
         if (editedBio) {
           setBio(editedBio)
         }
