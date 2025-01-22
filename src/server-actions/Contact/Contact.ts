@@ -3,7 +3,8 @@
 import {
   CreateContact,
   DeleteContact,
-  GetConnectionRequests,
+  GetOutgoingConnectionRequests,
+  GetIncomingConnectionRequests,
   UpdateContact
 } from "@/src/db/data-access/contact/query"
 import { CreateServerAction } from ".."
@@ -66,16 +67,24 @@ export const GetConnectionRequestsAction = CreateServerAction(
   true,
   async (user_id: string) => {
     try {
-      const connectionReqs = (await GetConnectionRequests(user_id)).map(
-        (connectionReq) => ({
-          ...connectionReq,
-          // Normalize the direction - always return the other user
-          otherUser:
-            connectionReq.user_id === user_id
-              ? connectionReq.contact
-              : connectionReq.user
-        })
-      )
+      const IncomingConnectionReqs = (
+        await GetIncomingConnectionRequests(user_id)
+      ).map((connectionReq) => ({
+        ...connectionReq,
+        // Normalize the direction - always return the other user
+        otherUser: connectionReq.user
+      }))
+      const OutgoingConnectionReqs = (
+        await GetOutgoingConnectionRequests(user_id)
+      ).map((connectionReq) => ({
+        ...connectionReq,
+        // Normalize the direction - always return the other user
+        otherUser: connectionReq.contact
+      }))
+      const connectionReqs = [
+        ...IncomingConnectionReqs,
+        ...OutgoingConnectionReqs
+      ]
       return { success: true, data: connectionReqs }
     } catch (error) {
       return { error: error, success: false }

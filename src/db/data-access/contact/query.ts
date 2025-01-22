@@ -47,7 +47,7 @@ export const DeleteContact = async (user_id: string, contact_id: string) => {
   }
 }
 
-export const GetConnectionRequests = async (user_id: string) => {
+export const GetIncomingConnectionRequests = async (user_id: string) => {
   try {
     return await db.query.userContactsTable.findMany({
       where: and(
@@ -55,13 +55,28 @@ export const GetConnectionRequests = async (user_id: string) => {
           eq(userContactsTable.is_accepted, 1),
           eq(userContactsTable.is_requested, 1)
         ),
-        or(
-          eq(userContactsTable.user_id, user_id),
-          eq(userContactsTable.contact_id, user_id)
-        )
+        eq(userContactsTable.contact_id, user_id)
       ),
       with: {
-        user: true,
+        user: true
+      }
+    })
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
+
+export const GetOutgoingConnectionRequests = async (user_id: string) => {
+  try {
+    return await db.query.userContactsTable.findMany({
+      where: and(
+        or(
+          eq(userContactsTable.is_accepted, 1),
+          eq(userContactsTable.is_requested, 1)
+        ),
+        eq(userContactsTable.user_id, user_id)
+      ),
+      with: {
         contact: true
       }
     })

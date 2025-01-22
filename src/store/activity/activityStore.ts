@@ -1,4 +1,4 @@
-import { ProfileActivity } from "@/src/components/Dashboard/Activity/types/activity.types.d"
+import { ProfileActivity } from "@/src/components/Dashboard/ProfileActivity/types/activity.types"
 import { atom } from "jotai"
 
 const profileActivities = atom<ProfileActivity[]>([])

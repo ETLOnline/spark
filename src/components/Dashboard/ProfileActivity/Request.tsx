@@ -1,7 +1,3 @@
-import { UserCheck, X } from "lucide-react"
-import NotificationItem from "../../NotificationItem/NotifictionItem"
-import { Button } from "../../ui/button"
-import { ActivityType, ProfileActivity } from "./types/activity.types.d"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   AcceptConnectionAction,
@@ -10,6 +6,10 @@ import {
 import { activityStore } from "@/src/store/activity/activityStore"
 import { useAtom } from "jotai"
 import { useToast } from "@/src/hooks/use-toast"
+import NotificationItem from "../../NotificationItem/NotifictionItem"
+import { Button } from "../../ui/button"
+import { UserCheck, X } from "lucide-react"
+import { ProfileActivity } from "./types/activity.types"
 
 type RequestProps = {
   activity: ProfileActivity
@@ -44,12 +44,12 @@ const Request: React.FC<RequestProps> = ({ activity, variant }) => {
           if (
             activity.user_id === user_id &&
             activity.contact_id === contact_id &&
-            (activity.type === ActivityType.Connect_Received ||
-              activity.type === ActivityType.Connect_Sent)
+            activity.is_requested
           ) {
             return {
               ...activity,
-              type: ActivityType.Connect_Accepted
+              is_accepted: 1,
+              is_requested: 0
             }
           }
           return activity
@@ -79,10 +79,7 @@ const Request: React.FC<RequestProps> = ({ activity, variant }) => {
           (activity) =>
             activity.user_id !== user_id &&
             activity.contact_id !== contact_id &&
-            activity.type !==
-              (type === "received"
-                ? ActivityType.Connect_Received
-                : ActivityType.Connect_Sent)
+            activity.is_requested
         )
       )
       toast({
@@ -103,7 +100,7 @@ const Request: React.FC<RequestProps> = ({ activity, variant }) => {
   }
 
   return (
-    <NotificationItem activity={activity} key={activity.id}>
+    <NotificationItem activity={activity}>
       {variant === "received" ? (
         <div className="flex space-x-2">
           <Button

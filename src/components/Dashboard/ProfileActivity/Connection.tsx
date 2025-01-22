@@ -1,13 +1,12 @@
-import React from "react"
-import { ActivityType, ProfileActivity } from "./types/activity.types.d"
-import { Button } from "../../ui/button"
 import { DeleteConnectionAction } from "@/src/server-actions/Contact/Contact"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { UserRoundX } from "lucide-react"
 import { useSetAtom } from "jotai"
 import { activityStore } from "@/src/store/activity/activityStore"
 import { useToast } from "@/src/hooks/use-toast"
 import NotificationItem from "../../NotificationItem/NotifictionItem"
+import { Button } from "../../ui/button"
+import { UserRoundX } from "lucide-react"
+import { ProfileActivity } from "./types/activity.types"
 
 type ConnectionProps = {
   activity: ProfileActivity
@@ -29,7 +28,7 @@ const Connection: React.FC<ConnectionProps> = ({ activity }) => {
           (activity) =>
             activity.user_id !== user_id &&
             activity.contact_id !== contact_id &&
-            activity.type !== ActivityType.Connect_Accepted
+            activity.is_accepted
         )
       )
       toast({
@@ -48,7 +47,7 @@ const Connection: React.FC<ConnectionProps> = ({ activity }) => {
   }
 
   return (
-    <NotificationItem activity={activity} key={activity.id}>
+    <NotificationItem activity={activity}>
       <Button
         size="sm"
         variant="outline"

@@ -1,8 +1,5 @@
-import ActivityScreen from "@/src/components/Dashboard/Activity/ActivityScreen"
-import {
-  ActivityType,
-  ProfileActivity
-} from "@/src/components/Dashboard/Activity/types/activity.types.d"
+import ActivityScreen from "@/src/components/Dashboard/ProfileActivity/ActivityScreen"
+import { ProfileActivity } from "@/src/components/Dashboard/ProfileActivity/types/activity.types"
 import {
   Card,
   CardContent,
@@ -21,33 +18,7 @@ const ProfileActivityPage = async () => {
     try {
       const res = await GetConnectionRequestsAction(user.unique_id)
       if (res.success && res.data) {
-        activities = res.data.map((contact) => {
-          const type = contact.is_accepted
-            ? ActivityType.Connect_Accepted
-            : contact.is_requested
-            ? contact.contact_id === user.unique_id
-              ? ActivityType.Connect_Received
-              : ActivityType.Connect_Sent
-            : contact.is_following
-            ? ActivityType.Following
-            : contact.is_followed_by
-            ? ActivityType.Followed
-            : contact.is_accepted
-            ? ActivityType.Connect_Accepted
-            : ActivityType.Null
-          return {
-            id: contact.user_id + contact.contact_id,
-            user_id: contact.user_id,
-            contact_id: contact.contact_id,
-            name:
-              contact.otherUser?.first_name +
-                " " +
-                contact.otherUser?.last_name || "",
-            avatar: contact.otherUser?.profile_url || "",
-            timestamp: contact.created_at || "",
-            type
-          }
-        })
+        activities = res.data
       } else {
         throw res.error
       }
@@ -64,11 +35,10 @@ const ProfileActivityPage = async () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-4">
+          <TabsList className="w-fit mb-4">
             <TabsTrigger value="all">All Activity</TabsTrigger>
-            <TabsTrigger value="requests">Requests</TabsTrigger>
-            <TabsTrigger value="visits">Profile Visits</TabsTrigger>
-            <TabsTrigger value="following">Following</TabsTrigger>
+            <TabsTrigger value="pending requests">Pending Requests</TabsTrigger>
+            <TabsTrigger value="accepted requests">Accepted Requests</TabsTrigger>
           </TabsList>
           <ActivityScreen activities={activities} />
         </Tabs>
