@@ -4,7 +4,7 @@ import {
   DeleteConnectionAction
 } from "@/src/server-actions/Contact/Contact"
 import { activityStore } from "@/src/store/activity/activityStore"
-import { useAtom } from "jotai"
+import { useSetAtom } from "jotai"
 import { useToast } from "@/src/hooks/use-toast"
 import NotificationItem from "../../NotificationItem/NotifictionItem"
 import { Button } from "../../ui/button"
@@ -17,9 +17,7 @@ type RequestProps = {
 }
 
 const Request: React.FC<RequestProps> = ({ activity, variant }) => {
-  const [profileActivities, setProfileActivities] = useAtom(
-    activityStore.profileActivities
-  )
+  const setProfileActivities = useSetAtom(activityStore.profileActivities)
 
   const [
     rejectConnectionLoading,
@@ -39,12 +37,11 @@ const Request: React.FC<RequestProps> = ({ activity, variant }) => {
   const handleAcceptRequest = async (user_id: string, contact_id: string) => {
     const response = await acceptConnection(user_id, contact_id)
     if (response?.success) {
-      setProfileActivities(
+      setProfileActivities((profileActivities) =>
         profileActivities.map((activity) => {
           if (
             activity.user_id === user_id &&
-            activity.contact_id === contact_id &&
-            activity.is_requested
+            activity.contact_id === contact_id
           ) {
             return {
               ...activity,
@@ -75,12 +72,18 @@ const Request: React.FC<RequestProps> = ({ activity, variant }) => {
     const response = await rejectConnection(user_id, contact_id)
     if (response?.success) {
       setProfileActivities((profileActivities) =>
-        profileActivities.filter(
-          (activity) =>
-            activity.user_id !== user_id &&
-            activity.contact_id !== contact_id &&
-            activity.is_requested
-        )
+        profileActivities.map((activity) => {
+          if (
+            activity.user_id === user_id &&
+            activity.contact_id === contact_id
+          ) {
+            return {
+              ...activity,
+              is_requested: 0
+            }
+          }
+          return activity
+        })
       )
       toast({
         title: type === "received" ? "Request Rejected!" : "Request Cancelled!",

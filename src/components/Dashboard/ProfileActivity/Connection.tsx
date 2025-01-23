@@ -24,12 +24,18 @@ const Connection: React.FC<ConnectionProps> = ({ activity }) => {
     const response = await disconnect(user_id, contact_id)
     if (response?.success) {
       setProfileActivities((profileActivities) =>
-        profileActivities.filter(
-          (activity) =>
-            activity.user_id !== user_id &&
-            activity.contact_id !== contact_id &&
-            activity.is_accepted
-        )
+        profileActivities.map((activity) => {
+          if (
+            activity.user_id === user_id &&
+            activity.contact_id === contact_id
+          ) {
+            return {
+              ...activity,
+              is_accepted: 0
+            }
+          }
+          return activity
+        })
       )
       toast({
         title: "Disconnected!",

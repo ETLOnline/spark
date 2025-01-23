@@ -84,3 +84,27 @@ export const GetOutgoingConnectionRequests = async (user_id: string) => {
     throw new Error(error.message)
   }
 }
+
+export const GetContact = async (user_id: string, contact_id: string) => {
+  try {
+    const contact = await db.query.userContactsTable.findFirst({
+      where: or(
+        and(
+          eq(userContactsTable.user_id, user_id),
+          eq(userContactsTable.contact_id, contact_id)
+        ),
+        and(
+          eq(userContactsTable.user_id, contact_id),
+          eq(userContactsTable.contact_id, user_id)
+        )
+      ),
+      with: {
+        contact: true,
+        user: true
+      }
+    })
+    return contact
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}

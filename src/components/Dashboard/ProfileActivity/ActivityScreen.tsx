@@ -35,10 +35,14 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
                 variant={
                   activity.contact_id === user?.unique_id ? "received" : "sent"
                 }
+                key={activity.user_id + activity.contact_id}
               />
-            ) : (
-              <Connection activity={activity} />
-            )
+            ) : activity.is_requested ? (
+              <Connection
+                activity={activity}
+                key={activity.user_id + activity.contact_id}
+              />
+            ) : null
           )}
         </div>
       </TabsContent>
@@ -52,6 +56,7 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
                 variant={
                   activity.contact_id === user?.unique_id ? "received" : "sent"
                 }
+                key={activity.user_id + activity.contact_id}
               />
             ))}
         </div>
@@ -61,7 +66,10 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
           {profileActivities
             .filter((activity) => activity.is_accepted)
             .map((activity) => (
-              <Connection activity={activity} />
+              <Connection
+                activity={activity}
+                key={activity.user_id + activity.contact_id}
+              />
             ))}
         </div>
       </TabsContent>

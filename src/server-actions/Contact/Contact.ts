@@ -5,7 +5,8 @@ import {
   DeleteContact,
   GetOutgoingConnectionRequests,
   GetIncomingConnectionRequests,
-  UpdateContact
+  UpdateContact,
+  GetContact
 } from "@/src/db/data-access/contact/query"
 import { CreateServerAction } from ".."
 
@@ -88,6 +89,18 @@ export const GetConnectionRequestsAction = CreateServerAction(
       return { success: true, data: connectionReqs }
     } catch (error) {
       return { error: error, success: false }
+    }
+  }
+)
+
+export const GetContactAction = CreateServerAction(
+  true,
+  async (user_id: string, contact_id: string) => {
+    try {
+      const contact = await GetContact(user_id, contact_id)
+      return { success: true, data: contact }
+    } catch (error) {
+      return { error: error, data: null }
     }
   }
 )
