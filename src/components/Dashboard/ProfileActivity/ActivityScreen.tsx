@@ -10,18 +10,36 @@ import { userStore } from "@/src/store/user/userStore"
 import { ProfileActivity } from "./types/activity.types"
 
 type ActivityScreenProps = {
-  activities: ProfileActivity[]
+  incomingActivities: ProfileActivity[]
+  outgoingActivities: ProfileActivity[]
 }
 
-const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
-  const [profileActivities, setProfileActivities] = useAtom(
-    activityStore.profileActivities
+const ActivityScreen: React.FC<ActivityScreenProps> = ({
+  incomingActivities,
+  outgoingActivities
+}) => {
+  const [incomingProfileActivities, setIncomingProfileActivities] = useAtom(
+    activityStore.incomingProfileActivities
+  )
+  const [outgoingProfileActivities, setOutgoingProfileActivities] = useAtom(
+    activityStore.outgoingProfileActivities
   )
 
   const user = useAtomValue(userStore.AuthUser)
 
+  const profileActivities = [
+    ...incomingProfileActivities,
+    ...outgoingProfileActivities
+  ].sort((a, b) => {
+    return (
+      new Date(b.updated_at ?? (b.created_at as string)).getTime() -
+      new Date(a.updated_at ?? (a.created_at as string)).getTime()
+    )
+  })
+
   useEffect(() => {
-    setProfileActivities(activities)
+    setIncomingProfileActivities([...incomingActivities])
+    setOutgoingProfileActivities([...outgoingActivities])
   }, [])
 
   return (
@@ -37,31 +55,45 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
                 }
                 key={activity.user_id + activity.contact_id}
               />
-            ) : activity.is_requested ? (
+            ) : activity.is_accepted ? (
               <Connection
                 activity={activity}
                 key={activity.user_id + activity.contact_id}
+                variant={
+                  activity.contact_id === user?.unique_id ? "received" : "sent"
+                }
               />
             ) : null
           )}
         </div>
       </TabsContent>
-      <TabsContent value="pending requests">
+      <TabsContent value="incoming">
         <div className="space-y-4">
-          {profileActivities
+          {incomingProfileActivities
             .filter((activity) => activity.is_requested)
             .map((activity) => (
               <Request
                 activity={activity}
-                variant={
-                  activity.contact_id === user?.unique_id ? "received" : "sent"
-                }
+                variant={"received"}
                 key={activity.user_id + activity.contact_id}
               />
             ))}
         </div>
       </TabsContent>
-      <TabsContent value="accepted requests">
+      <TabsContent value="outgoing">
+        <div className="space-y-4">
+          {outgoingProfileActivities
+            .filter((activity) => activity.is_requested)
+            .map((activity) => (
+              <Request
+                activity={activity}
+                variant={"sent"}
+                key={activity.user_id + activity.contact_id}
+              />
+            ))}
+        </div>
+      </TabsContent>
+      <TabsContent value="accepted">
         <div className="space-y-4">
           {profileActivities
             .filter((activity) => activity.is_accepted)
@@ -69,6 +101,9 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({ activities }) => {
               <Connection
                 activity={activity}
                 key={activity.user_id + activity.contact_id}
+                variant={
+                  activity.contact_id === user?.unique_id ? "received" : "sent"
+                }
               />
             ))}
         </div>

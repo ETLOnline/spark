@@ -9,6 +9,7 @@ import {
   GetContact
 } from "@/src/db/data-access/contact/query"
 import { CreateServerAction } from ".."
+import { AuthUserAction } from "../User/AuthUserAction"
 
 export const CreateContactAction = CreateServerAction(
   true,
@@ -26,11 +27,11 @@ export const AcceptConnectionAction = CreateServerAction(
   true,
   async (user_id: string, contact_id: string) => {
     try {
-      await UpdateContact(user_id, contact_id, {
+      const res = await UpdateContact(user_id, contact_id, {
         is_accepted: 1,
         is_requested: 0
       })
-      return { success: true }
+      return { success: true, data: res[0] }
     } catch (error) {
       return { error: error }
     }
@@ -66,27 +67,34 @@ export const DeleteContactAction = CreateServerAction(
 
 export const GetConnectionRequestsAction = CreateServerAction(
   true,
-  async (user_id: string) => {
+  async () => {
     try {
-      const IncomingConnectionReqs = (
-        await GetIncomingConnectionRequests(user_id)
-      ).map((connectionReq) => ({
-        ...connectionReq,
-        // Normalize the direction - always return the other user
-        otherUser: connectionReq.user
-      }))
-      const OutgoingConnectionReqs = (
-        await GetOutgoingConnectionRequests(user_id)
-      ).map((connectionReq) => ({
-        ...connectionReq,
-        // Normalize the direction - always return the other user
-        otherUser: connectionReq.contact
-      }))
-      const connectionReqs = [
-        ...IncomingConnectionReqs,
-        ...OutgoingConnectionReqs
-      ]
-      return { success: true, data: connectionReqs }
+      const user_id = (await AuthUserAction())?.unique_id
+      if (user_id) {
+        const IncomingConnectionReqs = (
+          await GetIncomingConnectionRequests(user_id)
+        ).map((connectionReq) => ({
+          ...connectionReq,
+          // Normalize the direction - always return the other user
+          otherUser: connectionReq.user
+        }))
+        const OutgoingConnectionReqs = (
+          await GetOutgoingConnectionRequests(user_id)
+        ).map((connectionReq) => ({
+          ...connectionReq,
+          // Normalize the direction - always return the other user
+          otherUser: connectionReq.contact
+        }))
+        return {
+          success: true,
+          data: {
+            incoming: IncomingConnectionReqs,
+            outgoing: OutgoingConnectionReqs
+          }
+        }
+      } else {
+        throw new Error("Unauthorized", { cause: 401 })
+      }
     } catch (error) {
       return { error: error, success: false }
     }

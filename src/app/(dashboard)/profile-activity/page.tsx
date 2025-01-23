@@ -9,22 +9,20 @@ import {
 } from "@/src/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
 import { GetConnectionRequestsAction } from "@/src/server-actions/Contact/Contact"
-import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 
 const ProfileActivityPage = async () => {
-  const user = await AuthUserAction()
-  let activities: ProfileActivity[] = []
-  if (user) {
-    try {
-      const res = await GetConnectionRequestsAction(user.unique_id)
-      if (res.success && res.data) {
-        activities = res.data
-      } else {
-        throw res.error
-      }
-    } catch (error) {
-      throw error
+  let incomingActivities: ProfileActivity[] = []
+  let outgoingActivities: ProfileActivity[] = []
+  try {
+    const res = await GetConnectionRequestsAction()
+    if (res.success && res.data) {
+      incomingActivities = res.data.incoming
+      outgoingActivities = res.data.outgoing
+    } else {
+      throw res.error
     }
+  } catch (error) {
+    throw error
   }
 
   return (
@@ -36,11 +34,15 @@ const ProfileActivityPage = async () => {
       <CardContent>
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="w-fit mb-4">
-            <TabsTrigger value="all">All Activity</TabsTrigger>
-            <TabsTrigger value="pending requests">Pending Requests</TabsTrigger>
-            <TabsTrigger value="accepted requests">Accepted Requests</TabsTrigger>
+            <TabsTrigger value="all">All Requests</TabsTrigger>
+            <TabsTrigger value="incoming">Incoming Requests</TabsTrigger>
+            <TabsTrigger value="outgoing">Outgoing Requests</TabsTrigger>
+            <TabsTrigger value="accepted">Accepted Requests</TabsTrigger>
           </TabsList>
-          <ActivityScreen activities={activities} />
+          <ActivityScreen
+            incomingActivities={incomingActivities}
+            outgoingActivities={outgoingActivities}
+          />
         </Tabs>
       </CardContent>
     </Card>

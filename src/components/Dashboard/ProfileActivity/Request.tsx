@@ -17,7 +17,11 @@ type RequestProps = {
 }
 
 const Request: React.FC<RequestProps> = ({ activity, variant }) => {
-  const setProfileActivities = useSetAtom(activityStore.profileActivities)
+  const setProfileActivities = useSetAtom(
+    variant === "received"
+      ? activityStore.incomingProfileActivities
+      : activityStore.outgoingProfileActivities
+  )
 
   const [
     rejectConnectionLoading,
@@ -37,21 +41,29 @@ const Request: React.FC<RequestProps> = ({ activity, variant }) => {
   const handleAcceptRequest = async (user_id: string, contact_id: string) => {
     const response = await acceptConnection(user_id, contact_id)
     if (response?.success) {
-      setProfileActivities((profileActivities) =>
-        profileActivities.map((activity) => {
+      setProfileActivities((profileActivities) => {
+        let updatedIndex = -1
+        const updatedActivities = profileActivities.map((activity, i) => {
           if (
             activity.user_id === user_id &&
             activity.contact_id === contact_id
           ) {
+            updatedIndex = i
             return {
               ...activity,
               is_accepted: 1,
-              is_requested: 0
+              is_requested: 0,
+              updated_at: response.data.updated_at
             }
           }
           return activity
         })
-      )
+        if (updatedIndex > -1) {
+          const [item] = updatedActivities.splice(updatedIndex, 1)
+          updatedActivities.unshift(item)
+        }
+        return updatedActivities
+      })
       toast({ title: "Connection Accepted!", duration: 3000 })
     } else {
       toast({

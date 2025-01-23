@@ -26,7 +26,7 @@ export const UpdateContact = async (
           eq(userContactsTable.contact_id, contact_id),
           eq(userContactsTable.user_id, user_id)
         )
-      )
+      ).returning()
   } catch (error: any) {
     throw new Error(error.message)
   }

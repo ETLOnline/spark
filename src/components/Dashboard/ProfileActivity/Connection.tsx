@@ -10,10 +10,15 @@ import { ProfileActivity } from "./types/activity.types"
 
 type ConnectionProps = {
   activity: ProfileActivity
+  variant: "sent" | "received"
 }
 
-const Connection: React.FC<ConnectionProps> = ({ activity }) => {
-  const setProfileActivities = useSetAtom(activityStore.profileActivities)
+const Connection: React.FC<ConnectionProps> = ({ activity,variant }) => {
+  const setProfileActivities = useSetAtom(
+    variant === "received"
+      ? activityStore.incomingProfileActivities
+      : activityStore.outgoingProfileActivities
+  )
 
   const [disconnectLoading, disconnectData, disconnectError, disconnect] =
     useServerAction(DeleteConnectionAction)
