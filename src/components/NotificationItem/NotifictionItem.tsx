@@ -14,7 +14,8 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
 }) => {
   const user = useAtomValue(userStore.AuthUser)
 
-  const name = activity.otherUser.first_name + activity.otherUser.last_name
+  const name =
+    activity.otherUser.first_name + " " + activity.otherUser.last_name
 
   const generateNotificationText = (activity: ProfileActivity) => {
     if (activity.is_requested && activity.contact_id === user?.unique_id) {

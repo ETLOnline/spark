@@ -23,7 +23,7 @@ const ProfileActivityPage = async () => {
         throw res.error
       }
     } catch (error) {
-      console.error(error)
+      throw error
     }
   }
 
