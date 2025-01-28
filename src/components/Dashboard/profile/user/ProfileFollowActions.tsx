@@ -41,7 +41,7 @@ const ProfileFollowActions = ({user}:Props) => {
    */
   const handleConnect = async() => {
     if(!Iam?.unique_id || !user.unique_id) return
-    await createContact(Iam?.unique_id, user.unique_id)
+    await createContact(user.unique_id)
     await getContact(Iam?.unique_id, user.unique_id)
   }
 

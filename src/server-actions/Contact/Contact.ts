@@ -10,12 +10,23 @@ import {
 } from "@/src/db/data-access/contact/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
+import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 
 export const CreateContactAction = CreateServerAction(
   true,
-  async (user_id: string, contact_id: string) => {
+  async (contact_id: string) => {
     try {
-      await CreateContact(user_id, contact_id)
+      const user = await AuthUserAction()
+      if (user) {
+        const newRequest = await CreateContact(user.unique_id, contact_id)
+        const realtimeChannel = AblyClientRest.channels.get(contact_id)
+        await realtimeChannel.publish("connection-request", {
+          ...newRequest[0],
+          otherUser: user
+        })
+      } else {
+        return { error: "Unauthorized", cause: 401 }
+      }
       return { success: true }
     } catch (error) {
       return { error: error }

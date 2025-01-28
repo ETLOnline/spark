@@ -196,7 +196,7 @@ export const tagsTable = sqliteTable("tags", {
 
 export const tagsRelations = relations(tagsTable, ({ many }) => ({
   tags: many(userTagsTable, {
-    relationName: "userTagsToActivity"
+    relationName: "userTagsToTag"
   })
 }))
 
@@ -235,7 +235,7 @@ export const rewardsTable = sqliteTable("rewards", {
 
 export const rewardsRelations = relations(rewardsTable, ({ many }) => ({
   rewards: many(userRewardsTable, {
-    relationName: "userRewardsToRewards"
+    relationName: "userRewardsToReward"
   })
 }))
 

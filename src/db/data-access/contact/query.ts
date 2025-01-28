@@ -6,7 +6,7 @@ export const CreateContact = async (user_id: string, contact_id: string) => {
   try {
     return await db
       .insert(userContactsTable)
-      .values({ user_id, contact_id, is_requested: 1 })
+      .values({ user_id, contact_id, is_requested: 1 }).returning()
   } catch (error: any) {
     throw new Error(error.message)
   }

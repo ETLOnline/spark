@@ -8,6 +8,7 @@ import Request from "./Request"
 import Connection from "./Connection"
 import { userStore } from "@/src/store/user/userStore"
 import { ProfileActivity } from "./types/activity.types"
+import { AblyClient } from "@/src/services/realtime/AblyClient"
 
 type ActivityScreenProps = {
   incomingActivities: ProfileActivity[]
@@ -41,6 +42,38 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({
     setIncomingProfileActivities([...incomingActivities])
     setOutgoingProfileActivities([...outgoingActivities])
   }, [])
+
+  useEffect(() => {
+    if (!user) return
+    const { sendRequest, unsubscribe } = joinChannel(
+      user.unique_id,
+      (request) => {
+        setIncomingProfileActivities((prev) => [request,...prev])
+      }
+    )
+    return () => {
+      unsubscribe()
+    }
+  }, [user])
+  
+  const joinChannel = (
+    channelName: string,
+    onRequestReceived: (request: ProfileActivity) => void
+  ) => {
+    const channel = AblyClient.channels.get(channelName)
+    // Subscribe to incoming requests
+    channel.subscribe((request) => {
+      onRequestReceived(request.data)
+    })
+    // Return functions to send messages and cleanup
+    return {
+      sendRequest: (content: any) => channel.publish("connection-request", content),
+      unsubscribe: () => {
+        channel.unsubscribe()
+        channel.detach()
+      }
+    }
+  }
 
   return (
     <>
