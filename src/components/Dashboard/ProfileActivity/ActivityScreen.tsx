@@ -16,6 +16,27 @@ type ActivityScreenProps = {
   outgoingActivities: ProfileActivity[]
 }
 
+const joinRequestChannel = (
+  channelId: string,
+  onRequestReceived: (request: ProfileActivity, activity: string) => void
+) => {
+  const channel = AblyClient.channels.get(channelId)
+  // Subscribe to incoming requests
+  channel.subscribe(
+    [ActivityType.acceptRequest, ActivityType.delRequest, ActivityType.request],
+    (message) => {
+      onRequestReceived(message.data, message.name as string)
+    }
+  )
+  // Return functions to send messages and cleanup
+  return {
+    unsubscribe: () => {
+      channel.unsubscribe()
+      channel.detach()
+    }
+  }
+}
+
 const ActivityScreen: React.FC<ActivityScreenProps> = ({
   incomingActivities,
   outgoingActivities
@@ -48,91 +69,53 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({
 
   useEffect(() => {
     if (!user) return
-    const UnsubNewReqs = joinRequestChannel(
+    const { unsubscribe } = joinRequestChannel(
       user.unique_id,
-      (request) => {
-        setIncomingProfileActivities((prev) => [request, ...prev])
-        toast({
-          title: "New Request!",
-          description: `${request.otherUser.first_name} sent you a request.`,
-          duration: 3000
-        })
-      },
-      ActivityType.request
-    ).unsubscribe
-    const UnsubDeletedReqs = joinRequestChannel(
-      user.unique_id,
-      (request) => {
-        request.contact_id === user.unique_id
-          ? setIncomingProfileActivities((prev) =>
-              prev.filter(
-                (activity) =>
-                  activity.user_id !== request.user_id &&
-                  activity.contact_id !== request.contact_id
+      (request, activity) => {
+        if (activity === ActivityType.request) {
+          setIncomingProfileActivities((prev) => [request, ...prev])
+          toast({
+            title: "New Request!",
+            description: `${request.otherUser.first_name} sent you a request.`,
+            duration: 3000
+          })
+        } else if (activity === ActivityType.delRequest) {
+          request.contact_id === user.unique_id
+            ? setIncomingProfileActivities((prev) =>
+                prev.filter(
+                  (activity) =>
+                    activity.user_id !== request.user_id &&
+                    activity.contact_id !== request.contact_id
+                )
               )
-            )
-          : setOutgoingProfileActivities((prev) =>
-              prev.filter(
-                (activity) =>
-                  activity.user_id !== request.user_id &&
-                  activity.contact_id !== request.contact_id
+            : setOutgoingProfileActivities((prev) =>
+                prev.filter(
+                  (activity) =>
+                    activity.user_id !== request.user_id &&
+                    activity.contact_id !== request.contact_id
+                )
               )
+        } else {
+          setOutgoingProfileActivities((prev) =>
+            prev.map((activity) =>
+              activity.user_id === request.user_id &&
+              activity.contact_id === request.contact_id
+                ? {
+                    ...activity,
+                    is_accepted: 1,
+                    is_requested: 0,
+                    updated_at: request.updated_at
+                  }
+                : activity
             )
-      },
-      ActivityType.delRequest
-    ).unsubscribe
-    const UnsubAcceptedReqs = joinRequestChannel(
-      user.unique_id,
-      (request) => {
-        setOutgoingProfileActivities((prev) =>
-          prev.map((activity) =>
-            activity.user_id === request.user_id &&
-            activity.contact_id === request.contact_id
-              ? {
-                  ...activity,
-                  is_accepted: 1,
-                  is_requested: 0,
-                  updated_at: request.updated_at
-                }
-              : activity
           )
-        )
-        toast({
-          title: "Request Accepted!",
-          description: `${request.otherUser.first_name} accepted your request.`,
-          duration: 3000
-        })
-      },
-      ActivityType.acceptRequest
-    ).unsubscribe
+        }
+      }
+    )
     return () => {
-      UnsubNewReqs()
-      UnsubDeletedReqs()
-      UnsubAcceptedReqs()
+      unsubscribe()
     }
   }, [user])
-
-  const joinRequestChannel = (
-    channelId: string,
-    onRequestReceived: (request: ProfileActivity) => void,
-    channelType: ActivityType
-  ) => {
-    const channel = AblyClient.channels.get(channelId)
-    // Subscribe to incoming requests
-    channel.subscribe((message) => {
-      if (message.name === channelType) {
-        onRequestReceived(message.data)
-      }
-    })
-    // Return functions to send messages and cleanup
-    return {
-      sendRequest: (content: any) => channel.publish(channelType, content),
-      unsubscribe: () => {
-        channel.unsubscribe()
-        channel.detach()
-      }
-    }
-  }
 
   return (
     <>
