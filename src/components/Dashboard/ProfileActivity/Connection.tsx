@@ -1,4 +1,4 @@
-import { DeleteConnectionAction } from "@/src/server-actions/Contact/Contact"
+import { DeleteContactAction } from "@/src/server-actions/Contact/Contact"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useSetAtom } from "jotai"
 import { activityStore } from "@/src/store/activity/activityStore"
@@ -21,7 +21,7 @@ const Connection: React.FC<ConnectionProps> = ({ activity,variant }) => {
   )
 
   const [disconnectLoading, disconnectData, disconnectError, disconnect] =
-    useServerAction(DeleteConnectionAction)
+    useServerAction(DeleteContactAction)
 
   const { toast } = useToast()
 

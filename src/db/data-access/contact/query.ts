@@ -41,7 +41,7 @@ export const DeleteContact = async (user_id: string, contact_id: string) => {
           eq(userContactsTable.contact_id, contact_id),
           eq(userContactsTable.user_id, user_id)
         )
-      )
+      ).returning()
   } catch (error: any) {
     throw new Error(error.message)
   }

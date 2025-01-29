@@ -80,7 +80,12 @@ export const DeleteContactAction = CreateServerAction(
   true,
   async (user_id: string, contact_id: string) => {
     try {
-      await DeleteContact(user_id, contact_id)
+      const curreUserId = (await AuthUserAction())?.unique_id
+      const deletedConnection = await DeleteContact(user_id, contact_id)
+      const realtimeChannel = AblyClientRest.channels.get(
+        curreUserId === user_id ? contact_id : user_id
+      )
+      realtimeChannel.publish(ActivityType.delRequest, deletedConnection[0])
       return { success: true }
     } catch (error) {
       return { error: error }

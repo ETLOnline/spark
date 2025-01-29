@@ -13,7 +13,7 @@ import {
   Lightbulb,
   Beaker,
   LayoutDashboard,
-  UserRoundPlus
+  Network
 } from "lucide-react"
 
 import NavMain from "@/src/components/Dashboard/nav-main"
@@ -63,6 +63,11 @@ const data = {
       ]
     },
     {
+      title: "Profile Activity",
+      url: "/profile-activity",
+      icon: Network
+    },
+    {
       title: "Posts",
       url: "/posts",
       icon: Newspaper
@@ -71,11 +76,6 @@ const data = {
       title: "Chat",
       url: "/chat",
       icon: MessageSquare
-    },
-    {
-      title: "Profile Activity",
-      url: "/profile-activity",
-      icon: UserRoundPlus
     },
     {
       title: "Events",
