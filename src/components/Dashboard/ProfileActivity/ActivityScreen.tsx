@@ -7,8 +7,9 @@ import { useEffect } from "react"
 import Request from "./Request"
 import Connection from "./Connection"
 import { userStore } from "@/src/store/user/userStore"
-import { ProfileActivity } from "./types/activity.types"
+import { ActivityType, ProfileActivity } from "./types/activity.types.d"
 import { AblyClient } from "@/src/services/realtime/AblyClient"
+import { useToast } from "@/src/hooks/use-toast"
 
 type ActivityScreenProps = {
   incomingActivities: ProfileActivity[]
@@ -28,6 +29,8 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({
 
   const user = useAtomValue(userStore.AuthUser)
 
+  const { toast } = useToast()
+
   const profileActivities = [
     ...incomingProfileActivities,
     ...outgoingProfileActivities
@@ -45,29 +48,85 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({
 
   useEffect(() => {
     if (!user) return
-    const { sendRequest, unsubscribe } = joinChannel(
+    const UnsubNewReqs = joinRequestChannel(
       user.unique_id,
       (request) => {
-        setIncomingProfileActivities((prev) => [request,...prev])
-      }
-    )
+        setIncomingProfileActivities((prev) => [request, ...prev])
+        toast({
+          title: "New Request!",
+          description: `${request.otherUser.first_name} sent you a request.`,
+          duration: 3000
+        })
+      },
+      ActivityType.request
+    ).unsubscribe
+    const UnsubDeletedReqs = joinRequestChannel(
+      user.unique_id,
+      (request) => {
+        request.contact_id === user.unique_id
+          ? setIncomingProfileActivities((prev) =>
+              prev.filter(
+                (activity) =>
+                  activity.user_id !== request.user_id &&
+                  activity.contact_id !== request.contact_id
+              )
+            )
+          : setOutgoingProfileActivities((prev) =>
+              prev.filter(
+                (activity) =>
+                  activity.user_id !== request.user_id &&
+                  activity.contact_id !== request.contact_id
+              )
+            )
+      },
+      ActivityType.delRequest
+    ).unsubscribe
+    const UnsubAcceptedReqs = joinRequestChannel(
+      user.unique_id,
+      (request) => {
+        setOutgoingProfileActivities((prev) =>
+          prev.map((activity) =>
+            activity.user_id === request.user_id &&
+            activity.contact_id === request.contact_id
+              ? {
+                  ...activity,
+                  is_accepted: 1,
+                  is_requested: 0,
+                  updated_at: request.updated_at
+                }
+              : activity
+          )
+        )
+        toast({
+          title: "Request Accepted!",
+          description: `${request.otherUser.first_name} accepted your request.`,
+          duration: 3000
+        })
+      },
+      ActivityType.acceptRequest
+    ).unsubscribe
     return () => {
-      unsubscribe()
+      UnsubNewReqs()
+      UnsubDeletedReqs()
+      UnsubAcceptedReqs()
     }
   }, [user])
-  
-  const joinChannel = (
-    channelName: string,
-    onRequestReceived: (request: ProfileActivity) => void
+
+  const joinRequestChannel = (
+    channelId: string,
+    onRequestReceived: (request: ProfileActivity) => void,
+    channelType: ActivityType
   ) => {
-    const channel = AblyClient.channels.get(channelName)
+    const channel = AblyClient.channels.get(channelId)
     // Subscribe to incoming requests
-    channel.subscribe((request) => {
-      onRequestReceived(request.data)
+    channel.subscribe((message) => {
+      if (message.name === channelType) {
+        onRequestReceived(message.data)
+      }
     })
     // Return functions to send messages and cleanup
     return {
-      sendRequest: (content: any) => channel.publish("connection-request", content),
+      sendRequest: (content: any) => channel.publish(channelType, content),
       unsubscribe: () => {
         channel.unsubscribe()
         channel.detach()
