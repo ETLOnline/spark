@@ -38,7 +38,6 @@ export default async function ProfileScreen({
   const userRes = await FindUserByUniqueIdAction(id)
   const user = userRes.data
   let profileData
-
   if (user) {
     profileData = await GetUserProfileAction(user.unique_id)
   }

@@ -8,33 +8,12 @@ import Request from "./Request"
 import Connection from "./Connection"
 import { userStore } from "@/src/store/user/userStore"
 import { ActivityType, ProfileActivity } from "./types/activity.types.d"
-import { AblyClient } from "@/src/services/realtime/AblyClient"
 import { useToast } from "@/src/hooks/use-toast"
+import { joinRequestChannel } from "@/src/utils/helpers"
 
 type ActivityScreenProps = {
   incomingActivities: ProfileActivity[]
   outgoingActivities: ProfileActivity[]
-}
-
-const joinRequestChannel = (
-  channelId: string,
-  onRequestReceived: (request: ProfileActivity, activity: string) => void
-) => {
-  const channel = AblyClient.channels.get(channelId)
-  // Subscribe to incoming requests
-  channel.subscribe(
-    [ActivityType.acceptRequest, ActivityType.delRequest, ActivityType.request],
-    (message) => {
-      onRequestReceived(message.data, message.name as string)
-    }
-  )
-  // Return functions to send messages and cleanup
-  return {
-    unsubscribe: () => {
-      channel.unsubscribe()
-      channel.detach()
-    }
-  }
 }
 
 const ActivityScreen: React.FC<ActivityScreenProps> = ({
