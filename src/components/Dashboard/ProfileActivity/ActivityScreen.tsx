@@ -68,7 +68,7 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({
   }, [])
 
   useEffect(() => {
-    if (!user) return
+    if (!user || !user.unique_id) return
     const { unsubscribe } = joinRequestChannel(
       user.unique_id,
       (request, activity) => {
@@ -84,14 +84,14 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({
             ? setIncomingProfileActivities((prev) =>
                 prev.filter(
                   (activity) =>
-                    activity.user_id !== request.user_id &&
+                    activity.user_id !== request.user_id ||
                     activity.contact_id !== request.contact_id
                 )
               )
             : setOutgoingProfileActivities((prev) =>
                 prev.filter(
                   (activity) =>
-                    activity.user_id !== request.user_id &&
+                    activity.user_id !== request.user_id ||
                     activity.contact_id !== request.contact_id
                 )
               )

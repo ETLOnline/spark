@@ -13,6 +13,7 @@ import { GetConnectionRequestsAction } from "@/src/server-actions/Contact/Contac
 const ProfileActivityPage = async () => {
   let incomingActivities: ProfileActivity[] = []
   let outgoingActivities: ProfileActivity[] = []
+  
   try {
     const res = await GetConnectionRequestsAction()
     if (res.success && res.data) {
