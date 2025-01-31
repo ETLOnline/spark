@@ -38,23 +38,25 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   }
 
   return (
-    <div className="flex items-center space-x-4 p-4 border-b last:border-b-0">
-      <Avatar className="h-12 w-12">
-        <AvatarImage
-          className="rounded-full"
-          src={activity.otherUser.profile_url as string}
-          alt={name}
-        />
-        <AvatarFallback>{activity.otherUser.first_name}</AvatarFallback>
-      </Avatar>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">{name}</p>
-        <p className="text-sm text-muted-foreground">
-          {generateNotificationText(activity)}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {new Date(activity.created_at as string).toLocaleString()}
-        </p>
+    <div className="flex items-center justify-between p-4 border-b last:border-b-0 max-[622px]:flex-col max-[622px]:items-start max-[622px]:space-x-0 max-[622px]:space-y-4">
+      <div className="flex items-center space-x-4">
+        <Avatar className="h-12 w-12">
+          <AvatarImage
+            className="rounded-full"
+            src={activity.otherUser.profile_url as string}
+            alt={name}
+          />
+          <AvatarFallback>{activity.otherUser.first_name}</AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">{name}</p>
+          <p className="text-sm text-muted-foreground">
+            {generateNotificationText(activity)}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {new Date(activity.created_at as string).toLocaleString()}
+          </p>
+        </div>
       </div>
       {children}
     </div>

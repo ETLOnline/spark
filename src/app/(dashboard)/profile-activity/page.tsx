@@ -27,18 +27,40 @@ const ProfileActivityPage = async () => {
   }
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle>Profile Activity</CardTitle>
-        <CardDescription>View your recent profile interactions</CardDescription>
+    <Card className="w-full max-w-[622px] mx-auto px-4 sm:px-6">
+      <CardHeader className="px-0 sm:px-2 pt-4 pb-2">
+        <CardTitle className="text-xl sm:text-2xl">Profile Activity</CardTitle>
+        <CardDescription className="text-sm sm:text-base">
+          View your recent profile interactions
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="all" className="w-full">
-          <TabsList className="w-fit mb-4">
-            <TabsTrigger value="all">All Requests</TabsTrigger>
-            <TabsTrigger value="incoming">Incoming Requests</TabsTrigger>
-            <TabsTrigger value="outgoing">Outgoing Requests</TabsTrigger>
-            <TabsTrigger value="accepted">Accepted Requests</TabsTrigger>
+      <CardContent className="px-0 sm:px-2 pb-4">
+        <Tabs defaultValue="all" className="w-full flex flex-col space-y-10">
+          <TabsList className="w-full flex flex-wrap gap-2 h-fit">
+            <TabsTrigger
+              value="all"
+              className="text-sm px-3 py-1 flex-1 min-w-[120px]"
+            >
+              All Requests
+            </TabsTrigger>
+            <TabsTrigger
+              value="incoming"
+              className="text-sm px-3 py-1 flex-1 min-w-[120px]"
+            >
+              Incoming
+            </TabsTrigger>
+            <TabsTrigger
+              value="outgoing"
+              className="text-sm px-3 py-1 flex-1 min-w-[120px]"
+            >
+              Outgoing
+            </TabsTrigger>
+            <TabsTrigger
+              value="accepted"
+              className="text-sm px-3 py-1 flex-1 min-w-[120px]"
+            >
+              Accepted
+            </TabsTrigger>
           </TabsList>
           <ActivityScreen
             incomingActivities={incomingActivities}
