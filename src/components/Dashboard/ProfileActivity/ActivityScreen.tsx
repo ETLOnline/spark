@@ -89,7 +89,12 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({
             )
           )
         }
-      }
+      },
+      [
+        ActivityType.acceptRequest,
+        ActivityType.delRequest,
+        ActivityType.request
+      ]
     )
     return () => {
       unsubscribe()

@@ -20,6 +20,7 @@ import { joinRequestChannel } from "@/src/utils/helpers"
 import { useAtomValue } from "jotai"
 import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
+import { ActivityType } from "../../ProfileActivity/types/activity.types.d"
 
 interface Props {
   user: SelectUser
@@ -70,7 +71,12 @@ const ProfileFollowActions = ({ user }: Props) => {
           if (user.unique_id === request.contact_id) {
             setConnectionContact({ ...request })
           }
-        }
+        },
+        [
+          ActivityType.acceptRequest,
+          ActivityType.delRequest,
+          ActivityType.request
+        ]
       )
       return () => {
         unsubscribe()
@@ -86,10 +92,15 @@ const ProfileFollowActions = ({ user }: Props) => {
   const handleConnect = async () => {
     if (!Iam?.unique_id || !user.unique_id) return
     try {
-      if ((await createContact(user.unique_id))?.success) {
+      const res = await createContact(user.unique_id)
+      if (res?.success) {
         if (connectionContact) {
           setConnectionContact({ ...connectionContact, is_requested: 1 })
         }
+        toast({
+          title: "Connection Request Sent!",
+          duration: 3000
+        })
       } else {
         toast({
           variant: "destructive",

@@ -1,17 +1,17 @@
 import {
-  ActivityType,
   ProfileActivity
 } from "../components/Dashboard/ProfileActivity/types/activity.types.d"
 import { AblyClient } from "../services/realtime/AblyClient"
 
 export const joinRequestChannel = (
   channelId: string,
-  onRequestReceived: (request: ProfileActivity, activity: string) => void
+  onRequestReceived: (request: ProfileActivity, activity: string) => void,
+  channelEvents: string[]
 ) => {
   const channel = AblyClient.channels.get(channelId)
   // Subscribe to incoming requests
   channel.subscribe(
-    [ActivityType.acceptRequest, ActivityType.delRequest, ActivityType.request],
+    channelEvents,
     (message) => {
       onRequestReceived(message.data, message.name as string)
     }
@@ -19,8 +19,7 @@ export const joinRequestChannel = (
   // Return functions to send messages and cleanup
   return {
     unsubscribe: () => {
-      channel.unsubscribe()
-      channel.detach()
+      channel.unsubscribe(channelEvents)
     }
   }
 }
