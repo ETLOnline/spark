@@ -104,7 +104,7 @@ export function ProjectDetailView() {
     const update: Update = {
       id: `u${project.updates.length + 1}`,
       content: newUpdate,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toDateString(),
       author: { name: "Current User", avatar: "/avatars/04.png" },
     }
     setProject({ ...project, updates: [...project.updates, update] })

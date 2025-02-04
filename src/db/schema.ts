@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto"
 import { InferSelectModel, relations, sql } from "drizzle-orm"
 import { int, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { z } from "zod"
 
 const timestamps = {
   updated_at: text("updated_at").$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
@@ -329,3 +330,16 @@ export const recommendationsRelations = relations(recommendationsTable, ({ one }
 
 export type InsertRecommendation = typeof recommendationsTable.$inferInsert
 export type SelectRecommendation = typeof recommendationsTable.$inferSelect
+
+export const eventsTable = sqliteTable("events", {
+  id: int().primaryKey({ autoIncrement: true }),
+  title: text().notNull(),
+  description: text(),
+  start_date_time: text(),
+  end_date_time: text(),
+  location: text().notNull(),
+  host_id: text().notNull(),
+})
+
+export type InsertEvent = typeof eventsTable.$inferInsert
+export type SelectEvent = typeof eventsTable.$inferSelect
