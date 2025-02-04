@@ -9,7 +9,7 @@ import { useToast } from "@/src/hooks/use-toast"
 import { Button } from "../../ui/button"
 import { UserCheck, X } from "lucide-react"
 import { ProfileActivity } from "./types/activity.types"
-import NotificationItem from "@/src/components/NotificationItem/NotifictionItem"
+import NotificationItem from "../NotificationItem/NotifictionItem"
 
 type RequestProps = {
   activity: ProfileActivity
