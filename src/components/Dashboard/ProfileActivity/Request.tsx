@@ -8,12 +8,13 @@ import { useSetAtom } from "jotai"
 import { useToast } from "@/src/hooks/use-toast"
 import { Button } from "../../ui/button"
 import { UserCheck, X } from "lucide-react"
-import { ProfileActivity } from "./types/activity.types"
+import { ProfileActivity, ReqType } from "./types/activity.types.d"
 import NotificationItem from "../NotificationItem/NotifictionItem"
+import { killConnection } from "@/src/utils/helpers"
 
 type RequestProps = {
   activity: ProfileActivity
-  variant: "sent" | "received"
+  variant: ReqType
 }
 
 const Request: React.FC<RequestProps> = ({ activity, variant }) => {
@@ -79,33 +80,23 @@ const Request: React.FC<RequestProps> = ({ activity, variant }) => {
   const handleDeleteRequest = async (
     user_id: string,
     contact_id: string,
-    type: "sent" | "received"
+    type: ReqType
   ) => {
     const response = await rejectConnection(user_id, contact_id)
     if (response?.success) {
-      setProfileActivities((profileActivities) =>
-        profileActivities.map((activity) => {
-          if (
-            activity.user_id === user_id &&
-            activity.contact_id === contact_id
-          ) {
-            return {
-              ...activity,
-              is_requested: 0
-            }
-          }
-          return activity
-        })
-      )
+      killConnection(setProfileActivities, "reject", user_id, contact_id)
       toast({
-        title: type === "received" ? "Request Rejected!" : "Request Cancelled!",
+        title:
+          type === ReqType.incoming
+            ? "Request Rejected!"
+            : "Request Cancelled!",
         duration: 3000
       })
     } else {
       toast({
         variant: "destructive",
         title: `Unable to ${
-          type === "received" ? "Reject" : "Cancel"
+          type === ReqType.incoming ? "Reject" : "Cancel"
         } Request!`,
         description:
           "There was an issue performing the action please try again.",
@@ -116,7 +107,7 @@ const Request: React.FC<RequestProps> = ({ activity, variant }) => {
 
   return (
     <NotificationItem activity={activity}>
-      {variant === "received" ? (
+      {variant === ReqType.incoming ? (
         <div className="flex space-x-2">
           <Button
             size="sm"

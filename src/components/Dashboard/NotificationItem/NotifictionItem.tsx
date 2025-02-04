@@ -3,6 +3,7 @@ import { useAtomValue } from "jotai"
 import Link from "next/link"
 import { ProfileActivity } from "../ProfileActivity/types/activity.types"
 import { userStore } from "@/src/store/user/userStore"
+import moment from "moment"
 
 type NotificationItemProps = {
   activity: ProfileActivity
@@ -15,22 +16,22 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   children,
   size = "lg"
 }) => {
-  const user = useAtomValue(userStore.AuthUser)
+  const authUser = useAtomValue(userStore.AuthUser)
 
   const name =
-    activity.otherUser.first_name + " " + activity.otherUser.last_name
+    `${activity.otherUser.first_name} ${activity.otherUser.last_name}`
 
   const generateNotificationText = (activity: ProfileActivity) => {
-    if (activity.is_requested && activity.contact_id === user?.unique_id) {
+    if (activity.is_requested && activity.contact_id === authUser?.unique_id) {
       return "Sent you a connection request"
-    } else if (activity.is_requested && activity.user_id === user?.unique_id) {
+    } else if (activity.is_requested && activity.user_id === authUser?.unique_id) {
       return `You sent ${name} a connection request`
     } else if (activity.is_following) {
       return "You are following"
     } else if (activity.is_followed_by) {
       return "Is following you"
     } else if (activity.is_accepted) {
-      if (activity.contact_id === user?.unique_id) {
+      if (activity.contact_id === authUser?.unique_id) {
         return `You accepted ${name}'s connection request`
       } else {
         return `${name} accepted your connection request`
@@ -75,7 +76,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
             </p>
             {size === "sm" ? null : (
               <p className="text-xs text-muted-foreground">
-                {new Date(activity.created_at as string).toLocaleString()}
+                {moment.utc(activity.created_at).local().fromNow()}
               </p>
             )}
           </div>

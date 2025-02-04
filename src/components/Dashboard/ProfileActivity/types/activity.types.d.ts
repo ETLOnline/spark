@@ -9,3 +9,8 @@ export enum ActivityType {
 export interface ProfileActivity extends SelectUserContact {
   otherUser: SelectUser
 }
+
+export enum ReqType {
+  incoming = "received",
+  outgoing = "sent"
+}

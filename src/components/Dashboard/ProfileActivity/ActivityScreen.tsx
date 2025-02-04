@@ -7,9 +7,14 @@ import { useEffect } from "react"
 import Request from "./Request"
 import Connection from "./Connection"
 import { userStore } from "@/src/store/user/userStore"
-import { ActivityType, ProfileActivity } from "./types/activity.types.d"
+import {
+  ActivityType,
+  ProfileActivity,
+  ReqType
+} from "./types/activity.types.d"
 import { useToast } from "@/src/hooks/use-toast"
 import { joinRequestChannel } from "@/src/utils/helpers"
+import moment from "moment"
 
 type ActivityScreenProps = {
   incomingActivities: ProfileActivity[]
@@ -36,8 +41,8 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({
     ...outgoingProfileActivities
   ].sort((a, b) => {
     return (
-      new Date(b.updated_at ?? (b.created_at as string)).getTime() -
-      new Date(a.updated_at ?? (a.created_at as string)).getTime()
+      moment.utc(b.updated_at ?? b.created_at).unix() -
+      moment.utc(a.updated_at ?? a.created_at).unix()
     )
   })
 
@@ -110,7 +115,9 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({
               <Request
                 activity={activity}
                 variant={
-                  activity.contact_id === user?.unique_id ? "received" : "sent"
+                  activity.contact_id === user?.unique_id
+                    ? ReqType.incoming
+                    : ReqType.outgoing
                 }
                 key={activity.user_id + activity.contact_id}
               />
@@ -119,7 +126,9 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({
                 activity={activity}
                 key={activity.user_id + activity.contact_id}
                 variant={
-                  activity.contact_id === user?.unique_id ? "received" : "sent"
+                  activity.contact_id === user?.unique_id
+                    ? ReqType.incoming
+                    : ReqType.outgoing
                 }
               />
             ) : null
@@ -133,7 +142,7 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({
             .map((activity) => (
               <Request
                 activity={activity}
-                variant={"received"}
+                variant={ReqType.incoming}
                 key={activity.user_id + activity.contact_id}
               />
             ))}
@@ -146,7 +155,7 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({
             .map((activity) => (
               <Request
                 activity={activity}
-                variant={"sent"}
+                variant={ReqType.outgoing}
                 key={activity.user_id + activity.contact_id}
               />
             ))}
@@ -161,7 +170,9 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({
                 activity={activity}
                 key={activity.user_id + activity.contact_id}
                 variant={
-                  activity.contact_id === user?.unique_id ? "received" : "sent"
+                  activity.contact_id === user?.unique_id
+                    ? ReqType.incoming
+                    : ReqType.outgoing
                 }
               />
             ))}
