@@ -127,6 +127,20 @@
       "when": 1737027000808,
       "tag": "0017_greedy_dragon_man",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1738653878446,
+      "tag": "0018_solid_gamora",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1738658808408,
+      "tag": "0019_wooden_wild_pack",
+      "breakpoints": true
     }
   ]
 }

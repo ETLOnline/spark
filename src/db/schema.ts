@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto"
 import { InferSelectModel, relations, sql } from "drizzle-orm"
 import { int, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { link } from "fs"
 
 const timestamps = {
   updated_at: text("updated_at").$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
@@ -315,18 +316,37 @@ export const recommendationsTable = sqliteTable("recommendations", {
   ...timestamps
 })
 
-export const recommendationsRelations = relations(recommendationsTable, ({ one }) => ({
-  recommender: one(usersTable, {
-    fields: [recommendationsTable.recommender_id],
-    references: [usersTable.unique_id],
-    relationName: "recommendationToUser"
-  }),
-  receiver: one(usersTable, {
-    fields: [recommendationsTable.receiver_id],
-    references: [usersTable.unique_id],
-    relationName: "recommendationToReceiver"
+export const recommendationsRelations = relations(
+  recommendationsTable,
+  ({ one }) => ({
+    recommender: one(usersTable, {
+      fields: [recommendationsTable.recommender_id],
+      references: [usersTable.unique_id],
+      relationName: "recommendationToUser"
+    }),
+    receiver: one(usersTable, {
+      fields: [recommendationsTable.receiver_id],
+      references: [usersTable.unique_id],
+      relationName: "recommendationToReceiver"
+    })
   })
-}))
+)
 
 export type InsertRecommendation = typeof recommendationsTable.$inferInsert
 export type SelectRecommendation = typeof recommendationsTable.$inferSelect
+
+export const notificationsTable = sqliteTable("notifications", {
+  id: int().primaryKey({ autoIncrement: true }),
+  created_by: text().notNull(),
+  received_by: text().notNull(),
+  type: text().notNull(),
+  link: text(),
+  is_read: int().notNull().default(0),
+  counter: int().notNull().default(0),
+  entity_id: text(),
+  entity_type: text(),
+  ...timestamps
+})
+
+export type InsertNotification = typeof notificationsTable.$inferInsert
+export type SelectNotification = typeof notificationsTable.$inferSelect

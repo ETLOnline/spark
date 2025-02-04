@@ -63,8 +63,8 @@ const data = {
       ]
     },
     {
-      title: "Profile Activity",
-      url: "/profile-activity",
+      title: "Connections",
+      url: "/connections",
       icon: Network
     },
     {

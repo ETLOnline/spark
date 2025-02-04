@@ -17,6 +17,7 @@ export const config = {
     '/chat',
     '/events',
     '/spaces',
+    '/connections',
     // Always run for API routes
     // '/(api|trpc)(.*)',
     // '/sign-in(.*)',

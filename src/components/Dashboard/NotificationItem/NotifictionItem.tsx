@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar"
 import { useAtomValue } from "jotai"
 import Link from "next/link"
-import { ProfileActivity } from "../ProfileActivity/types/activity.types"
+import { ProfileActivity } from "../Connections/types/activity.types"
 import { userStore } from "@/src/store/user/userStore"
 
 type NotificationItemProps = {

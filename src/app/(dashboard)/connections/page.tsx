@@ -1,5 +1,5 @@
-import ActivityScreen from "@/src/components/Dashboard/ProfileActivity/ActivityScreen"
-import { ProfileActivity } from "@/src/components/Dashboard/ProfileActivity/types/activity.types"
+import ConnectionsScreen from "@/src/components/Dashboard/Connections/ConnectionsScreen"
+import { ProfileActivity } from "@/src/components/Dashboard/Connections/types/activity.types"
 import {
   Card,
   CardContent,
@@ -10,10 +10,10 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
 import { GetConnectionRequestsAction } from "@/src/server-actions/Contact/Contact"
 
-const ProfileActivityPage = async () => {
+const ConnectionsPage = async () => {
   let incomingActivities: ProfileActivity[] = []
   let outgoingActivities: ProfileActivity[] = []
-  
+
   try {
     const res = await GetConnectionRequestsAction()
     if (res.success && res.data) {
@@ -62,7 +62,7 @@ const ProfileActivityPage = async () => {
               Accepted
             </TabsTrigger>
           </TabsList>
-          <ActivityScreen
+          <ConnectionsScreen
             incomingActivities={incomingActivities}
             outgoingActivities={outgoingActivities}
           />
@@ -72,4 +72,4 @@ const ProfileActivityPage = async () => {
   )
 }
 
-export default ProfileActivityPage
+export default ConnectionsPage

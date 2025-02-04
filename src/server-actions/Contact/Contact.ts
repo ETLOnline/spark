@@ -11,7 +11,7 @@ import {
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import { AblyClientRest } from "@/src/services/realtime/AblyClient"
-import { ActivityType } from "@/src/components/Dashboard/ProfileActivity/types/activity.types.d"
+import { ActivityType } from "@/src/components/Dashboard/Connections/types/activity.types.d"
 
 export const CreateContactAction = CreateServerAction(
   true,
