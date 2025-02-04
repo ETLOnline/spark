@@ -12,7 +12,6 @@ import { SelectEvent } from "@/src/db/schema";
 import { useAtomValue } from "jotai";
 import { userStore } from "@/src/store/user/userStore";
 import moment from "moment";
-import { datetime } from "drizzle-orm/mysql-core";
 
 interface EventcardProps {
   event: SelectEvent;
