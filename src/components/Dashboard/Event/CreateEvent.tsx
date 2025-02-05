@@ -167,8 +167,8 @@ export const CreateEvent = ({ events, setEvents, formModalVisibility, setFormMod
       newEvent?.location
     ) {
       const updateEvent = { ...newEvent }
-      updateEvent.start_date_time = moment(newEvent.start_date_time).utc().toString();
-      updateEvent.end_date_time = moment(newEvent.end_date_time).utc().toString();
+      updateEvent.start_date_time = moment(newEvent.start_date_time).utc().toISOString();
+      updateEvent.end_date_time = moment(newEvent.end_date_time).utc().toISOString();
 
       const updatedEvent = await UpdateEvents(updateEvent as SelectEvent)
       if (updatedEvent?.success && updatedEvent.data) {

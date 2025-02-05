@@ -141,6 +141,13 @@
       "when": 1737374083656,
       "tag": "0019_tough_rawhide_kid",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1738755418683,
+      "tag": "0020_flowery_hitman",
+      "breakpoints": true
     }
   ]
 }

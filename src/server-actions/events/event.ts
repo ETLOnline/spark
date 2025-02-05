@@ -23,7 +23,7 @@ export const GetEventsAction = CreateServerAction( false, async (startDate, endD
   }
 })
 
-export const UpdateEventsAction = CreateServerAction( true, async (updatedEventsData: InsertEvent)=>{
+export const UpdateEventsAction = CreateServerAction( true, async (updatedEventsData: SelectEvent)=>{
   try{
     const updatedEvents = await UpdateEvents(updatedEventsData)
     return { success: true, data: updatedEvents}

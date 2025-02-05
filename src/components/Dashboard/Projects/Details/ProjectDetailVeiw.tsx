@@ -7,6 +7,7 @@ import ProjectStatusAndTimeline from "./ProjectStatusAndTimeline"
 import ProjectContributers from "./ProjectContributers"
 import ProjectResources from "./ProjectResources"
 import ProjectComments from "./ProjectComments"
+import moment from "moment"
 
 
 
@@ -104,7 +105,7 @@ export function ProjectDetailView() {
     const update: Update = {
       id: `u${project.updates.length + 1}`,
       content: newUpdate,
-      createdAt: new Date().toDateString(),
+      createdAt: moment().toString(),
       author: { name: "Current User", avatar: "/avatars/04.png" },
     }
     setProject({ ...project, updates: [...project.updates, update] })

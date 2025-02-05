@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import CreateEvent from "./CreateEvent";
 import EventCard from "./EventCard";
 import { SelectEvent } from "@/src/db/schema";

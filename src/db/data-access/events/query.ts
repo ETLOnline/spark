@@ -28,11 +28,8 @@ export async function GetEvents(startDate: string, endDate: string){
 }
 
 
-export async function UpdateEvents(updatedEventsData: InsertEvent){
+export async function UpdateEvents(updatedEventsData: SelectEvent){
   try{
-    if (updatedEventsData.id === undefined) {
-      throw new Error();
-    }
     const updatedEvents = await db.update(eventsTable).set(updatedEventsData)
     .where( eq(eventsTable.id, updatedEventsData.id))
     .returning()

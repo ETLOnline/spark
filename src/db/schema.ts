@@ -339,6 +339,7 @@ export const eventsTable = sqliteTable("events", {
   end_date_time: text(),
   location: text().notNull(),
   host_id: text().notNull(),
+  ...timestamps,
 })
 
 export type InsertEvent = typeof eventsTable.$inferInsert

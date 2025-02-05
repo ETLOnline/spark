@@ -1,3 +1,4 @@
+import React, { Dispatch, SetStateAction } from "react";
 import {
   Card,
   CardContent,
@@ -15,8 +16,8 @@ import moment from "moment";
 
 interface EventcardProps {
   event: SelectEvent;
-  setFormModelVisibility: React.Dispatch<React.SetStateAction<boolean>>
-  setSelectEvent: React.Dispatch<React.SetStateAction<SelectEvent | null>>
+  setFormModelVisibility: Dispatch<SetStateAction<boolean>>
+  setSelectEvent: Dispatch<SetStateAction<SelectEvent | null>>
 }
 
 
