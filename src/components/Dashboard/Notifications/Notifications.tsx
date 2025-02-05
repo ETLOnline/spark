@@ -6,31 +6,21 @@ import { Button } from "../../ui/button"
 import NotificationItem from "../NotificationItem/NotifictionItem"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetConnectionRequestsAction } from "@/src/server-actions/Contact/Contact"
+import { GetNotificationsAction } from "@/src/server-actions/Notification/Notification"
 
 const Notifications: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
 
-  const [reqsLoading, reqs, reqsError, getReqs] = useServerAction(
-    GetConnectionRequestsAction
-  )
+  const [
+    notificationsLoading,
+    notifications,
+    notificationsError,
+    getNotifications
+  ] = useServerAction(GetNotificationsAction)
 
   useEffect(() => {
-    getReqs()
+    getNotifications()
   }, [])
-
-  const notifications =
-    reqs && reqs.data
-      ? [...reqs.data.incoming, ...reqs.data.outgoing].sort((a, b) => {
-          return (
-            new Date(b.updated_at ?? (b.created_at as string)).getTime() -
-            new Date(a.updated_at ?? (a.created_at as string)).getTime()
-          )
-        })
-      : []
-
-  useEffect(() => {
-    console.log(reqs)
-  }, [reqs])
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -46,13 +36,15 @@ const Notifications: React.FC = () => {
             <CardTitle>Notifications</CardTitle>
           </CardHeader>
           <CardContent className="max-h-[300px] overflow-auto">
-            {notifications.map((notification) => (
-              <NotificationItem
-                key={notification.user_id + notification.contact_id}
-                activity={notification}
-                size="sm"
-              />
-            ))}
+            {notifications &&
+              notifications.data &&
+              notifications.data.map((notification) => (
+                <NotificationItem
+                  key={notification.id}
+                  activity={notification}
+                  size="sm"
+                />
+              ))}
           </CardContent>
         </Card>
       </PopoverContent>

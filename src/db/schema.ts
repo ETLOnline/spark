@@ -353,7 +353,7 @@ export const notificationsTable = sqliteTable("notifications", {
 export const notificationsRelations = relations(
   notificationsTable,
   ({ one }) => ({
-    user: one(usersTable, {
+    creator: one(usersTable, {
       fields: [notificationsTable.created_by],
       references: [usersTable.unique_id],
       relationName: "notificationToUser"
@@ -363,5 +363,5 @@ export const notificationsRelations = relations(
 
 export type InsertNotification = typeof notificationsTable.$inferInsert
 export type SelectNotification = InferSelectModel<typeof notificationsTable> & {
-  creator: InsertUser
+  creator: SelectUser
 }

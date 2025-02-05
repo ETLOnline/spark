@@ -22,7 +22,8 @@ export const GetNotifications = async () => {
       throw new Error("User not authenticated")
     }
     const notifications = await db.query.notificationsTable.findMany({
-      where: eq(notificationsTable.received_by, userId)
+      where: eq(notificationsTable.received_by, userId),
+      with: { creator: true }
     })
     return notifications
   } catch (error: any) {

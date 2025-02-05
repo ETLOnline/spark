@@ -21,6 +21,11 @@ import { useAtomValue } from "jotai"
 import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
 import { ActivityType } from "../../Connections/types/activity.types"
+import { AddNotificationAction } from "@/src/server-actions/Notification/Notification"
+import {
+  NotificationEntity,
+  NotificationType
+} from "../../Notifications/types/notifications.types"
 
 interface Props {
   user: SelectUser
@@ -48,12 +53,18 @@ const ProfileFollowActions = ({ user }: Props) => {
     deleteContactError,
     deleteContact
   ] = useServerAction(DeleteContactAction)
+  const [
+    addNotificationLoading,
+    addNotificationState,
+    addNotificationError,
+    addNotification
+  ] = useServerAction(AddNotificationAction)
 
   const [connectionContact, setConnectionContact] =
     useState<SelectUserContact>()
 
   const router = useRouter()
-  const Iam = useAtomValue(userStore.AuthUser)
+  const authUser = useAtomValue(userStore.AuthUser)
 
   useEffect(() => {
     if (contact && contact.data) {
@@ -62,11 +73,11 @@ const ProfileFollowActions = ({ user }: Props) => {
   }, [contact])
 
   useEffect(() => {
-    if (Iam && Iam?.unique_id && user && user.unique_id) {
-      getContact(Iam.unique_id, user.unique_id)
+    if (authUser && authUser?.unique_id && user && user.unique_id) {
+      getContact(authUser.unique_id, user.unique_id)
       getMutualChat(user.unique_id)
       const { unsubscribe } = joinRequestChannel(
-        Iam.unique_id,
+        authUser.unique_id,
         (request, activity) => {
           if (user.unique_id === request.contact_id) {
             setConnectionContact({ ...request })
@@ -82,7 +93,7 @@ const ProfileFollowActions = ({ user }: Props) => {
         unsubscribe()
       }
     }
-  }, [Iam?.unique_id, user.unique_id])
+  }, [authUser?.unique_id, user.unique_id])
 
   /**
    * Connects the current user to the specified user. If a contact already exists, it does nothing.
@@ -90,10 +101,20 @@ const ProfileFollowActions = ({ user }: Props) => {
    * @requires both the current user's unique ID and the target user's unique ID to be available.
    */
   const handleConnect = async () => {
-    if (!Iam?.unique_id || !user.unique_id) return
+    if (!authUser?.unique_id || !user.unique_id) return
     try {
       const res = await createContact(user.unique_id)
       if (res?.success) {
+        try {
+          const res = await addNotification({
+            created_by: authUser.unique_id,
+            received_by: user.unique_id,
+            type: NotificationType.requestSent,
+            entity_type: NotificationEntity.request
+          })
+        } catch (error) {
+          console.error(error)
+        }
         if (connectionContact) {
           setConnectionContact({ ...connectionContact, is_requested: 1 })
         }
@@ -128,21 +149,21 @@ const ProfileFollowActions = ({ user }: Props) => {
    * Requires both the current user's unique ID and the target user's unique ID to be available.
    */
   const handleMessage = async () => {
-    if (!Iam?.unique_id || !user.unique_id) return
+    if (!authUser?.unique_id || !user.unique_id) return
     let chatSlug = null
     if (mutualChat && mutualChat.success && mutualChat.data) {
       chatSlug = mutualChat.data?.chat_slug
     } else {
-      const newChat = await createChat(Iam?.unique_id, user.unique_id)
+      const newChat = await createChat(authUser?.unique_id, user.unique_id)
       chatSlug = newChat?.data?.chat_slug
     }
     router.push(`/chat?active_chat=${chatSlug}`)
   }
 
   const handleAcceptConnection = async () => {
-    if (!Iam?.unique_id || !user.unique_id) return
+    if (!authUser?.unique_id || !user.unique_id) return
     try {
-      const res = await acceptConnection(Iam?.unique_id, user.unique_id)
+      const res = await acceptConnection(authUser?.unique_id, user.unique_id)
       if (res?.success) {
         if (connectionContact) {
           setConnectionContact({
@@ -178,9 +199,9 @@ const ProfileFollowActions = ({ user }: Props) => {
   }
 
   const handledeleteContact = async () => {
-    if (!Iam?.unique_id || !user.unique_id) return
+    if (!authUser?.unique_id || !user.unique_id) return
     try {
-      const res = await deleteContact(Iam?.unique_id, user.unique_id)
+      const res = await deleteContact(authUser?.unique_id, user.unique_id)
       if (res?.success) {
         if (connectionContact) {
           setConnectionContact({
@@ -233,7 +254,7 @@ const ProfileFollowActions = ({ user }: Props) => {
       connectionContact.is_requested &&
       !connectionContact.is_accepted ? (
         <>
-          {connectionContact.contact_id === Iam?.unique_id ? (
+          {connectionContact.contact_id === authUser?.unique_id ? (
             <Button onClick={handleAcceptConnection}>Accept Connection</Button>
           ) : (
             <Button disabled={acceptConnectionLoading}>
