@@ -141,6 +141,13 @@
       "when": 1738658808408,
       "tag": "0019_wooden_wild_pack",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1738736737478,
+      "tag": "0020_thin_namor",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,6 @@
 import { randomUUID } from "crypto"
 import { InferSelectModel, relations, sql } from "drizzle-orm"
 import { int, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
-import { link } from "fs"
 
 const timestamps = {
   updated_at: text("updated_at").$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
@@ -46,6 +45,9 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   }),
   recommendations: many(recommendationsTable, {
     relationName: "recommendationToReceiver"
+  }),
+  notifications: many(notificationsTable, {
+    relationName: "notificationToUser"
   })
 }))
 
@@ -344,9 +346,22 @@ export const notificationsTable = sqliteTable("notifications", {
   is_read: int().notNull().default(0),
   counter: int().notNull().default(0),
   entity_id: text(),
-  entity_type: text(),
+  entity_type: text().notNull(),
   ...timestamps
 })
 
+export const notificationsRelations = relations(
+  notificationsTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [notificationsTable.created_by],
+      references: [usersTable.unique_id],
+      relationName: "notificationToUser"
+    })
+  })
+)
+
 export type InsertNotification = typeof notificationsTable.$inferInsert
-export type SelectNotification = typeof notificationsTable.$inferSelect
+export type SelectNotification = InferSelectModel<typeof notificationsTable> & {
+  creator: InsertUser
+}
