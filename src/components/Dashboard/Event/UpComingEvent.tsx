@@ -1,32 +1,30 @@
-import React, { Dispatch, SetStateAction } from "react";
-import CreateEvent, { Event } from "./CreateEvent";
-import { sampleEvents } from ".";
+import React, { Dispatch, SetStateAction, useState } from "react";
+import CreateEvent from "./CreateEvent";
 import EventCard from "./EventCard";
+import { SelectEvent } from "@/src/db/schema";
 
 interface Props {
-  events: Event[];
-  setEvents: Dispatch<SetStateAction<Event[]>>;
+  events: SelectEvent[];
+  setEvents: Dispatch<SetStateAction<SelectEvent[]>>;
 }
 
 function UpComingEvent({ events, setEvents }: Props) {
+  const [formModalVisibility, setFormModalVisiblity] = useState(false)
+  const [SelectEvent, setSelectEvent] = useState<SelectEvent | null>(null)
   return (
     <div className="grid justify-items-center mt-3">
-      <CreateEvent events={events} setEvents={setEvents} />
-      <div className="flex flex-wrap justify-between">
-        {sampleEvents.map(
-          ({ id, title, description, date, location, attendees }, i) => {
-            return (
-              <EventCard
-                key={i}
-                id={id}
-                title={title}
-                description={description}
-                date={date}
-                location={location}
-                attendees={attendees}
-              />
-            );
-          }
+      <CreateEvent selectEvent={SelectEvent} setSelectEvent={setSelectEvent} formModalVisibility={formModalVisibility} setFormModalVisibility={setFormModalVisiblity} events={events} setEvents={setEvents} />
+      <div className="flex flex-wrap justify-between w-full gap-3">
+        {events.map((event, i) => {
+          return (
+            <EventCard
+              key={i}
+              event={event}
+              setFormModelVisibility={setFormModalVisiblity}
+              setSelectEvent={setSelectEvent}
+            />
+          )
+        }
         )}
       </div>
     </div>
