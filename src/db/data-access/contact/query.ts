@@ -50,43 +50,27 @@ export const DeleteContact = async (user_id: string, contact_id: string) => {
   }
 }
 
-export const GetIncomingConnectionRequests = async (user_id: string) => {
-  try {
-    return await db.query.usersTable.findFirst({
-      where: eq(usersTable.unique_id, user_id),
-      with: {
-        contacts: {
-          where: and(
-            or(
-              eq(userContactsTable.is_requested, 1),
-              eq(userContactsTable.is_accepted, 1)
-            )
-          ),
-          with: {
-            user: true
-          }
-        }
-      }
-    })
-  } catch (error: any) {
-    throw new Error(error.message)
-  }
-}
-
-export const GetOutgoingConnectionRequests = async (user_id: string) => {
+export const GetConnectionRequests = async (user_id: string) => {
   try {
     return await db.query.usersTable.findFirst({
       where: eq(usersTable.unique_id, user_id),
       with: {
         users: {
-          where: and(
-            or(
-              eq(userContactsTable.is_requested, 1),
-              eq(userContactsTable.is_accepted, 1)
-            )
+          where: or(
+            eq(userContactsTable.is_requested, 1),
+            eq(userContactsTable.is_accepted, 1)
           ),
           with: {
             contact: true
+          }
+        },
+        contacts: {
+          where: or(
+            eq(userContactsTable.is_requested, 1),
+            eq(userContactsTable.is_accepted, 1)
+          ),
+          with: {
+            user: true
           }
         }
       }
