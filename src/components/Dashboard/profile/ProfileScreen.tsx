@@ -43,7 +43,7 @@ export default function ProfileScreen({ tab }: ProfileScreenProps) {
   }
 
   return profileLoading ? (
-    <div className={"flex items-center justify-center items-center h-full"}>
+    <div className={"flex justify-center items-center h-full"}>
       <Loader size={LoaderSizes.xl} />
     </div>
   ) : (
