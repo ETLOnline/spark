@@ -1,5 +1,5 @@
 import ConnectionsScreen from "@/src/components/Dashboard/Connections/ConnectionsScreen"
-import { ProfileActivity } from "@/src/components/Dashboard/Connections/types/activity.types"
+import { ProfileActivity } from "@/src/components/Dashboard/Connections/types/activity.types.d"
 import {
   Card,
   CardContent,

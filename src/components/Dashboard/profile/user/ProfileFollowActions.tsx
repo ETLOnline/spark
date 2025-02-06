@@ -20,12 +20,12 @@ import { joinRequestChannel } from "@/src/utils/helpers"
 import { useAtomValue } from "jotai"
 import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
-import { ActivityType } from "../../Connections/types/activity.types"
+import { ActivityType } from "../../Connections/types/activity.types.d"
 import { AddNotificationAction } from "@/src/server-actions/Notification/Notification"
 import {
   NotificationEntity,
   NotificationType
-} from "../../Notifications/types/notifications.types"
+} from "../../Notifications/types/notifications.types.d"
 
 interface Props {
   user: SelectUser

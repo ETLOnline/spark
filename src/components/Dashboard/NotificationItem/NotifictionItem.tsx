@@ -1,10 +1,10 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar"
 import { useAtomValue } from "jotai"
 import Link from "next/link"
-import { ProfileActivity } from "../Connections/types/activity.types"
+import { ProfileActivity } from "../Connections/types/activity.types.d"
 import { userStore } from "@/src/store/user/userStore"
 import { SelectNotification } from "@/src/db/schema"
-import { NotificationType } from "../Notifications/types/notifications.types"
+import { NotificationType } from "../Notifications/types/notifications.types.d"
 
 type NotificationItemProps = {
   activity: SelectNotification | ProfileActivity

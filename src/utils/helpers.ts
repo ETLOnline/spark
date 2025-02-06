@@ -1,4 +1,4 @@
-import { ProfileActivity } from "../components/Dashboard/Connections/types/activity.types"
+import { ProfileActivity } from "../components/Dashboard/Connections/types/activity.types.d"
 import { AblyClient } from "../services/realtime/AblyClient"
 
 export const joinRequestChannel = (

@@ -1,3 +1,5 @@
+"use server"
+
 import { InsertNotification } from "@/src/db/schema"
 import {
   AddNotification,
