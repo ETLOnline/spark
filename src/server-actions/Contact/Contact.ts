@@ -101,14 +101,14 @@ export const GetConnectionRequestsAction = CreateServerAction(
       if (user_id) {
         const IncomingConnectionReqs = (
           await GetIncomingConnectionRequests(user_id)
-        ).map((connectionReq) => ({
+        )?.contacts.map((connectionReq) => ({
           ...connectionReq,
           // Normalize the direction - always return the other user
           otherUser: connectionReq.user
         }))
         const OutgoingConnectionReqs = (
           await GetOutgoingConnectionRequests(user_id)
-        ).map((connectionReq) => ({
+        )?.users.map((connectionReq) => ({
           ...connectionReq,
           // Normalize the direction - always return the other user
           otherUser: connectionReq.contact

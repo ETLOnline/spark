@@ -17,8 +17,8 @@ const ProfileActivityPage = async () => {
   try {
     const res = await GetConnectionRequestsAction()
     if (res.success && res.data) {
-      incomingActivities = res.data.incoming
-      outgoingActivities = res.data.outgoing
+      incomingActivities = res.data.incoming ?? []
+      outgoingActivities = res.data.outgoing ?? []
     } else {
       throw res.error
     }

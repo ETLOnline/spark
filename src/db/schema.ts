@@ -34,6 +34,9 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   contacts: many(userContactsTable, {
     relationName: "userToContact"
   }),
+  users: many(userContactsTable, {
+    relationName: "userToUser"
+  }),
   userActivities: many(userActivitiesTable, {
     relationName: "userActivitiesToUser"
   }),
