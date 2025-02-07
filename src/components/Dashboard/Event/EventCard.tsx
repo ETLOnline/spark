@@ -7,12 +7,13 @@ import {
   CardHeader,
   CardTitle,
 } from "../../ui/card";
-import { CalendarDays, MapPin, Users } from "lucide-react";
+import { CalendarDays, Link2, MapPin, TypeOutline, Users } from "lucide-react";
 import { Button } from "../../ui/button";
 import { SelectEvent } from "@/src/db/schema";
 import { useAtomValue } from "jotai";
 import { userStore } from "@/src/store/user/userStore";
 import moment from "moment";
+import Link from "next/link";
 
 interface EventcardProps {
   event: SelectEvent;
@@ -34,10 +35,10 @@ const EventCard = ({ event, setFormModelVisibility, setSelectEvent }: EventcardP
   }
 
   return (
-    <Card className="w-full sm:w-[49%] mt-5">
+    <Card className="w-full lg:w-[49%] mt-2">
       <CardHeader className="flex flex-row justify-between items-center">
         <div>
-          <CardTitle>{event.title}</CardTitle>
+          <CardTitle className="font-sans text-xl mb-2">{event.title}</CardTitle>
           <CardDescription >{event.description}</CardDescription>
         </div>
         {event.host_id === authUser?.unique_id && (
@@ -46,22 +47,40 @@ const EventCard = ({ event, setFormModelVisibility, setSelectEvent }: EventcardP
       </CardHeader>
       <CardContent>
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-          <CalendarDays className="h-4 w-4" />
-          <span>Start Date Time:</span>
-          <span>{localStartDate}</span>
+          <CalendarDays className="h-4 w-4 text-primary" />
+          <span><strong>Start Date Time: </strong>{localStartDate}</span>
         </div>
         <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
-          <CalendarDays className="h-4 w-4" />
-          <span>End Date Time:</span>
-          <span>{localEndDate}</span>
+          <CalendarDays className="h-4 w-4 text-primary" />
+          <span><strong>End Date Time: </strong>{localEndDate}</span>
         </div>
+
         <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
-          <MapPin className="h-4 w-4" />
-          <span>{event.location}</span>
+          <TypeOutline className="h-4 w-4 text-primary" />
+          <span><strong>Event type: </strong> {event.type}</span>
         </div>
+
+        {event.type === "Physical" ? (
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
+            <MapPin className="h-4 w-4 text-primary" />
+            <span><strong>Location: </strong>{event.metadata}</span>
+          </div>
+        ) : (
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
+            <Link2 className="h-4 w-4 text-primary" />
+            <span>
+              <strong>Meeting Link: </strong>
+              <Link target="_blank" rel="noopener noreferrer"
+                href={event.metadata || "#"} className="hover:text-blue-600 hover:underline">
+                {event.metadata}
+              </Link>
+            </span>
+          </div>
+        )}
+
         <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
-          <Users className="h-4 w-4" />
-          <span>{0} attendees</span>
+          <Users className="h-4 w-4 text-primary" />
+          <span><strong> attendees: </strong>{0}</span>
         </div>
       </CardContent>
       <CardFooter className="justify-end">

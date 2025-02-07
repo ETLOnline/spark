@@ -23,6 +23,8 @@ import { AlertDialogTrigger } from "@radix-ui/react-alert-dialog";
 import { useToast } from "@/src/hooks/use-toast";
 import { z } from "zod";
 import moment from "moment";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
+import { metadata } from "@/src/app/layout";
 
 
 interface Props {
@@ -41,7 +43,8 @@ const eventSchema = z.object({
   description: z.string().min(1, "Description is required").max(50, "Description is too long"),
   start_date_time: z.string().min(1, "Start date and time is required"),
   end_date_time: z.string().min(1, "End date and time is required"),
-  location: z.string().min(1, "Location is required")
+  type: z.string().min(1, "Type is required"),
+  metadata: z.string().min(1, "Location is required"),
 }).superRefine((data, ctx) => {
   if (new Date(data.start_date_time) <= new Date(now)) {
     ctx.addIssue({
@@ -70,7 +73,8 @@ export const CreateEvent = ({ events, setEvents, formModalVisibility, setFormMod
     description: "",
     start_date_time: datetime().toString(),
     end_date_time: "",
-    location: "",
+    type: "",
+    metadata: "",
     host_id: "",
   });
   const [editEvent, setEditEvent] = useState(false)
@@ -90,7 +94,8 @@ export const CreateEvent = ({ events, setEvents, formModalVisibility, setFormMod
         description: "",
         start_date_time: datetime().toString(),
         end_date_time: "",
-        location: "",
+        type: "",
+        metadata: "",
         host_id: "",
       })
     }
@@ -147,7 +152,8 @@ export const CreateEvent = ({ events, setEvents, formModalVisibility, setFormMod
         description: "",
         start_date_time: "",
         end_date_time: "",
-        location: "",
+        type: "",
+        metadata: "",
         host_id: "",
       });
 
@@ -164,7 +170,8 @@ export const CreateEvent = ({ events, setEvents, formModalVisibility, setFormMod
       newEvent?.description &&
       newEvent?.start_date_time &&
       newEvent?.end_date_time &&
-      newEvent?.location
+      newEvent?.type &&
+      newEvent?.metadata
     ) {
       const updateEvent = { ...newEvent }
       updateEvent.start_date_time = moment(newEvent.start_date_time).utc().toISOString();
@@ -207,7 +214,7 @@ export const CreateEvent = ({ events, setEvents, formModalVisibility, setFormMod
   return (
     <Dialog open={formModalVisibility} onOpenChange={(open) => { setFormModalVisibility(open) }} >
       <DialogTrigger asChild>
-        <button className="p-[3px] relative w-max">
+        <button className="p-1 relative w-max mb-2">
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg" />
           <div className="px-8 py-2  bg-primary rounded-[6px]  relative group transition duration-200 text-primary-foreground hover:bg-transparent">
             Add Event
@@ -304,26 +311,77 @@ export const CreateEvent = ({ events, setEvents, formModalVisibility, setFormMod
               {formErrors.end_date_time && <span className="text-red-500 text-sm">{formErrors.end_date_time}</span>}
             </div>
           </div>
+
           <div className="flex flex-col">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="location" className="text-right">
-                Location
+              <Label htmlFor="type" className="text-right">
+                Select type
               </Label>
-              <Input
-                id="location"
-                value={newEvent.location}
-                onChange={(e) => {
-                  setFormErrors((prev) => ({ ...prev, location: "" }));
-                  setNewEvent({ ...newEvent, location: e.target.value })
-                }
-                }
-                className="col-span-3"
-              />
+              <Select onValueChange={(value) => {
+                setFormErrors((prev) => ({ ...prev, type: "" }))
+                setNewEvent({ ...newEvent, type: value })
+              }}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Physical">Physical</SelectItem>
+                  <SelectItem value="Virtual">Virtual</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="text-right">
-              {formErrors.location && <span className="text-red-500 text-sm">{formErrors.location}</span>}
+              {formErrors.type && <span className="text-red-500 text-sm">{formErrors.type}</span>}
             </div>
           </div>
+
+          {newEvent.type === "Physical" && (
+            <div className="flex flex-col">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="location" className="text-right">
+                  Location
+                </Label>
+                <Input
+                  id="location"
+                  type="text"
+                  value={newEvent.metadata ? newEvent.metadata : ""}
+                  onChange={(e) => {
+                    setFormErrors((prev) => ({ ...prev, metadata: "" }));
+                    setNewEvent({ ...newEvent, metadata: e.target.value })
+                  }
+                  }
+                  className="col-span-3"
+                />
+              </div>
+              <div className="text-right">
+                {formErrors.metadata && <span className="text-red-500 text-sm">{formErrors.metadata}</span>}
+              </div>
+            </div>
+          )}
+
+          {newEvent.type === "Virtual" && (
+            <div className="flex flex-col">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="meeting-link" className="text-right">
+                  Meeting Link
+                </Label>
+                <Input
+                  id="meeting-link"
+                  type="url"
+                  value={newEvent.metadata ? newEvent.metadata : ""}
+                  onChange={(e) => {
+                    setFormErrors((prev) => ({ ...prev, metadata: "" }));
+                    setNewEvent({ ...newEvent, metadata: e.target.value })
+                  }
+                  }
+                  className="col-span-3"
+                />
+              </div>
+              <div className="text-right">
+                {formErrors.metadata && <span className="text-red-500 text-sm">Meeting link is required</span>}
+              </div>
+            </div>
+          )}
         </div>
         <DialogFooter className="flex justify-between">
           {editEvent === true ?
