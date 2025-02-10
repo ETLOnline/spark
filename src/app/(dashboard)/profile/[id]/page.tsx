@@ -38,7 +38,6 @@ export default async function ProfileScreen({
   const userRes = await FindUserByUniqueIdAction(id)
   const user = userRes.data
   let profileData
-
   if (user) {
     profileData = await GetUserProfileAction(user.unique_id)
   }
@@ -49,17 +48,19 @@ export default async function ProfileScreen({
 
   return (
     <div className="container mx-auto p-6">
-      <div className="mb-6 flex items-center space-x-4">
-        <Avatar className="h-20 w-20">
-          <AvatarImage
-            src={user?.profile_url as string}
-            alt="Profile picture"
-          />
-          <AvatarFallback>Profile Image</AvatarFallback>
-        </Avatar>
-        <div>
-          <h1 className="text-2xl font-bold">{user?.first_name}</h1>
-          <p className="text-muted-foreground">{user?.email}</p>
+      <div className="mb-6 flex justify-between items-center max-[892px]:items-start max-[892px]:flex-col max-[892px]:space-x-0 max-[892px]:space-y-4">
+        <div className="flex items-center space-x-4">
+          <Avatar className="h-20 w-20">
+            <AvatarImage
+              src={user?.profile_url as string}
+              alt="Profile picture"
+            />
+            <AvatarFallback>Profile Image</AvatarFallback>
+          </Avatar>
+          <div>
+            <h1 className="text-2xl font-bold">{user?.first_name}</h1>
+            <p className="text-muted-foreground">{user?.email}</p>
+          </div>
         </div>
         <ProfileFollowActions user={user as SelectUser} />
       </div>
@@ -97,6 +98,7 @@ export default async function ProfileScreen({
               profileData?.data?.recommendations as ExtendedRecommendations
             }
             tags={profileData?.data?.tags as SelectTag[]}
+            editable={false}
           />
         </TabsContent>
         <TabsContent value="rewards">

@@ -4,7 +4,7 @@ import { SelectUserByExternalId } from "@/src/db/data-access/user/query";
 import { CreateServerAction } from "..";
 import { auth } from "@clerk/nextjs/server";
 
-export const AuthUserAction = CreateServerAction(false, async () => {
+export const AuthUserAction = CreateServerAction(true, async () => {
 	try{
         const clerkUser = await auth();
 		if (!clerkUser || !clerkUser.userId ) {

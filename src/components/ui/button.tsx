@@ -61,8 +61,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {variant === "edit" && <PencilIcon size={"10"} />}
-        {props.loading ? <Loader/> : null}
         {children}
+        {props.loading ? <Loader /> : null}
       </Comp>
     )
   }

@@ -1,0 +1,1 @@
+ALTER TABLE `user_contacts` ADD `is_followed_by` integer DEFAULT 0 NOT NULL;

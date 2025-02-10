@@ -1,7 +1,6 @@
 import { randomUUID } from "crypto"
 import { InferSelectModel, relations, sql } from "drizzle-orm"
 import { int, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
-import { z } from "zod"
 
 const timestamps = {
   updated_at: text("updated_at").$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
@@ -34,6 +33,9 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   }),
   contacts: many(userContactsTable, {
     relationName: "userToContact"
+  }),
+  users: many(userContactsTable, {
+    relationName: "userToUser"
   }),
   userActivities: many(userActivitiesTable, {
     relationName: "userActivitiesToUser"
@@ -161,6 +163,7 @@ export const userContactsTable = sqliteTable(
     is_accepted: int().notNull().default(0),
     is_blocked: int().notNull().default(0),
     is_following: int().notNull().default(0),
+    is_followed_by: int().notNull().default(0),
     ...timestamps
   },
   (t) => ({
@@ -196,7 +199,7 @@ export const tagsTable = sqliteTable("tags", {
 
 export const tagsRelations = relations(tagsTable, ({ many }) => ({
   tags: many(userTagsTable, {
-    relationName: "userTagsToActivity"
+    relationName: "userTagsToTag"
   })
 }))
 
@@ -235,7 +238,7 @@ export const rewardsTable = sqliteTable("rewards", {
 
 export const rewardsRelations = relations(rewardsTable, ({ many }) => ({
   rewards: many(userRewardsTable, {
-    relationName: "userRewardsToRewards"
+    relationName: "userRewardsToReward"
   })
 }))
 
