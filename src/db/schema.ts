@@ -1,7 +1,6 @@
 import { randomUUID } from "crypto"
 import { InferSelectModel, relations, sql } from "drizzle-orm"
 import { int, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
-import { z } from "zod"
 
 const timestamps = {
   updated_at: text("updated_at").$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),

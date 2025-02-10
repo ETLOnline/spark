@@ -56,10 +56,10 @@ const ProfileActivityPage = async () => {
               Outgoing
             </TabsTrigger>
             <TabsTrigger
-              value="accepted"
+              value="connected"
               className="text-sm px-3 py-1 flex-1 min-w-[120px]"
             >
-              Accepted
+              Connected
             </TabsTrigger>
           </TabsList>
           <ActivityScreen

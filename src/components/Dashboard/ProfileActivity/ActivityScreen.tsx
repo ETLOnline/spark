@@ -123,16 +123,6 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({
                 }
                 key={activity.user_id + activity.contact_id}
               />
-            ) : activity.is_accepted ? (
-              <Connection
-                activity={activity}
-                key={activity.user_id + activity.contact_id}
-                variant={
-                  activity.contact_id === user?.unique_id
-                    ? ReqType.incoming
-                    : ReqType.outgoing
-                }
-              />
             ) : null
           )}
         </div>
@@ -163,7 +153,7 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({
             ))}
         </div>
       </TabsContent>
-      <TabsContent value="accepted">
+      <TabsContent value="connected">
         <div className="space-y-4">
           {profileActivities
             .filter((activity) => activity.is_accepted)
