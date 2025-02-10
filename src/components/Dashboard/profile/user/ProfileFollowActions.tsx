@@ -112,11 +112,9 @@ const ProfileFollowActions = ({ user }: Props) => {
             type: NotificationType.requestSent,
             entity_type: NotificationEntity.request
           })
+          setConnectionContact({ ...res.data })
         } catch (error) {
           console.error(error)
-        }
-        if (connectionContact) {
-          setConnectionContact({ ...connectionContact, is_requested: 1 })
         }
         toast({
           title: "Connection Request Sent!",
@@ -166,12 +164,12 @@ const ProfileFollowActions = ({ user }: Props) => {
       const res = await acceptConnection(authUser?.unique_id, user.unique_id)
       if (res?.success) {
         try {
-          await addNotification({
-            created_by: authUser.unique_id,
-            received_by: authUser.unique_id,
-            type: NotificationType.incomingRequestAcceptance,
-            entity_type: NotificationEntity.request
-          })
+          // await addNotification({
+          //   created_by: authUser.unique_id,
+          //   received_by: authUser.unique_id,
+          //   type: NotificationType.incomingRequestAcceptance,
+          //   entity_type: NotificationEntity.request
+          // })
           await addNotification({
             created_by: authUser.unique_id,
             received_by: user.unique_id,

@@ -18,8 +18,9 @@ export const CreateContactAction = CreateServerAction(
   async (contact_id: string) => {
     try {
       const user = await AuthUserAction()
+      let newRequest
       if (user) {
-        const newRequest = await CreateContact(user.unique_id, contact_id)
+        newRequest = await CreateContact(user.unique_id, contact_id)
         const realtimeChannel = AblyClientRest.channels.get(contact_id)
         await realtimeChannel.publish(ActivityType.request, {
           ...newRequest[0],
@@ -28,7 +29,7 @@ export const CreateContactAction = CreateServerAction(
       } else {
         return { error: "Unauthorized", cause: 401 }
       }
-      return { success: true }
+      return { success: true, data: newRequest[0] }
     } catch (error) {
       return { error: error }
     }

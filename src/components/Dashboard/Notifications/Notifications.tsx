@@ -6,20 +6,76 @@ import { Button } from "../../ui/button"
 import NotificationItem from "../NotificationItem/NotifictionItem"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetNotificationsAction } from "@/src/server-actions/Notification/Notification"
+import { AblyClient } from "@/src/services/realtime/AblyClient"
+import { InsertNotification, SelectNotification } from "@/src/db/schema"
+import { useAtom, useAtomValue } from "jotai"
+import { userStore } from "@/src/store/user/userStore"
+import { notificationStore } from "@/src/store/notification/notificationStore"
 
 const Notifications: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState<boolean>(false)
+
+  const userId = useAtomValue(userStore.AuthUser)?.unique_id
+  const [notifications, setNotifications] = useAtom(
+    notificationStore.notifications
+  )
 
   const [
     notificationsLoading,
-    notifications,
+    notificationsData,
     notificationsError,
     getNotifications
   ] = useServerAction(GetNotificationsAction)
 
   useEffect(() => {
-    getNotifications()
+    ;(async () => {
+      const notificationsData = (await getNotifications())?.data
+      if (notificationsData) {
+        setNotifications(notificationsData)
+      }
+    })()
   }, [])
+
+  useEffect(() => {
+    if (userId) {
+      const { unsubscribe } = joinNotificationChannel(
+        userId,
+        (request) => {
+          setNotifications((prev) => [
+            ...prev,
+            {
+              ...request
+            } as SelectNotification
+          ])
+        },
+        ["notification"]
+      )
+      return () => {
+        unsubscribe()
+      }
+    }
+  }, [userId])
+
+  const joinNotificationChannel = (
+    channelId: string,
+    onRequestReceived: (
+      notifcation: InsertNotification,
+      activity: string
+    ) => void,
+    channelEvents: string[]
+  ) => {
+    const channel = AblyClient.channels.get(channelId)
+    // Subscribe to incoming notifications
+    channel.subscribe(channelEvents, (message) => {
+      onRequestReceived(message.data, message.name as string)
+    })
+    // Return functions to send messages and cleanup
+    return {
+      unsubscribe: () => {
+        channel.unsubscribe()
+      }
+    }
+  }
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -36,8 +92,8 @@ const Notifications: React.FC = () => {
           </CardHeader>
           <CardContent className="max-h-[300px] overflow-auto">
             {notifications &&
-              notifications.data &&
-              notifications.data.map((notification) => (
+              notifications &&
+              notifications.map((notification) => (
                 <NotificationItem
                   key={notification.id}
                   activity={notification}

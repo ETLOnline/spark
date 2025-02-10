@@ -59,12 +59,12 @@ const Request: React.FC<RequestProps> = ({ activity, variant }) => {
           type: NotificationType.outgoingRequestAcceptance,
           entity_type: NotificationEntity.request
         })
-        await addNotification({
-          created_by: contact_id,
-          received_by: contact_id,
-          type: NotificationType.incomingRequestAcceptance,
-          entity_type: NotificationEntity.request
-        })
+        // await addNotification({
+        //   created_by: contact_id,
+        //   received_by: contact_id,
+        //   type: NotificationType.incomingRequestAcceptance,
+        //   entity_type: NotificationEntity.request
+        // })
       } catch (error) {
         console.error(error)
       }

@@ -1,10 +1,13 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar"
-import { useAtomValue } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import Link from "next/link"
 import { ProfileActivity } from "../Connections/types/activity.types.d"
 import { userStore } from "@/src/store/user/userStore"
 import { SelectNotification } from "@/src/db/schema"
 import { NotificationType } from "../Notifications/types/notifications.types.d"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { MarkNotificationAsReadAction } from "@/src/server-actions/Notification/Notification"
+import { notificationStore } from "@/src/store/notification/notificationStore"
 
 type NotificationItemProps = {
   activity: SelectNotification | ProfileActivity
@@ -23,7 +26,12 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   children,
   size = "lg"
 }) => {
+  const [markaAsReadLoading, markaAsRead, markaAsReadError, markAsRead] =
+    useServerAction(MarkNotificationAsReadAction)
+
   const user = useAtomValue(userStore.AuthUser)
+  const setNotifications = useSetAtom(notificationStore.notifications)
+
   const otherUser = isProfileActivity(activity)
     ? activity.otherUser
     : activity.creator
@@ -77,11 +85,29 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     }
   }
 
+  const markNotificationAsRead = () => {
+    if (!isProfileActivity(activity)) {
+      markAsRead(activity.id)
+      setNotifications((notifications) => [
+        ...notifications.map((notification) => 
+          notification.id !== activity.id
+            ? notification
+            : { ...notification, is_read: 1 }
+        )
+      ])
+    }
+  }
+
   return (
-    <Link href={size === "sm" ? "/connections" : "#"}>
+    <Link
+      href={size === "sm" ? "/connections" : "#"}
+      onClick={markNotificationAsRead}
+    >
       <div className="flex items-center justify-between p-4 border-b last:border-b-0 max-[622px]:flex-col max-[622px]:items-start max-[622px]:space-x-0 max-[622px]:space-y-4">
         <div className="flex items-center space-x-4">
-          {size === "sm" ? (
+          {size === "sm" &&
+          !isProfileActivity(activity) &&
+          !activity.is_read ? (
             <span className="flex h-2 w-2 translate-y-1.5 rounded-full bg-sky-500" />
           ) : null}
           <Avatar className="h-12 w-12">
