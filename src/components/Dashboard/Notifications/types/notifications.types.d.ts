@@ -1,7 +1,9 @@
 export enum NotificationType {
-  requestAcceptance = "req_accept",
+  incomingRequestAcceptance = "incoming_req_accept",
+  outgoingRequestAcceptance = "outgoing_req_accept",
   requestSent = "req_sent",
   follow = "follow",
+  follower = "follower",
   like = "like",
   share = "share",
   comment = "comment",

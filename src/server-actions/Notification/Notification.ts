@@ -5,7 +5,7 @@ import {
   AddNotification,
   GetNotifications,
   MarkNotificationAsRead
-} from "./../../db/data-access/notifications/query"
+} from "../../db/data-access/notification/query"
 import { CreateServerAction } from ".."
 
 export const AddNotificationAction = CreateServerAction(
@@ -22,8 +22,8 @@ export const AddNotificationAction = CreateServerAction(
 
 export const GetNotificationsAction = CreateServerAction(true, async () => {
   try {
-    const notification = await GetNotifications()
-    return { success: true, data: notification }
+    const notifications = await GetNotifications()
+    return { success: true, data: notifications }
   } catch (error: any) {
     return { error: error, success: false }
   }

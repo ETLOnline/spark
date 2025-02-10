@@ -55,10 +55,14 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     } else {
       if (activity.type === NotificationType.requestSent) {
         return "Sent you a connection request"
-      } else if (activity.type === NotificationType.requestAcceptance) {
+      } else if (activity.type === NotificationType.incomingRequestAcceptance) {
         return `You accepted ${name}'s connection request`
+      } else if (activity.type === NotificationType.outgoingRequestAcceptance) {
+        return `${name} accepted your connection request`
       } else if (activity.type === NotificationType.follow) {
-        return "Started following you"
+        return `You started following ${name}`
+      } else if (activity.type === NotificationType.follower) {
+        return `${name} started following you`
       } else if (activity.type === NotificationType.event) {
         return "You created an event"
       } else if (activity.type === NotificationType.visit) {

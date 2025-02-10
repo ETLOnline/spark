@@ -106,7 +106,7 @@ const ProfileFollowActions = ({ user }: Props) => {
       const res = await createContact(user.unique_id)
       if (res?.success) {
         try {
-          const res = await addNotification({
+          await addNotification({
             created_by: authUser.unique_id,
             received_by: user.unique_id,
             type: NotificationType.requestSent,
@@ -165,6 +165,22 @@ const ProfileFollowActions = ({ user }: Props) => {
     try {
       const res = await acceptConnection(authUser?.unique_id, user.unique_id)
       if (res?.success) {
+        try {
+          await addNotification({
+            created_by: authUser.unique_id,
+            received_by: authUser.unique_id,
+            type: NotificationType.incomingRequestAcceptance,
+            entity_type: NotificationEntity.request
+          })
+          await addNotification({
+            created_by: authUser.unique_id,
+            received_by: user.unique_id,
+            type: NotificationType.outgoingRequestAcceptance,
+            entity_type: NotificationEntity.request
+          })
+        } catch (error) {
+          console.error(error)
+        }
         if (connectionContact) {
           setConnectionContact({
             ...connectionContact,

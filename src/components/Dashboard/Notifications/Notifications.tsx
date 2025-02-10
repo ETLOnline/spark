@@ -5,7 +5,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
 import { Button } from "../../ui/button"
 import NotificationItem from "../NotificationItem/NotifictionItem"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { GetConnectionRequestsAction } from "@/src/server-actions/Contact/Contact"
 import { GetNotificationsAction } from "@/src/server-actions/Notification/Notification"
 
 const Notifications: React.FC = () => {
