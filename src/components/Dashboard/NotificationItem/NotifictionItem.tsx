@@ -127,7 +127,6 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
             <Link
               href={size === "sm" ? "#" : `/profile/${otherUser.unique_id}`}
             >
-              {" "}
               <p className="text-sm font-medium truncate">{name}</p>
             </Link>
             <p className="text-xs text-muted-foreground">

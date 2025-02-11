@@ -1,6 +1,7 @@
-import { eq } from "drizzle-orm"
+import { notificationsTable } from "./../../schema"
+import { desc, eq } from "drizzle-orm"
 import { db } from "../.."
-import { InsertNotification, notificationsTable } from "../../schema"
+import { InsertNotification } from "../../schema"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 
 export const AddNotification = async (payload: InsertNotification) => {
@@ -23,6 +24,7 @@ export const GetNotifications = async () => {
     }
     const notifications = await db.query.notificationsTable.findMany({
       where: eq(notificationsTable.received_by, userId),
+      orderBy: (notificationsTable) => desc(notificationsTable.created_at),
       with: { creator: true }
     })
     return notifications

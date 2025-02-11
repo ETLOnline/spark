@@ -53,22 +53,6 @@ const Request: React.FC<RequestProps> = ({ activity, variant }) => {
   const handleAcceptRequest = async (user_id: string, contact_id: string) => {
     const response = await acceptConnection(user_id, contact_id)
     if (response?.success) {
-      try {
-        await addNotification({
-          created_by: contact_id,
-          received_by: user_id,
-          type: NotificationType.outgoingRequestAcceptance,
-          entity_type: NotificationEntity.request
-        })
-        // await addNotification({
-        //   created_by: contact_id,
-        //   received_by: contact_id,
-        //   type: NotificationType.incomingRequestAcceptance,
-        //   entity_type: NotificationEntity.request
-        // })
-      } catch (error) {
-        console.error(error)
-      }
       setProfileActivities((profileActivities) => {
         let updatedIndex = -1
         const updatedActivities = profileActivities.map((activity, i) => {

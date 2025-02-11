@@ -6,11 +6,11 @@ import { Button } from "../../ui/button"
 import NotificationItem from "../NotificationItem/NotifictionItem"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetNotificationsAction } from "@/src/server-actions/Notification/Notification"
-import { AblyClient } from "@/src/services/realtime/AblyClient"
-import { InsertNotification, SelectNotification } from "@/src/db/schema"
+import { SelectNotification } from "@/src/db/schema"
 import { useAtom, useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { notificationStore } from "@/src/store/notification/notificationStore"
+import { joinNotificationChannel } from "@/src/utils/helpers"
 
 const Notifications: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false)
@@ -29,9 +29,13 @@ const Notifications: React.FC = () => {
 
   useEffect(() => {
     ;(async () => {
-      const notificationsData = (await getNotifications())?.data
-      if (notificationsData) {
-        setNotifications(notificationsData)
+      try {
+        const notificationsData = (await getNotifications())?.data
+        if (notificationsData) {
+          setNotifications(notificationsData)
+        }
+      } catch (error) {
+        console.error(error)
       }
     })()
   }, [])
@@ -41,41 +45,23 @@ const Notifications: React.FC = () => {
       const { unsubscribe } = joinNotificationChannel(
         userId,
         (request) => {
+          console.log("notification", request)
           setNotifications((prev) => [
-            ...prev,
             {
               ...request
-            } as SelectNotification
+            } as SelectNotification,
+            ...prev
           ])
         },
         ["notification"]
       )
+      console.log("unsub", unsubscribe, userId)
+
       return () => {
         unsubscribe()
       }
     }
   }, [userId])
-
-  const joinNotificationChannel = (
-    channelId: string,
-    onRequestReceived: (
-      notifcation: InsertNotification,
-      activity: string
-    ) => void,
-    channelEvents: string[]
-  ) => {
-    const channel = AblyClient.channels.get(channelId)
-    // Subscribe to incoming notifications
-    channel.subscribe(channelEvents, (message) => {
-      onRequestReceived(message.data, message.name as string)
-    })
-    // Return functions to send messages and cleanup
-    return {
-      unsubscribe: () => {
-        channel.unsubscribe()
-      }
-    }
-  }
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
