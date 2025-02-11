@@ -5,7 +5,7 @@ import { activityStore } from "@/src/store/activity/activityStore"
 import { useToast } from "@/src/hooks/use-toast"
 import { Button } from "../../ui/button"
 import { UserRoundX } from "lucide-react"
-import { ProfileActivity, ReqType } from "./types/activity.types.d"
+import { ProfileActivity, ReqType } from "./types/connections.types.d"
 import NotificationItem from "../NotificationItem/NotifictionItem"
 import { killConnection } from "@/src/utils/helpers"
 

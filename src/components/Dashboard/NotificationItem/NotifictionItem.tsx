@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar"
 import { useAtomValue, useSetAtom } from "jotai"
 import Link from "next/link"
-import { ProfileActivity } from "../Connections/types/activity.types.d"
+import { ProfileActivity } from "../Connections/types/connections.types.d"
 import { userStore } from "@/src/store/user/userStore"
 import { SelectNotification } from "@/src/db/schema"
 import { NotificationType } from "../Notifications/types/notifications.types.d"
@@ -90,7 +90,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     if (!isProfileActivity(activity)) {
       markAsRead(activity.id)
       setNotifications((notifications) => [
-        ...notifications.map((notification) => 
+        ...notifications.map((notification) =>
           notification.id !== activity.id
             ? notification
             : { ...notification, is_read: 1 }

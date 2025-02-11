@@ -11,7 +11,7 @@ import {
   ActivityType,
   ProfileActivity,
   ReqType
-} from "./types/activity.types.d"
+} from "./types/connections.types.d"
 import { useToast } from "@/src/hooks/use-toast"
 import { joinRequestChannel } from "@/src/utils/helpers"
 import moment from "moment"
