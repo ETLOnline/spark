@@ -106,11 +106,13 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     >
       <div className="flex items-center justify-between p-4 border-b last:border-b-0 max-[622px]:flex-col max-[622px]:items-start max-[622px]:space-x-0 max-[622px]:space-y-4">
         <div className="flex items-center space-x-4">
-          {size === "sm" &&
-          !isProfileActivity(activity) &&
-          !activity.is_read ? (
-            <span className="flex h-2 w-2 translate-y-1.5 rounded-full bg-sky-500" />
-          ) : null}
+          {size === "sm" && !isProfileActivity(activity) && (
+            <span
+              className={`flex h-2 w-2 translate-y-1.5 rounded-full ${
+                activity.is_read === 0 ? "bg-sky-500" : "bg-transparent"
+              }`}
+            />
+          )}
           <Avatar className="h-12 w-12">
             <Link
               href={size === "sm" ? "#" : `/profile/${otherUser.unique_id}`}
