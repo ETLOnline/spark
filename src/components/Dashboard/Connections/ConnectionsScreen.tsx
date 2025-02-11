@@ -59,21 +59,23 @@ const ConnectionsScreen: React.FC<ConnectionsScreenProps> = ({
             duration: 3000
           })
         } else if (activity === ActivityType.delRequest) {
-          request.contact_id === user.unique_id
-            ? setIncomingProfileActivities((prev) =>
-                prev.filter(
-                  (activity) =>
-                    activity.user_id !== request.user_id ||
-                    activity.contact_id !== request.contact_id
-                )
+          if (request.contact_id === user.unique_id) {
+            setIncomingProfileActivities((prev) =>
+              prev.filter(
+                (activity) =>
+                  activity.user_id !== request.user_id ||
+                  activity.contact_id !== request.contact_id
               )
-            : setOutgoingProfileActivities((prev) =>
-                prev.filter(
-                  (activity) =>
-                    activity.user_id !== request.user_id ||
-                    activity.contact_id !== request.contact_id
-                )
+            )
+          } else {
+            setOutgoingProfileActivities((prev) =>
+              prev.filter(
+                (activity) =>
+                  activity.user_id !== request.user_id ||
+                  activity.contact_id !== request.contact_id
               )
+            )
+          }
         } else {
           setOutgoingProfileActivities((prev) =>
             prev.map((activity) =>
