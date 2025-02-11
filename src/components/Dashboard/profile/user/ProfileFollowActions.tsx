@@ -21,11 +21,6 @@ import { useAtomValue } from "jotai"
 import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
 import { ActivityType } from "../../Connections/types/connections.types.d"
-import { AddNotificationAction } from "@/src/server-actions/Notification/Notification"
-import {
-  NotificationEntity,
-  NotificationType
-} from "../../Notifications/types/notifications.types.d"
 
 interface Props {
   user: SelectUser
@@ -53,12 +48,6 @@ const ProfileFollowActions = ({ user }: Props) => {
     deleteContactError,
     deleteContact
   ] = useServerAction(DeleteContactAction)
-  const [
-    addNotificationLoading,
-    addNotificationState,
-    addNotificationError,
-    addNotification
-  ] = useServerAction(AddNotificationAction)
 
   const [connectionContact, setConnectionContact] =
     useState<SelectUserContact>()

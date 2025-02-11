@@ -11,11 +11,6 @@ import { UserCheck, X } from "lucide-react"
 import { ProfileActivity, ReqType } from "./types/connections.types.d"
 import NotificationItem from "../NotificationItem/NotifictionItem"
 import { killConnection } from "@/src/utils/helpers"
-import { AddNotificationAction } from "@/src/server-actions/Notification/Notification"
-import {
-  NotificationEntity,
-  NotificationType
-} from "../Notifications/types/notifications.types.d"
 
 type RequestProps = {
   activity: ProfileActivity
@@ -41,12 +36,6 @@ const Request: React.FC<RequestProps> = ({ activity, variant }) => {
     acceptConnectionError,
     acceptConnection
   ] = useServerAction(AcceptConnectionAction)
-  const [
-    addNotificationLoading,
-    addNotificationState,
-    addNotificationError,
-    addNotification
-  ] = useServerAction(AddNotificationAction)
 
   const { toast } = useToast()
 
