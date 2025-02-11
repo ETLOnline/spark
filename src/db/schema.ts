@@ -34,6 +34,9 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   contacts: many(userContactsTable, {
     relationName: "userToContact"
   }),
+  users: many(userContactsTable, {
+    relationName: "userToUser"
+  }),
   userActivities: many(userActivitiesTable, {
     relationName: "userActivitiesToUser"
   }),
@@ -365,3 +368,17 @@ export type InsertNotification = typeof notificationsTable.$inferInsert
 export type SelectNotification = InferSelectModel<typeof notificationsTable> & {
   creator: SelectUser
 }
+
+export const eventsTable = sqliteTable("events", {
+  id: int().primaryKey({ autoIncrement: true }),
+  title: text().notNull(),
+  description: text(),
+  start_date_time: text(),
+  end_date_time: text(),
+  location: text().notNull(),
+  host_id: text().notNull(),
+  ...timestamps,
+})
+
+export type InsertEvent = typeof eventsTable.$inferInsert
+export type SelectEvent = typeof eventsTable.$inferSelect

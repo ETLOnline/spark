@@ -246,7 +246,6 @@ const ProfileFollowActions = ({ user }: Props) => {
           "There was an issue performing the action please try again.",
         duration: 3000
       })
-      console.error("Error deleting connection", error)
     }
   }
 

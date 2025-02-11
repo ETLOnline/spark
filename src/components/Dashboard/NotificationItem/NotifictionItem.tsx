@@ -8,6 +8,7 @@ import { NotificationType } from "../Notifications/types/notifications.types.d"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { MarkNotificationAsReadAction } from "@/src/server-actions/Notification/Notification"
 import { notificationStore } from "@/src/store/notification/notificationStore"
+import moment from "moment"
 
 type NotificationItemProps = {
   activity: SelectNotification | ProfileActivity
@@ -134,7 +135,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
             </p>
             {size === "sm" ? null : (
               <p className="text-xs text-muted-foreground">
-                {new Date(activity.created_at as string).toLocaleString()}
+                {moment.utc(activity.created_at).local().fromNow()}
               </p>
             )}
           </div>

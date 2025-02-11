@@ -1,12 +1,13 @@
 import { and, eq, or } from "drizzle-orm"
 import { db } from "../.."
-import { SelectUserContact, userContactsTable } from "../../schema"
+import { SelectUserContact, userContactsTable, usersTable } from "../../schema"
 
 export const CreateContact = async (user_id: string, contact_id: string) => {
   try {
     return await db
       .insert(userContactsTable)
-      .values({ user_id, contact_id, is_requested: 1 }).returning()
+      .values({ user_id, contact_id, is_requested: 1 })
+      .returning()
   } catch (error: any) {
     throw new Error(error.message)
   }
@@ -26,7 +27,8 @@ export const UpdateContact = async (
           eq(userContactsTable.contact_id, contact_id),
           eq(userContactsTable.user_id, user_id)
         )
-      ).returning()
+      )
+      .returning()
   } catch (error: any) {
     throw new Error(error.message)
   }
@@ -41,43 +43,36 @@ export const DeleteContact = async (user_id: string, contact_id: string) => {
           eq(userContactsTable.contact_id, contact_id),
           eq(userContactsTable.user_id, user_id)
         )
-      ).returning()
+      )
+      .returning()
   } catch (error: any) {
     throw new Error(error.message)
   }
 }
 
-export const GetIncomingConnectionRequests = async (user_id: string) => {
+export const GetConnectionRequests = async (user_id: string) => {
   try {
-    return await db.query.userContactsTable.findMany({
-      where: and(
-        or(
-          eq(userContactsTable.is_accepted, 1),
-          eq(userContactsTable.is_requested, 1)
-        ),
-        eq(userContactsTable.contact_id, user_id)
-      ),
+    return await db.query.usersTable.findFirst({
+      where: eq(usersTable.unique_id, user_id),
       with: {
-        user: true
-      }
-    })
-  } catch (error: any) {
-    throw new Error(error.message)
-  }
-}
-
-export const GetOutgoingConnectionRequests = async (user_id: string) => {
-  try {
-    return await db.query.userContactsTable.findMany({
-      where: and(
-        or(
-          eq(userContactsTable.is_accepted, 1),
-          eq(userContactsTable.is_requested, 1)
-        ),
-        eq(userContactsTable.user_id, user_id)
-      ),
-      with: {
-        contact: true
+        users: {
+          where: or(
+            eq(userContactsTable.is_requested, 1),
+            eq(userContactsTable.is_accepted, 1)
+          ),
+          with: {
+            contact: true
+          }
+        },
+        contacts: {
+          where: or(
+            eq(userContactsTable.is_requested, 1),
+            eq(userContactsTable.is_accepted, 1)
+          ),
+          with: {
+            user: true
+          }
+        }
       }
     })
   } catch (error: any) {

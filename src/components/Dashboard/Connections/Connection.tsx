@@ -5,17 +5,18 @@ import { activityStore } from "@/src/store/activity/activityStore"
 import { useToast } from "@/src/hooks/use-toast"
 import { Button } from "../../ui/button"
 import { UserRoundX } from "lucide-react"
-import { ProfileActivity } from "./types/activity.types.d"
+import { ProfileActivity, ReqType } from "./types/activity.types.d"
 import NotificationItem from "../NotificationItem/NotifictionItem"
+import { killConnection } from "@/src/utils/helpers"
 
 type ConnectionProps = {
   activity: ProfileActivity
-  variant: "sent" | "received"
+  variant: ReqType
 }
 
-const Connection: React.FC<ConnectionProps> = ({ activity,variant }) => {
+const Connection: React.FC<ConnectionProps> = ({ activity, variant }) => {
   const setProfileActivities = useSetAtom(
-    variant === "received"
+    variant === ReqType.incoming
       ? activityStore.incomingProfileActivities
       : activityStore.outgoingProfileActivities
   )
@@ -28,20 +29,7 @@ const Connection: React.FC<ConnectionProps> = ({ activity,variant }) => {
   const handleDeleteRequest = async (user_id: string, contact_id: string) => {
     const response = await disconnect(user_id, contact_id)
     if (response?.success) {
-      setProfileActivities((profileActivities) =>
-        profileActivities.map((activity) => {
-          if (
-            activity.user_id === user_id &&
-            activity.contact_id === contact_id
-          ) {
-            return {
-              ...activity,
-              is_accepted: 0
-            }
-          }
-          return activity
-        })
-      )
+      killConnection(setProfileActivities, "disconnect", user_id, contact_id)
       toast({
         title: "Disconnected!",
         duration: 3000

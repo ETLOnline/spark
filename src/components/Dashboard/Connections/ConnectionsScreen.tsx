@@ -7,9 +7,14 @@ import { useEffect } from "react"
 import Request from "./Request"
 import Connection from "./Connection"
 import { userStore } from "@/src/store/user/userStore"
-import { ActivityType, ProfileActivity } from "./types/activity.types.d"
+import {
+  ActivityType,
+  ProfileActivity,
+  ReqType
+} from "./types/activity.types.d"
 import { useToast } from "@/src/hooks/use-toast"
 import { joinRequestChannel } from "@/src/utils/helpers"
+import moment from "moment"
 
 type ConnectionsScreenProps = {
   incomingActivities: ProfileActivity[]
@@ -36,8 +41,8 @@ const ConnectionsScreen: React.FC<ConnectionsScreenProps> = ({
     ...outgoingProfileActivities
   ].sort((a, b) => {
     return (
-      new Date(b.updated_at ?? (b.created_at as string)).getTime() -
-      new Date(a.updated_at ?? (a.created_at as string)).getTime()
+      moment.utc(b.updated_at ?? b.created_at).unix() -
+      moment.utc(a.updated_at ?? a.created_at).unix()
     )
   })
 
@@ -112,17 +117,11 @@ const ConnectionsScreen: React.FC<ConnectionsScreenProps> = ({
               <Request
                 activity={activity}
                 variant={
-                  activity.contact_id === user?.unique_id ? "received" : "sent"
+                  activity.contact_id === user?.unique_id
+                    ? ReqType.incoming
+                    : ReqType.outgoing
                 }
                 key={activity.user_id + activity.contact_id}
-              />
-            ) : activity.is_accepted ? (
-              <Connection
-                activity={activity}
-                key={activity.user_id + activity.contact_id}
-                variant={
-                  activity.contact_id === user?.unique_id ? "received" : "sent"
-                }
               />
             ) : null
           )}
@@ -135,7 +134,7 @@ const ConnectionsScreen: React.FC<ConnectionsScreenProps> = ({
             .map((activity) => (
               <Request
                 activity={activity}
-                variant={"received"}
+                variant={ReqType.incoming}
                 key={activity.user_id + activity.contact_id}
               />
             ))}
@@ -148,13 +147,13 @@ const ConnectionsScreen: React.FC<ConnectionsScreenProps> = ({
             .map((activity) => (
               <Request
                 activity={activity}
-                variant={"sent"}
+                variant={ReqType.outgoing}
                 key={activity.user_id + activity.contact_id}
               />
             ))}
         </div>
       </TabsContent>
-      <TabsContent value="accepted">
+      <TabsContent value="connected">
         <div className="space-y-4">
           {profileActivities
             .filter((activity) => activity.is_accepted)
@@ -163,7 +162,9 @@ const ConnectionsScreen: React.FC<ConnectionsScreenProps> = ({
                 activity={activity}
                 key={activity.user_id + activity.contact_id}
                 variant={
-                  activity.contact_id === user?.unique_id ? "received" : "sent"
+                  activity.contact_id === user?.unique_id
+                    ? ReqType.incoming
+                    : ReqType.outgoing
                 }
               />
             ))}

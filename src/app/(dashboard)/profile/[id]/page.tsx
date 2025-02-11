@@ -98,6 +98,7 @@ export default async function ProfileScreen({
               profileData?.data?.recommendations as ExtendedRecommendations
             }
             tags={profileData?.data?.tags as SelectTag[]}
+            editable={false}
           />
         </TabsContent>
         <TabsContent value="rewards">

@@ -17,8 +17,8 @@ const ConnectionsPage = async () => {
   try {
     const res = await GetConnectionRequestsAction()
     if (res.success && res.data) {
-      incomingActivities = res.data.incoming
-      outgoingActivities = res.data.outgoing
+      incomingActivities = res.data.incoming ?? []
+      outgoingActivities = res.data.outgoing ?? []
     } else {
       throw res.error
     }
@@ -56,10 +56,10 @@ const ConnectionsPage = async () => {
               Outgoing
             </TabsTrigger>
             <TabsTrigger
-              value="accepted"
+              value="connected"
               className="text-sm px-3 py-1 flex-1 min-w-[120px]"
             >
-              Accepted
+              Connected
             </TabsTrigger>
           </TabsList>
           <ConnectionsScreen

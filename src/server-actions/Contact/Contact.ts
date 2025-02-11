@@ -3,10 +3,9 @@
 import {
   CreateContact,
   DeleteContact,
-  GetOutgoingConnectionRequests,
-  GetIncomingConnectionRequests,
   UpdateContact,
-  GetContact
+  GetContact,
+  GetConnectionRequests
 } from "@/src/db/data-access/contact/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
@@ -100,20 +99,21 @@ export const GetConnectionRequestsAction = CreateServerAction(
     try {
       const user_id = (await AuthUserAction())?.unique_id
       if (user_id) {
-        const IncomingConnectionReqs = (
-          await GetIncomingConnectionRequests(user_id)
-        ).map((connectionReq) => ({
-          ...connectionReq,
-          // Normalize the direction - always return the other user
-          otherUser: connectionReq.user
-        }))
-        const OutgoingConnectionReqs = (
-          await GetOutgoingConnectionRequests(user_id)
-        ).map((connectionReq) => ({
-          ...connectionReq,
-          // Normalize the direction - always return the other user
-          otherUser: connectionReq.contact
-        }))
+        const connectionRequests = await GetConnectionRequests(user_id)
+        const IncomingConnectionReqs = connectionRequests?.contacts.map(
+          (connectionReq) => ({
+            ...connectionReq,
+            // Normalize the direction - always return the other user
+            otherUser: connectionReq.user
+          })
+        )
+        const OutgoingConnectionReqs = connectionRequests?.users.map(
+          (connectionReq) => ({
+            ...connectionReq,
+            // Normalize the direction - always return the other user
+            otherUser: connectionReq.contact
+          })
+        )
         return {
           success: true,
           data: {
