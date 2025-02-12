@@ -45,7 +45,6 @@ const Notifications: React.FC = () => {
       const { unsubscribe } = joinNotificationChannel(
         userId,
         (request) => {
-          console.log("notification", request)
           setNotifications((prev) => [
             {
               ...request
@@ -55,8 +54,6 @@ const Notifications: React.FC = () => {
         },
         ["notification"]
       )
-      console.log("unsub", unsubscribe, userId)
-
       return () => {
         unsubscribe()
       }
