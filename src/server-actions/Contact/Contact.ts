@@ -22,38 +22,53 @@ export const CreateContactAction = CreateServerAction(
   async (contact_id: string) => {
     try {
       const user = await AuthUserAction()
-      let newRequest
-      if (user) {
-        newRequest = await CreateContact(user.unique_id, contact_id)
-        if (newRequest[0]) {
-          const realtimeChannel = AblyClientRest.channels.get(contact_id)
-          await realtimeChannel.publish(ActivityType.request, {
-            ...newRequest[0],
-            otherUser: user
-          })
-          try {
-            const data = await AddNotification({
-              created_by: user.unique_id,
-              received_by: contact_id,
-              type: NotificationType.requestSent,
-              entity_type: NotificationEntity.request,
-              entity_id: `${newRequest[0].user_id}-${newRequest[0].contact_id}`
-            })
-            const realTimeChannel = AblyClientRest.channels.get(contact_id)
-            await realTimeChannel.publish("notification", {
-              ...data,
-              creator: user
-            })
-          } catch (error) {
-            console.error(error)
-          }
-        }
-      } else {
+      if (!user) {
         return { error: "Unauthorized", cause: 401 }
       }
-      return { success: true, data: newRequest[0] }
+      const newRequest = await CreateContact(user.unique_id, contact_id)
+      if (!newRequest?.[0]) {
+        return { error: "Failed to create contact", success: false }
+      }
+      const realtimeChannel = AblyClientRest.channels.get(contact_id)
+      realtimeChannel.publish(ActivityType.acceptRequest, {
+        ...newRequest[0],
+        otherUser: user
+      })
+      // Ensure we're returning a plain object
+      const sanitizedRequest = {
+        user_id: newRequest[0].user_id,
+        contact_id: newRequest[0].contact_id,
+        is_accepted: newRequest[0].is_accepted,
+        is_requested: newRequest[0].is_requested,
+        created_at: newRequest[0].created_at
+          ? new Date(newRequest[0].created_at).toISOString()
+          : null,
+        updated_at: newRequest[0].updated_at
+          ? new Date(newRequest[0].updated_at).toISOString()
+          : null
+      }
+      try {
+        const data = await AddNotification({
+          created_by: user.unique_id,
+          received_by: contact_id,
+          type: NotificationType.requestSent,
+          entity_type: NotificationEntity.request,
+          entity_id: `${newRequest[0].user_id}${newRequest[0].contact_id}`
+        })
+        const realTimeChannel = AblyClientRest.channels.get(contact_id)
+        await realTimeChannel.publish("notification", {
+          ...data,
+          creator: user
+        })
+      } catch (error) {
+        console.error("Failed to add notification:", error)
+      }
+      return { success: true, data: sanitizedRequest }
     } catch (error) {
-      return { error: error }
+      return {
+        error: error instanceof Error ? error.message : "Unknown error",
+        success: false
+      }
     }
   }
 )
