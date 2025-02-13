@@ -68,9 +68,9 @@ const ProfileFollowActions = ({ user }: Props) => {
       const { unsubscribe } = joinRequestChannel(
         authUser.unique_id,
         (request, activity) => {
-          if (user.unique_id === request.contact_id) {
-            setConnectionContact({ ...request })
-          }
+          activity !== ActivityType.delRequest
+            ? setConnectionContact({ ...request })
+            : setConnectionContact(undefined)
         },
         [
           ActivityType.acceptRequest,
@@ -140,10 +140,13 @@ const ProfileFollowActions = ({ user }: Props) => {
   const handleAcceptConnection = async () => {
     if (!connectionContact?.user_id || !connectionContact?.contact_id) return
     try {
-      const res = await acceptConnection(connectionContact?.user_id, connectionContact?.contact_id)
+      const res = await acceptConnection(
+        connectionContact?.user_id,
+        connectionContact?.contact_id
+      )
       if (res?.success && res?.data) {
         if (connectionContact) {
-          setConnectionContact({...res.data})
+          setConnectionContact({ ...res.data })
         }
         toast({
           title: "Connection Accepted",
@@ -174,7 +177,10 @@ const ProfileFollowActions = ({ user }: Props) => {
   const handledeleteContact = async () => {
     if (!connectionContact?.user_id || !connectionContact?.contact_id) return
     try {
-      const res = await deleteContact(connectionContact?.user_id, connectionContact?.contact_id)
+      const res = await deleteContact(
+        connectionContact?.user_id,
+        connectionContact?.contact_id
+      )
       if (res?.success) {
         if (connectionContact) {
           setConnectionContact({
