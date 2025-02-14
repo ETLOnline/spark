@@ -14,7 +14,7 @@ import {
   CardHeader
 } from "@/src/components/ui/card"
 import { Label } from "@/src/components/ui/label"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
   Select,
   SelectContent,
@@ -260,10 +260,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         {variant === "posts" && (
           <div className="mt-4">
             <Label htmlFor="hashtags">Hashtags</Label>
-            <TagsInput
-              tags={hashtags}
-              updateTags={setHashtags}
-            />
+            <TagsInput tags={hashtags} updateTags={setHashtags} />
           </div>
         )}
       </CardContent>

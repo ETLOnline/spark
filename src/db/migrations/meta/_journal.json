@@ -162,6 +162,13 @@
       "when": 1739392463715,
       "tag": "0021_chief_epoch",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "6",
+      "when": 1739533351611,
+      "tag": "0022_flippant_yellowjacket",
+      "breakpoints": true
     }
   ]
 }
