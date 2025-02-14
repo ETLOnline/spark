@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "a85ac071-2393-45d7-b387-f6c79a064017",
-  "prevId": "caba835d-86a4-494b-b964-495ec6bf8f6c",
+  "id": "988072a6-b3cb-412a-9bb2-949054cb22d0",
+  "prevId": "2509623f-7851-4e3c-bf50-45214ad1c135",
   "tables": {
     "activities": {
       "name": "activities",
@@ -277,7 +277,8 @@
           "name": "metadata",
           "type": "text",
           "primaryKey": false,
-          "notNull": false},
+          "notNull": false
+        },
         "location": {
           "name": "location",
           "type": "text",
@@ -843,10 +844,7 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "user_chats_user_id_chat_id_pk": {
-          "columns": [
-            "user_id",
-            "chat_id"
-          ],
+          "columns": ["user_id", "chat_id"],
           "name": "user_chats_user_id_chat_id_pk"
         }
       },
@@ -937,10 +935,7 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "user_contacts_user_id_contact_id_pk": {
-          "columns": [
-            "user_id",
-            "contact_id"
-          ],
+          "columns": ["user_id", "contact_id"],
           "name": "user_contacts_user_id_contact_id_pk"
         }
       },
@@ -1096,16 +1091,12 @@
       "indexes": {
         "users_email_unique": {
           "name": "users_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": true
         },
         "users_external_auth_id_unique": {
           "name": "users_external_auth_id_unique",
-          "columns": [
-            "external_auth_id"
-          ],
+          "columns": ["external_auth_id"],
           "isUnique": true
         }
       },

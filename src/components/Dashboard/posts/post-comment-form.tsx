@@ -10,7 +10,7 @@ import { userStore } from "@/src/store/user/userStore"
 import { useToast } from "@/src/hooks/use-toast"
 
 type PostCommentFormProps = {
-  postId: number
+  postId: string
 }
 
 const PostCommentForm: React.FC<PostCommentFormProps> = ({ postId }) => {
@@ -30,7 +30,7 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({ postId }) => {
 
   const name = `${user?.first_name} ${user?.last_name}`
 
-  const handleAddComment = async (postId: number) => {
+  const handleAddComment = async (postId: string) => {
     try {
       const response = await createComment(postId, commentText.current)
       if (response?.data) {

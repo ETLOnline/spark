@@ -891,14 +891,6 @@
           "autoincrement": false,
           "default": 0
         },
-        "is_followed_by": {
-          "name": "is_followed_by",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
         "updated_at": {
           "name": "updated_at",
           "type": "text",
