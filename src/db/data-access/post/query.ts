@@ -4,6 +4,7 @@ import {
   commentsTable,
   InsertComment,
   InsertFilePost,
+  InsertLike,
   InsertPollOption,
   InsertPollVote,
   InsertPost,

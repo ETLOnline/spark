@@ -14,7 +14,7 @@ import {
   CardHeader
 } from "@/src/components/ui/card"
 import { Label } from "@/src/components/ui/label"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
   Select,
   SelectContent,
