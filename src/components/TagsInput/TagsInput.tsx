@@ -10,14 +10,35 @@ import {
 import { Input } from "@/src/components/ui/input"
 import { Button } from "@/src/components/ui/button"
 
-type TagsInputProps = {
-  tags: Tag[]
-  updateTags: (tags: Tag[] | ((tags: Tag[]) => Tag[])) => void
-  suggestions: Tag[]
-  onChange: (tagName: string) => void
-  loadingSuggestions: boolean
+type BaseTagsInputProps = {
   autocomplete?: boolean
+  placeholder?: string
 }
+
+type TagsObjUpdaterArgs = Tag[] | ((tags: Tag[]) => Tag[])
+
+type TagsStringUpdaterArgs = string[] | ((tags: string[]) => string[])
+
+type AutocompleteProps = {
+  autocomplete: true
+  tags: Tag[]
+  updateTags: (tags: TagsObjUpdaterArgs) => void
+  suggestions: Tag[]
+  loadingSuggestions: boolean
+  onChange: (tagName: string) => void
+}
+
+type NoAutocompleteProps = {
+  autocomplete?: false
+  tags: string[]
+  updateTags: (tags: TagsStringUpdaterArgs) => void
+  suggestions?: Tag[]
+  loadingSuggestions?: boolean
+  onChange?: (tagName: string) => void
+}
+
+type TagsInputProps = BaseTagsInputProps &
+  (AutocompleteProps | NoAutocompleteProps)
 
 type SuggestionButtonProps = {
   hover: boolean
@@ -42,10 +63,11 @@ const SuggestionButton: React.FC<SuggestionButtonProps> = ({
 const TagsInput: React.FC<TagsInputProps> = ({
   tags,
   updateTags,
-  suggestions,
-  loadingSuggestions,
-  onChange,
-  autocomplete = true
+  suggestions = [],
+  loadingSuggestions = false,
+  onChange = () => {},
+  autocomplete = false,
+  placeholder
 }) => {
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false)
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] =
@@ -82,53 +104,75 @@ const TagsInput: React.FC<TagsInputProps> = ({
       } else {
         onChange(e.target.value)
       }
-    } else {
-      setShowSuggestions(false)
     }
   }
 
   const handleNewTag = () => {
-    if (
-      !tags.some(
-        (tag) =>
-          tag?.name.toLowerCase() ===
-            (tagInput.current as HTMLInputElement).value.toLowerCase() &&
-          !tag.deleted
-      )
-    ) {
-      updateTags((tags: Tag[]) => [
-        ...tags,
-        {
-          name:
-            (tagInput.current as HTMLInputElement).value
-              .trim()[0]
-              .toUpperCase() +
-            (tagInput.current as HTMLInputElement).value
-              .substring(1)
-              .toLowerCase(),
-          status: TagStatus.new
-        }
-      ])
-      setShowSuggestions(false)
-      ;(tagInput.current as HTMLInputElement).value = ""
+    const inputValue = (tagInput.current as HTMLInputElement).value
+    if (autocomplete) {
+      if (
+        !(tags as Tag[]).some(
+          (tag: Tag) =>
+            tag?.name.toLowerCase() === inputValue.toLowerCase() && !tag.deleted
+        )
+      ) {
+        const tagUpdater = updateTags as (tags: TagsObjUpdaterArgs) => void
+        tagUpdater((prevTags: Tag[]) => [
+          ...prevTags,
+          {
+            name:
+              inputValue.trim()[0].toUpperCase() +
+              inputValue.substring(1).toLowerCase(),
+            status: TagStatus.new
+          }
+        ])
+      }
+    } else {
+      if (
+        !(tags as string[]).some(
+          (tag: string) => tag.toLowerCase() === inputValue.toLowerCase()
+        )
+      ) {
+        const tagUpdater = updateTags as (tags: TagsStringUpdaterArgs) => void
+        tagUpdater((prevTags: string[]) => [
+          ...prevTags,
+          inputValue.trim()[0].toUpperCase() +
+            inputValue.substring(1).toLowerCase()
+        ])
+      }
     }
+    setShowSuggestions(false)
+    autocomplete && ((tagInput.current as HTMLInputElement).value = "")
   }
 
   const removeTag = (indexToRemove: number) => {
-    updateTags((tags) =>
-      tags.with(indexToRemove, { ...tags[indexToRemove], deleted: true })
-    )
+    if (autocomplete) {
+      const tagUpdater = updateTags as (tags: TagsObjUpdaterArgs) => void
+      tagUpdater((prevTags: Tag[]) =>
+        prevTags.with(indexToRemove, {
+          ...prevTags[indexToRemove],
+          deleted: true
+        })
+      )
+    } else {
+      const tagUpdater = updateTags as (tags: TagsStringUpdaterArgs) => void
+      tagUpdater((prevTags: string[]) =>
+        prevTags.filter((_, index) => index !== indexToRemove)
+      )
+    }
   }
 
   const selectSuggestion = (suggestion: Tag) => {
     if (
-      !tags.some(
+      autocomplete &&
+      !(tags as Tag[]).some(
         (tag) =>
           tag?.name.toLowerCase() === suggestion.name.toLowerCase() &&
           !tag.deleted
       )
     ) {
-      updateTags((tags: Tag[]) => [...tags, suggestion])
+      const tagUpdater = updateTags as (tags: TagsObjUpdaterArgs) => void
+      tagUpdater((prevTags: Tag[]) => [...prevTags, suggestion])
     }
     ;(tagInput.current as HTMLInputElement).value = ""
     setShowSuggestions(false)
@@ -148,12 +192,11 @@ const TagsInput: React.FC<TagsInputProps> = ({
         }
       }
     } else if (e.key === "ArrowDown") {
-      if(suggestions.length){
+      if (suggestions.length) {
         setSelectedSuggestionIndex((prev) => (prev + 1) % suggestions.length)
-      }else{
+      } else {
         setSelectNewTag(true)
       }
-       
     } else if (e.key === "ArrowUp") {
       if (suggestions.length) {
         setSelectedSuggestionIndex(
@@ -163,17 +206,46 @@ const TagsInput: React.FC<TagsInputProps> = ({
     }
   }
 
+  const enterTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      if (tagInput.current?.value) {
+        handleNewTag()
+        onChange && onChange(tagInput.current?.value)
+        ;(tagInput.current as HTMLInputElement).value = ""
+      }
+    }
+  }
+
   return (
     <div className="relative w-full">
       <div className="flex flex-wrap gap-2 rounded-md border border-input bg-transparent p-2 focus-within:ring-1 focus-within:ring-ring">
-        {tags.map(
-          (tag, i) =>
-            !tag.deleted && (
+        {autocomplete
+          ? (tags as Tag[]).map(
+              (tag, i) =>
+                !tag.deleted && (
+                  <span
+                    key={tag?.id ?? tag?.name}
+                    className="flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-sm"
+                  >
+                    {tag?.name}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeTag(i)}
+                      className="h-4 w-4 p-0 hover:bg-muted-foreground/20"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </span>
+                )
+            )
+          : (tags as string[]).map((tag, i) => (
               <span
-                key={tag?.id ?? tag?.name}
+                key={tag}
                 className="flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-sm"
               >
-                {tag?.name}
+                {tag}
                 <Button
                   variant="ghost"
                   size="sm"
@@ -183,15 +255,20 @@ const TagsInput: React.FC<TagsInputProps> = ({
                   <X className="h-3 w-3" />
                 </Button>
               </span>
-            )
-        )}
+            ))}
         <Input
           type="text"
           ref={tagInput}
           onChange={handleInputChange}
-          onKeyDown={suggestionController}
+          onKeyDown={autocomplete ? suggestionController : enterTag}
           className="flex-1 border-0 bg-transparent p-0 focus-visible:ring-0"
-          placeholder={tags.length === 0 ? "Type to add tags..." : ""}
+          placeholder={
+            tags.length === 0
+              ? placeholder
+                ? placeholder
+                : "Type to add tags..."
+              : ""
+          }
         />
       </div>
       {showSuggestions && (tagInput.current as HTMLInputElement).value && (
@@ -206,7 +283,7 @@ const TagsInput: React.FC<TagsInputProps> = ({
             </CommandGroup>
           ) : (
             <CommandGroup className="max-h-48 overflow-auto">
-              {suggestions.map((suggestion, index) => (
+              {suggestions.map((suggestion: Tag, index: number) => (
                 <SuggestionButton
                   key={suggestion.id}
                   hover={index === selectedSuggestionIndex}

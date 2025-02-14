@@ -1,45 +1,32 @@
 "use client"
 
 import { Button } from "@/src/components/ui/button"
-import { useState } from "react"
+import { useRef } from "react"
 import { Input } from "@/src/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import { Post, PostFile, PostPoll } from "./types/posts-types.d"
+import { postStore } from "@/src/store/post/postStore"
+import { useAtom } from "jotai"
 
 type Props = {
-  posts: (Post | PostFile | PostPoll)[]
-  setPosts: (posts: Post[]) => void
-  postId: string
+  postId: number
 }
 
-const PostCommentForm: React.FC<Props> = ({ posts, setPosts, postId }) => {
-  const [newComment, setNewComment] = useState<{ [key: string]: string }>({})
+const PostCommentForm: React.FC<Props> = ({ postId }) => {
+  const commentText = useRef<string>("")
 
-  const handleAddComment = (postId: string) => {
+  const [posts, setPosts] = useAtom(postStore.posts)
+
+  const handleAddComment = (postId: number) => {
     const updatedPosts = posts.map((post) => {
       if (post.id === postId) {
         return {
           ...post,
-          comments: [
-            ...post.comments,
-            {
-              id: `c${post.comments.length + 1}`,
-              author: { name: "Current User", avatar: "/avatars/04.png" },
-              content: newComment[postId] || "",
-              createdAt: new Date().toISOString()
-            }
-          ]
+          comments: [...post.comments]
         }
       }
       return post
     })
-    setPosts(
-      updatedPosts.filter(
-        (post): post is Post =>
-          "content" in post && typeof post.content === "string"
-      )
-    )
-    setNewComment({ ...newComment, [postId]: "" })
+    commentText.current = ""
   }
 
   return (
@@ -50,13 +37,7 @@ const PostCommentForm: React.FC<Props> = ({ posts, setPosts, postId }) => {
       </Avatar>
       <Input
         placeholder="Add a comment..."
-        value={newComment[postId] || ""}
-        onChange={(e) =>
-          setNewComment({
-            ...newComment,
-            [postId]: e.target.value
-          })
-        }
+        onChange={(e) => (commentText.current = e.target.value)}
         className="flex-1"
       />
       <Button
