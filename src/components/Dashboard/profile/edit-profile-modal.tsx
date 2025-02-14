@@ -222,6 +222,7 @@ const EditProfileModal: React.FC = () => {
                   suggestions={skillSuggestions}
                   onChange={searchSkills}
                   loadingSuggestions={searchSkillsLoading}
+                  autocomplete
                 />
                 <div className={"flex justify-between mt-1"}>
                   <p
@@ -248,6 +249,7 @@ const EditProfileModal: React.FC = () => {
                   suggestions={interestSuggestions}
                   onChange={searchInterests}
                   loadingSuggestions={searchInterestsLoading}
+                  autocomplete
                 />
                 <div className={"flex justify-between mt-1"}>
                   <p

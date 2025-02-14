@@ -1,4 +1,9 @@
-export type PostType = "text" | "image" | "poll" | "file"
+export enum PostType {
+  text = "text",
+  image = "image",
+  poll = "poll",
+  file = "file"
+}
 
 export type Post = {
   id: string
@@ -26,10 +31,10 @@ export type PostPoll = Post & { options: string[] }
 export type NewPost = {
   content: string | File
   type: PostType
-  hashtags: string[]
+  hashtags?: string[]
   options?: string[]
   fileName?: string
-  fileSize?: number
+  fileSize?: string
   category?: string
 }
 
