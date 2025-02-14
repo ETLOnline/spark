@@ -3,7 +3,10 @@
 import {
   addPollOptions,
   createFilePost,
-  createPost
+  createPost,
+  likePost,
+  unlikePost,
+  isPostLiked
 } from "@/src/db/data-access/post/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
@@ -79,6 +82,51 @@ export const createPollPostAction = CreateServerAction(
       }
     } catch (error: any) {
       return { success: false, error }
+    }
+  }
+)
+
+export const toggleLikeAction = CreateServerAction(
+  true,
+  async (postId: number, isLiked: boolean) => {
+    try {
+      const userId = (await AuthUserAction())?.unique_id
+      if (userId) {
+        if (isLiked) {
+          const data = await unlikePost(postId, userId)
+          return { success: true, data }
+        } else {
+          const data = await likePost(postId, userId)
+          return { success: true, data }
+        }
+      } else {
+        throw new Error("Unauthorized", { cause: 401 })
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error
+      }
+    }
+  }
+)
+
+export const isPostLikedAction = CreateServerAction(
+  true,
+  async (postId: number) => {
+    try {
+      const userId = (await AuthUserAction())?.unique_id
+      if (userId) {
+        const isLiked = await isPostLiked(postId, userId)
+        return { success: true, data: isLiked }
+      } else {
+        throw new Error("Unauthorized", { cause: 401 })
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error
+      }
     }
   }
 )

@@ -25,6 +25,8 @@ import { Separator } from "@/src/components/ui/separator"
 import PostInteractions from "./posts/post-interactions"
 import PostComments from "./posts/post-comments"
 import PostCommentForm from "./posts/post-comment-form"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { isPostLikedAction } from "@/src/server-actions/Post/Post"
 
 type PostFeedProps = {
   fetchedPosts: (SelectPost | SelectFilePost | SelectPollPost)[]
@@ -81,7 +83,11 @@ const PostFeed: React.FC<PostFeedProps> = ({ fetchedPosts }) => {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col items-start space-y-4">
-              <PostInteractions likes={post.likes} comments={post.comments} />
+              <PostInteractions
+                postId={post.id}
+                likes={post.likes}
+                comments={post.comments}
+              />
               <Separator />
               <div className="w-full space-y-4">
                 {post.postComments.map((comment: SelectComment) => (

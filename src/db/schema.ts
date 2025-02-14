@@ -482,7 +482,7 @@ export const postHashtagsRelations = relations(
 export type InsertPostHashtag = typeof postHashtagsTable.$inferInsert
 export type SelectPostHashtag = typeof postHashtagsTable.$inferSelect
 
-const likesTable = sqliteTable(
+export const likesTable = sqliteTable(
   "likes",
   {
     user_id: text().notNull(),
