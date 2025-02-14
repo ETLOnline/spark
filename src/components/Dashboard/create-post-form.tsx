@@ -13,9 +13,8 @@ import {
   CardFooter,
   CardHeader
 } from "@/src/components/ui/card"
-import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Select,
   SelectContent,
@@ -24,18 +23,27 @@ import {
   SelectValue
 } from "@/src/components/ui/select"
 import { Textarea } from "../ui/textarea"
-import {
-  NewPost,
-  Post,
-  PostFile,
-  PostPoll,
-  PostType
-} from "./posts/types/posts-types.d"
+import { NewPost, PostType } from "./posts/types/posts-types.d"
 import CreatePostInput from "./posts/create-post-input"
+import {
+  createFilePostAction,
+  createPollPostAction,
+  createPostAction
+} from "@/src/server-actions/Post/Post"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { useAtomValue, useSetAtom } from "jotai"
+import { postStore } from "@/src/store/post/postStore"
+import {
+  SelectFilePost,
+  SelectPollPost,
+  SelectPost,
+  SelectUser
+} from "@/src/db/schema"
+import { useToast } from "@/src/hooks/use-toast"
+import TagsInput from "../TagsInput/TagsInput"
+import { userStore } from "@/src/store/user/userStore"
 
 type Props = {
-  setPosts: (posts: (Post | PostFile | PostPoll)[]) => void
-  posts: (Post | PostFile | PostPoll)[]
   variant?: "posts" | "spaces"
 }
 
@@ -53,46 +61,115 @@ const categories = [
   "IoT"
 ]
 
-const CreatePostForm: React.FC<Props> = ({
-  setPosts,
-  posts,
-  variant = "posts"
-}) => {
+const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   const [newPost, setNewPost] = useState<NewPost>({
     content: "",
-    type: "text" as PostType,
+    type: PostType.text as PostType,
     hashtags: []
   })
+  const [pollOptions, setPollOptions] = useState<string[]>([])
+  const [hashtags, setHashtags] = useState<string[]>([])
 
-  const handleCreatePost = () => {
-    const tempNewPostObj: Post = {
-      id: (posts.length + 1).toString(),
-      author: { name: "Current User", avatar: "/avatars/04.png" },
-      content: newPost.content as string,
-      type: newPost.type,
-      likes: 0,
-      comments: [],
-      hashtags: newPost.hashtags.filter((tag: string) => tag.trim() !== ""),
-      createdAt: new Date().toISOString()
+  const setPosts = useSetAtom(postStore.posts)
+  const authUser = useAtomValue(userStore.AuthUser)
+
+  const { toast } = useToast()
+
+  const [createPostLoading, createdPost, createPostError, createPost] =
+    useServerAction(createPostAction)
+  const [
+    createFilePostLoading,
+    createdFilePost,
+    createFilePostError,
+    createFilePost
+  ] = useServerAction(createFilePostAction)
+  const [
+    createPollPostLoading,
+    createdPollPost,
+    createPollPostError,
+    createPollPost
+  ] = useServerAction(createPollPostAction)
+
+  const handleCreatePost = async () => {
+    try {
+      let postData: SelectPost | SelectFilePost | SelectPollPost =
+        {} as SelectPost
+      if (newPost.type === PostType.text || newPost.type === PostType.image) {
+        const post = await createPost(newPost.content as string, newPost.type)
+        if (post && post.data && post.data[0]) {
+          postData = {
+            ...post.data[0],
+            author: authUser as SelectUser,
+            hashtags: [],
+            postComments: []
+          }
+        } else if (post?.error) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Error creating post please try again!"
+          })
+        }
+      } else if (newPost.type === PostType.poll) {
+        const post = await createPollPost(
+          newPost.content as string,
+          newPost.type,
+          pollOptions
+        )
+        setPollOptions([])
+        if (post && post.data) {
+          postData = {
+            ...post.data,
+            author: authUser as SelectUser,
+            hashtags: [],
+            postComments: []
+          }
+        } else if (post?.error) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Error creating post please try again!"
+          })
+        }
+      } else {
+        const post = await createFilePost(
+          newPost.content as string,
+          newPost.type,
+          newPost.fileSize as string,
+          newPost.fileName as string
+        )
+        if (post && post.data && post.data[0]) {
+          postData = {
+            ...post.data[0],
+            author: authUser as SelectUser,
+            hashtags: [],
+            postComments: []
+          }
+        } else if (post?.error) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Error creating post please try again!"
+          })
+        }
+      }
+      if (postData.id) {
+        setPosts((posts) => [
+          postData as unknown as SelectPost | SelectFilePost | SelectPollPost,
+          ...posts
+        ])
+      }
+      toast({
+        title: "Posted!"
+      })
+      setNewPost({ content: "", type: PostType.text, hashtags: [] })
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Error creating post please try again!"
+      })
     }
-    const newPostObj: Post | PostFile | PostPoll = newPost.fileName
-      ? ({
-          ...tempNewPostObj,
-          content: newPost.content as File,
-          fileName: newPost.fileName as string,
-          fileSize: newPost.fileSize as number
-        } as PostFile)
-      : newPost.options
-      ? ({
-          ...tempNewPostObj,
-          options: newPost.options
-        } as PostPoll)
-      : ({
-          ...tempNewPostObj
-        } as Post)
-
-    setPosts([newPostObj, ...posts])
-    setNewPost({ content: "", type: "text", hashtags: [] })
   }
 
   return (
@@ -111,28 +188,30 @@ const CreatePostForm: React.FC<Props> = ({
             </TabsList>
             <TabsContent value="text">
               <CreatePostInput
-                type="text"
+                type={PostType.text}
                 setNewPost={setNewPost}
                 newPost={newPost}
               />
             </TabsContent>
             <TabsContent value="image">
               <CreatePostInput
-                type="image"
+                type={PostType.image}
                 setNewPost={setNewPost}
                 newPost={newPost}
               />
             </TabsContent>
             <TabsContent value="poll">
               <CreatePostInput
-                type="poll"
+                type={PostType.poll}
                 setNewPost={setNewPost}
                 newPost={newPost}
+                pollOptions={pollOptions}
+                setPollOptions={setPollOptions}
               />
             </TabsContent>
             <TabsContent value="file">
               <CreatePostInput
-                type="file"
+                type={PostType.file}
                 setNewPost={setNewPost}
                 newPost={newPost}
               />
@@ -180,16 +259,10 @@ const CreatePostForm: React.FC<Props> = ({
         )}
         {variant === "posts" && (
           <div className="mt-4">
-            <Label htmlFor="hashtags">Hashtags (space-separated)</Label>
-            <Input
-              id="hashtags"
-              placeholder="Enter hashtags (e.g., coding webdev)"
-              onChange={(e) =>
-                setNewPost({
-                  ...newPost,
-                  hashtags: e.target.value.split(" ")
-                })
-              }
+            <Label htmlFor="hashtags">Hashtags</Label>
+            <TagsInput
+              tags={hashtags}
+              updateTags={setHashtags}
             />
           </div>
         )}

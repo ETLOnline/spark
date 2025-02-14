@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "2509623f-7851-4e3c-bf50-45214ad1c135",
-  "prevId": "33e7f489-671a-4aa8-8460-b3350dba91c6",
+  "id": "988072a6-b3cb-412a-9bb2-949054cb22d0",
+  "prevId": "2509623f-7851-4e3c-bf50-45214ad1c135",
   "tables": {
     "activities": {
       "name": "activities",
@@ -546,13 +546,6 @@
           "notNull": false,
           "autoincrement": false
         },
-        "link": {
-          "name": "link",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "likes": {
           "name": "likes",
           "type": "integer",
@@ -891,14 +884,6 @@
         },
         "is_following": {
           "name": "is_following",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "is_followed_by": {
-          "name": "is_followed_by",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,

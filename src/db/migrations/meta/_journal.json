@@ -148,6 +148,27 @@
       "when": 1738736737478,
       "tag": "0020_thin_namor",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1739346662472,
+      "tag": "0019_nostalgic_gunslinger",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1739355699546,
+      "tag": "0020_nappy_sprite",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "6",
+      "when": 1739392463715,
+      "tag": "0021_chief_epoch",
+      "breakpoints": true
     }
   ]
 }
