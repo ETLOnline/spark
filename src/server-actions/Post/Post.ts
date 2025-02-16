@@ -6,11 +6,11 @@ import {
   createPost,
   likePost,
   unlikePost,
-  isPostLiked
+  isPostLiked,
+  createComment
 } from "@/src/db/data-access/post/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
-import { InsertPollOption } from "@/src/db/schema"
 
 export const createPostAction = CreateServerAction(
   true,
@@ -119,6 +119,30 @@ export const isPostLikedAction = CreateServerAction(
       if (userId) {
         const isLiked = await isPostLiked(postId, userId)
         return { success: true, data: isLiked }
+      } else {
+        throw new Error("Unauthorized", { cause: 401 })
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error
+      }
+    }
+  }
+)
+
+export const createCommentAction = CreateServerAction(
+  true,
+  async (postId: number, content: string) => {
+    try {
+      const user = await AuthUserAction()
+      if (user?.unique_id) {
+        const commentData = await createComment({
+          content,
+          post_id: postId,
+          user_id: user?.unique_id
+        })
+        return { success: true, data: { ...commentData, commentor: user } }
       } else {
         throw new Error("Unauthorized", { cause: 401 })
       }

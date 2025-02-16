@@ -1,7 +1,9 @@
+import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { db } from "../.."
 import {
+  commentsTable,
+  InsertComment,
   InsertFilePost,
-  InsertLike,
   InsertPollOption,
   InsertPost,
   likesTable,
@@ -69,6 +71,25 @@ export const isPostLiked = async (postId: number, userId: string) => {
   const like = await db.query.likesTable.findFirst({
     where: and(eq(likesTable.post_id, postId), eq(likesTable.user_id, userId))
   })
-
   return like !== undefined
+}
+
+export const createComment = async (comment: InsertComment) => {
+  return await db.transaction(async (tx) => {
+    const user = AuthUserAction()
+    // Insert the comment
+    const newComment = await tx
+      .insert(commentsTable)
+      .values(comment)
+      .returning()
+    // Increment comments count in posts table
+    const post = await tx.query.postsTable.findFirst({
+      where: eq(postsTable.id, comment.post_id)
+    })
+    await tx
+      .update(postsTable)
+      .set({ comments: (post?.likes || 0) + 1 })
+      .where(eq(postsTable.id, comment.post_id))
+    return { ...newComment[0] }
+  })
 }
