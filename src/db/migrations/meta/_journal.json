@@ -225,6 +225,34 @@
       "when": 1739533351611,
       "tag": "0022_flippant_yellowjacket",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "6",
+      "when": 1739725075094,
+      "tag": "0023_ambiguous_genesis",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1739730391468,
+      "tag": "0024_smart_puff_adder",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1739767811788,
+      "tag": "0025_large_frightful_four",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "6",
+      "when": 1739775208035,
+      "tag": "0026_nebulous_elektra",
+      "breakpoints": true
     }
   ]
 }
