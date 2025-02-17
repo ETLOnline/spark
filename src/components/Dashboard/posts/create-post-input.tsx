@@ -40,6 +40,7 @@ const CreatePostInput: React.FC<Props> = (props) => {
           type: PostType.text
         })
       }
+      required
       className="min-h-[100px]"
     />
   ) : props.type === "image" ? (
@@ -49,6 +50,7 @@ const CreatePostInput: React.FC<Props> = (props) => {
       onChange={() =>
         props.setNewPost({ ...props.newPost, type: PostType.image })
       }
+      required
     />
   ) : props.type === "poll" ? (
     <div className="flex flex-col space-y-2">
@@ -63,6 +65,7 @@ const CreatePostInput: React.FC<Props> = (props) => {
           })
         }
         className="min-h-[100px]"
+        required
       />
       <TagsInput
         tags={props.pollOptions as string[]}
@@ -72,7 +75,7 @@ const CreatePostInput: React.FC<Props> = (props) => {
     </div>
   ) : (
     props.type === "file" && (
-      <Input type={PostType.file} onChange={handleFileUpload} />
+      <Input type={PostType.file} onChange={handleFileUpload} required/>
     )
   )
 }
