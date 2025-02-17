@@ -26,7 +26,7 @@ import PostInteractions from "./posts/post-interactions"
 import PostComments from "./posts/post-comments"
 import PostCommentForm from "./posts/post-comment-form"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { isPostLikedAction } from "@/src/server-actions/Post/Post"
+import { IsPostLikedAction } from "@/src/server-actions/Post/Post"
 
 type PostFeedProps = {
   fetchedPosts: (SelectPost | SelectFilePost | SelectPollPost)[]
