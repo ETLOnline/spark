@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { SidebarTrigger } from "../ui/sidebar";
-import { Separator } from "@radix-ui/react-separator";
+import { SidebarTrigger } from "../ui/sidebar"
+import { Separator } from "@radix-ui/react-separator"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,11 +10,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "../ui/breadcrumb"
-import ModeToggle  from "../ThemeProvider/ThemeToggle"
+import ModeToggle from "../ThemeProvider/ThemeToggle"
 import { usePathname } from "next/navigation"
-import CommandCenter  from "./CommandCenter/CommandCenter"
+import CommandCenter from "./CommandCenter/CommandCenter"
 import { SignedIn } from "@clerk/nextjs"
 import pageMeta, { PageMeta } from "@/src/utils/constants"
+import Notifications from "./Notifications/Notifications"
 
 type Crumb = {
   href: string
@@ -67,10 +68,13 @@ const Header = () => {
         <SignedIn>
           <CommandCenter />
         </SignedIn>
-        <ModeToggle />
+        <div className="flex items-center gap-2">
+          <Notifications />
+          <ModeToggle />
+        </div>
       </div>
     </header>
-  );
-};
+  )
+}
 
-export default Header;
+export default Header

@@ -20,7 +20,7 @@ import { joinRequestChannel } from "@/src/utils/helpers"
 import { useAtomValue } from "jotai"
 import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
-import { ActivityType } from "../../ProfileActivity/types/activity.types.d"
+import { ActivityType } from "../../Connections/types/connections.types.d"
 
 interface Props {
   user: SelectUser
@@ -68,9 +68,9 @@ const ProfileFollowActions = ({ user }: Props) => {
       const { unsubscribe } = joinRequestChannel(
         authUser.unique_id,
         (request, activity) => {
-          if (user.unique_id === request.contact_id) {
-            setConnectionContact({ ...request })
-          }
+          activity !== ActivityType.delRequest
+            ? setConnectionContact({ ...request })
+            : setConnectionContact(undefined)
         },
         [
           ActivityType.acceptRequest,
@@ -93,10 +93,8 @@ const ProfileFollowActions = ({ user }: Props) => {
     if (!authUser?.unique_id || !user.unique_id) return
     try {
       const res = await createContact(user.unique_id)
-      if (res?.success) {
-        if (connectionContact) {
-          setConnectionContact({ ...connectionContact, is_requested: 1 })
-        }
+      if (res?.success && res?.data) {
+        setConnectionContact({ ...res.data })
         toast({
           title: "Connection Request Sent!",
           duration: 3000
@@ -140,16 +138,15 @@ const ProfileFollowActions = ({ user }: Props) => {
   }
 
   const handleAcceptConnection = async () => {
-    if (!authUser?.unique_id || !user.unique_id) return
+    if (!connectionContact?.user_id || !connectionContact?.contact_id) return
     try {
-      const res = await acceptConnection(authUser?.unique_id, user.unique_id)
-      if (res?.success) {
+      const res = await acceptConnection(
+        connectionContact?.user_id,
+        connectionContact?.contact_id
+      )
+      if (res?.success && res?.data) {
         if (connectionContact) {
-          setConnectionContact({
-            ...connectionContact,
-            is_accepted: 1,
-            is_requested: 0
-          })
+          setConnectionContact({ ...res.data })
         }
         toast({
           title: "Connection Accepted",
@@ -178,9 +175,12 @@ const ProfileFollowActions = ({ user }: Props) => {
   }
 
   const handledeleteContact = async () => {
-    if (!authUser?.unique_id || !user.unique_id) return
+    if (!connectionContact?.user_id || !connectionContact?.contact_id) return
     try {
-      const res = await deleteContact(authUser?.unique_id, user.unique_id)
+      const res = await deleteContact(
+        connectionContact?.user_id,
+        connectionContact?.contact_id
+      )
       if (res?.success) {
         if (connectionContact) {
           setConnectionContact({

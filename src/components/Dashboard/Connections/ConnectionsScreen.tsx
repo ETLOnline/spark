@@ -11,17 +11,17 @@ import {
   ActivityType,
   ProfileActivity,
   ReqType
-} from "./types/activity.types.d"
+} from "./types/connections.types.d"
 import { useToast } from "@/src/hooks/use-toast"
 import { joinRequestChannel } from "@/src/utils/helpers"
 import moment from "moment"
 
-type ActivityScreenProps = {
+type ConnectionsScreenProps = {
   incomingActivities: ProfileActivity[]
   outgoingActivities: ProfileActivity[]
 }
 
-const ActivityScreen: React.FC<ActivityScreenProps> = ({
+const ConnectionsScreen: React.FC<ConnectionsScreenProps> = ({
   incomingActivities,
   outgoingActivities
 }) => {
@@ -174,4 +174,4 @@ const ActivityScreen: React.FC<ActivityScreenProps> = ({
   )
 }
 
-export default ActivityScreen
+export default ConnectionsScreen

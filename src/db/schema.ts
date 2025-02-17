@@ -48,6 +48,9 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   }),
   recommendations: many(recommendationsTable, {
     relationName: "recommendationToReceiver"
+  }),
+  notifications: many(notificationsTable, {
+    relationName: "notificationToUser"
   })
 }))
 
@@ -318,21 +321,53 @@ export const recommendationsTable = sqliteTable("recommendations", {
   ...timestamps
 })
 
-export const recommendationsRelations = relations(recommendationsTable, ({ one }) => ({
-  recommender: one(usersTable, {
-    fields: [recommendationsTable.recommender_id],
-    references: [usersTable.unique_id],
-    relationName: "recommendationToUser"
-  }),
-  receiver: one(usersTable, {
-    fields: [recommendationsTable.receiver_id],
-    references: [usersTable.unique_id],
-    relationName: "recommendationToReceiver"
+export const recommendationsRelations = relations(
+  recommendationsTable,
+  ({ one }) => ({
+    recommender: one(usersTable, {
+      fields: [recommendationsTable.recommender_id],
+      references: [usersTable.unique_id],
+      relationName: "recommendationToUser"
+    }),
+    receiver: one(usersTable, {
+      fields: [recommendationsTable.receiver_id],
+      references: [usersTable.unique_id],
+      relationName: "recommendationToReceiver"
+    })
   })
-}))
+)
 
 export type InsertRecommendation = typeof recommendationsTable.$inferInsert
 export type SelectRecommendation = typeof recommendationsTable.$inferSelect
+
+export const notificationsTable = sqliteTable("notifications", {
+  id: int().primaryKey({ autoIncrement: true }),
+  created_by: text().notNull(),
+  received_by: text().notNull(),
+  type: text().notNull(),
+  link: text(),
+  is_read: int().notNull().default(0),
+  counter: int().notNull().default(0),
+  entity_id: text(),
+  entity_type: text().notNull(),
+  ...timestamps
+})
+
+export const notificationsRelations = relations(
+  notificationsTable,
+  ({ one }) => ({
+    creator: one(usersTable, {
+      fields: [notificationsTable.created_by],
+      references: [usersTable.unique_id],
+      relationName: "notificationToUser"
+    })
+  })
+)
+
+export type InsertNotification = typeof notificationsTable.$inferInsert
+export type SelectNotification = InferSelectModel<typeof notificationsTable> & {
+  creator: SelectUser
+}
 
 export const eventsTable = sqliteTable("events", {
   id: int().primaryKey({ autoIncrement: true }),

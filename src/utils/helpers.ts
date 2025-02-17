@@ -1,4 +1,5 @@
-import { ProfileActivity } from "../components/Dashboard/ProfileActivity/types/activity.types.d"
+import { ProfileActivity } from "../components/Dashboard/Connections/types/connections.types.d"
+import { InsertNotification } from "../db/schema"
 import { AblyClient } from "../services/realtime/AblyClient"
 
 export const joinRequestChannel = (
@@ -38,4 +39,25 @@ export const killConnection = (
       return activity
     })
   )
+}
+
+export const joinNotificationChannel = (
+  channelId: string,
+  onRequestReceived: (
+    notifcation: InsertNotification,
+    activity: string
+  ) => void,
+  channelEvents: string[]
+) => {
+  const channel = AblyClient.channels.get(channelId)
+  // Subscribe to incoming notifications
+  channel.subscribe(channelEvents, (message) => {
+    onRequestReceived(message.data, message.name as string)
+  })
+  // Return functions to send messages and cleanup
+  return {
+    unsubscribe: () => {
+      channel.unsubscribe()
+    }
+  }
 }
