@@ -117,7 +117,17 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         if (post && post.data && post.data[0]) {
           const linkedHashtags = await linkHashtagsToPost(
             post.data[0].id,
-            hashtags.length ? hashtags.map((tag) => tag.name) : []
+            hashtags.length
+              ? hashtags
+                  .filter((tag) => !tag.deleted)
+                  .map((tag) => {
+                    return {
+                      name: tag.name,
+                      count: tag.count,
+                      status: tag.status
+                    }
+                  })
+              : []
           )
           if (linkedHashtags?.error) {
             console.error(

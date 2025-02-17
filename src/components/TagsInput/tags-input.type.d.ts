@@ -3,6 +3,7 @@ export type Tag = {
   id?: number
   status: TagStatus
   deleted?: boolean
+  count?: number
 }
 
 export enum TagStatus {

@@ -22,7 +22,8 @@ const useHashtags = (): UseHashtagsReturn => {
     ? searchedTags.data.map((tag) => ({
         name: tag.name,
         id: tag.id,
-        status: TagStatus.selected as const
+        status: TagStatus.selected as const,
+        count: tag.count
       }))
     : []
 
