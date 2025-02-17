@@ -77,13 +77,6 @@ const eventSchema = z.object({
         message: "Meeting Link  required"
       });
     }
-    if (data.meeting_link && !z.string().url().safeParse(data.meeting_link).success) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["meeting_link"],
-        message: "Invalid URL"
-      })
-    }
     if (data.event_type === "both") {
       if (!data.location) {
         ctx.addIssue({
@@ -99,6 +92,13 @@ const eventSchema = z.object({
           message: "Meeting Link is required"
         });
       }
+    }
+    if (data.meeting_link && !z.string().url().safeParse(data.meeting_link).success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["meeting_link"],
+        message: "Invalid URL"
+      })
     }
   });
 
