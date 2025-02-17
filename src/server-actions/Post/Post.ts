@@ -11,7 +11,8 @@ import {
   VotePoll,
   HasUserVoted,
   GetUserPosts,
-  LinkHashtagsToPost
+  LinkHashtagsToPost,
+  SearchHashtags
 } from "@/src/db/data-access/post/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
@@ -237,6 +238,24 @@ export const LinkHashtagsToPostAction = CreateServerAction(
       return {
         success: false,
         error: error.message || "Failed to link hashtags"
+      }
+    }
+  }
+)
+
+export const SearchHashtagsAction = CreateServerAction(
+  false,
+  async (searchTerm: string) => {
+    try {
+      const hashtags = await SearchHashtags(searchTerm)
+      return {
+        success: true,
+        data: hashtags
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to search hashtags"
       }
     }
   }

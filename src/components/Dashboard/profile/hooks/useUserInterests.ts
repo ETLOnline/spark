@@ -1,8 +1,8 @@
-import { Tag, TagStatus } from "../types/profile-types.d"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { SearchTagsForSuggestionsAction } from "@/src/server-actions/Tag/Tag"
 import { SetStateAction, useAtomValue, useSetAtom } from "jotai"
 import { profileStore } from "@/src/store/profile/profileStore"
+import { Tag, TagStatus } from "@/src/components/TagsInput/tags-input.type.d"
 
 type UseUserInterestsReturn = [
   interests: Tag[], // Current skills
