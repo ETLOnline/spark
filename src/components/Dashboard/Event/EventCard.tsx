@@ -7,29 +7,29 @@ import {
   CardHeader,
   CardTitle,
 } from "../../ui/card";
-import { CalendarDays, Link2, MapPin, TypeOutline, Users } from "lucide-react";
+import { CalendarDays, MapPin, Presentation, Projector, Users } from "lucide-react";
 import { Button } from "../../ui/button";
 import { SelectEvent } from "@/src/db/schema";
 import { useAtomValue } from "jotai";
 import { userStore } from "@/src/store/user/userStore";
 import moment from "moment";
-import Link from "next/link";
+
 
 interface EventcardProps {
   event: SelectEvent;
   setFormModelVisibility: Dispatch<SetStateAction<boolean>>
-  setSelectEvent: Dispatch<SetStateAction<SelectEvent | null>>
+  setSelectedEvent: Dispatch<SetStateAction<SelectEvent | null>>
 }
 
 
 
-const EventCard = ({ event, setFormModelVisibility, setSelectEvent }: EventcardProps) => {
+const EventCard = ({ event, setFormModelVisibility, setSelectedEvent }: EventcardProps) => {
   const authUser = useAtomValue(userStore.AuthUser);
   const localStartDate = moment.utc(event.start_date_time ? event.start_date_time : "").local().format("DD/MM/YYYY hh:mm A");
   const localEndDate = moment.utc(event.end_date_time ? event.end_date_time : "").local().format("DD/MM/YYYY hh:mm A");
 
   function openDialog(event: SelectEvent) {
-    setSelectEvent(event)
+    setSelectedEvent(event)
     setFormModelVisibility(true)
 
   }
@@ -55,32 +55,86 @@ const EventCard = ({ event, setFormModelVisibility, setSelectEvent }: EventcardP
           <span><strong>End Date Time: </strong>{localEndDate}</span>
         </div>
 
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
-          <TypeOutline className="h-4 w-4 text-primary" />
-          <span><strong>Event type: </strong> {event.type}</span>
-        </div>
-
-        {event.type === "Physical" ? (
+        {event.type === "physical" ? (
           <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
             <MapPin className="h-4 w-4 text-primary" />
-            <span><strong>Location: </strong>{event.metadata}</span>
-          </div>
-        ) : (
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
-            <Link2 className="h-4 w-4 text-primary" />
-            <span>
-              <strong>Meeting Link: </strong>
-              <Link target="_blank" rel="noopener noreferrer"
-                href={event.metadata || "#"} className="hover:text-blue-600 hover:underline">
-                {event.metadata}
-              </Link>
+            <span><strong>Location: </strong>
+              {(() => {
+                try {
+                  const metadata = JSON.parse(event.metadata || "{}");
+                  return metadata.location || "";
+                } catch {
+                  return "";
+                }
+              })()}
             </span>
           </div>
+        ) : event.type === "virtual" ? (
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
+            <Presentation className="h-4 w-4 text-primary" />
+            <span>
+              <strong>Meeting Link: </strong>
+              {(() => {
+                const metadata = JSON.parse(event.metadata || "{}");
+                return metadata.meeting_link ? (
+                  <a
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    href={metadata.meeting_link}
+                    className="hover:text-blue-600 hover:underline">
+                    {metadata.meeting_link}
+                  </a>
+                ) : (
+                  ""
+                );
+
+              })()}
+            </span>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
+              <MapPin className="h-4 w-4 text-primary" />
+              <span><strong>Location: </strong>
+                {(() => {
+                  try {
+                    const metadata = JSON.parse(event.metadata || "{}");
+                    return metadata.location || "";
+                  } catch {
+                    return "";
+                  }
+                })()}
+              </span>
+            </div>
+
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
+              <Presentation className="h-4 w-4 text-primary" />
+              <span>
+                <strong>Meeting Link: </strong>
+                {(() => {
+                  const metadata = JSON.parse(event.metadata || "{}");
+                  return metadata.meeting_link ? (
+                    <a
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href={metadata.meeting_link}
+                      className="hover:text-blue-600 hover:underline">
+                      {metadata.meeting_link}
+                    </a>
+                  ) : (
+                    ""
+                  );
+
+                })()}
+              </span>
+            </div>
+          </>
         )}
+
 
         <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
           <Users className="h-4 w-4 text-primary" />
-          <span><strong> attendees: </strong>{0}</span>
+          <span><strong> Attendees: </strong>{0}</span>
         </div>
       </CardContent>
       <CardFooter className="justify-end">
