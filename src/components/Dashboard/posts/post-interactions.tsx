@@ -1,6 +1,6 @@
 import {
-  isPostLikedAction,
-  toggleLikeAction
+  IsPostLikedAction,
+  ToggleLikeAction
 } from "@/src/server-actions/Post/Post"
 import { Button } from "../../ui/button"
 import { MessageCircle, Share2, ThumbsUp } from "lucide-react"
@@ -18,9 +18,9 @@ type Props = {
 
 const PostInteractions: React.FC<Props> = ({ likes, comments, postId }) => {
   const [toggleLikeLoading, toggleLikedPost, toggleLikeError, toggleLike] =
-    useServerAction(toggleLikeAction)
-  const [isPostLikedLoading, isPostLikeddPost, isPostLikedError, isPostLiked] =
-    useServerAction(isPostLikedAction)
+    useServerAction(ToggleLikeAction)
+  const [IsPostLikedLoading, IsPostLikeddPost, IsPostLikedError, IsPostLiked] =
+    useServerAction(IsPostLikedAction)
 
   const [isLiked, setIsLiked] = useState<boolean>(false)
 
@@ -30,7 +30,7 @@ const PostInteractions: React.FC<Props> = ({ likes, comments, postId }) => {
 
   useEffect(() => {
     ;(async () => {
-      setIsLiked((await isPostLiked(postId))?.data as boolean)
+      setIsLiked((await IsPostLiked(postId))?.data as boolean)
     })()
   }, [])
 
@@ -53,7 +53,6 @@ const PostInteractions: React.FC<Props> = ({ likes, comments, postId }) => {
           title: "Error",
           description: "Error liking post please try again!"
         })
-        setIsLiked(!isLiked)
         setPosts((posts) =>
           posts.map((post) =>
             post.id === postId
@@ -73,7 +72,12 @@ const PostInteractions: React.FC<Props> = ({ likes, comments, postId }) => {
 
   return (
     <div className="flex justify-between w-full">
-      <Button variant="ghost" size="sm" onClick={handleLike}>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleLike}
+        disabled={toggleLikeLoading}
+      >
         <ThumbsUp className={`mr-2 h-4 w-4 ${isLiked ? "text-primary" : ""}`} />
         {likes}
       </Button>

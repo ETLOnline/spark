@@ -25,11 +25,6 @@ import {
 import { Textarea } from "../ui/textarea"
 import { NewPost, PostType } from "./posts/types/posts-types.d"
 import CreatePostInput from "./posts/create-post-input"
-import {
-  createFilePostAction,
-  createPollPostAction,
-  createPostAction
-} from "@/src/server-actions/Post/Post"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useAtomValue, useSetAtom } from "jotai"
 import { postStore } from "@/src/store/post/postStore"
@@ -42,6 +37,12 @@ import {
 import { useToast } from "@/src/hooks/use-toast"
 import TagsInput from "../TagsInput/TagsInput"
 import { userStore } from "@/src/store/user/userStore"
+import {
+  CreateFilePostAction,
+  CreatePollPostAction,
+  CreatePostAction,
+  LinkHashtagsToPostAction
+} from "@/src/server-actions/Post/Post"
 
 type Props = {
   variant?: "posts" | "spaces"
@@ -76,19 +77,25 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   const { toast } = useToast()
 
   const [createPostLoading, createdPost, createPostError, createPost] =
-    useServerAction(createPostAction)
+    useServerAction(CreatePostAction)
   const [
     createFilePostLoading,
     createdFilePost,
     createFilePostError,
     createFilePost
-  ] = useServerAction(createFilePostAction)
+  ] = useServerAction(CreateFilePostAction)
   const [
     createPollPostLoading,
     createdPollPost,
     createPollPostError,
     createPollPost
-  ] = useServerAction(createPollPostAction)
+  ] = useServerAction(CreatePollPostAction)
+  const [
+    linkHashtagsToPostLoading,
+    linkedHashtags,
+    linkHashtagsToPostError,
+    linkHashtagsToPost
+  ] = useServerAction(LinkHashtagsToPostAction)
 
   const handleCreatePost = async () => {
     try {
@@ -97,12 +104,23 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
       if (newPost.type === PostType.text || newPost.type === PostType.image) {
         const post = await createPost(newPost.content as string, newPost.type)
         if (post && post.data && post.data[0]) {
+          const linkedHashtags = await linkHashtagsToPost(
+            post.data[0].id,
+            hashtags || []
+          )
+          if (linkedHashtags?.error) {
+            console.error(
+              "Error linking hashtags to post:",
+              linkedHashtags.error
+            )
+          }
           postData = {
             ...post.data[0],
             author: authUser as SelectUser,
-            hashtags: [],
+            hashtags: linkedHashtags?.data ? [...linkedHashtags?.data] : [],
             postComments: []
           }
+          setHashtags([])
         } else if (post?.error) {
           toast({
             variant: "destructive",
@@ -158,10 +176,10 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           postData as unknown as SelectPost | SelectFilePost | SelectPollPost,
           ...posts
         ])
+        toast({
+          title: "Posted!"
+        })
       }
-      toast({
-        title: "Posted!"
-      })
       setNewPost({ content: "", type: PostType.text, hashtags: [] })
     } catch (error) {
       toast({

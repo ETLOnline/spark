@@ -5,8 +5,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { postStore } from "@/src/store/post/postStore"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { createCommentAction } from "@/src/server-actions/Post/Post"
+import { CreateCommentAction } from "@/src/server-actions/Post/Post"
 import { userStore } from "@/src/store/user/userStore"
+import { useToast } from "@/src/hooks/use-toast"
 
 type PostCommentFormProps = {
   postId: number
@@ -18,28 +19,54 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({ postId }) => {
   const setPosts = useSetAtom(postStore.posts)
   const user = useAtomValue(userStore.AuthUser)
 
+  const { toast } = useToast()
+
   const [
     createCommentLoading,
     createdComment,
     createCommentError,
     createComment
-  ] = useServerAction(createCommentAction)
+  ] = useServerAction(CreateCommentAction)
 
   const name = `${user?.first_name} ${user?.last_name}`
 
   const handleAddComment = async (postId: number) => {
-    const response = await createComment(postId, commentText.current)
-    const addedComment = response?.success ? response.data : null
-    if (addedComment) {
-      setPosts((posts) =>
-        posts.map((post) =>
-          post.id === postId
-            ? { ...post, postComments: [...post.postComments, addedComment] }
-            : post
-        )
-      )
+    try {
+      const response = await createComment(postId, commentText.current)
+      if (response?.data) {
+        const addedComment = response.data
+        if (addedComment) {
+          setPosts((posts) =>
+            posts.map((post) =>
+              post.id === postId
+                ? {
+                    ...post,
+                    comments: (post.comments || 0) + 1,
+                    postComments: [...post.postComments, addedComment]
+                  }
+                : post
+            )
+          )
+        }
+        toast({
+          title: "Comment added",
+          description: "Your comment has been added successfully"
+        })
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Error adding comment please try again!"
+        })
+      }
+      commentText.current = ""
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Error adding comment please try again!"
+      })
     }
-    commentText.current = ""
   }
 
   return (
