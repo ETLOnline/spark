@@ -93,7 +93,7 @@ export const CreatePollPostAction = CreateServerAction(
 
 export const ToggleLikeAction = CreateServerAction(
   true,
-  async (postId: number, isLiked: boolean) => {
+  async (postId: string, isLiked: boolean) => {
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
@@ -118,7 +118,7 @@ export const ToggleLikeAction = CreateServerAction(
 
 export const IsPostLikedAction = CreateServerAction(
   true,
-  async (postId: number) => {
+  async (postId: string) => {
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
@@ -138,7 +138,7 @@ export const IsPostLikedAction = CreateServerAction(
 
 export const CreateCommentAction = CreateServerAction(
   true,
-  async (postId: number, content: string) => {
+  async (postId: string, content: string) => {
     try {
       const user = await AuthUserAction()
       if (user?.unique_id) {
@@ -162,7 +162,7 @@ export const CreateCommentAction = CreateServerAction(
 
 export const VotePollAction = CreateServerAction(
   true,
-  async (postId: number, option_text: string) => {
+  async (postId: string, option_text: string) => {
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
@@ -186,7 +186,7 @@ export const VotePollAction = CreateServerAction(
 
 export const HasUserVotedAction = CreateServerAction(
   true,
-  async (postId: number) => {
+  async (postId: string) => {
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
@@ -225,7 +225,7 @@ export const GetUserPostsAction = CreateServerAction(
 
 export const LinkHashtagsToPostAction = CreateServerAction(
   true,
-  async (postId: number, hashtags: string[]) => {
+  async (postId: string, hashtags: string[]) => {
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {

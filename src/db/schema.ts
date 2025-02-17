@@ -358,7 +358,9 @@ export type InsertEvent = typeof eventsTable.$inferInsert
 export type SelectEvent = typeof eventsTable.$inferSelect
 
 export const postsTable = sqliteTable("posts", {
-  id: int().primaryKey({ autoIncrement: true }),
+  id: text()
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
   content: text().notNull(),
   user_id: text().notNull(),
   is_private: int().notNull().default(0),
@@ -366,8 +368,6 @@ export const postsTable = sqliteTable("posts", {
   channel_id: text(),
   likes: int().notNull().default(0),
   comments: int().notNull().default(0),
-  fileSize: text(),
-  fileName: text(),
   ...timestamps
 })
 
@@ -388,6 +388,11 @@ export const postsRelations = relations(postsTable, ({ one, many }) => ({
   }),
   pollOptions: many(pollOptionsTable, {
     relationName: "pollToPost"
+  }),
+  file: one(filesTable, {
+    fields: [postsTable.id],
+    references: [filesTable.post_id],
+    relationName: "fileToPost"
   })
 }))
 
@@ -419,7 +424,7 @@ export const commentsTable = sqliteTable("comments", {
   id: int().primaryKey({ autoIncrement: true }),
   content: text().notNull(),
   user_id: text().notNull(),
-  post_id: int().notNull(),
+  post_id: text().notNull(),
   ...timestamps
 })
 
@@ -459,7 +464,7 @@ export type SelectHashtag = typeof hashtagsTable.$inferSelect
 
 export const postHashtagsTable = sqliteTable("post_hashtags", {
   id: int().primaryKey({ autoIncrement: true }),
-  post_id: int().notNull(),
+  post_id: text().notNull(),
   hashtag_id: int().notNull()
 })
 
@@ -486,7 +491,7 @@ export const likesTable = sqliteTable(
   "likes",
   {
     user_id: text().notNull(),
-    post_id: int().notNull(),
+    post_id: text().notNull(),
     ...timestamps
   },
   (t) => ({
@@ -513,7 +518,7 @@ export type SelectLike = typeof likesTable.$inferSelect
 export const pollOptionsTable = sqliteTable(
   "poll_options",
   {
-    post_id: int().notNull(),
+    post_id: text().notNull(),
     option_text: text().notNull(),
     vote_count: int().notNull().default(0)
   },
@@ -537,7 +542,7 @@ export const pollVotesTable = sqliteTable(
   "poll_votes",
   {
     user_id: text().notNull(),
-    post_id: int().notNull(),
+    post_id: text().notNull(),
     option_text: text().notNull(),
     ...timestamps
   },
@@ -546,3 +551,24 @@ export const pollVotesTable = sqliteTable(
 
 export type InsertPollVote = typeof pollVotesTable.$inferInsert
 export type SelectPollVote = typeof pollVotesTable.$inferSelect
+
+export const filesTable = sqliteTable("files", {
+  id: text().primaryKey(),
+  post_id: text().notNull(),
+  file_name: text().notNull(),
+  file_size: text().notNull(),
+  file_type: text().notNull(),
+  file_path: text().notNull(),
+  ...timestamps
+})
+
+export const filesRelations = relations(filesTable, ({ one }) => ({
+  post: one(postsTable, {
+    fields: [filesTable.post_id],
+    references: [postsTable.id],
+    relationName: "fileToPost"
+  })
+}))
+
+export type InsertFile = typeof filesTable.$inferInsert
+export type SelectFile = typeof filesTable.$inferSelect
