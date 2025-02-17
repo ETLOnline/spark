@@ -19,8 +19,9 @@ import { userStore } from "@/src/store/user/userStore"
 import { profileStore } from "@/src/store/profile/profileStore"
 import useUserSkills from "./hooks/useUserSkills"
 import useUserInterests from "./hooks/useUserInterests"
-import { ProfileData, Tag, TagStatus } from "./types/profile-types.d"
+import { ProfileData } from "./types/profile-types.d"
 import { useToast } from "@/src/hooks/use-toast"
+import { TagStatus, Tag } from "../../TagsInput/tags-input.type.d"
 
 const EditProfileModal: React.FC = () => {
   const bio = useAtomValue(profileStore.bio)
@@ -141,7 +142,7 @@ const EditProfileModal: React.FC = () => {
             )
             .map((tag) => ({ ...tag, status: TagStatus.saved }))
         )
-        if(editedBio){
+        if (editedBio) {
           setBio(editedBio)
         }
         setIsOpen(false)

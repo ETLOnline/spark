@@ -78,7 +78,7 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({ postId }) => {
       <Input
         placeholder="Add a comment..."
         onChange={(e) => (commentText.current = e.target.value)}
-        className="flex-1"
+        className="flex-1 mt-4"
       />
       <Button
         onClick={() => handleAddComment(postId)}

@@ -84,11 +84,6 @@ const ProfileFollowActions = ({ user }: Props) => {
     }
   }, [authUser?.unique_id, user.unique_id])
 
-  /**
-   * Connects the current user to the specified user. If a contact already exists, it does nothing.
-   * Otherwise, it creates a new contact and updates the server state.
-   * @requires both the current user's unique ID and the target user's unique ID to be available.
-   */
   const handleConnect = async () => {
     if (!authUser?.unique_id || !user.unique_id) return
     try {

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react"
 import { X } from "lucide-react"
-import { Tag, TagStatus } from "../Dashboard/profile/types/profile-types.d"
 import {
   Command,
   CommandEmpty,
@@ -9,6 +8,7 @@ import {
 } from "@/src/components/ui/command"
 import { Input } from "@/src/components/ui/input"
 import { Button } from "@/src/components/ui/button"
+import { Tag, TagStatus } from "./tags-input.type.d"
 
 type BaseTagsInputProps = {
   autocomplete?: boolean
