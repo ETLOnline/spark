@@ -31,7 +31,7 @@ export const AddPollOptions = async (options: InsertPollOption[]) => {
   return await db.insert(pollOptionsTable).values(options).returning()
 }
 
-export const LikePost = async (post_id: number, user_id: string) => {
+export const LikePost = async (post_id: string, user_id: string) => {
   return await db.transaction(async (tx) => {
     // Insert into likes table
     const like = await tx
@@ -52,7 +52,7 @@ export const LikePost = async (post_id: number, user_id: string) => {
   })
 }
 
-export const UnlikePost = async (post_id: number, user_id: string) => {
+export const UnlikePost = async (post_id: string, user_id: string) => {
   return await db.transaction(async (tx) => {
     // Delete from likes table
     await tx
@@ -74,7 +74,7 @@ export const UnlikePost = async (post_id: number, user_id: string) => {
   })
 }
 
-export const IsPostLiked = async (postId: number, userId: string) => {
+export const IsPostLiked = async (postId: string, userId: string) => {
   const like = await db.query.likesTable.findFirst({
     where: and(eq(likesTable.post_id, postId), eq(likesTable.user_id, userId))
   })
@@ -129,7 +129,7 @@ export const VotePoll = async (vote: InsertPollVote) => {
   })
 }
 
-export const HasUserVoted = async (postId: number, userId: string) => {
+export const HasUserVoted = async (postId: string, userId: string) => {
   return await db.query.pollVotesTable.findFirst({
     where: and(
       eq(pollVotesTable.post_id, postId),
@@ -190,7 +190,7 @@ export const GetOrCreateHashtag = async (name: string) => {
 }
 
 export const LinkHashtagsToPost = async (
-  postId: number,
+  postId: string,
   hashtags: string[]
 ) => {
   return await db.transaction(async (tx) => {
