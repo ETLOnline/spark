@@ -30,6 +30,7 @@ import { useAtomValue, useSetAtom } from "jotai"
 import { postStore } from "@/src/store/post/postStore"
 import {
   SelectFilePost,
+  SelectHashtag,
   SelectPollPost,
   SelectPost,
   SelectUser
@@ -41,8 +42,10 @@ import {
   CreateFilePostAction,
   CreatePollPostAction,
   CreatePostAction,
-  LinkHashtagsToPostAction
+  LinkHashtagsToPostAction,
+  SearchHashtagsAction
 } from "@/src/server-actions/Post/Post"
+import useHashtags from "./profile/hooks/useHashtags"
 
 type Props = {
   variant?: "posts" | "spaces"
@@ -69,10 +72,17 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     hashtags: []
   })
   const [pollOptions, setPollOptions] = useState<string[]>([])
-  const [hashtags, setHashtags] = useState<string[]>([])
 
   const setPosts = useSetAtom(postStore.posts)
   const authUser = useAtomValue(userStore.AuthUser)
+
+  const [
+    hashtags,
+    setHashtags,
+    suggestions,
+    searchTagsForUserInput,
+    searchTagsLoading
+  ] = useHashtags()
 
   const { toast } = useToast()
 
@@ -106,7 +116,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         if (post && post.data && post.data[0]) {
           const linkedHashtags = await linkHashtagsToPost(
             post.data[0].id,
-            hashtags || []
+            hashtags.length ? hashtags.map((tag) => tag.name) : []
           )
           if (linkedHashtags?.error) {
             console.error(
@@ -278,12 +288,27 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         {variant === "posts" && (
           <div className="mt-4">
             <Label htmlFor="hashtags">Hashtags</Label>
-            <TagsInput tags={hashtags} updateTags={setHashtags} />
+            <TagsInput
+              autocomplete
+              tags={hashtags}
+              updateTags={setHashtags}
+              onChange={searchTagsForUserInput}
+              suggestions={suggestions}
+              loadingSuggestions={searchTagsLoading}
+            />
           </div>
         )}
       </CardContent>
       <CardFooter>
-        <Button onClick={handleCreatePost}>Post</Button>
+        <Button
+          onClick={handleCreatePost}
+          className="w-full"
+          disabled={
+            createPostLoading || createFilePostLoading || createPollPostLoading
+          }
+        >
+          Post
+        </Button>
       </CardFooter>
     </Card>
   )

@@ -17,6 +17,7 @@ import {
   InsertPostHashtag
 } from "../../schema"
 import { eq, and, desc } from "drizzle-orm"
+import { like } from "drizzle-orm"
 
 export const CreatePost = async (post: InsertPost) => {
   return await db.insert(postsTable).values(post).returning()
@@ -204,9 +205,21 @@ export const LinkHashtagsToPost = async (
           post_id: postId,
           hashtag_id: hashtag.id
         })
-        .returning()
       linkedHashtags.push(hashtag)
     }
     return linkedHashtags
   })
+}
+
+export const SearchHashtags = async (searchTerm: string) => {
+  try {
+    const hashtags = await db.query.hashtagsTable.findMany({
+      where: like(hashtagsTable.name, `%${searchTerm}%`),
+      orderBy: desc(hashtagsTable.count),
+      limit: 10
+    })
+    return hashtags
+  } catch (error: any) {
+    throw new Error(`Failed to search hashtags: ${error.message}`)
+  }
 }
