@@ -11,11 +11,13 @@ import {
   VotePoll,
   HasUserVoted,
   GetUserPosts,
-  LinkHashtagsToPost,
-  SearchHashtags
+  SearchHashtags,
+  LinkNewHashtagsToPost,
+  LinkExistingHashtagsToPost
 } from "@/src/db/data-access/post/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
+import { TagStatus } from "@/src/components/TagsInput/tags-input.type.d"
 
 export const CreatePostAction = CreateServerAction(
   true,
@@ -225,12 +227,26 @@ export const GetUserPostsAction = CreateServerAction(
 
 export const LinkHashtagsToPostAction = CreateServerAction(
   true,
-  async (postId: string, hashtags: string[]) => {
+  async (
+    postId: string,
+    hashtags: { name: string; count?: number; status: TagStatus }[]
+  ) => {
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
-        const data = await LinkHashtagsToPost(postId, hashtags)
-        return { success: true, data }
+        const newTags = hashtags.filter((tag) => tag.status === TagStatus.new)
+        const existingTags = hashtags.filter(
+          (tag) => tag.status !== TagStatus.new
+        )
+        const newHashtags = await LinkNewHashtagsToPost(
+          postId,
+          newTags.map((tag) => tag.name)
+        )
+        const existingHashtags = await LinkExistingHashtagsToPost(
+          postId,
+          existingTags
+        )
+        return { success: true, data: [...newHashtags, ...existingHashtags] }
       } else {
         throw new Error("Unauthorized", { cause: 401 })
       }

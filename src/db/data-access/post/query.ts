@@ -14,10 +14,12 @@ import {
   hashtagsTable,
   postHashtagsTable,
   InsertHashtag,
-  InsertPostHashtag
+  InsertPostHashtag,
+  SelectHashtag
 } from "../../schema"
 import { eq, and, desc } from "drizzle-orm"
 import { like } from "drizzle-orm"
+import { Tag, TagStatus } from "@/src/components/TagsInput/tags-input.type.d"
 
 export const CreatePost = async (post: InsertPost) => {
   return await db.insert(postsTable).values(post).returning()
@@ -164,49 +166,60 @@ export const GetUserPosts = async (userId: string) => {
   }
 }
 
-export const CreateHashtag = async (hashtag: InsertHashtag) => {
-  return await db.insert(hashtagsTable).values(hashtag).returning()
+export const CreateHashtags = async (names: string[]) => {
+  const newHashtags = await db
+    .insert(hashtagsTable)
+    .values(
+      names.map((name) => {
+        return { name }
+      })
+    )
+    .returning()
+  return newHashtags
 }
 
-export const GetOrCreateHashtag = async (name: string) => {
-  // First try to find existing hashtag
-  const existing = await db.query.hashtagsTable.findFirst({
-    where: eq(hashtagsTable.name, name)
-  })
-  if (existing) {
-    // Update count and return
-    const updated = await db
+export const updateHashTagsCount = async (tags: Tag[]) => {
+  const updatedHashtags = []
+  for (const tag of tags) {
+    const updatedHashtag = await db
       .update(hashtagsTable)
-      .set({ count: existing.count + 1 })
-      .where(eq(hashtagsTable.id, existing.id))
+      .set({ count: (tag.count as number) + 1 })
+      .where(eq(hashtagsTable.name, tag.name))
       .returning()
-    return updated[0]
+    updatedHashtags.push(updatedHashtag[0])
   }
-  // Create new hashtag if doesn't exist
-  const newHashtag = await CreateHashtag({
-    name
-  })
-  return newHashtag[0]
+  return updatedHashtags
 }
 
-export const LinkHashtagsToPost = async (
+export const AddHashtagToPostLink = async (
+  hashtags: SelectHashtag[],
+  postId: string
+) => {
+  await db.insert(postHashtagsTable).values(
+    hashtags.map((tag) => {
+      return { post_id: postId, hashtag_id: tag.id }
+    })
+  )
+}
+
+export const LinkNewHashtagsToPost = async (
   postId: string,
   hashtags: string[]
 ) => {
   return await db.transaction(async (tx) => {
-    const linkedHashtags = []
-    for (const tag of hashtags) {
-      // Get or create hashtag
-      const hashtag = await GetOrCreateHashtag(tag)
-      // Create post-hashtag link
-      await tx
-        .insert(postHashtagsTable)
-        .values({
-          post_id: postId,
-          hashtag_id: hashtag.id
-        })
-      linkedHashtags.push(hashtag)
-    }
+    const linkedHashtags = await CreateHashtags(hashtags)
+    await AddHashtagToPostLink(linkedHashtags, postId)
+    return linkedHashtags
+  })
+}
+
+export const LinkExistingHashtagsToPost = async (
+  postId: string,
+  hashtags: Tag[]
+) => {
+  return await db.transaction(async (tx) => {
+    const linkedHashtags = await updateHashTagsCount(hashtags)
+    await AddHashtagToPostLink(linkedHashtags, postId)
     return linkedHashtags
   })
 }
