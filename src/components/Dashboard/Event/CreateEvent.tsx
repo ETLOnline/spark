@@ -15,7 +15,7 @@ import { Button } from "../../ui/button";
 import { InsertEvent, SelectEvent } from "@/src/db/schema";
 import { useServerAction } from "@/src/hooks/useServerAction";
 import { CreateEventAction, DeleteEventAction, UpdateEventsAction } from "@/src/server-actions/events/event";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { userStore } from "@/src/store/user/userStore";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../../ui/alert-dialog";
 import { AlertDialogTrigger } from "@radix-ui/react-alert-dialog";
@@ -25,15 +25,12 @@ import moment from "moment";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from '@hookform/resolvers/zod'
+import { eventStore } from "@/src/store/event/eventStore";
 
 
 interface Props {
   events: SelectEvent[];
   setEvents: React.Dispatch<React.SetStateAction<SelectEvent[]>>;
-  formModalVisibility: boolean;
-  setFormModalVisibility: React.Dispatch<React.SetStateAction<boolean>>;
-  selectedEvent: SelectEvent | null;
-  setSelectedEvent: React.Dispatch<React.SetStateAction<SelectEvent | null>>;
 }
 
 const now = moment().format("YYYY-MM-DD HH:mm");
@@ -103,7 +100,7 @@ const eventSchema = z.object({
   });
 
 
-export const CreateEvent = ({ events, setEvents, formModalVisibility, setFormModalVisibility, setSelectedEvent, selectedEvent }: Props) => {
+export const CreateEvent = ({ events, setEvents }: Props) => {
 
   const [editEvent, setEditEvent] = useState(false)
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
@@ -111,6 +108,10 @@ export const CreateEvent = ({ events, setEvents, formModalVisibility, setFormMod
     resolver: zodResolver(eventSchema),
     shouldUnregister: true
   })
+  const selectedEvent = useAtomValue(eventStore.selectedEvent)
+  const setSelectedEvent = useSetAtom(eventStore.selectedEvent)
+  const formModalVisibility = useAtomValue(eventStore.formModalVisibility)
+  const setFormModalVisibility = useSetAtom(eventStore.formModalVisibility)
 
 
 

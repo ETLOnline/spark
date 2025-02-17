@@ -10,29 +10,51 @@ import {
 import { CalendarDays, MapPin, Presentation, Projector, Users } from "lucide-react";
 import { Button } from "../../ui/button";
 import { SelectEvent } from "@/src/db/schema";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { userStore } from "@/src/store/user/userStore";
 import moment from "moment";
+import { eventStore } from "@/src/store/event/eventStore";
 
 
 interface EventcardProps {
   event: SelectEvent;
-  setFormModelVisibility: Dispatch<SetStateAction<boolean>>
-  setSelectedEvent: Dispatch<SetStateAction<SelectEvent | null>>
 }
 
 
 
-const EventCard = ({ event, setFormModelVisibility, setSelectedEvent }: EventcardProps) => {
+const EventCard = ({ event }: EventcardProps) => {
+  const setSelectedEvent = useSetAtom(eventStore.selectedEvent)
+  const setFormModalVisibility = useSetAtom(eventStore.formModalVisibility)
   const authUser = useAtomValue(userStore.AuthUser);
+
+
   const localStartDate = moment.utc(event.start_date_time ? event.start_date_time : "").local().format("DD/MM/YYYY hh:mm A");
   const localEndDate = moment.utc(event.end_date_time ? event.end_date_time : "").local().format("DD/MM/YYYY hh:mm A");
 
   function openDialog(event: SelectEvent) {
     setSelectedEvent(event)
-    setFormModelVisibility(true)
+    setFormModalVisibility(true)
 
   }
+
+
+  const location = (() => {
+    const metadata = JSON.parse(event.metadata || "{}");
+    return metadata.location;
+  })()
+
+  const meeting_link = (() => {
+    const metadata = JSON.parse(event.metadata || "{}");
+    return metadata.meeting_link && (
+      <a
+        target="_blank"
+        rel="noopener noreferrer"
+        href={metadata.meeting_link}
+        className="hover:text-blue-600 hover:underline">
+        {metadata.meeting_link}
+      </a>
+    )
+  })()
 
   return (
     <Card className="w-full lg:w-[49%] mt-2">
@@ -55,82 +77,24 @@ const EventCard = ({ event, setFormModelVisibility, setSelectedEvent }: Eventcar
           <span><strong>End Date Time: </strong>{localEndDate}</span>
         </div>
 
-        {event.type === "physical" ? (
+        {(event.type === "both" || event.type === "physical") && (
           <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
             <MapPin className="h-4 w-4 text-primary" />
             <span><strong>Location: </strong>
-              {(() => {
-                try {
-                  const metadata = JSON.parse(event.metadata || "{}");
-                  return metadata.location || "";
-                } catch {
-                  return "";
-                }
-              })()}
+              {location}
             </span>
           </div>
-        ) : event.type === "virtual" ? (
+        )}
+
+        {(event.type === "both" || event.type === "virtual") && (
           <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
             <Presentation className="h-4 w-4 text-primary" />
             <span>
               <strong>Meeting Link: </strong>
-              {(() => {
-                const metadata = JSON.parse(event.metadata || "{}");
-                return metadata.meeting_link ? (
-                  <a
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    href={metadata.meeting_link}
-                    className="hover:text-blue-600 hover:underline">
-                    {metadata.meeting_link}
-                  </a>
-                ) : (
-                  ""
-                );
-
-              })()}
+              {meeting_link}
             </span>
           </div>
-        ) : (
-          <>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
-              <MapPin className="h-4 w-4 text-primary" />
-              <span><strong>Location: </strong>
-                {(() => {
-                  try {
-                    const metadata = JSON.parse(event.metadata || "{}");
-                    return metadata.location || "";
-                  } catch {
-                    return "";
-                  }
-                })()}
-              </span>
-            </div>
-
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
-              <Presentation className="h-4 w-4 text-primary" />
-              <span>
-                <strong>Meeting Link: </strong>
-                {(() => {
-                  const metadata = JSON.parse(event.metadata || "{}");
-                  return metadata.meeting_link ? (
-                    <a
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      href={metadata.meeting_link}
-                      className="hover:text-blue-600 hover:underline">
-                      {metadata.meeting_link}
-                    </a>
-                  ) : (
-                    ""
-                  );
-
-                })()}
-              </span>
-            </div>
-          </>
         )}
-
 
         <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
           <Users className="h-4 w-4 text-primary" />
