@@ -68,9 +68,11 @@ const ProfileFollowActions = ({ user }: Props) => {
       const { unsubscribe } = joinRequestChannel(
         authUser.unique_id,
         (request, activity) => {
-          activity !== ActivityType.delRequest
-            ? setConnectionContact({ ...request })
-            : setConnectionContact(undefined)
+          if (activity !== ActivityType.delRequest) {
+            setConnectionContact({ ...request })
+          } else {
+            setConnectionContact(undefined)
+          }
         },
         [
           ActivityType.acceptRequest,
