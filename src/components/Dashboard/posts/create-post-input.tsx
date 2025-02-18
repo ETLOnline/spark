@@ -16,16 +16,23 @@ type Props = {
 }
 
 const CreatePostInput: React.FC<Props> = (props) => {
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      props.setNewPost({
-        ...props.newPost,
-        type: PostType.file,
-        content: file.name,
-        fileName: file.name,
-        fileSize: file.size.toString()
-      })
+      // Convert file to Base64
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64String = reader.result as string
+        props.setNewPost({
+          ...props.newPost,
+          type: file.type.startsWith("image/") ? PostType.image : PostType.file,
+          fileName: file.name,
+          fileSize: file.size.toString(),
+          fileType: file.type,
+          fileBase64: base64String
+        })
+      }
+      reader.readAsDataURL(file)
     }
   }
 
@@ -44,14 +51,7 @@ const CreatePostInput: React.FC<Props> = (props) => {
       className="min-h-[100px]"
     />
   ) : props.type === "image" ? (
-    <Input
-      type={PostType.file}
-      accept="image/*"
-      onChange={() =>
-        props.setNewPost({ ...props.newPost, type: PostType.image })
-      }
-      required
-    />
+    <Input type="file" accept="image/*" onChange={handleFileUpload} required />
   ) : props.type === "poll" ? (
     <div className="flex flex-col space-y-2">
       <Textarea
@@ -75,7 +75,7 @@ const CreatePostInput: React.FC<Props> = (props) => {
     </div>
   ) : (
     props.type === "file" && (
-      <Input type={PostType.file} onChange={handleFileUpload} required/>
+      <Input type="file" onChange={handleFileUpload} required />
     )
   )
 }

@@ -28,14 +28,15 @@ export type PostFile = Omit<Post, "content"> & {
 
 export type PostPoll = Post & { options: string[] }
 
-export type NewPost = {
-  content: string | File
-  type: PostType
-  hashtags?: string[]
-  options?: string[]
+export interface NewPost {
+  content?: string
+  type?: PostType
+  category?: string
+  hashtags: any[]
   fileName?: string
   fileSize?: string
-  category?: string
+  fileType?: string
+  fileBase64?: string
 }
 
 export type Comment = {

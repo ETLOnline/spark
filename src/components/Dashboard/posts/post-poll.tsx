@@ -46,7 +46,7 @@ const PollPost: React.FC<Props> = ({ post }) => {
     }
     try {
       setIsVoting(true)
-      const option = post.options?.find(
+      const option = post.pollOptions?.find(
         (option) => option.option_text === value
       )
       if (!option) return
@@ -83,7 +83,7 @@ const PollPost: React.FC<Props> = ({ post }) => {
         disabled={isVoting}
         defaultValue={selectedOption}
       >
-        {post.options?.map((option) => (
+        {post.pollOptions?.map((option) => (
           <div key={option.option_text} className="flex items-center space-x-2">
             <RadioGroupItem
               value={option.option_text}

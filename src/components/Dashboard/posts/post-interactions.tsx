@@ -13,7 +13,7 @@ import { useToast } from "@/src/hooks/use-toast"
 type Props = {
   likes: number
   comments: number
-  postId: number
+  postId: string
 }
 
 const PostInteractions: React.FC<Props> = ({ likes, comments, postId }) => {

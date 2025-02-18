@@ -393,7 +393,7 @@ export const postsTable = sqliteTable("posts", {
   id: text()
     .primaryKey()
     .$defaultFn(() => randomUUID()),
-  content: text().notNull(),
+  content: text(),
   user_id: text().notNull(),
   is_private: int().notNull().default(0),
   type: text().notNull(),
@@ -428,28 +428,17 @@ export const postsRelations = relations(postsTable, ({ one, many }) => ({
   })
 }))
 
-export type InsertPost = Omit<
-  typeof postsTable.$inferInsert,
-  "filename" | "fileSize"
->
-export type InsertFilePost = InsertPost & {
-  fileName: string
-  fileSize: string
-}
-export type SelectPost = Omit<
-  typeof postsTable.$inferSelect,
-  "filename" | "fileSize"
-> & {
+export type InsertPost = typeof postsTable.$inferInsert
+export type SelectPost = typeof postsTable.$inferSelect & {
   author: SelectUser
   postComments: SelectComment[]
   hashtags: SelectHashtag[]
 }
 export type SelectFilePost = SelectPost & {
-  fileName: string
-  fileSize: string
+  file: SelectFile
 }
 export type SelectPollPost = SelectPost & {
-  options: SelectPollOption[]
+  pollOptions: SelectPollOption[]
 }
 
 export const commentsTable = sqliteTable("comments", {
@@ -585,7 +574,7 @@ export type InsertPollVote = typeof pollVotesTable.$inferInsert
 export type SelectPollVote = typeof pollVotesTable.$inferSelect
 
 export const filesTable = sqliteTable("files", {
-  id: text().primaryKey(),
+  id: int().primaryKey({ autoIncrement: true }),
   post_id: text().notNull(),
   file_name: text().notNull(),
   file_size: text().notNull(),

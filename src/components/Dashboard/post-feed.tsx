@@ -27,6 +27,7 @@ import PostComments from "./posts/post-comments"
 import PostCommentForm from "./posts/post-comment-form"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { IsPostLikedAction } from "@/src/server-actions/Post/Post"
+import { PostFile } from "./posts/types/posts-types"
 
 type PostFeedProps = {
   fetchedPosts: (SelectPost | SelectFilePost | SelectPollPost)[]
@@ -64,9 +65,12 @@ const PostFeed: React.FC<PostFeedProps> = ({ fetchedPosts }) => {
             </CardHeader>
             <CardContent>
               {post.type === "text" ? (
-                <TextPost key={post.id} postText={post.content} />
+                <TextPost key={post.id} postText={post.content as string} />
               ) : post.type === "image" ? (
-                <ImagePost key={post.id} postImg={post.content} />
+                <ImagePost
+                  key={post.id}
+                  postImg={(post as SelectFilePost).file.file_path as string}
+                />
               ) : post.type === "poll" ? (
                 <PollPost key={post.id} post={post as SelectPollPost} />
               ) : (
