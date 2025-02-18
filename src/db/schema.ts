@@ -1,7 +1,6 @@
 import { randomUUID } from "crypto"
 import { InferSelectModel, relations, sql } from "drizzle-orm"
 import { int, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
-import { z } from "zod"
 
 const timestamps = {
   updated_at: text("updated_at").$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
@@ -35,6 +34,9 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   contacts: many(userContactsTable, {
     relationName: "userToContact"
   }),
+  users: many(userContactsTable, {
+    relationName: "userToUser"
+  }),
   userActivities: many(userActivitiesTable, {
     relationName: "userActivitiesToUser"
   }),
@@ -46,6 +48,9 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   }),
   recommendations: many(recommendationsTable, {
     relationName: "recommendationToReceiver"
+  }),
+  notifications: many(notificationsTable, {
+    relationName: "notificationToUser"
   })
 }))
 
@@ -161,6 +166,7 @@ export const userContactsTable = sqliteTable(
     is_accepted: int().notNull().default(0),
     is_blocked: int().notNull().default(0),
     is_following: int().notNull().default(0),
+    is_followed_by: int().notNull().default(0),
     ...timestamps
   },
   (t) => ({
@@ -196,7 +202,7 @@ export const tagsTable = sqliteTable("tags", {
 
 export const tagsRelations = relations(tagsTable, ({ many }) => ({
   tags: many(userTagsTable, {
-    relationName: "userTagsToActivity"
+    relationName: "userTagsToTag"
   })
 }))
 
@@ -235,7 +241,7 @@ export const rewardsTable = sqliteTable("rewards", {
 
 export const rewardsRelations = relations(rewardsTable, ({ many }) => ({
   rewards: many(userRewardsTable, {
-    relationName: "userRewardsToRewards"
+    relationName: "userRewardsToReward"
   })
 }))
 
@@ -315,21 +321,53 @@ export const recommendationsTable = sqliteTable("recommendations", {
   ...timestamps
 })
 
-export const recommendationsRelations = relations(recommendationsTable, ({ one }) => ({
-  recommender: one(usersTable, {
-    fields: [recommendationsTable.recommender_id],
-    references: [usersTable.unique_id],
-    relationName: "recommendationToUser"
-  }),
-  receiver: one(usersTable, {
-    fields: [recommendationsTable.receiver_id],
-    references: [usersTable.unique_id],
-    relationName: "recommendationToReceiver"
+export const recommendationsRelations = relations(
+  recommendationsTable,
+  ({ one }) => ({
+    recommender: one(usersTable, {
+      fields: [recommendationsTable.recommender_id],
+      references: [usersTable.unique_id],
+      relationName: "recommendationToUser"
+    }),
+    receiver: one(usersTable, {
+      fields: [recommendationsTable.receiver_id],
+      references: [usersTable.unique_id],
+      relationName: "recommendationToReceiver"
+    })
   })
-}))
+)
 
 export type InsertRecommendation = typeof recommendationsTable.$inferInsert
 export type SelectRecommendation = typeof recommendationsTable.$inferSelect
+
+export const notificationsTable = sqliteTable("notifications", {
+  id: int().primaryKey({ autoIncrement: true }),
+  created_by: text().notNull(),
+  received_by: text().notNull(),
+  type: text().notNull(),
+  link: text(),
+  is_read: int().notNull().default(0),
+  counter: int().notNull().default(0),
+  entity_id: text(),
+  entity_type: text().notNull(),
+  ...timestamps
+})
+
+export const notificationsRelations = relations(
+  notificationsTable,
+  ({ one }) => ({
+    creator: one(usersTable, {
+      fields: [notificationsTable.created_by],
+      references: [usersTable.unique_id],
+      relationName: "notificationToUser"
+    })
+  })
+)
+
+export type InsertNotification = typeof notificationsTable.$inferInsert
+export type SelectNotification = InferSelectModel<typeof notificationsTable> & {
+  creator: SelectUser
+}
 
 export const eventsTable = sqliteTable("events", {
   id: int().primaryKey({ autoIncrement: true }),
