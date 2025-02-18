@@ -10,11 +10,11 @@ import {
 import { CalendarDays, MapPin, Presentation, Projector, Users } from "lucide-react";
 import { Button } from "../../ui/button";
 import { SelectEvent } from "@/src/db/schema";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { userStore } from "@/src/store/user/userStore";
 import moment from "moment";
 import { eventStore } from "@/src/store/event/eventStore";
-import { eventType } from "../../common/Loader/types/event.types";
+import { EventType } from "../../common/Loader/types/event.types";
 
 
 interface EventcardProps {
@@ -78,7 +78,7 @@ const EventCard = ({ event }: EventcardProps) => {
           <span><strong>End Date Time: </strong>{localEndDate}</span>
         </div>
 
-        {(event.type === eventType.Both || event.type === eventType.Physical) && (
+        {(event.type === EventType.Both || event.type === EventType.Physical) && (
           <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
             <MapPin className="h-4 w-4 text-primary" />
             <span><strong>Location: </strong>
@@ -87,7 +87,7 @@ const EventCard = ({ event }: EventcardProps) => {
           </div>
         )}
 
-        {(event.type === eventType.Both || event.type === eventType.Virtual) && (
+        {(event.type === EventType.Both || event.type === EventType.Virtual) && (
           <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
             <Presentation className="h-4 w-4 text-primary" />
             <span>
