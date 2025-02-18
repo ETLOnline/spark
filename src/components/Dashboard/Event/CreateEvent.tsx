@@ -62,21 +62,21 @@ const eventSchema = z.object({
         message: "End date and time must be after the start date and time",
       });
     }
-    if (data.event_type === "physical" && !data.location) {
+    if (data.event_type === eventType.Physical && !data.location) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["location"],
         message: "location required"
       });
     }
-    if (data.event_type === "virtual" && !data.meeting_link) {
+    if (data.event_type === eventType.Virtual && !data.meeting_link) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["meeting_link"],
         message: "Meeting Link  required"
       });
     }
-    if (data.event_type === "both") {
+    if (data.event_type === eventType.Both) {
       if (!data.location) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -129,11 +129,11 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
 
 
   useEffect(() => {
-    if (eventTypeSelection === "physical") {
+    if (eventTypeSelection === eventType.Physical) {
       setValue("meeting_link", "");
       clearErrors("meeting_link")
     }
-    else if (eventTypeSelection === "virtual") {
+    else if (eventTypeSelection === eventType.Virtual) {
       setValue("location", "");
       clearErrors("location")
     }
