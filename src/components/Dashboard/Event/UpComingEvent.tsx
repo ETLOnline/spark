@@ -9,19 +9,17 @@ interface Props {
 }
 
 function UpComingEvent({ events, setEvents }: Props) {
-  const [formModalVisibility, setFormModalVisiblity] = useState(false)
-  const [SelectEvent, setSelectEvent] = useState<SelectEvent | null>(null)
+
+
   return (
-    <div className="grid justify-items-center mt-3">
-      <CreateEvent selectEvent={SelectEvent} setSelectEvent={setSelectEvent} formModalVisibility={formModalVisibility} setFormModalVisibility={setFormModalVisiblity} events={events} setEvents={setEvents} />
+    <div className="grid justify-items-center mt-2">
+      <CreateEvent events={events} setEvents={setEvents} />
       <div className="flex flex-wrap justify-between w-full gap-3">
         {events.map((event, i) => {
           return (
             <EventCard
               key={i}
               event={event}
-              setFormModelVisibility={setFormModalVisiblity}
-              setSelectEvent={setSelectEvent}
             />
           )
         }

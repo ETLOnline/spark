@@ -23,9 +23,9 @@ export const GetEventsAction = CreateServerAction( false, async (startDate, endD
   }
 })
 
-export const UpdateEventsAction = CreateServerAction( true, async (updatedEventsData: SelectEvent)=>{
+export const UpdateEventsAction = CreateServerAction( true, async (eventId: number,updatedEventsData: Partial<SelectEvent>)=>{
   try{
-    const updatedEvents = await UpdateEvents(updatedEventsData)
+    const updatedEvents = await UpdateEvents(eventId, updatedEventsData)
     return { success: true, data: updatedEvents}
   }catch(error){
     return { error: error}

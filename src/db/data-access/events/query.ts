@@ -28,10 +28,11 @@ export async function GetEvents(startDate: string, endDate: string){
 }
 
 
-export async function UpdateEvents(updatedEventsData: SelectEvent){
+export async function UpdateEvents(eventId: number ,updatedEventsData: Partial<SelectEvent>){
   try{
+
     const updatedEvents = await db.update(eventsTable).set(updatedEventsData)
-    .where( eq(eventsTable.id, updatedEventsData.id))
+    .where( eq(eventsTable.id, eventId))
     .returning()
     return updatedEvents[0]
   }catch(e:any){

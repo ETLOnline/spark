@@ -7,37 +7,61 @@ import {
   CardHeader,
   CardTitle,
 } from "../../ui/card";
-import { CalendarDays, MapPin, Users } from "lucide-react";
+import { CalendarDays, MapPin, Presentation, Projector, Users } from "lucide-react";
 import { Button } from "../../ui/button";
 import { SelectEvent } from "@/src/db/schema";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { userStore } from "@/src/store/user/userStore";
 import moment from "moment";
+import { eventStore } from "@/src/store/event/eventStore";
+import { eventType } from "../../common/Loader/types/event.types";
+
 
 interface EventcardProps {
   event: SelectEvent;
-  setFormModelVisibility: Dispatch<SetStateAction<boolean>>
-  setSelectEvent: Dispatch<SetStateAction<SelectEvent | null>>
 }
 
 
 
-const EventCard = ({ event, setFormModelVisibility, setSelectEvent }: EventcardProps) => {
+const EventCard = ({ event }: EventcardProps) => {
+  const setSelectedEvent = useSetAtom(eventStore.selectedEvent)
+  const setFormModalVisibility = useSetAtom(eventStore.formModalVisibility)
   const authUser = useAtomValue(userStore.AuthUser);
+
+
   const localStartDate = moment.utc(event.start_date_time ? event.start_date_time : "").local().format("DD/MM/YYYY hh:mm A");
   const localEndDate = moment.utc(event.end_date_time ? event.end_date_time : "").local().format("DD/MM/YYYY hh:mm A");
 
   function openDialog(event: SelectEvent) {
-    setSelectEvent(event)
-    setFormModelVisibility(true)
+    setSelectedEvent(event)
+    setFormModalVisibility(true)
 
   }
 
+
+  const location = (() => {
+    const metadata = JSON.parse(event.metadata || "{}");
+    return metadata.location;
+  })()
+
+  const meeting_link = (() => {
+    const metadata = JSON.parse(event.metadata || "{}");
+    return metadata.meeting_link && (
+      <a
+        target="_blank"
+        rel="noopener noreferrer"
+        href={metadata.meeting_link}
+        className="hover:text-blue-600 hover:underline">
+        {metadata.meeting_link}
+      </a>
+    )
+  })()
+
   return (
-    <Card className="w-full sm:w-[49%] mt-5">
+    <Card className="w-full lg:w-[49%] mt-2">
       <CardHeader className="flex flex-row justify-between items-center">
         <div>
-          <CardTitle>{event.title}</CardTitle>
+          <CardTitle className="font-sans text-xl mb-2">{event.title}</CardTitle>
           <CardDescription >{event.description}</CardDescription>
         </div>
         {event.host_id === authUser?.unique_id && (
@@ -46,22 +70,36 @@ const EventCard = ({ event, setFormModelVisibility, setSelectEvent }: EventcardP
       </CardHeader>
       <CardContent>
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-          <CalendarDays className="h-4 w-4" />
-          <span>Start Date Time:</span>
-          <span>{localStartDate}</span>
+          <CalendarDays className="h-4 w-4 text-primary" />
+          <span><strong>Start Date Time: </strong>{localStartDate}</span>
         </div>
         <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
-          <CalendarDays className="h-4 w-4" />
-          <span>End Date Time:</span>
-          <span>{localEndDate}</span>
+          <CalendarDays className="h-4 w-4 text-primary" />
+          <span><strong>End Date Time: </strong>{localEndDate}</span>
         </div>
+
+        {(event.type === eventType.Both || event.type === eventType.Physical) && (
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
+            <MapPin className="h-4 w-4 text-primary" />
+            <span><strong>Location: </strong>
+              {location}
+            </span>
+          </div>
+        )}
+
+        {(event.type === eventType.Both || event.type === eventType.Virtual) && (
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
+            <Presentation className="h-4 w-4 text-primary" />
+            <span>
+              <strong>Meeting Link: </strong>
+              {meeting_link}
+            </span>
+          </div>
+        )}
+
         <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
-          <MapPin className="h-4 w-4" />
-          <span>{event.location}</span>
-        </div>
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
-          <Users className="h-4 w-4" />
-          <span>{0} attendees</span>
+          <Users className="h-4 w-4 text-primary" />
+          <span><strong> Attendees: </strong>{0}</span>
         </div>
       </CardContent>
       <CardFooter className="justify-end">

@@ -375,7 +375,8 @@ export const eventsTable = sqliteTable("events", {
   description: text(),
   start_date_time: text(),
   end_date_time: text(),
-  location: text().notNull(),
+  type: text(),
+  metadata: text(),
   host_id: text().notNull(),
   ...timestamps,
 })
