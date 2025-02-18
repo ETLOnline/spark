@@ -2,7 +2,6 @@ import React, { Dispatch, SetStateAction, useState } from "react";
 import CreateEvent from "./CreateEvent";
 import EventCard from "./EventCard";
 import { SelectEvent } from "@/src/db/schema";
-import { atom } from "jotai";
 
 interface Props {
   events: SelectEvent[];

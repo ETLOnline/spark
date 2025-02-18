@@ -14,6 +14,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { userStore } from "@/src/store/user/userStore";
 import moment from "moment";
 import { eventStore } from "@/src/store/event/eventStore";
+import { eventType } from "../../common/Loader/types/event.types";
 
 
 interface EventcardProps {
@@ -77,7 +78,7 @@ const EventCard = ({ event }: EventcardProps) => {
           <span><strong>End Date Time: </strong>{localEndDate}</span>
         </div>
 
-        {(event.type === "both" || event.type === "physical") && (
+        {(event.type === eventType.Both || event.type === eventType.Physical) && (
           <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
             <MapPin className="h-4 w-4 text-primary" />
             <span><strong>Location: </strong>
@@ -86,7 +87,7 @@ const EventCard = ({ event }: EventcardProps) => {
           </div>
         )}
 
-        {(event.type === "both" || event.type === "virtual") && (
+        {(event.type === eventType.Both || event.type === eventType.Virtual) && (
           <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
             <Presentation className="h-4 w-4 text-primary" />
             <span>

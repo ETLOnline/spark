@@ -26,6 +26,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from '@hookform/resolvers/zod'
 import { eventStore } from "@/src/store/event/eventStore";
+import { eventType } from "../../common/Loader/types/event.types";
+
 
 
 interface Props {
@@ -398,9 +400,9 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="physical">Physical</SelectItem>
-                        <SelectItem value="virtual">Virtual</SelectItem>
-                        <SelectItem value="both">Both</SelectItem>
+                        <SelectItem value={eventType.Physical}>Physical</SelectItem>
+                        <SelectItem value={eventType.Virtual}>Virtual</SelectItem>
+                        <SelectItem value={eventType.Both}>Both</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
