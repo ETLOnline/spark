@@ -30,7 +30,6 @@ import { useAtomValue, useSetAtom } from "jotai"
 import { postStore } from "@/src/store/post/postStore"
 import {
   SelectFilePost,
-  SelectHashtag,
   SelectPollPost,
   SelectPost,
   SelectUser
@@ -42,8 +41,7 @@ import {
   CreateFilePostAction,
   CreatePollPostAction,
   CreatePostAction,
-  LinkHashtagsToPostAction,
-  SearchHashtagsAction
+  LinkHashtagsToPostAction
 } from "@/src/server-actions/Post/Post"
 import useHashtags from "./profile/hooks/useHashtags"
 
@@ -112,28 +110,31 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     try {
       let postData: SelectPost | SelectFilePost | SelectPollPost =
         {} as SelectPost
-      if (newPost.type === PostType.text || newPost.type === PostType.image) {
+      if (newPost.type === PostType.text) {
+        let linkedHashtags
         const post = await createPost(newPost.content as string, newPost.type)
         if (post && post.data && post.data[0]) {
-          const linkedHashtags = await linkHashtagsToPost(
-            post.data[0].id,
-            hashtags.length
-              ? hashtags
-                  .filter((tag) => !tag.deleted)
-                  .map((tag) => {
-                    return {
-                      name: tag.name,
-                      count: tag.count,
-                      status: tag.status
-                    }
-                  })
-              : []
-          )
-          if (linkedHashtags?.error) {
-            console.error(
-              "Error linking hashtags to post:",
-              linkedHashtags.error
+          if (hashtags.length) {
+            linkedHashtags = await linkHashtagsToPost(
+              post.data[0].id,
+              hashtags.length
+                ? hashtags
+                    .filter((tag) => !tag.deleted)
+                    .map((tag) => {
+                      return {
+                        name: tag.name,
+                        count: tag.count,
+                        status: tag.status
+                      }
+                    })
+                : []
             )
+            if (linkedHashtags?.error) {
+              console.error(
+                "Error linking hashtags to post:",
+                linkedHashtags.error
+              )
+            }
           }
           postData = {
             ...post.data[0],
@@ -141,7 +142,6 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             hashtags: linkedHashtags?.data ? [...linkedHashtags?.data] : [],
             postComments: []
           }
-          setHashtags([])
         } else if (post?.error) {
           toast({
             variant: "destructive",
@@ -150,6 +150,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           })
         }
       } else if (newPost.type === PostType.poll) {
+        let linkedHashtags
         const post = await createPollPost(
           newPost.content as string,
           newPost.type,
@@ -157,10 +158,32 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         )
         setPollOptions([])
         if (post && post.data) {
+          if (hashtags.length) {
+            linkedHashtags = await linkHashtagsToPost(
+              post.data.id,
+              hashtags.length
+                ? hashtags
+                    .filter((tag) => !tag.deleted)
+                    .map((tag) => {
+                      return {
+                        name: tag.name,
+                        count: tag.count,
+                        status: tag.status
+                      }
+                    })
+                : []
+            )
+            if (linkedHashtags?.error) {
+              console.error(
+                "Error linking hashtags to post:",
+                linkedHashtags.error
+              )
+            }
+          }
           postData = {
             ...post.data,
             author: authUser as SelectUser,
-            hashtags: [],
+            hashtags: linkedHashtags?.data ? [...linkedHashtags?.data] : [],
             postComments: []
           }
         } else if (post?.error) {
@@ -170,21 +193,58 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             description: "Error creating post please try again!"
           })
         }
-      } else {
+      } else if (
+        newPost.type === PostType.file ||
+        newPost.type === PostType.image
+      ) {
+        if (!newPost.fileBase64 || !newPost.fileName) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Please select a file to upload"
+          })
+          return
+        }
+
         const post = await createFilePost(
-          newPost.content as string,
           newPost.type,
           newPost.fileSize as string,
-          newPost.fileName as string
+          newPost.fileName as string,
+          newPost.fileType as string,
+          newPost.fileBase64
         )
-        if (post && post.data && post.data[0]) {
+        if (post && post.data && post.data) {
+          let linkedHashtags
+          if (hashtags.length) {
+            linkedHashtags = await linkHashtagsToPost(
+              post.data.id,
+              hashtags.length
+                ? hashtags
+                    .filter((tag) => !tag.deleted)
+                    .map((tag) => {
+                      return {
+                        name: tag.name,
+                        count: tag.count,
+                        status: tag.status
+                      }
+                    })
+                : []
+            )
+            if (linkedHashtags?.error) {
+              console.error(
+                "Error linking hashtags to post:",
+                linkedHashtags.error
+              )
+            }
+          }
           postData = {
-            ...post.data[0],
+            ...post.data,
             author: authUser as SelectUser,
-            hashtags: [],
+            hashtags: linkedHashtags?.data ? [...linkedHashtags?.data] : [],
             postComments: []
           }
         } else if (post?.error) {
+          console.error("Error creating post:", post.error)
           toast({
             variant: "destructive",
             title: "Error",
@@ -192,6 +252,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           })
         }
       }
+      setHashtags([])
       if (postData.id) {
         setPosts((posts) => [
           postData as unknown as SelectPost | SelectFilePost | SelectPollPost,
@@ -201,8 +262,9 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           title: "Posted!"
         })
       }
-      setNewPost({ content: "", type: PostType.text, hashtags: [] })
+      setNewPost({ content: "", hashtags: [] })
     } catch (error) {
+      console.error(error)
       toast({
         variant: "destructive",
         title: "Error",
@@ -313,7 +375,6 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         </CardContent>
         <CardFooter>
           <Button
-            // onClick={handleCreatePost}
             className="w-full"
             type="submit"
             disabled={

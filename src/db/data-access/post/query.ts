@@ -3,7 +3,6 @@ import { db } from "../.."
 import {
   commentsTable,
   InsertComment,
-  InsertFilePost,
   InsertPollOption,
   InsertPollVote,
   InsertPost,
@@ -13,20 +12,24 @@ import {
   postsTable,
   hashtagsTable,
   postHashtagsTable,
-  InsertHashtag,
-  InsertPostHashtag,
-  SelectHashtag
+  SelectHashtag,
+  InsertFile,
+  filesTable
 } from "../../schema"
 import { eq, and, desc } from "drizzle-orm"
 import { like } from "drizzle-orm"
-import { Tag, TagStatus } from "@/src/components/TagsInput/tags-input.type.d"
+import { Tag } from "@/src/components/TagsInput/tags-input.type.d"
 
 export const CreatePost = async (post: InsertPost) => {
   return await db.insert(postsTable).values(post).returning()
 }
 
-export const CreateFilePost = async (post: InsertFilePost) => {
+export const CreateFilePost = async (post: InsertPost) => {
   return await db.insert(postsTable).values(post).returning()
+}
+
+export const AddFile = async (file: InsertFile) => {
+  return await db.insert(filesTable).values(file).returning()
 }
 
 export const AddPollOptions = async (options: InsertPollOption[]) => {
@@ -140,10 +143,10 @@ export const HasUserVoted = async (postId: string, userId: string) => {
   })
 }
 
-export const GetUserPosts = async (userId: string) => {
+export const GetPublicPosts = async () => {
   try {
     const posts = await db.query.postsTable.findMany({
-      where: eq(postsTable.user_id, userId),
+      where: eq(postsTable.is_private, 0),
       with: {
         author: true,
         postComments: {
@@ -156,7 +159,8 @@ export const GetUserPosts = async (userId: string) => {
             hashtag: true
           }
         },
-        pollOptions: true
+        pollOptions: true,
+        file: true
       },
       orderBy: desc(postsTable.created_at)
     })
@@ -178,7 +182,7 @@ export const CreateHashtags = async (names: string[]) => {
   return newHashtags
 }
 
-export const updateHashTagsCount = async (tags: Tag[]) => {
+export const UpdateHashTagsCount = async (tags: Tag[]) => {
   const updatedHashtags = []
   for (const tag of tags) {
     const updatedHashtag = await db
@@ -218,7 +222,7 @@ export const LinkExistingHashtagsToPost = async (
   hashtags: Tag[]
 ) => {
   return await db.transaction(async (tx) => {
-    const linkedHashtags = await updateHashTagsCount(hashtags)
+    const linkedHashtags = await UpdateHashTagsCount(hashtags)
     await AddHashtagToPostLink(linkedHashtags, postId)
     return linkedHashtags
   })

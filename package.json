@@ -47,6 +47,7 @@
     "jotai": "^2.10.3",
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.462.0",
+    "minio": "^8.0.4",
     "moment": "^2.30.1",
     "moment-timezone": "^0.5.46",
     "next": "14.2.16",
