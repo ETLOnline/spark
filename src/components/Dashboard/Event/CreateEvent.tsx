@@ -26,7 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from '@hookform/resolvers/zod'
 import { eventStore } from "@/src/store/event/eventStore";
-import { eventType } from "../../common/Loader/types/event.types";
+import { EventType } from "../../common/Loader/types/event.types";
 
 
 
@@ -62,21 +62,21 @@ const eventSchema = z.object({
         message: "End date and time must be after the start date and time",
       });
     }
-    if (data.event_type === eventType.Physical && !data.location) {
+    if (data.event_type === EventType.Physical && !data.location) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["location"],
         message: "location required"
       });
     }
-    if (data.event_type === eventType.Virtual && !data.meeting_link) {
+    if (data.event_type === EventType.Virtual && !data.meeting_link) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["meeting_link"],
         message: "Meeting Link  required"
       });
     }
-    if (data.event_type === eventType.Both) {
+    if (data.event_type === EventType.Both) {
       if (!data.location) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -123,17 +123,17 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
   const authUser = useAtomValue(userStore.AuthUser);
   const { toast } = useToast()
 
-  const eventTypeSelection = form.watch('event_type');
+  const EventTypeSelection = form.watch('event_type');
   const { setValue, clearErrors } = form
 
 
 
   useEffect(() => {
-    if (eventTypeSelection === eventType.Physical) {
+    if (EventTypeSelection === EventType.Physical) {
       setValue("meeting_link", "");
       clearErrors("meeting_link")
     }
-    else if (eventTypeSelection === eventType.Virtual) {
+    else if (EventTypeSelection === EventType.Virtual) {
       setValue("location", "");
       clearErrors("location")
     }
@@ -146,10 +146,10 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
       selesctedEventCopy.end_date_time = moment.utc(selesctedEventCopy.end_date_time).local().format("YYYY-MM-DD HH:mm")
       const metadata = JSON.parse(selesctedEventCopy.metadata || "{}")
       form.setValue("title", selesctedEventCopy.title);
-      form.setValue("description", selesctedEventCopy.description);
+      form.setValue("description", selesctedEventCopy?.description || '');
       form.setValue("start_date_time", selesctedEventCopy.start_date_time);
       form.setValue("end_date_time", selesctedEventCopy.end_date_time);
-      form.setValue("event_type", selesctedEventCopy.type);
+      form.setValue("event_type", selesctedEventCopy?.type || EventType.Both);
       form.setValue("location", metadata.location);
       form.setValue("meeting_link", metadata.meeting_link);
     }
@@ -400,9 +400,9 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={eventType.Physical}>Physical</SelectItem>
-                        <SelectItem value={eventType.Virtual}>Virtual</SelectItem>
-                        <SelectItem value={eventType.Both}>Both</SelectItem>
+                        <SelectItem value={EventType.Physical}>Physical</SelectItem>
+                        <SelectItem value={EventType.Virtual}>Virtual</SelectItem>
+                        <SelectItem value={EventType.Both}>Both</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -413,7 +413,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
               </div>
             </div>
 
-            {(eventTypeSelection === eventType.Physical || eventTypeSelection === eventType.Both) && (
+            {(EventTypeSelection === EventType.Physical || EventTypeSelection === EventType.Both) && (
               <div className="flex flex-col">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="location" className="text-right">
@@ -438,7 +438,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
               </div>
             )}
 
-            {(eventTypeSelection === eventType.Virtual || eventTypeSelection === eventType.Both) && (
+            {(EventTypeSelection === EventType.Virtual || EventTypeSelection === EventType.Both) && (
               <div className="flex flex-col">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="meeting_link" className="text-right">
