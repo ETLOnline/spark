@@ -1,15 +1,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { SelectComment } from "@/src/db/schema"
-import { SelectComment } from "@/src/db/schema"
 
 type Props = {
-  comment: SelectComment
   comment: SelectComment
 }
 
 const PostComments: React.FC<Props> = (props) => {
-  const name = `${props.comment.commentor.first_name} ${props.comment.commentor.last_name}`
-
   const name = `${props.comment.commentor.first_name} ${props.comment.commentor.last_name}`
 
   return (
@@ -18,10 +14,7 @@ const PostComments: React.FC<Props> = (props) => {
         <AvatarImage
           src={props.comment.commentor.profile_url as string}
           alt={name}
-          src={props.comment.commentor.profile_url as string}
-          alt={name}
         />
-        <AvatarFallback>{name}</AvatarFallback>
         <AvatarFallback>{name}</AvatarFallback>
       </Avatar>
       <div className="rounded-[15px] bg-secondary p-3 pt-2">
