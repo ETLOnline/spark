@@ -37,12 +37,6 @@ const PostFeed: React.FC<PostFeedProps> = ({ fetchedPosts }) => {
     setPosts([...fetchedPosts])
   }, [fetchedPosts])
 
-  useEffect(() => {
-    console.log("posts", posts);
-
-  }, [posts])
-  
-
   return (
     <div className="space-y-6">
       {posts.map((post) => {
