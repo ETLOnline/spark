@@ -413,7 +413,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
               </div>
             </div>
 
-            {(eventTypeSelection === "physical" || eventTypeSelection === "both") && (
+            {(eventTypeSelection === eventType.Physical || eventTypeSelection === eventType.Both) && (
               <div className="flex flex-col">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="location" className="text-right">
@@ -438,7 +438,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
               </div>
             )}
 
-            {(eventTypeSelection === "virtual" || eventTypeSelection === "both") && (
+            {(eventTypeSelection === eventType.Virtual || eventTypeSelection === eventType.Both) && (
               <div className="flex flex-col">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="meeting_link" className="text-right">
