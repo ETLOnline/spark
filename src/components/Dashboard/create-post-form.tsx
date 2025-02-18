@@ -139,7 +139,9 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           postData = {
             ...post.data[0],
             author: authUser as SelectUser,
-            hashtags: linkedHashtags?.data ? [...linkedHashtags?.data] : [],
+            hashtags: linkedHashtags?.data?.length
+              ? [...linkedHashtags?.data]
+              : [],
             postComments: []
           }
         } else if (post?.error) {
@@ -183,7 +185,9 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           postData = {
             ...post.data,
             author: authUser as SelectUser,
-            hashtags: linkedHashtags?.data ? [...linkedHashtags?.data] : [],
+            hashtags: linkedHashtags?.data?.length
+              ? [...linkedHashtags?.data]
+              : [],
             postComments: []
           }
         } else if (post?.error) {
@@ -205,7 +209,6 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           })
           return
         }
-
         const post = await createFilePost(
           newPost.type,
           newPost.fileSize as string,
@@ -240,7 +243,9 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           postData = {
             ...post.data,
             author: authUser as SelectUser,
-            hashtags: linkedHashtags?.data ? [...linkedHashtags?.data] : [],
+            hashtags: linkedHashtags?.data?.length
+              ? [...linkedHashtags?.data]
+              : [],
             postComments: []
           }
         } else if (post?.error) {

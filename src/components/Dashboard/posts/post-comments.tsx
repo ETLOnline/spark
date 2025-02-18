@@ -17,12 +17,9 @@ const PostComments: React.FC<Props> = (props) => {
         />
         <AvatarFallback>{name}</AvatarFallback>
       </Avatar>
-      <div className="flex-1">
+      <div className="rounded-[15px] bg-secondary p-3 pt-2">
         <p className="font-semibold">{name}</p>
         <p className="text-sm">{props.comment.content}</p>
-        <p className="text-xs text-muted-foreground">
-          {new Date(props.comment.created_at as string).toLocaleString()}
-        </p>
       </div>
     </div>
   )

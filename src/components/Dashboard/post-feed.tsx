@@ -25,9 +25,6 @@ import { Separator } from "@/src/components/ui/separator"
 import PostInteractions from "./posts/post-interactions"
 import PostComments from "./posts/post-comments"
 import PostCommentForm from "./posts/post-comment-form"
-import { useServerAction } from "@/src/hooks/useServerAction"
-import { IsPostLikedAction } from "@/src/server-actions/Post/Post"
-import { PostFile } from "./posts/types/posts-types"
 
 type PostFeedProps = {
   fetchedPosts: (SelectPost | SelectFilePost | SelectPollPost)[]
@@ -39,6 +36,12 @@ const PostFeed: React.FC<PostFeedProps> = ({ fetchedPosts }) => {
   useEffect(() => {
     setPosts([...fetchedPosts])
   }, [fetchedPosts])
+
+  useEffect(() => {
+    console.log("posts", posts);
+
+  }, [posts])
+  
 
   return (
     <div className="space-y-6">

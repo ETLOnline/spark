@@ -46,25 +46,22 @@ const PollPost: React.FC<Props> = ({ post }) => {
     }
     try {
       setIsVoting(true)
-      const option = post.pollOptions?.find(
+      const option = post.options?.find(
         (option) => option.option_text === value
       )
       if (!option) return
+      setSelectedOption(value)
       const result = await votePoll(post.id, value)
       if (result?.success) {
         toast({
           title: "Success",
           description: "You have successfully voted"
         })
-        setSelectedOption(value)
       } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Error voting please try again!"
-        })
+        throw new Error(result?.error)
       }
     } catch (error) {
+      setSelectedOption("")
       toast({
         variant: "destructive",
         title: "Error",
@@ -81,9 +78,9 @@ const PollPost: React.FC<Props> = ({ post }) => {
       <RadioGroup
         onValueChange={handleVote}
         disabled={isVoting}
-        defaultValue={selectedOption}
+        value={selectedOption}
       >
-        {post.pollOptions?.map((option) => (
+        {post.options?.map((option) => (
           <div key={option.option_text} className="flex items-center space-x-2">
             <RadioGroupItem
               value={option.option_text}

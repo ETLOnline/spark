@@ -2,7 +2,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { SearchTagsForSuggestionsAction } from "@/src/server-actions/Tag/Tag"
 import { SetStateAction, useAtomValue, useSetAtom } from "jotai"
 import { profileStore } from "@/src/store/profile/profileStore"
-import { Tag, TagStatus } from "@/src/components/TagsInput/tags-input.type.d"
+import { Tag, TagStatus } from "@/src/components/TagsInput/tags-input-types.d"
 
 type UseUserSkillsReturn = [
   skills: Tag[], // Current skills

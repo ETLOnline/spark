@@ -8,7 +8,7 @@ import {
 } from "@/src/components/ui/command"
 import { Input } from "@/src/components/ui/input"
 import { Button } from "@/src/components/ui/button"
-import { Tag, TagStatus } from "./tags-input.type.d"
+import { Tag, TagStatus } from "./tags-input-types.d"
 
 type BaseTagsInputProps = {
   autocomplete?: boolean
@@ -142,7 +142,9 @@ const TagsInput: React.FC<TagsInputProps> = ({
       }
     }
     setShowSuggestions(false)
-    autocomplete && ((tagInput.current as HTMLInputElement).value = "")
+    if (autocomplete) {
+      ;(tagInput.current as HTMLInputElement).value = ""
+    }
   }
 
   const removeTag = (indexToRemove: number) => {
@@ -211,7 +213,9 @@ const TagsInput: React.FC<TagsInputProps> = ({
       e.preventDefault()
       if (tagInput.current?.value) {
         handleNewTag()
-        onChange && onChange(tagInput.current?.value)
+        if (onChange) {
+          onChange(tagInput.current?.value)
+        }
         ;(tagInput.current as HTMLInputElement).value = ""
       }
     }

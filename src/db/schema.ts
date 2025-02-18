@@ -419,7 +419,7 @@ export const postsRelations = relations(postsTable, ({ one, many }) => ({
   hashtags: many(postHashtagsTable, {
     relationName: "postHashtagToPost"
   }),
-  pollOptions: many(pollOptionsTable, {
+  options: many(pollOptionsTable, {
     relationName: "pollToPost"
   }),
   file: one(filesTable, {
@@ -439,7 +439,7 @@ export type SelectFilePost = SelectPost & {
   file: SelectFile
 }
 export type SelectPollPost = SelectPost & {
-  pollOptions: SelectPollOption[]
+  options: SelectPollOption[]
 }
 
 export const commentsTable = sqliteTable("comments", {

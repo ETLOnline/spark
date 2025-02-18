@@ -18,7 +18,7 @@ import {
 } from "../../schema"
 import { eq, and, desc } from "drizzle-orm"
 import { like } from "drizzle-orm"
-import { Tag } from "@/src/components/TagsInput/tags-input.type.d"
+import { Tag } from "@/src/components/TagsInput/tags-input-types.d"
 
 export const CreatePost = async (post: InsertPost) => {
   return await db.insert(postsTable).values(post).returning()
@@ -159,7 +159,7 @@ export const GetPublicPosts = async () => {
             hashtag: true
           }
         },
-        pollOptions: true,
+        options: true,
         file: true
       },
       orderBy: desc(postsTable.created_at)

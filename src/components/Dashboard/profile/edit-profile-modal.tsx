@@ -21,7 +21,7 @@ import useUserSkills from "./hooks/useUserSkills"
 import useUserInterests from "./hooks/useUserInterests"
 import { ProfileData } from "./types/profile-types.d"
 import { useToast } from "@/src/hooks/use-toast"
-import { TagStatus, Tag } from "../../TagsInput/tags-input.type.d"
+import { TagStatus, Tag } from "../../TagsInput/tags-input-types.d"
 
 const EditProfileModal: React.FC = () => {
   const bio = useAtomValue(profileStore.bio)

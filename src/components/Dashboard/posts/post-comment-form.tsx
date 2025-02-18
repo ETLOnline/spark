@@ -15,6 +15,7 @@ type PostCommentFormProps = {
 
 const PostCommentForm: React.FC<PostCommentFormProps> = ({ postId }) => {
   const commentText = useRef<string>("")
+  const commentInput = useRef<HTMLInputElement>(null)
 
   const setPosts = useSetAtom(postStore.posts)
   const user = useAtomValue(userStore.AuthUser)
@@ -60,6 +61,9 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({ postId }) => {
         })
       }
       commentText.current = ""
+      if (commentInput.current) {
+        commentInput.current.value = ""
+      }
     } catch (error) {
       toast({
         variant: "destructive",
@@ -79,6 +83,7 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({ postId }) => {
         placeholder="Add a comment..."
         onChange={(e) => (commentText.current = e.target.value)}
         className="flex-1 mt-4"
+        ref={commentInput}
       />
       <Button
         onClick={() => handleAddComment(postId)}

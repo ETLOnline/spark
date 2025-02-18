@@ -78,7 +78,13 @@ const PostInteractions: React.FC<Props> = ({ likes, comments, postId }) => {
         onClick={handleLike}
         disabled={toggleLikeLoading}
       >
-        <ThumbsUp className={`mr-2 h-4 w-4 ${isLiked ? "text-primary" : ""}`} />
+        <ThumbsUp
+          className={`mr-2 h-4 w-4 ${
+            isLiked
+              ? "text-primary dark:text-primary fill-primary dark:fill-white"
+              : ""
+          }`}
+        />
         {likes}
       </Button>
       <Button variant="ghost" size="sm">

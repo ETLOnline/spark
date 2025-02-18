@@ -1,6 +1,6 @@
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { SetStateAction } from "jotai"
-import { Tag, TagStatus } from "@/src/components/TagsInput/tags-input.type.d"
+import { Tag, TagStatus } from "@/src/components/TagsInput/tags-input-types.d"
 import { useState } from "react"
 import { SearchHashtagsAction } from "@/src/server-actions/Post/Post"
 

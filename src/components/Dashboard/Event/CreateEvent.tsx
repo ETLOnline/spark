@@ -146,10 +146,10 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
       selesctedEventCopy.end_date_time = moment.utc(selesctedEventCopy.end_date_time).local().format("YYYY-MM-DD HH:mm")
       const metadata = JSON.parse(selesctedEventCopy.metadata || "{}")
       form.setValue("title", selesctedEventCopy.title);
-      form.setValue("description", selesctedEventCopy.description);
+      form.setValue("description", selesctedEventCopy.description as string);
       form.setValue("start_date_time", selesctedEventCopy.start_date_time);
       form.setValue("end_date_time", selesctedEventCopy.end_date_time);
-      form.setValue("event_type", selesctedEventCopy.type);
+      form.setValue("event_type", selesctedEventCopy.type as string);
       form.setValue("location", metadata.location);
       form.setValue("meeting_link", metadata.meeting_link);
     }
