@@ -24,27 +24,7 @@ import {
 } from "@/src/components/ui/select"
 import { Textarea } from "../ui/textarea"
 import { NewPost, PostType } from "./posts/types/posts-types.d"
-import { NewPost, PostType } from "./posts/types/posts-types.d"
 import CreatePostInput from "./posts/create-post-input"
-import { useServerAction } from "@/src/hooks/useServerAction"
-import { useAtomValue, useSetAtom } from "jotai"
-import { postStore } from "@/src/store/post/postStore"
-import {
-  SelectFilePost,
-  SelectPollPost,
-  SelectPost,
-  SelectUser
-} from "@/src/db/schema"
-import { useToast } from "@/src/hooks/use-toast"
-import TagsInput from "../TagsInput/TagsInput"
-import { userStore } from "@/src/store/user/userStore"
-import {
-  CreateFilePostAction,
-  CreatePollPostAction,
-  CreatePostAction,
-  LinkHashtagsToPostAction
-} from "@/src/server-actions/Post/Post"
-import useHashtags from "./profile/hooks/useHashtags"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useAtomValue, useSetAtom } from "jotai"
 import { postStore } from "@/src/store/post/postStore"
@@ -84,10 +64,8 @@ const categories = [
 ]
 
 const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
-const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   const [newPost, setNewPost] = useState<NewPost>({
     content: "",
-    type: PostType.text as PostType,
     type: PostType.text as PostType,
     hashtags: []
   })
