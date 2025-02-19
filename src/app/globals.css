@@ -48,7 +48,7 @@ body {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
     --footer-background: #f4f3f6;
-    --hero-gradient: linear-gradient(77deg, #9DD5C8 0%, #F8FBFE 100%);
+    --hero-gradient: linear-gradient(77deg, #9dd5c8 0%, #f8fbfe 100%);
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -95,13 +95,17 @@ body {
   body {
     @apply bg-background text-foreground;
   }
-  .section{
-    @apply  pt-8 pb-8
+  .section {
+    @apply pt-8 pb-8;
   }
-  .section-title{
-      @apply text-3xl font-bold  mb-5
+  .section-title {
+    @apply text-3xl font-bold  mb-5;
   }
-  .section-content{
-    @apply  mt-8
+  .section-content {
+    @apply mt-8;
   }
+}
+
+.dark .ant-upload-list-item-actions .anticon {
+  color: rgb(229 231 235) !important; /* gray-200 */
 }

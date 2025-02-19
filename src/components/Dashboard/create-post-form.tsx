@@ -305,6 +305,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                   type={PostType.image}
                   setNewPost={setNewPost}
                   newPost={newPost}
+                  key={createdFilePost?.data?.id}
                 />
               </TabsContent>
               <TabsContent value="poll">
@@ -321,6 +322,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                   type={PostType.file}
                   setNewPost={setNewPost}
                   newPost={newPost}
+                  key={createdFilePost?.data?.id}
                 />
               </TabsContent>
             </Tabs>

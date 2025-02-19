@@ -1,7 +1,11 @@
 import { Textarea } from "@/src/components/ui/textarea"
-import { Input } from "@/src/components/ui/input"
 import { NewPost, PostType } from "./types/posts-types.d"
 import TagsInput from "../../TagsInput/TagsInput"
+import { Upload } from "antd"
+import { Button } from "../../ui/button"
+import { UploadIcon } from "lucide-react"
+import "./create-post-input.css"
+import { FileUpload } from "../../ui/file-upload"
 
 type PollOptionsSetter = (
   tags: string[] | ((tags: string[]) => string[])
@@ -51,7 +55,24 @@ const CreatePostInput: React.FC<Props> = (props) => {
       className="min-h-[100px]"
     />
   ) : props.type === "image" ? (
-    <Input type="file" accept="image/*" onChange={handleFileUpload} required />
+    <div className="flex flex-col justify-center items-center pt-4">
+      <Upload
+        customRequest={({ file, onSuccess }) => {
+          handleFileUpload({
+            target: { files: [file] }
+          } as unknown as React.ChangeEvent<HTMLInputElement>)
+          onSuccess?.("ok")
+        }}
+        listType="picture"
+        maxCount={1}
+        accept="image/*"
+        className="[&_.ant-upload-list-item-name]:text-foreground img-upload"
+      >
+        <Button variant="secondary" type="button" width="full">
+          <UploadIcon /> Upload (Max: 1)
+        </Button>
+      </Upload>
+    </div>
   ) : props.type === "poll" ? (
     <div className="flex flex-col space-y-2">
       <Textarea
@@ -74,9 +95,13 @@ const CreatePostInput: React.FC<Props> = (props) => {
       />
     </div>
   ) : (
-    props.type === "file" && (
-      <Input type="file" onChange={handleFileUpload} required />
-    )
+    <FileUpload
+      onChange={(files: File[]) => {
+        handleFileUpload({
+          target: { files: [...files] }
+        } as unknown as React.ChangeEvent<HTMLInputElement>)
+      }}
+    />
   )
 }
 

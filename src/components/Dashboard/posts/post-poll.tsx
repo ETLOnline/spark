@@ -9,14 +9,17 @@ import {
 import { useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
+import { useSetAtom } from "jotai"
+import { postStore } from "@/src/store/post/postStore"
 
 type Props = {
   post: SelectPollPost
 }
 
 const PollPost: React.FC<Props> = ({ post }) => {
-  const [isVoting, setIsVoting] = useState<boolean>(false)
   const [selectedOption, setSelectedOption] = useState<string>("")
+
+  const setPosts = useSetAtom(postStore.posts)
 
   const [votePollLoading, votePollData, votePollError, votePoll] =
     useServerAction(VotePollAction)
@@ -45,7 +48,6 @@ const PollPost: React.FC<Props> = ({ post }) => {
       return
     }
     try {
-      setIsVoting(true)
       const option = post.options?.find(
         (option) => option.option_text === value
       )
@@ -57,6 +59,20 @@ const PollPost: React.FC<Props> = ({ post }) => {
           title: "Success",
           description: "You have successfully voted"
         })
+        setPosts((posts) =>
+          posts.map((p) =>
+            p.id === post.id && "options" in p
+              ? {
+                  ...p,
+                  options: p.options.map((option) =>
+                    option.option_text === value
+                      ? { ...option, vote_count: option.vote_count + 1 }
+                      : option
+                  )
+                }
+              : p
+          )
+        )
       } else {
         throw new Error(result?.error)
       }
@@ -67,8 +83,6 @@ const PollPost: React.FC<Props> = ({ post }) => {
         title: "Error",
         description: "Error voting please try again!"
       })
-    } finally {
-      setIsVoting(false)
     }
   }
 
@@ -77,7 +91,11 @@ const PollPost: React.FC<Props> = ({ post }) => {
       <p className="font-semibold mb-2">{post.content}</p>
       <RadioGroup
         onValueChange={handleVote}
-        disabled={isVoting}
+        disabled={
+          votePollLoading ||
+          (hasUserVotedData?.data?.option_text.length as number) > 0 ||
+          (votePollData?.data?.option.option_text.length as number) > 0
+        }
         value={selectedOption}
       >
         {post.options?.map((option) => (
