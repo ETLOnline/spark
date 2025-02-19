@@ -12,6 +12,7 @@ const ImagePost: React.FC<Props> = ({ postImg }) => {
       className="rounded-lg max-h-96 w-full object-cover"
       width={1000}
       height={1000}
+      style={{ objectFit: "contain" }}
     />
   )
 }
