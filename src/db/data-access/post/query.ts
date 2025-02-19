@@ -36,20 +36,18 @@ export const AddPollOptions = async (options: InsertPollOption[]) => {
   return await db.insert(pollOptionsTable).values(options).returning()
 }
 
-export const LikePost = async (post_id: string, user_id: string) => {
+export const LikePost = async (
+  post_id: string,
+  user_id: string,
+  likes: number
+) => {
   return await db.transaction(async (tx) => {
     // Insert into likes table
-    const like = await tx
-      .insert(likesTable)
-      .values({ post_id, user_id })
-      .returning()
+    await tx.insert(likesTable).values({ post_id, user_id }).returning()
     // Increment likes count in posts table
-    const post = await tx.query.postsTable.findFirst({
-      where: eq(postsTable.id, post_id)
-    })
     const updatedPost = await tx
       .update(postsTable)
-      .set({ likes: (post?.likes || 0) + 1 })
+      .set({ likes: (likes || 0) + 1 })
       .where(eq(postsTable.id, post_id))
       .returning()
 
@@ -57,7 +55,11 @@ export const LikePost = async (post_id: string, user_id: string) => {
   })
 }
 
-export const UnlikePost = async (post_id: string, user_id: string) => {
+export const UnlikePost = async (
+  post_id: string,
+  user_id: string,
+  likes: number
+) => {
   return await db.transaction(async (tx) => {
     // Delete from likes table
     await tx
@@ -66,12 +68,9 @@ export const UnlikePost = async (post_id: string, user_id: string) => {
         and(eq(likesTable.post_id, post_id), eq(likesTable.user_id, user_id))
       )
     // Decrement likes count in posts table
-    const post = await tx.query.postsTable.findFirst({
-      where: eq(postsTable.id, post_id)
-    })
     const updatedPost = await tx
       .update(postsTable)
-      .set({ likes: Math.max((post?.likes || 0) - 1, 0) })
+      .set({ likes: Math.max((likes || 0) - 1, 0) })
       .where(eq(postsTable.id, post_id))
       .returning()
 
@@ -86,40 +85,33 @@ export const IsPostLiked = async (postId: string, userId: string) => {
   return like !== undefined
 }
 
-export const CreateComment = async (comment: InsertComment) => {
+export const CreateComment = async (
+  comment: InsertComment,
+  comments: number
+) => {
   return await db.transaction(async (tx) => {
-    const user = AuthUserAction()
     // Insert the comment
     const newComment = await tx
       .insert(commentsTable)
       .values(comment)
       .returning()
     // Increment comments count in posts table
-    const post = await tx.query.postsTable.findFirst({
-      where: eq(postsTable.id, comment.post_id)
-    })
     await tx
       .update(postsTable)
-      .set({ comments: (post?.likes || 0) + 1 })
+      .set({ comments: (comments || 0) + 1 })
       .where(eq(postsTable.id, comment.post_id))
     return { ...newComment[0] }
   })
 }
 
-export const VotePoll = async (vote: InsertPollVote) => {
+export const VotePoll = async (vote: InsertPollVote, voteCount: number) => {
   return await db.transaction(async (tx) => {
     // Insert vote record
     const newVote = await tx.insert(pollVotesTable).values(vote).returning()
     // Increment vote count for the selected option
-    const option = await tx.query.pollOptionsTable.findFirst({
-      where: and(
-        eq(pollOptionsTable.post_id, vote.post_id),
-        eq(pollOptionsTable.option_text, vote.option_text)
-      )
-    })
     const updatedOption = await tx
       .update(pollOptionsTable)
-      .set({ vote_count: (option?.vote_count || 0) + 1 })
+      .set({ vote_count: (voteCount || 0) + 1 })
       .where(
         and(
           eq(pollOptionsTable.post_id, vote.post_id),
@@ -206,37 +198,11 @@ export const AddHashtagToPostLink = async (
   )
 }
 
-export const LinkNewHashtagsToPost = async (
-  postId: string,
-  hashtags: string[]
-) => {
-  return await db.transaction(async (tx) => {
-    const linkedHashtags = await CreateHashtags(hashtags)
-    await AddHashtagToPostLink(linkedHashtags, postId)
-    return linkedHashtags
-  })
-}
-
-export const LinkExistingHashtagsToPost = async (
-  postId: string,
-  hashtags: Tag[]
-) => {
-  return await db.transaction(async (tx) => {
-    const linkedHashtags = await UpdateHashTagsCount(hashtags)
-    await AddHashtagToPostLink(linkedHashtags, postId)
-    return linkedHashtags
-  })
-}
-
 export const SearchHashtags = async (searchTerm: string) => {
-  try {
-    const hashtags = await db.query.hashtagsTable.findMany({
-      where: like(hashtagsTable.name, `%${searchTerm}%`),
-      orderBy: desc(hashtagsTable.count),
-      limit: 10
-    })
-    return hashtags
-  } catch (error: any) {
-    throw new Error(`Failed to search hashtags: ${error.message}`)
-  }
+  const hashtags = await db.query.hashtagsTable.findMany({
+    where: like(hashtagsTable.name, `%${searchTerm}%`),
+    orderBy: desc(hashtagsTable.count),
+    limit: 10
+  })
+  return hashtags
 }

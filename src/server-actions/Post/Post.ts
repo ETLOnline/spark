@@ -12,9 +12,10 @@ import {
   HasUserVoted,
   GetPublicPosts,
   SearchHashtags,
-  LinkNewHashtagsToPost,
-  LinkExistingHashtagsToPost,
-  AddFile
+  AddFile,
+  CreateHashtags,
+  AddHashtagToPostLink,
+  UpdateHashTagsCount
 } from "@/src/db/data-access/post/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
@@ -122,15 +123,15 @@ export const CreatePollPostAction = CreateServerAction(
 
 export const ToggleLikeAction = CreateServerAction(
   true,
-  async (postId: string, isLiked: boolean) => {
+  async (postId: string, isLiked: boolean, likes: number) => {
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
         if (isLiked) {
-          const data = await UnlikePost(postId, userId)
+          const data = await UnlikePost(postId, userId, likes)
           return { success: true, data }
         } else {
-          const data = await LikePost(postId, userId)
+          const data = await LikePost(postId, userId, likes)
           return { success: true, data }
         }
       } else {
@@ -167,15 +168,18 @@ export const IsPostLikedAction = CreateServerAction(
 
 export const CreateCommentAction = CreateServerAction(
   true,
-  async (postId: string, content: string) => {
+  async (postId: string, content: string, comments: number) => {
     try {
       const user = await AuthUserAction()
       if (user?.unique_id) {
-        const commentData = await CreateComment({
-          content,
-          post_id: postId,
-          user_id: user?.unique_id
-        })
+        const commentData = await CreateComment(
+          {
+            content,
+            post_id: postId,
+            user_id: user?.unique_id
+          },
+          comments
+        )
         return { success: true, data: { ...commentData, commentor: user } }
       } else {
         throw new Error("Unauthorized", { cause: 401 })
@@ -191,15 +195,18 @@ export const CreateCommentAction = CreateServerAction(
 
 export const VotePollAction = CreateServerAction(
   true,
-  async (postId: string, option_text: string) => {
+  async (postId: string, optionText: string, voteCount: number) => {
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
-        const voteData = await VotePoll({
-          user_id: userId,
-          post_id: postId,
-          option_text: option_text
-        })
+        const voteData = await VotePoll(
+          {
+            user_id: userId,
+            post_id: postId,
+            option_text: optionText
+          },
+          voteCount
+        )
         return { success: true, data: voteData }
       } else {
         throw new Error("Unauthorized", { cause: 401 })
@@ -262,14 +269,10 @@ export const LinkHashtagsToPostAction = CreateServerAction(
         const existingTags = hashtags.filter(
           (tag) => tag.status !== TagStatus.new
         )
-        const newHashtags = await LinkNewHashtagsToPost(
-          postId,
-          newTags.map((tag) => tag.name)
-        )
-        const existingHashtags = await LinkExistingHashtagsToPost(
-          postId,
-          existingTags
-        )
+        const newHashtags = await CreateHashtags(newTags.map((tag) => tag.name))
+        await AddHashtagToPostLink(newHashtags, postId)
+        const existingHashtags = await UpdateHashTagsCount(existingTags)
+        await AddHashtagToPostLink(existingHashtags, postId)
         return { success: true, data: [...newHashtags, ...existingHashtags] }
       } else {
         throw new Error("Unauthorized", { cause: 401 })

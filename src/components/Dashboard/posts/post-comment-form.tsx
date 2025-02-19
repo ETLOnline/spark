@@ -11,9 +11,13 @@ import { useToast } from "@/src/hooks/use-toast"
 
 type PostCommentFormProps = {
   postId: string
+  comments: number
 }
 
-const PostCommentForm: React.FC<PostCommentFormProps> = ({ postId }) => {
+const PostCommentForm: React.FC<PostCommentFormProps> = ({
+  postId,
+  comments
+}) => {
   const commentText = useRef<string>("")
   const commentInput = useRef<HTMLInputElement>(null)
 
@@ -33,7 +37,11 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({ postId }) => {
 
   const handleAddComment = async (postId: string) => {
     try {
-      const response = await createComment(postId, commentText.current)
+      const response = await createComment(
+        postId,
+        commentText.current,
+        comments
+      )
       if (response?.data) {
         const addedComment = response.data
         if (addedComment) {
@@ -89,6 +97,8 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({ postId }) => {
         onClick={() => handleAddComment(postId)}
         size="sm"
         className="mt-4"
+        loading={createCommentLoading}
+        disabled={createCommentLoading}
       >
         Comment
       </Button>

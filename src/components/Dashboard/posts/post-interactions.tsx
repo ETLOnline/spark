@@ -43,7 +43,7 @@ const PostInteractions: React.FC<Props> = ({ likes, comments, postId }) => {
             : post
         )
       )
-      const response = await toggleLike(postId, isLiked)
+      const response = await toggleLike(postId, isLiked, likes)
       if (response?.data) {
         setIsLiked(!isLiked)
       }

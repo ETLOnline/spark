@@ -51,7 +51,7 @@ const PollPost: React.FC<Props> = ({ post }) => {
       )
       if (!option) return
       setSelectedOption(value)
-      const result = await votePoll(post.id, value)
+      const result = await votePoll(post.id, value, option.vote_count)
       if (result?.success) {
         toast({
           title: "Success",

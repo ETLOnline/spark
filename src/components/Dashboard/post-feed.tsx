@@ -95,7 +95,7 @@ const PostFeed: React.FC<PostFeedProps> = ({ fetchedPosts }) => {
                   <PostComments key={comment.id} comment={comment} />
                 ))}
               </div>
-              <PostCommentForm postId={post.id} />
+              <PostCommentForm postId={post.id} comments={post.comments} />
             </CardFooter>
           </Card>
         )
