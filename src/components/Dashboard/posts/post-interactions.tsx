@@ -1,38 +1,42 @@
-import {
-  IsPostLikedAction,
-  ToggleLikeAction
-} from "@/src/server-actions/Post/Post"
+import { ToggleLikeAction } from "@/src/server-actions/Post/Post"
 import { Button } from "../../ui/button"
 import { MessageCircle, Share2, ThumbsUp } from "lucide-react"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { useSetAtom } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { postStore } from "@/src/store/post/postStore"
 import { useEffect, useState } from "react"
 import { useToast } from "@/src/hooks/use-toast"
+import { SelectLike } from "@/src/db/schema"
+import { userStore } from "@/src/store/user/userStore"
 
 type Props = {
   likes: number
   comments: number
   postId: string
+  likers?: SelectLike[]
 }
 
-const PostInteractions: React.FC<Props> = ({ likes, comments, postId }) => {
+const PostInteractions: React.FC<Props> = ({
+  likes,
+  comments,
+  postId,
+  likers
+}) => {
   const [toggleLikeLoading, toggleLikedPost, toggleLikeError, toggleLike] =
     useServerAction(ToggleLikeAction)
-  const [IsPostLikedLoading, IsPostLikeddPost, IsPostLikedError, IsPostLiked] =
-    useServerAction(IsPostLikedAction)
 
   const [isLiked, setIsLiked] = useState<boolean>(false)
 
   const setPosts = useSetAtom(postStore.posts)
+  const userId = useAtomValue(userStore.AuthUser)?.unique_id
 
   const { toast } = useToast()
 
   useEffect(() => {
-    ;(async () => {
-      setIsLiked((await IsPostLiked(postId))?.data as boolean)
-    })()
-  }, [])
+    if (likers && likers?.length && userId) {
+      setIsLiked(likers.some((like) => like.user_id === (userId as string)))
+    }
+  }, [userId])
 
   const handleLike = async () => {
     try {

@@ -19,7 +19,13 @@ type Props = {
   setPollOptions?: (tags: string[] | ((tags: string[]) => string[])) => void
 }
 
-const CreatePostInput: React.FC<Props> = (props) => {
+const CreatePostInput: React.FC<Props> = ({
+  type,
+  setNewPost,
+  newPost,
+  pollOptions,
+  setPollOptions
+}) => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -27,8 +33,8 @@ const CreatePostInput: React.FC<Props> = (props) => {
       const reader = new FileReader()
       reader.onloadend = () => {
         const base64String = reader.result as string
-        props.setNewPost({
-          ...props.newPost,
+        setNewPost({
+          ...newPost,
           type: file.type.startsWith("image/") ? PostType.image : PostType.file,
           fileName: file.name,
           fileSize: file.size.toString(),
@@ -40,13 +46,13 @@ const CreatePostInput: React.FC<Props> = (props) => {
     }
   }
 
-  return props.type === "text" ? (
+  return type === "text" ? (
     <Textarea
       placeholder="What's on your mind?"
-      value={props.newPost.content as string}
+      value={newPost.content as string}
       onChange={(e) =>
-        props.setNewPost({
-          ...props.newPost,
+        setNewPost({
+          ...newPost,
           content: e.target.value,
           type: PostType.text
         })
@@ -54,7 +60,7 @@ const CreatePostInput: React.FC<Props> = (props) => {
       required
       className="min-h-[100px]"
     />
-  ) : props.type === "image" ? (
+  ) : type === "image" ? (
     <div className="flex flex-col justify-center items-center pt-4">
       <Upload
         customRequest={({ file, onSuccess }) => {
@@ -73,14 +79,14 @@ const CreatePostInput: React.FC<Props> = (props) => {
         </Button>
       </Upload>
     </div>
-  ) : props.type === "poll" ? (
+  ) : type === "poll" ? (
     <div className="flex flex-col space-y-2">
       <Textarea
         placeholder="Enter your poll question"
-        value={props.newPost.content as string}
+        value={newPost.content as string}
         onChange={(e) =>
-          props.setNewPost({
-            ...props.newPost,
+          setNewPost({
+            ...newPost,
             content: e.target.value,
             type: PostType.poll
           })
@@ -89,8 +95,8 @@ const CreatePostInput: React.FC<Props> = (props) => {
         required
       />
       <TagsInput
-        tags={props.pollOptions as string[]}
-        updateTags={props.setPollOptions as PollOptionsSetter}
+        tags={pollOptions as string[]}
+        updateTags={setPollOptions as PollOptionsSetter}
         placeholder="Type to add poll options..."
       />
     </div>

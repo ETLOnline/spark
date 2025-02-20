@@ -27,15 +27,15 @@ import PostComments from "./posts/post-comments"
 import PostCommentForm from "./posts/post-comment-form"
 
 type PostFeedProps = {
-  fetchedPosts: (SelectPost | SelectFilePost | SelectPollPost)[]
+  ssrPosts: (SelectPost | SelectFilePost | SelectPollPost)[]
 }
 
-const PostFeed: React.FC<PostFeedProps> = ({ fetchedPosts }) => {
+const PostFeed: React.FC<PostFeedProps> = ({ ssrPosts }) => {
   const [posts, setPosts] = useAtom(postStore.posts)
 
   useEffect(() => {
-    setPosts([...fetchedPosts])
-  }, [fetchedPosts])
+    setPosts([...ssrPosts])
+  }, [ssrPosts])
 
   return (
     <div className="space-y-6">
@@ -60,43 +60,20 @@ const PostFeed: React.FC<PostFeedProps> = ({ fetchedPosts }) => {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              {post.type === "text" ? (
-                <TextPost key={post.id} postText={post.content as string} />
-              ) : post.type === "image" ? (
-                <ImagePost
-                  key={post.id}
-                  postImg={(post as SelectFilePost).file.file_path as string}
-                />
-              ) : post.type === "poll" ? (
-                <PollPost key={post.id} post={post as SelectPollPost} />
-              ) : (
-                post.type === "file" && (
-                  <FilePost key={post.id} post={post as SelectFilePost} />
-                )
-              )}
-              <div className="mt-4 flex flex-wrap gap-2">
-                {post.hashtags.map((tag) => (
-                  <Badge key={tag.id} variant="secondary">
-                    #{tag.name}
-                  </Badge>
-                ))}
-              </div>
-            </CardContent>
-            <CardFooter className="flex flex-col items-start space-y-4">
-              <PostInteractions
-                postId={post.id}
-                likes={post.likes}
-                comments={post.comments}
+            {post.type === "text" ? (
+              <TextPost key={post.id} post={post} />
+            ) : post.type === "image" ? (
+              <ImagePost
+                key={post.id}
+                post={post as SelectFilePost}
               />
-              <Separator />
-              <div className="w-full space-y-4">
-                {post.postComments.map((comment: SelectComment) => (
-                  <PostComments key={comment.id} comment={comment} />
-                ))}
-              </div>
-              <PostCommentForm postId={post.id} comments={post.comments} />
-            </CardFooter>
+            ) : post.type === "poll" ? (
+              <PollPost key={post.id} post={post as SelectPollPost} />
+            ) : (
+              post.type === "file" && (
+                <FilePost key={post.id} post={post as SelectFilePost} />
+              )
+            )}
           </Card>
         )
       })}

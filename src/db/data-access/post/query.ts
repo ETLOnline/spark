@@ -1,4 +1,4 @@
-import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
+import { Post } from "./../../../components/Dashboard/posts/types/posts-types.d"
 import { db } from "../.."
 import {
   commentsTable,
@@ -10,13 +10,13 @@ import {
   pollOptionsTable,
   pollVotesTable,
   postsTable,
-  hashtagsTable,
+  tagsTable,
   postHashtagsTable,
-  SelectHashtag,
+  SelectTag,
   InsertFile,
   filesTable
 } from "../../schema"
-import { eq, and, desc } from "drizzle-orm"
+import { eq, and, desc, inArray } from "drizzle-orm"
 import { like } from "drizzle-orm"
 import { Tag } from "@/src/components/TagsInput/tags-input-types.d"
 
@@ -78,13 +78,6 @@ export const UnlikePost = async (
   })
 }
 
-export const IsPostLiked = async (postId: string, userId: string) => {
-  const like = await db.query.likesTable.findFirst({
-    where: and(eq(likesTable.post_id, postId), eq(likesTable.user_id, userId))
-  })
-  return like !== undefined
-}
-
 export const CreateComment = async (
   comment: InsertComment,
   comments: number
@@ -126,19 +119,34 @@ export const VotePoll = async (vote: InsertPollVote, voteCount: number) => {
   })
 }
 
-export const HasUserVoted = async (postId: string, userId: string) => {
-  return await db.query.pollVotesTable.findFirst({
-    where: and(
-      eq(pollVotesTable.post_id, postId),
-      eq(pollVotesTable.user_id, userId)
-    )
-  })
+interface PostQueryFilters {
+  isPrivate?: boolean
+  userIds?: string[]
+  limit?: number
+  offset?: number
+  orderBy?: "created_at" | "likes" | "comments"
+  orderDirection?: "asc" | "desc"
 }
 
-export const GetPublicPosts = async () => {
+export const getPosts = async (filters: PostQueryFilters = {}) => {
   try {
-    const posts = await db.query.postsTable.findMany({
-      where: eq(postsTable.is_private, 0),
+    const {
+      isPrivate = false,
+      userIds = [],
+      limit = 10,
+      offset = 0,
+      orderBy = "created_at",
+      orderDirection = "desc"
+    } = filters
+    const where = []
+    where.push(eq(postsTable.is_private, isPrivate ? 1 : 0))
+    if (userIds.length) {
+      where.push(inArray(postsTable.user_id, userIds))
+    }
+    const query = db.query.postsTable.findMany({
+      limit,
+      offset,
+      where: where.length > 0 ? and(...where) : undefined,
       with: {
         author: true,
         postComments: {
@@ -151,12 +159,16 @@ export const GetPublicPosts = async () => {
             hashtag: true
           }
         },
-        options: true,
-        file: true
+        options: { with: { votes: true } },
+        file: true,
+        postLikes: true
       },
-      orderBy: desc(postsTable.created_at)
+      orderBy:
+        orderDirection === "desc"
+          ? [desc(postsTable[orderBy])]
+          : [postsTable[orderBy]]
     })
-    return posts
+    return await query
   } catch (error: any) {
     throw new Error(error)
   }
@@ -164,10 +176,10 @@ export const GetPublicPosts = async () => {
 
 export const CreateHashtags = async (names: string[]) => {
   const newHashtags = await db
-    .insert(hashtagsTable)
+    .insert(tagsTable)
     .values(
       names.map((name) => {
-        return { name }
+        return { name, type: "hashtag" }
       })
     )
     .returning()
@@ -178,9 +190,9 @@ export const UpdateHashTagsCount = async (tags: Tag[]) => {
   const updatedHashtags = []
   for (const tag of tags) {
     const updatedHashtag = await db
-      .update(hashtagsTable)
+      .update(tagsTable)
       .set({ count: (tag.count as number) + 1 })
-      .where(eq(hashtagsTable.name, tag.name))
+      .where(eq(tagsTable.name, tag.name))
       .returning()
     updatedHashtags.push(updatedHashtag[0])
   }
@@ -188,7 +200,7 @@ export const UpdateHashTagsCount = async (tags: Tag[]) => {
 }
 
 export const AddHashtagToPostLink = async (
-  hashtags: SelectHashtag[],
+  hashtags: SelectTag[],
   postId: string
 ) => {
   await db.insert(postHashtagsTable).values(
@@ -199,9 +211,12 @@ export const AddHashtagToPostLink = async (
 }
 
 export const SearchHashtags = async (searchTerm: string) => {
-  const hashtags = await db.query.hashtagsTable.findMany({
-    where: like(hashtagsTable.name, `%${searchTerm}%`),
-    orderBy: desc(hashtagsTable.count),
+  const hashtags = await db.query.tagsTable.findMany({
+    where: and(
+      eq(tagsTable.type, "hashtag"),
+      like(tagsTable.name, `%${searchTerm}%`)
+    ),
+    orderBy: desc(tagsTable.count),
     limit: 10
   })
   return hashtags

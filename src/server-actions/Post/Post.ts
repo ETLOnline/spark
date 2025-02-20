@@ -6,21 +6,18 @@ import {
   CreatePost,
   LikePost,
   UnlikePost,
-  IsPostLiked,
   CreateComment,
   VotePoll,
-  HasUserVoted,
-  GetPublicPosts,
   SearchHashtags,
-  AddFile,
   CreateHashtags,
   AddHashtagToPostLink,
-  UpdateHashTagsCount
+  UpdateHashTagsCount,
+  getPosts
 } from "@/src/db/data-access/post/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import { TagStatus } from "@/src/components/TagsInput/tags-input-types.d"
-import { uploadFileToBucket } from "@/src/utils/serverHelpers"
+import { addFileToDb, uploadFileToBucket } from "@/src/utils/serverHelpers"
 
 export const CreatePostAction = CreateServerAction(
   true,
@@ -55,29 +52,22 @@ export const CreateFilePostAction = CreateServerAction(
     fileType: string,
     fileBase64: string
   ) => {
-    let delFile: () => void = () => {
-      return
-    }
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
-        const { url: signedUrl, delTempFile } = await uploadFileToBucket(
-          fileName,
-          fileBase64
-        )
-        delFile = delTempFile
         const postData = await CreateFilePost({
           type,
           user_id: userId
         })
         if (postData) {
-          const fileData = await AddFile({
-            file_name: fileName,
-            file_size: fileSize,
-            file_type: fileType,
-            post_id: postData[0].id,
-            file_path: signedUrl
-          })
+          const fileData = await addFileToDb(
+            fileName,
+            fileBase64,
+            process.env.S3_BUCKET || "profile",
+            postData[0].id,
+            fileSize,
+            fileType
+          )
           return {
             success: true,
             data: { ...postData[0], file: { ...fileData[0] } }
@@ -91,8 +81,6 @@ export const CreateFilePostAction = CreateServerAction(
         success: false,
         error: error
       }
-    } finally {
-      delFile()
     }
   }
 )
@@ -108,12 +96,16 @@ export const CreatePollPostAction = CreateServerAction(
           type,
           user_id: userId
         })
-        const pollOptions = options.map((option) => {
-          return { option_text: option, post_id: postData[0].id }
-        })
-        const pollOptionsData = await AddPollOptions(pollOptions)
-        const data = { ...postData[0], options: [...pollOptionsData] }
-        return { success: true, data }
+        if (postData[0]) {
+          const pollOptions = options.map((option) => {
+            return { option_text: option, post_id: postData[0].id }
+          })
+          const pollOptionsData = await AddPollOptions(pollOptions)
+          const data = { ...postData[0], options: [...pollOptionsData] }
+          return { success: true, data }
+        } else {
+          throw new Error("Failed to create post")
+        }
       }
     } catch (error: any) {
       return { success: false, error }
@@ -134,26 +126,6 @@ export const ToggleLikeAction = CreateServerAction(
           const data = await LikePost(postId, userId, likes)
           return { success: true, data }
         }
-      } else {
-        throw new Error("Unauthorized", { cause: 401 })
-      }
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error
-      }
-    }
-  }
-)
-
-export const IsPostLikedAction = CreateServerAction(
-  true,
-  async (postId: string) => {
-    try {
-      const userId = (await AuthUserAction())?.unique_id
-      if (userId) {
-        const isLiked = await IsPostLiked(postId, userId)
-        return { success: true, data: isLiked }
       } else {
         throw new Error("Unauthorized", { cause: 401 })
       }
@@ -220,29 +192,9 @@ export const VotePollAction = CreateServerAction(
   }
 )
 
-export const HasUserVotedAction = CreateServerAction(
-  true,
-  async (postId: string) => {
-    try {
-      const userId = (await AuthUserAction())?.unique_id
-      if (userId) {
-        const hasVoted = await HasUserVoted(postId, userId)
-        return { success: true, data: hasVoted }
-      } else {
-        throw new Error("Unauthorized", { cause: 401 })
-      }
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.message || "Failed to check vote status"
-      }
-    }
-  }
-)
-
 export const GetPublicPostsAction = CreateServerAction(true, async () => {
   try {
-    const posts = await GetPublicPosts()
+    const posts = await getPosts()
     const sanitizedPosts = posts.map((post) => ({
       ...post,
       hashtags: post.hashtags.map((hashtag) => hashtag.hashtag)
@@ -270,9 +222,11 @@ export const LinkHashtagsToPostAction = CreateServerAction(
           (tag) => tag.status !== TagStatus.new
         )
         const newHashtags = await CreateHashtags(newTags.map((tag) => tag.name))
-        await AddHashtagToPostLink(newHashtags, postId)
         const existingHashtags = await UpdateHashTagsCount(existingTags)
-        await AddHashtagToPostLink(existingHashtags, postId)
+        await AddHashtagToPostLink(
+          [...newHashtags, ...existingHashtags],
+          postId
+        )
         return { success: true, data: [...newHashtags, ...existingHashtags] }
       } else {
         throw new Error("Unauthorized", { cause: 401 })

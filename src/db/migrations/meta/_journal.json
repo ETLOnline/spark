@@ -288,6 +288,13 @@
       "when": 1739954550302,
       "tag": "0024_secret_invaders",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1740044279880,
+      "tag": "0025_married_vindicator",
+      "breakpoints": true
     }
   ]
 }

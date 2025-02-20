@@ -8,6 +8,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { CreateCommentAction } from "@/src/server-actions/Post/Post"
 import { userStore } from "@/src/store/user/userStore"
 import { useToast } from "@/src/hooks/use-toast"
+import { SelectComment } from "@/src/db/schema"
 
 type PostCommentFormProps = {
   postId: string
@@ -35,7 +36,8 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
 
   const name = `${user?.first_name} ${user?.last_name}`
 
-  const handleAddComment = async (postId: string) => {
+  const handleAddComment = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
     try {
       const response = await createComment(
         postId,
@@ -51,7 +53,10 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
                 ? {
                     ...post,
                     comments: (post.comments || 0) + 1,
-                    postComments: [...post.postComments, addedComment]
+                    postComments: [
+                      ...(post.postComments as SelectComment[]),
+                      addedComment
+                    ]
                   }
                 : post
             )
@@ -82,7 +87,10 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
   }
 
   return (
-    <div className="flex items-center w-full space-x-2">
+    <form
+      className="flex items-center w-full space-x-2"
+      onSubmit={handleAddComment}
+    >
       <Avatar className="h-8 w-8 mt-4">
         <AvatarImage src={user?.profile_url as string} alt="Current User" />
         <AvatarFallback>{name}</AvatarFallback>
@@ -94,15 +102,15 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
         ref={commentInput}
       />
       <Button
-        onClick={() => handleAddComment(postId)}
         size="sm"
         className="mt-4"
+        type="submit"
         loading={createCommentLoading}
         disabled={createCommentLoading}
       >
         Comment
       </Button>
-    </div>
+    </form>
   )
 }
 

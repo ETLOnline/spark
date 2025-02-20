@@ -52,10 +52,10 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   notifications: many(notificationsTable, {
     relationName: "notificationToUser"
   }),
-  author: many(postsTable, {
+  posts: many(postsTable, {
     relationName: "postToUser"
   }),
-  commenters: many(commentsTable, {
+  comments: many(commentsTable, {
     relationName: "commentToUser"
   })
 }))
@@ -203,12 +203,16 @@ export const tagsTable = sqliteTable("tags", {
   id: int().primaryKey({ autoIncrement: true }),
   name: text().notNull(),
   type: text().notNull(),
+  count: int().notNull().default(1),
   ...timestamps
 })
 
 export const tagsRelations = relations(tagsTable, ({ many }) => ({
   tags: many(userTagsTable, {
     relationName: "userTagsToTag"
+  }),
+  hashtags: many(postHashtagsTable, {
+    relationName: "postHashtagToHashTag"
   })
 }))
 
@@ -413,7 +417,7 @@ export const postsRelations = relations(postsTable, ({ one, many }) => ({
   postComments: many(commentsTable, {
     relationName: "commentToPost"
   }),
-  likes: many(likesTable, {
+  postLikes: many(likesTable, {
     relationName: "likeToPost"
   }),
   hashtags: many(postHashtagsTable, {
@@ -432,8 +436,9 @@ export const postsRelations = relations(postsTable, ({ one, many }) => ({
 export type InsertPost = typeof postsTable.$inferInsert
 export type SelectPost = typeof postsTable.$inferSelect & {
   author: SelectUser
-  postComments: SelectComment[]
-  hashtags: SelectHashtag[]
+  postComments?: SelectComment[]
+  hashtags?: SelectTag[]
+  postLikes?: SelectLike[]
 }
 export type SelectFilePost = SelectPost & {
   file: SelectFile
@@ -468,22 +473,6 @@ export type SelectComment = typeof commentsTable.$inferSelect & {
   commentor: SelectUser
 }
 
-export const hashtagsTable = sqliteTable("hashtags", {
-  id: int().primaryKey({ autoIncrement: true }),
-  name: text().notNull(),
-  count: int().notNull().default(1),
-  ...timestamps
-})
-
-export const hashtagsRelations = relations(hashtagsTable, ({ many }) => ({
-  hashtags: many(postHashtagsTable, {
-    relationName: "postHashtagToHashTag"
-  })
-}))
-
-export type InsertHashtag = typeof hashtagsTable.$inferInsert
-export type SelectHashtag = typeof hashtagsTable.$inferSelect
-
 export const postHashtagsTable = sqliteTable("post_hashtags", {
   id: int().primaryKey({ autoIncrement: true }),
   post_id: text().notNull(),
@@ -498,9 +487,9 @@ export const postHashtagsRelations = relations(
       references: [postsTable.id],
       relationName: "postHashtagToPost"
     }),
-    hashtag: one(hashtagsTable, {
+    hashtag: one(tagsTable, {
       fields: [postHashtagsTable.hashtag_id],
-      references: [hashtagsTable.id],
+      references: [tagsTable.id],
       relationName: "postHashtagToHashTag"
     })
   })
@@ -549,16 +538,24 @@ export const pollOptionsTable = sqliteTable(
   }
 )
 
-export const pollOptionsRelations = relations(pollOptionsTable, ({ one }) => ({
-  post: one(postsTable, {
-    fields: [pollOptionsTable.post_id],
-    references: [postsTable.id],
-    relationName: "pollToPost"
+export const pollOptionsRelations = relations(
+  pollOptionsTable,
+  ({ one, many }) => ({
+    post: one(postsTable, {
+      fields: [pollOptionsTable.post_id],
+      references: [postsTable.id],
+      relationName: "pollToPost"
+    }),
+    votes: many(pollVotesTable, {
+      relationName: "voteToOption"
+    })
   })
-}))
+)
 
 export type InsertPollOption = typeof pollOptionsTable.$inferInsert
-export type SelectPollOption = typeof pollOptionsTable.$inferSelect
+export type SelectPollOption = typeof pollOptionsTable.$inferSelect & {
+  votes?: SelectPollVote[]
+}
 
 export const pollVotesTable = sqliteTable(
   "poll_votes",
@@ -570,6 +567,14 @@ export const pollVotesTable = sqliteTable(
   },
   (t) => ({ pk: primaryKey({ columns: [t.user_id, t.post_id] }) })
 )
+
+export const pollVotesRelations = relations(pollVotesTable, ({ one }) => ({
+  option: one(pollOptionsTable, {
+    fields: [pollVotesTable.post_id, pollVotesTable.option_text],
+    references: [pollOptionsTable.post_id, pollOptionsTable.option_text],
+    relationName: "voteToOption"
+  })
+}))
 
 export type InsertPollVote = typeof pollVotesTable.$inferInsert
 export type SelectPollVote = typeof pollVotesTable.$inferSelect

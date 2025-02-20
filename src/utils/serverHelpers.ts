@@ -4,33 +4,75 @@ import * as Minio from "minio"
 import { promises as fs } from "fs"
 import * as path from "path"
 import { randomUUID } from "crypto"
+import { AddFile } from "../db/data-access/post/query"
 
 export const uploadFileToBucket = async (
   fileName: string,
-  fileBase64: string
+  fileBase64: string,
+  bucket: string,
+  tempFolderPath = "/tmp"
 ) => {
-  const minioClient = new Minio.Client({
-    endPoint: "minio-jwogs4w.scrumwiz.com",
-    accessKey: "4DkHAY5RCdK0cPX7",
-    secretKey: "yRMP7bwI55PNZivrowHq10BUxohvb2ab"
-  })
-  const bucket = "profile"
-  // Create temporary file with unique name
-  const tempFilePath = path.join("/tmp", `${randomUUID()}-${fileName}`)
-  // Convert base64 to Buffer
-  const fileBuffer = Buffer.from(fileBase64.split(",")[1], "base64")
-  // Write buffer to temporary file
-  await fs.writeFile(tempFilePath, fileBuffer)
-  // Check/create bucket
-  const exists = await minioClient.bucketExists(bucket)
-  if (!exists) {
-    await minioClient.makeBucket(bucket, "us-east-1")
+  try {
+    const s3Client = new Minio.Client({
+      endPoint: process.env.S3_ENDPOINT || "minio-jwogs4w.scrumwiz.com",
+      accessKey: process.env.S3_ACCESS_KEY,
+      secretKey: process.env.S3_SECRET_KEY
+    })
+    // Create temporary file with unique name
+    const tempFilePath = path.join(
+      tempFolderPath,
+      `${randomUUID()}-${fileName}`
+    )
+    // Convert base64 to Buffer
+    const fileBuffer = Buffer.from(fileBase64.split(",")[1], "base64")
+    // Write buffer to temporary file
+    await fs.writeFile(tempFilePath, fileBuffer)
+    // Check/create bucket
+    const exists = await s3Client.bucketExists(bucket)
+    if (!exists) {
+      await s3Client.makeBucket(bucket, process.env.S3_REGION)
+    }
+    // Upload file
+    await s3Client.fPutObject(bucket, fileName, tempFilePath)
+    const signedUrl = await s3Client.presignedGetObject(bucket, fileName)
+    const delTempFile = () => {
+      fs.unlink(tempFilePath)
+    }
+    return { url: signedUrl, delTempFile }
+  } catch (error: any) {
+    throw new Error(error)
   }
-  // Upload file
-  await minioClient.fPutObject(bucket, fileName, tempFilePath)
-  const signedUrl = await minioClient.presignedGetObject(bucket, fileName)
-  const delTempFile = () => {
-    fs.unlink(tempFilePath)
+}
+
+export const addFileToDb = async (
+  fileName: string,
+  fileBase64: string,
+  bucket: string,
+  postId: string,
+  fileSize: string,
+  fileType: string,
+  tempFolderPath = "/tmp"
+) => {
+  let delFile = () => {}
+  try {
+    const { url: signedUrl, delTempFile } = await uploadFileToBucket(
+      fileName,
+      fileBase64,
+      bucket,
+      tempFolderPath
+    )
+    delFile = delTempFile
+    const fileData = await AddFile({
+      file_name: fileName,
+      file_size: fileSize,
+      file_type: fileType,
+      post_id: postId,
+      file_path: signedUrl
+    })
+    return { ...fileData }
+  } catch (error: any) {
+    throw new Error(error)
+  } finally {
+    delFile()
   }
-  return { url: signedUrl, delTempFile }
 }
