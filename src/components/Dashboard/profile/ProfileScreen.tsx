@@ -11,7 +11,13 @@ import {
   TabsList,
   TabsTrigger
 } from "@/src/components/ui/tabs"
-import { CalendarIcon, StarIcon, TrophyIcon, UserIcon } from "lucide-react"
+import {
+  CalendarIcon,
+  LinkIcon,
+  StarIcon,
+  TrophyIcon,
+  UserIcon
+} from "lucide-react"
 import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
 import Link from "next/link"
 import { useServerAction } from "@/src/hooks/useServerAction"
@@ -22,32 +28,82 @@ import { LoaderSizes } from "../../common/Loader/types/loader-types.d"
 import Loader from "../../common/Loader/Loader"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
-import { useEffect } from "react"
+import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
+import { Button } from "@/src/components/ui/button"
+import { useToast } from "@/src/hooks/use-toast"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/src/components/ui/tooltip"
 
 type ProfileScreenProps = { tab?: string }
 
 export default function ProfileScreen({ tab }: ProfileScreenProps) {
-  const user = useAtomValue(userStore.Iam)
+  const user = useAtomValue(userStore.AuthUser)
+  const pathname = usePathname()
+  const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(true)
 
   const [profileLoading, profileData, profileDataError, getProfile] =
     useServerAction(GetUserProfileAction)
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 750)
     if (user) {
       getProfile(user.unique_id)
     }
+    return () => clearTimeout(timer)
   }, [user])
 
-  if (!user) {
+  const handleCopyUrl = async () => {
+    try {
+      const url = `${window.location.origin}${pathname}/${user?.unique_id}`
+      await navigator.clipboard.writeText(url)
+      toast({
+        title: "URL copied!",
+        description: "Profile URL copied to clipboard"
+      })
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to copy URL"
+      })
+    }
+  }
+
+  if (!user && !isLoading) {
     return <NotFound />
   }
 
-  return profileLoading ? (
+  return isLoading || profileLoading ? (
     <div className={"flex justify-center items-center h-full"}>
       <Loader size={LoaderSizes.xl} />
     </div>
   ) : (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 relative">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute top-0 right-0"
+              onClick={handleCopyUrl}
+            >
+              <LinkIcon className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <span>Copy profile URL</span>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <div className="mb-6 flex items-center space-x-4">
         <Avatar className="h-20 w-20">
           <AvatarImage
@@ -58,7 +114,7 @@ export default function ProfileScreen({ tab }: ProfileScreenProps) {
         </Avatar>
         <div>
           <h1 className="text-2xl font-bold">{user?.first_name}</h1>
-          <p className="text-muted-foreground">{user?.email}</p>
+          <span className="text-muted-foreground">{user?.email}</span>
         </div>
       </div>
       <Tabs defaultValue="basic" className="space-y-4" value={tab || "basic"}>
@@ -90,7 +146,7 @@ export default function ProfileScreen({ tab }: ProfileScreenProps) {
         </TabsList>
         <TabsContent value="basic">
           <ProfileBio
-            userBio={user.bio as string}
+            userBio={user?.bio as string}
             recommendations={
               profileData?.data?.recommendations as ExtendedRecommendations
             }
