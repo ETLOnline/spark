@@ -63,7 +63,7 @@ export const CreateFilePostAction = CreateServerAction(
           const fileData = await addFileToDb(
             fileName,
             fileBase64,
-            process.env.S3_BUCKET || "profile",
+            process.env.S3_BUCKET || "spark-dev/posts",
             postData[0].id,
             fileSize,
             fileType

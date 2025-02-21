@@ -12,9 +12,12 @@ export const uploadFileToBucket = async (
   bucket: string,
   tempFolderPath = "/tmp"
 ) => {
+  if (!process.env.S3_ENDPOINT) {
+    throw new Error("S3_ENDPOINT not set")
+  }
   try {
     const s3Client = new Minio.Client({
-      endPoint: process.env.S3_ENDPOINT || "minio-jwogs4w.scrumwiz.com",
+      endPoint: process.env.S3_ENDPOINT,
       accessKey: process.env.S3_ACCESS_KEY,
       secretKey: process.env.S3_SECRET_KEY
     })
