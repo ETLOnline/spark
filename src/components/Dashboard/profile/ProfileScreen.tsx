@@ -26,7 +26,6 @@ import {
   SelectUser
 } from "@/src/db/schema"
 import { ExtendedRecommendations, Profile } from "./types/profile-types.d"
-import { usePathname } from "next/navigation"
 import { Button } from "@/src/components/ui/button"
 import { useToast } from "@/src/hooks/use-toast"
 import {
@@ -48,7 +47,6 @@ export default function ProfileScreen({
   user,
   profileData
 }: ProfileScreenProps) {
-  const pathname = usePathname()
   const { toast } = useToast()
 
   const handleCopyUrl = async () => {
@@ -57,13 +55,15 @@ export default function ProfileScreen({
       await navigator.clipboard.writeText(url)
       toast({
         title: "URL copied!",
-        description: "Profile URL copied to clipboard"
+        description: "Profile URL copied to clipboard",
+        duration: 3000
       })
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to copy URL"
+        description: "Failed to copy URL",
+        duration: 3000
       })
     }
   }
