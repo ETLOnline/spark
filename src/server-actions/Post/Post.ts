@@ -68,7 +68,7 @@ export const CreateFilePostAction = CreateServerAction(
               postData[0].id,
               fileSize,
               fileType,
-              process.env.S3_FOLDER_PATH
+              "/posts"
             )
             return {
               success: true,
