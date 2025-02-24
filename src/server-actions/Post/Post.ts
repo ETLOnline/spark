@@ -60,7 +60,7 @@ export const CreateFilePostAction = CreateServerAction(
           user_id: userId
         })
         if (postData) {
-          if (process.env.S3_BUCKET_NAME && process.env.S3_FOLDER_PATH) {
+          if (process.env.S3_BUCKET_NAME) {
             const fileData = await addFileToDb(
               fileName,
               fileBase64,
@@ -75,7 +75,7 @@ export const CreateFilePostAction = CreateServerAction(
               data: { ...postData[0], file: { ...fileData[0] } }
             }
           } else {
-            throw new Error("S3 Bucket name or folder path not found", {
+            throw new Error("S3 Bucket name not found", {
               cause: 500
             })
           }
