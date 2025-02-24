@@ -1,1 +1,0 @@
-ALTER TABLE `chats` ADD `chat_slug` text NOT NULL;
