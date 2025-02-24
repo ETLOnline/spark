@@ -1,26 +1,25 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import { Comment } from "./types/posts-types.d"
+import { SelectComment } from "@/src/db/schema"
 
 type Props = {
-  comment: Comment
+  comment: SelectComment
 }
 
 const PostComments: React.FC<Props> = (props) => {
+  const name = `${props.comment.commentor.first_name} ${props.comment.commentor.last_name}`
+
   return (
     <div key={props.comment.id} className="flex items-start space-x-4">
       <Avatar className="h-8 w-8">
         <AvatarImage
-          src={props.comment.author.avatar}
-          alt={props.comment.author.name}
+          src={props.comment.commentor.profile_url as string}
+          alt={name}
         />
-        <AvatarFallback>{props.comment.author.name.charAt(0)}</AvatarFallback>
+        <AvatarFallback>{name}</AvatarFallback>
       </Avatar>
-      <div className="flex-1">
-        <p className="font-semibold">{props.comment.author.name}</p>
+      <div className="rounded-[15px] bg-secondary p-3 pt-2">
+        <p className="font-semibold">{name}</p>
         <p className="text-sm">{props.comment.content}</p>
-        <p className="text-xs text-muted-foreground">
-          {new Date(props.comment.createdAt).toLocaleString()}
-        </p>
       </div>
     </div>
   )

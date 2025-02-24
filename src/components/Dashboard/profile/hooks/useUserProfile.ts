@@ -1,6 +1,6 @@
+import { Tag } from "@/src/components/TagsInput/tags-input-types.d"
 import { profileStore } from "@/src/store/profile/profileStore"
 import { useAtomValue, useSetAtom } from "jotai"
-import { Tag } from "../types/profile-types.d"
 
 type UseUserProfileReturn = [
   setUserBio: React.Dispatch<React.SetStateAction<string>>,

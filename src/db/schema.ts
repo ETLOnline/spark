@@ -51,6 +51,12 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   }),
   notifications: many(notificationsTable, {
     relationName: "notificationToUser"
+  }),
+  posts: many(postsTable, {
+    relationName: "postToUser"
+  }),
+  comments: many(commentsTable, {
+    relationName: "commentToUser"
   })
 }))
 
@@ -197,12 +203,16 @@ export const tagsTable = sqliteTable("tags", {
   id: int().primaryKey({ autoIncrement: true }),
   name: text().notNull(),
   type: text().notNull(),
+  count: int().notNull().default(1),
   ...timestamps
 })
 
 export const tagsRelations = relations(tagsTable, ({ many }) => ({
   tags: many(userTagsTable, {
     relationName: "userTagsToTag"
+  }),
+  hashtags: many(postHashtagsTable, {
+    relationName: "postHashtagToHashTag"
   })
 }))
 
@@ -378,8 +388,214 @@ export const eventsTable = sqliteTable("events", {
   type: text(),
   metadata: text(),
   host_id: text().notNull(),
-  ...timestamps,
+  ...timestamps
 })
 
 export type InsertEvent = typeof eventsTable.$inferInsert
 export type SelectEvent = typeof eventsTable.$inferSelect
+
+export const postsTable = sqliteTable("posts", {
+  id: text()
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  content: text(),
+  user_id: text().notNull(),
+  is_private: int().notNull().default(0),
+  type: text().notNull(),
+  channel_id: text(),
+  likes: int().notNull().default(0),
+  comments: int().notNull().default(0),
+  ...timestamps
+})
+
+export const postsRelations = relations(postsTable, ({ one, many }) => ({
+  author: one(usersTable, {
+    fields: [postsTable.user_id],
+    references: [usersTable.unique_id],
+    relationName: "postToUser"
+  }),
+  postComments: many(commentsTable, {
+    relationName: "commentToPost"
+  }),
+  postLikes: many(likesTable, {
+    relationName: "likeToPost"
+  }),
+  hashtags: many(postHashtagsTable, {
+    relationName: "postHashtagToPost"
+  }),
+  options: many(pollOptionsTable, {
+    relationName: "pollToPost"
+  }),
+  file: one(filesTable, {
+    fields: [postsTable.id],
+    references: [filesTable.post_id],
+    relationName: "fileToPost"
+  })
+}))
+
+export type InsertPost = typeof postsTable.$inferInsert
+export type SelectPost = typeof postsTable.$inferSelect & {
+  author: SelectUser
+  postComments?: SelectComment[]
+  hashtags?: SelectTag[]
+  postLikes?: SelectLike[]
+}
+export type SelectFilePost = SelectPost & {
+  file: SelectFile
+}
+export type SelectPollPost = SelectPost & {
+  options: SelectPollOption[]
+}
+
+export const commentsTable = sqliteTable("comments", {
+  id: int().primaryKey({ autoIncrement: true }),
+  content: text().notNull(),
+  user_id: text().notNull(),
+  post_id: text().notNull(),
+  ...timestamps
+})
+
+export const commentsRelations = relations(commentsTable, ({ one }) => ({
+  commentor: one(usersTable, {
+    fields: [commentsTable.user_id],
+    references: [usersTable.unique_id],
+    relationName: "commentToUser"
+  }),
+  post: one(postsTable, {
+    fields: [commentsTable.post_id],
+    references: [postsTable.id],
+    relationName: "commentToPost"
+  })
+}))
+
+export type InsertComment = typeof commentsTable.$inferInsert
+export type SelectComment = typeof commentsTable.$inferSelect & {
+  commentor: SelectUser
+}
+
+export const postHashtagsTable = sqliteTable("post_hashtags", {
+  id: int().primaryKey({ autoIncrement: true }),
+  post_id: text().notNull(),
+  hashtag_id: int().notNull()
+})
+
+export const postHashtagsRelations = relations(
+  postHashtagsTable,
+  ({ one }) => ({
+    post: one(postsTable, {
+      fields: [postHashtagsTable.post_id],
+      references: [postsTable.id],
+      relationName: "postHashtagToPost"
+    }),
+    hashtag: one(tagsTable, {
+      fields: [postHashtagsTable.hashtag_id],
+      references: [tagsTable.id],
+      relationName: "postHashtagToHashTag"
+    })
+  })
+)
+
+export type InsertPostHashtag = typeof postHashtagsTable.$inferInsert
+export type SelectPostHashtag = typeof postHashtagsTable.$inferSelect
+
+export const likesTable = sqliteTable(
+  "likes",
+  {
+    user_id: text().notNull(),
+    post_id: text().notNull(),
+    ...timestamps
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.user_id, t.post_id] })
+  })
+)
+
+export const likesRelations = relations(likesTable, ({ one }) => ({
+  interactor: one(usersTable, {
+    fields: [likesTable.user_id],
+    references: [usersTable.unique_id],
+    relationName: "likeToUser"
+  }),
+  post: one(postsTable, {
+    fields: [likesTable.post_id],
+    references: [postsTable.id],
+    relationName: "likeToPost"
+  })
+}))
+
+export type InsertLike = typeof likesTable.$inferInsert
+export type SelectLike = typeof likesTable.$inferSelect
+
+export const pollOptionsTable = sqliteTable(
+  "poll_options",
+  {
+    post_id: text().notNull(),
+    option_text: text().notNull(),
+    vote_count: int().notNull().default(0)
+  },
+  (t) => {
+    return { pk: primaryKey({ columns: [t.post_id, t.option_text] }) }
+  }
+)
+
+export const pollOptionsRelations = relations(
+  pollOptionsTable,
+  ({ one, many }) => ({
+    post: one(postsTable, {
+      fields: [pollOptionsTable.post_id],
+      references: [postsTable.id],
+      relationName: "pollToPost"
+    }),
+    votes: many(pollVotesTable, {
+      relationName: "voteToOption"
+    })
+  })
+)
+
+export type InsertPollOption = typeof pollOptionsTable.$inferInsert
+export type SelectPollOption = typeof pollOptionsTable.$inferSelect & {
+  votes?: SelectPollVote[]
+}
+
+export const pollVotesTable = sqliteTable(
+  "poll_votes",
+  {
+    user_id: text().notNull(),
+    post_id: text().notNull(),
+    option_text: text().notNull(),
+    ...timestamps
+  },
+  (t) => ({ pk: primaryKey({ columns: [t.user_id, t.post_id] }) })
+)
+
+export const pollVotesRelations = relations(pollVotesTable, ({ one }) => ({
+  option: one(pollOptionsTable, {
+    fields: [pollVotesTable.post_id, pollVotesTable.option_text],
+    references: [pollOptionsTable.post_id, pollOptionsTable.option_text],
+    relationName: "voteToOption"
+  })
+}))
+
+export type InsertPollVote = typeof pollVotesTable.$inferInsert
+export type SelectPollVote = typeof pollVotesTable.$inferSelect
+
+export const filesTable = sqliteTable("files", {
+  id: int().primaryKey({ autoIncrement: true }),
+  post_id: text().notNull(),
+  file_name: text().notNull(),
+  file_size: text().notNull(),
+  file_type: text().notNull(),
+  file_path: text().notNull(),
+  ...timestamps
+})
+
+export const filesRelations = relations(filesTable, ({ one }) => ({
+  post: one(postsTable, {
+    fields: [filesTable.post_id],
+    references: [postsTable.id],
+    relationName: "fileToPost"
+  })
+}))
+
+export type InsertFile = typeof filesTable.$inferInsert
+export type SelectFile = typeof filesTable.$inferSelect

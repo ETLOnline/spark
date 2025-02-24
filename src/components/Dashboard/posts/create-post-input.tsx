@@ -1,61 +1,113 @@
 import { Textarea } from "@/src/components/ui/textarea"
-import { Input } from "@/src/components/ui/input"
 import { NewPost, PostType } from "./types/posts-types.d"
+import TagsInput from "../../TagsInput/TagsInput"
+import { Upload } from "antd"
+import { Button } from "../../ui/button"
+import { UploadIcon } from "lucide-react"
+import "./create-post-input.css"
+import { FileUpload } from "../../ui/file-upload"
+
+type PollOptionsSetter = (
+  tags: string[] | ((tags: string[]) => string[])
+) => void
 
 type Props = {
   type: PostType
   setNewPost: (newPost: NewPost) => void
   newPost: NewPost
+  pollOptions?: string[]
+  setPollOptions?: (tags: string[] | ((tags: string[]) => string[])) => void
 }
 
-const CreatePostInput: React.FC<Props> = (props) => {
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+const CreatePostInput: React.FC<Props> = ({
+  type,
+  setNewPost,
+  newPost,
+  pollOptions,
+  setPollOptions
+}) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      props.setNewPost({
-        ...props.newPost,
-        type: "file",
-        content: file,
-        fileName: file.name,
-        fileSize: file.size
-      })
+      // Convert file to Base64
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64String = reader.result as string
+        setNewPost({
+          ...newPost,
+          type: file.type.startsWith("image/") ? PostType.image : PostType.file,
+          fileName: file.name,
+          fileSize: file.size.toString(),
+          fileType: file.type,
+          fileBase64: base64String
+        })
+      }
+      reader.readAsDataURL(file)
     }
   }
 
-  return props.type === "text" ? (
+  return type === "text" ? (
     <Textarea
       placeholder="What's on your mind?"
-      value={props.newPost.content as string}
+      value={newPost.content as string}
       onChange={(e) =>
-        props.setNewPost({
-          ...props.newPost,
+        setNewPost({
+          ...newPost,
           content: e.target.value,
-          type: "text"
+          type: PostType.text
         })
       }
+      required
       className="min-h-[100px]"
     />
-  ) : props.type === "image" ? (
-    <Input
-      type="file"
-      accept="image/*"
-      onChange={() => props.setNewPost({ ...props.newPost, type: "image" })}
-    />
-  ) : props.type === "poll" ? (
-    <Textarea
-      placeholder="Enter your poll question"
-      value={props.newPost.content as string}
-      onChange={(e) =>
-        props.setNewPost({
-          ...props.newPost,
-          content: e.target.value,
-          type: "poll"
-        })
-      }
-      className="min-h-[100px]"
-    />
+  ) : type === "image" ? (
+    <div className="flex flex-col justify-center items-center pt-4">
+      <Upload
+        customRequest={({ file, onSuccess }) => {
+          handleFileUpload({
+            target: { files: [file] }
+          } as unknown as React.ChangeEvent<HTMLInputElement>)
+          onSuccess?.("ok")
+        }}
+        listType="picture"
+        maxCount={1}
+        accept="image/*"
+        className="[&_.ant-upload-list-item-name]:text-foreground img-upload"
+      >
+        <Button variant="secondary" type="button" width="full">
+          <UploadIcon /> Upload (Max: 1)
+        </Button>
+      </Upload>
+    </div>
+  ) : type === "poll" ? (
+    <div className="flex flex-col space-y-2">
+      <Textarea
+        placeholder="Enter your poll question"
+        value={newPost.content as string}
+        onChange={(e) =>
+          setNewPost({
+            ...newPost,
+            content: e.target.value,
+            type: PostType.poll
+          })
+        }
+        className="min-h-[100px]"
+        required
+      />
+      <TagsInput
+        tags={pollOptions as string[]}
+        updateTags={setPollOptions as PollOptionsSetter}
+        placeholder="Type to add poll options..."
+      />
+    </div>
   ) : (
-    props.type === "file" && <Input type="file" onChange={handleFileUpload} />
+    <FileUpload
+      onChange={(files: File[]) => {
+        handleFileUpload({
+          target: { files: [...files] }
+        } as unknown as React.ChangeEvent<HTMLInputElement>)
+      }}
+    />
   )
 }
 
