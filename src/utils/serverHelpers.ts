@@ -10,6 +10,7 @@ export const uploadFileToBucket = async (
   fileName: string,
   fileBase64: string,
   bucket: string,
+  folderPath: string,
   tempFolderPath = "/tmp"
 ) => {
   if (!process.env.S3_ENDPOINT) {
@@ -22,10 +23,9 @@ export const uploadFileToBucket = async (
       secretKey: process.env.S3_SECRET_KEY
     })
     // Create temporary file with unique name
-    const tempFilePath = path.join(
-      tempFolderPath,
-      `${randomUUID()}-${fileName}`
-    )
+    const bucketFileName = `${randomUUID()}-${fileName}`
+    const tempFilePath = path.join(tempFolderPath, bucketFileName)
+    const filePath = path.join(folderPath, bucketFileName)
     // Convert base64 to Buffer
     const fileBuffer = Buffer.from(fileBase64.split(",")[1], "base64")
     // Write buffer to temporary file
@@ -36,8 +36,8 @@ export const uploadFileToBucket = async (
       await s3Client.makeBucket(bucket, process.env.S3_REGION)
     }
     // Upload file
-    await s3Client.fPutObject(bucket, fileName, tempFilePath)
-    const signedUrl = await s3Client.presignedGetObject(bucket, fileName)
+    await s3Client.fPutObject(bucket, filePath, tempFilePath)
+    const signedUrl = await s3Client.presignedGetObject(bucket, filePath)
     const delTempFile = () => {
       fs.unlink(tempFilePath)
     }
@@ -54,6 +54,7 @@ export const addFileToDb = async (
   postId: string,
   fileSize: string,
   fileType: string,
+  folderPath: string,
   tempFolderPath = "/tmp"
 ) => {
   let delFile = () => {}
@@ -62,6 +63,7 @@ export const addFileToDb = async (
       fileName,
       fileBase64,
       bucket,
+      folderPath,
       tempFolderPath
     )
     delFile = delTempFile

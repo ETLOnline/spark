@@ -17,7 +17,7 @@ import {
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import { TagStatus } from "@/src/components/TagsInput/tags-input-types.d"
-import { addFileToDb, uploadFileToBucket } from "@/src/utils/serverHelpers"
+import { addFileToDb } from "@/src/utils/serverHelpers"
 
 export const CreatePostAction = CreateServerAction(
   true,
@@ -60,17 +60,24 @@ export const CreateFilePostAction = CreateServerAction(
           user_id: userId
         })
         if (postData) {
-          const fileData = await addFileToDb(
-            fileName,
-            fileBase64,
-            process.env.S3_BUCKET || "spark-dev/posts",
-            postData[0].id,
-            fileSize,
-            fileType
-          )
-          return {
-            success: true,
-            data: { ...postData[0], file: { ...fileData[0] } }
+          if (process.env.S3_BUCKET_NAME && process.env.S3_FOLDER_PATH) {
+            const fileData = await addFileToDb(
+              fileName,
+              fileBase64,
+              process.env.S3_BUCKET_NAME,
+              postData[0].id,
+              fileSize,
+              fileType,
+              process.env.S3_FOLDER_PATH
+            )
+            return {
+              success: true,
+              data: { ...postData[0], file: { ...fileData[0] } }
+            }
+          } else {
+            throw new Error("S3 Bucket name or folder path not found", {
+              cause: 500
+            })
           }
         }
       } else {
