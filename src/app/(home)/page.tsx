@@ -7,7 +7,7 @@ import MentorCard from "@/src/components/HomePageComponents/MentorCard/MentorCar
 import SessionCard from '@/src/components/HomePageComponents/SessionCard/SessionCard';
 import StatCardList from '@/src/components/StatCard/StatCardList';
 import MissionCardList from '@/src/components/MissionCard/MissionCardList';
-import Container from '@/src/components/Container/Container';
+import Container from '@/src/components/container/Container';
 
 
 
