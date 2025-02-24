@@ -383,3 +383,27 @@ export const eventsTable = sqliteTable("events", {
 
 export type InsertEvent = typeof eventsTable.$inferInsert
 export type SelectEvent = typeof eventsTable.$inferSelect
+
+
+export const channelstable = sqliteTable("channels", {
+  id:  text("channel_id", { length: 36 })
+  .primaryKey()
+  .$defaultFn(() => randomUUID()),
+  channel_name: text().notNull(),
+  description: text(),
+  channel_type: text(),
+  created_by: text().notNull(),
+  ...timestamps,
+})
+
+export type InsertChannel = typeof channelstable.$inferInsert
+export type SelectChannel = typeof channelstable.$inferInsert
+
+
+export const spacesTable = sqliteTable("spaces", {
+  id: int().primaryKey({ autoIncrement: true}),
+  title: text().notNull(),
+  description: text(),
+  channel_id: text()
+
+})

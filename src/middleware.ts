@@ -16,6 +16,7 @@ export const config = {
     "/posts",
     "/chat",
     "/events",
+    "/channels",
     "/spaces",
     "/connections",
     "/dashboard"

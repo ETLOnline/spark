@@ -13,7 +13,8 @@ import {
   Lightbulb,
   Beaker,
   LayoutDashboard,
-  Network
+  Network,
+  Boxes
 } from "lucide-react"
 
 import NavMain from "@/src/components/Dashboard/nav-main"
@@ -81,6 +82,11 @@ const data = {
       title: "Events",
       url: "/events",
       icon: Calendar
+    },
+    {
+      title: "Channels",
+      url: "/channels",
+      icon: Boxes,
     },
     {
       title: "Spaces",
