@@ -1,1 +1,0 @@
-ALTER TABLE `poll_votes` RENAME COLUMN "option_id" TO "option_text";
