@@ -13,7 +13,6 @@ import {
   CardFooter,
   CardHeader
 } from "@/src/components/ui/card"
-import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import { useState } from "react"
 import {
@@ -24,18 +23,29 @@ import {
   SelectValue
 } from "@/src/components/ui/select"
 import { Textarea } from "../ui/textarea"
-import {
-  NewPost,
-  Post,
-  PostFile,
-  PostPoll,
-  PostType
-} from "./posts/types/posts-types.d"
+import { NewPost, PostType } from "./posts/types/posts-types.d"
 import CreatePostInput from "./posts/create-post-input"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { useAtomValue, useSetAtom } from "jotai"
+import { postStore } from "@/src/store/post/postStore"
+import {
+  SelectFilePost,
+  SelectPollPost,
+  SelectPost,
+  SelectUser
+} from "@/src/db/schema"
+import { useToast } from "@/src/hooks/use-toast"
+import TagsInput from "../TagsInput/TagsInput"
+import { userStore } from "@/src/store/user/userStore"
+import {
+  CreateFilePostAction,
+  CreatePollPostAction,
+  CreatePostAction,
+  LinkHashtagsToPostAction
+} from "@/src/server-actions/Post/Post"
+import useHashtags from "./profile/hooks/useHashtags"
 
 type Props = {
-  setPosts: (posts: (Post | PostFile | PostPoll)[]) => void
-  posts: (Post | PostFile | PostPoll)[]
   variant?: "posts" | "spaces"
 }
 
@@ -53,46 +63,219 @@ const categories = [
   "IoT"
 ]
 
-const CreatePostForm: React.FC<Props> = ({
-  setPosts,
-  posts,
-  variant = "posts"
-}) => {
+const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   const [newPost, setNewPost] = useState<NewPost>({
     content: "",
-    type: "text" as PostType,
+    type: PostType.text as PostType,
     hashtags: []
   })
+  const [pollOptions, setPollOptions] = useState<string[]>([])
 
-  const handleCreatePost = () => {
-    const tempNewPostObj: Post = {
-      id: (posts.length + 1).toString(),
-      author: { name: "Current User", avatar: "/avatars/04.png" },
-      content: newPost.content as string,
-      type: newPost.type,
-      likes: 0,
-      comments: [],
-      hashtags: newPost.hashtags.filter((tag: string) => tag.trim() !== ""),
-      createdAt: new Date().toISOString()
+  const setPosts = useSetAtom(postStore.posts)
+  const authUser = useAtomValue(userStore.AuthUser)
+
+  const [
+    hashtags,
+    setHashtags,
+    suggestions,
+    searchTagsForUserInput,
+    searchTagsLoading
+  ] = useHashtags()
+
+  const { toast } = useToast()
+
+  const [createPostLoading, createdPost, createPostError, createPost] =
+    useServerAction(CreatePostAction)
+  const [
+    createFilePostLoading,
+    createdFilePost,
+    createFilePostError,
+    createFilePost
+  ] = useServerAction(CreateFilePostAction)
+  const [
+    createPollPostLoading,
+    createdPollPost,
+    createPollPostError,
+    createPollPost
+  ] = useServerAction(CreatePollPostAction)
+  const [
+    linkHashtagsToPostLoading,
+    linkedHashtags,
+    linkHashtagsToPostError,
+    linkHashtagsToPost
+  ] = useServerAction(LinkHashtagsToPostAction)
+
+  const handleCreatePost = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    try {
+      let postData: SelectPost | SelectFilePost | SelectPollPost =
+        {} as SelectPost
+      if (newPost.type === PostType.text) {
+        let linkedHashtags
+        const post = await createPost(newPost.content as string, newPost.type)
+        if (post && post.data && post.data[0]) {
+          if (hashtags.length) {
+            linkedHashtags = await linkHashtagsToPost(
+              post.data[0].id,
+              hashtags.length
+                ? hashtags
+                    .filter((tag) => !tag.deleted)
+                    .map((tag) => {
+                      return {
+                        name: tag.name,
+                        count: tag.count,
+                        status: tag.status
+                      }
+                    })
+                : []
+            )
+            if (linkedHashtags?.error) {
+              console.error(
+                "Error linking hashtags to post:",
+                linkedHashtags.error
+              )
+            }
+          }
+          postData = {
+            ...post.data[0],
+            author: authUser as SelectUser,
+            hashtags: linkedHashtags?.data?.length
+              ? [...linkedHashtags?.data]
+              : [],
+            postComments: []
+          }
+        } else if (post?.error) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Error creating post please try again!"
+          })
+        }
+      } else if (newPost.type === PostType.poll) {
+        let linkedHashtags
+        const post = await createPollPost(
+          newPost.content as string,
+          newPost.type,
+          pollOptions
+        )
+        setPollOptions([])
+        if (post && post.data) {
+          if (hashtags.length) {
+            linkedHashtags = await linkHashtagsToPost(
+              post.data.id,
+              hashtags.length
+                ? hashtags
+                    .filter((tag) => !tag.deleted)
+                    .map((tag) => {
+                      return {
+                        name: tag.name,
+                        count: tag.count,
+                        status: tag.status
+                      }
+                    })
+                : []
+            )
+            if (linkedHashtags?.error) {
+              console.error(
+                "Error linking hashtags to post:",
+                linkedHashtags.error
+              )
+            }
+          }
+          postData = {
+            ...post.data,
+            author: authUser as SelectUser,
+            hashtags: linkedHashtags?.data?.length
+              ? [...linkedHashtags?.data]
+              : [],
+            postComments: []
+          }
+        } else if (post?.error) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Error creating post please try again!"
+          })
+        }
+      } else if (
+        newPost.type === PostType.file ||
+        newPost.type === PostType.image
+      ) {
+        if (!newPost.fileBase64 || !newPost.fileName) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Please select a file to upload"
+          })
+          return
+        }
+        const post = await createFilePost(
+          newPost.type,
+          newPost.fileSize as string,
+          newPost.fileName as string,
+          newPost.fileType as string,
+          newPost.fileBase64
+        )
+        if (post && post.data && post.data) {
+          let linkedHashtags
+          if (hashtags.length) {
+            linkedHashtags = await linkHashtagsToPost(
+              post.data.id,
+              hashtags.length
+                ? hashtags
+                    .filter((tag) => !tag.deleted)
+                    .map((tag) => {
+                      return {
+                        name: tag.name,
+                        count: tag.count,
+                        status: tag.status
+                      }
+                    })
+                : []
+            )
+            if (linkedHashtags?.error) {
+              console.error(
+                "Error linking hashtags to post:",
+                linkedHashtags.error
+              )
+            }
+          }
+          postData = {
+            ...post.data,
+            author: authUser as SelectUser,
+            hashtags: linkedHashtags?.data?.length
+              ? [...linkedHashtags?.data]
+              : [],
+            postComments: []
+          }
+        } else if (post?.error) {
+          console.error("Error creating post:", post.error)
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Error creating post please try again!"
+          })
+        }
+      }
+      setHashtags([])
+      if (postData.id) {
+        setPosts((posts) => [
+          postData as unknown as SelectPost | SelectFilePost | SelectPollPost,
+          ...posts
+        ])
+        toast({
+          title: "Posted!"
+        })
+      }
+      setNewPost({ content: "", hashtags: [] })
+    } catch (error) {
+      console.error(error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Error creating post please try again!"
+      })
     }
-    const newPostObj: Post | PostFile | PostPoll = newPost.fileName
-      ? ({
-          ...tempNewPostObj,
-          content: newPost.content as File,
-          fileName: newPost.fileName as string,
-          fileSize: newPost.fileSize as number
-        } as PostFile)
-      : newPost.options
-      ? ({
-          ...tempNewPostObj,
-          options: newPost.options
-        } as PostPoll)
-      : ({
-          ...tempNewPostObj
-        } as Post)
-
-    setPosts([newPostObj, ...posts])
-    setNewPost({ content: "", type: "text", hashtags: [] })
   }
 
   return (
@@ -100,103 +283,122 @@ const CreatePostForm: React.FC<Props> = ({
       <CardHeader>
         <h2 className="text-2xl font-bold">Create a Post</h2>
       </CardHeader>
-      <CardContent>
-        {variant === "posts" ? (
-          <Tabs defaultValue="text" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="text">Text</TabsTrigger>
-              <TabsTrigger value="image">Image</TabsTrigger>
-              <TabsTrigger value="poll">Poll</TabsTrigger>
-              <TabsTrigger value="file">File</TabsTrigger>
-            </TabsList>
-            <TabsContent value="text">
-              <CreatePostInput
-                type="text"
-                setNewPost={setNewPost}
-                newPost={newPost}
-              />
-            </TabsContent>
-            <TabsContent value="image">
-              <CreatePostInput
-                type="image"
-                setNewPost={setNewPost}
-                newPost={newPost}
-              />
-            </TabsContent>
-            <TabsContent value="poll">
-              <CreatePostInput
-                type="poll"
-                setNewPost={setNewPost}
-                newPost={newPost}
-              />
-            </TabsContent>
-            <TabsContent value="file">
-              <CreatePostInput
-                type="file"
-                setNewPost={setNewPost}
-                newPost={newPost}
-              />
-            </TabsContent>
-          </Tabs>
-        ) : (
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <Select
-                // id="category"
-                value={newPost.category}
-                onValueChange={
-                  (value) => setNewPost({ ...newPost, category: value })
-                  // TODO: set active category after state management is integrated
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories
-                    .filter((category) => category !== "All")
-                    .map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+      <form onSubmit={handleCreatePost}>
+        <CardContent>
+          {variant === "posts" ? (
+            <Tabs defaultValue="text" className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="text">Text</TabsTrigger>
+                <TabsTrigger value="image">Image</TabsTrigger>
+                <TabsTrigger value="poll">Poll</TabsTrigger>
+                <TabsTrigger value="file">File</TabsTrigger>
+              </TabsList>
+              <TabsContent value="text">
+                <CreatePostInput
+                  type={PostType.text}
+                  setNewPost={setNewPost}
+                  newPost={newPost}
+                />
+              </TabsContent>
+              <TabsContent value="image">
+                <CreatePostInput
+                  type={PostType.image}
+                  setNewPost={setNewPost}
+                  newPost={newPost}
+                  key={createdFilePost?.data?.id}
+                />
+              </TabsContent>
+              <TabsContent value="poll">
+                <CreatePostInput
+                  type={PostType.poll}
+                  setNewPost={setNewPost}
+                  newPost={newPost}
+                  pollOptions={pollOptions}
+                  setPollOptions={setPollOptions}
+                />
+              </TabsContent>
+              <TabsContent value="file">
+                <CreatePostInput
+                  type={PostType.file}
+                  setNewPost={setNewPost}
+                  newPost={newPost}
+                  key={createdFilePost?.data?.id}
+                />
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  // id="category"
+                  value={newPost.category}
+                  onValueChange={
+                    (value) => setNewPost({ ...newPost, category: value })
+                    // TODO: set active category after state management is integrated
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories
+                      .filter((category) => category !== "All")
+                      .map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="content">Content</Label>
+                <Textarea
+                  id="content"
+                  placeholder="What's on your mind?"
+                  value={newPost.content as string}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                    setNewPost({ ...newPost, content: e.target.value })
+                  }
+                  rows={3}
+                />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="content">Content</Label>
-              <Textarea
-                id="content"
-                placeholder="What's on your mind?"
-                value={newPost.content as string}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                  setNewPost({ ...newPost, content: e.target.value })
-                }
-                rows={3}
+          )}
+          {variant === "posts" && (
+            <div className="mt-4">
+              <Label htmlFor="hashtags">Hashtags</Label>
+              <TagsInput
+                autocomplete
+                tags={hashtags}
+                updateTags={setHashtags}
+                onChange={searchTagsForUserInput}
+                suggestions={suggestions}
+                loadingSuggestions={searchTagsLoading}
               />
             </div>
-          </div>
-        )}
-        {variant === "posts" && (
-          <div className="mt-4">
-            <Label htmlFor="hashtags">Hashtags (space-separated)</Label>
-            <Input
-              id="hashtags"
-              placeholder="Enter hashtags (e.g., coding webdev)"
-              onChange={(e) =>
-                setNewPost({
-                  ...newPost,
-                  hashtags: e.target.value.split(" ")
-                })
-              }
-            />
-          </div>
-        )}
-      </CardContent>
-      <CardFooter>
-        <Button onClick={handleCreatePost}>Post</Button>
-      </CardFooter>
+          )}
+        </CardContent>
+        <CardFooter>
+          <Button
+            className="w-full"
+            type="submit"
+            disabled={
+              createPostLoading ||
+              createFilePostLoading ||
+              createPollPostLoading
+            }
+            loading={
+              createPostLoading ||
+              createFilePostLoading ||
+              createPollPostLoading
+            }
+          >
+            Post
+          </Button>
+        </CardFooter>
+      </form>
     </Card>
   )
 }

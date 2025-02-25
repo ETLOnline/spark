@@ -10,6 +10,7 @@ import MissionCardList from '@/src/components/MissionCard/MissionCardList';
 import Container from '@/src/components/container/Container';
 
 
+
 export default function Home() {
 	return (
 		<>
