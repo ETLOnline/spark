@@ -18,17 +18,14 @@ import {
   TrophyIcon,
   UserIcon
 } from "lucide-react"
-import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
 import Link from "next/link"
-import { useServerAction } from "@/src/hooks/useServerAction"
-import { GetUserProfileAction } from "@/src/server-actions/User/User"
-import { SelectActivity, SelectReward, SelectTag } from "@/src/db/schema"
-import { ExtendedRecommendations } from "./types/profile-types.d"
-import { LoaderSizes } from "../../common/Loader/types/loader-types.d"
-import Loader from "../../common/Loader/Loader"
-import { useAtomValue } from "jotai"
-import { userStore } from "@/src/store/user/userStore"
-import { useState, useEffect } from "react"
+import {
+  SelectActivity,
+  SelectReward,
+  SelectTag,
+  SelectUser
+} from "@/src/db/schema"
+import { ExtendedRecommendations, Profile } from "./types/profile-types.d"
 import { usePathname } from "next/navigation"
 import { Button } from "@/src/components/ui/button"
 import { useToast } from "@/src/hooks/use-toast"
@@ -39,30 +36,23 @@ import {
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
 
-type ProfileScreenProps = { tab?: string }
+type ProfileScreenProps = {
+  tab?: string
+  user: SelectUser
+  profileData: Profile
+}
 
-export default function ProfileScreen({ tab }: ProfileScreenProps) {
-  const user = useAtomValue(userStore.AuthUser)
+export default function ProfileScreen({
+  tab,
+  user,
+  profileData
+}: ProfileScreenProps) {
   const pathname = usePathname()
   const { toast } = useToast()
-  const [isLoading, setIsLoading] = useState(true)
-
-  const [profileLoading, profileData, profileDataError, getProfile] =
-    useServerAction(GetUserProfileAction)
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 750)
-    if (user) {
-      getProfile(user.unique_id)
-    }
-    return () => clearTimeout(timer)
-  }, [user])
 
   const handleCopyUrl = async () => {
     try {
-      const url = `${window.location.origin}${pathname}/${user?.unique_id}`
+      const url = `${window.location.origin}${pathname}/${user.unique_id}`
       await navigator.clipboard.writeText(url)
       toast({
         title: "URL copied!",
@@ -77,15 +67,7 @@ export default function ProfileScreen({ tab }: ProfileScreenProps) {
     }
   }
 
-  if (!user && !isLoading) {
-    return <NotFound />
-  }
-
-  return isLoading || profileLoading ? (
-    <div className={"flex justify-center items-center h-full"}>
-      <Loader size={LoaderSizes.xl} />
-    </div>
-  ) : (
+  return (
     <div className="container mx-auto p-6 relative">
       <TooltipProvider>
         <Tooltip>
@@ -148,19 +130,17 @@ export default function ProfileScreen({ tab }: ProfileScreenProps) {
           <ProfileBio
             userBio={user?.bio as string}
             recommendations={
-              profileData?.data?.recommendations as ExtendedRecommendations
+              profileData?.recommendations as ExtendedRecommendations
             }
-            tags={profileData?.data?.tags as SelectTag[]}
+            tags={profileData?.tags as SelectTag[]}
           />
         </TabsContent>
         <TabsContent value="rewards">
-          <ProfileRewards
-            rewards={profileData?.data?.rewards as SelectReward[]}
-          />
+          <ProfileRewards rewards={profileData?.rewards as SelectReward[]} />
         </TabsContent>
         <TabsContent value="activity">
           <ProfileActivities
-            activities={profileData?.data?.activities as SelectActivity[]}
+            activities={profileData?.activities as SelectActivity[]}
           />
         </TabsContent>
         {/* <TabsContent value="calendar">
