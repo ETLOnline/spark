@@ -13,13 +13,26 @@ type Props = {
 }
 
 const FilePost: React.FC<Props> = ({ post }) => {
+  const formatFileSize = (sizeInBytes: number) => {
+    const kb = sizeInBytes / 1024
+    const mb = kb / 1024
+    if (mb >= 1) {
+      return `${mb.toFixed(2)} MB`
+    }
+    return `${kb.toFixed(2)} KB`
+  }
+
   return (
     <>
       <CardContent>
+        <p className="text-lg pb-5">{post.content}</p>
         <Link href={post.file.file_path}>
           <div className="flex items-center space-x-2 bg-muted p-4 rounded-lg w-fit">
             <FileIcon className="h-8 w-8" />
             <span className="font-medium">{post.file.file_name}</span>
+            <span className="text-xs text-primary">
+              {formatFileSize(post.file.file_size)}
+            </span>
           </div>
         </Link>
         <div className="mt-4 flex flex-wrap gap-2">

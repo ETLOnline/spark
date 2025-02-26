@@ -36,7 +36,6 @@
     "@radix-ui/react-tooltip": "^1.1.4",
     "@tabler/icons-react": "^3.30.0",
     "ably": "^2.6.0",
-    "antd": "^5.24.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",

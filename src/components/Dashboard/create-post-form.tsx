@@ -211,10 +211,11 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         }
         const post = await createFilePost(
           newPost.type,
-          newPost.fileSize as string,
+          newPost.fileSize as number,
           newPost.fileName as string,
           newPost.fileType as string,
-          newPost.fileBase64
+          newPost.fileBase64,
+          newPost.content
         )
         if (post && post.data && post.data) {
           let linkedHashtags
