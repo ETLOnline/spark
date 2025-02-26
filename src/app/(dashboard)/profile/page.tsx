@@ -14,15 +14,20 @@ interface ProfilePageProps {
 const ProfilePage: React.FC<ProfilePageProps> = async ({
   searchParams: { tab }
 }) => {
-  const user = await AuthUserAction()
+  let user
 
   let profileData: Profile | undefined
 
-  if (user) {
-    const res = await GetUserProfileAction(user.unique_id)
-    if (res) {
-      profileData = res.data
+  try {
+    user = await AuthUserAction()
+    if (user) {
+      const res = await GetUserProfileAction(user.unique_id)
+      if (res) {
+        profileData = res.data
+      }
     }
+  } catch (error) {
+    console.error("Error fetching profile data!", error)
   }
 
   return (
