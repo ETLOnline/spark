@@ -48,7 +48,6 @@ export default function ProfileScreen({
   user,
   profileData
 }: ProfileScreenProps) {
-  const pathname = usePathname()
   const { toast } = useToast()
 
   const handleCopyUrl = async () => {
