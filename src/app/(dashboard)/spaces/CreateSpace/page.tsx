@@ -1,10 +1,10 @@
+import { CreateSpace } from '@/src/components/Dashboard/Spaces/CreateSpace/CreateSpace'
 import React from 'react'
-import { CreateSpace } from "@/src/components/Dashboard/Spaces/CreateSpace/CreateSpace"
 
-function page() {
+function CreateSpacePage() {
   return (
     <CreateSpace />
   )
 }
 
-export default page
+export default CreateSpacePage

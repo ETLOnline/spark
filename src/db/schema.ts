@@ -599,3 +599,31 @@ export const filesRelations = relations(filesTable, ({ one }) => ({
 
 export type InsertFile = typeof filesTable.$inferInsert
 export type SelectFile = typeof filesTable.$inferSelect
+
+
+export const channelsTable = sqliteTable("channels", {
+  id:  text("channel_id", { length: 36 })
+  .primaryKey()
+  .$defaultFn(() => randomUUID()),
+  channel_name: text().notNull(),
+  description: text(),
+  channel_type: text(),
+  created_by: text().notNull(),
+  ...timestamps,
+})
+
+export type InsertChannel = typeof channelsTable.$inferInsert
+export type SelectChannel = typeof channelsTable.$inferSelect
+
+
+export const spacesTable = sqliteTable("spaces", {
+  id: int().primaryKey({ autoIncrement: true }),
+  space_name: text().notNull(),
+  description: text(),
+  channel_id: text().notNull(),
+  created_by: text().notNull(),
+  ...timestamps,
+})
+
+export type InsertSpace = typeof spacesTable.$inferInsert
+export type SelectSpace = typeof spacesTable.$inferSelect

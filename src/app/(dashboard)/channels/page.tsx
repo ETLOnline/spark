@@ -1,10 +1,9 @@
 import ChannelsScreen from '@/src/components/Dashboard/Channels'
-import React from 'react'
 
-function page() {
+function CreateSpacePage() {
   return (
     <ChannelsScreen />
   )
 }
 
-export default page
+export default CreateSpacePage

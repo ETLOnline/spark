@@ -4,40 +4,73 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
 import { Textarea } from '@/src/components/ui/textarea'
-import { channelstable } from '@/src/db/schema'
-import React, { useEffect, useState } from 'react'
+import { InsertSpace, SelectSpace } from '@/src/db/schema'
+import { toast } from '@/src/hooks/use-toast'
+import { useServerAction } from '@/src/hooks/useServerAction'
+import { CreateSpaceAction } from '@/src/server-actions/Spaces/space'
+import { userStore } from '@/src/store/user/userStore'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useAtomValue } from 'jotai'
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { Controller, useForm } from 'react-hook-form'
+import { z } from 'zod'
+
+const spaceSchema = z.object({
+  space_name: z.string().min(1, "Space name required").max(30, "Too long"),
+  description: z.string().min(1, "Description required").max(50, "Description is too long")
+})
 
 export function CreateSpace() {
-  const [newSpace, setNewSpace] = useState({
-    title: '',
-    desscrption: '',
+
+  const [space, setSpace] = useState<SelectSpace[]>([])
+  const [spaceFormModelVisibility, setSpaceFormModelVisibility] = useState(false)
+  const [addSpaceLoading, addSpaceData, addSpaceError, CreateNewSpace] = useServerAction(CreateSpaceAction);
+  const form = useForm({
+    resolver: zodResolver(spaceSchema)
   })
-  const [space, setSpace] = useState<{ title: string; desscrption: string }[]>([])
+  const authUser = useAtomValue(userStore.AuthUser);
+  const searchParams = useSearchParams();
+  const channelId = searchParams.get("channelId");
+  const error = form.formState.errors;
 
-  useEffect(() => {
-    console.log(space)
-  }, [space])
-
-  function handleCreateSpace() {
-    if (
-      newSpace.title &&
-      newSpace.desscrption
-    ) {
-      setSpace([...space, newSpace])
+  function submit(data: any) {
+    if (data != null) {
+      handleCreateSpace(data)
     }
-    setNewSpace({
-      title: '',
-      desscrption: '',
-    })
+  }
+
+  async function handleCreateSpace(data: any) {
+    try {
+      const finalData = { ...data }
+      finalData.created_by = authUser?.unique_id
+      finalData.channel_id = channelId
+      const createSpace = await CreateNewSpace(finalData as InsertSpace)
+      console.log(createSpace?.data)
+      if (createSpace?.success && createSpace.data) {
+        setSpace([...space, ...createSpace.data])
+        setSpaceFormModelVisibility(false)
+        toast({
+          title: "Space created",
+          duration: 3000
+        })
+      }
+    } catch {
+      toast({
+        title: "unable to create space",
+        variant: "destructive",
+        duration: 3000
+      })
+    }
   }
 
 
   return (
 
     <div className=" flex  w-full justify-center">
-      <Dialog >
+      <Dialog open={spaceFormModelVisibility} onOpenChange={(open) => { setSpaceFormModelVisibility(open) }}>
         <DialogTrigger>
-          <Button variant={'default'}>
+          <Button>
             Create Space
           </Button>
         </DialogTrigger>
@@ -46,37 +79,63 @@ export function CreateSpace() {
             <DialogTitle>Create Space</DialogTitle>
             <DialogDescription>You can create Spaces.</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <form onSubmit={form.handleSubmit(submit)}>
+            <div className="grid gap-4 py-4">
+              <div className='flex flex-col'>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="space_name" className="text-right">
+                    Title
+                  </Label>
+                  <Controller
+                    name='space_name'
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input
+                        id='space_name'
+                        placeholder='Enter space title'
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.value.trimStart())}
+                        className="col-span-3" />
 
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="title" className="text-right">
-                Title
-              </Label>
-              <Input
-                id='title'
-                placeholder='Enter space title'
-                value={newSpace.title}
-                onChange={(e) => setNewSpace({ ...newSpace, title: e.target.value })}
-                className="col-span-3" />
+                    )}
+                  />
+                </div>
+                <div className="text-right">
+                  {error.space_name && <span className="text-red-500 text-sm">{String(error.space_name.message)}</span>}
+                </div>
+              </div>
+
+              <div className='flex flex-col'>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="description" className="text-right">
+                    Description
+                  </Label>
+                  <Controller
+                    name='description'
+                    control={form.control}
+                    render={({ field }) => (
+                      <Textarea
+                        id='description'
+                        placeholder='Description'
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.value.trimStart())}
+                        className="col-span-3" />
+
+                    )}
+                  />
+
+                </div>
+                <div className="text-right">
+                  {error.description && <span className="text-red-500 text-sm">{String(error.description.message)}</span>}
+                </div>
+              </div>
+
+
             </div>
-
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="description" className="text-right">
-                Description
-              </Label>
-              <Textarea
-                id='description'
-                value={newSpace.desscrption}
-                onChange={(e) => setNewSpace({ ...newSpace, desscrption: e.target.value })}
-                className="col-span-3" />
-
-            </div>
-
-
-          </div>
-          <DialogFooter>
-            <Button onClick={handleCreateSpace}> Create </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="submit" loading={addSpaceLoading}> Create </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

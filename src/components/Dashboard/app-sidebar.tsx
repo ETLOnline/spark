@@ -32,6 +32,11 @@ import {
 import { SignedIn } from "@clerk/nextjs"
 import Image from "next/image"
 import Link from "next/link"
+import { Item } from "@radix-ui/react-dropdown-menu"
+import { channelStore } from "@/src/store/chennel/channelStore"
+import { useAtomValue } from "jotai"
+
+
 
 const data = {
   navMain: [
@@ -87,6 +92,9 @@ const data = {
       title: "Channels",
       url: "/channels",
       icon: Boxes,
+      Item: [
+
+      ]
     },
     {
       title: "Spaces",
