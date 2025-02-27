@@ -35,6 +35,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
+import { generateUrl, getPagePath } from "@/src/utils/helpers"
 
 type ProfileScreenProps = {
   tab?: string
@@ -52,7 +53,7 @@ export default function ProfileScreen({
 
   const handleCopyUrl = async () => {
     try {
-      const url = `${window.location.origin}${pathname}/${user.unique_id}`
+      const url = generateUrl(`${getPagePath("profile")}/${user?.unique_id}`)
       await navigator.clipboard.writeText(url)
       toast({
         title: "URL copied!",
