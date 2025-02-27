@@ -583,7 +583,7 @@ export const filesTable = sqliteTable("files", {
   id: int().primaryKey({ autoIncrement: true }),
   post_id: text().notNull(),
   file_name: text().notNull(),
-  file_size: text().notNull(),
+  file_size: int().notNull(),
   file_type: text().notNull(),
   file_path: text().notNull(),
   ...timestamps

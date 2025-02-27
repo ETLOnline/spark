@@ -52,7 +52,7 @@ export const addFileToDb = async (
   fileBase64: string,
   bucket: string,
   postId: string,
-  fileSize: string,
+  fileSize: number,
   fileType: string,
   folderPath: string,
   tempFolderPath = "/tmp"

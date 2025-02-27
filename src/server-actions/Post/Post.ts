@@ -12,7 +12,8 @@ import {
   CreateHashtags,
   AddHashtagToPostLink,
   UpdateHashTagsCount,
-  getPosts
+  getPosts,
+  DeletePost
 } from "@/src/db/data-access/post/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
@@ -47,17 +48,19 @@ export const CreateFilePostAction = CreateServerAction(
   true,
   async (
     type: string,
-    fileSize: string,
+    fileSize: number,
     fileName: string,
     fileType: string,
-    fileBase64: string
+    fileBase64: string,
+    content?: string
   ) => {
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
         const postData = await CreateFilePost({
           type,
-          user_id: userId
+          user_id: userId,
+          content
         })
         if (postData) {
           if (process.env.S3_BUCKET_NAME) {
@@ -260,6 +263,21 @@ export const SearchHashtagsAction = CreateServerAction(
       return {
         success: false,
         error: error.message || "Failed to search hashtags"
+      }
+    }
+  }
+)
+
+export const DeletePostAction = CreateServerAction(
+  true,
+  async (postId: string) => {
+    try {
+      const deletedPost = await DeletePost(postId)
+      return { success: true, data: deletedPost }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to delete post"
       }
     }
   }
