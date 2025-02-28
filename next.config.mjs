@@ -19,6 +19,11 @@ const nextConfig = {
     S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
     S3_REGION: process.env.S3_REGION,
     S3_ENDPOINT: process.env.S3_ENDPOINT
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "500mb"
+    }
   }
 }
 

@@ -15,10 +15,11 @@ const ImagePost: React.FC<Props> = ({ post }) => {
   return (
     <>
       <CardContent>
+        <p className="text-lg pb-5">{post.content}</p>
         <Image
           src={post.file.file_path}
           alt="Post image"
-          className="rounded-lg max-h-96 w-full object-cover"
+          className="rounded-lg max-h-96 w-full object-cover bg-gradient-to-r from-accent to-secondary"
           width={1000}
           height={1000}
           style={{ objectFit: "contain" }}

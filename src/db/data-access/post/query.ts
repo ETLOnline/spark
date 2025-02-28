@@ -20,6 +20,15 @@ import { eq, and, desc, inArray } from "drizzle-orm"
 import { like } from "drizzle-orm"
 import { Tag } from "@/src/components/TagsInput/tags-input-types.d"
 
+interface PostQueryFilters {
+  isPrivate?: boolean
+  userIds?: string[]
+  limit?: number
+  offset?: number
+  orderBy?: "created_at" | "likes" | "comments"
+  orderDirection?: "asc" | "desc"
+}
+
 export const CreatePost = async (post: InsertPost) => {
   return await db.insert(postsTable).values(post).returning()
 }
@@ -119,15 +128,6 @@ export const VotePoll = async (vote: InsertPollVote, voteCount: number) => {
   })
 }
 
-interface PostQueryFilters {
-  isPrivate?: boolean
-  userIds?: string[]
-  limit?: number
-  offset?: number
-  orderBy?: "created_at" | "likes" | "comments"
-  orderDirection?: "asc" | "desc"
-}
-
 export const getPosts = async (filters: PostQueryFilters = {}) => {
   try {
     const {
@@ -220,4 +220,28 @@ export const SearchHashtags = async (searchTerm: string) => {
     limit: 10
   })
   return hashtags
+}
+
+export const DeletePost = async (postId: string) => {
+  return await db.transaction(async (tx) => {
+    // Delete associated records first
+    await tx.delete(likesTable).where(eq(likesTable.post_id, postId))
+    await tx.delete(commentsTable).where(eq(commentsTable.post_id, postId))
+    await tx
+      .delete(pollOptionsTable)
+      .where(eq(pollOptionsTable.post_id, postId))
+    await tx.delete(pollVotesTable).where(eq(pollVotesTable.post_id, postId))
+    await tx
+      .delete(postHashtagsTable)
+      .where(eq(postHashtagsTable.post_id, postId))
+    await tx.delete(filesTable).where(eq(filesTable.post_id, postId))
+
+    // Finally delete the post
+    const deletedPost = await tx
+      .delete(postsTable)
+      .where(eq(postsTable.id, postId))
+      .returning()
+
+    return deletedPost[0]
+  })
 }

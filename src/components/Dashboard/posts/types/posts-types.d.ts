@@ -34,7 +34,7 @@ export interface NewPost {
   category?: string
   hashtags: any[]
   fileName?: string
-  fileSize?: string
+  fileSize?: number
   fileType?: string
   fileBase64?: string
 }
