@@ -104,7 +104,7 @@ export default async function ProfileScreen(props: ProfileScreenProps) {
           <ProfileBio
             userBio={user?.bio as string}
             recommendations={
-              profileData?.data?.recommendations as ExtendedRecommendations
+              profileData?.data?.recommendations as unknown as ExtendedRecommendations[]
             }
             tags={profileData?.data?.tags as SelectTag[]}
             editable={false}

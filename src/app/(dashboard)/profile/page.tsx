@@ -2,9 +2,9 @@ import ProfileScreen from "@/src/components/Dashboard/profile/ProfileScreen"
 import { Suspense } from "react"
 
 interface ProfilePageProps {
-  searchParams: {
+  searchParams: Promise<{
     tab?: string
-  }
+  }>
 }
 
 const ProfilePage: React.FC<ProfilePageProps> = async props => {
