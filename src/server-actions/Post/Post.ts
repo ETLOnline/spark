@@ -2,7 +2,6 @@
 
 import {
   AddPollOptions,
-  CreateFilePost,
   CreatePost,
   LikePost,
   UnlikePost,
@@ -13,7 +12,8 @@ import {
   AddHashtagToPostLink,
   UpdateHashTagsCount,
   getPosts,
-  DeletePost
+  DeletePost,
+  AddPostFileLink
 } from "@/src/db/data-access/post/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
@@ -57,7 +57,7 @@ export const CreateFilePostAction = CreateServerAction(
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
-        const postData = await CreateFilePost({
+        const postData = await CreatePost({
           type,
           user_id: userId,
           content
@@ -68,11 +68,11 @@ export const CreateFilePostAction = CreateServerAction(
               fileName,
               fileBase64,
               process.env.S3_BUCKET_NAME,
-              postData[0].id,
               fileSize,
               fileType,
               "/posts"
             )
+            await AddPostFileLink(postData[0].id, fileData[0].id)
             return {
               success: true,
               data: { ...postData[0], file: { ...fileData[0] } }
@@ -207,7 +207,8 @@ export const GetPublicPostsAction = CreateServerAction(true, async () => {
     const posts = await getPosts()
     const sanitizedPosts = posts.map((post) => ({
       ...post,
-      hashtags: post.hashtags.map((hashtag) => hashtag.hashtag)
+      hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
+      file: post.file?.postFile
     }))
     return { success: true, data: sanitizedPosts }
   } catch (error: any) {

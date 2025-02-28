@@ -51,7 +51,6 @@ export const addFileToDb = async (
   fileName: string,
   fileBase64: string,
   bucket: string,
-  postId: string,
   fileSize: number,
   fileType: string,
   folderPath: string,
@@ -71,7 +70,6 @@ export const addFileToDb = async (
       file_name: fileName,
       file_size: fileSize,
       file_type: fileType,
-      post_id: postId,
       file_path: signedUrl
     })
     return { ...fileData }
