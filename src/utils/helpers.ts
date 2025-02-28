@@ -1,5 +1,5 @@
 import { ProfileActivity } from "../components/Dashboard/Connections/types/connections.types"
-import { InsertNotification } from "../db/schema"
+import { InsertNotification, SelectUser } from "../db/schema"
 import { AblyClient } from "../services/realtime/AblyClient"
 
 export const joinRequestChannel = (
@@ -60,4 +60,9 @@ export const joinNotificationChannel = (
       channel.unsubscribe()
     }
   }
+}
+
+export const getUserRoles = (user: SelectUser) :string[] => {
+  const roles = user.role.split(',')
+  return roles
 }
