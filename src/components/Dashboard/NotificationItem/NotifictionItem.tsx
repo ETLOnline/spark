@@ -1,14 +1,14 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar"
 import { useAtomValue, useSetAtom } from "jotai"
 import Link from "next/link"
-import { ProfileActivity } from "../Connections/types/connections.types.d"
+import { ProfileActivity } from "../Connections/types/connections.types"
 import { userStore } from "@/src/store/user/userStore"
 import { SelectNotification } from "@/src/db/schema"
-import { NotificationType } from "../Notifications/types/notifications.types.d"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { MarkNotificationAsReadAction } from "@/src/server-actions/Notification/Notification"
 import { notificationStore } from "@/src/store/notification/notificationStore"
 import moment from "moment"
+import { NotificationType } from "../Notifications/types/notifications.types"
 
 type NotificationItemProps = {
   activity: SelectNotification | ProfileActivity
@@ -100,37 +100,37 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   }
 
   return (
-    <Link
-      href={size === "sm" ? "/connections" : "#"}
-      onClick={markNotificationAsRead}
-    >
-      <div className="flex items-center justify-between p-4 border-b last:border-b-0 max-[622px]:flex-col max-[622px]:items-start max-[622px]:space-x-0 max-[622px]:space-y-4">
-        <div className="flex items-center space-x-4">
-          {size === "sm" && !isProfileActivity(activity) && (
-            <span
-              className={`flex h-2 w-2 translate-y-1.5 rounded-full ${
-                activity.is_read === 0 ? "bg-sky-500" : "bg-transparent"
-              }`}
+    
+    <div className="flex items-center justify-between p-4 border-b last:border-b-0 max-[622px]:flex-col max-[622px]:items-start max-[622px]:space-x-0 max-[622px]:space-y-4">
+      <div className="flex items-center space-x-4">
+        {size === "sm" && !isProfileActivity(activity) && (
+          <span
+            className={`flex h-2 w-2 translate-y-1.5 rounded-full ${
+              activity.is_read === 0 ? "bg-sky-500" : "bg-transparent"
+            }`}
+          />
+        )}
+        <Avatar className="h-12 w-12">
+          <Link
+            href={size === "sm" ? "#" : `/profile/${otherUser.unique_id}`}
+          >
+            <AvatarImage
+              className="rounded-full"
+              src={otherUser.profile_url as string}
+              alt={name}
             />
-          )}
-          <Avatar className="h-12 w-12">
-            <Link
-              href={size === "sm" ? "#" : `/profile/${otherUser.unique_id}`}
-            >
-              <AvatarImage
-                className="rounded-full"
-                src={otherUser.profile_url as string}
-                alt={name}
-              />
-              <AvatarFallback>{otherUser.first_name}</AvatarFallback>
-            </Link>
-          </Avatar>
+            <AvatarFallback>{otherUser.first_name}</AvatarFallback>
+          </Link>
+        </Avatar>
+        <Link
+          href={size === "sm" ? "/connections" : "#"}
+          onClick={markNotificationAsRead}
+        >
+
           <div className="flex-1 min-w-0">
-            <Link
-              href={size === "sm" ? "#" : `/profile/${otherUser.unique_id}`}
-            >
-              <p className="text-sm font-medium truncate">{name}</p>
-            </Link>
+            
+            <p className="text-sm font-medium truncate">{name}</p>
+            
             <p className="text-xs text-muted-foreground">
               {generateNotificationText(activity)}
             </p>
@@ -140,10 +140,10 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
               </p>
             )}
           </div>
-        </div>
-        {children}
+        </Link>
       </div>
-    </Link>
+      {children}
+    </div>
   )
 }
 

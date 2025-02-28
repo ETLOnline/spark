@@ -42,7 +42,7 @@ const buttonVariants = cva(
 )
 
 interface CustomButtonProps {
-  loading ?: boolean
+  loading?: boolean
 }
 
 export interface ButtonProps
@@ -62,7 +62,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {variant === "edit" && <PencilIcon size={"10"} />}
         {children}
-        {props.loading ? <Loader /> : null}
+        {props?.loading ? <Loader /> : null}
       </Comp>
     )
   }

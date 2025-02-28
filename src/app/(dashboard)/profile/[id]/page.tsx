@@ -23,18 +23,27 @@ import { CalendarIcon, StarIcon, TrophyIcon, UserIcon } from "lucide-react"
 import Link from "next/link"
 
 interface ProfileScreenProps {
-  params: {
+  params: Promise<{
     id: string
-  }
-  searchParams: {
+  }>
+  searchParams: Promise<{
     tab?: string
-  }
+  }>
 }
 
-export default async function ProfileScreen({
-  params: { id },
-  searchParams: { tab }
-}: ProfileScreenProps) {
+export default async function ProfileScreen(props: ProfileScreenProps) {
+  const searchParams = await props.searchParams;
+
+  const {
+    tab
+  } = searchParams;
+
+  const params = await props.params;
+
+  const {
+    id
+  } = params;
+
   const userRes = await FindUserByUniqueIdAction(id)
   const user = userRes.data
   let profileData

@@ -1,4 +1,4 @@
-import { Tag } from "@/src/components/TagsInput/tags-input-types.d"
+import { Tag } from "@/src/components/TagsInput/tags-input-types"
 import { profileStore } from "@/src/store/profile/profileStore"
 import { useAtomValue, useSetAtom } from "jotai"
 

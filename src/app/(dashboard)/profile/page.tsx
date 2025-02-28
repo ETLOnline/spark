@@ -7,7 +7,13 @@ interface ProfilePageProps {
   }
 }
 
-const ProfilePage: React.FC<ProfilePageProps> = ({ searchParams: { tab } }) => {
+const ProfilePage: React.FC<ProfilePageProps> = async props => {
+  const searchParams = await props.searchParams;
+
+  const {
+    tab
+  } = searchParams;
+
   return (
     <Suspense>
       <ProfileScreen tab={tab} />

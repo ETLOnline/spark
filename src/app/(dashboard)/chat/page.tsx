@@ -3,12 +3,13 @@ import { SelectChat } from "@/src/db/schema";
 import { GetChatBySlugWithMessagesAction, GetUserChatsAction } from "@/src/server-actions/Chat/Chat";
 
 interface ChatPageProps {
-    searchParams:{
+    searchParams: Promise<{
         active_chat?: string
-    }
+    }>
 }
 
-export default async function ChatPage({ searchParams }: ChatPageProps) {
+export default async function ChatPage(props: ChatPageProps) {
+    const searchParams = await props.searchParams;
     let currentChat : SelectChat | undefined = undefined
     let allChats : SelectChat[] = []
     let selectedCurrectChatSlug = null

@@ -1,4 +1,4 @@
-import { ProfileActivity } from "../components/Dashboard/Connections/types/connections.types.d"
+import { ProfileActivity } from "../components/Dashboard/Connections/types/connections.types"
 import { InsertNotification } from "../db/schema"
 import { AblyClient } from "../services/realtime/AblyClient"
 

@@ -1,5 +1,5 @@
 import { Textarea } from "@/src/components/ui/textarea"
-import { NewPost, PostType } from "./types/posts-types.d"
+import { NewPost, PostType } from "./types/posts-types"
 import TagsInput from "../../TagsInput/TagsInput"
 import "./create-post-input.css"
 import { FileUpload } from "../../ui/file-upload"

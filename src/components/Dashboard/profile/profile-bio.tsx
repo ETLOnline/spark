@@ -2,12 +2,12 @@
 
 import { Card, CardContent } from "../../ui/card"
 import { useEffect } from "react"
-import { ExtendedRecommendations } from "./types/profile-types.d"
+import { ExtendedRecommendations } from "./types/profile-types"
 import EditProfileModal from "./edit-profile-modal"
 import { Badge } from "../../ui/badge"
 import { SelectTag } from "@/src/db/schema"
 import useUserProfile from "./hooks/useUserProfile"
-import { Tag, TagStatus } from "@/src/components/TagsInput/tags-input-types.d"
+import { Tag, TagStatus } from "@/src/components/TagsInput/tags-input-types"
 
 type ProfileBioProps = {
   userBio: string

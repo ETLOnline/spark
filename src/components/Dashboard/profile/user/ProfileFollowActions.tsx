@@ -20,7 +20,7 @@ import { joinRequestChannel } from "@/src/utils/helpers"
 import { useAtomValue } from "jotai"
 import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
-import { ActivityType } from "../../Connections/types/connections.types.d"
+import { ActivityType } from "../../Connections/types/connections.types"
 
 interface Props {
   user: SelectUser
