@@ -4,7 +4,7 @@ import * as Minio from "minio"
 import { promises as fs } from "fs"
 import * as path from "path"
 import { randomUUID } from "crypto"
-import { AddFile } from "../db/data-access/post/query"
+import { AddFile } from "../db/data-access/file/query"
 
 export const uploadFileToBucket = async (
   fileName: string,

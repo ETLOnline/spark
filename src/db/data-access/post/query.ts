@@ -1,4 +1,3 @@
-import { Post } from "./../../../components/Dashboard/posts/types/posts-types.d"
 import { db } from "../.."
 import {
   commentsTable,
@@ -13,8 +12,6 @@ import {
   tagsTable,
   postHashtagsTable,
   SelectTag,
-  InsertFile,
-  filesTable,
   postFilesTable
 } from "../../schema"
 import { eq, and, desc, inArray } from "drizzle-orm"
@@ -32,10 +29,6 @@ interface PostQueryFilters {
 
 export const CreatePost = async (post: InsertPost) => {
   return await db.insert(postsTable).values(post).returning()
-}
-
-export const AddFile = async (file: InsertFile) => {
-  return await db.insert(filesTable).values(file).returning()
 }
 
 export const AddPostFileLink = async (postId: string, fileId: number) => {
@@ -131,7 +124,7 @@ export const VotePoll = async (vote: InsertPollVote, voteCount: number) => {
   })
 }
 
-export const getPosts = async (filters: PostQueryFilters = {}) => {
+export const GetPosts = async (filters: PostQueryFilters = {}) => {
   try {
     const {
       isPrivate = false,

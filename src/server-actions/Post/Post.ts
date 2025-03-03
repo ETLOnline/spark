@@ -11,7 +11,7 @@ import {
   CreateHashtags,
   AddHashtagToPostLink,
   UpdateHashTagsCount,
-  getPosts,
+  GetPosts,
   DeletePost,
   AddPostFileLink
 } from "@/src/db/data-access/post/query"
@@ -204,7 +204,7 @@ export const VotePollAction = CreateServerAction(
 
 export const GetPublicPostsAction = CreateServerAction(true, async () => {
   try {
-    const posts = await getPosts()
+    const posts = await GetPosts()
     const sanitizedPosts = posts.map((post) => ({
       ...post,
       hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
