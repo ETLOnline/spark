@@ -7,7 +7,7 @@ import {
 import { CreateServerAction } from ".."
 import { AddTag } from "@/src/db/data-access/tag/query"
 import { AddUserTag, DeleteUserTags } from "@/src/db/data-access/tag/query"
-import { ProfileData } from "@/src/components/Dashboard/profile/types/profile-types"
+import { Profile, ProfileData } from "@/src/components/Dashboard/profile/types/profile-types"
 
 export const UpdateBioForUserAction = CreateServerAction(
   true,
@@ -71,7 +71,7 @@ export const GetUserProfileAction = CreateServerAction(
   async (userId: string) => {
     try {
       const profileData = await GetUserProfileData(userId)
-      profileData.recommendations = profileData.recommendations.map(
+      const mappedRecommendations = profileData.recommendations.map(
         (recommendation) => {
           return {
             ...recommendation,
@@ -80,7 +80,7 @@ export const GetUserProfileAction = CreateServerAction(
         }
       )
       return {
-        data: profileData,
+        data: {...profileData, recommendations: mappedRecommendations},
         success: true
       }
     } catch (error) {

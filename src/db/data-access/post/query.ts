@@ -1,4 +1,3 @@
-import { Post } from "../../../components/Dashboard/posts/types/posts-types"
 import { db } from "../.."
 import {
   commentsTable,
@@ -13,8 +12,7 @@ import {
   tagsTable,
   postHashtagsTable,
   SelectTag,
-  InsertFile,
-  filesTable
+  postFilesTable
 } from "../../schema"
 import { eq, and, desc, inArray } from "drizzle-orm"
 import { like } from "drizzle-orm"
@@ -33,12 +31,10 @@ export const CreatePost = async (post: InsertPost) => {
   return await db.insert(postsTable).values(post).returning()
 }
 
-export const CreateFilePost = async (post: InsertPost) => {
-  return await db.insert(postsTable).values(post).returning()
-}
-
-export const AddFile = async (file: InsertFile) => {
-  return await db.insert(filesTable).values(file).returning()
+export const AddPostFileLink = async (postId: string, fileId: number) => {
+  return await db
+    .insert(postFilesTable)
+    .values({ post_id: postId, file_id: fileId })
 }
 
 export const AddPollOptions = async (options: InsertPollOption[]) => {
@@ -128,7 +124,7 @@ export const VotePoll = async (vote: InsertPollVote, voteCount: number) => {
   })
 }
 
-export const getPosts = async (filters: PostQueryFilters = {}) => {
+export const GetPosts = async (filters: PostQueryFilters = {}) => {
   try {
     const {
       isPrivate = false,
@@ -160,7 +156,7 @@ export const getPosts = async (filters: PostQueryFilters = {}) => {
           }
         },
         options: { with: { votes: true } },
-        file: true,
+        file: { with: { postFile: true } },
         postLikes: true
       },
       orderBy:
@@ -234,7 +230,7 @@ export const DeletePost = async (postId: string) => {
     await tx
       .delete(postHashtagsTable)
       .where(eq(postHashtagsTable.post_id, postId))
-    await tx.delete(filesTable).where(eq(filesTable.post_id, postId))
+    await tx.delete(postFilesTable).where(eq(postFilesTable.post_id, postId))
 
     // Finally delete the post
     const deletedPost = await tx

@@ -427,10 +427,10 @@ export const postsRelations = relations(postsTable, ({ one, many }) => ({
   options: many(pollOptionsTable, {
     relationName: "pollToPost"
   }),
-  file: one(filesTable, {
+  file: one(postFilesTable, {
     fields: [postsTable.id],
-    references: [filesTable.post_id],
-    relationName: "fileToPost"
+    references: [postFilesTable.post_id],
+    relationName: "postToFile"
   })
 }))
 
@@ -582,7 +582,6 @@ export type SelectPollVote = typeof pollVotesTable.$inferSelect
 
 export const filesTable = sqliteTable("files", {
   id: int().primaryKey({ autoIncrement: true }),
-  post_id: text().notNull(),
   file_name: text().notNull(),
   file_size: int().notNull(),
   file_type: text().notNull(),
@@ -591,12 +590,34 @@ export const filesTable = sqliteTable("files", {
 })
 
 export const filesRelations = relations(filesTable, ({ one }) => ({
-  post: one(postsTable, {
-    fields: [filesTable.post_id],
-    references: [postsTable.id],
+  post: one(postFilesTable, {
+    fields: [filesTable.id],
+    references: [postFilesTable.file_id],
     relationName: "fileToPost"
   })
 }))
 
 export type InsertFile = typeof filesTable.$inferInsert
 export type SelectFile = typeof filesTable.$inferSelect
+
+export const postFilesTable = sqliteTable("post_files", {
+  id: int().primaryKey({ autoIncrement: true }),
+  post_id: text().notNull(),
+  file_id: int().notNull()
+})
+
+export const postFilesRelations = relations(postFilesTable, ({ one }) => ({
+  post: one(postsTable, {
+    fields: [postFilesTable.post_id],
+    references: [postsTable.id],
+    relationName: "postToFile"
+  }),
+  postFile: one(filesTable, {
+    fields: [postFilesTable.file_id],
+    references: [filesTable.id],
+    relationName: "fileToPost"
+  })
+}))
+
+export type InsertPostFile = typeof postFilesTable.$inferInsert
+export type SelectPostFile = typeof postFilesTable.$inferSelect

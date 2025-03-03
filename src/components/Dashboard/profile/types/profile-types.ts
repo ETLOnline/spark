@@ -26,3 +26,10 @@ export type ProfileData = {
   existingTags: InsertTag[]
   deletedTagsIds: number[]
 }
+
+export type Profile = {
+  recommendations: ExtendedRecommendations[]
+  rewards: Reward[]
+  activities: Activity[]
+  tags: InsertTag[]
+}
