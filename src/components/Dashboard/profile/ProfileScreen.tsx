@@ -70,23 +70,6 @@ export default function ProfileScreen({
 
   return (
     <div className="container mx-auto p-6 relative">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute top-0 right-0"
-              onClick={handleCopyUrl}
-            >
-              <LinkIcon className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <span>Copy profile URL</span>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
       <div className="mb-6 flex items-center space-x-4">
         <Avatar className="h-20 w-20">
           <AvatarImage
@@ -96,7 +79,27 @@ export default function ProfileScreen({
           <AvatarFallback>Profile Image</AvatarFallback>
         </Avatar>
         <div>
-          <h1 className="text-2xl font-bold">{user?.first_name}</h1>
+          <h1 className="text-2xl font-bold">{user?.first_name} 
+            <span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="ml-2"
+                      onClick={handleCopyUrl}
+                    >
+                      <LinkIcon className="h-2 w-2" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span>Copy profile URL</span>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </span>
+          </h1>
           <span className="text-muted-foreground">{user?.email}</span>
         </div>
       </div>

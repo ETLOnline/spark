@@ -388,7 +388,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             disabled={
               createPostLoading ||
               createFilePostLoading ||
-              createPollPostLoading
+              createPollPostLoading ? true : false
             }
             loading={
               createPostLoading ||
