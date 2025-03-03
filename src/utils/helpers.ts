@@ -1,3 +1,4 @@
+import pageMeta from "@/src/utils/constants"
 import { ProfileActivity } from "../components/Dashboard/Connections/types/connections.types.d"
 import { InsertNotification } from "../db/schema"
 import { AblyClient } from "../services/realtime/AblyClient"
@@ -60,4 +61,13 @@ export const joinNotificationChannel = (
       channel.unsubscribe()
     }
   }
+}
+
+export const generateUrl = (path: string) => {
+  return `${window.location.origin}${path}`
+}
+
+export const getPagePath = (page: string) => {
+  const targetPageMeta = pageMeta.find((meta) => meta.id === page)
+  return targetPageMeta ? targetPageMeta.url : ""
 }
