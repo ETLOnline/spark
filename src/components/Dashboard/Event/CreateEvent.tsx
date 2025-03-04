@@ -490,6 +490,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                   <Controller
                     name="location"
                     control={form.control}
+                    defaultValue=""
                     render={({ field }) => (
                       <Input
                         id="location"
@@ -524,6 +525,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                   <Controller
                     name="meeting_link"
                     control={form.control}
+                    defaultValue=""
                     render={({ field }) => (
                       <Input
                         id="meeting_link"
