@@ -1,4 +1,4 @@
-import { InsertTag } from "@/src/db/schema"
+import { InsertTag, SelectRecommendation } from "@/src/db/schema"
 
 export type Recommendation = {
   name: string

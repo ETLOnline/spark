@@ -20,7 +20,8 @@ export const usersTable = sqliteTable(
     external_auth_id: text().notNull().unique(),
     profile_url: text(),
     meta: text(),
-    bio: text()
+    bio: text(),
+    role: text().notNull().default("user"),
   },
   (t) => ({
     pk: primaryKey({ columns: [t.unique_id] })

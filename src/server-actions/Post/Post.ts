@@ -17,7 +17,7 @@ import {
 } from "@/src/db/data-access/post/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
-import { TagStatus } from "@/src/components/TagsInput/tags-input-types.d"
+import { TagStatus } from "@/src/components/TagsInput/tags-input-types"
 import { addFileToDb } from "@/src/utils/serverHelpers"
 
 export const CreatePostAction = CreateServerAction(

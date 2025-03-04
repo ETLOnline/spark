@@ -1,7 +1,7 @@
 import { Badge } from "../../ui/badge"
 import { Calendar } from "../../ui/calendar"
 import { Card, CardHeader, CardTitle, CardContent } from "../../ui/card"
-import { Event } from "./types/spaces-types.d"
+import { Event } from "./types/spaces-types"
 
 type UpcomingEventsProps = {
   events: Event[]

@@ -10,12 +10,10 @@ import {
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import { AblyClientRest } from "@/src/services/realtime/AblyClient"
-import { ActivityType } from "@/src/components/Dashboard/Connections/types/connections.types.d"
+import { ActivityType } from "@/src/components/Dashboard/Connections/types/connections.types"
 import { AddNotification } from "@/src/db/data-access/notification/query"
-import {
-  NotificationEntity,
-  NotificationType
-} from "@/src/components/Dashboard/Notifications/types/notifications.types.d"
+import { NotificationEntity, NotificationType } from "@/src/components/Dashboard/Notifications/types/notifications.types"
+
 
 export const CreateContactAction = CreateServerAction(
   true,

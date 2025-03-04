@@ -22,6 +22,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import data from '@emoji-mart/data'
 import Picker from '@emoji-mart/react'
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
+import { isOnlyEmoji } from "@/src/utils/helpers"
 
 
 interface ChatScreenProps {
@@ -117,11 +118,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-
   useEffect(() => {
     if (!currentChat || !authUser) return
-    // Join a channel (e.g., "general" or "user1-user2" for one-to-one chat)
-    // const channelId = ChatChannelHash(currentChat.channel_id)
+
     const { sendMessage, unsubscribe } = joinChannel(currentChat.channel_id, (message) => {
       setMessages((prev) => [...prev, message])
     });
@@ -132,10 +131,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       const chatContact = currentChat.users?.find(user => user.user_id !== authUser?.unique_id)?.user
       setChatContact(chatContact || null) 
     }
-
-    // return () => {
-    //   unsubscribe();
-    // }
 
   }, [currentChat?.channel_id, authUser]);
 
@@ -287,25 +282,37 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                   {
                     authUser && currentChat && !fetchingChatMessages ? (
                       <ScrollArea className="h-[calc(100svh-17rem)] pr-4">
-                        {messages.map((message) => (
+                        {messages.map((message) => (                          
                           <div
                             key={message.id}
                             className={`mb-4 flex ${
                               message.sender_id === authUser?.unique_id ? "justify-end" : "justify-start"
                             }`}
                           >
-                            <div
-                              className={`rounded-lg p-3 max-w-[70%] ${
-                                message.sender_id === authUser?.unique_id
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-muted"
-                              }`}
-                            >
-                              <p className="text-sm">{message.message}</p>
-                              <p className="text-xs mt-1 opacity-70">
-                                {moment.utc(message.created_at).local().format('hh:mm A')}
-                              </p>
-                            </div>
+                            {
+                              isOnlyEmoji(message.message) ? (
+                                <div >
+                                  <p className="text-4xl">{message.message}</p>
+                                  <p className="text-xs mt-1 opacity-70 text-right">
+                                    {moment.utc(message.created_at).local().format('hh:mm A')}
+                                  </p>
+                                </div>
+                              ) : (
+
+                                <div
+                                  className={`rounded-lg p-3 max-w-[70%] ${
+                                    message.sender_id === authUser?.unique_id
+                                      ? "bg-primary text-primary-foreground"
+                                      : "bg-muted"
+                                  }`}
+                                >
+                                  <p className="text-sm">{message.message}</p>
+                                  <p className="text-xs mt-1 opacity-70 text-right">
+                                    {moment.utc(message.created_at).local().format('hh:mm A')}
+                                  </p>
+                                </div>
+                              )
+                            }
                           </div>
                         ))}
                         <div ref={messagesEndRef} />

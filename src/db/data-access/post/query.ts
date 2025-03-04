@@ -16,7 +16,7 @@ import {
 } from "../../schema"
 import { eq, and, desc, inArray } from "drizzle-orm"
 import { like } from "drizzle-orm"
-import { Tag } from "@/src/components/TagsInput/tags-input-types.d"
+import { Tag } from "@/src/components/TagsInput/tags-input-types"
 
 interface PostQueryFilters {
   isPrivate?: boolean

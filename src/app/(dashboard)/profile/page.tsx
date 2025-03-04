@@ -3,17 +3,17 @@ import { SelectUser } from "@/src/db/schema"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { GetUserProfileAction } from "@/src/server-actions/User/User"
 import { Suspense } from "react"
-import { Profile } from "@/src/components/Dashboard/profile/types/profile-types.d"
+import { Profile } from "@/src/components/Dashboard/profile/types/profile-types"
 
 interface ProfilePageProps {
-  searchParams: {
+  searchParams: Promise<{
     tab?: string
-  }
+  }>
 }
 
-const ProfilePage: React.FC<ProfilePageProps> = async ({
-  searchParams: { tab }
-}) => {
+const ProfilePage: React.FC<ProfilePageProps> = async (props) => {
+  const { tab } = await props.searchParams
+  
   let user
 
   let profileData: Profile | undefined

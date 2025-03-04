@@ -18,7 +18,8 @@ export const config = {
     "/events",
     "/spaces",
     "/connections",
-    "/dashboard"
+    "/dashboard",
+    "/admin"
     // Always run for API routes
     // '/(api|trpc)(.*)',
     // '/sign-in(.*)',
