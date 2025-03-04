@@ -31,6 +31,8 @@ const EditProfileModal: React.FC = () => {
 
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const [editedBio, setEditedBio] = useState<string | undefined>(bio)
+  const [skillsCopy, setSkillsCopy] = useState<Tag[]>([])
+  const [interestsCopy, setInterestsCopy] = useState<Tag[]>([])
 
   const [
     updateProfileLoading,
@@ -66,10 +68,18 @@ const EditProfileModal: React.FC = () => {
     }
   }, [updateProfileError])
 
-  const updatedSkillsLength: number = skills.filter(
+  useEffect(() => {
+    setSkillsCopy([...skills])
+  }, [skills])
+
+  useEffect(() => {
+    setInterestsCopy([...interests])
+  }, [interests])
+
+  const updatedSkillsLength: number = skillsCopy.filter(
     (tag) => !tag.deleted
   ).length
-  const updatedInterestsLength: number = interests.filter(
+  const updatedInterestsLength: number = interestsCopy.filter(
     (tag) => !tag.deleted
   ).length
   const skillsError: string =
@@ -82,13 +92,14 @@ const EditProfileModal: React.FC = () => {
     editedBio && editedBio?.length > 2000
       ? "Bio cannot exceed 2000 characters"
       : ""
+
   const saveProfileChanges = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
-      const deletedSkillsIds: number[] = skills
+      const deletedSkillsIds: number[] = skillsCopy
         .filter((skill) => skill.deleted && skill.status === TagStatus.saved)
         .map((skill) => skill.id as number)
-      const deletedInterestsIds: number[] = interests
+      const deletedInterestsIds: number[] = interestsCopy
         .filter(
           (interest) => interest.deleted && interest.status === TagStatus.saved
         )
@@ -97,24 +108,24 @@ const EditProfileModal: React.FC = () => {
         userId: user?.unique_id as string,
         bio: editedBio ? editedBio : bio,
         newTags: [
-          ...skills
+          ...skillsCopy
             .filter((tag) => tag.status === TagStatus.new && !tag.deleted)
             .map((tag) => {
               return { name: tag.name, type: "skill" }
             }),
-          ...interests
+          ...interestsCopy
             .filter((tag) => tag.status === TagStatus.new && !tag.deleted)
             .map((tag) => {
               return { name: tag.name, type: "interest" }
             })
         ],
         existingTags: [
-          ...skills
+          ...skillsCopy
             .filter((tag) => tag.status === TagStatus.selected && !tag.deleted)
             .map((tag) => {
               return { name: tag.name, id: tag.id, type: "skill" }
             }),
-          ...interests
+          ...interestsCopy
             .filter((tag) => tag.status === TagStatus.selected && !tag.deleted)
             .map((tag) => {
               return { name: tag.name, id: tag.id, type: "interest" }
@@ -124,24 +135,31 @@ const EditProfileModal: React.FC = () => {
       }
       const res = await updateProfile(updatedProfileData)
       if (res?.success) {
-        // remove deleted skills and update skills val in store
-        setSkills((skills: Tag[]) =>
-          skills
-            .filter(
-              (tag) =>
-                !deletedSkillsIds.includes(tag.id as number) && !tag.deleted
-            )
-            .map((tag) => ({ ...tag, status: TagStatus.saved }))
-        )
-        // remove deleted Interests and update interests val in store
-        setInterests((interests: Tag[]) =>
-          interests
-            .filter(
-              (tag) =>
-                !deletedInterestsIds.includes(tag.id as number) && !tag.deleted
-            )
-            .map((tag) => ({ ...tag, status: TagStatus.saved }))
-        )
+        if (res.data?.skills.length || deletedSkillsIds.length) {
+          setSkills((skills) => {
+            const updatedSkillTags = res.data?.skills.length
+              ? [...skills, ...res.data?.skills]
+              : [...skills]
+            return deletedSkillsIds.length
+              ? updatedSkillTags.filter(
+                  (skill) => !deletedSkillsIds.includes(skill.id as number)
+                )
+              : [...updatedSkillTags]
+          })
+        }
+        if (res.data?.interests.length || deletedInterestsIds.length) {
+          setInterests((interests) => {
+            const updatedInterestTags = res.data?.interests.length
+              ? [...interests, ...res.data?.interests]
+              : [...interests]
+            return deletedInterestsIds.length
+              ? updatedInterestTags.filter(
+                  (interest) =>
+                    !deletedInterestsIds.includes(interest.id as number)
+                )
+              : [...updatedInterestTags]
+          })
+        }
         if (editedBio) {
           setBio(editedBio)
         }
@@ -218,8 +236,8 @@ const EditProfileModal: React.FC = () => {
                   Skills
                 </Label>
                 <TagsInput
-                  tags={skills}
-                  updateTags={setSkills}
+                  tags={skillsCopy}
+                  updateTags={setSkillsCopy}
                   suggestions={skillSuggestions}
                   onChange={searchSkills}
                   loadingSuggestions={searchSkillsLoading}
@@ -245,8 +263,8 @@ const EditProfileModal: React.FC = () => {
                   Interests
                 </Label>
                 <TagsInput
-                  tags={interests}
-                  updateTags={setInterests}
+                  tags={interestsCopy}
+                  updateTags={setInterestsCopy}
                   suggestions={interestSuggestions}
                   onChange={searchInterests}
                   loadingSuggestions={searchInterestsLoading}

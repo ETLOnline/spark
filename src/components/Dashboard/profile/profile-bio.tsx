@@ -109,7 +109,7 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
             <ul className="space-y-2">
               {recommendations &&
                 recommendations.map((recommendation, i) => (
-                  <li key={i} className="rounded-lg border p-3">
+                  <li key={recommendation.id} className="rounded-lg border p-3">
                     <p className="text-sm">
                       &quot;{recommendation.content}&quot;
                     </p>
