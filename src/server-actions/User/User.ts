@@ -31,8 +31,8 @@ export const SaveUserProfileAction = CreateServerAction(
   true,
   async (profileData: ProfileData) => {
     try {
-      let updatedSkillTags: Tag[] = []
-      let updatedInterestTags: Tag[] = []
+      const updatedSkillTags: Tag[] = []
+      const updatedInterestTags: Tag[] = []
       await UpdateUserBio(profileData.userId, profileData.bio)
       // add new tags
       if (profileData.newTags.length) {
@@ -43,17 +43,18 @@ export const SaveUserProfileAction = CreateServerAction(
           })
         )
         insertedTags.forEach((tag) => {
-          tag.type === "skill"
-            ? updatedSkillTags.push({
-                id: tag.id,
-                name: tag.name,
-                status: TagStatus.saved
-              })
-            : updatedInterestTags.push({
-                id: tag.id,
-                name: tag.name,
-                status: TagStatus.saved
-              })
+          if (tag.type === "skill")
+            updatedSkillTags.push({
+              id: tag.id,
+              name: tag.name,
+              status: TagStatus.saved
+            })
+          else
+            updatedInterestTags.push({
+              id: tag.id,
+              name: tag.name,
+              status: TagStatus.saved
+            })
         })
       }
       // add existing tags
@@ -64,17 +65,18 @@ export const SaveUserProfileAction = CreateServerAction(
           })
         )
         profileData.existingTags.forEach((tag) => {
-          tag.type === "skill"
-            ? updatedSkillTags.push({
-                id: tag.id,
-                name: tag.name,
-                status: TagStatus.saved
-              })
-            : updatedInterestTags.push({
-                id: tag.id,
-                name: tag.name,
-                status: TagStatus.saved
-              })
+          if (tag.type === "skill")
+            updatedSkillTags.push({
+              id: tag.id,
+              name: tag.name,
+              status: TagStatus.saved
+            })
+          else
+            updatedInterestTags.push({
+              id: tag.id,
+              name: tag.name,
+              status: TagStatus.saved
+            })
         })
       }
       // delete tags
