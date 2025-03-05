@@ -16,6 +16,7 @@ import { channelStore } from '@/src/store/chennel/channelStore'
 import { z } from 'zod'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Plus } from 'lucide-react'
 
 
 const channelSchema = z.object({
@@ -133,12 +134,13 @@ function CreateChannels() {
 
   return (
     <Dialog open={channelFormModelVisibility} onOpenChange={(open) => { setChannelFormModelVisibility(open) }}>
-      <DialogTrigger>
+      <DialogTrigger asChild>
         <Button>
+          <Plus className="mr-2 h-4 w-4" />
           Create Channel
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-[95vw] sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{editChannal === true ? "Edit Channel" : "Create Channel"}</DialogTitle>
           <DialogDescription>{editChannal === true ? "You can edit your channel." : "You can create Channels."}</DialogDescription>
@@ -233,3 +235,15 @@ function CreateChannels() {
 }
 
 export default CreateChannels
+
+
+
+
+
+
+
+
+
+
+
+

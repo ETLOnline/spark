@@ -1,6 +1,6 @@
-import { Badge } from "../../ui/badge"
-import { Calendar } from "../../ui/calendar"
-import { Card, CardHeader, CardTitle, CardContent } from "../../ui/card"
+import { Badge } from "@/src/components/ui/badge"
+import { Calendar } from "@/src/components/ui/calendar"
+import { Card, CardHeader, CardTitle, CardContent } from "@/src/components/ui/card"
 import { Event } from "./types/spaces-types.d"
 
 type UpcomingEventsProps = {

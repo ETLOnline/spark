@@ -25,23 +25,23 @@ function ChannelsScreen() {
 
 
   return (
-    <>
-      <div className=" flex  w-full justify-center">
+    <div className="flex-1 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <h2 className="text-xl font-bold sm:text-2xl">Channels</h2>
         <CreateChannels />
       </div>
 
-      <div className='w-full'>
-        <div className='flex flex-wrap justify-around w-full gap-3'>
-          {channel.map((channel, i) => {
-            return (
-              <div>
-                <ChannelsCard channel={channel} key={channel.id} />
-              </div>
-            )
-          })}
-        </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 ">
+        {channel.map((channel, i) => {
+          return (
+            <div>
+              <ChannelsCard channel={channel} key={channel.id} />
+            </div>
+          )
+        })}
       </div>
-    </>
+    </div>
   )
 }
 
