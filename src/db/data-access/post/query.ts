@@ -22,6 +22,7 @@ import { Tag } from "@/src/components/TagsInput/tags-input-types.d"
 
 interface PostQueryFilters {
   isPrivate?: boolean
+  entityId?: string
   userIds?: string[]
   limit?: number
   offset?: number
@@ -136,12 +137,16 @@ export const getPosts = async (filters: PostQueryFilters = {}) => {
       limit = 10,
       offset = 0,
       orderBy = "created_at",
-      orderDirection = "desc"
+      orderDirection = "desc",
+      entityId = ""
     } = filters
     const where = []
     where.push(eq(postsTable.is_private, isPrivate ? 1 : 0))
     if (userIds.length) {
       where.push(inArray(postsTable.user_id, userIds))
+    }
+    if (entityId) {
+      where.push(eq(postsTable.entity_id, entityId))
     }
     const query = db.query.postsTable.findMany({
       limit,

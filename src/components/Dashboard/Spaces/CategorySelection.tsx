@@ -8,6 +8,8 @@ import { ScrollArea } from "../../ui/scroll-area"
 import { ScrollBar } from "../../ui/scroll-area"
 import { Button } from "../../ui/button"
 import { useState } from "react"
+import { useAtom } from "jotai"
+import { spaceStore } from "@/src/store/space/spaceStore"
 
 const CategorySelection = () => {
   const [categories, setCategories] = useState([
@@ -23,7 +25,8 @@ const CategorySelection = () => {
     "Blockchain",
     "IoT"
   ])
-  const [activeCategory, setActiveCategory] = useState("All")
+
+  const [activeCategory, setActiveCategory] = useAtom(spaceStore.activeCategory)
 
   return (
     <Card className="w-full">
