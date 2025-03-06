@@ -28,6 +28,7 @@ interface PostQueryFilters {
   offset?: number
   orderBy?: "created_at" | "likes" | "comments"
   orderDirection?: "asc" | "desc"
+  category?: string
 }
 
 export const CreatePost = async (post: InsertPost) => {
@@ -138,7 +139,8 @@ export const getPosts = async (filters: PostQueryFilters = {}) => {
       offset = 0,
       orderBy = "created_at",
       orderDirection = "desc",
-      entityId = ""
+      entityId = "",
+      category = ""
     } = filters
     const where = []
     where.push(eq(postsTable.is_private, isPrivate ? 1 : 0))
@@ -147,6 +149,9 @@ export const getPosts = async (filters: PostQueryFilters = {}) => {
     }
     if (entityId) {
       where.push(eq(postsTable.entity_id, entityId))
+    }
+    if (category) {
+      where.push(eq(postsTable.category, category))
     }
     const query = db.query.postsTable.findMany({
       limit,

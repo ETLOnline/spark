@@ -20,7 +20,7 @@ const Posts: React.FC = async () => {
   return (
     <div className="container mx-auto p-4 space-y-8 max-w-3xl">
       <CreatePostForm />
-      <PostFeed ssrPosts={posts} />
+      <PostFeed fetchedPosts={posts} />
     </div>
   )
 }

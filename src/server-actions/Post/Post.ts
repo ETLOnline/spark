@@ -245,9 +245,9 @@ export const GetPublicPostsAction = CreateServerAction(true, async () => {
 
 export const GetSpacePostsAction = CreateServerAction(
   true,
-  async (spaceId: string) => {
+  async (spaceId: string, category: string = "") => {
     try {
-      const posts = await getPosts({ entityId: spaceId })
+      const posts = await getPosts({ entityId: spaceId, category: category })
       const sanitizedPosts = posts.map((post) => ({
         ...post,
         hashtags: post.hashtags.map((hashtag) => hashtag.hashtag)

@@ -46,24 +46,11 @@ import {
 import useHashtags from "./profile/hooks/useHashtags"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useSearchParams } from "next/navigation"
+import { categories } from "@/src/utils/constants"
 
 type Props = {
   variant?: "posts" | "spaces"
 }
-
-const categories = [
-  "All",
-  "Programming",
-  "AI & Machine Learning",
-  "Open Source",
-  "Web Development",
-  "Mobile Development",
-  "Data Science",
-  "DevOps",
-  "Cybersecurity",
-  "Blockchain",
-  "IoT"
-]
 
 const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   const searchParams = useSearchParams()
@@ -123,7 +110,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             ? await createPost(
                 newPost.content as string,
                 newPost.type,
-                activeCategory,
+                newPost.category,
                 "space",
                 spaceId as string
               )

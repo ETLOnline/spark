@@ -1,39 +1,23 @@
 "use client"
-import React, { useEffect, useState } from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "../../ui/dialog"
-import { Button } from "../../ui/button"
-import { Label } from "../../ui/label"
-import { Input } from "../../ui/input"
-import { Textarea } from "../../ui/textarea"
-import { useAtom, useAtomValue, useSetAtom } from "jotai"
-import { userStore } from "@/src/store/user/userStore"
-import { InsertChannel, SelectChannel } from "@/src/db/schema"
-import { useServerAction } from "@/src/hooks/useServerAction"
-import {
-  CreateChannelAction,
-  DeleteChannelAction,
-  UpdateChannelAction
-} from "@/src/server-actions/channels/channel"
-import { useToast } from "@/src/hooks/use-toast"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "../../ui/select"
-import { channelStore } from "@/src/store/chennel/channelStore"
-import { z } from "zod"
-import { Controller, useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '../../ui/dialog'
+import { Button } from '../../ui/button'
+import { Label } from '../../ui/label'
+import { Input } from '../../ui/input'
+import { Textarea } from '../../ui/textarea'
+import { useAtom, useAtomValue, useSetAtom } from 'jotai'
+import { userStore } from '@/src/store/user/userStore'
+import { InsertChannel, SelectChannel } from '@/src/db/schema'
+import { useServerAction } from '@/src/hooks/useServerAction'
+import { CreateChannelAction, DeleteChannelAction, UpdateChannelAction } from '@/src/server-actions/channels/channel'
+import { useToast } from '@/src/hooks/use-toast'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select'
+import { channelStore } from '@/src/store/chennel/channelStore'
+import { z } from 'zod'
+import { Controller, useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Plus } from 'lucide-react'
+
 
 const channelSchema = z.object({
   channel_name: z
@@ -169,16 +153,14 @@ function CreateChannels() {
   }
 
   return (
-    <Dialog
-      open={channelFormModelVisibility}
-      onOpenChange={(open) => {
-        setChannelFormModelVisibility(open)
-      }}
-    >
-      <DialogTrigger>
-        <Button>Create Channel</Button>
+    <Dialog open={channelFormModelVisibility} onOpenChange={(open) => { setChannelFormModelVisibility(open) }}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Channel
+        </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-[95vw] sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
             {editChannal === true ? "Edit Channel" : "Create Channel"}
@@ -299,3 +281,15 @@ function CreateChannels() {
 }
 
 export default CreateChannels
+
+
+
+
+
+
+
+
+
+
+
+

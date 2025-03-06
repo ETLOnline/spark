@@ -12,19 +12,19 @@ import {
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import { Textarea } from "@/src/components/ui/textarea"
-import { InsertSpace, SelectSpace } from "@/src/db/schema"
+import { InsertSpace } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { CreateSpaceAction } from "@/src/server-actions/Spaces/space"
+import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useAtomValue } from "jotai"
-import { useSearchParams } from "next/navigation"
+import { useAtom, useAtomValue } from "jotai"
 import { useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
-type CreateSpaceProps = {
+type CreateSpaceModalProps = {
   channelId: string
 }
 
@@ -36,8 +36,8 @@ const spaceSchema = z.object({
     .max(50, "Description is too long")
 })
 
-function CreateSpace({ channelId }: CreateSpaceProps) {
-  const [space, setSpace] = useState<SelectSpace[]>([])
+function CreateSpaceModal({ channelId }: CreateSpaceModalProps) {
+  const [space, setSpace] = useAtom(spaceStore.spaces)
   const [spaceFormModelVisibility, setSpaceFormModelVisibility] =
     useState(false)
   const [addSpaceLoading, addSpaceData, addSpaceError, CreateNewSpace] =
@@ -55,18 +55,18 @@ function CreateSpace({ channelId }: CreateSpaceProps) {
         created_by: authUser?.unique_id as string,
         channel_id: channelId as string
       }
-      handleCreateSpace(spaceData)
+      handleCreateSpaceModal(spaceData)
     }
   }
 
-  async function handleCreateSpace(data: InsertSpace) {
+  async function handleCreateSpaceModal(data: InsertSpace) {
     try {
       const finalData = { ...data }
       finalData.created_by = authUser?.unique_id as string
       finalData.channel_id = channelId as string
-      const createSpace = await CreateNewSpace(finalData as InsertSpace)
-      if (createSpace?.success && createSpace.data) {
-        setSpace([...space, ...createSpace.data])
+      const CreateSpaceModal = await CreateNewSpace(finalData as InsertSpace)
+      if (CreateSpaceModal?.success && CreateSpaceModal.data) {
+        setSpace([...space, ...CreateSpaceModal.data])
         setSpaceFormModelVisibility(false)
         toast({
           title: "Space created",
@@ -83,7 +83,7 @@ function CreateSpace({ channelId }: CreateSpaceProps) {
   }
 
   return (
-    <div className="flex w-full justify-center">
+    <div className="flex justify-center">
       <Dialog
         open={spaceFormModelVisibility}
         onOpenChange={(open) => {
@@ -172,4 +172,4 @@ function CreateSpace({ channelId }: CreateSpaceProps) {
   )
 }
 
-export default CreateSpace
+export default CreateSpaceModal

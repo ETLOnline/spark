@@ -1,9 +1,21 @@
 "use client"
 
+import CreatePostForm from "@/src/components/Dashboard/create-post-form"
+import PostFeed from "@/src/components/Dashboard/post-feed"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription
+} from "@/src/components/ui/card"
+import { useEffect } from "react"
 import { useSearchParams } from "next/navigation"
-import Link from "next/link"
 import { useAtomValue } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { GetSpacePostsAction } from "@/src/server-actions/Post/Post"
+import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
 
 const SpacesPage: React.FC = () => {
   const searchParams = useSearchParams()
@@ -12,25 +24,33 @@ const SpacesPage: React.FC = () => {
 
   const activeCategory = useAtomValue(spaceStore.activeCategory)
 
+  const [postsLoading, posts, postsError, getPosts] =
+    useServerAction(GetSpacePostsAction)
+
+  useEffect(() => {
+    if (spaceId) {
+      getPosts(spaceId, activeCategory === "All" ? "" : activeCategory)
+    }
+  }, [activeCategory])
+
   return (
     <div className="container mx-auto space-y-8">
-      {/* Display the extracted spaceId */}
-      {spaceId && <div className="text-lg font-bold">Space ID: {spaceId}</div>}
-      {/* Widgets for Discussion and Work */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <Link
-          href={`./spaces/posts?space_id=${spaceId}&active_category=${activeCategory}`}
-        >
-          <div className="flex-1 p-6 bg-background border border-gray-200 rounded-md shadow hover:shadow-md transition ">
-            <h2 className="text-xl font-semibold mb-2">Discussion</h2>
-          </div>
-        </Link>
-        <Link href={`./spaces/work?space_id=${spaceId}`}>
-          <div className="flex-1 p-6 bg-background border border-gray-200 rounded-md shadow hover:shadow-md transition">
-            <h2 className="text-xl font-semibold mb-2">Work</h2>
-          </div>
-        </Link>
-      </div>
+      <CreatePostForm variant="spaces" />
+      <Card>
+        <CardHeader>
+          <CardTitle>Feed</CardTitle>
+          <CardDescription>Latest posts from {activeCategory}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {posts?.data && (
+            <PostFeed
+              fetchedPosts={
+                posts?.data as (SelectPost | SelectFilePost | SelectPollPost)[]
+              }
+            />
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }
