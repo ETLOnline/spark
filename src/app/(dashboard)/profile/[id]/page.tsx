@@ -17,31 +17,47 @@ import {
   SelectTag,
   SelectUser
 } from "@/src/db/schema"
+import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
 import { GetUserProfileAction } from "@/src/server-actions/User/User"
 import { CalendarIcon, StarIcon, TrophyIcon, UserIcon } from "lucide-react"
 import Link from "next/link"
+import { redirect } from "next/navigation"
 
 interface ProfileScreenProps {
-  params: {
+  params: Promise<{
     id: string
-  }
-  searchParams: {
+  }>
+  searchParams: Promise<{
     tab?: string
-  }
+  }>
 }
 
-export default async function ProfileScreen({
-  params: { id },
-  searchParams: { tab }
-}: ProfileScreenProps) {
+export default async function ProfileScreen(props: ProfileScreenProps) {
+  const searchParams = await props.searchParams;
+
+  const {
+    tab
+  } = searchParams;
+
+  const params = await props.params;
+
+  const {
+    id
+  } = params;
+  
+  const userId = (await AuthUserAction())?.unique_id
+
   const userRes = await FindUserByUniqueIdAction(id)
   const user = userRes.data
   let profileData
+
+  if (userId === id) {
+    redirect("/profile")
+  }
   if (user) {
     profileData = await GetUserProfileAction(user.unique_id)
   }
-
   if (userRes.error || !userRes.data) {
     return <NotFound />
   }
@@ -95,7 +111,7 @@ export default async function ProfileScreen({
           <ProfileBio
             userBio={user?.bio as string}
             recommendations={
-              profileData?.data?.recommendations as ExtendedRecommendations
+              profileData?.data?.recommendations as unknown as ExtendedRecommendations[]
             }
             tags={profileData?.data?.tags as SelectTag[]}
             editable={false}

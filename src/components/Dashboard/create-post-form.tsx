@@ -23,7 +23,7 @@ import {
   SelectValue
 } from "@/src/components/ui/select"
 import { Textarea } from "../ui/textarea"
-import { NewPost, PostType } from "./posts/types/posts-types.d"
+import { NewPost, PostType } from "./posts/types/posts-types"
 import CreatePostInput from "./posts/create-post-input"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
@@ -416,12 +416,12 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             disabled={
               createPostLoading ||
               createFilePostLoading ||
-              createPollPostLoading
+              createPollPostLoading ? true : false
             }
             loading={
               createPostLoading ||
               createFilePostLoading ||
-              createPollPostLoading
+              createPollPostLoading ? true : false
             }
           >
             Post

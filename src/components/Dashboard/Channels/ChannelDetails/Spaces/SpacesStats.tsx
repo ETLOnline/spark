@@ -5,7 +5,7 @@ import TrendingTopicsCard from "./TrendingTopicsCard"
 import UpcomingEventsCard from "./UpcomingEventsCard"
 import { useDetectBreakpoint } from "@/src/hooks/useBreakpoint"
 import { MessageCircle, Users } from "lucide-react"
-import { Event, Topic, Stat } from "./types/spaces-types.d"
+import { Event, Topic, Stat } from "./types/spaces-types"
 
 const upcomingEvents: Event[] = [
   { name: "TechConf 2023", date: "2023-09-15" },

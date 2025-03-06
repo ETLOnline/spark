@@ -11,43 +11,65 @@ import {
   TabsList,
   TabsTrigger
 } from "@/src/components/ui/tabs"
-import { CalendarIcon, StarIcon, TrophyIcon, UserIcon } from "lucide-react"
-import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
+import {
+  CalendarIcon,
+  LinkIcon,
+  StarIcon,
+  TrophyIcon,
+  UserIcon
+} from "lucide-react"
 import Link from "next/link"
-import { useServerAction } from "@/src/hooks/useServerAction"
-import { GetUserProfileAction } from "@/src/server-actions/User/User"
-import { SelectActivity, SelectReward, SelectTag } from "@/src/db/schema"
-import { ExtendedRecommendations } from "./types/profile-types.d"
-import { LoaderSizes } from "../../common/Loader/types/loader-types.d"
-import Loader from "../../common/Loader/Loader"
-import { useAtomValue } from "jotai"
-import { userStore } from "@/src/store/user/userStore"
-import { useEffect } from "react"
+import {
+  SelectActivity,
+  SelectReward,
+  SelectTag,
+  SelectUser
+} from "@/src/db/schema"
+import { ExtendedRecommendations, Profile } from "./types/profile-types"
+import { Button } from "@/src/components/ui/button"
+import { useToast } from "@/src/hooks/use-toast"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/src/components/ui/tooltip"
+import { generateUrl, getPagePath } from "@/src/utils/helpers"
 
-type ProfileScreenProps = { tab?: string }
+type ProfileScreenProps = {
+  tab?: string
+  user: SelectUser
+  profileData: Profile
+}
 
-export default function ProfileScreen({ tab }: ProfileScreenProps) {
-  const user = useAtomValue(userStore.Iam)
+export default function ProfileScreen({
+  tab,
+  user,
+  profileData
+}: ProfileScreenProps) {
+  const { toast } = useToast()
 
-  const [profileLoading, profileData, profileDataError, getProfile] =
-    useServerAction(GetUserProfileAction)
-
-  useEffect(() => {
-    if (user) {
-      getProfile(user.unique_id)
+  const handleCopyUrl = async () => {
+    try {
+      const url = generateUrl(`${getPagePath("profile")}/${user?.unique_id}`)
+      await navigator.clipboard.writeText(url)
+      toast({
+        title: "URL copied!",
+        description: "Profile URL copied to clipboard",
+        duration: 3000
+      })
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to copy URL",
+        duration: 3000
+      })
     }
-  }, [user])
-
-  if (!user) {
-    return <NotFound />
   }
 
-  return profileLoading ? (
-    <div className={"flex justify-center items-center h-full"}>
-      <Loader size={LoaderSizes.xl} />
-    </div>
-  ) : (
-    <div className="container mx-auto p-6">
+  return (
+    <div className="container mx-auto p-6 relative">
       <div className="mb-6 flex items-center space-x-4">
         <Avatar className="h-20 w-20">
           <AvatarImage
@@ -57,8 +79,28 @@ export default function ProfileScreen({ tab }: ProfileScreenProps) {
           <AvatarFallback>Profile Image</AvatarFallback>
         </Avatar>
         <div>
-          <h1 className="text-2xl font-bold">{user?.first_name}</h1>
-          <p className="text-muted-foreground">{user?.email}</p>
+          <h1 className="text-2xl font-bold">{user?.first_name} 
+            <span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="ml-2"
+                      onClick={handleCopyUrl}
+                    >
+                      <LinkIcon className="h-2 w-2" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span>Copy profile URL</span>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </span>
+          </h1>
+          <span className="text-muted-foreground">{user?.email}</span>
         </div>
       </div>
       <Tabs defaultValue="basic" className="space-y-4" value={tab || "basic"}>
@@ -90,21 +132,19 @@ export default function ProfileScreen({ tab }: ProfileScreenProps) {
         </TabsList>
         <TabsContent value="basic">
           <ProfileBio
-            userBio={user.bio as string}
+            userBio={user?.bio as string}
             recommendations={
-              profileData?.data?.recommendations as ExtendedRecommendations
+              profileData?.recommendations as unknown as ExtendedRecommendations[]
             }
-            tags={profileData?.data?.tags as SelectTag[]}
+            tags={profileData?.tags as SelectTag[]}
           />
         </TabsContent>
         <TabsContent value="rewards">
-          <ProfileRewards
-            rewards={profileData?.data?.rewards as SelectReward[]}
-          />
+          <ProfileRewards rewards={profileData?.rewards as SelectReward[]} />
         </TabsContent>
         <TabsContent value="activity">
           <ProfileActivities
-            activities={profileData?.data?.activities as SelectActivity[]}
+            activities={profileData?.activities as SelectActivity[]}
           />
         </TabsContent>
         {/* <TabsContent value="calendar">

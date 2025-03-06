@@ -1,4 +1,4 @@
-import { InsertTag } from "@/src/db/schema"
+import { InsertTag, SelectRecommendation } from "@/src/db/schema"
 
 export type Recommendation = {
   name: string
@@ -25,4 +25,11 @@ export type ProfileData = {
   newTags: InsertTag[]
   existingTags: InsertTag[]
   deletedTagsIds: number[]
+}
+
+export type Profile = {
+  recommendations: ExtendedRecommendations[]
+  rewards: Reward[]
+  activities: Activity[]
+  tags: InsertTag[]
 }

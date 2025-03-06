@@ -8,7 +8,7 @@ import { useSetAtom } from "jotai"
 import { useToast } from "@/src/hooks/use-toast"
 import { Button } from "../../ui/button"
 import { UserCheck, X } from "lucide-react"
-import { ProfileActivity, ReqType } from "./types/connections.types.d"
+import { ProfileActivity, ReqType } from "./types/connections.types"
 import NotificationItem from "../NotificationItem/NotifictionItem"
 import { killConnection } from "@/src/utils/helpers"
 

@@ -20,7 +20,8 @@ export const config = {
     "/channels/(.*)",
     "/spaces",
     "/connections",
-    "/dashboard"
+    "/dashboard",
+    "/admin"
     // Always run for API routes
     // '/(api|trpc)(.*)',
     // '/sign-in(.*)',

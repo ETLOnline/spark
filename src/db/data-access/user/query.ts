@@ -15,7 +15,8 @@ export async function SelectUserByExternalId(id: string) {
       external_auth_id: true,
       profile_url: true,
       unique_id: true,
-      bio: true
+      bio: true,
+      role: true
     },
     where: eq(usersTable.external_auth_id, id)
   })
@@ -43,7 +44,8 @@ export async function FindUserWildCard(wildcard: string) {
         external_auth_id: true,
         profile_url: true,
         unique_id: true,
-        bio: true
+        bio: true,
+        role: true
       },
       where: (usersTable, { or }) =>
         or(

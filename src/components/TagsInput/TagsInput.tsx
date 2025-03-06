@@ -8,7 +8,7 @@ import {
 } from "@/src/components/ui/command"
 import { Input } from "@/src/components/ui/input"
 import { Button } from "@/src/components/ui/button"
-import { Tag, TagStatus } from "./tags-input-types.d"
+import { Tag, TagStatus } from "./tags-input-types"
 
 type BaseTagsInputProps = {
   autocomplete?: boolean
@@ -74,7 +74,7 @@ const TagsInput: React.FC<TagsInputProps> = ({
     useState<number>(-1)
   const [selectNewTag, setSelectNewTag] = useState<boolean>(false)
 
-  const timer = useRef<NodeJS.Timeout | undefined>()
+  const timer = useRef<NodeJS.Timeout | undefined>(undefined)
   const tagInput = useRef<HTMLInputElement>(null)
 
   useEffect(() => {

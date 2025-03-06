@@ -8,6 +8,7 @@ import { CreateServerAction } from ".."
 import { AddTag } from "@/src/db/data-access/tag/query"
 import { AddUserTag, DeleteUserTags } from "@/src/db/data-access/tag/query"
 import { ProfileData } from "@/src/components/Dashboard/profile/types/profile-types"
+import { Tag, TagStatus } from "@/src/components/TagsInput/tags-input-types"
 
 export const UpdateBioForUserAction = CreateServerAction(
   true,
@@ -30,6 +31,8 @@ export const SaveUserProfileAction = CreateServerAction(
   true,
   async (profileData: ProfileData) => {
     try {
+      const updatedSkillTags: Tag[] = []
+      const updatedInterestTags: Tag[] = []
       await UpdateUserBio(profileData.userId, profileData.bio)
       // add new tags
       if (profileData.newTags.length) {
@@ -39,6 +42,20 @@ export const SaveUserProfileAction = CreateServerAction(
             return { user_id: profileData.userId, tag_id: tag.id }
           })
         )
+        insertedTags.forEach((tag) => {
+          if (tag.type === "skill")
+            updatedSkillTags.push({
+              id: tag.id,
+              name: tag.name,
+              status: TagStatus.saved
+            })
+          else
+            updatedInterestTags.push({
+              id: tag.id,
+              name: tag.name,
+              status: TagStatus.saved
+            })
+        })
       }
       // add existing tags
       if (profileData.existingTags.length) {
@@ -47,17 +64,32 @@ export const SaveUserProfileAction = CreateServerAction(
             return { user_id: profileData.userId, tag_id: tag.id as number }
           })
         )
+        profileData.existingTags.forEach((tag) => {
+          if (tag.type === "skill")
+            updatedSkillTags.push({
+              id: tag.id,
+              name: tag.name,
+              status: TagStatus.saved
+            })
+          else
+            updatedInterestTags.push({
+              id: tag.id,
+              name: tag.name,
+              status: TagStatus.saved
+            })
+        })
       }
-
       // delete tags
       if (profileData.deletedTagsIds.length) {
         await DeleteUserTags(profileData.userId, profileData.deletedTagsIds)
       }
 
       return {
-        success: true
+        success: true,
+        data: { skills: updatedSkillTags, interests: updatedInterestTags }
       }
     } catch (error) {
+      console.error(error)
       return {
         success: false,
         error: error
@@ -71,7 +103,7 @@ export const GetUserProfileAction = CreateServerAction(
   async (userId: string) => {
     try {
       const profileData = await GetUserProfileData(userId)
-      profileData.recommendations = profileData.recommendations.map(
+      const mappedRecommendations = profileData.recommendations.map(
         (recommendation) => {
           return {
             ...recommendation,
@@ -80,7 +112,7 @@ export const GetUserProfileAction = CreateServerAction(
         }
       )
       return {
-        data: profileData,
+        data: { ...profileData, recommendations: mappedRecommendations },
         success: true
       }
     } catch (error) {

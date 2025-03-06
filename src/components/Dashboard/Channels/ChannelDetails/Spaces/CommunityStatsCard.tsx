@@ -1,5 +1,5 @@
 import { Card, CardTitle, CardHeader, CardContent } from "@/src/components/ui/card"
-import { Stat } from "./types/spaces-types.d"
+import { Stat } from "./types/spaces-types"
 
 type CommunityStatsProps = {
   stats: Stat[]

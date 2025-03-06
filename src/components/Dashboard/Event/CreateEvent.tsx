@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -6,75 +6,95 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "../../ui/dialog";
-import { Label } from "../../ui/label";
-import { Input } from "../../ui/input";
-import { Textarea } from "../../ui/textarea";
-import { Button } from "../../ui/button";
-import { InsertEvent, SelectEvent } from "@/src/db/schema";
-import { useServerAction } from "@/src/hooks/useServerAction";
-import { CreateEventAction, DeleteEventAction, UpdateEventsAction } from "@/src/server-actions/events/event";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { userStore } from "@/src/store/user/userStore";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../../ui/alert-dialog";
-import { AlertDialogTrigger } from "@radix-ui/react-alert-dialog";
-import { useToast } from "@/src/hooks/use-toast";
-import { z } from "zod";
-import moment from "moment";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
+  DialogTrigger
+} from "../../ui/dialog"
+import { Label } from "../../ui/label"
+import { Input } from "../../ui/input"
+import { Textarea } from "../../ui/textarea"
+import { Button } from "../../ui/button"
+import { InsertEvent, SelectEvent } from "@/src/db/schema"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import {
+  CreateEventAction,
+  DeleteEventAction,
+  UpdateEventsAction
+} from "@/src/server-actions/events/event"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
+import { userStore } from "@/src/store/user/userStore"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "../../ui/alert-dialog"
+import { AlertDialogTrigger } from "@radix-ui/react-alert-dialog"
+import { useToast } from "@/src/hooks/use-toast"
+import { z } from "zod"
+import moment from "moment"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "../../ui/select"
 import { useForm, Controller } from "react-hook-form"
-import { zodResolver } from '@hookform/resolvers/zod'
-import { eventStore } from "@/src/store/event/eventStore";
-import { EventType } from "../../common/Loader/types/event.types";
-
-
+import { zodResolver } from "@hookform/resolvers/zod"
+import { eventStore } from "@/src/store/event/eventStore"
+import { EventType } from "../../common/Loader/types/event.types"
 
 interface Props {
-  events: SelectEvent[];
-  setEvents: React.Dispatch<React.SetStateAction<SelectEvent[]>>;
+  events: SelectEvent[]
+  setEvents: React.Dispatch<React.SetStateAction<SelectEvent[]>>
 }
 
-const now = moment().format("YYYY-MM-DD HH:mm");
-const eventSchema = z.object({
-  title: z.string().min(1, "Title required").max(30, "Title is too long"),
-  description: z.string().min(1, "Description required").max(50, "Description is too long"),
-  start_date_time: z.string().min(1, "Start date and time required"),
-  end_date_time: z.string().min(1, "End date and time required"),
-  event_type: z.string().min(1, "Type required"),
-  location: z.string().optional(),
-  meeting_link: z.string().optional(),
-})
+const now = moment().format("YYYY-MM-DD HH:mm")
+const eventSchema = z
+  .object({
+    title: z.string().min(1, "Title required").max(30, "Title is too long"),
+    description: z
+      .string()
+      .min(1, "Description required")
+      .max(50, "Description is too long"),
+    start_date_time: z.string().min(1, "Start date and time required"),
+    end_date_time: z.string().min(1, "End date and time required"),
+    event_type: z.string().min(1, "Type required"),
+    location: z.string().optional(),
+    meeting_link: z.string().optional()
+  })
   .superRefine((data, ctx) => {
-
     if (new Date(data.start_date_time) <= new Date(now)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["start_date_time"],
-        message: "Start date and time must be current date and time or later",
-      });
+        message: "Start date and time must be current date and time or later"
+      })
     }
 
     if (new Date(data.end_date_time) <= new Date(data.start_date_time)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["end_date_time"],
-        message: "End date and time must be after the start date and time",
-      });
+        message: "End date and time must be after the start date and time"
+      })
     }
     if (data.event_type === EventType.Physical && !data.location) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["location"],
         message: "location required"
-      });
+      })
     }
     if (data.event_type === EventType.Virtual && !data.meeting_link) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["meeting_link"],
         message: "Meeting Link  required"
-      });
+      })
     }
     if (data.event_type === EventType.Both) {
       if (!data.location) {
@@ -82,30 +102,31 @@ const eventSchema = z.object({
           code: z.ZodIssueCode.custom,
           path: ["location"],
           message: "location required"
-        });
+        })
       }
       if (!data.meeting_link && z.string().url()) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["meeting_link"],
           message: "Meeting Link is required"
-        });
+        })
       }
     }
-    if (data.meeting_link && !z.string().url().safeParse(data.meeting_link).success) {
+    if (
+      data.meeting_link &&
+      !z.string().url().safeParse(data.meeting_link).success
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["meeting_link"],
         message: "Invalid URL"
       })
     }
-  });
-
+  })
 
 export const CreateEvent = ({ events, setEvents }: Props) => {
-
   const [editEvent, setEditEvent] = useState(false)
-  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
   const form = useForm({
     resolver: zodResolver(eventSchema),
     shouldUnregister: true
@@ -115,26 +136,32 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
   const formModalVisibility = useAtomValue(eventStore.formModalVisibility)
   const setFormModalVisibility = useSetAtom(eventStore.formModalVisibility)
 
-
-
-  const [addEventLoading, addEventError, addEventData, CreateEvent] = useServerAction(CreateEventAction);
-  const [addUpdatedEventLoading, addUpdatedEventData, addUpdatedEventError, UpdateEvents] = useServerAction(UpdateEventsAction);
-  const [addDeleteEventLoading, addDeleteEventData, addDeleteEventError, DeleteEvent] = useServerAction(DeleteEventAction)
-  const authUser = useAtomValue(userStore.AuthUser);
+  const [addEventLoading, addEventError, addEventData, CreateEvent] =
+    useServerAction(CreateEventAction)
+  const [
+    addUpdatedEventLoading,
+    addUpdatedEventData,
+    addUpdatedEventError,
+    UpdateEvents
+  ] = useServerAction(UpdateEventsAction)
+  const [
+    addDeleteEventLoading,
+    addDeleteEventData,
+    addDeleteEventError,
+    DeleteEvent
+  ] = useServerAction(DeleteEventAction)
+  const authUser = useAtomValue(userStore.AuthUser)
   const { toast } = useToast()
 
-  const EventTypeSelection = form.watch('event_type');
+  const EventTypeSelection = form.watch("event_type")
   const { setValue, clearErrors } = form
-
-
 
   useEffect(() => {
     if (EventTypeSelection === EventType.Physical) {
-      setValue("meeting_link", "");
+      setValue("meeting_link", "")
       clearErrors("meeting_link")
-    }
-    else if (EventTypeSelection === EventType.Virtual) {
-      setValue("location", "");
+    } else if (EventTypeSelection === EventType.Virtual) {
+      setValue("location", "")
       clearErrors("location")
     }
   }, [setValue, clearErrors])
@@ -142,16 +169,22 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
   useEffect(() => {
     if (selectedEvent) {
       const selesctedEventCopy = { ...selectedEvent }
-      selesctedEventCopy.start_date_time = moment.utc(selesctedEventCopy.start_date_time).local().format("YYYY-MM-DD HH:mm")
-      selesctedEventCopy.end_date_time = moment.utc(selesctedEventCopy.end_date_time).local().format("YYYY-MM-DD HH:mm")
+      selesctedEventCopy.start_date_time = moment
+        .utc(selesctedEventCopy.start_date_time)
+        .local()
+        .format("YYYY-MM-DD HH:mm")
+      selesctedEventCopy.end_date_time = moment
+        .utc(selesctedEventCopy.end_date_time)
+        .local()
+        .format("YYYY-MM-DD HH:mm")
       const metadata = JSON.parse(selesctedEventCopy.metadata || "{}")
-      form.setValue("title", selesctedEventCopy.title);
-      form.setValue("description", selesctedEventCopy?.description || '');
-      form.setValue("start_date_time", selesctedEventCopy.start_date_time);
-      form.setValue("end_date_time", selesctedEventCopy.end_date_time);
-      form.setValue("event_type", selesctedEventCopy?.type || EventType.Both);
-      form.setValue("location", metadata.location);
-      form.setValue("meeting_link", metadata.meeting_link);
+      form.setValue("title", selesctedEventCopy.title)
+      form.setValue("description", selesctedEventCopy?.description || "")
+      form.setValue("start_date_time", selesctedEventCopy.start_date_time)
+      form.setValue("end_date_time", selesctedEventCopy.end_date_time)
+      form.setValue("event_type", selesctedEventCopy?.type || EventType.Both)
+      form.setValue("location", metadata.location)
+      form.setValue("meeting_link", metadata.meeting_link)
     }
   }, [selectedEvent])
 
@@ -169,11 +202,9 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
     }
   }, [selectedEvent])
 
-  const error = form.formState.errors;
-
+  const error = form.formState.errors
 
   async function eventSubmit(data: any) {
-
     const metadata = JSON.stringify({
       location: data.location?.toUpperCase() || "",
       meeting_link: data.meeting_link
@@ -195,18 +226,20 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
     if (selectedEvent) {
       handleUpdateEvent(finalEventData)
     }
-  };
+  }
 
   async function handleCreateEvent(finalEventData: any) {
     try {
       const payLoad = { ...finalEventData }
-      payLoad.start_date_time = moment(finalEventData.start_date_time).toISOString();
-      payLoad.end_date_time = moment(finalEventData.end_date_time).toISOString();
-      payLoad.host_id = authUser?.unique_id;
+      payLoad.start_date_time = moment(
+        finalEventData.start_date_time
+      ).toISOString()
+      payLoad.end_date_time = moment(finalEventData.end_date_time).toISOString()
+      payLoad.host_id = authUser?.unique_id
 
-      const createdEvent = await CreateEvent(payLoad as InsertEvent);
+      const createdEvent = await CreateEvent(payLoad as InsertEvent)
       if (createdEvent?.success && createdEvent.data) {
-        setEvents([...events, createdEvent.data]);
+        setEvents([...events, createdEvent.data])
         setFormModalVisibility(false)
         toast({
           title: "Event created",
@@ -216,7 +249,11 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
-        setFormErrors(Object.fromEntries(error.errors.map((error) => [error.path[0], error.message])));
+        setFormErrors(
+          Object.fromEntries(
+            error.errors.map((error) => [error.path[0], error.message])
+          )
+        )
       }
     }
   }
@@ -224,17 +261,20 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
   async function handleUpdateEvent(finalEventData: Partial<SelectEvent>) {
     {
       const updateEvent = { ...finalEventData }
-      updateEvent.start_date_time = moment(finalEventData.start_date_time).utc().toISOString();
-      updateEvent.end_date_time = moment(finalEventData.end_date_time).utc().toISOString();
+      updateEvent.start_date_time = moment(finalEventData.start_date_time)
+        .utc()
+        .toISOString()
+      updateEvent.end_date_time = moment(finalEventData.end_date_time)
+        .utc()
+        .toISOString()
       if (!selectedEvent?.id) return
       const updatedEvent = await UpdateEvents(selectedEvent?.id, updateEvent)
       if (updatedEvent?.success && updatedEvent.data) {
         setEvents((Events) =>
-
           Events.map((event) =>
             event.id === selectedEvent.id ? updatedEvent.data : event
           )
-        );
+        )
         setFormModalVisibility(false)
         toast({
           title: "Event updated",
@@ -249,16 +289,13 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
         })
       }
     }
-  };
+  }
 
   async function handleDeleteEvent() {
-
     const deletedEvent = await DeleteEvent(selectedEvent as SelectEvent)
     if (deletedEvent?.success) {
       setEvents((Events) =>
-        Events.filter((event) =>
-          event.id !== selectedEvent?.id
-        )
+        Events.filter((event) => event.id !== selectedEvent?.id)
       )
       setFormModalVisibility(false)
       toast({
@@ -267,10 +304,13 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
     }
   }
 
-
-
   return (
-    <Dialog open={formModalVisibility} onOpenChange={(open) => { setFormModalVisibility(open) }} >
+    <Dialog
+      open={formModalVisibility}
+      onOpenChange={(open) => {
+        setFormModalVisibility(open)
+      }}
+    >
       <DialogTrigger asChild>
         <button className="p-1 relative w-max mb-2">
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg" />
@@ -279,16 +319,19 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
           </div>
         </button>
       </DialogTrigger>
-      <DialogContent >
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>{editEvent === true ? 'Edit event' : 'Create a new event'}</DialogTitle>
+          <DialogTitle>
+            {editEvent === true ? "Edit event" : "Create a new event"}
+          </DialogTitle>
           <DialogDescription>
-            {editEvent === true ? 'Fill in the details to edit your event' : 'Fill in the details for your new event.'}
+            {editEvent === true
+              ? "Fill in the details to edit your event"
+              : "Fill in the details for your new event."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(eventSubmit)}>
           <div className="grid gap-4 py-4">
-
             <div className="flex flex-col">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="title" className="text-right">
@@ -297,11 +340,14 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                 <Controller
                   name="title"
                   control={form.control}
+                  defaultValue=""
                   render={({ field }) => (
                     <Input
                       id="title"
                       {...field}
-                      onChange={(e) => field.onChange(e.target.value.trimStart())}
+                      onChange={(e) =>
+                        field.onChange(e.target.value.trimStart())
+                      }
                       className="col-span-3"
                     />
                   )}
@@ -309,7 +355,9 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
               </div>
               <div className="text-right">
                 {error.title && (
-                  <span className="text-red-500 text-sm">{String(error.title?.message)}</span>
+                  <span className="text-red-500 text-sm">
+                    {String(error.title?.message)}
+                  </span>
                 )}
               </div>
             </div>
@@ -326,14 +374,20 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                     <Textarea
                       id="description"
                       {...field}
-                      onChange={(e) => field.onChange(e.target.value.trimStart())}
+                      onChange={(e) =>
+                        field.onChange(e.target.value.trimStart())
+                      }
                       className="col-span-3"
                     />
                   )}
                 />
               </div>
               <div className="text-right">
-                {error.description && <span className="text-red-500 text-sm">{String(error.description.message)}</span>}
+                {error.description && (
+                  <span className="text-red-500 text-sm">
+                    {String(error.description.message)}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -356,7 +410,11 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                 />
               </div>
               <div className="text-right">
-                {error.start_date_time && <span className="text-red-500 text-sm">{String(error.start_date_time.message)}</span>}
+                {error.start_date_time && (
+                  <span className="text-red-500 text-sm">
+                    {String(error.start_date_time.message)}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -379,7 +437,11 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                 />
               </div>
               <div className="text-right">
-                {error.end_date_time && <span className="text-red-500 text-sm">{String(error.end_date_time.message)}</span>}
+                {error.end_date_time && (
+                  <span className="text-red-500 text-sm">
+                    {String(error.end_date_time.message)}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -392,16 +454,17 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                   name="event_type"
                   control={form.control}
                   render={({ field }) => (
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <SelectTrigger className="col-span-3">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={EventType.Physical}>Physical</SelectItem>
-                        <SelectItem value={EventType.Virtual}>Virtual</SelectItem>
+                        <SelectItem value={EventType.Physical}>
+                          Physical
+                        </SelectItem>
+                        <SelectItem value={EventType.Virtual}>
+                          Virtual
+                        </SelectItem>
                         <SelectItem value={EventType.Both}>Both</SelectItem>
                       </SelectContent>
                     </Select>
@@ -409,11 +472,16 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                 />
               </div>
               <div className="text-right">
-                {error.event_type && <span className="text-red-500 text-sm">{String(error.event_type.message)}</span>}
+                {error.event_type && (
+                  <span className="text-red-500 text-sm">
+                    {String(error.event_type.message)}
+                  </span>
+                )}
               </div>
             </div>
 
-            {(EventTypeSelection === EventType.Physical || EventTypeSelection === EventType.Both) && (
+            {(EventTypeSelection === EventType.Physical ||
+              EventTypeSelection === EventType.Both) && (
               <div className="flex flex-col">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="location" className="text-right">
@@ -422,23 +490,33 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                   <Controller
                     name="location"
                     control={form.control}
+                    defaultValue=""
                     render={({ field }) => (
                       <Input
                         id="location"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.value.toUpperCase().trimStart())}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value.toUpperCase().trimStart()
+                          )
+                        }
                         className="col-span-3"
                       />
                     )}
                   />
                 </div>
                 <div className="text-right">
-                  {error.location && <span className="text-red-500 text-sm">{String(error.location.message)}</span>}
+                  {error.location && (
+                    <span className="text-red-500 text-sm">
+                      {String(error.location.message)}
+                    </span>
+                  )}
                 </div>
               </div>
             )}
 
-            {(EventTypeSelection === EventType.Virtual || EventTypeSelection === EventType.Both) && (
+            {(EventTypeSelection === EventType.Virtual ||
+              EventTypeSelection === EventType.Both) && (
               <div className="flex flex-col">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="meeting_link" className="text-right">
@@ -447,7 +525,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                   <Controller
                     name="meeting_link"
                     control={form.control}
-
+                    defaultValue=""
                     render={({ field }) => (
                       <Input
                         id="meeting_link"
@@ -458,37 +536,61 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                   />
                 </div>
                 <div className="text-right">
-                  {error.meeting_link && <span className="text-red-500 text-sm">{String(error.meeting_link.message)}</span>}
+                  {error.meeting_link && (
+                    <span className="text-red-500 text-sm">
+                      {String(error.meeting_link.message)}
+                    </span>
+                  )}
                 </div>
               </div>
             )}
           </div>
 
-
           <DialogFooter className="flex justify-between">
-            {editEvent === true ?
+            {editEvent === true ? (
               <>
                 <AlertDialog>
-                  <AlertDialogTrigger className="mr-auto"><Button type="button" loading={addDeleteEventLoading} variant="destructive">Delete</Button></AlertDialogTrigger>
+                  <AlertDialogTrigger className="mr-auto">
+                    <Button
+                      type="button"
+                      loading={addDeleteEventLoading}
+                      variant="destructive"
+                    >
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete Event?</AlertDialogTitle>
-                      <AlertDialogDescription>Are you sure you want to delete your event?</AlertDialogDescription>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete your event?
+                      </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction type="button" onClick={handleDeleteEvent}>Delete</AlertDialogAction>
+                      <AlertDialogAction
+                        type="button"
+                        onClick={handleDeleteEvent}
+                      >
+                        Delete
+                      </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-                <Button loading={addUpdatedEventLoading} type='submit' >Save</Button>
+                <Button loading={addUpdatedEventLoading} type="submit">
+                  Save
+                </Button>
               </>
-              : <Button type="submit" loading={addEventLoading} >Create Event</Button>}
+            ) : (
+              <Button type="submit" loading={addEventLoading}>
+                Create Event
+              </Button>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>
-    </Dialog >
-  );
-};
+    </Dialog>
+  )
+}
 
-export default CreateEvent;
+export default CreateEvent

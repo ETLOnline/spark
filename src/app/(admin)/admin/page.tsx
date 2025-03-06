@@ -1,6 +1,6 @@
 import React from 'react'
 
-const page = () => {
+const AdminDashboard = () => {
   return (
     <>
       <div className="grid auto-rows-min gap-4 md:grid-cols-3">
@@ -13,4 +13,4 @@ const page = () => {
   )
 }
 
-export default page
+export default AdminDashboard
