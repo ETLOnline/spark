@@ -12,7 +12,8 @@ import {
   CreateHashtags,
   AddHashtagToPostLink,
   UpdateHashTagsCount,
-  getPosts
+  getPosts,
+  DeletePost
 } from "@/src/db/data-access/post/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
@@ -21,14 +22,23 @@ import { addFileToDb } from "@/src/utils/serverHelpers"
 
 export const CreatePostAction = CreateServerAction(
   true,
-  async (content: string, type: string) => {
+  async (
+    content: string,
+    type: string,
+    category?: string,
+    entityType?: string,
+    entityId?: string
+  ) => {
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
         const postData = await CreatePost({
           content,
           type,
-          user_id: userId
+          user_id: userId,
+          category,
+          entity_type: entityType,
+          entity_id: entityId
         })
         return { success: true, data: postData }
       } else {
@@ -47,17 +57,25 @@ export const CreateFilePostAction = CreateServerAction(
   true,
   async (
     type: string,
-    fileSize: string,
+    fileSize: number,
     fileName: string,
     fileType: string,
-    fileBase64: string
+    fileBase64: string,
+    content?: string,
+    category?: string,
+    entityType?: string,
+    entityId?: string
   ) => {
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
-        const postData = await CreateFilePost({
+        const postData = await CreatePost({
           type,
-          user_id: userId
+          user_id: userId,
+          content,
+          category,
+          entity_type: entityType,
+          entity_id: entityId
         })
         if (postData) {
           if (process.env.S3_BUCKET_NAME) {
@@ -94,14 +112,24 @@ export const CreateFilePostAction = CreateServerAction(
 
 export const CreatePollPostAction = CreateServerAction(
   true,
-  async (content: string, type: string, options: string[]) => {
+  async (
+    content: string,
+    type: string,
+    options: string[],
+    category?: string,
+    entityType?: string,
+    entityId?: string
+  ) => {
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
         const postData = await CreatePost({
           content,
           type,
-          user_id: userId
+          user_id: userId,
+          category,
+          entity_type: entityType,
+          entity_id: entityId
         })
         if (postData[0]) {
           const pollOptions = options.map((option) => {
@@ -215,6 +243,25 @@ export const GetPublicPostsAction = CreateServerAction(true, async () => {
   }
 })
 
+export const GetSpacePostsAction = CreateServerAction(
+  true,
+  async (spaceId: string) => {
+    try {
+      const posts = await getPosts({ entityId: spaceId })
+      const sanitizedPosts = posts.map((post) => ({
+        ...post,
+        hashtags: post.hashtags.map((hashtag) => hashtag.hashtag)
+      }))
+      return { success: true, data: sanitizedPosts }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to fetch user posts"
+      }
+    }
+  }
+)
+
 export const LinkHashtagsToPostAction = CreateServerAction(
   true,
   async (
@@ -260,6 +307,21 @@ export const SearchHashtagsAction = CreateServerAction(
       return {
         success: false,
         error: error.message || "Failed to search hashtags"
+      }
+    }
+  }
+)
+
+export const DeletePostAction = CreateServerAction(
+  true,
+  async (postId: string) => {
+    try {
+      const deletedPost = await DeletePost(postId)
+      return { success: true, data: deletedPost }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to delete post"
       }
     }
   }

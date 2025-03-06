@@ -1,9 +1,6 @@
 import { Textarea } from "@/src/components/ui/textarea"
 import { NewPost, PostType } from "./types/posts-types.d"
 import TagsInput from "../../TagsInput/TagsInput"
-import { Upload } from "antd"
-import { Button } from "../../ui/button"
-import { UploadIcon } from "lucide-react"
 import "./create-post-input.css"
 import { FileUpload } from "../../ui/file-upload"
 
@@ -37,7 +34,7 @@ const CreatePostInput: React.FC<Props> = ({
           ...newPost,
           type: file.type.startsWith("image/") ? PostType.image : PostType.file,
           fileName: file.name,
-          fileSize: file.size.toString(),
+          fileSize: file.size,
           fileType: file.type,
           fileBase64: base64String
         })
@@ -61,23 +58,28 @@ const CreatePostInput: React.FC<Props> = ({
       className="min-h-[100px]"
     />
   ) : type === "image" ? (
-    <div className="flex flex-col justify-center items-center pt-4">
-      <Upload
-        customRequest={({ file, onSuccess }) => {
-          handleFileUpload({
-            target: { files: [file] }
-          } as unknown as React.ChangeEvent<HTMLInputElement>)
-          onSuccess?.("ok")
-        }}
-        listType="picture"
-        maxCount={1}
-        accept="image/*"
-        className="[&_.ant-upload-list-item-name]:text-foreground img-upload"
-      >
-        <Button variant="secondary" type="button" width="full">
-          <UploadIcon /> Upload (Max: 1)
-        </Button>
-      </Upload>
+    <div className="flex flex-col space-y-4">
+      <div className="flex flex-col justify-center items-center pt-4">
+        <FileUpload
+          onChange={(files: File[]) => {
+            handleFileUpload({
+              target: { files: [...files] }
+            } as unknown as React.ChangeEvent<HTMLInputElement>)
+          }}
+          accept="image/*"
+        />
+      </div>
+      <Textarea
+        placeholder="Add a caption..."
+        value={newPost.content as string}
+        onChange={(e) =>
+          setNewPost({
+            ...newPost,
+            content: e.target.value
+          })
+        }
+        className="min-h-[60px]"
+      />
     </div>
   ) : type === "poll" ? (
     <div className="flex flex-col space-y-2">
@@ -101,13 +103,26 @@ const CreatePostInput: React.FC<Props> = ({
       />
     </div>
   ) : (
-    <FileUpload
-      onChange={(files: File[]) => {
-        handleFileUpload({
-          target: { files: [...files] }
-        } as unknown as React.ChangeEvent<HTMLInputElement>)
-      }}
-    />
+    <div className="flex flex-col space-y-4">
+      <FileUpload
+        onChange={(files: File[]) => {
+          handleFileUpload({
+            target: { files: [...files] }
+          } as unknown as React.ChangeEvent<HTMLInputElement>)
+        }}
+      />
+      <Textarea
+        placeholder="Add a description..."
+        value={newPost.content as string}
+        onChange={(e) =>
+          setNewPost({
+            ...newPost,
+            content: e.target.value
+          })
+        }
+        className="min-h-[60px]"
+      />
+    </div>
   )
 }
 

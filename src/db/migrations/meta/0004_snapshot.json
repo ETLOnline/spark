@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "c75fda3f-fb18-4c21-ada3-618a7164738d",
-  "prevId": "69829a30-c64a-4196-a1f2-3294e5a583c9",
+  "id": "f19ec54b-4529-4fa5-bbc3-ce38630c6ce0",
+  "prevId": "5bddb811-4f94-4142-9d54-e60766730bb2",
   "tables": {
     "activities": {
       "name": "activities",
@@ -393,13 +393,6 @@
           "notNull": true,
           "autoincrement": true
         },
-        "post_id": {
-          "name": "post_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "file_name": {
           "name": "file_name",
           "type": "text",
@@ -776,6 +769,37 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "post_files": {
+      "name": "post_files",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "post_id": {
+          "name": "post_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "file_id": {
+          "name": "file_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "post_hashtags": {
       "name": "post_hashtags",
       "columns": {
@@ -846,8 +870,15 @@
           "notNull": true,
           "autoincrement": false
         },
-        "channel_id": {
-          "name": "channel_id",
+        "entity_id": {
+          "name": "entity_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "entity_type": {
+          "name": "entity_type",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -868,6 +899,13 @@
           "notNull": true,
           "autoincrement": false,
           "default": 0
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         },
         "updated_at": {
           "name": "updated_at",
@@ -1023,10 +1061,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text(36)",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "space_name": {
           "name": "space_name",

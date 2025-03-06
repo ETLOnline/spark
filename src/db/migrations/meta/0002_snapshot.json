@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "c75fda3f-fb18-4c21-ada3-618a7164738d",
-  "prevId": "69829a30-c64a-4196-a1f2-3294e5a583c9",
+  "id": "8a054dcf-42f1-4532-8a5b-171780c2a43a",
+  "prevId": "c75fda3f-fb18-4c21-ada3-618a7164738d",
   "tables": {
     "activities": {
       "name": "activities",
@@ -846,8 +846,15 @@
           "notNull": true,
           "autoincrement": false
         },
-        "channel_id": {
-          "name": "channel_id",
+        "entity_id": {
+          "name": "entity_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "entity_type": {
+          "name": "entity_type",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -1023,10 +1030,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text(36)",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "space_name": {
           "name": "space_name",

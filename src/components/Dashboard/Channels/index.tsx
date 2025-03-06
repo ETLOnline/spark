@@ -1,28 +1,26 @@
-'use client'
-import { useEffect, useState } from 'react'
-import { SelectChannel } from '@/src/db/schema'
-import { useServerAction } from '@/src/hooks/useServerAction'
-import { GetChannelsAction } from '@/src/server-actions/channels/channel'
-import ChannelsCard from './ChannelsCard'
-import CreateChannels from './CreateChannels'
-import { useAtom } from 'jotai'
-import { channelStore } from '@/src/store/chennel/channelStore'
+"use client"
 
+import { useEffect } from "react"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { GetChannelsAction } from "@/src/server-actions/channels/channel"
+import ChannelsCard from "./ChannelsCard"
+import CreateChannels from "./CreateChannels"
+import { useAtom } from "jotai"
+import { channelStore } from "@/src/store/chennel/channelStore"
 
 function ChannelsScreen() {
-  const [channel, setChannel] = useAtom(channelStore.channel);
-  const [getchannelLoading, getchannelData, getchannelError, GetChannel] = useServerAction(GetChannelsAction);
+  const [channels, setChannels] = useAtom(channelStore.channels)
+  const [getchannelLoading, getchannelData, getchannelError, GetChannel] =
+    useServerAction(GetChannelsAction)
 
   useEffect(() => {
-    GetChannel()
+    ;(async () => {
+      const channelsData = await GetChannel()
+      if (channelsData) {
+        setChannels(channelsData.data ? channelsData.data : [])
+      }
+    })()
   }, [])
-
-  useEffect(() => {
-    if (getchannelData != null) {
-      setChannel(getchannelData.data ? getchannelData.data : [])
-    }
-  }, [getchannelData])
-
 
   return (
     <div className="flex-1 p-4 sm:p-6">

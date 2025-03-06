@@ -402,9 +402,11 @@ export const postsTable = sqliteTable("posts", {
   user_id: text().notNull(),
   is_private: int().notNull().default(0),
   type: text().notNull(),
-  channel_id: text(),
+  entity_id: text(),
+  entity_type: text(),
   likes: int().notNull().default(0),
   comments: int().notNull().default(0),
+  category: text(),
   ...timestamps
 })
 
@@ -426,10 +428,10 @@ export const postsRelations = relations(postsTable, ({ one, many }) => ({
   options: many(pollOptionsTable, {
     relationName: "pollToPost"
   }),
-  file: one(filesTable, {
+  file: one(postFilesTable, {
     fields: [postsTable.id],
-    references: [filesTable.post_id],
-    relationName: "fileToPost"
+    references: [postFilesTable.post_id],
+    relationName: "postToFile"
   })
 }))
 
@@ -581,18 +583,17 @@ export type SelectPollVote = typeof pollVotesTable.$inferSelect
 
 export const filesTable = sqliteTable("files", {
   id: int().primaryKey({ autoIncrement: true }),
-  post_id: text().notNull(),
   file_name: text().notNull(),
-  file_size: text().notNull(),
+  file_size: int().notNull(),
   file_type: text().notNull(),
   file_path: text().notNull(),
   ...timestamps
 })
 
 export const filesRelations = relations(filesTable, ({ one }) => ({
-  post: one(postsTable, {
-    fields: [filesTable.post_id],
-    references: [postsTable.id],
+  post: one(postFilesTable, {
+    fields: [filesTable.id],
+    references: [postFilesTable.file_id],
     relationName: "fileToPost"
   })
 }))
@@ -600,30 +601,66 @@ export const filesRelations = relations(filesTable, ({ one }) => ({
 export type InsertFile = typeof filesTable.$inferInsert
 export type SelectFile = typeof filesTable.$inferSelect
 
+export const postFilesTable = sqliteTable("post_files", {
+  id: int().primaryKey({ autoIncrement: true }),
+  post_id: text().notNull(),
+  file_id: int().notNull()
+})
+
+export const postFilesRelations = relations(postFilesTable, ({ one }) => ({
+  post: one(postsTable, {
+    fields: [postFilesTable.post_id],
+    references: [postsTable.id],
+    relationName: "postToFile"
+  }),
+  postFile: one(filesTable, {
+    fields: [postFilesTable.file_id],
+    references: [filesTable.id],
+    relationName: "fileToPost"
+  })
+}))
+
+export type InsertPostFile = typeof postFilesTable.$inferInsert
+export type SelectPostFile = typeof postFilesTable.$inferSelect
 
 export const channelsTable = sqliteTable("channels", {
-  id:  text("channel_id", { length: 36 })
-  .primaryKey()
-  .$defaultFn(() => randomUUID()),
+  id: text("channel_id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
   channel_name: text().notNull(),
   description: text(),
   channel_type: text(),
   created_by: text().notNull(),
-  ...timestamps,
+  ...timestamps
 })
+
+export const channelsRelations = relations(channelsTable, ({ many }) => ({
+  spaces: many(spacesTable, {
+    relationName: "spaceToChannel"
+  })
+}))
 
 export type InsertChannel = typeof channelsTable.$inferInsert
 export type SelectChannel = typeof channelsTable.$inferSelect
 
-
 export const spacesTable = sqliteTable("spaces", {
-  id: int().primaryKey({ autoIncrement: true }),
+  id: text("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
   space_name: text().notNull(),
   description: text(),
   channel_id: text().notNull(),
   created_by: text().notNull(),
-  ...timestamps,
+  ...timestamps
 })
+
+export const spacesRelations = relations(spacesTable, ({ one }) => ({
+  channel: one(channelsTable, {
+    fields: [spacesTable.channel_id],
+    references: [channelsTable.id],
+    relationName: "spaceToChannel"
+  })
+}))
 
 export type InsertSpace = typeof spacesTable.$inferInsert
 export type SelectSpace = typeof spacesTable.$inferSelect

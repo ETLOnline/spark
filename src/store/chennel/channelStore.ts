@@ -3,10 +3,10 @@ import { atom } from "jotai";
 
 const selectedChannel = atom<SelectChannel | null>(null)
 const channelformModalVisibility = atom<boolean>(false)
-const channel = atom<SelectChannel[]>([])
+const channels = atom<SelectChannel[]>([])
 
 export const channelStore = {
-  channel,
+  channels,
   selectedChannel,
   channelformModalVisibility,
 }
