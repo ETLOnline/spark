@@ -33,6 +33,11 @@ const SpacesPage: React.FC = () => {
     }
   }, [activeCategory])
 
+  useEffect(() => {
+    console.log("posts",posts?.data);
+  }, [posts])
+  
+
   return (
     <div className="container mx-auto space-y-8">
       <CreatePostForm variant="spaces" />

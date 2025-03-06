@@ -248,10 +248,11 @@ export const GetSpacePostsAction = CreateServerAction(
   true,
   async (spaceId: string, category: string = "") => {
     try {
-      const posts = await getPosts({ entityId: spaceId, category: category })
+      const posts = await GetPosts({ entityId: spaceId, category: category })
       const sanitizedPosts = posts.map((post) => ({
         ...post,
-        hashtags: post.hashtags.map((hashtag) => hashtag.hashtag)
+        hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
+        file: post.file?.postFile
       }))
       return { success: true, data: sanitizedPosts }
     } catch (error: any) {
