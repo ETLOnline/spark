@@ -29,9 +29,9 @@ const SpacesPage: React.FC = () => {
 
   useEffect(() => {
     if (spaceId) {
-      getPosts(spaceId)
+      getPosts(spaceId, activeCategory === "All" ? "" : activeCategory)
     }
-  }, [])
+  }, [activeCategory])
 
   return (
     <div className="container mx-auto space-y-8">
@@ -42,11 +42,13 @@ const SpacesPage: React.FC = () => {
           <CardDescription>Latest posts from {activeCategory}</CardDescription>
         </CardHeader>
         <CardContent>
-          <PostFeed
-            fetchedPosts={
-              posts?.data as (SelectPost | SelectFilePost | SelectPollPost)[]
-            }
-          />
+          {posts?.data && (
+            <PostFeed
+              fetchedPosts={
+                posts?.data as (SelectPost | SelectFilePost | SelectPollPost)[]
+              }
+            />
+          )}
         </CardContent>
       </Card>
     </div>

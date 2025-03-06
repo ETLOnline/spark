@@ -1,9 +1,6 @@
 import CategorySelection from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/CategorySelection"
 import SpacesStats from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/SpacesStats"
 
-
-
-
 const SpacesLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex flex-col space-y-4 w-full">

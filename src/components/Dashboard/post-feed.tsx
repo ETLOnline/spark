@@ -14,16 +14,16 @@ import PostMenu from "./posts/post-menu"
 import { userStore } from "@/src/store/user/userStore"
 
 type PostFeedProps = {
-  ssrPosts: (SelectPost | SelectFilePost | SelectPollPost)[]
+  fetchedPosts: (SelectPost | SelectFilePost | SelectPollPost)[]
 }
 
-const PostFeed: React.FC<PostFeedProps> = ({ ssrPosts }) => {
+const PostFeed: React.FC<PostFeedProps> = ({ fetchedPosts }) => {
   const [posts, setPosts] = useAtom(postStore.posts)
   const user = useAtomValue(userStore.AuthUser)
 
   useEffect(() => {
-    setPosts([...ssrPosts])
-  }, [ssrPosts])
+    setPosts([...fetchedPosts])
+  }, [fetchedPosts])
 
   return (
     <div className="space-y-6">

@@ -1,26 +1,20 @@
 "use client"
 
 import { useEffect } from "react"
-import { useServerAction } from "@/src/hooks/useServerAction"
-import { GetChannelsAction } from "@/src/server-actions/channels/channel"
 import ChannelsCard from "./ChannelsCard"
 import CreateChannels from "./CreateChannels"
 import { useAtom } from "jotai"
 import { channelStore } from "@/src/store/chennel/channelStore"
+import { SelectChannel } from "@/src/db/schema"
 
-function ChannelsScreen() {
+type ChannelScreenProps = { fetchedChannels: SelectChannel[] }
+
+function ChannelsScreen({ fetchedChannels }: ChannelScreenProps) {
   const [channels, setChannels] = useAtom(channelStore.channels)
-  const [getchannelLoading, getchannelData, getchannelError, GetChannel] =
-    useServerAction(GetChannelsAction)
 
   useEffect(() => {
-    ;(async () => {
-      const channelsData = await GetChannel()
-      if (channelsData) {
-        setChannels(channelsData.data ? channelsData.data : [])
-      }
-    })()
-  }, [])
+    setChannels(fetchedChannels)
+  }, [fetchedChannels])
 
   return (
     <div className="flex-1 p-4 sm:p-6">
@@ -29,9 +23,8 @@ function ChannelsScreen() {
         <CreateChannels />
       </div>
 
-
       <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 ">
-        {channel.map((channel, i) => {
+        {channels.map((channel) => {
           return (
             <div>
               <ChannelsCard channel={channel} key={channel.id} />
