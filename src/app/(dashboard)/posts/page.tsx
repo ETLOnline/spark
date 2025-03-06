@@ -26,3 +26,4 @@ const Posts: React.FC = async () => {
 }
 
 export default Posts
+export const dynamic = "force-dynamic"
