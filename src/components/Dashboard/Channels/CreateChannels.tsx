@@ -35,6 +35,7 @@ import { z } from "zod"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Plus } from "lucide-react"
+import { Switch } from "../../ui/switch"
 
 const channelSchema = z.object({
   channel_name: z
@@ -267,14 +268,21 @@ function CreateChannels() {
                   )}
                 />
               </div>
+              <div className="text-right">
+                {error.channel_type && (
+                  <span className="text-red-500 text-sm">
+                    {String(error.channel_type.message)}
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="text-right">
-              {error.channel_type && (
-                <span className="text-red-500 text-sm">
-                  {String(error.channel_type.message)}
-                </span>
-              )}
-            </div>
+            {selectedChannel && (
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="channel_name">Publish Channel</Label>
+                <Switch />
+              </div>
+            )}
           </div>
           <DialogFooter>
             {editChannal === true ? (
