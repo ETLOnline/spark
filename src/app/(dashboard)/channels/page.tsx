@@ -1,6 +1,6 @@
 import ChannelsScreen from "@/src/components/Dashboard/Channels"
 import { SelectChannel } from "@/src/db/schema"
-import { GetChannelsAction } from "@/src/server-actions/channels/channel"
+import { GetChannelsAction } from "@/src/server-actions/Channel/channel"
 
 async function ChannelPage() {
   let channels: SelectChannel[] = []

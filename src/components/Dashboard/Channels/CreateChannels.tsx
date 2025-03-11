@@ -17,11 +17,6 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { InsertChannel, SelectChannel } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import {
-  CreateChannelAction,
-  DeleteChannelAction,
-  UpdateChannelAction
-} from "@/src/server-actions/channels/channel"
 import { useToast } from "@/src/hooks/use-toast"
 import {
   Select,
@@ -35,7 +30,9 @@ import { z } from "zod"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Plus } from "lucide-react"
+import { CreateChannelAction, DeleteChannelAction, UpdateChannelAction } from "@/src/server-actions/Channel/channel"
 import { Switch } from "../../ui/switch"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../../ui/alert-dialog"
 
 const channelSchema = z.object({
   channel_name: z
@@ -52,7 +49,7 @@ const channelSchema = z.object({
 function CreateChannels() {
   const [channels, setChannels] = useAtom(channelStore.channels)
   const [editChannal, setEditChannel] = useState(false)
-  const selectedChannel = useAtomValue(channelStore.selectedChannel)
+  const [selectedChannel, setSelectedChannel] = useAtom(channelStore.selectedChannel)
   const [channelFormModelVisibility, setChannelFormModelVisibility] = useAtom(
     channelStore.channelformModalVisibility
   )
@@ -78,16 +75,19 @@ function CreateChannels() {
   const error = form.formState.errors
 
   useEffect(() => {
+    form.reset()
+    if (!channelFormModelVisibility) {
+      setSelectedChannel(null)
+    }
+  }, [channelFormModelVisibility])
+
+  useEffect(() => {
     if (selectedChannel != null) {
       setEditChannel(true)
     } else {
       setEditChannel(false)
     }
   }, [selectedChannel])
-
-  useEffect(() => {
-    form.reset()
-  }, [channelFormModelVisibility])
 
   useEffect(() => {
     if (selectedChannel) {
@@ -167,6 +167,11 @@ function CreateChannels() {
         channel.filter((channel) => channel.id !== selectedChannel?.id)
       )
       setChannelFormModelVisibility(false)
+      toast({
+        title: "Channel deleted",
+        description: "Your channel successfully deleted.",
+        duration: 3000
+      })
     }
   }
 
@@ -174,6 +179,7 @@ function CreateChannels() {
     <Dialog
       open={channelFormModelVisibility}
       onOpenChange={(open) => {
+        console.log(open)
         setChannelFormModelVisibility(open)
       }}
     >
@@ -287,14 +293,28 @@ function CreateChannels() {
           <DialogFooter>
             {editChannal === true ? (
               <div className="w-full flex justify-between">
-                <Button
-                  variant="destructive"
-                  type="button"
-                  onClick={handleDeleteChannel}
-                  loading={addDeleteChannelLoading}
-                >
-                  Delete
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" loading={addDeleteChannelLoading}>
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure ?</AlertDialogTitle>
+                      <DialogDescription>
+                        This action will permanently delete channel and the space that exist in this channel.
+                        This action can't be undone.
+                      </DialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeleteChannel} loading={addDeleteChannelLoading}>
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
                 <Button type="submit" loading={addUpdateChannelLoading}>
                   Save
                 </Button>

@@ -15,12 +15,12 @@ import { Textarea } from "@/src/components/ui/textarea"
 import { InsertSpace } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { CreateSpaceAction } from "@/src/server-actions/Spaces/space"
+import { CreateSpaceAction, UpdateSpaceAction } from "@/src/server-actions/Space/space"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAtom, useAtomValue } from "jotai"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -39,14 +39,40 @@ const spaceSchema = z.object({
 function CreateSpaceModal({ channelId }: CreateSpaceModalProps) {
   const [space, setSpace] = useAtom(spaceStore.spaces)
   const [spaceFormModelVisibility, setSpaceFormModelVisibility] =
-    useState(false)
+    useAtom(spaceStore.spaceFormModelVisibility)
+  const [selectedSpace, setSelectedSpace] = useAtom(spaceStore.selectedSpace)
+  const [editSpace, setEditSpace] = useState(false)
   const [addSpaceLoading, addSpaceData, addSpaceError, CreateNewSpace] =
     useServerAction(CreateSpaceAction)
-  const form = useForm({
+  const [addUpdateSpaceLoading, addUpdateSpaceData, addUpdateSpaceError, updateSpace] =
+    useServerAction(UpdateSpaceAction)
+  const form = useForm<{ space_name: string; description: string }>({
     resolver: zodResolver(spaceSchema)
   })
   const authUser = useAtomValue(userStore.AuthUser)
   const error = form.formState.errors
+
+  useEffect(() => {
+    form.reset()
+    if (!spaceFormModelVisibility) {
+      setSelectedSpace(null)
+    }
+  }, [spaceFormModelVisibility])
+
+  useEffect(() => {
+    if (selectedSpace) {
+      setEditSpace(true)
+    } else {
+      setEditSpace(false)
+    }
+  }, [selectedSpace])
+
+  useEffect(() => {
+    if (selectedSpace) {
+      form.setValue("space_name", selectedSpace.space_name)
+      form.setValue("description", selectedSpace.description || "")
+    }
+  }, [selectedSpace])
 
   function submit(data: { space_name: string; description: string }) {
     if (data && authUser) {
@@ -55,7 +81,11 @@ function CreateSpaceModal({ channelId }: CreateSpaceModalProps) {
         created_by: authUser?.unique_id as string,
         channel_id: channelId as string
       }
-      handleCreateSpaceModal(spaceData)
+      if (!selectedSpace) {
+        handleCreateSpaceModal(spaceData)
+      } else {
+        handleUpdateSpace(spaceData)
+      }
     }
   }
 
@@ -82,6 +112,36 @@ function CreateSpaceModal({ channelId }: CreateSpaceModalProps) {
     }
   }
 
+  async function handleUpdateSpace(spaceData: InsertSpace) {
+    try {
+      const finalData = { ...spaceData }
+      finalData.created_by = authUser?.unique_id as string
+      finalData.channel_id = channelId as string
+      const UpdateSpaceModal = await updateSpace(selectedSpace?.id as string, finalData as InsertSpace)
+      if (UpdateSpaceModal?.success && UpdateSpaceModal.data) {
+        const updatedSpace = space.map((space) => {
+          if (space.id === selectedSpace?.id) {
+            return { ...space, ...UpdateSpaceModal.data }
+          }
+          return space
+        })
+        setSpace(updatedSpace)
+        setSpaceFormModelVisibility(false)
+        toast({
+          title: "Space updated",
+          description: "Your space has been updated successfully.",
+          duration: 3000
+        })
+      }
+    } catch {
+      toast({
+        title: "Unable to update space",
+        variant: "destructive",
+        duration: 3000
+      })
+    }
+  }
+
   return (
     <div className="flex justify-center">
       <Dialog
@@ -90,13 +150,17 @@ function CreateSpaceModal({ channelId }: CreateSpaceModalProps) {
           setSpaceFormModelVisibility(open)
         }}
       >
-        <DialogTrigger>
-          <Button>Create Space</Button>
+        <DialogTrigger asChild>
+          <Button>
+            Create Space
+          </Button>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Space</DialogTitle>
-            <DialogDescription>You can create Spaces.</DialogDescription>
+            <DialogTitle>
+              {editSpace === true ? "Edit Space" : "Create Space"}
+            </DialogTitle>
+            <DialogDescription>{editSpace === true ? "You can edit Spaces." : "You can create Spaces."}</DialogDescription>
           </DialogHeader>
           <form onSubmit={form.handleSubmit(submit)}>
             <div className="grid gap-4 py-4">
@@ -161,9 +225,17 @@ function CreateSpaceModal({ channelId }: CreateSpaceModalProps) {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit" loading={addSpaceLoading}>
-                Create
-              </Button>
+              {editSpace === true ?
+                <Button
+                  onClick={() => form.handleSubmit(submit)}
+                  loading={addUpdateSpaceLoading}
+                >
+                  Save
+                </Button> :
+                <Button type="submit" loading={addSpaceLoading}>
+                  Create
+                </Button>
+              }
             </DialogFooter>
           </form>
         </DialogContent>

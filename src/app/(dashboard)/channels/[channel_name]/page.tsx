@@ -1,12 +1,11 @@
 import ChannelDetails from "@/src/components/Dashboard/Channels/ChannelDetails"
 import { SelectSpace } from "@/src/db/schema"
-import { GetSpacesAction } from "@/src/server-actions/Spaces/space"
+import { GetSpacesAction } from "@/src/server-actions/Space/space"
 
 async function ChannelPage(props: {
   searchParams: Promise<{ channel_id: string }>
 }) {
   const { channel_id } = await props.searchParams
-  
   let spaces: SelectSpace[] = []
 
   try {
