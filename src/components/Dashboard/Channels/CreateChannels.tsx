@@ -145,7 +145,8 @@ function CreateChannels() {
     try {
       const payLoad = {
         ...data,
-        channel_slug: data.channel_name + data.channel_slug
+        channel_name: data.channel_name.trim(),
+        channel_slug: `${data.channel_name}${data.channel_slug.trim()}`
       }
       payLoad.created_by = authUser?.unique_id as string
 

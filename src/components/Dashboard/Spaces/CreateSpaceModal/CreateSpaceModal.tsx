@@ -90,7 +90,7 @@ function CreateSpaceModal() {
       data.channel_id = channelId as string
       data.channel_slug = channelSlug as string
       data.space_name = (data.space_name as string).trim()
-      data.space_slug = `${data.space_name}${data.space_slug}`.trim()
+      data.space_slug = `${data.space_name}${data.space_slug?.trim()}`
       const CreateSpaceModal = await CreateNewSpace(data as InsertSpace)
       if (CreateSpaceModal?.success && CreateSpaceModal.data) {
         setSpace([...space, ...CreateSpaceModal.data])
