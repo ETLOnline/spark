@@ -37,11 +37,7 @@ export default function ChannelDetails({ fetchedSpaces }: ChannelDetailsProps) {
 
 	useEffect(() => {
 		setSpaces(fetchedSpaces)
-	}, [])
-
-	// useEffect(() => {
-	// 	setSpaces(fetchedSpaces)
-	// }, [fetchedSpaces])
+	}, [fetchedSpaces])
 
 	function handleEditSpace(space: SelectSpace) {
 		setSpaceFormModelVisibility(true)
