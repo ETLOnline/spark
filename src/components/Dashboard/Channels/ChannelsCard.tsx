@@ -7,7 +7,7 @@ import { SelectChannel } from "@/src/db/schema"
 import { Button } from "../../ui/button"
 import { useSetAtom } from "jotai"
 import Link from "next/link"
-import { channelStore } from "@/src/store/chennel/channelStore"
+import { channelStore } from "@/src/store/channel/channelStore"
 import { Edit } from "lucide-react"
 
 interface channelProps {

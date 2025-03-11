@@ -32,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "../../ui/select"
-import { channelStore } from "@/src/store/chennel/channelStore"
+import { channelStore } from "@/src/store/channel/channelStore"
 import { z } from "zod"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"

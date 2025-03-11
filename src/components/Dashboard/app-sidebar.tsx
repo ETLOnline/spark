@@ -1,22 +1,5 @@
 "use client"
 
-import * as React from "react"
-import {
-  LifeBuoy,
-  Send,
-  Settings2,
-  Newspaper,
-  User,
-  MessageSquare,
-  Calendar,
-  BetweenHorizontalStart,
-  Lightbulb,
-  Beaker,
-  LayoutDashboard,
-  Network,
-  Boxes
-} from "lucide-react"
-
 import NavMain from "@/src/components/Dashboard/nav-main"
 import NavSecondary from "@/src/components/Dashboard/nav-secondary"
 import NavUser from "@/src/components/Dashboard/nav-user"
@@ -32,142 +15,48 @@ import {
 import { SignedIn } from "@clerk/nextjs"
 import Image from "next/image"
 import Link from "next/link"
-import { Item } from "@radix-ui/react-dropdown-menu"
-import { channelStore } from "@/src/store/chennel/channelStore"
-import { useAtomValue } from "jotai"
-
-
-
-const data = {
-  navMain: [
-    {
-      title: "Analytics Dashboard",
-      url: "/dashboard",
-      icon: LayoutDashboard
-    },
-    {
-      title: "Profile",
-      url: "/profile",
-      icon: User,
-      items: [
-        {
-          title: "Bio",
-          url: "/profile/?tab=basic"
-        },
-        {
-          title: "Rewards",
-          url: "/profile/?tab=rewards"
-        },
-        {
-          title: "Activity",
-          url: "/profile/?tab=activity"
-        },
-        {
-          title: "Schedule",
-          url: "/profile/?tab=calendar"
-        }
-      ]
-    },
-    {
-      title: "Connections",
-      url: "/connections",
-      icon: Network
-    },
-    {
-      title: "Posts",
-      url: "/posts",
-      icon: Newspaper
-    },
-    {
-      title: "Chat",
-      url: "/chat",
-      icon: MessageSquare
-    },
-    {
-      title: "Events",
-      url: "/events",
-      icon: Calendar
-    },
-    {
-      title: "Channels",
-      url: "/channels",
-      icon: Boxes,
-      Item: [
-
-      ]
-    },
-    {
-      title: "Spaces",
-      url: "/spaces",
-      icon: BetweenHorizontalStart
-    },
-    {
-      title: "Project Incubator",
-      url: "/project-incubator",
-      icon: Lightbulb
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "#"
-        },
-        {
-          title: "Team",
-          url: "#"
-        },
-        {
-          title: "Billing",
-          url: "#"
-        },
-        {
-          title: "Limits",
-          url: "#"
-        }
-      ]
-    }
-  ],
-  testNav: [
-    {
-      title: "Test",
-      url: "#",
-      icon: Beaker,
-      items: [
-        {
-          title: "Team Collaboration",
-          url: "/test/team-collaboration"
-        },
-        {
-          title: "Learning Hub",
-          url: "/test/learning-hub"
-        },
-        {
-          title: "Marketplace",
-          url: "/test/marketplace"
-        }
-      ]
-    }
-  ],
-  navSecondary: [
-    {
-      title: "Support",
-      url: "#",
-      icon: LifeBuoy
-    },
-    {
-      title: "Feedback",
-      url: "#",
-      icon: Send
-    }
-  ]
-}
+import { useAtom, useSetAtom } from "jotai"
+import { navStore } from "@/src/store/nav/navStore"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { GetChannelsAction } from "@/src/server-actions/Channel/Channel"
+import { useEffect } from "react"
+import { Hash } from "lucide-react"
+import { channelStore } from "@/src/store/channel/channelStore"
 
 export default function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
+  const [routes, setRoutes] = useAtom(navStore.routes)
+  const setChannels = useSetAtom(channelStore.channels)
+
+  const [channelsLoading, channelsData, channelsError, getChannels] =
+    useServerAction(GetChannelsAction)
+
+  useEffect(() => {
+    ;(async () => {
+      const channels = (await getChannels())?.data
+      if (channels) {
+        setChannels(channels)
+        setRoutes((routes) => {
+          return {
+            ...routes,
+            navChannels: channels.map((channel) => ({
+              title: channel.channel_name,
+              url: `/channels/${channel.channel_slug}/spaces`,
+              icon: Hash,
+              items: channel.spaces.length
+                ? channel.spaces.map((space) => ({
+                    title: space.space_name,
+                    url: `/channels/${channel.channel_slug}/spaces/${space.space_slug}`
+                  }))
+                : []
+            }))
+          }
+        })
+      }
+    })()
+  }, [])
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -194,9 +83,10 @@ export default function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} label="Platform" />
-        <NavMain items={data.testNav} label="Test" />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={routes.navMain} label="Platform" />
+        <NavMain items={routes.testNav} label="Test" />
+        <NavMain items={routes.navChannels} label="Channels" />
+        <NavSecondary items={routes.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <SignedIn>

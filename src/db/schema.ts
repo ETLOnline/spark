@@ -643,7 +643,9 @@ export const channelsRelations = relations(channelsTable, ({ many }) => ({
 }))
 
 export type InsertChannel = typeof channelsTable.$inferInsert
-export type SelectChannel = typeof channelsTable.$inferSelect
+export type SelectChannel = typeof channelsTable.$inferSelect & {
+  spaces?: SelectSpace[]
+}
 
 export const spacesTable = sqliteTable("spaces", {
   id: text("id", { length: 36 })

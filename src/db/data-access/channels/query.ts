@@ -16,10 +16,12 @@ export async function CreateChannel(channelData: InsertChannel) {
 
 export async function GetPublicChannels() {
   try {
-    const channels = await db
-      .select()
-      .from(channelsTable)
-      .where(eq(channelsTable.channel_type, "public"))
+    const channels = await db.query.channelsTable.findMany({
+      where: eq(channelsTable.channel_type, "public"),
+      with: {
+        spaces: true
+      }
+    })
     return channels
   } catch (e: any) {
     throw new Error(e.message)
@@ -47,7 +49,7 @@ export async function DeleteChannel(deletedChannelData: SelectChannel) {
     if (!deletedChannelData.id) {
       throw new Error("Channel ID is required")
     }
-    const deleteChannel = await db
+    await db
       .delete(channelsTable)
       .where(eq(channelsTable.id, deletedChannelData.id))
   } catch (e: any) {
