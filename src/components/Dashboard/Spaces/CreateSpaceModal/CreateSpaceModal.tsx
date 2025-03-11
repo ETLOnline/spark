@@ -1,4 +1,6 @@
 "use client"
+import Loader from "@/src/components/common/Loader/Loader"
+import { LoaderSizes } from "@/src/components/common/Loader/types/loader-types"
 import { Button } from "@/src/components/ui/button"
 import {
   Dialog,
@@ -24,6 +26,7 @@ import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAtom, useAtomValue } from "jotai"
+import { CircleCheck, CircleXIcon } from "lucide-react"
 import { useParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
@@ -193,16 +196,28 @@ function CreateSpaceModal() {
                     />
                   </div>
                 </div>
-                <div className="text-left">
-                  {error.space_slug && (
-                    <span className="text-red-500 text-sm">
-                      {error.space_slug.message}
-                    </span>
+                <div className="text-left flex items-center gap-x-2 pt-1 pl-[30%]">
+                  {error.space_slug && !isSlugAvailableLoading && (
+                    <div className="flex items-center text-red-500">
+                      <CircleXIcon className="mr-2 h-4 w-4" />
+                      <span className="text-sm">
+                        {error.space_slug.message}
+                      </span>
+                    </div>
                   )}
-                  {slugAvailableMessage && (
-                    <span className="text-green-500 text-sm">
-                      {slugAvailableMessage}
-                    </span>
+                  {isSlugAvailableLoading && (
+                    <>
+                      <Loader size={LoaderSizes.sm} />
+                      <span className="text-gray-500 text-sm">
+                        checking slug availibity
+                      </span>
+                    </>
+                  )}
+                  {slugAvailableMessage && !isSlugAvailableLoading && (
+                    <div className="flex items-center gap-x-1 text-green-500">
+                      <CircleCheck className="mr-2 h-4 w-4" />
+                      <span className="text-sm">{slugAvailableMessage}</span>
+                    </div>
                   )}
                 </div>
               </div>

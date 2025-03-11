@@ -36,7 +36,9 @@ import { channelStore } from "@/src/store/channel/channelStore"
 import { z } from "zod"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Plus } from "lucide-react"
+import { CircleCheck, CircleXIcon, Plus } from "lucide-react"
+import Loader from "../../common/Loader/Loader"
+import { LoaderSizes } from "../../common/Loader/types/loader-types"
 
 const channelSchema = z.object({
   channel_name: z
@@ -295,16 +297,28 @@ function CreateChannels() {
                   />
                 </div>
               </div>
-              <div className="text-left">
-                {error.channel_slug && (
-                  <span className="text-red-500 text-sm">
-                    {error.channel_slug.message}
-                  </span>
+              <div className="text-left flex items-center gap-x-2 pt-1 pl-[30%]">
+                {error.channel_slug && !isSlugAvailableLoading && (
+                  <div className="flex items-center text-red-500">
+                    <CircleXIcon className="mr-2 h-4 w-4" />
+                    <span className="text-sm">
+                      {error.channel_slug.message}
+                    </span>
+                  </div>
                 )}
-                {slugAvailableMessage && (
-                  <span className="text-green-500 text-sm">
-                    {slugAvailableMessage}
-                  </span>
+                {isSlugAvailableLoading && (
+                  <>
+                    <Loader size={LoaderSizes.sm} />
+                    <span className="text-gray-500 text-sm">
+                      checking slug availibity
+                    </span>
+                  </>
+                )}
+                {slugAvailableMessage && !isSlugAvailableLoading && (
+                  <div className="flex items-center gap-x-1 text-green-500">
+                    <CircleCheck className="mr-2 h-4 w-4" />
+                    <span className="text-sm">{slugAvailableMessage}</span>
+                  </div>
                 )}
               </div>
             </div>
