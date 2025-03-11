@@ -22,7 +22,6 @@ function ChannelsScreen({ fetchedChannels }: ChannelScreenProps) {
         <h2 className="text-xl font-bold sm:text-2xl">Channels</h2>
         <CreateChannels />
       </div>
-
       <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 ">
         {channels.map((channel) => {
           return <ChannelsCard key={channel.id} channel={channel} />

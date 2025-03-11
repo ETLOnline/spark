@@ -10,7 +10,7 @@ import {
   CardDescription
 } from "@/src/components/ui/card"
 import { useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import { useParams } from "next/navigation"
 import { useAtomValue } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
@@ -18,9 +18,9 @@ import { GetSpacePostsAction } from "@/src/server-actions/Post/Post"
 import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
 
 const SpacesPage: React.FC = () => {
-  const searchParams = useSearchParams()
+  const params = useParams()
 
-  const spaceId = searchParams.get("space_id")
+  const spaceSlug = params.space_slug
 
   const activeCategory = useAtomValue(spaceStore.activeCategory)
 
@@ -28,11 +28,14 @@ const SpacesPage: React.FC = () => {
     useServerAction(GetSpacePostsAction)
 
   useEffect(() => {
-    if (spaceId) {
-      getPosts(spaceId, activeCategory === "All" ? "" : activeCategory)
+    if (spaceSlug) {
+      getPosts(
+        spaceSlug as string,
+        activeCategory === "All" ? "" : activeCategory
+      )
     }
   }, [activeCategory])
-  
+
   return (
     <div className="container mx-auto space-y-8">
       <CreatePostForm variant="spaces" />

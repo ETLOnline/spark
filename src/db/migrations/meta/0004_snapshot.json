@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "f19ec54b-4529-4fa5-bbc3-ce38630c6ce0",
-  "prevId": "5bddb811-4f94-4142-9d54-e60766730bb2",
+  "id": "b191d17b-d504-49e5-a2d2-7a74f3635ef3",
+  "prevId": "f19ec54b-4529-4fa5-bbc3-ce38630c6ce0",
   "tables": {
     "activities": {
       "name": "activities",
@@ -78,6 +78,13 @@
           "name": "channel_id",
           "type": "text(36)",
           "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "channel_slug": {
+          "name": "channel_slug",
+          "type": "text",
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -1066,6 +1073,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "space_slug": {
+          "name": "space_slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "space_name": {
           "name": "space_name",
           "type": "text",
@@ -1082,6 +1096,13 @@
         },
         "channel_id": {
           "name": "channel_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "channel_slug": {
+          "name": "channel_slug",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -1485,6 +1506,14 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'user'"
         }
       },
       "indexes": {

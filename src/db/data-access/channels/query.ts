@@ -54,3 +54,15 @@ export async function DeleteChannel(deletedChannelData: SelectChannel) {
     throw new Error(e.message)
   }
 }
+
+export async function IsSlugAvailable(slug: string): Promise<boolean> {
+  try {
+    const searchedSlug = await db
+      .select()
+      .from(channelsTable)
+      .where(eq(channelsTable.channel_slug, slug))
+    return !searchedSlug.length
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
