@@ -1,9 +1,11 @@
 "use server"
+
 import {
   CreateChannel,
   DeleteChannel,
   GetPublicChannels,
-  UpdateChannel
+  UpdateChannel,
+  IsSlugAvailable
 } from "@/src/db/data-access/channels/query"
 import { CreateServerAction } from ".."
 import { InsertChannel, SelectChannel } from "@/src/db/schema"
@@ -47,6 +49,18 @@ export const DeleteChannelAction = CreateServerAction(
     try {
       await DeleteChannel(deletedChannelData)
       return { success: true }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const IsSlugAvailableAction = CreateServerAction(
+  true,
+  async (slug: string) => {
+    try {
+      const isAvailable = await IsSlugAvailable(slug)
+      return { success: true, data: isAvailable }
     } catch (error) {
       return { error: error }
     }

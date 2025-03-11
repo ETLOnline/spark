@@ -1,4 +1,6 @@
 "use client"
+import Loader from "@/src/components/common/Loader/Loader"
+import { LoaderSizes } from "@/src/components/common/Loader/types/loader-types"
 import { Button } from "@/src/components/ui/button"
 import {
   Dialog,
@@ -15,56 +17,81 @@ import { Textarea } from "@/src/components/ui/textarea"
 import { InsertSpace } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { CreateSpaceAction } from "@/src/server-actions/Spaces/space"
+import {
+  CreateSpaceAction,
+  IsSlugAvailableAction
+} from "@/src/server-actions/Space/Space"
+import { channelStore } from "@/src/store/channel/channelStore"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAtom, useAtomValue } from "jotai"
-import { useState } from "react"
+import { CircleCheck, CircleXIcon } from "lucide-react"
+import { useParams } from "next/navigation"
+import { useEffect, useRef, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
-type CreateSpaceModalProps = {
-  channelId: string
-}
-
 const spaceSchema = z.object({
   space_name: z.string().min(1, "Space name required").max(30, "Too long"),
+  space_slug: z.string().max(15, "Slug is too long"),
   description: z
     .string()
     .min(1, "Description required")
     .max(50, "Description is too long")
 })
 
-function CreateSpaceModal({ channelId }: CreateSpaceModalProps) {
+function CreateSpaceModal() {
   const [space, setSpace] = useAtom(spaceStore.spaces)
+  const authUser = useAtomValue(userStore.AuthUser)
+  const channelId = useAtomValue(channelStore.selectedChannel)?.id
+
+  const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
   const [spaceFormModelVisibility, setSpaceFormModelVisibility] =
     useState(false)
+
+  const timeoutId = useRef<NodeJS.Timeout>(null)
+
+  const channelSlug = useParams().channel_slug
+
   const [addSpaceLoading, addSpaceData, addSpaceError, CreateNewSpace] =
     useServerAction(CreateSpaceAction)
+  const [
+    isSlugAvailableLoading,
+    isSlugAvailableData,
+    isSlugAvailableError,
+    isSlugAvailable
+  ] = useServerAction(IsSlugAvailableAction)
+
   const form = useForm({
     resolver: zodResolver(spaceSchema)
   })
-  const authUser = useAtomValue(userStore.AuthUser)
   const error = form.formState.errors
 
-  function submit(data: { space_name: string; description: string }) {
-    if (data && authUser) {
-      const spaceData: InsertSpace = {
-        ...data,
-        created_by: authUser?.unique_id as string,
-        channel_id: channelId as string
-      }
-      handleCreateSpaceModal(spaceData)
-    }
-  }
+  useEffect(() => {
+    const value = form.getValues("space_name")
 
-  async function handleCreateSpaceModal(data: InsertSpace) {
+    if (value) {
+      checkSlugAvailability(value + form.getValues("space_slug"))
+    }
+  }, [form.watch("space_name")])
+
+  useEffect(() => {
+    const value = form.getValues("space_slug")
+
+    if (value) {
+      checkSlugAvailability(form.getValues("space_name") + value)
+    }
+  }, [form.watch("space_slug")])
+
+  async function handleCreateSpace(data: Partial<InsertSpace>) {
     try {
-      const finalData = { ...data }
-      finalData.created_by = authUser?.unique_id as string
-      finalData.channel_id = channelId as string
-      const CreateSpaceModal = await CreateNewSpace(finalData as InsertSpace)
+      data.created_by = authUser?.unique_id as string
+      data.channel_id = channelId as string
+      data.channel_slug = channelSlug as string
+      data.space_name = (data.space_name as string).trim()
+      data.space_slug = `${data.space_name}${data.space_slug?.trim()}`
+      const CreateSpaceModal = await CreateNewSpace(data as InsertSpace)
       if (CreateSpaceModal?.success && CreateSpaceModal.data) {
         setSpace([...space, ...CreateSpaceModal.data])
         setSpaceFormModelVisibility(false)
@@ -80,6 +107,27 @@ function CreateSpaceModal({ channelId }: CreateSpaceModalProps) {
         duration: 3000
       })
     }
+  }
+
+  const checkSlugAvailability = async (slug: string) => {
+    if (timeoutId.current) {
+      clearTimeout(timeoutId.current)
+    }
+    timeoutId.current = setTimeout(async () => {
+      const result = await isSlugAvailable(slug)
+      if (result?.success) {
+        if (!result?.data) {
+          form.setError("space_slug", {
+            type: "manual",
+            message: `the slug, ${slug} is already taken`
+          })
+          setslugAvailableMessage("")
+        } else {
+          form.clearErrors("space_slug")
+          setslugAvailableMessage(`the slug, ${slug} is available`)
+        }
+      }
+    }, 2500)
   }
 
   return (
@@ -98,63 +146,103 @@ function CreateSpaceModal({ channelId }: CreateSpaceModalProps) {
             <DialogTitle>Create Space</DialogTitle>
             <DialogDescription>You can create Spaces.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={form.handleSubmit(submit)}>
+          <form onSubmit={form.handleSubmit(handleCreateSpace)}>
             <div className="grid gap-4 py-4">
               <div className="flex flex-col">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="space_name" className="text-right">
-                    Title
-                  </Label>
-                  <Controller
-                    name="space_name"
-                    defaultValue=""
-                    control={form.control}
-                    render={({ field }) => (
-                      <Input
-                        id="space_name"
-                        placeholder="Enter space title"
-                        {...field}
-                        onChange={(e) =>
-                          field.onChange(e.target.value.trimStart())
-                        }
-                        className="col-span-3"
-                      />
-                    )}
-                  />
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="space_name">Title</Label>
+                  <div className="w-[70%]">
+                    <Controller
+                      name="space_name"
+                      defaultValue=""
+                      control={form.control}
+                      render={({ field }) => (
+                        <Input
+                          id="space_name"
+                          placeholder="Enter space title"
+                          {...field}
+                          className="col-span-3"
+                        />
+                      )}
+                    />
+                  </div>
                 </div>
-                <div className="text-right">
+                <div className="text-left">
                   {error.space_name && (
                     <span className="text-red-500 text-sm">
-                      {String(error.space_name.message)}
+                      {error.space_name.message}
                     </span>
                   )}
                 </div>
               </div>
               <div className="flex flex-col">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="description" className="text-right">
-                    Description
-                  </Label>
-                  <Controller
-                    name="description"
-                    control={form.control}
-                    render={({ field }) => (
-                      <Textarea
-                        id="description"
-                        placeholder="Description"
-                        {...field}
-                        onChange={(e) =>
-                          field.onChange(e.target.value.trimStart())
-                        }
-                        className="col-span-3"
-                      />
-                    )}
-                  />
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="space_name">Space Slug</Label>
+                  <div className="w-[70%]">
+                    <Controller
+                      name="space_slug"
+                      defaultValue=""
+                      control={form.control}
+                      render={({ field }) => (
+                        <Input
+                          id="space_slug"
+                          placeholder="Enter space slug"
+                          {...field}
+                          className="col-span-3"
+                          variant="resistive"
+                          prefix={form.getValues("space_name")}
+                        />
+                      )}
+                    />
+                  </div>
                 </div>
-                <div className="text-right">
+                <div className="text-left flex items-center gap-x-2 pt-1 pl-[30%]">
+                  {error.space_slug && !isSlugAvailableLoading && (
+                    <div className="flex items-center text-red-500">
+                      <CircleXIcon className="mr-2 h-4 w-4" />
+                      <span className="text-sm">
+                        {error.space_slug.message}
+                      </span>
+                    </div>
+                  )}
+                  {isSlugAvailableLoading && (
+                    <>
+                      <Loader size={LoaderSizes.sm} />
+                      <span className="text-gray-500 text-sm">
+                        checking slug availibity
+                      </span>
+                    </>
+                  )}
+                  {slugAvailableMessage && !isSlugAvailableLoading && (
+                    <div className="flex items-center gap-x-1 text-green-500">
+                      <CircleCheck className="mr-2 h-4 w-4" />
+                      <span className="text-sm">{slugAvailableMessage}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="description">Description</Label>
+                  <div className="w-[70%]">
+                    <Controller
+                      name="description"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Textarea
+                          id="description"
+                          placeholder="Description"
+                          {...field}
+                          className="col-span-3"
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
+                <div className="text-left">
                   {error.description && (
                     <span className="text-red-500 text-sm">
-                      {String(error.description.message)}
+                      {error.description.message}
                     </span>
                   )}
                 </div>

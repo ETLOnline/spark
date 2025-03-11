@@ -21,7 +21,7 @@ export const usersTable = sqliteTable(
     profile_url: text(),
     meta: text(),
     bio: text(),
-    role: text().notNull().default("user"),
+    role: text().notNull().default("user")
   },
   (t) => ({
     pk: primaryKey({ columns: [t.unique_id] })
@@ -628,6 +628,7 @@ export const channelsTable = sqliteTable("channels", {
   id: text("channel_id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
+  channel_slug: text().notNull(),
   channel_name: text().notNull(),
   description: text(),
   channel_type: text(),
@@ -642,23 +643,27 @@ export const channelsRelations = relations(channelsTable, ({ many }) => ({
 }))
 
 export type InsertChannel = typeof channelsTable.$inferInsert
-export type SelectChannel = typeof channelsTable.$inferSelect
+export type SelectChannel = typeof channelsTable.$inferSelect & {
+  spaces?: SelectSpace[]
+}
 
 export const spacesTable = sqliteTable("spaces", {
   id: text("id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
+  space_slug: text().notNull(),
   space_name: text().notNull(),
   description: text(),
   channel_id: text().notNull(),
+  channel_slug: text().notNull(),
   created_by: text().notNull(),
   ...timestamps
 })
 
 export const spacesRelations = relations(spacesTable, ({ one }) => ({
   channel: one(channelsTable, {
-    fields: [spacesTable.channel_id],
-    references: [channelsTable.id],
+    fields: [spacesTable.channel_slug],
+    references: [channelsTable.channel_slug],
     relationName: "spaceToChannel"
   })
 }))

@@ -22,6 +22,20 @@
       "when": 1740743398270,
       "tag": "0002_wet_rhodey",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1741259093020,
+      "tag": "0003_furry_magma",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1741593450546,
+      "tag": "0004_third_ben_grimm",
+      "breakpoints": true
     }
   ]
 }

@@ -11,26 +11,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/src/components/ui/dropdown-menu"
-import { useParams, useSearchParams } from "next/navigation"
-import { SelectSpace } from "@/src/db/schema"
-import { useAtom } from "jotai"
+import { useParams } from "next/navigation"
+import { useAtom, useAtomValue } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useEffect } from "react"
-import CreateSpaceModal from "../../Spaces/CreateSpaceModal/CreateSpaceModal"
+import { channelStore } from "@/src/store/channel/channelStore"
+import CreateSpaceModal from "@/src/components/Dashboard/Spaces/CreateSpaceModal/CreateSpaceModal"
 
-type ChannelDetailsProps = {
-  fetchedSpaces: SelectSpace[]
-}
-
-export default function ChannelDetails({ fetchedSpaces }: ChannelDetailsProps) {
+export default function ChannelPage() {
   const [spaces, setSpaces] = useAtom(spaceStore.spaces)
+  const selectedChannel = useAtomValue(channelStore.selectedChannel)
+
   const params = useParams()
-  const searchParams = useSearchParams()
-  const channelName = decodeURIComponent(params.channel_name as string)
 
   useEffect(() => {
-    setSpaces(fetchedSpaces)
-  }, [fetchedSpaces])
+    if (selectedChannel && selectedChannel.spaces) {
+      setSpaces(selectedChannel?.spaces)
+    }
+  }, [])
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -53,7 +51,7 @@ export default function ChannelDetails({ fetchedSpaces }: ChannelDetailsProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
         <div className="absolute bottom-0 left-0 p-4 sm:p-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-white">
-            {channelName}
+            {selectedChannel?.channel_name}
           </h1>
           <div className="flex items-center gap-2 mt-2">
             <Button
@@ -70,10 +68,10 @@ export default function ChannelDetails({ fetchedSpaces }: ChannelDetailsProps) {
       <main className="flex-1 p-4 sm:p-6">
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <h2 className="text-xl font-bold">Spaces in {channelName}</h2>
-            <CreateSpaceModal
-              channelId={searchParams.get("channel_id") as string}
-            />
+            <h2 className="text-xl font-bold">
+              Spaces in {selectedChannel?.channel_name}
+            </h2>
+            <CreateSpaceModal />
           </div>
           {/* Desktop view */}
           <div className="hidden sm:block">
@@ -84,7 +82,7 @@ export default function ChannelDetails({ fetchedSpaces }: ChannelDetailsProps) {
               {spaces.map((space) => (
                 <Link
                   key={space.id}
-                  href={`./${params.channel_name}/spaces?space_id=${space.id}`}
+                  href={`./${params.channel_slug}/spaces/${space.space_slug}`}
                 >
                   <div className="md:flex md:flex-wrap md:justify-between lg:grid lg:grid-cols-2 gap-4 items-center border-t p-4">
                     <div className="flex items-center gap-3">
@@ -96,16 +94,10 @@ export default function ChannelDetails({ fetchedSpaces }: ChannelDetailsProps) {
                           className="object-cover"
                         />
                       </div>
-                      <Link
-                        href={`/channels/${encodeURIComponent(
-                          channelName
-                        )}/spaces`}
-                      >
-                        <div className="font-medium">{space.space_name}</div>
-                        <div className="text-sm text-muted-foreground line-clamp-1">
-                          {space.description}
-                        </div>
-                      </Link>
+                      <div className="font-medium">{space.space_name}</div>
+                      <div className="text-sm text-muted-foreground line-clamp-1">
+                        {space.description}
+                      </div>
                     </div>
                     <div className="text-end">
                       <DropdownMenu>
@@ -145,7 +137,7 @@ export default function ChannelDetails({ fetchedSpaces }: ChannelDetailsProps) {
             {spaces.map((space) => (
               <Link
                 key={space.id}
-                href={`./${params.channel_name}/spaces?space_id=${space.id}`}
+                href={`./${params.channel_slug}/spaces/${space.space_slug}`}
               >
                 <div className="rounded-lg border bg-card p-4">
                   <div className="flex items-center justify-between">

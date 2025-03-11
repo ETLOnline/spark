@@ -1,21 +1,20 @@
 "use client"
-import React from 'react'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../ui/card'
-import Image from 'next/image'
-import { SelectChannel } from '@/src/db/schema'
-import { Button } from '../../ui/button'
-import { useAtomValue, useSetAtom } from 'jotai'
-import { userStore } from '@/src/store/user/userStore'
-import Link from 'next/link'
-import { channelStore } from '@/src/store/chennel/channelStore'
-import { Edit } from 'lucide-react'
+
+import React from "react"
+import { Card, CardContent, CardFooter, CardHeader } from "../../ui/card"
+import Image from "next/image"
+import { SelectChannel } from "@/src/db/schema"
+import { Button } from "../../ui/button"
+import { useSetAtom } from "jotai"
+import Link from "next/link"
+import { channelStore } from "@/src/store/channel/channelStore"
+import { Edit } from "lucide-react"
 
 interface channelProps {
   channel: SelectChannel
 }
 
 function ChannelsCard({ channel }: channelProps) {
-  const authUser = useAtomValue(userStore.AuthUser)
   const setSelectedChannel = useSetAtom(channelStore.selectedChannel)
   const setChannelFormModelVisibility = useSetAtom(
     channelStore.channelformModalVisibility
@@ -60,10 +59,14 @@ function ChannelsCard({ channel }: channelProps) {
         </CardContent>
         <CardFooter>
           <Link
-            href={`/channels/${channel.channel_name}?channel_id=${channel.id}`}
+            href={`/channels/${channel.channel_slug}/spaces`}
             className="w-full"
           >
-            <Button variant="outline" className="w-full">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setSelectedChannel(channel)}
+            >
               View Channel
             </Button>
           </Link>

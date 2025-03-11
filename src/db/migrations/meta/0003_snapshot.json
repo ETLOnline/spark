@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "5bddb811-4f94-4142-9d54-e60766730bb2",
-  "prevId": "8a054dcf-42f1-4532-8a5b-171780c2a43a",
+  "id": "c6a68140-837c-4d0e-ae3e-b68475666382",
+  "prevId": "f19ec54b-4529-4fa5-bbc3-ce38630c6ce0",
   "tables": {
     "activities": {
       "name": "activities",
@@ -900,6 +900,13 @@
           "autoincrement": false,
           "default": 0
         },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "text",
@@ -1478,6 +1485,14 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'user'"
         }
       },
       "indexes": {

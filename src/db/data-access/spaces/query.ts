@@ -22,3 +22,27 @@ export async function GetSpaces(channelId: string) {
     throw new Error(error.message)
   }
 }
+
+export async function GetSpacesBySlug(channelSlug: string) {
+  try {
+    const spaces = await db
+      .select()
+      .from(spacesTable)
+      .where(eq(spacesTable.channel_slug, channelSlug))
+    return spaces
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
+
+export async function IsSlugAvailable(slug: string): Promise<boolean> {
+  try {
+    const searchedSlug = await db
+      .select()
+      .from(spacesTable)
+      .where(eq(spacesTable.channel_slug, slug))
+    return !searchedSlug.length
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}

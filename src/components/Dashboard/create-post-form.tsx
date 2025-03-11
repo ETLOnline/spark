@@ -45,7 +45,7 @@ import {
 } from "@/src/server-actions/Post/Post"
 import useHashtags from "./profile/hooks/useHashtags"
 import { spaceStore } from "@/src/store/space/spaceStore"
-import { useSearchParams } from "next/navigation"
+import { useParams } from "next/navigation"
 import { categories } from "@/src/utils/constants"
 
 type Props = {
@@ -53,8 +53,8 @@ type Props = {
 }
 
 const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
-  const searchParams = useSearchParams()
-  const spaceId = searchParams.get("space_id")
+  const params = useParams()
+  const spaceSlug = params.space_slug
 
   const [newPost, setNewPost] = useState<NewPost>({
     content: "",
@@ -112,7 +112,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 newPost.type,
                 newPost.category,
                 "space",
-                spaceId as string
+                spaceSlug as string
               )
             : await createPost(newPost.content as string, newPost.type)
         if (post && post.data && post.data[0]) {
@@ -163,7 +163,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 pollOptions,
                 activeCategory,
                 "space",
-                spaceId as string
+                spaceSlug as string
               )
             : await createPollPost(
                 newPost.content as string,
@@ -232,7 +232,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 newPost.content,
                 activeCategory,
                 "space",
-                spaceId as string
+                spaceSlug as string
               )
             : await createFilePost(
                 newPost.type,
@@ -416,12 +416,16 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             disabled={
               createPostLoading ||
               createFilePostLoading ||
-              createPollPostLoading ? true : false
+              createPollPostLoading
+                ? true
+                : false
             }
             loading={
               createPostLoading ||
               createFilePostLoading ||
-              createPollPostLoading ? true : false
+              createPollPostLoading
+                ? true
+                : false
             }
           >
             Post
