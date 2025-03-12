@@ -28,6 +28,24 @@ export async function GetPublicChannels() {
   }
 }
 
+export async function GetPublicChannelPaths() {
+  try {
+    const channels = await db.query.channelsTable.findMany({
+      where: eq(channelsTable.channel_type, "public"),
+      columns: {
+        channel_name: true,
+        channel_slug: true
+      },
+      with: {
+        spaces: { columns: { space_name: true, space_slug: true } }
+      }
+    })
+    return channels
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
 export async function UpdateChannel(
   channelID: string,
   updatedChannelData: Partial<SelectChannel>

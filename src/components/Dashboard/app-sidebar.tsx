@@ -18,7 +18,10 @@ import Link from "next/link"
 import { useAtom, useSetAtom } from "jotai"
 import { navStore } from "@/src/store/nav/navStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { GetChannelsAction } from "@/src/server-actions/Channel/Channel"
+import {
+  GetChannelPathsAction,
+  GetChannelsAction
+} from "@/src/server-actions/Channel/Channel"
 import { useEffect } from "react"
 import { Hash } from "lucide-react"
 import { channelStore } from "@/src/store/channel/channelStore"
@@ -29,25 +32,28 @@ export default function AppSidebar({
   const [routes, setRoutes] = useAtom(navStore.routes)
   const setChannels = useSetAtom(channelStore.channels)
 
-  const [channelsLoading, channelsData, channelsError, getChannels] =
-    useServerAction(GetChannelsAction)
+  const [
+    channelPathsLoading,
+    channelPathsData,
+    channelPathsError,
+    getChannelPaths
+  ] = useServerAction(GetChannelPathsAction)
 
   useEffect(() => {
     ;(async () => {
-      const channels = (await getChannels())?.data
-      if (channels) {
-        setChannels(channels)
+      const channelPaths = (await getChannelPaths())?.data
+      if (channelPaths) {
         setRoutes((routes) => {
           return {
             ...routes,
-            navChannels: channels.map((channel) => ({
-              title: channel.channel_name,
-              url: `/channels/${channel.channel_slug}/spaces`,
+            navChannels: channelPaths.map((channelPath) => ({
+              title: channelPath.channel_name,
+              url: `/channels/${channelPath.channel_slug}/spaces`,
               icon: Hash,
-              items: channel.spaces.length
-                ? channel.spaces.map((space) => ({
-                    title: space.space_name,
-                    url: `/channels/${channel.channel_slug}/spaces/${space.space_slug}`
+              items: channelPath.spaces.length
+                ? channelPath.spaces.map((spacePath) => ({
+                    title: spacePath.space_name,
+                    url: `/channels/${channelPath.channel_slug}/spaces/${spacePath.space_slug}`
                   }))
                 : []
             }))

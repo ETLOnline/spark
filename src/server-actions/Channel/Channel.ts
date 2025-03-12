@@ -5,7 +5,8 @@ import {
   DeleteChannel,
   GetPublicChannels,
   UpdateChannel,
-  IsSlugAvailable
+  IsSlugAvailable,
+  GetPublicChannelPaths
 } from "@/src/db/data-access/channels/query"
 import { CreateServerAction } from ".."
 import { InsertChannel, SelectChannel } from "@/src/db/schema"
@@ -26,6 +27,15 @@ export const GetChannelsAction = CreateServerAction(true, async () => {
   try {
     const channels = await GetPublicChannels()
     return { success: true, data: channels }
+  } catch (error) {
+    return { error: error }
+  }
+})
+
+export const GetChannelPathsAction = CreateServerAction(true, async () => {
+  try {
+    const channelPaths = await GetPublicChannelPaths()
+    return { success: true, data: channelPaths }
   } catch (error) {
     return { error: error }
   }
