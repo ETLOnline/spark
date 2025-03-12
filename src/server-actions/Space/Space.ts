@@ -3,7 +3,6 @@
 import {
   CreateSpace,
   GetSpaces,
-  GetSpacesBySlug,
   IsSlugAvailable
 } from "@/src/db/data-access/spaces/query"
 import { CreateServerAction } from ".."
@@ -35,23 +34,11 @@ export const GetSpacesAction = CreateServerAction(
   }
 )
 
-export const GetSpacesBySlugAction = CreateServerAction(
-  true,
-  async (channelSlug: string) => {
-    try {
-      const spaces = await GetSpacesBySlug(channelSlug)
-      return { success: true, data: spaces }
-    } catch (error: any) {
-      return { error: error.message }
-    }
-  }
-)
-
 export const IsSlugAvailableAction = CreateServerAction(
   true,
-  async (slug: string) => {
+  async (slug: string, channelId: string) => {
     try {
-      const isAvailable = await IsSlugAvailable(slug)
+      const isAvailable = await IsSlugAvailable(slug, channelId)
       return { success: true, data: isAvailable }
     } catch (error) {
       return { error: error }

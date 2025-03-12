@@ -20,15 +20,27 @@ import CreateSpaceModal from "@/src/components/Dashboard/Spaces/CreateSpaceModal
 
 export default function ChannelPage() {
   const [spaces, setSpaces] = useAtom(spaceStore.spaces)
-  const selectedChannel = useAtomValue(channelStore.selectedChannel)
+  const [selectedChannel, setSelectedChannel] = useAtom(
+    channelStore.selectedChannel
+  )
+  const channels = useAtomValue(channelStore.channels)
 
   const params = useParams()
+
+  useEffect(() => {
+    const currChannel = channels.find(
+      (channel) => channel.channel_slug === (params.channel_slug as string)
+    )
+    if (currChannel) {
+      setSelectedChannel(currChannel)
+    }
+  }, [])
 
   useEffect(() => {
     if (selectedChannel && selectedChannel.spaces) {
       setSpaces(selectedChannel?.spaces)
     }
-  }, [])
+  }, [selectedChannel])
 
   return (
     <div className="flex min-h-screen flex-col">

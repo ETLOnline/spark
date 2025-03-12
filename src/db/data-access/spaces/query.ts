@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 import { db } from "../.."
 import { InsertSpace, spacesTable } from "../../schema"
 
@@ -23,24 +23,20 @@ export async function GetSpaces(channelId: string) {
   }
 }
 
-export async function GetSpacesBySlug(channelSlug: string) {
-  try {
-    const spaces = await db
-      .select()
-      .from(spacesTable)
-      .where(eq(spacesTable.channel_slug, channelSlug))
-    return spaces
-  } catch (error: any) {
-    throw new Error(error.message)
-  }
-}
-
-export async function IsSlugAvailable(slug: string): Promise<boolean> {
+export async function IsSlugAvailable(
+  slug: string,
+  channelId: string
+): Promise<boolean> {
   try {
     const searchedSlug = await db
       .select()
       .from(spacesTable)
-      .where(eq(spacesTable.channel_slug, slug))
+      .where(
+        and(
+          eq(spacesTable.space_slug, slug),
+          eq(spacesTable.channel_id, channelId)
+        )
+      )
     return !searchedSlug.length
   } catch (e: any) {
     throw new Error(e.message)

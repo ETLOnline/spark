@@ -146,7 +146,9 @@ function CreateChannels() {
       const payLoad = {
         ...data,
         channel_name: data.channel_name.trim(),
-        channel_slug: `${data.channel_name}${data.channel_slug.trim()}`
+        channel_slug: `${
+          data.channel_name
+        }${data.channel_slug.trim()}`.replaceAll(" ", "-")
       }
       payLoad.created_by = authUser?.unique_id as string
 
@@ -219,12 +221,14 @@ function CreateChannels() {
         if (!result?.data) {
           form.setError("channel_slug", {
             type: "manual",
-            message: `the slug, ${slug} is already taken`
+            message: `the slug, ${slug.replaceAll(" ", "-")} is already taken`
           })
           setslugAvailableMessage("")
         } else {
           form.clearErrors("channel_slug")
-          setslugAvailableMessage(`the slug, ${slug} is available`)
+          setslugAvailableMessage(
+            `the slug, ${slug.replaceAll(" ", "-")} is available`
+          )
         }
       }
     }, 2500)
@@ -393,7 +397,11 @@ function CreateChannels() {
                 </Button>
               </div>
             ) : (
-              <Button type="submit" loading={addChannelLoading}>
+              <Button
+                type="submit"
+                loading={addChannelLoading}
+                disabled={error.channel_slug?.message ? true : false}
+              >
                 Create
               </Button>
             )}

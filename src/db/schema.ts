@@ -58,6 +58,9 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   }),
   comments: many(commentsTable, {
     relationName: "commentToUser"
+  }),
+  spaces: many(spacesTable, {
+    relationName: "spaceToOwner"
   })
 }))
 
@@ -655,16 +658,21 @@ export const spacesTable = sqliteTable("spaces", {
   space_name: text().notNull(),
   description: text(),
   channel_id: text().notNull(),
-  channel_slug: text().notNull(),
   created_by: text().notNull(),
+  ownerId: text(),
   ...timestamps
 })
 
 export const spacesRelations = relations(spacesTable, ({ one }) => ({
   channel: one(channelsTable, {
-    fields: [spacesTable.channel_slug],
-    references: [channelsTable.channel_slug],
+    fields: [spacesTable.channel_id],
+    references: [channelsTable.id],
     relationName: "spaceToChannel"
+  }),
+  owner: one(usersTable, {
+    fields: [spacesTable.ownerId],
+    references: [usersTable.unique_id],
+    relationName: "spaceToOwner"
   })
 }))
 

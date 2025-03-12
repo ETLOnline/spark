@@ -27,7 +27,6 @@ import { userStore } from "@/src/store/user/userStore"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAtom, useAtomValue } from "jotai"
 import { CircleCheck, CircleXIcon } from "lucide-react"
-import { useParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
@@ -51,8 +50,6 @@ function CreateSpaceModal() {
     useState(false)
 
   const timeoutId = useRef<NodeJS.Timeout>(null)
-
-  const channelSlug = useParams().channel_slug
 
   const [addSpaceLoading, addSpaceData, addSpaceError, CreateNewSpace] =
     useServerAction(CreateSpaceAction)
@@ -88,9 +85,10 @@ function CreateSpaceModal() {
     try {
       data.created_by = authUser?.unique_id as string
       data.channel_id = channelId as string
-      data.channel_slug = channelSlug as string
       data.space_name = (data.space_name as string).trim()
-      data.space_slug = `${data.space_name}${data.space_slug?.trim()}`
+      data.space_slug = `${
+        data.space_name
+      }${data.space_slug?.trim()}`.replaceAll(" ", "-")
       const CreateSpaceModal = await CreateNewSpace(data as InsertSpace)
       if (CreateSpaceModal?.success && CreateSpaceModal.data) {
         setSpace([...space, ...CreateSpaceModal.data])
@@ -114,17 +112,19 @@ function CreateSpaceModal() {
       clearTimeout(timeoutId.current)
     }
     timeoutId.current = setTimeout(async () => {
-      const result = await isSlugAvailable(slug)
+      const result = await isSlugAvailable(slug, channelId as string)
       if (result?.success) {
         if (!result?.data) {
           form.setError("space_slug", {
             type: "manual",
-            message: `the slug, ${slug} is already taken`
+            message: `the slug, ${slug.replaceAll(" ", "-")} is already taken`
           })
           setslugAvailableMessage("")
         } else {
           form.clearErrors("space_slug")
-          setslugAvailableMessage(`the slug, ${slug} is available`)
+          setslugAvailableMessage(
+            `the slug, ${slug.replaceAll(" ", "-")} is available`
+          )
         }
       }
     }, 2500)
@@ -249,7 +249,11 @@ function CreateSpaceModal() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit" loading={addSpaceLoading}>
+              <Button
+                type="submit"
+                loading={addSpaceLoading}
+                disabled={error.space_name?.message ? true : false}
+              >
                 Create
               </Button>
             </DialogFooter>
