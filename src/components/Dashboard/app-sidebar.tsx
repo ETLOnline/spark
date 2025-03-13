@@ -38,10 +38,13 @@ export default function AppSidebar({
     channelPathsError,
     getChannelPaths
   ] = useServerAction(GetChannelPathsAction)
+  const [channelsLoading, channelsData, channelsError, getChannels] =
+    useServerAction(GetChannelsAction)
 
   useEffect(() => {
     ;(async () => {
       const channelPaths = (await getChannelPaths())?.data
+      const channels = (await getChannels())?.data
       if (channelPaths) {
         setRoutes((routes) => {
           return {
@@ -60,8 +63,17 @@ export default function AppSidebar({
           }
         })
       }
+      if (channels) {
+        setChannels([...channels])
+      }
     })()
   }, [])
+
+  useEffect(() => {
+    console.log("routes",routes);
+ 
+  }, [routes])
+  
 
   return (
     <Sidebar variant="inset" {...props}>

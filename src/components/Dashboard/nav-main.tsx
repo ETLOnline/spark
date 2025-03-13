@@ -31,7 +31,7 @@ export default function NavMain({
     <SidebarGroup>
       <SidebarGroupLabel>{label || ""}</SidebarGroupLabel>
       <SidebarMenu>
-        {items
+        {items && items.length
           ? items.map((item) => (
               <Collapsible
                 key={item.url + item.title}

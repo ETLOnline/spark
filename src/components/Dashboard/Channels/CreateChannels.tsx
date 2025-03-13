@@ -14,7 +14,7 @@ import { Button } from "../../ui/button"
 import { Label } from "../../ui/label"
 import { Input } from "../../ui/input"
 import { Textarea } from "../../ui/textarea"
-import { useAtom, useAtomValue } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { InsertChannel, SelectChannel } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
@@ -36,9 +36,10 @@ import { channelStore } from "@/src/store/channel/channelStore"
 import { z } from "zod"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { CircleCheck, CircleXIcon, Plus } from "lucide-react"
+import { CircleCheck, CircleXIcon, Hash, Plus } from "lucide-react"
 import Loader from "../../common/Loader/Loader"
 import { LoaderSizes } from "../../common/Loader/types/loader-types"
+import { navStore } from "@/src/store/nav/navStore"
 
 const channelSchema = z.object({
   channel_name: z
@@ -63,6 +64,7 @@ function CreateChannels() {
   const [channelFormModelVisibility, setChannelFormModelVisibility] = useAtom(
     channelStore.channelformModalVisibility
   )
+  const setRoutes = useSetAtom(navStore.routes)
 
   const authUser = useAtomValue(userStore.AuthUser)
   const selectedChannel = useAtomValue(channelStore.selectedChannel)
@@ -146,15 +148,26 @@ function CreateChannels() {
       const payLoad = {
         ...data,
         channel_name: data.channel_name.trim(),
-        channel_slug: `${
-          data.channel_name
-        }${data.channel_slug.trim()}`.replaceAll(" ", "-")
+        channel_slug: `${data.channel_name}${data.channel_slug.trim()}`
+          .replaceAll(" ", "-")
+          .toLowerCase()
       }
       payLoad.created_by = authUser?.unique_id as string
 
       const createdChannel = await CreateChannel(payLoad as InsertChannel)
       if (createdChannel?.success && createdChannel?.data) {
         setChannels([...channels, ...createdChannel.data])
+        setRoutes((routes) => ({
+          ...routes,
+          navChannels: [
+            ...routes.navChannels,
+            {
+              title: createdChannel.data[0].channel_name,
+              url: `/channels/${createdChannel.data[0].channel_slug}/spaces`,
+              icon: Hash
+            }
+          ]
+        }))
         setChannelFormModelVisibility(false)
         toast({
           title: "Channel Created",

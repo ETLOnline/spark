@@ -1,4 +1,5 @@
 "use client"
+
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/Loader/types/loader-types"
 import { Button } from "@/src/components/ui/button"
@@ -22,10 +23,11 @@ import {
   IsSlugAvailableAction
 } from "@/src/server-actions/Space/Space"
 import { channelStore } from "@/src/store/channel/channelStore"
+import { navStore } from "@/src/store/nav/navStore"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useAtom, useAtomValue } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { CircleCheck, CircleXIcon } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
@@ -43,7 +45,8 @@ const spaceSchema = z.object({
 function CreateSpaceModal() {
   const [space, setSpace] = useAtom(spaceStore.spaces)
   const authUser = useAtomValue(userStore.AuthUser)
-  const channelId = useAtomValue(channelStore.selectedChannel)?.id
+  const currChannel = useAtomValue(channelStore.selectedChannel)
+  const setRoutes = useSetAtom(navStore.routes)
 
   const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
   const [spaceFormModelVisibility, setSpaceFormModelVisibility] =
@@ -84,14 +87,31 @@ function CreateSpaceModal() {
   async function handleCreateSpace(data: Partial<InsertSpace>) {
     try {
       data.created_by = authUser?.unique_id as string
-      data.channel_id = channelId as string
+      data.channel_id = currChannel?.id as string
       data.space_name = (data.space_name as string).trim()
-      data.space_slug = `${
-        data.space_name
-      }${data.space_slug?.trim()}`.replaceAll(" ", "-")
-      const CreateSpaceModal = await CreateNewSpace(data as InsertSpace)
-      if (CreateSpaceModal?.success && CreateSpaceModal.data) {
-        setSpace([...space, ...CreateSpaceModal.data])
+      data.space_slug = `${data.space_name}${data.space_slug?.trim()}`
+        .replaceAll(" ", "-")
+        .toLowerCase()
+      const createdSpace = await CreateNewSpace(data as InsertSpace)
+      if (createdSpace?.success && createdSpace.data) {
+        setSpace([...space, ...createdSpace.data])
+        setRoutes((routes) => ({
+          ...routes,
+          navChannels: routes.navChannels.map((channel) =>
+            channel.url.includes(currChannel?.channel_slug as string)
+              ? {
+                  ...channel,
+                  items: [
+                    ...(channel.items ?? []),
+                    {
+                      title: createdSpace.data[0].space_name,
+                      url: `/channels/${currChannel?.channel_slug}/spaces/${createdSpace.data[0].space_slug}`
+                    }
+                  ]
+                }
+              : channel
+          )
+        }))
         setSpaceFormModelVisibility(false)
         toast({
           title: "Space created",
@@ -112,7 +132,7 @@ function CreateSpaceModal() {
       clearTimeout(timeoutId.current)
     }
     timeoutId.current = setTimeout(async () => {
-      const result = await isSlugAvailable(slug, channelId as string)
+      const result = await isSlugAvailable(slug, currChannel?.id as string)
       if (result?.success) {
         if (!result?.data) {
           form.setError("space_slug", {
