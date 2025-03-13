@@ -10,12 +10,15 @@ import {
 } from "@/src/db/data-access/channels/query"
 import { CreateServerAction } from ".."
 import { InsertChannel, SelectChannel } from "@/src/db/schema"
+import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 
 export const CreateChannelAction = CreateServerAction(
   true,
   async (channelData: InsertChannel) => {
     try {
       const newChannel = await CreateChannel(channelData)
+      const channel = AblyClientRest.channels.get("channels-spaces")
+      await channel.publish("channel", newChannel)
       return { success: true, data: newChannel }
     } catch (error) {
       return { error: error }

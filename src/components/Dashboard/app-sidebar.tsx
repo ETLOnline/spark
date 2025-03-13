@@ -15,7 +15,7 @@ import {
 import { SignedIn } from "@clerk/nextjs"
 import Image from "next/image"
 import Link from "next/link"
-import { useAtom, useSetAtom } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { navStore } from "@/src/store/nav/navStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
@@ -25,12 +25,15 @@ import {
 import { useEffect } from "react"
 import { Hash } from "lucide-react"
 import { channelStore } from "@/src/store/channel/channelStore"
+import { joinChannelsAndSpacesChannel } from "@/src/utils/helpers"
+import { userStore } from "@/src/store/user/userStore"
 
 export default function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const [routes, setRoutes] = useAtom(navStore.routes)
-  const setChannels = useSetAtom(channelStore.channels)
+  const [channels, setChannels] = useAtom(channelStore.channels)
+  const authUser = useAtomValue(userStore.AuthUser)
 
   const [
     channelPathsLoading,
@@ -42,32 +45,87 @@ export default function AppSidebar({
     useServerAction(GetChannelsAction)
 
   useEffect(() => {
-    ;(async () => {
-      const channelPaths = (await getChannelPaths())?.data
-      const channels = (await getChannels())?.data
-      if (channelPaths) {
-        setRoutes((routes) => {
-          return {
+    const { unsubscribe } = joinChannelsAndSpacesChannel(
+      "channels-spaces",
+      (data, activity) => {
+        if (activity === "channel" && "channel_name" in data) {
+          setRoutes((routes) => ({
             ...routes,
-            navChannels: channelPaths.map((channelPath) => ({
-              title: channelPath.channel_name,
-              url: `/channels/${channelPath.channel_slug}/spaces`,
-              icon: Hash,
-              items: channelPath.spaces.length
-                ? channelPath.spaces.map((spacePath) => ({
-                    title: spacePath.space_name,
-                    url: `/channels/${channelPath.channel_slug}/spaces/${spacePath.space_slug}`
-                  }))
-                : []
-            }))
-          }
-        })
-      }
-      if (channels) {
-        setChannels([...channels])
-      }
-    })()
+            navChannels: [
+              ...routes.navChannels,
+              {
+                title: data.channel_name,
+                url: `/channels/${data.channel_slug}/spaces`,
+                icon: Hash,
+                items: []
+              }
+            ]
+          }))
+          setChannels((channels) => [...channels, data])
+        }
+
+        if (activity === "space" && "space_name" in data) {
+          const channelSlug = channels.find(
+            (channel) => channel.id === data.channel_id
+          )?.channel_slug
+          setRoutes((routes) => ({
+            ...routes,
+            navChannels: routes.navChannels.map((channel) =>
+              channel.url.includes(channelSlug as string)
+                ? {
+                    ...channel,
+                    items: [
+                      ...(channel.items ?? []),
+                      {
+                        title: data.space_name,
+                        url: `/channels/${channelSlug as string}/spaces/${
+                          data.space_slug
+                        }`
+                      }
+                    ]
+                  }
+                : channel
+            )
+          }))
+        }
+      },
+      ["channel", "space"]
+    )
+
+    return () => {
+      unsubscribe()
+    }
   }, [])
+
+  useEffect(() => {
+    if (authUser) {
+      ;(async () => {
+        const channelPaths = (await getChannelPaths())?.data
+        const channels = (await getChannels())?.data
+        if (channelPaths) {
+          setRoutes((routes) => {
+            return {
+              ...routes,
+              navChannels: channelPaths.map((channelPath) => ({
+                title: channelPath.channel_name,
+                url: `/channels/${channelPath.channel_slug}/spaces`,
+                icon: Hash,
+                items: channelPath.spaces.length
+                  ? channelPath.spaces.map((spacePath) => ({
+                      title: spacePath.space_name,
+                      url: `/channels/${channelPath.channel_slug}/spaces/${spacePath.space_slug}`
+                    }))
+                  : []
+              }))
+            }
+          })
+        }
+        if (channels) {
+          setChannels([...channels])
+        }
+      })()
+    }
+  }, [authUser])
 
   return (
     <Sidebar variant="inset" {...props}>

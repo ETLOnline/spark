@@ -1,7 +1,13 @@
 import { pageMeta } from "@/src/utils/constants"
 import { ProfileActivity } from "../components/Dashboard/Connections/types/connections.types"
-import { InsertNotification, SelectUser } from "../db/schema"
+import {
+  InsertNotification,
+  SelectChannel,
+  SelectSpace,
+  SelectUser
+} from "../db/schema"
 import { AblyClient } from "../services/realtime/AblyClient"
+import { NavItem, NavSubItem } from "../components/Dashboard/nav-types"
 
 export const joinRequestChannel = (
   channelId: string,
@@ -59,6 +65,24 @@ export const joinNotificationChannel = (
   return {
     unsubscribe: () => {
       channel.unsubscribe()
+    }
+  }
+}
+
+export const joinChannelsAndSpacesChannel = (
+  channelId: string,
+  onUpdate: (data: SelectChannel | SelectSpace, activity: string) => void,
+  channelEvents: string[]
+) => {
+  const channel = AblyClient.channels.get(channelId)
+  // Subscribe to incoming channel/space updates
+  channel.subscribe(channelEvents, (message) => {
+    onUpdate(message.data, message.name as string)
+  })
+  // Return functions to send messages and cleanup
+  return {
+    unsubscribe: () => {
+      channel.unsubscribe(channelEvents)
     }
   }
 }
