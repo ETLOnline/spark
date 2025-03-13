@@ -71,7 +71,10 @@ export const joinNotificationChannel = (
 
 export const joinChannelsAndSpacesChannel = (
   channelId: string,
-  onUpdate: (data: SelectChannel | SelectSpace, activity: string) => void,
+  onUpdate: (
+    data: SelectChannel | SelectSpace,
+    activity: string
+  ) => void | Promise<void>,
   channelEvents: string[]
 ) => {
   const channel = AblyClient.channels.get(channelId)

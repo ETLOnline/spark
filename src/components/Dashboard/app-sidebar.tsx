@@ -15,10 +15,11 @@ import {
 import { SignedIn } from "@clerk/nextjs"
 import Image from "next/image"
 import Link from "next/link"
-import { useAtom, useAtomValue } from "jotai"
+import { useAtom } from "jotai"
 import { navStore } from "@/src/store/nav/navStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
+  GetChannelByIdAction,
   GetChannelPathsAction,
   GetChannelsAction
 } from "@/src/server-actions/Channel/Channel"
@@ -26,14 +27,12 @@ import { useEffect } from "react"
 import { Hash } from "lucide-react"
 import { channelStore } from "@/src/store/channel/channelStore"
 import { joinChannelsAndSpacesChannel } from "@/src/utils/helpers"
-import { userStore } from "@/src/store/user/userStore"
 
 export default function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const [routes, setRoutes] = useAtom(navStore.routes)
   const [channels, setChannels] = useAtom(channelStore.channels)
-  const authUser = useAtomValue(userStore.AuthUser)
 
   const [
     channelPathsLoading,
@@ -43,6 +42,8 @@ export default function AppSidebar({
   ] = useServerAction(GetChannelPathsAction)
   const [channelsLoading, channelsData, channelsError, getChannels] =
     useServerAction(GetChannelsAction)
+  const [channelLoading, channelData, channelError, getChannelById] =
+    useServerAction(GetChannelByIdAction)
 
   useEffect(() => {
     ;(async () => {
@@ -72,8 +73,8 @@ export default function AppSidebar({
     })()
 
     const { unsubscribe } = joinChannelsAndSpacesChannel(
-      "channels-spaces",
-      (data, activity) => {
+      "boradcast-channels-spaces-update",
+      async (data, activity) => {
         if (activity === "channel" && "channel_name" in data) {
           setRoutes((routes) => ({
             ...routes,
@@ -91,9 +92,8 @@ export default function AppSidebar({
         }
 
         if (activity === "space" && "space_name" in data) {
-          const channelSlug = channels.find(
-            (channel) => channel.id === data.channel_id
-          )?.channel_slug
+          const channelSlug = (await getChannelById(data.channel_id))?.data
+            ?.channel_slug
           setRoutes((routes) => ({
             ...routes,
             navChannels: routes.navChannels.map((channel) => {

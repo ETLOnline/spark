@@ -2,19 +2,23 @@
 
 import {
   CreateSpace,
+  DeleteSpace,
   GetSpaces,
-  IsSlugAvailable
+  IsSlugAvailable,
+  UpdateSpace
 } from "@/src/db/data-access/spaces/query"
-import { CreateServerAction } from ".."
-import { InsertSpace } from "@/src/db/schema"
 import { AblyClientRest } from "@/src/services/realtime/AblyClient"
+import { CreateServerAction } from ".."
+import { InsertSpace, SelectSpace } from "@/src/db/schema"
 
 export const CreateSpaceAction = CreateServerAction(
   true,
   async (SpaceData: InsertSpace) => {
     try {
       const newSpace = await CreateSpace(SpaceData)
-      const channel = AblyClientRest.channels.get("channels-spaces")
+      const channel = AblyClientRest.channels.get(
+        "boradcast-channels-spaces-update"
+      )
       await channel.publish("space", newSpace[0])
       return { success: true, data: newSpace }
     } catch (error: any) {
@@ -43,6 +47,30 @@ export const IsSlugAvailableAction = CreateServerAction(
     try {
       const isAvailable = await IsSlugAvailable(slug, channelId)
       return { success: true, data: isAvailable }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const UpdateSpaceAction = CreateServerAction(
+  true,
+  async (spaceID: string, updatedData: Partial<SelectSpace>) => {
+    try {
+      const updateSapce = await UpdateSpace(spaceID, updatedData)
+      return { success: true, data: updateSapce }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const DeleteSpaceAction = CreateServerAction(
+  true,
+  async (deleteSpaceData: SelectSpace) => {
+    try {
+      await DeleteSpace(deleteSpaceData)
+      return { success: true }
     } catch (error) {
       return { error: error }
     }
