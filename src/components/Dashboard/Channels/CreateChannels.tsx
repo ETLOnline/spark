@@ -36,9 +36,11 @@ import { channelStore } from "@/src/store/channel/channelStore"
 import { z } from "zod"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { CircleCheck, CircleXIcon, Plus } from "lucide-react"
+import { CircleCheck, CirclePlus, CircleXIcon, Plus } from "lucide-react"
 import Loader from "../../common/Loader/Loader"
 import { LoaderSizes } from "../../common/Loader/types/loader-types"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../../ui/alert-dialog"
+import { Switch } from "../../ui/switch"
 
 const channelSchema = z.object({
   channel_name: z
@@ -48,9 +50,9 @@ const channelSchema = z.object({
   description: z
     .string()
     .min(1, "description required")
-    .max(50, "Description is too long"),
+    .max(100, "Description is too long"),
   channel_type: z.string().min(1, " Channel type required"),
-  channel_slug: z.string().max(15, "Slug is too long")
+  channel_slug: z.string().max(15, "Slug is too long"),
 })
 
 function CreateChannels() {
@@ -65,7 +67,7 @@ function CreateChannels() {
   )
 
   const authUser = useAtomValue(userStore.AuthUser)
-  const selectedChannel = useAtomValue(channelStore.selectedChannel)
+  const [selectedChannel, setSelectedChannel] = useAtom(channelStore.selectedChannel)
 
   const [addChannelLoading, addChannelData, addChannelError, CreateChannel] =
     useServerAction(CreateChannelAction)
@@ -106,6 +108,10 @@ function CreateChannels() {
 
   useEffect(() => {
     form.reset()
+    if (!channelFormModelVisibility) {
+      setSelectedChannel(null)
+    }
+    form.clearErrors()
   }, [channelFormModelVisibility])
 
   useEffect(() => {
@@ -171,10 +177,15 @@ function CreateChannels() {
 
   async function handleUpdateChannel(updatedData: Partial<SelectChannel>) {
     try {
+      const payLoad = {
+        ...updatedData,
+        channel_name: updatedData?.channel_name?.trim() || "",
+        channel_slug: `${updatedData.channel_name}${updatedData?.channel_slug?.trim() || ""}`
+      }
       if (!selectedChannel?.id) return
       const updatedChannel = await UpdateChannel(
         selectedChannel.id,
-        updatedData
+        payLoad
       )
       if (updatedChannel?.success && updatedChannel.data)
         setChannels((channel) =>
@@ -188,7 +199,7 @@ function CreateChannels() {
       toast({
         title: "Channel updated",
         description: "Your channel successfully updated.",
-        duration: 3000
+        duration: 300
       })
     } catch {
       toast({
@@ -239,7 +250,7 @@ function CreateChannels() {
     >
       <DialogTrigger asChild>
         <Button>
-          <Plus className="mr-2 h-4 w-4" />
+          <CirclePlus className=" h-4 w-4" />
           Create Channel
         </Button>
       </DialogTrigger>
@@ -303,7 +314,7 @@ function CreateChannels() {
                   <div className="flex items-center text-red-500">
                     <CircleXIcon className="mr-2 h-4 w-4" />
                     <span className="text-sm">
-                      {error.channel_slug.message}
+                      {String(error.channel_slug.message)}
                     </span>
                   </div>
                 )}
@@ -376,18 +387,47 @@ function CreateChannels() {
                 )}
               </div>
             </div>
+            {editChannel === true && (
+              <div className="flex items-center justify-between">
+                <Label htmlFor="publish_channel">Publish Channel</Label>
+                <div className="w-[70%]">
+                  <Controller
+                    name="publish_channel"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange} />
+                    )}
+                  />
+                </div>
+              </div>)}
           </div>
           <DialogFooter>
             {editChannel === true ? (
               <div className="w-full flex justify-between">
-                <Button
-                  variant="destructive"
-                  type="button"
-                  onClick={handleDeleteChannel}
-                  loading={addDeleteChannelLoading}
-                >
-                  Delete
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" loading={addDeleteChannelLoading}>
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure ?</AlertDialogTitle>
+                      <DialogDescription>
+                        This action will permanently delete channel and the space that exist in this channel.
+                        This action can't be undone.
+                      </DialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeleteChannel} loading={addDeleteChannelLoading}>
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
                 <Button type="submit" loading={addUpdateChannelLoading}>
                   Save
                 </Button>

@@ -14,23 +14,30 @@ import {
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import { Textarea } from "@/src/components/ui/textarea"
-import { InsertSpace } from "@/src/db/schema"
+import { InsertSpace, SelectSpace } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateSpaceAction,
-  IsSlugAvailableAction
+  IsSlugAvailableAction,
+  UpdateSpaceAction
 } from "@/src/server-actions/Space/Space"
 import { channelStore } from "@/src/store/channel/channelStore"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAtom, useAtomValue } from "jotai"
-import { CircleCheck, CircleXIcon } from "lucide-react"
+import { CircleCheck, CirclePlus, CircleXIcon } from "lucide-react"
 import { useParams } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
+
+
+interface spaceProps {
+  space: SelectSpace[],
+  setSpace: Dispatch<SetStateAction<SelectSpace[]>>
+}
 
 const spaceSchema = z.object({
   space_name: z.string().min(1, "Space name required").max(30, "Too long"),
@@ -41,17 +48,16 @@ const spaceSchema = z.object({
     .max(50, "Description is too long")
 })
 
-function CreateSpaceModal() {
-  const [space, setSpace] = useAtom(spaceStore.spaces)
+function CreateSpaceModal({ space, setSpace }: spaceProps) {
   const authUser = useAtomValue(userStore.AuthUser)
-  const channelId = useAtomValue(channelStore.selectedChannel)?.id
-
   const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
   const [spaceFormModelVisibility, setSpaceFormModelVisibility] =
-    useState(false)
+    useAtom(spaceStore.spaceFormModelVisibility)
+  const [selectedSpace, setSelectedSpace] = useAtom(spaceStore.selectedSpace)
+  const [editSpace, setEditSpace] = useState(false)
+  const [channel, setChannel] = useAtom(channelStore.selectedChannel)
 
   const timeoutId = useRef<NodeJS.Timeout>(null)
-
   const channelSlug = useParams().channel_slug
 
   const [addSpaceLoading, addSpaceData, addSpaceError, CreateNewSpace] =
@@ -62,6 +68,12 @@ function CreateSpaceModal() {
     isSlugAvailableError,
     isSlugAvailable
   ] = useServerAction(IsSlugAvailableAction)
+  const [
+    addUpdateSpaceLoading,
+    addUpdateSpaceData,
+    addUpdateSpaceError,
+    updateSpace
+  ] = useServerAction(UpdateSpaceAction)
 
   const form = useForm({
     resolver: zodResolver(spaceSchema)
@@ -84,10 +96,35 @@ function CreateSpaceModal() {
     }
   }, [form.watch("space_slug")])
 
+  useEffect(() => {
+    form.reset()
+    if (!spaceFormModelVisibility) {
+      setSelectedSpace(null)
+    }
+  }, [spaceFormModelVisibility])
+
+  useEffect(() => {
+    if (selectedSpace) {
+      setEditSpace(true)
+      form.setValue("space_name", selectedSpace.space_name)
+      form.setValue("description", selectedSpace.description)
+    } else {
+      setEditSpace(false)
+    }
+  }, [selectedSpace])
+
+  function submitData(data: any) {
+    if (!selectedSpace) {
+      handleCreateSpace(data)
+    } else (
+      handleUpdateSpace(data)
+    )
+  }
+
   async function handleCreateSpace(data: Partial<InsertSpace>) {
     try {
       data.created_by = authUser?.unique_id as string
-      data.channel_id = channelId as string
+      data.channel_id = channel?.id
       data.channel_slug = channelSlug as string
       data.space_name = (data.space_name as string).trim()
       data.space_slug = `${data.space_name}${data.space_slug?.trim()}`
@@ -130,6 +167,36 @@ function CreateSpaceModal() {
     }, 2500)
   }
 
+  async function handleUpdateSpace(data: Partial<InsertSpace>) {
+    try {
+      data.created_by = authUser?.unique_id as string
+      data.channel_id = channel?.id
+      data.channel_slug = channelSlug as string
+      data.space_name = (data.space_name as string).trim()
+      data.space_slug = `${data.space_name}${data.space_slug?.trim()}`
+      const UpdateSpaceModal = await updateSpace(selectedSpace?.id as string, data as InsertSpace)
+      if (UpdateSpaceModal?.success && UpdateSpaceModal.data) {
+        setSpace((spaces) =>
+          spaces.map((space) =>
+            space.id === selectedSpace?.id ? { ...space, ...UpdateSpaceModal.data } : space
+          )
+        )
+        setSpaceFormModelVisibility(false)
+        toast({
+          title: "Space updated",
+          description: "Your space has been updated successfully.",
+          duration: 3000
+        })
+      }
+    } catch {
+      toast({
+        title: "Unable to update space",
+        variant: "destructive",
+        duration: 3000
+      })
+    }
+  }
+
   return (
     <div className="flex justify-center">
       <Dialog
@@ -138,15 +205,18 @@ function CreateSpaceModal() {
           setSpaceFormModelVisibility(open)
         }}
       >
-        <DialogTrigger>
-          <Button>Create Space</Button>
+        <DialogTrigger asChild>
+          <Button>
+            <CirclePlus className="h-4 w-4" />
+            Create Space
+          </Button>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Space</DialogTitle>
-            <DialogDescription>You can create Spaces.</DialogDescription>
+            <DialogTitle>{editSpace === true ? "Edit Space" : "Create Space"}</DialogTitle>
+            <DialogDescription>{editSpace === true ? "You can edit Spaces." : "You can create Spaces."}</DialogDescription>
           </DialogHeader>
-          <form onSubmit={form.handleSubmit(handleCreateSpace)}>
+          <form onSubmit={form.handleSubmit(submitData)}>
             <div className="grid gap-4 py-4">
               <div className="flex flex-col">
                 <div className="flex items-center justify-between">
@@ -170,7 +240,7 @@ function CreateSpaceModal() {
                 <div className="text-left">
                   {error.space_name && (
                     <span className="text-red-500 text-sm">
-                      {error.space_name.message}
+                      {String(error.space_name.message)}
                     </span>
                   )}
                 </div>
@@ -201,7 +271,7 @@ function CreateSpaceModal() {
                     <div className="flex items-center text-red-500">
                       <CircleXIcon className="mr-2 h-4 w-4" />
                       <span className="text-sm">
-                        {error.space_slug.message}
+                        {String(error.space_slug.message)}
                       </span>
                     </div>
                   )}
@@ -242,16 +312,23 @@ function CreateSpaceModal() {
                 <div className="text-left">
                   {error.description && (
                     <span className="text-red-500 text-sm">
-                      {error.description.message}
+                      {String(error.description.message)}
                     </span>
                   )}
                 </div>
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit" loading={addSpaceLoading}>
-                Create
-              </Button>
+              {editSpace === true ?
+                <Button
+                  onClick={() => form.handleSubmit(submitData)}
+                  loading={addUpdateSpaceLoading}>
+                  Save
+                </Button> :
+                <Button type="submit" loading={addSpaceLoading}>
+                  Create
+                </Button>
+              }
             </DialogFooter>
           </form>
         </DialogContent>

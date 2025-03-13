@@ -2,12 +2,14 @@
 
 import {
   CreateSpace,
+  DeleteSpace,
   GetSpaces,
   GetSpacesBySlug,
-  IsSlugAvailable
+  IsSlugAvailable,
+  UpdateSpace
 } from "@/src/db/data-access/spaces/query"
 import { CreateServerAction } from ".."
-import { InsertSpace } from "@/src/db/schema"
+import { InsertSpace, SelectSpace } from "@/src/db/schema"
 
 export const CreateSpaceAction = CreateServerAction(
   true,
@@ -58,3 +60,25 @@ export const IsSlugAvailableAction = CreateServerAction(
     }
   }
 )
+
+export const UpdateSpaceAction = CreateServerAction(
+  true,
+  async (spaceID: string, updatedData: Partial<SelectSpace>) => {
+    try {
+      const updateSapce = await UpdateSpace(spaceID, updatedData)
+      return { success: true, data: updateSapce }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+
+export const DeleteSpaceAction = CreateServerAction( true, async (deleteSpaceData: SelectSpace)=>{
+  try{
+     await DeleteSpace(deleteSpaceData)
+    return{success: true}
+  }catch(error){
+    return { error: error}
+  }
+})

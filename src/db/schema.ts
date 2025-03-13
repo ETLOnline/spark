@@ -662,8 +662,8 @@ export const spacesTable = sqliteTable("spaces", {
 
 export const spacesRelations = relations(spacesTable, ({ one }) => ({
   channel: one(channelsTable, {
-    fields: [spacesTable.channel_slug],
-    references: [channelsTable.channel_slug],
+    fields: [spacesTable.channel_id],
+    references: [channelsTable.id],
     relationName: "spaceToChannel"
   })
 }))
