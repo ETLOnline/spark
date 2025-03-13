@@ -69,12 +69,6 @@ export default function AppSidebar({
     })()
   }, [])
 
-  useEffect(() => {
-    console.log("routes",routes);
- 
-  }, [routes])
-  
-
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>

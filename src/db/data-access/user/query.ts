@@ -7,7 +7,7 @@ export async function CreateUser(data: InsertUser) {
 }
 
 export async function SelectUserByExternalId(id: string) {
-  return await db.query.usersTable.findFirst({
+  const user = await db.query.usersTable.findFirst({
     columns: {
       first_name: true,
       last_name: true,
@@ -20,6 +20,8 @@ export async function SelectUserByExternalId(id: string) {
     },
     where: eq(usersTable.external_auth_id, id)
   })
+
+  return user
 }
 
 export async function SelectUserByEmail(email: string) {

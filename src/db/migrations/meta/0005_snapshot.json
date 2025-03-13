@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "b191d17b-d504-49e5-a2d2-7a74f3635ef3",
-  "prevId": "c6a68140-837c-4d0e-ae3e-b68475666382",
+  "id": "c9670a76-57b9-4a42-a314-bf58d57c5ef0",
+  "prevId": "b191d17b-d504-49e5-a2d2-7a74f3635ef3",
   "tables": {
     "activities": {
       "name": "activities",
@@ -1101,18 +1101,18 @@
           "notNull": true,
           "autoincrement": false
         },
-        "channel_slug": {
-          "name": "channel_slug",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "created_by": {
           "name": "created_by",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "ownerId": {
+          "name": "ownerId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "updated_at": {
