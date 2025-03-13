@@ -15,7 +15,7 @@ export const CreateSpaceAction = CreateServerAction(
     try {
       const newSpace = await CreateSpace(SpaceData)
       const channel = AblyClientRest.channels.get("channels-spaces")
-      await channel.publish("space", newSpace)
+      await channel.publish("space", newSpace[0])
       return { success: true, data: newSpace }
     } catch (error: any) {
       return {

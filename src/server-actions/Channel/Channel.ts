@@ -18,7 +18,7 @@ export const CreateChannelAction = CreateServerAction(
     try {
       const newChannel = await CreateChannel(channelData)
       const channel = AblyClientRest.channels.get("channels-spaces")
-      await channel.publish("channel", newChannel)
+      await channel.publish("channel", newChannel[0])
       return { success: true, data: newChannel }
     } catch (error) {
       return { error: error }

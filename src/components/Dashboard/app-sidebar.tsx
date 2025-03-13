@@ -45,6 +45,32 @@ export default function AppSidebar({
     useServerAction(GetChannelsAction)
 
   useEffect(() => {
+    ;(async () => {
+      const channelPaths = (await getChannelPaths())?.data
+      const channels = (await getChannels())?.data
+      if (channelPaths) {
+        setRoutes((routes) => {
+          return {
+            ...routes,
+            navChannels: channelPaths.map((channelPath) => ({
+              title: channelPath.channel_name,
+              url: `/channels/${channelPath.channel_slug}/spaces`,
+              icon: Hash,
+              items: channelPath.spaces.length
+                ? channelPath.spaces.map((spacePath) => ({
+                    title: spacePath.space_name,
+                    url: `/channels/${channelPath.channel_slug}/spaces/${spacePath.space_slug}`
+                  }))
+                : []
+            }))
+          }
+        })
+      }
+      if (channels) {
+        setChannels([...channels])
+      }
+    })()
+
     const { unsubscribe } = joinChannelsAndSpacesChannel(
       "channels-spaces",
       (data, activity) => {
@@ -70,8 +96,8 @@ export default function AppSidebar({
           )?.channel_slug
           setRoutes((routes) => ({
             ...routes,
-            navChannels: routes.navChannels.map((channel) =>
-              channel.url.includes(channelSlug as string)
+            navChannels: routes.navChannels.map((channel) => {
+              return channel.url.includes(channelSlug as string)
                 ? {
                     ...channel,
                     items: [
@@ -85,7 +111,7 @@ export default function AppSidebar({
                     ]
                   }
                 : channel
-            )
+            })
           }))
         }
       },
@@ -96,36 +122,6 @@ export default function AppSidebar({
       unsubscribe()
     }
   }, [])
-
-  useEffect(() => {
-    if (authUser) {
-      ;(async () => {
-        const channelPaths = (await getChannelPaths())?.data
-        const channels = (await getChannels())?.data
-        if (channelPaths) {
-          setRoutes((routes) => {
-            return {
-              ...routes,
-              navChannels: channelPaths.map((channelPath) => ({
-                title: channelPath.channel_name,
-                url: `/channels/${channelPath.channel_slug}/spaces`,
-                icon: Hash,
-                items: channelPath.spaces.length
-                  ? channelPath.spaces.map((spacePath) => ({
-                      title: spacePath.space_name,
-                      url: `/channels/${channelPath.channel_slug}/spaces/${spacePath.space_slug}`
-                    }))
-                  : []
-              }))
-            }
-          })
-        }
-        if (channels) {
-          setChannels([...channels])
-        }
-      })()
-    }
-  }, [authUser])
 
   return (
     <Sidebar variant="inset" {...props}>
