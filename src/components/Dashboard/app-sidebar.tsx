@@ -27,6 +27,7 @@ import { useEffect } from "react"
 import { Hash } from "lucide-react"
 import { channelStore } from "@/src/store/channel/channelStore"
 import { joinChannelsAndSpacesChannel } from "@/src/utils/helpers"
+import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 
 export default function AppSidebar({
   ...props
@@ -44,6 +45,8 @@ export default function AppSidebar({
     useServerAction(GetChannelsAction)
   const [channelLoading, channelData, channelError, getChannelById] =
     useServerAction(GetChannelByIdAction)
+  const [userLoading, userData, userError, getUser] =
+    useServerAction(AuthUserAction)
 
   useEffect(() => {
     ;(async () => {
@@ -75,44 +78,50 @@ export default function AppSidebar({
     const { unsubscribe } = joinChannelsAndSpacesChannel(
       "boradcast-channels-spaces-update",
       async (data, activity) => {
+        const userId = (await getUser())?.unique_id
         if (activity === "channel" && "channel_name" in data) {
-          setRoutes((routes) => ({
-            ...routes,
-            navChannels: [
-              ...routes.navChannels,
-              {
-                title: data.channel_name,
-                url: `/channels/${data.channel_slug}/spaces`,
-                icon: Hash,
-                items: []
-              }
-            ]
-          }))
-          setChannels((channels) => [...channels, data])
+          if (data.created_by !== userId) {
+            setRoutes((routes) => ({
+              ...routes,
+              navChannels: [
+                ...routes.navChannels,
+                {
+                  title: data.channel_name,
+                  url: `/channels/${data.channel_slug}/spaces`,
+                  icon: Hash,
+                  items: []
+                }
+              ]
+            }))
+
+            setChannels((channels) => [...channels, data])
+          }
         }
 
         if (activity === "space" && "space_name" in data) {
-          const channelSlug = (await getChannelById(data.channel_id))?.data
-            ?.channel_slug
-          setRoutes((routes) => ({
-            ...routes,
-            navChannels: routes.navChannels.map((channel) => {
-              return channel.url.includes(channelSlug as string)
-                ? {
-                    ...channel,
-                    items: [
-                      ...(channel.items ?? []),
-                      {
-                        title: data.space_name,
-                        url: `/channels/${channelSlug as string}/spaces/${
-                          data.space_slug
-                        }`
-                      }
-                    ]
-                  }
-                : channel
-            })
-          }))
+          if (data.created_by !== userId) {
+            const channelSlug = (await getChannelById(data.channel_id))?.data
+              ?.channel_slug
+            setRoutes((routes) => ({
+              ...routes,
+              navChannels: routes.navChannels.map((channel) => {
+                return channel.url.includes(channelSlug as string)
+                  ? {
+                      ...channel,
+                      items: [
+                        ...(channel.items ?? []),
+                        {
+                          title: data.space_name,
+                          url: `/channels/${channelSlug as string}/spaces/${
+                            data.space_slug
+                          }`
+                        }
+                      ]
+                    }
+                  : channel
+              })
+            }))
+          }
         }
       },
       ["channel", "space"]

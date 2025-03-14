@@ -116,6 +116,23 @@ function CreateSpaceModal({ space, setSpace }: spaceProps) {
     }
   }, [selectedSpace])
 
+  useEffect(() => {
+    if (!spaceFormModelVisibility) {
+      // Reset all form fields
+      form.reset({
+        space_name: "",
+        space_slug: "",
+        description: ""
+      })
+      // Clear any errors
+      form.clearErrors()
+      // Reset other state
+      setSelectedSpace(null)
+      setEditSpace(false)
+      setslugAvailableMessage("")
+    }
+  }, [spaceFormModelVisibility])
+
   function submitData(data: any) {
     if (!selectedSpace) {
       handleCreateSpace(data)
@@ -175,13 +192,15 @@ function CreateSpaceModal({ space, setSpace }: spaceProps) {
         if (!result?.data) {
           form.setError("space_slug", {
             type: "manual",
-            message: `the slug, ${slug.replaceAll(" ", "-")} is already taken`
+            message: `the slug, ${
+              slug.replaceAll(" ", "-").toLowerCase
+            } is already taken`
           })
           setslugAvailableMessage("")
         } else {
           form.clearErrors("space_slug")
           setslugAvailableMessage(
-            `the slug, ${slug.replaceAll(" ", "-")} is available`
+            `the slug, ${slug.replaceAll(" ", "-").toLowerCase()} is available`
           )
         }
       }
@@ -268,7 +287,7 @@ function CreateSpaceModal({ space, setSpace }: spaceProps) {
                     />
                   </div>
                 </div>
-                <div className="text-left">
+                <div className="text-left flex items-center gap-x-2 pt-1 pl-[30%]">
                   {error.space_name && (
                     <span className="text-red-500 text-sm">
                       {String(error.space_name.message)}
@@ -340,7 +359,7 @@ function CreateSpaceModal({ space, setSpace }: spaceProps) {
                     />
                   </div>
                 </div>
-                <div className="text-left">
+                <div className="text-left flex items-center gap-x-2 pt-1 pl-[30%]">
                   {error.description && (
                     <span className="text-red-500 text-sm">
                       {String(error.description.message)}

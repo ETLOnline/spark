@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { Card, CardContent, CardFooter, CardHeader } from "../../ui/card"
+import { Card, CardContent, CardHeader } from "../../ui/card"
 import Image from "next/image"
 import { SelectChannel } from "@/src/db/schema"
 import { Button } from "../../ui/button"

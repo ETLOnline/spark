@@ -129,6 +129,25 @@ function CreateChannels() {
   }, [channelFormModelVisibility])
 
   useEffect(() => {
+    if (!channelFormModelVisibility) {
+      // Reset all form fields
+      form.reset({
+        channel_name: "",
+        channel_slug: "",
+        description: "",
+        channel_type: "",
+        publish_channel: false
+      })
+      // Clear any errors
+      form.clearErrors()
+      // Reset other state
+      setSelectedChannel(null)
+      setEditChannel(false)
+      setslugAvailableMessage("")
+    }
+  }, [channelFormModelVisibility])
+
+  useEffect(() => {
     if (selectedChannel) {
       form.setValue("channel_name", selectedChannel.channel_name)
       form.setValue("description", selectedChannel.description as string)
@@ -210,6 +229,8 @@ function CreateChannels() {
         channel_slug: `${updatedData.channel_name}${
           updatedData?.channel_slug?.trim() || ""
         }`
+          .replaceAll(" ", "-")
+          .toLowerCase()
       }
       if (!selectedChannel?.id) return
       const updatedChannel = await UpdateChannel(selectedChannel.id, payLoad)
@@ -256,13 +277,15 @@ function CreateChannels() {
         if (!result?.data) {
           form.setError("channel_slug", {
             type: "manual",
-            message: `the slug, ${slug.replaceAll(" ", "-")} is already taken`
+            message: `the slug, ${slug
+              .replaceAll(" ", "-")
+              .toLowerCase()} is already taken`
           })
           setslugAvailableMessage("")
         } else {
           form.clearErrors("channel_slug")
           setslugAvailableMessage(
-            `the slug, ${slug.replaceAll(" ", "-")} is available`
+            `the slug, ${slug.replaceAll(" ", "-").toLowerCase()} is available`
           )
         }
       }
@@ -309,7 +332,7 @@ function CreateChannels() {
                   />
                 </div>
               </div>
-              <div className="text-left">
+              <div className="text-left flex items-center gap-x-2 pt-1 pl-[30%]">
                 {error.channel_name && (
                   <span className="text-red-500 text-sm">
                     {String(error.channel_name.message)}
@@ -375,7 +398,7 @@ function CreateChannels() {
                   />
                 </div>
               </div>
-              <div className="text-left">
+              <div className="text-left flex items-center gap-x-2 pt-1 pl-[30%]">
                 {error.description && (
                   <span className="text-red-500 text-sm">
                     {String(error.description.message)}
@@ -407,7 +430,7 @@ function CreateChannels() {
                   />
                 </div>
               </div>
-              <div className="text-left">
+              <div className="text-left flex items-center gap-x-2 pt-1 pl-[30%]">
                 {error.channel_type && (
                   <span className="text-red-500 text-sm">
                     {String(error.channel_type.message)}
