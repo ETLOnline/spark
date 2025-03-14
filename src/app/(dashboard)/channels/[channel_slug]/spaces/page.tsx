@@ -27,6 +27,7 @@ import { DeleteSpaceAction } from "@/src/server-actions/Space/Space"
 import { GetChannelBySlugAction } from "@/src/server-actions/Channel/Channel"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/Loader/types/loader-types"
+import { toast } from "@/src/hooks/use-toast"
 
 export default function ChannelPage() {
   const [spaces, setSpaces] = useAtom(spaceStore.spaces)
@@ -73,6 +74,10 @@ export default function ChannelPage() {
       setSpaces((spaces) =>
         spaces.filter((spaces) => spaces.id !== selectedSpace?.id)
       )
+      toast({
+        title: "Space deleted successfully.",
+        duration: 3000,
+      })
     }
   }
 
@@ -130,13 +135,16 @@ export default function ChannelPage() {
                     </div>
                   </Link>
                   <div className="flex justify-end gap-2 mt-4">
-                    <Button size="sm" onClick={() => handleEditSpace(space)}>
+                    <Button size="sm"
+                      onClick={() => handleEditSpace(space)}
+                      variant={"outline"}>
                       <Edit3 />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant={"destructive"}>
-                          <Trash2 />
+                        <Button variant={"outline"}>
+                          {addDeleteSpaceLoading ? <Loader /> :
+                            <Trash2 className="" />}
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -158,7 +166,8 @@ export default function ChannelPage() {
                       </AlertDialogContent>
                     </AlertDialog>
                     <Link href={`./spaces/${space.space_slug}/settings`}>
-                      <Button size="sm">
+                      <Button size="sm"
+                        variant={"outline"}>
                         <Settings />
                       </Button>
                     </Link>

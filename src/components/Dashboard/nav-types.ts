@@ -1,6 +1,9 @@
+import React from "react"
+
 export type NavSubItem = {
   title: string
   url: string
+  icon?: React.ComponentType
 }
 
 export type NavItem = {

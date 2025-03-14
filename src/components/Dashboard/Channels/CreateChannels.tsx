@@ -92,12 +92,6 @@ function CreateChannels() {
     UpdateChannel
   ] = useServerAction(UpdateChannelAction)
   const [
-    addDeleteChannelLoading,
-    addDeleteChannelData,
-    addDeleteChannelError,
-    DeleteChannel
-  ] = useServerAction(DeleteChannelAction)
-  const [
     isSlugAvailableLoading,
     isSlugAvailableData,
     isSlugAvailableError,
@@ -193,7 +187,7 @@ function CreateChannels() {
 
       const createdChannel = await CreateChannel(payLoad as InsertChannel)
       if (createdChannel?.success && createdChannel?.data) {
-        setChannels([...channels, ...createdChannel.data])
+        // setChannels([...channels, ...createdChannel.data])
         setRoutes((routes) => ({
           ...routes,
           navChannels: [
@@ -226,15 +220,14 @@ function CreateChannels() {
       const payLoad = {
         ...updatedData,
         channel_name: updatedData?.channel_name?.trim() || "",
-        channel_slug: `${updatedData.channel_name}${
-          updatedData?.channel_slug?.trim() || ""
-        }`
+        channel_slug: `${updatedData.channel_name}${updatedData?.channel_slug?.trim() || ""
+          }`
           .replaceAll(" ", "-")
           .toLowerCase()
       }
       if (!selectedChannel?.id) return
       const updatedChannel = await UpdateChannel(selectedChannel.id, payLoad)
-      if (updatedChannel?.success && updatedChannel.data)
+      if (updatedChannel?.success && updatedChannel.data) {
         setChannels((channel) =>
           channel.map((channel) =>
             channel.id === selectedChannel.id
@@ -242,28 +235,19 @@ function CreateChannels() {
               : channel
           )
         )
-      setChannelFormModelVisibility(false)
-      toast({
-        title: "Channel updated",
-        description: "Your channel successfully updated.",
-        duration: 300
-      })
+        setChannelFormModelVisibility(false)
+        toast({
+          title: "Channel updated",
+          description: "Your channel successfully updated.",
+          duration: 300
+        })
+      }
     } catch {
       toast({
         title: "Unable to update channel",
         variant: "destructive",
         duration: 3000
       })
-    }
-  }
-
-  async function handleDeleteChannel() {
-    const deletedChannel = await DeleteChannel(selectedChannel as SelectChannel)
-    if (deletedChannel?.success) {
-      setChannels((channel) =>
-        channel.filter((channel) => channel.id !== selectedChannel?.id)
-      )
-      setChannelFormModelVisibility(false)
     }
   }
 
@@ -459,35 +443,6 @@ function CreateChannels() {
           <DialogFooter>
             {editChannel === true ? (
               <div className="w-full flex justify-between">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      loading={addDeleteChannelLoading}
-                    >
-                      Delete
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you sure ?</AlertDialogTitle>
-                      <DialogDescription>
-                        This action will permanently delete channel and the
-                        space that exist in this channel. This action can't be
-                        undone.
-                      </DialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleDeleteChannel}
-                        loading={addDeleteChannelLoading}
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
                 <Button type="submit" loading={addUpdateChannelLoading}>
                   Save
                 </Button>

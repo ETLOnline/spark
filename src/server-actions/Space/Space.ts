@@ -17,9 +17,9 @@ export const CreateSpaceAction = CreateServerAction(
     try {
       const newSpace = await CreateSpace(SpaceData)
       const channel = AblyClientRest.channels.get(
-        "boradcast-channels-spaces-update"
+        "broadcast-channels-spaces-update"
       )
-      await channel.publish("space", newSpace[0])
+      await channel.publish("space-add", newSpace[0])
       return { success: true, data: newSpace }
     } catch (error: any) {
       return {
