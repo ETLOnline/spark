@@ -6,7 +6,9 @@ import {
   GetPublicChannels,
   UpdateChannel,
   IsSlugAvailable,
-  GetPublicChannelPaths
+  GetPublicChannelPaths,
+  GetChannelBySlug,
+  GetChannelById
 } from "@/src/db/data-access/channels/query"
 import { CreateServerAction } from ".."
 import { InsertChannel, SelectChannel } from "@/src/db/schema"
@@ -17,7 +19,9 @@ export const CreateChannelAction = CreateServerAction(
   async (channelData: InsertChannel) => {
     try {
       const newChannel = await CreateChannel(channelData)
-      const channel = AblyClientRest.channels.get("channels-spaces")
+      const channel = AblyClientRest.channels.get(
+        "boradcast-channels-spaces-update"
+      )
       await channel.publish("channel", newChannel[0])
       return { success: true, data: newChannel }
     } catch (error) {
@@ -74,6 +78,30 @@ export const IsSlugAvailableAction = CreateServerAction(
     try {
       const isAvailable = await IsSlugAvailable(slug)
       return { success: true, data: isAvailable }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetChannelBySlugAction = CreateServerAction(
+  true,
+  async (slug: string) => {
+    try {
+      const channel = await GetChannelBySlug(slug)
+      return { success: true, data: channel }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetChannelByIdAction = CreateServerAction(
+  true,
+  async (id: string) => {
+    try {
+      const channel = await GetChannelById(id)
+      return { success: true, data: channel }
     } catch (error) {
       return { error: error }
     }

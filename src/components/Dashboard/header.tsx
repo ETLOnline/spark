@@ -26,7 +26,7 @@ const Header = () => {
   const hrefs: string[] = path
     .split("/")
     .map(
-      (pathName, i) =>
+      (pathName) =>
         "/" + path.substring(0, path.indexOf(pathName) + pathName.length)
     )
   const crumbs: Crumb[] = (() => {

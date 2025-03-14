@@ -86,3 +86,31 @@ export async function IsSlugAvailable(slug: string): Promise<boolean> {
     throw new Error(e.message)
   }
 }
+
+export async function GetChannelBySlug(channelSlug: string) {
+  try {
+    const channel = await db.query.channelsTable.findFirst({
+      where: eq(channelsTable.channel_slug, channelSlug),
+      with: {
+        spaces: true
+      }
+    })
+    return channel
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function GetChannelById(id: string) {
+  try {
+    const channel = await db.query.channelsTable.findFirst({
+      where: eq(channelsTable.id, id),
+      with: {
+        spaces: true
+      }
+    })
+    return channel
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}

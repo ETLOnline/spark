@@ -1,58 +1,83 @@
 "use client"
 
-import { ArrowLeft, Edit, MoreHorizontal, Users } from "lucide-react"
+import { Edit3, Settings, Trash2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/src/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/src/components/ui/dropdown-menu"
 import { useParams } from "next/navigation"
-import { useAtom, useAtomValue } from "jotai"
+import { useAtom, useSetAtom } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useEffect } from "react"
 import { channelStore } from "@/src/store/channel/channelStore"
 import CreateSpaceModal from "@/src/components/Dashboard/Spaces/CreateSpaceModal/CreateSpaceModal"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/src/components/ui/alert-dialog"
+import { SelectSpace } from "@/src/db/schema"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { DeleteSpaceAction } from "@/src/server-actions/Space/Space"
+import { GetChannelBySlugAction } from "@/src/server-actions/Channel/Channel"
+import Loader from "@/src/components/common/Loader/Loader"
+import { LoaderSizes } from "@/src/components/common/Loader/types/loader-types"
 
 export default function ChannelPage() {
   const [spaces, setSpaces] = useAtom(spaceStore.spaces)
   const [selectedChannel, setSelectedChannel] = useAtom(
     channelStore.selectedChannel
   )
-  const channels = useAtomValue(channelStore.channels)
+  const setSelecteSpace = useSetAtom(spaceStore.selectedSpace)
+  const setSpaceFormModelVisibility = useSetAtom(
+    spaceStore.spaceFormModelVisibility
+  )
 
-  const params = useParams()
+  const channelSlug = useParams().channel_slug
+
+  const [
+    addDeleteSpaceLoading,
+    addDeleteSpaceData,
+    addDeleteSpaceError,
+    deleteSpace
+  ] = useServerAction(DeleteSpaceAction)
+  const [channelLoading, channelData, channelError, getChannel] =
+    useServerAction(GetChannelBySlugAction)
 
   useEffect(() => {
-    const currChannel = channels.find(
-      (channel) => channel.channel_slug === (params.channel_slug as string)
-    )
-    if (currChannel) {
-      setSelectedChannel(currChannel)
+    const fetchChannel = async () => {
+      const slug = decodeURIComponent(channelSlug as string)
+      const res = await getChannel(slug)
+      if (res?.success && res.data) {
+        setSelectedChannel(res?.data)
+        setSpaces(res.data.spaces)
+        console.log(res.data.spaces)
+      }
     }
+    fetchChannel()
   }, [])
 
-  useEffect(() => {
-    if (selectedChannel && selectedChannel.spaces) {
-      setSpaces(selectedChannel?.spaces)
+  function handleEditSpace(space: SelectSpace) {
+    setSpaceFormModelVisibility(true)
+    setSelecteSpace(space)
+  }
+
+  async function handleDeleteSpace(selectedSpace: SelectSpace) {
+    const deletedSpace = await deleteSpace(selectedSpace)
+    if (deletedSpace?.success) {
+      setSpaces((spaces) =>
+        spaces.filter((spaces) => spaces.id !== selectedSpace?.id)
+      )
     }
-  }, [selectedChannel])
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 sm:px-6">
-        <Link href="/channels" className="mr-2">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
-            <span className="sr-only">Back to Dashboard</span>
-          </Button>
-        </Link>
-        <h1 className="text-lg font-semibold sm:text-xl">Channels</h1>
-      </header>
       <div className="relative h-40 sm:h-56 w-full">
         <Image
           src="/images/channels/channel_sample_image.jpg"
@@ -62,19 +87,9 @@ export default function ChannelPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
         <div className="absolute bottom-0 left-0 p-4 sm:p-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold">
             {selectedChannel?.channel_name}
           </h1>
-          <div className="flex items-center gap-2 mt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 bg-background/20 border-white/20 text-white hover:bg-background/30"
-            >
-              <Edit className="h-3.5 w-3.5 mr-1" />
-              Edit Channel
-            </Button>
-          </div>
         </div>
       </div>
       <main className="flex-1 p-4 sm:p-6">
@@ -83,76 +98,20 @@ export default function ChannelPage() {
             <h2 className="text-xl font-bold">
               Spaces in {selectedChannel?.channel_name}
             </h2>
-            <CreateSpaceModal />
+            <CreateSpaceModal space={spaces} setSpace={setSpaces} />
           </div>
-          {/* Desktop view */}
-          <div className="hidden sm:block">
-            <div className="rounded-lg border bg-card">
-              <div className="grid grid-cols-[1fr_100px_150px_120px_50px] gap-4 p-4 font-medium">
-                <div>Space</div>
-              </div>
-              {spaces.map((space) => (
-                <Link
-                  key={space.id}
-                  href={`./${params.channel_slug}/spaces/${space.space_slug}`}
-                >
-                  <div className="md:flex md:flex-wrap md:justify-between lg:grid lg:grid-cols-2 gap-4 items-center border-t p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="relative h-10 w-10 overflow-hidden rounded-lg">
-                        <Image
-                          src="/images/home/session-image2.jpg"
-                          alt={space.space_name}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="font-medium">{space.space_name}</div>
-                      <div className="text-sm text-muted-foreground line-clamp-1">
-                        {space.description}
-                      </div>
-                    </div>
-                    <div className="text-end">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Open menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Users className="mr-2 h-4 w-4" />
-                            Manage Members
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive">
-                            Delete Space
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+          {channelLoading ? (
+            <div className="flex justify-center h-full w-full">
+              <Loader size={LoaderSizes.xl} />{" "}
             </div>
-          </div>
-          {/* Mobile view */}
-          <div className="sm:hidden space-y-4">
-            {spaces.map((space) => (
-              <Link
-                key={space.id}
-                href={`./${params.channel_slug}/spaces/${space.space_slug}`}
-              >
-                <div className="rounded-lg border bg-card p-4">
-                  <div className="flex items-center justify-between">
+          ) : (
+            <div className="grid grid-cols-1 gap-6">
+              {spaces.map((space) => (
+                <div
+                  key={space.id}
+                  className="rounded-lg border bg-card p-4 flex flex-col sm:flex-row justify-between"
+                >
+                  <Link href={`./spaces/${space.space_slug}`}>
                     <div className="flex items-center gap-3">
                       <div className="relative h-10 w-10 overflow-hidden rounded-lg">
                         <Image
@@ -164,38 +123,50 @@ export default function ChannelPage() {
                       </div>
                       <div>
                         <div className="font-medium">{space.space_name}</div>
+                        <div className="text-sm text-muted-foreground line-clamp-1">
+                          {space.description}
+                        </div>
                       </div>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Open menu</span>
+                  </Link>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button size="sm" onClick={() => handleEditSpace(space)}>
+                      <Edit3 />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant={"destructive"}>
+                          <Trash2 />
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Users className="mr-2 h-4 w-4" />
-                          Manage Members
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
-                          Delete Space
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                  <div className="mt-4 text-sm text-muted-foreground">
-                    {space.description}
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action will permanently delete space.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteSpace(space)}
+                            loading={addDeleteSpaceLoading}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <Link href={`./spaces/${space.space_slug}/settings`}>
+                      <Button size="sm">
+                        <Settings />
+                      </Button>
+                    </Link>
                   </div>
                 </div>
-              </Link>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>
