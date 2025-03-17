@@ -4,19 +4,14 @@ import { useAtomValue } from "jotai"
 import { channelStore } from "@/src/store/channel/channelStore"
 import CreateChannels from "@/src/components/Dashboard/Channels/CreateChannels"
 import ChannelsCard from "@/src/components/Dashboard/Channels/ChannelsCard"
-import { useEffect } from "react"
 import { userStore } from "@/src/store/user/userStore"
-import { redirect } from "next/navigation"
+import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
 
 const ChannelsPage = () => {
   const channels = useAtomValue(channelStore.channels)
   const userRole = useAtomValue(userStore.AuthUser)?.role
 
-  useEffect(() => {
-    redirect("/")
-  }, [userRole])
-
-  return (
+  return userRole?.includes("admin") ? (
     <div className="flex-1 p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <h2 className="text-xl font-bold sm:text-2xl">Channels</h2>
@@ -28,6 +23,8 @@ const ChannelsPage = () => {
         })}
       </div>
     </div>
+  ) : (
+    <NotFound />
   )
 }
 

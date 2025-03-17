@@ -17,6 +17,8 @@ import { spaceStore } from "@/src/store/space/spaceStore"
 import { useEffect } from "react"
 import { channelStore } from "@/src/store/channel/channelStore"
 import CreateSpaceModal from "@/src/components/Dashboard/Spaces/CreateSpaceModal/CreateSpaceModal"
+import { userStore } from "@/src/store/user/userStore"
+import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
 
 export default function ChannelPage() {
   const [spaces, setSpaces] = useAtom(spaceStore.spaces)
@@ -24,6 +26,7 @@ export default function ChannelPage() {
     channelStore.selectedChannel
   )
   const channels = useAtomValue(channelStore.channels)
+  const userRole = useAtomValue(userStore.AuthUser)?.role
 
   const params = useParams()
 
@@ -42,7 +45,7 @@ export default function ChannelPage() {
     }
   }, [selectedChannel])
 
-  return (
+  return userRole?.includes("admin") ? (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 sm:px-6">
         <Link href="/channels" className="mr-2">
@@ -199,5 +202,7 @@ export default function ChannelPage() {
         </div>
       </main>
     </div>
+  ) : (
+    <NotFound />
   )
 }

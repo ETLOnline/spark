@@ -15,19 +15,22 @@ import {
 import { SignedIn } from "@clerk/nextjs"
 import Image from "next/image"
 import Link from "next/link"
-import { useAtom, useSetAtom } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { navStore } from "@/src/store/nav/navStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetChannelsAction } from "@/src/server-actions/Channel/Channel"
 import { useEffect } from "react"
 import { Hash } from "lucide-react"
 import { channelStore } from "@/src/store/channel/channelStore"
+import { userStore } from "@/src/store/user/userStore"
+import { NavItem, SiteRoutes } from "./nav-types"
 
 export default function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const [routes, setRoutes] = useAtom(navStore.routes)
   const setChannels = useSetAtom(channelStore.channels)
+  const userRole = useAtomValue(userStore.AuthUser)?.role
 
   const [channelsLoading, channelsData, channelsError, getChannels] =
     useServerAction(GetChannelsAction)
@@ -38,7 +41,7 @@ export default function AppSidebar({
       if (channels) {
         setChannels(channels)
         setRoutes((routes) => {
-          return {
+          let tempRoutes = {
             ...routes,
             navChannels: channels.map((channel) => ({
               title: channel.channel_name,
@@ -50,8 +53,17 @@ export default function AppSidebar({
                     url: `/channels/${channel.channel_slug}/spaces/${space.space_slug}`
                   }))
                 : []
-            }))
+            })) as NavItem[]
+          } as SiteRoutes
+          if (!userRole?.includes("admin")) {
+            if ("navMain" in tempRoutes) {
+              tempRoutes = {
+                ...routes,
+                navMain: (tempRoutes.navMain as NavItem[]).filter((route) => route.title !== "Channels")
+              }
+            }
           }
+          return tempRoutes
         })
       }
     })()
