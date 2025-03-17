@@ -4,9 +4,17 @@ import { useAtomValue } from "jotai"
 import { channelStore } from "@/src/store/channel/channelStore"
 import CreateChannels from "@/src/components/Dashboard/Channels/CreateChannels"
 import ChannelsCard from "@/src/components/Dashboard/Channels/ChannelsCard"
+import { useEffect } from "react"
+import { userStore } from "@/src/store/user/userStore"
+import { redirect } from "next/navigation"
 
 const ChannelsPage = () => {
   const channels = useAtomValue(channelStore.channels)
+  const userRole = useAtomValue(userStore.AuthUser)?.role
+
+  useEffect(() => {
+    redirect("/")
+  }, [userRole])
 
   return (
     <div className="flex-1 p-4 sm:p-6">
