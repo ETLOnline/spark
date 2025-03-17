@@ -20,7 +20,6 @@ import { InsertChannel, SelectChannel } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateChannelAction,
-  DeleteChannelAction,
   IsSlugAvailableAction,
   UpdateChannelAction
 } from "@/src/server-actions/Channel/Channel"
@@ -40,16 +39,6 @@ import { CircleCheck, CircleXIcon, Hash, CirclePlus } from "lucide-react"
 import { navStore } from "@/src/store/nav/navStore"
 import Loader from "../../common/Loader/Loader"
 import { LoaderSizes } from "../../common/Loader/types/loader-types"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger
-} from "../../ui/alert-dialog"
 import { Switch } from "../../ui/switch"
 
 const channelSchema = z.object({
@@ -129,8 +118,7 @@ function CreateChannels() {
         channel_name: "",
         channel_slug: "",
         description: "",
-        channel_type: "",
-        publish_channel: false
+        channel_type: ""
       })
       // Clear any errors
       form.clearErrors()
@@ -146,6 +134,11 @@ function CreateChannels() {
       form.setValue("channel_name", selectedChannel.channel_name)
       form.setValue("description", selectedChannel.description as string)
       form.setValue("channel_type", selectedChannel.channel_type as string)
+      if (selectedChannel.publish_channel === 1) {
+        form.setValue("publish_channel", true)
+      } else {
+        form.setValue("publish_channel", false)
+      }
     }
   }, [selectedChannel])
 
@@ -170,6 +163,11 @@ function CreateChannels() {
       handleCreateChannel(data)
     }
     if (selectedChannel) {
+      if (data.publish_channel === true) {
+        data.publish_channel = 1
+      } else {
+        data.publish_channel = 0
+      }
       handleUpdateChannel(data)
     }
   }
@@ -187,7 +185,7 @@ function CreateChannels() {
 
       const createdChannel = await CreateChannel(payLoad as InsertChannel)
       if (createdChannel?.success && createdChannel?.data) {
-        // setChannels([...channels, ...createdChannel.data])
+        setChannels([...channels, ...createdChannel.data])
         setRoutes((routes) => ({
           ...routes,
           navChannels: [
