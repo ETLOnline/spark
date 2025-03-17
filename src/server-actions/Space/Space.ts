@@ -3,7 +3,8 @@
 import {
   CreateSpace,
   GetSpaces,
-  IsSlugAvailable
+  IsSlugAvailable,
+  GetSpaceIdBySlug
 } from "@/src/db/data-access/spaces/query"
 import { CreateServerAction } from ".."
 import { InsertSpace } from "@/src/db/schema"
@@ -40,6 +41,18 @@ export const IsSlugAvailableAction = CreateServerAction(
     try {
       const isAvailable = await IsSlugAvailable(slug, channelId)
       return { success: true, data: isAvailable }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetSpaceIdBySlugAction = CreateServerAction(
+  true,
+  async (slug: string, channelId: string) => {
+    try {
+      const spaceId = await GetSpaceIdBySlug(slug, channelId)
+      return { success: true, data: spaceId }
     } catch (error) {
       return { error: error }
     }

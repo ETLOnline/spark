@@ -14,7 +14,7 @@ import {
   CardHeader
 } from "@/src/components/ui/card"
 import { Label } from "@/src/components/ui/label"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Select,
   SelectContent,
@@ -47,6 +47,7 @@ import useHashtags from "./profile/hooks/useHashtags"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useParams } from "next/navigation"
 import { categories } from "@/src/utils/constants"
+import { GetChannelIdBySlugAction } from "@/src/server-actions/Channel/Channel"
 
 type Props = {
   variant?: "posts" | "spaces"
@@ -97,6 +98,12 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     linkHashtagsToPostError,
     linkHashtagsToPost
   ] = useServerAction(LinkHashtagsToPostAction)
+  const [channelIdLoading, channelIdData, channelIdError, getChannelId] =
+    useServerAction(GetChannelIdBySlugAction)
+
+  useEffect(() => {
+    getChannelId(spaceSlug as string)
+  }, [])
 
   const handleCreatePost = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -112,7 +119,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 newPost.type,
                 newPost.category,
                 "space",
-                spaceSlug as string
+                channelIdData?.data as string
               )
             : await createPost(newPost.content as string, newPost.type)
         if (post && post.data && post.data[0]) {
@@ -163,7 +170,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 pollOptions,
                 activeCategory,
                 "space",
-                spaceSlug as string
+                channelIdData?.data as string
               )
             : await createPollPost(
                 newPost.content as string,
@@ -232,7 +239,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 newPost.content,
                 activeCategory,
                 "space",
-                spaceSlug as string
+                channelIdData?.data as string
               )
             : await createFilePost(
                 newPost.type,

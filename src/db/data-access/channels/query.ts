@@ -68,3 +68,20 @@ export async function IsSlugAvailable(slug: string): Promise<boolean> {
     throw new Error(e.message)
   }
 }
+
+export async function GetChannelIdBySlug(slug: string) {
+  try {
+    const channel = await db
+      .select({ id: channelsTable.id })
+      .from(channelsTable)
+      .where(eq(channelsTable.channel_slug, slug))
+      .limit(1)
+
+    if (!channel.length) {
+      throw new Error("Channel not found")
+    }
+    return channel[0].id
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}

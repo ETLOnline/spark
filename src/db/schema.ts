@@ -404,7 +404,6 @@ export const postsTable = sqliteTable("posts", {
     .$defaultFn(() => randomUUID()),
   content: text(),
   user_id: text().notNull(),
-  is_private: int().notNull().default(0),
   type: text().notNull(),
   entity_id: text(),
   entity_type: text(),
@@ -436,6 +435,11 @@ export const postsRelations = relations(postsTable, ({ one, many }) => ({
     fields: [postsTable.id],
     references: [postFilesTable.post_id],
     relationName: "postToFile"
+  }),
+  post: one(spacesTable, {
+    fields: [postsTable.entity_id],
+    references: [spacesTable.id],
+    relationName: "spaceToPosts"
   })
 }))
 
@@ -663,7 +667,7 @@ export const spacesTable = sqliteTable("spaces", {
   ...timestamps
 })
 
-export const spacesRelations = relations(spacesTable, ({ one }) => ({
+export const spacesRelations = relations(spacesTable, ({ one, many }) => ({
   channel: one(channelsTable, {
     fields: [spacesTable.channel_id],
     references: [channelsTable.id],
@@ -673,7 +677,8 @@ export const spacesRelations = relations(spacesTable, ({ one }) => ({
     fields: [spacesTable.ownerId],
     references: [usersTable.unique_id],
     relationName: "spaceToOwner"
-  })
+  }),
+  posts: many(postsTable, { relationName: "spaceToPosts" })
 }))
 
 export type InsertSpace = typeof spacesTable.$inferInsert

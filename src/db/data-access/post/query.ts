@@ -129,7 +129,6 @@ export const VotePoll = async (vote: InsertPollVote, voteCount: number) => {
 export const GetPosts = async (filters: PostQueryFilters = {}) => {
   try {
     const {
-      isPrivate = false,
       userIds = [],
       limit = 10,
       offset = 0,
@@ -139,7 +138,6 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
       category = ""
     } = filters
     const where = []
-    where.push(eq(postsTable.is_private, isPrivate ? 1 : 0))
     if (userIds.length) {
       where.push(inArray(postsTable.user_id, userIds))
     }
