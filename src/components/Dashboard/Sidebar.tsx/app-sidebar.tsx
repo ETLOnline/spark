@@ -15,10 +15,9 @@ import {
 import { SignedIn } from "@clerk/nextjs"
 import Image from "next/image"
 import Link from "next/link"
-import { useAtom, useAtomValue } from "jotai"
+import { useAtomValue } from "jotai"
 import { navStore } from "@/src/store/nav/navStore"
 import useSideBarHook from "./hooks/useSideBarHook"
-
 
 export default function AppSidebar({
   ...props

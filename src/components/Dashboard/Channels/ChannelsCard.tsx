@@ -9,7 +9,17 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import Link from "next/link"
 import { channelStore } from "@/src/store/channel/channelStore"
 import { Edit, Trash2 } from "lucide-react"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../../ui/alert-dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "../../ui/alert-dialog"
 import { DeleteChannelAction } from "@/src/server-actions/Channel/Channel"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import Loader from "../../common/Loader/Loader"
@@ -43,7 +53,6 @@ function ChannelsCard({ channel }: channelProps) {
     setChannelFormModelVisibility(true)
   }
 
-
   async function handleDeleteChannel() {
     const deletedChannel = await DeleteChannel(selectedChannel as SelectChannel)
     if (deletedChannel?.success) {
@@ -60,8 +69,14 @@ function ChannelsCard({ channel }: channelProps) {
 
   return (
     <div className="w-full h-full mt-2">
-      <Link href={`/channels/${channel.channel_slug}/spaces`} onClick={() => setSelectedChannel(channel)}>
-        <Card key={channel.id} className="overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-300">
+      <Link
+        href={`/channels/${channel.channel_slug}/spaces`}
+        onClick={() => setSelectedChannel(channel)}
+      >
+        <Card
+          key={channel.id}
+          className="overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-300"
+        >
           <div className="relative h-40 sm:h-48 w-full">
             <Image
               src="/images/channels/channel_sample_image.jpg"
@@ -76,13 +91,14 @@ function ChannelsCard({ channel }: channelProps) {
                 <h3 className="text-base font-semibold sm:text-lg">
                   {channel.channel_name}
                 </h3>
+                <Badge>{channel.channel_type}</Badge>
               </div>
               {channel.created_by === authUser?.unique_id && (
                 <div className="flex items-center gap-1">
                   <Button
                     onClick={(e) => {
-                      e.preventDefault();
-                      editChannal(channel);
+                      e.preventDefault()
+                      editChannal(channel)
                     }}
                     variant={"ghost"}
                     size={"sm"}
@@ -95,26 +111,34 @@ function ChannelsCard({ channel }: channelProps) {
                         variant={"ghost"}
                         size={"sm"}
                         onClick={(e) => {
-                          e.preventDefault();
-                          setIsOpen(true);
+                          e.preventDefault()
+                          setIsOpen(true)
                         }}
                       >
-                        {addDeleteChannelLoading ? <Loader /> : <Trash2 className="w-4 h-4" />}
+                        {addDeleteChannelLoading ? (
+                          <Loader />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This action will permanently delete the channel and the spaces that exist in this channel. This action cannot be undone.
+                          This action will permanently delete the channel and
+                          the spaces that exist in this channel. This action
+                          cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
+                          Cancel
+                        </AlertDialogCancel>
                         <AlertDialogAction
                           onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteChannel();
+                            e.stopPropagation()
+                            handleDeleteChannel()
                           }}
                           loading={addDeleteChannelLoading}
                         >

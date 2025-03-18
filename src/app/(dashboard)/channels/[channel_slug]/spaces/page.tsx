@@ -133,7 +133,7 @@ export default function ChannelPage() {
                           />
                         </div>
                       </Link>
-                      <div className="flex justify-end ">
+                      <div className="flex justify-end">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -175,48 +175,6 @@ export default function ChannelPage() {
                           </AlertDialogContent>
                         </AlertDialog>
                       </div>
-                    </div>
-                    <div className="flex justify-end gap-2 mt-4">
-                      <Button
-                        size="sm"
-                        onClick={() => handleEditSpace(space)}
-                        variant={"outline"}
-                      >
-                        <Edit3 />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant={"outline"}>
-                            {addDeleteSpaceLoading ? (
-                              <Loader />
-                            ) : (
-                              <Trash2 className="" />
-                            )}
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action will permanently delete space.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteSpace(space)}
-                              loading={addDeleteSpaceLoading}
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                      <Link href={`./spaces/${space.space_slug}/settings`}>
-                        <Button size="sm" variant={"outline"}>
-                          <Settings />
-                        </Button>
-                      </Link>
                     </div>
                     <Link href={`./spaces/${space.space_slug}`}>
                       <div>
