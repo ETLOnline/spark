@@ -1,26 +1,13 @@
 "use client"
 
-import { Edit3, Settings, Trash2 } from "lucide-react"
+
 import Image from "next/image"
-import Link from "next/link"
-import { Button } from "@/src/components/ui/button"
 import { useParams } from "next/navigation"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useEffect } from "react"
 import { channelStore } from "@/src/store/channel/channelStore"
 import CreateSpaceModal from "@/src/components/Dashboard/Spaces/CreateSpaceModal/CreateSpaceModal"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger
-} from "@/src/components/ui/alert-dialog"
 import { SelectSpace } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { DeleteSpaceAction } from "@/src/server-actions/Space/Space"
@@ -30,34 +17,21 @@ import { LoaderSizes } from "@/src/components/common/Loader/types/loader-types"
 import { toast } from "@/src/hooks/use-toast"
 import { userStore } from "@/src/store/user/userStore"
 import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/src/components/ui/card"
+import SpacesCards from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/SpacesCards"
 
 export default function ChannelPage() {
   const [spaces, setSpaces] = useAtom(spaceStore.spaces)
   const [selectedChannel, setSelectedChannel] = useAtom(
     channelStore.selectedChannel
   )
-  const setSelecteSpace = useSetAtom(spaceStore.selectedSpace)
-  const setSpaceFormModelVisibility = useSetAtom(
-    spaceStore.spaceFormModelVisibility
-  )
+
   const userRole = useAtomValue(userStore.AuthUser)?.role
   const channelSlug = useParams().channel_slug
 
-  const [
-    addDeleteSpaceLoading,
-    addDeleteSpaceData,
-    addDeleteSpaceError,
-    deleteSpace
-  ] = useServerAction(DeleteSpaceAction)
   const [channelLoading, channelData, channelError, getChannel] =
     useServerAction(GetChannelBySlugAction)
+  const [addDeleteSpaceLoading, deleteSpaceData, deleteSpaceError, deleteSpace] =
+    useServerAction(DeleteSpaceAction)
 
   useEffect(() => {
     const fetchChannel = async () => {
@@ -70,24 +44,6 @@ export default function ChannelPage() {
     }
     fetchChannel()
   }, [])
-
-  function handleEditSpace(space: SelectSpace) {
-    setSpaceFormModelVisibility(true)
-    setSelecteSpace(space)
-  }
-
-  async function handleDeleteSpace(selectedSpace: SelectSpace) {
-    const deletedSpace = await deleteSpace(selectedSpace)
-    if (deletedSpace?.success) {
-      setSpaces((spaces) =>
-        spaces.filter((spaces) => spaces.id !== selectedSpace?.id)
-      )
-      toast({
-        title: "Space deleted successfully.",
-        duration: 3000
-      })
-    }
-  }
 
   return userRole?.includes("admin") ? (
     <div className="flex min-h-screen flex-col">
@@ -120,81 +76,7 @@ export default function ChannelPage() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3  gap-4 sm:gap-6">
               {spaces.map((space) => (
-                <Card key={space.id}>
-                  <CardHeader>
-                    <div className="flex justify-between">
-                      <Link href={`./spaces/${space.space_slug}`}>
-                        <div className="relative h-12 w-12 overflow-hidden rounded-md">
-                          <Image
-                            src="/images/home/session-image2.jpg"
-                            alt={space.space_name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                      </Link>
-                      <div className="flex justify-end">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEditSpace(space)}
-                        >
-                          <Edit3 />
-                        </Button>
-                        <Link href={`./spaces/${space.space_slug}/settings`}>
-                          <Button variant="ghost" size="icon">
-                            <Settings />
-                          </Button>
-                        </Link>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                            >
-                              <Trash2 />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action will permanently delete space.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDeleteSpace(space)}
-                                loading={addDeleteSpaceLoading}
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </div>
-                    <Link href={`./spaces/${space.space_slug}`}>
-                      <div>
-                        <CardTitle className="text-xl">
-                          {space.space_name}
-                        </CardTitle>
-                        <CardDescription className="text-sm text-muted-foreground">
-                          {0} members
-                        </CardDescription>
-                      </div>
-                    </Link>
-                  </CardHeader>
-                  <Link href={`./spaces/${space.space_slug}`}>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">
-                        {space.description}
-                      </p>
-                    </CardContent>
-                  </Link>
-                </Card>
+                <SpacesCards space={space} key={space.id} />
               ))}
             </div>
           )}
