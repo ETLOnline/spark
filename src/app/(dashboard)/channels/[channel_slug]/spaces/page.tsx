@@ -5,7 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/src/components/ui/button"
 import { useParams } from "next/navigation"
-import { useAtom, useSetAtom } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useEffect } from "react"
 import { channelStore } from "@/src/store/channel/channelStore"
@@ -27,6 +27,8 @@ import { DeleteSpaceAction } from "@/src/server-actions/Space/Space"
 import { GetChannelBySlugAction } from "@/src/server-actions/Channel/Channel"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/Loader/types/loader-types"
+import { userStore } from "@/src/store/user/userStore"
+import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
 
 export default function ChannelPage() {
   const [spaces, setSpaces] = useAtom(spaceStore.spaces)
@@ -37,6 +39,7 @@ export default function ChannelPage() {
   const setSpaceFormModelVisibility = useSetAtom(
     spaceStore.spaceFormModelVisibility
   )
+  const userRole = useAtomValue(userStore.AuthUser)?.role
 
   const channelSlug = useParams().channel_slug
 
@@ -56,7 +59,6 @@ export default function ChannelPage() {
       if (res?.success && res.data) {
         setSelectedChannel(res?.data)
         setSpaces(res.data.spaces)
-        console.log(res.data.spaces)
       }
     }
     fetchChannel()
@@ -76,7 +78,7 @@ export default function ChannelPage() {
     }
   }
 
-  return (
+  return userRole?.includes("admin") ? (
     <div className="flex min-h-screen flex-col">
       <div className="relative h-40 sm:h-56 w-full">
         <Image
@@ -170,5 +172,7 @@ export default function ChannelPage() {
         </div>
       </main>
     </div>
+  ) : (
+    <NotFound />
   )
 }

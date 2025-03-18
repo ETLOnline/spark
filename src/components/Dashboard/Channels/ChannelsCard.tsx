@@ -9,6 +9,7 @@ import { useSetAtom } from "jotai"
 import Link from "next/link"
 import { channelStore } from "@/src/store/channel/channelStore"
 import { Edit } from "lucide-react"
+import { Badge } from "../../ui/badge"
 
 interface channelProps {
   channel: SelectChannel
@@ -27,7 +28,10 @@ function ChannelsCard({ channel }: channelProps) {
 
   return (
     <div className=" w-full h-full  mt-2">
-      <Link href={`/channels/${channel.channel_slug}/spaces`} onClick={() => setSelectedChannel(channel)}>
+      <Link
+        href={`/channels/${channel.channel_slug}/spaces`}
+        onClick={() => setSelectedChannel(channel)}
+      >
         <Card key={channel.id} className="overflow-hidden flex flex-col">
           <div className="relative h-40 sm:h-48 w-full">
             <Image
@@ -39,18 +43,24 @@ function ChannelsCard({ channel }: channelProps) {
           </div>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold sm:text-lg">
-                {channel.channel_name}
-              </h3>
-              <Button onClick={(e) => {
-                e.preventDefault()
-                editChannal(channel)
-              }} variant={"ghost"}>
+              <div className="flex items-center gap-x-2">
+                <h3 className="text-base font-semibold sm:text-lg">
+                  {channel.channel_name}
+                </h3>
+                <Badge>{channel.channel_type}</Badge>
+              </div>
+              <Button
+                onClick={(e) => {
+                  e.preventDefault()
+                  editChannal(channel)
+                }}
+                variant={"ghost"}
+              >
                 <Edit />
               </Button>
             </div>
           </CardHeader>
-          <CardContent >
+          <CardContent>
             <p className="text-sm text-muted-foreground sm:text-base line-clamp-3">
               {channel.description}
             </p>
