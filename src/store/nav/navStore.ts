@@ -2,7 +2,6 @@ import { SiteRoutes } from "@/src/components/Dashboard/nav-types"
 import { atom } from "jotai"
 import {
   Beaker,
-  BetweenHorizontalStart,
   Boxes,
   Calendar,
   LayoutDashboard,
