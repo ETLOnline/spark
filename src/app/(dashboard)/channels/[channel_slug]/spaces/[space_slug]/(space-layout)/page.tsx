@@ -53,7 +53,7 @@ const SpacesPage: React.FC = () => {
   }, [activeCategory, spaceIdData])
 
   return (
-    <div className="container mx-auto space-y-8">
+    <div className="container mx-auto p-4 space-y-8 max-w-3xl">
       <CreatePostForm variant="spaces" />
       <Card>
         <CardHeader>
