@@ -16,6 +16,8 @@ import { spaceStore } from "@/src/store/space/spaceStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetSpacePostsAction } from "@/src/server-actions/Post/Post"
 import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
+import { GetSpaceIdBySlugAction } from "@/src/server-actions/Space/Space"
+import { channelStore } from "@/src/store/channel/channelStore"
 
 const SpacesPage: React.FC = () => {
   const params = useParams()
@@ -23,18 +25,27 @@ const SpacesPage: React.FC = () => {
   const spaceSlug = params.space_slug
 
   const activeCategory = useAtomValue(spaceStore.activeCategory)
+  const currChannel = useAtomValue(channelStore.selectedChannel)
 
   const [postsLoading, posts, postsError, getPosts] =
     useServerAction(GetSpacePostsAction)
+  const [spaceIdLoading, spaceIdData, spaceIdError, getSpaceId] =
+    useServerAction(GetSpaceIdBySlugAction)
 
   useEffect(() => {
-    if (spaceSlug) {
+    if (currChannel) {
+      getSpaceId(spaceSlug as string, currChannel.id)
+    }
+  }, [currChannel])
+
+  useEffect(() => {
+    if (spaceIdData) {
       getPosts(
-        spaceSlug as string,
+        spaceIdData?.data as string,
         activeCategory === "All" ? "" : activeCategory
       )
     }
-  }, [activeCategory])
+  }, [activeCategory, spaceIdData])
 
   return (
     <div className="container mx-auto space-y-8">

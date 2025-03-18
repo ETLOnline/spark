@@ -59,7 +59,6 @@ export default function ChannelPage() {
       if (res?.success && res.data) {
         setSelectedChannel(res?.data)
         setSpaces(res.data.spaces)
-        console.log(res.data.spaces)
       }
     }
     fetchChannel()

@@ -227,7 +227,7 @@ export const VotePollAction = CreateServerAction(
   }
 )
 
-export const GetPublicPostsAction = CreateServerAction(true, async () => {
+export const GetPostsAction = CreateServerAction(true, async () => {
   try {
     const posts = await GetPosts()
     const sanitizedPosts = posts.map((post) => ({

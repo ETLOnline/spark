@@ -43,7 +43,10 @@ export async function IsSlugAvailable(
   }
 }
 
-export async function UpdateSpace( spaceID: string, updatedSpaceData: Partial<SelectSpace>) {
+export async function UpdateSpace(
+  spaceID: string,
+  updatedSpaceData: Partial<SelectSpace>
+) {
   try {
     const UpdateSpace = await db
       .update(spacesTable)
@@ -58,9 +61,38 @@ export async function UpdateSpace( spaceID: string, updatedSpaceData: Partial<Se
 
 export async function DeleteSpace(deletedSpaceData: SelectSpace) {
   try {
-    const deletedSpace = await db.delete(spacesTable)
+    const deletedSpace = await db
+      .delete(spacesTable)
       .where(eq(spacesTable.id, deletedSpaceData.id))
-      return deletedSpaceData
+    return deletedSpaceData
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function GetSpaceIdBySlug(slug: string, channelId: string) {
+  try {
+    const space = await db
+
+      .select({ id: spacesTable.id })
+
+      .from(spacesTable)
+
+      .where(
+        and(
+          eq(spacesTable.space_slug, slug),
+
+          eq(spacesTable.channel_id, channelId)
+        )
+      )
+
+      .limit(1)
+
+    if (!space.length) {
+      throw new Error("Space not found")
+    }
+
+    return space[0].id
   } catch (e: any) {
     throw new Error(e.message)
   }
