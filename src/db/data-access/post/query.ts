@@ -12,9 +12,11 @@ import {
   tagsTable,
   postHashtagsTable,
   SelectTag,
-  postFilesTable
+  postFilesTable,
+  spacesTable,
+  channelsTable
 } from "../../schema"
-import { eq, and, desc, inArray } from "drizzle-orm"
+import { eq, and, desc, inArray, sql, or, isNull, SQL } from "drizzle-orm"
 import { like } from "drizzle-orm"
 import { Tag } from "@/src/components/TagsInput/tags-input-types"
 
@@ -129,7 +131,6 @@ export const VotePoll = async (vote: InsertPollVote, voteCount: number) => {
 export const GetPosts = async (filters: PostQueryFilters = {}) => {
   try {
     const {
-      isPrivate = false,
       userIds = [],
       limit = 10,
       offset = 0,
@@ -138,33 +139,39 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
       entityId = "",
       category = ""
     } = filters
-    const where = []
-    where.push(eq(postsTable.is_private, isPrivate ? 1 : 0))
-    if (userIds.length) {
-      where.push(inArray(postsTable.user_id, userIds))
-    }
+    const whereClauses = [
+      ...(userIds.length ? [inArray(postsTable.user_id, userIds)] : []),
+      ...(category ? [eq(postsTable.category, category)] : [])
+    ]
+
     if (entityId) {
-      where.push(eq(postsTable.entity_id, entityId))
+      whereClauses.push(eq(postsTable.entity_id, entityId))
+    } else {
+      // If entity_id is not provided, get public space ids.
+      const publicSpaces = await db
+        .select({ id: spacesTable.id })
+        .from(spacesTable)
+        .innerJoin(channelsTable, eq(spacesTable.channel_id, channelsTable.id))
+        .where(eq(channelsTable.channel_type, "public"))
+      const publicSpaceIds = publicSpaces.map((space) => space.id)
+
+      // Fetch posts that either have a NULL entity_id or whose entity_id is in the publicSpaces list
+      whereClauses.push(
+        or(
+          isNull(postsTable.entity_id),
+          inArray(postsTable.entity_id, publicSpaceIds)
+        ) as SQL<unknown>
+      )
     }
-    if (category) {
-      where.push(eq(postsTable.category, category))
-    }
-    const query = db.query.postsTable.findMany({
+
+    return await db.query.postsTable.findMany({
       limit,
       offset,
-      where: where.length > 0 ? and(...where) : undefined,
+      where: whereClauses.length ? and(...whereClauses) : undefined,
       with: {
         author: true,
-        postComments: {
-          with: {
-            commentor: true
-          }
-        },
-        hashtags: {
-          with: {
-            hashtag: true
-          }
-        },
+        postComments: { with: { commentor: true } },
+        hashtags: { with: { hashtag: true } },
         options: { with: { votes: true } },
         file: { with: { postFile: true } },
         postLikes: true
@@ -174,7 +181,6 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
           ? [desc(postsTable[orderBy])]
           : [postsTable[orderBy]]
     })
-    return await query
   } catch (error: any) {
     throw new Error(error)
   }

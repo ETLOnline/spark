@@ -16,28 +16,44 @@ import { spaceStore } from "@/src/store/space/spaceStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetSpacePostsAction } from "@/src/server-actions/Post/Post"
 import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
+import { GetSpaceIdBySlugAction } from "@/src/server-actions/Space/Space"
+import { GetChannelIdBySlugAction } from "@/src/server-actions/Channel/Channel"
 
 const SpacesPage: React.FC = () => {
   const params = useParams()
 
   const spaceSlug = params.space_slug
+  const channelSlug = params.channel_slug
 
   const activeCategory = useAtomValue(spaceStore.activeCategory)
 
   const [postsLoading, posts, postsError, getPosts] =
     useServerAction(GetSpacePostsAction)
+  const [spaceIdLoading, spaceIdData, spaceIdError, getSpaceId] =
+    useServerAction(GetSpaceIdBySlugAction)
+  const [channelIdLoading, channelIdData, channelIdError, getChannelId] =
+    useServerAction(GetChannelIdBySlugAction)
 
   useEffect(() => {
-    if (spaceSlug) {
+    ;(async () => {
+      const channelId = (await getChannelId(channelSlug as string))?.data
+      if (channelId) {
+        getSpaceId(spaceSlug as string, channelId)
+      }
+    })()
+  }, [])
+
+  useEffect(() => {
+    if (spaceIdData) {
       getPosts(
-        spaceSlug as string,
+        spaceIdData?.data as string,
         activeCategory === "All" ? "" : activeCategory
       )
     }
-  }, [activeCategory])
+  }, [activeCategory, spaceIdData])
 
   return (
-    <div className="container mx-auto space-y-8">
+    <div className="container mx-auto p-4 space-y-8 max-w-3xl">
       <CreatePostForm variant="spaces" />
       <Card>
         <CardHeader>

@@ -3,12 +3,13 @@
 import {
   CreateChannel,
   DeleteChannel,
-  GetPublicChannels,
+  GetChannels,
   UpdateChannel,
   IsSlugAvailable,
   GetPublicChannelPaths,
   GetChannelBySlug,
-  GetChannelById
+  GetChannelById,
+  GetChannelIdBySlug
 } from "@/src/db/data-access/channels/query"
 import { CreateServerAction } from ".."
 import { InsertChannel, SelectChannel } from "@/src/db/schema"
@@ -32,7 +33,7 @@ export const CreateChannelAction = CreateServerAction(
 
 export const GetChannelsAction = CreateServerAction(true, async () => {
   try {
-    const channels = await GetPublicChannels()
+    const channels = await GetChannels()
     return { success: true, data: channels }
   } catch (error) {
     return { error: error }
@@ -102,6 +103,18 @@ export const GetChannelByIdAction = CreateServerAction(
     try {
       const channel = await GetChannelById(id)
       return { success: true, data: channel }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetChannelIdBySlugAction = CreateServerAction(
+  true,
+  async (slug: string) => {
+    try {
+      const channelId = await GetChannelIdBySlug(slug)
+      return { success: true, data: channelId }
     } catch (error) {
       return { error: error }
     }

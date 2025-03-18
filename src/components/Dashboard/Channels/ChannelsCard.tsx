@@ -15,6 +15,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import Loader from "../../common/Loader/Loader"
 import { toast } from "@/src/hooks/use-toast"
 import { userStore } from "@/src/store/user/userStore"
+import { Badge } from "../../ui/badge"
 
 interface channelProps {
   channel: SelectChannel

@@ -3,6 +3,7 @@
 import {
   CreateSpace,
   DeleteSpace,
+  GetSpaceIdBySlug,
   GetSpaces,
   IsSlugAvailable,
   UpdateSpace
@@ -71,6 +72,19 @@ export const DeleteSpaceAction = CreateServerAction(
     try {
       await DeleteSpace(deleteSpaceData)
       return { success: true }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetSpaceIdBySlugAction = CreateServerAction(
+  true,
+  async (slug: string, channelId: string) => {
+    try {
+      const spaceId = await GetSpaceIdBySlug(slug, channelId)
+
+      return { success: true, data: spaceId }
     } catch (error) {
       return { error: error }
     }
