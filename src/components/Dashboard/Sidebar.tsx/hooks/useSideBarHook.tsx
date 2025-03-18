@@ -9,9 +9,9 @@ import { channelStore } from "@/src/store/channel/channelStore"
 import { navStore } from "@/src/store/nav/navStore"
 import { joinChannelsAndSpacesChannel } from "@/src/utils/helpers"
 import { useAtom } from "jotai"
-import React, { useEffect } from "react"
+import { useEffect } from "react"
 import { getChannelsNavMapped } from "../utils/helpers"
-import { NavItem, SiteRoutes } from "../../nav-types"
+import { NavItem } from "../../nav-types"
 
 const useSideBarHook = () => {
   const [routes, setRoutes] = useAtom(navStore.routes)
@@ -97,10 +97,6 @@ const useSideBarHook = () => {
           }
           return tempRoutes
         })
-
-        if (channels) {
-          setChannels([...channels])
-        }
       })()
     }
   }, [userData?.role])
