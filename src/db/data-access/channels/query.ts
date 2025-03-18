@@ -14,10 +14,9 @@ export async function CreateChannel(channelData: InsertChannel) {
   }
 }
 
-export async function GetPublicChannels() {
+export async function GetChannels() {
   try {
     const channels = await db.query.channelsTable.findMany({
-      where: eq(channelsTable.channel_type, "public"),
       with: {
         spaces: true
       }

@@ -5,7 +5,7 @@ import { channelStore } from "@/src/store/channel/channelStore"
 import CreateChannels from "@/src/components/Dashboard/Channels/CreateChannels"
 import ChannelsCard from "@/src/components/Dashboard/Channels/ChannelsCard"
 
-const ChannelsPage = () => {
+const ChannelsPage: React.FC = () => {
   const channels = useAtomValue(channelStore.channels)
 
   return (

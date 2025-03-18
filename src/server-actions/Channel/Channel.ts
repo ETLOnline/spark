@@ -3,7 +3,7 @@
 import {
   CreateChannel,
   DeleteChannel,
-  GetPublicChannels,
+  GetChannels,
   UpdateChannel,
   IsSlugAvailable,
   GetPublicChannelPaths,
@@ -32,7 +32,7 @@ export const CreateChannelAction = CreateServerAction(
 
 export const GetChannelsAction = CreateServerAction(true, async () => {
   try {
-    const channels = await GetPublicChannels()
+    const channels = await GetChannels()
     return { success: true, data: channels }
   } catch (error) {
     return { error: error }
