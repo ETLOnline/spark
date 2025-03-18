@@ -71,7 +71,6 @@ export default function ChannelPage() {
 
   async function handleDeleteSpace(selectedSpace: SelectSpace) {
     const deletedSpace = await deleteSpace(selectedSpace)
-    console.log(selectedSpace)
     if (deletedSpace?.success) {
       setSpaces((spaces) =>
         spaces.filter((spaces) => spaces.id !== selectedSpace?.id)
