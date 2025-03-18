@@ -15,7 +15,7 @@ import {
 import { SignedIn } from "@clerk/nextjs"
 import Image from "next/image"
 import Link from "next/link"
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { navStore } from "@/src/store/nav/navStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
@@ -28,12 +28,15 @@ import { Hash } from "lucide-react"
 import { channelStore } from "@/src/store/channel/channelStore"
 import { joinChannelsAndSpacesChannel } from "@/src/utils/helpers"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
+import { userStore } from "@/src/store/user/userStore"
+import { NavItem, SiteRoutes } from "./nav-types"
 
 export default function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const [routes, setRoutes] = useAtom(navStore.routes)
   const [channels, setChannels] = useAtom(channelStore.channels)
+  const userRole = useAtomValue(userStore.AuthUser)?.role
 
   const [
     channelPathsLoading,
@@ -49,32 +52,6 @@ export default function AppSidebar({
     useServerAction(AuthUserAction)
 
   useEffect(() => {
-    ;(async () => {
-      const channelPaths = (await getChannelPaths())?.data
-      const channels = (await getChannels())?.data
-      if (channelPaths) {
-        setRoutes((routes) => {
-          return {
-            ...routes,
-            navChannels: channelPaths.map((channelPath) => ({
-              title: channelPath.channel_name,
-              url: `/channels/${channelPath.channel_slug}/spaces`,
-              icon: Hash,
-              items: channelPath.spaces.length
-                ? channelPath.spaces.map((spacePath) => ({
-                    title: spacePath.space_name,
-                    url: `/channels/${channelPath.channel_slug}/spaces/${spacePath.space_slug}`
-                  }))
-                : []
-            }))
-          }
-        })
-      }
-      if (channels) {
-        setChannels([...channels])
-      }
-    })()
-
     const { unsubscribe } = joinChannelsAndSpacesChannel(
       "boradcast-channels-spaces-update",
       async (data, activity) => {
@@ -131,6 +108,49 @@ export default function AppSidebar({
       unsubscribe()
     }
   }, [])
+
+  useEffect(() => {
+    if (userRole) {
+      ;(async () => {
+        const channelPaths = (await getChannelPaths())?.data
+        const channels = (await getChannels())?.data
+        if (channelPaths) {
+          setRoutes((routes) => {
+            let tempRoutes = {
+              ...routes,
+              navChannels: channelPaths.map((channelPath) => ({
+                title: channelPath.channel_name,
+                url: `/channels/${channelPath.channel_slug}/spaces`,
+                icon: Hash,
+                items: channelPath.spaces.length
+                  ? channelPath.spaces.map((spacePath) => ({
+                      title: spacePath.space_name,
+                      url: `/channels/${channelPath.channel_slug}/spaces/${spacePath.space_slug}`
+                    }))
+                  : []
+              })) as NavItem[]
+            } as SiteRoutes
+
+            if (!userRole?.includes("admin")) {
+              if ("navMain" in tempRoutes) {
+                tempRoutes = {
+                  ...routes,
+                  navMain: (tempRoutes.navMain as NavItem[]).filter(
+                    (route) => route.title !== "Channels"
+                  )
+                }
+              }
+            }
+            return tempRoutes
+          })
+        }
+
+        if (channels) {
+          setChannels([...channels])
+        }
+      })()
+    }
+  }, [userRole])
 
   return (
     <Sidebar variant="inset" {...props}>
