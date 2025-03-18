@@ -8,6 +8,7 @@ import {
 } from "../db/schema"
 import { AblyClient } from "../services/realtime/AblyClient"
 import { NavItem, NavSubItem } from "../components/Dashboard/nav-types"
+import { GanttChart, Hash } from "lucide-react"
 
 export const joinRequestChannel = (
   channelId: string,

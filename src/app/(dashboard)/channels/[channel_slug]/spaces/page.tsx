@@ -27,9 +27,16 @@ import { DeleteSpaceAction } from "@/src/server-actions/Space/Space"
 import { GetChannelBySlugAction } from "@/src/server-actions/Channel/Channel"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/Loader/types/loader-types"
+import { toast } from "@/src/hooks/use-toast"
 import { userStore } from "@/src/store/user/userStore"
 import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/src/components/ui/card"
 
 export default function ChannelPage() {
   const [spaces, setSpaces] = useAtom(spaceStore.spaces)
@@ -75,6 +82,10 @@ export default function ChannelPage() {
       setSpaces((spaces) =>
         spaces.filter((spaces) => spaces.id !== selectedSpace?.id)
       )
+      toast({
+        title: "Space deleted successfully.",
+        duration: 3000
+      })
     }
   }
 
@@ -109,27 +120,29 @@ export default function ChannelPage() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3  gap-4 sm:gap-6">
               {spaces.map((space) => (
-                <Card
-                  key={space.id}
-                >
+                <Card key={space.id}>
                   <CardHeader>
                     <div className="flex justify-between">
                       <Link href={`./spaces/${space.space_slug}`}>
                         <div className="relative h-12 w-12 overflow-hidden rounded-md">
-                          <Image src="/images/home/session-image2.jpg"
-                            alt={space.space_name} fill className="object-cover" />
+                          <Image
+                            src="/images/home/session-image2.jpg"
+                            alt={space.space_name}
+                            fill
+                            className="object-cover"
+                          />
                         </div>
                       </Link>
                       <div className="flex justify-end ">
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleEditSpace(space)}>
+                          onClick={() => handleEditSpace(space)}
+                        >
                           <Edit3 />
                         </Button>
                         <Link href={`./spaces/${space.space_slug}/settings`}>
-                          <Button variant="ghost"
-                            size="icon">
+                          <Button variant="ghost" size="icon">
                             <Settings />
                           </Button>
                         </Link>
@@ -138,7 +151,8 @@ export default function ChannelPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-destructive hover:bg-destructive/10 hover:text-destructive">
+                              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            >
                               <Trash2 />
                             </Button>
                           </AlertDialogTrigger>
@@ -162,16 +176,64 @@ export default function ChannelPage() {
                         </AlertDialog>
                       </div>
                     </div>
+                    <div className="flex justify-end gap-2 mt-4">
+                      <Button
+                        size="sm"
+                        onClick={() => handleEditSpace(space)}
+                        variant={"outline"}
+                      >
+                        <Edit3 />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant={"outline"}>
+                            {addDeleteSpaceLoading ? (
+                              <Loader />
+                            ) : (
+                              <Trash2 className="" />
+                            )}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action will permanently delete space.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteSpace(space)}
+                              loading={addDeleteSpaceLoading}
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                      <Link href={`./spaces/${space.space_slug}/settings`}>
+                        <Button size="sm" variant={"outline"}>
+                          <Settings />
+                        </Button>
+                      </Link>
+                    </div>
                     <Link href={`./spaces/${space.space_slug}`}>
                       <div>
-                        <CardTitle className="text-xl">{space.space_name}</CardTitle>
-                        <CardDescription className="text-sm text-muted-foreground">{0} members</CardDescription>
+                        <CardTitle className="text-xl">
+                          {space.space_name}
+                        </CardTitle>
+                        <CardDescription className="text-sm text-muted-foreground">
+                          {0} members
+                        </CardDescription>
                       </div>
                     </Link>
                   </CardHeader>
                   <Link href={`./spaces/${space.space_slug}`}>
                     <CardContent>
-                      <p className="text-sm text-muted-foreground">{space.description}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {space.description}
+                      </p>
                     </CardContent>
                   </Link>
                 </Card>
@@ -185,8 +247,3 @@ export default function ChannelPage() {
     <NotFound />
   )
 }
-
-
-
-// onClick={() => handleDeleteSpace(space)}
-

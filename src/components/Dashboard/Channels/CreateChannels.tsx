@@ -20,7 +20,6 @@ import { InsertChannel, SelectChannel } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateChannelAction,
-  DeleteChannelAction,
   IsSlugAvailableAction,
   UpdateChannelAction
 } from "@/src/server-actions/Channel/Channel"
@@ -40,16 +39,6 @@ import { CircleCheck, CircleXIcon, Hash, CirclePlus } from "lucide-react"
 import { navStore } from "@/src/store/nav/navStore"
 import Loader from "../../common/Loader/Loader"
 import { LoaderSizes } from "../../common/Loader/types/loader-types"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger
-} from "../../ui/alert-dialog"
 import { Switch } from "../../ui/switch"
 
 const channelSchema = z.object({
@@ -92,12 +81,6 @@ function CreateChannels() {
     UpdateChannel
   ] = useServerAction(UpdateChannelAction)
   const [
-    addDeleteChannelLoading,
-    addDeleteChannelData,
-    addDeleteChannelError,
-    DeleteChannel
-  ] = useServerAction(DeleteChannelAction)
-  const [
     isSlugAvailableLoading,
     isSlugAvailableData,
     isSlugAvailableError,
@@ -135,8 +118,7 @@ function CreateChannels() {
         channel_name: "",
         channel_slug: "",
         description: "",
-        channel_type: "",
-        publish_channel: false
+        channel_type: ""
       })
       // Clear any errors
       form.clearErrors()
@@ -152,6 +134,11 @@ function CreateChannels() {
       form.setValue("channel_name", selectedChannel.channel_name)
       form.setValue("description", selectedChannel.description as string)
       form.setValue("channel_type", selectedChannel.channel_type as string)
+      if (selectedChannel.publish_channel === 1) {
+        form.setValue("publish_channel", true)
+      } else {
+        form.setValue("publish_channel", false)
+      }
     }
   }, [selectedChannel])
 
@@ -176,6 +163,11 @@ function CreateChannels() {
       handleCreateChannel(data)
     }
     if (selectedChannel) {
+      if (data.publish_channel === true) {
+        data.publish_channel = 1
+      } else {
+        data.publish_channel = 0
+      }
       handleUpdateChannel(data)
     }
   }
@@ -226,15 +218,14 @@ function CreateChannels() {
       const payLoad = {
         ...updatedData,
         channel_name: updatedData?.channel_name?.trim() || "",
-        channel_slug: `${updatedData.channel_name}${
-          updatedData?.channel_slug?.trim() || ""
-        }`
+        channel_slug: `${updatedData.channel_name}${updatedData?.channel_slug?.trim() || ""
+          }`
           .replaceAll(" ", "-")
           .toLowerCase()
       }
       if (!selectedChannel?.id) return
       const updatedChannel = await UpdateChannel(selectedChannel.id, payLoad)
-      if (updatedChannel?.success && updatedChannel.data)
+      if (updatedChannel?.success && updatedChannel.data) {
         setChannels((channel) =>
           channel.map((channel) =>
             channel.id === selectedChannel.id
@@ -242,28 +233,19 @@ function CreateChannels() {
               : channel
           )
         )
-      setChannelFormModelVisibility(false)
-      toast({
-        title: "Channel updated",
-        description: "Your channel successfully updated.",
-        duration: 300
-      })
+        setChannelFormModelVisibility(false)
+        toast({
+          title: "Channel updated",
+          description: "Your channel successfully updated.",
+          duration: 300
+        })
+      }
     } catch {
       toast({
         title: "Unable to update channel",
         variant: "destructive",
         duration: 3000
       })
-    }
-  }
-
-  async function handleDeleteChannel() {
-    const deletedChannel = await DeleteChannel(selectedChannel as SelectChannel)
-    if (deletedChannel?.success) {
-      setChannels((channel) =>
-        channel.filter((channel) => channel.id !== selectedChannel?.id)
-      )
-      setChannelFormModelVisibility(false)
     }
   }
 
@@ -459,35 +441,6 @@ function CreateChannels() {
           <DialogFooter>
             {editChannel === true ? (
               <div className="w-full flex justify-between">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      loading={addDeleteChannelLoading}
-                    >
-                      Delete
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you sure ?</AlertDialogTitle>
-                      <DialogDescription>
-                        This action will permanently delete channel and the
-                        space that exist in this channel. This action can't be
-                        undone.
-                      </DialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleDeleteChannel}
-                        loading={addDeleteChannelLoading}
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
                 <Button type="submit" loading={addUpdateChannelLoading}>
                   Save
                 </Button>
