@@ -170,7 +170,7 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
       where: whereClauses.length ? and(...whereClauses) : undefined,
       with: {
         author: true,
-        postComments: { with: { commentor: true } },
+        postComments: { with: { commentor: true }, limit:5, orderBy: [desc(commentsTable.created_at)] },
         hashtags: { with: { hashtag: true } },
         options: { with: { votes: true } },
         file: { with: { postFile: true } },

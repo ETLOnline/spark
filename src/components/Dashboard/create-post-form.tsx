@@ -14,7 +14,7 @@ import {
   CardHeader
 } from "@/src/components/ui/card"
 import { Label } from "@/src/components/ui/label"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
   Select,
   SelectContent,
@@ -46,7 +46,6 @@ import useHashtags from "./profile/hooks/useHashtags"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useParams } from "next/navigation"
 import { categories } from "@/src/utils/constants"
-import { GetSpaceIdBySlugAction } from "@/src/server-actions/Space/Space"
 import { channelStore } from "@/src/store/channel/channelStore"
 
 type Props = {
@@ -68,6 +67,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   const authUser = useAtomValue(userStore.AuthUser)
   const currChannel = useAtomValue(channelStore.selectedChannel)
   const [activeCategory, setActiveCategory] = useAtom(spaceStore.activeCategory)
+  const currentSpace = useAtomValue(spaceStore.selectedSpace)
 
   const [
     hashtags,
@@ -99,14 +99,6 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     linkHashtagsToPostError,
     linkHashtagsToPost
   ] = useServerAction(LinkHashtagsToPostAction)
-  const [spaceIdLoading, spaceIdData, spaceIdError, getSpaceId] =
-    useServerAction(GetSpaceIdBySlugAction)
-
-  useEffect(() => {
-    if (currChannel) {
-      getSpaceId(spaceSlug as string, currChannel?.id)
-    }
-  }, [currChannel])
 
   const handleCreatePost = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -122,7 +114,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 newPost.type,
                 newPost.category,
                 "space",
-                spaceIdData?.data as string
+                currentSpace?.id
               )
             : await createPost(newPost.content as string, newPost.type)
         if (post && post.data && post.data[0]) {
@@ -173,7 +165,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 pollOptions,
                 newPost.category,
                 "space",
-                spaceIdData?.data as string
+                currentSpace?.id
               )
             : await createPollPost(
                 newPost.content as string,
@@ -242,7 +234,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 newPost.content,
                 newPost.category,
                 "space",
-                spaceIdData?.data as string
+                currentSpace?.id
               )
             : await createFilePost(
                 newPost.type,

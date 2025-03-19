@@ -64,35 +64,7 @@ export async function DeleteSpace(deletedSpaceData: SelectSpace) {
     const deletedSpace = await db
       .delete(spacesTable)
       .where(eq(spacesTable.id, deletedSpaceData.id))
-    return deletedSpaceData
-  } catch (e: any) {
-    throw new Error(e.message)
-  }
-}
-
-export async function GetSpaceIdBySlug(slug: string, channelId: string) {
-  try {
-    const space = await db
-
-      .select({ id: spacesTable.id })
-
-      .from(spacesTable)
-
-      .where(
-        and(
-          eq(spacesTable.space_slug, slug),
-
-          eq(spacesTable.channel_id, channelId)
-        )
-      )
-
-      .limit(1)
-
-    if (!space.length) {
-      throw new Error("Space not found")
-    }
-
-    return space[0].id
+    return deletedSpace
   } catch (e: any) {
     throw new Error(e.message)
   }

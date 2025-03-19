@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { SelectComment } from "@/src/db/schema"
+import moment from "moment-timezone"
 
 type Props = {
   comment: SelectComment
@@ -20,6 +21,7 @@ const PostComments: React.FC<Props> = (props) => {
       <div className="rounded-[15px] bg-secondary p-3 pt-2">
         <p className="font-semibold">{name}</p>
         <p className="text-sm">{props.comment.content}</p>
+        <p className="text-xs text-muted-foreground">{moment.utc(props.comment.created_at || '').local().fromNow()}</p>
       </div>
     </div>
   )

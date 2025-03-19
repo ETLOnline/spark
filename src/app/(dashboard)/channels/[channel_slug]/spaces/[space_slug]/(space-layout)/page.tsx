@@ -4,55 +4,47 @@ import CreatePostForm from "@/src/components/Dashboard/create-post-form"
 import PostFeed from "@/src/components/Dashboard/post-feed"
 import {
   Card,
-  CardContent,
   CardHeader,
   CardTitle,
   CardDescription
 } from "@/src/components/ui/card"
 import { useEffect } from "react"
 import { useParams } from "next/navigation"
-import { useAtomValue } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetSpacePostsAction } from "@/src/server-actions/Post/Post"
 import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
-import { GetSpaceIdBySlugAction } from "@/src/server-actions/Space/Space"
-import { GetChannelIdBySlugAction } from "@/src/server-actions/Channel/Channel"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/Loader/types/loader-types"
+import { GetChannelBySlugAction } from "@/src/server-actions/Channel/Channel"
 
 const SpacesPage: React.FC = () => {
   const params = useParams()
 
-  const spaceSlug = params.space_slug
-  const channelSlug = params.channel_slug
+  const spaceSlug = params.space_slug as string
+  const channelSlug = params.channel_slug as string
 
   const activeCategory = useAtomValue(spaceStore.activeCategory)
+  const setSpace = useSetAtom(spaceStore.selectedSpace)
 
   const [postsLoading, posts, postsError, getPosts] =
     useServerAction(GetSpacePostsAction)
-  const [spaceIdLoading, spaceIdData, spaceIdError, getSpaceId] =
-    useServerAction(GetSpaceIdBySlugAction)
-  const [channelIdLoading, channelIdData, channelIdError, getChannelId] =
-    useServerAction(GetChannelIdBySlugAction)
 
   useEffect(() => {
-    ; (async () => {
-      const channelId = (await getChannelId(channelSlug as string))?.data
-      if (channelId) {
-        getSpaceId(spaceSlug as string, channelId)
+    GetChannelBySlugAction(channelSlug).then((channel)=>{
+      if(channel.success && channel.data){
+        const space = channel.data.spaces.find((space) => space.space_slug === spaceSlug)
+        if(space){
+          setSpace(space)
+          getPosts(
+            space.id,
+            activeCategory === "All" ? "" : activeCategory
+          )
+        }
       }
-    })()
+    })
   }, [])
-
-  useEffect(() => {
-    if (spaceIdData) {
-      getPosts(
-        spaceIdData?.data as string,
-        activeCategory === "All" ? "" : activeCategory
-      )
-    }
-  }, [activeCategory, spaceIdData])
 
   return (
     <div className="container mx-auto p-4 space-y-8 max-w-3xl">

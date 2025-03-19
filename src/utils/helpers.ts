@@ -97,6 +97,14 @@ export const getUserRoles = (user: SelectUser): string[] => {
   return roles
 }
 
+export const isUserAdmin = (user: SelectUser): boolean => {
+  return getUserRoles(user).includes("admin")
+}
+
+export const CanUserIntract = (user: SelectUser, ownerId?:string|null): boolean=> {
+  return isUserAdmin(user) || user.unique_id === ownerId ? true : false
+}
+
 export const generateUrl = (path: string) => {
   return `${window.location.origin}${path}`
 }

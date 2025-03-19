@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Card, CardHeader } from "@/src/components/ui/card"
 import PostMenu from "./posts/post-menu"
 import { userStore } from "@/src/store/user/userStore"
+import moment from "moment-timezone"
 
 type PostFeedProps = {
   fetchedPosts: (SelectPost | SelectFilePost | SelectPollPost)[]
@@ -45,13 +46,12 @@ const PostFeed: React.FC<PostFeedProps> = ({ fetchedPosts }) => {
                   <div>
                     <p className="font-semibold">{name}</p>
                     <p className="text-sm text-muted-foreground">
-                      {new Date(post.created_at as string).toLocaleString()}
+                      {moment.utc(post.created_at || "").local().fromNow()}
                     </p>
                   </div>
                 </div>
-                {user?.unique_id === post.author.unique_id ? (
-                  <PostMenu postId={post.id} />
-                ) : null}
+                
+                <PostMenu post={post}  />
               </div>
             </CardHeader>
             {post.type === "text" ? (
