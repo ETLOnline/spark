@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useState } from 'react'
 import { Button } from "@/src/components/ui/button"
 import {
   AlertDialog,
@@ -12,14 +12,14 @@ import {
   AlertDialogTrigger
 } from "@/src/components/ui/alert-dialog"
 import { Edit3, Settings, Trash2 } from "lucide-react"
-import { spaceStore } from "@/src/store/space/spaceStore"
-import { useSetAtom } from "jotai"
-import { DeleteSpaceAction } from "@/src/server-actions/Space/Space"
-import { useServerAction } from "@/src/hooks/useServerAction"
-import { SelectSpace } from "@/src/db/schema"
-import { toast } from "@/src/hooks/use-toast"
-import { usePathname, useRouter } from "next/navigation"
-import { AlertDialogOverlay } from "@radix-ui/react-alert-dialog"
+import { spaceStore } from '@/src/store/space/spaceStore'
+import { useSetAtom } from 'jotai'
+import { DeleteSpaceAction } from '@/src/server-actions/Space/Space'
+import { useServerAction } from '@/src/hooks/useServerAction'
+import { SelectSpace } from '@/src/db/schema'
+import { toast } from '@/src/hooks/use-toast'
+import { useRouter } from 'next/navigation'
+
 
 interface Props {
   space: SelectSpace
@@ -31,23 +31,15 @@ function SpacesActionButtons({ space }: Props) {
   const setSpaceFormModelVisibility = useSetAtom(
     spaceStore.spaceFormModelVisibility
   )
-
   const [
     addDeleteSpaceLoading,
     addDeleteSpaceData,
     addDeleteSpaceError,
     deleteSpace
   ] = useServerAction(DeleteSpaceAction)
-
   const [isOpen, setIsOpen] = useState(false)
-  const currPath = useRef<string>("")
-
   const router = useRouter()
-  const pathname = usePathname()
 
-  useEffect(() => {
-    currPath.current = pathname
-  }, [])
 
   function handleEditSpace(space: SelectSpace) {
     setSpaceFormModelVisibility(true)
@@ -73,20 +65,18 @@ function SpacesActionButtons({ space }: Props) {
         variant="ghost"
         size="icon"
         onClick={(e) => {
-          e.preventDefault()
+          e.preventDefault();
           handleEditSpace(space)
         }}
       >
         <Edit3 />
       </Button>
       <Button
-        variant="ghost"
-        size="icon"
+        variant="ghost" size="icon"
         onClick={(e) => {
-          e.preventDefault()
+          e.preventDefault();
           router.push(`./spaces/${space.space_slug}/settings`)
-        }}
-      >
+        }}>
         <Settings />
       </Button>
       <AlertDialog open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
@@ -96,47 +86,36 @@ function SpacesActionButtons({ space }: Props) {
             size="icon"
             className="text-destructive hover:bg-destructive/10 hover:text-destructive"
             onClick={(e) => {
-              e.preventDefault()
+              e.preventDefault();
               setIsOpen(true)
             }}
           >
             <Trash2 />
           </Button>
         </AlertDialogTrigger>
-        <AlertDialogOverlay
-          onClick={(e) => {
-            e.stopPropagation()
-            setIsOpen(false)
-          }}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action will permanently delete space.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel
-                onClick={(e) => {
-                  e.preventDefault()
-                  setIsOpen(false)
-                }}
-              >
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={(e) => {
-                  e.preventDefault()
-                  handleDeleteSpace(space)
-                }}
-                loading={addDeleteSpaceLoading}
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will permanently delete space.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={(e) => {
+              e.preventDefault();
+              setIsOpen(false);
+            }}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteSpace(space);
+              }}
+              loading={addDeleteSpaceLoading}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
       </AlertDialog>
     </>
   )
