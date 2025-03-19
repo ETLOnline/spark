@@ -90,7 +90,7 @@ export default function SpaceSettings() {
                 </div>
               </div>
             </div>
-            <div className="pt-4">
+            <div className="text-end pt-4">
               <Button onClick={handleSaveSettings} className="w-full sm:w-auto">
                 <Save className="h-4 w-4 mr-2" />
                 Save Changes
