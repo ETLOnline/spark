@@ -65,7 +65,7 @@ const TagsInput: React.FC<TagsInputProps> = ({
   updateTags,
   suggestions = [],
   loadingSuggestions = false,
-  onChange = () => {},
+  onChange = () => { },
   autocomplete = false,
   placeholder
 }) => {
@@ -137,13 +137,13 @@ const TagsInput: React.FC<TagsInputProps> = ({
         tagUpdater((prevTags: string[]) => [
           ...prevTags,
           inputValue.trim()[0].toUpperCase() +
-            inputValue.substring(1).toLowerCase()
+          inputValue.substring(1).toLowerCase()
         ])
       }
     }
     setShowSuggestions(false)
     if (autocomplete) {
-      ;(tagInput.current as HTMLInputElement).value = ""
+      ; (tagInput.current as HTMLInputElement).value = ""
     }
   }
 
@@ -176,7 +176,7 @@ const TagsInput: React.FC<TagsInputProps> = ({
       const tagUpdater = updateTags as (tags: TagsObjUpdaterArgs) => void
       tagUpdater((prevTags: Tag[]) => [...prevTags, suggestion])
     }
-    ;(tagInput.current as HTMLInputElement).value = ""
+    ; (tagInput.current as HTMLInputElement).value = ""
     setShowSuggestions(false)
     setSelectedSuggestionIndex(0)
   }
@@ -216,56 +216,56 @@ const TagsInput: React.FC<TagsInputProps> = ({
         if (onChange) {
           onChange(tagInput.current?.value)
         }
-        ;(tagInput.current as HTMLInputElement).value = ""
+        ; (tagInput.current as HTMLInputElement).value = ""
       }
     }
   }
 
   return (
     <div className="relative w-full">
-      <div className="flex flex-wrap gap-2 rounded-md border border-input bg-transparent p-2 focus-within:ring-1 focus-within:ring-ring">
+      <div className="flex flex-wrap gap-2 rounded-md border border-input bg-transparent  focus-within:ring-1 focus-within:ring-ring">
         {autocomplete
           ? (tags as Tag[]).map(
-              (tag, i) =>
-                !tag.deleted && (
-                  <span
-                    key={tag?.id ?? tag?.name}
-                    className="flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-sm"
-                  >
-                    {tag?.name}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeTag(i)}
-                      className="h-4 w-4 p-0 hover:bg-muted-foreground/20"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </span>
-                )
-            )
-          : (tags as string[]).map((tag, i) => (
-              <span
-                key={tag}
-                className="flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-sm"
-              >
-                {tag}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeTag(i)}
-                  className="h-4 w-4 p-0 hover:bg-muted-foreground/20"
+            (tag, i) =>
+              !tag.deleted && (
+                <span
+                  key={tag?.id ?? tag?.name}
+                  className="flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-sm"
                 >
-                  <X className="h-3 w-3" />
-                </Button>
-              </span>
-            ))}
+                  {tag?.name}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeTag(i)}
+                    className="h-4 w-4 p-0 hover:bg-muted-foreground/20"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </span>
+              )
+          )
+          : (tags as string[]).map((tag, i) => (
+            <span
+              key={tag}
+              className="flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-sm"
+            >
+              {tag}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => removeTag(i)}
+                className="h-4 w-4 p-0 hover:bg-muted-foreground/20"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </span>
+          ))}
         <Input
           type="text"
           ref={tagInput}
           onChange={handleInputChange}
           onKeyDown={autocomplete ? suggestionController : enterTag}
-          className="flex-1 border-0 bg-transparent p-0 focus-visible:ring-0"
+          className="flex-1 border-0 bg-transparent p-0 focus-visible:ring-0 indent-3"
           placeholder={
             tags.length === 0
               ? placeholder
