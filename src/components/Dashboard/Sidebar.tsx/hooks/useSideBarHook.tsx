@@ -11,7 +11,6 @@ import { joinChannelsAndSpacesChannel } from "@/src/utils/helpers"
 import { useAtom } from "jotai"
 import { useEffect } from "react"
 import { getChannelsNavMapped } from "../utils/helpers"
-import { NavItem } from "../../nav-types"
 
 const useSideBarHook = () => {
   const [routes, setRoutes] = useAtom(navStore.routes)
@@ -30,7 +29,6 @@ const useSideBarHook = () => {
 
   useEffect(() => {
     getUser()
-    getChannels()
 
     const { unsubscribe } = joinChannelsAndSpacesChannel(
       "broadcast-channels-spaces-update",
@@ -60,6 +58,16 @@ const useSideBarHook = () => {
   }, [])
 
   useEffect(() => {
+    if (userData) {
+      if (userData.role?.includes("admin")) {
+        getChannels()
+      } else {
+        getChannels("public", userData.unique_id)
+      }
+    }
+  }, [userData])
+
+  useEffect(() => {
     if (channelsData?.data && channelsData.success) {
       const allChannels = channelsData.data
       setChannels(allChannels)
@@ -76,30 +84,6 @@ const useSideBarHook = () => {
       })
     }
   }, [channels, userData])
-
-  useEffect(() => {
-    if (userData?.role) {
-      ;(async () => {
-        setRoutes((routes) => {
-          let tempRoutes = {
-            ...routes
-          }
-
-          if (!userData.role?.includes("admin")) {
-            if ("navMain" in tempRoutes) {
-              tempRoutes = {
-                ...routes,
-                navMain: (tempRoutes.navMain as NavItem[]).filter(
-                  (route) => route.title !== "Channels"
-                )
-              }
-            }
-          }
-          return tempRoutes
-        })
-      })()
-    }
-  }, [userData?.role])
 }
 
 export default useSideBarHook

@@ -155,15 +155,15 @@ function CreateSpaceModal({ space, setSpace }: spaceProps) {
           navChannels: routes.navChannels.map((channel) =>
             channel.url.includes(currChannel?.channel_slug as string)
               ? {
-                ...channel,
-                items: [
-                  ...(channel.items ?? []),
-                  {
-                    title: createdSpace.data[0].space_name,
-                    url: `/channels/${currChannel?.channel_slug}/spaces/${createdSpace.data[0].space_slug}`
-                  }
-                ]
-              }
+                  ...channel,
+                  items: [
+                    ...(channel.items ?? []),
+                    {
+                      title: createdSpace.data[0].space_name,
+                      url: `/channels/${currChannel?.channel_slug}/spaces/${createdSpace.data[0].space_slug}`
+                    }
+                  ]
+                }
               : channel
           )
         }))
@@ -192,8 +192,9 @@ function CreateSpaceModal({ space, setSpace }: spaceProps) {
         if (!result?.data) {
           form.setError("space_slug", {
             type: "manual",
-            message: `the slug, ${slug.replaceAll(" ", "-").toLowerCase
-              } is already taken`
+            message: `the slug, ${
+              slug.replaceAll(" ", "-").toLowerCase()
+            } is already taken`
           })
           setslugAvailableMessage("")
         } else {
@@ -211,7 +212,9 @@ function CreateSpaceModal({ space, setSpace }: spaceProps) {
       data.created_by = authUser?.unique_id as string
       data.channel_id = channel?.id
       data.space_name = (data.space_name as string).trim()
-      data.space_slug = `${data.space_name}${data.space_slug?.trim()}`
+      data.space_slug = `${data.space_name}-${data.space_slug?.trim()}`
+        .replaceAll(" ", "-")
+        .toLowerCase()
       const UpdateSpaceModal = await updateSpace(
         selectedSpace?.id as string,
         data as InsertSpace

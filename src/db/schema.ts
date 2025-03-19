@@ -641,6 +641,7 @@ export const channelsTable = sqliteTable("channels", {
   channel_type: text(),
   created_by: text().notNull(),
   publish_channel: int().notNull().default(0),
+  ownerId: text(),
   ...timestamps
 })
 

@@ -218,8 +218,9 @@ function CreateChannels() {
       const payLoad = {
         ...updatedData,
         channel_name: updatedData?.channel_name?.trim() || "",
-        channel_slug: `${updatedData.channel_name}${updatedData?.channel_slug?.trim() || ""
-          }`
+        channel_slug: `${updatedData.channel_name}${
+          updatedData?.channel_slug?.trim() || ""
+        }`
           .replaceAll(" ", "-")
           .toLowerCase()
       }
@@ -440,11 +441,9 @@ function CreateChannels() {
           </div>
           <DialogFooter>
             {editChannel === true ? (
-              <div className="w-full flex justify-between">
-                <Button type="submit" loading={addUpdateChannelLoading}>
-                  Save
-                </Button>
-              </div>
+              <Button type="submit" loading={addUpdateChannelLoading}>
+                Save
+              </Button>
             ) : (
               <Button
                 type="submit"

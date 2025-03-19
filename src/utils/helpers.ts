@@ -7,8 +7,34 @@ import {
   SelectUser
 } from "../db/schema"
 import { AblyClient } from "../services/realtime/AblyClient"
-import { NavItem, NavSubItem } from "../components/Dashboard/nav-types"
-import { GanttChart, Hash } from "lucide-react"
+import { ErrorOption } from "react-hook-form"
+
+type SlugAvailibilityCallback = (slug: string) =>
+  | {
+      success: boolean
+      data: boolean
+      error?: undefined
+    }
+  | {
+      error: unknown
+      success?: undefined
+      data?: undefined
+    }
+  | undefined
+type FormErrorSetter = (
+  name:
+    | "channel_slug"
+    | "channel_name"
+    | "description"
+    | "channel_type"
+    | "publish_channel"
+    | "root"
+    | `root.${string}`,
+  error: ErrorOption,
+  options?: {
+    shouldFocus: boolean
+  }
+) => void
 
 export const joinRequestChannel = (
   channelId: string,
@@ -113,4 +139,40 @@ export const removeEmojis = (string: string) => {
 
 export const isOnlyEmoji = (string: string) => {
   return !removeEmojis(string).length
+}
+
+export const checkSlugAvailability = async (
+  slug: string,
+  timeoutId: NodeJS.Timeout,
+  isSlugAvailable: SlugAvailibilityCallback,
+  setslugAvailableMessage: (msg: string) => void,
+  setFormError: FormErrorSetter,
+  clearFormError: (inputName: string) => void
+) => {
+  if (timeoutId) {
+    clearTimeout(timeoutId)
+  }
+  timeoutId = setTimeout(async () => {
+    try {
+      const result = await isSlugAvailable(slug)
+      if (result?.success) {
+        if (!result?.data) {
+          setFormError("channel_slug", {
+            type: "manual",
+            message: `the slug, ${slug
+              .replaceAll(" ", "-")
+              .toLowerCase()} is already taken`
+          })
+          setslugAvailableMessage("")
+        } else {
+          clearFormError("channel_slug")
+          setslugAvailableMessage(
+            `the slug, ${slug.replaceAll(" ", "-").toLowerCase()} is available`
+          )
+        }
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }, 2500)
 }

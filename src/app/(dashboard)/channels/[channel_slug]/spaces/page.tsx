@@ -29,7 +29,6 @@ import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/Loader/types/loader-types"
 import { toast } from "@/src/hooks/use-toast"
 import { userStore } from "@/src/store/user/userStore"
-import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
 import {
   Card,
   CardContent,
@@ -48,6 +47,8 @@ export default function ChannelPage() {
     spaceStore.spaceFormModelVisibility
   )
   const userRole = useAtomValue(userStore.AuthUser)?.role
+  const userId = useAtomValue(userStore.AuthUser)?.unique_id
+
   const channelSlug = useParams().channel_slug
 
   const [
@@ -89,7 +90,7 @@ export default function ChannelPage() {
     }
   }
 
-  return userRole?.includes("admin") ? (
+  return (
     <div className="flex min-h-screen flex-col">
       <div className="relative h-40 sm:h-56 w-full">
         <Image
@@ -111,7 +112,10 @@ export default function ChannelPage() {
             <h2 className="text-xl font-bold">
               Spaces in {selectedChannel?.channel_name}
             </h2>
-            <CreateSpaceModal space={spaces} setSpace={setSpaces} />
+            {userRole?.includes("admin") ||
+            selectedChannel?.ownerId === userId ? (
+              <CreateSpaceModal space={spaces} setSpace={setSpaces} />
+            ) : null}
           </div>
           {channelLoading ? (
             <div className="flex justify-center h-full w-full">
@@ -201,7 +205,5 @@ export default function ChannelPage() {
         </div>
       </main>
     </div>
-  ) : (
-    <NotFound />
   )
 }

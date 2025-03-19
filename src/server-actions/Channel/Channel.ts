@@ -31,14 +31,17 @@ export const CreateChannelAction = CreateServerAction(
   }
 )
 
-export const GetChannelsAction = CreateServerAction(true, async () => {
-  try {
-    const channels = await GetChannels()
-    return { success: true, data: channels }
-  } catch (error) {
-    return { error: error }
+export const GetChannelsAction = CreateServerAction(
+  true,
+  async (channelType?: "public" | "private", ownerId?: string) => {
+    try {
+      const channels = await GetChannels({ channelType, ownerId })
+      return { success: true, data: channels }
+    } catch (error) {
+      return { error: error }
+    }
   }
-})
+)
 
 export const GetChannelPathsAction = CreateServerAction(true, async () => {
   try {

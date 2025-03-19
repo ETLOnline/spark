@@ -1,6 +1,11 @@
-import { eq } from "drizzle-orm"
+import { eq, or } from "drizzle-orm"
 import { db } from "../.."
 import { channelsTable, InsertChannel, SelectChannel } from "../../schema"
+
+type channelQueryFilters = {
+  channelType?: "public" | "private"
+  ownerId?: string
+}
 
 export async function CreateChannel(channelData: InsertChannel) {
   try {
@@ -14,13 +19,36 @@ export async function CreateChannel(channelData: InsertChannel) {
   }
 }
 
-export async function GetChannels() {
+export async function GetChannels(filters?: channelQueryFilters) {
   try {
-    const channels = await db.query.channelsTable.findMany({
+    let query = db.query.channelsTable.findMany({
       with: {
         spaces: true
       }
     })
+
+    if (filters) {
+      const whereClauses = []
+
+      if (filters.channelType) {
+        whereClauses.push(eq(channelsTable.channel_type, filters.channelType))
+      }
+
+      if (filters.ownerId) {
+        whereClauses.push(eq(channelsTable.ownerId, filters.ownerId))
+      }
+
+      if (whereClauses.length > 0) {
+        query = db.query.channelsTable.findMany({
+          where: whereClauses.length ? or(...whereClauses) : undefined,
+          with: {
+            spaces: true
+          }
+        })
+      }
+    }
+
+    const channels = await query
     return channels
   } catch (e: any) {
     throw new Error(e.message)
