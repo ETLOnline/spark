@@ -1,8 +1,8 @@
-import { Card } from "../../ui/card"
-import { CardHeader } from "../../ui/card"
-import { CardTitle } from "../../ui/card"
-import { CardContent } from "../../ui/card"
-import { Badge } from "../../ui/badge"
+import { Card } from "@/src/components/ui/card"
+import { CardHeader } from "@/src/components/ui/card"
+import { CardTitle } from "@/src/components/ui/card"
+import { CardContent } from "@/src/components/ui/card"
+import { Badge } from "@/src/components/ui/badge"
 import { TrendingUp } from "lucide-react"
 import { Topic } from "./types/spaces-types"
 

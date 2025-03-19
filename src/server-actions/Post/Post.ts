@@ -22,14 +22,23 @@ import { addFileToDb } from "@/src/utils/serverHelpers"
 
 export const CreatePostAction = CreateServerAction(
   true,
-  async (content: string, type: string) => {
+  async (
+    content: string,
+    type: string,
+    category?: string,
+    entityType?: string,
+    entityId?: string
+  ) => {
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
         const postData = await CreatePost({
           content,
           type,
-          user_id: userId
+          user_id: userId,
+          category,
+          entity_type: entityType,
+          entity_id: entityId
         })
         return { success: true, data: postData }
       } else {
@@ -52,7 +61,10 @@ export const CreateFilePostAction = CreateServerAction(
     fileName: string,
     fileType: string,
     fileBase64: string,
-    content?: string
+    content?: string,
+    category?: string,
+    entityType?: string,
+    entityId?: string
   ) => {
     try {
       const userId = (await AuthUserAction())?.unique_id
@@ -60,7 +72,10 @@ export const CreateFilePostAction = CreateServerAction(
         const postData = await CreatePost({
           type,
           user_id: userId,
-          content
+          content,
+          category,
+          entity_type: entityType,
+          entity_id: entityId
         })
         if (postData) {
           if (process.env.S3_BUCKET_NAME) {
@@ -97,14 +112,24 @@ export const CreateFilePostAction = CreateServerAction(
 
 export const CreatePollPostAction = CreateServerAction(
   true,
-  async (content: string, type: string, options: string[]) => {
+  async (
+    content: string,
+    type: string,
+    options: string[],
+    category?: string,
+    entityType?: string,
+    entityId?: string
+  ) => {
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
         const postData = await CreatePost({
           content,
           type,
-          user_id: userId
+          user_id: userId,
+          category,
+          entity_type: entityType,
+          entity_id: entityId
         })
         if (postData[0]) {
           const pollOptions = options.map((option) => {
@@ -202,7 +227,7 @@ export const VotePollAction = CreateServerAction(
   }
 )
 
-export const GetPublicPostsAction = CreateServerAction(true, async () => {
+export const GetPostsAction = CreateServerAction(true, async () => {
   try {
     const posts = await GetPosts()
     const sanitizedPosts = posts.map((post) => ({
@@ -218,6 +243,26 @@ export const GetPublicPostsAction = CreateServerAction(true, async () => {
     }
   }
 })
+
+export const GetSpacePostsAction = CreateServerAction(
+  true,
+  async (spaceId: string, category: string = "") => {
+    try {
+      const posts = await GetPosts({ entityId: spaceId, category: category })
+      const sanitizedPosts = posts.map((post) => ({
+        ...post,
+        hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
+        file: post.file?.postFile
+      }))
+      return { success: true, data: sanitizedPosts }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to fetch user posts"
+      }
+    }
+  }
+)
 
 export const LinkHashtagsToPostAction = CreateServerAction(
   true,

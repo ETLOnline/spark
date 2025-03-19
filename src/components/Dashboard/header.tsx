@@ -14,7 +14,7 @@ import ModeToggle from "../ThemeProvider/ThemeToggle"
 import { usePathname } from "next/navigation"
 import CommandCenter from "./CommandCenter/CommandCenter"
 import { SignedIn } from "@clerk/nextjs"
-import pageMeta, { PageMeta } from "@/src/utils/constants"
+import { PageMeta, pageMeta } from "@/src/utils/constants"
 import Notifications from "./Notifications/Notifications"
 
 type Crumb = {
@@ -26,7 +26,7 @@ const Header = () => {
   const hrefs: string[] = path
     .split("/")
     .map(
-      (pathName, i) =>
+      (pathName) =>
         "/" + path.substring(0, path.indexOf(pathName) + pathName.length)
     )
   const crumbs: Crumb[] = (() => {

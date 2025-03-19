@@ -7,17 +7,21 @@ import {
 } from "@/src/components/ui/dropdown-menu"
 import { DeletePostAction } from "@/src/server-actions/Post/Post"
 import { Button } from "@/src/components/ui/button"
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { postStore } from "@/src/store/post/postStore"
 import { useToast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
+import { userStore } from "@/src/store/user/userStore"
+import { SelectPost } from "@/src/db/schema"
+import { isUserAdmin } from "@/src/utils/helpers"
 
 interface PostMenuProps {
-  postId: string
+  post: SelectPost
 }
 
-const PostMenu = ({ postId }: PostMenuProps) => {
+const PostMenu = ({ post }: PostMenuProps) => {
   const [posts, setPosts] = useAtom(postStore.posts)
+  const user = useAtomValue(userStore.AuthUser)
 
   const { toast } = useToast()
 
@@ -26,9 +30,9 @@ const PostMenu = ({ postId }: PostMenuProps) => {
 
   const handleDelete = async () => {
     try {
-      const res = await deletePost(postId)
+      const res = await deletePost(post.id)
       if (res?.success) {
-        setPosts(posts.filter((post) => post.id !== postId))
+        setPosts(posts.filter((post) => post.id !== post.id))
         toast({
           title: "Post deleted!",
           duration: 3000
@@ -45,23 +49,28 @@ const PostMenu = ({ postId }: PostMenuProps) => {
     }
   }
 
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <MoreVertical className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
+  if (user?.role && (isUserAdmin(user) || user.unique_id === post.user_id )){
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm">
-            <Trash className="mr-2 h-4 w-4" />
-            Delete
+            <MoreVertical className="h-4 w-4" />
           </Button>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
+            <Button variant="ghost" size="sm">
+              <Trash className="mr-2 h-4 w-4" />
+              Delete
+            </Button>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
+  }else{
+    return null
+  }
+
 }
 
 export default PostMenu

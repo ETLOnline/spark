@@ -12,18 +12,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Card, CardHeader } from "@/src/components/ui/card"
 import PostMenu from "./posts/post-menu"
 import { userStore } from "@/src/store/user/userStore"
+import moment from "moment-timezone"
 
 type PostFeedProps = {
-  ssrPosts: (SelectPost | SelectFilePost | SelectPollPost)[]
+  fetchedPosts: (SelectPost | SelectFilePost | SelectPollPost)[]
 }
 
-const PostFeed: React.FC<PostFeedProps> = ({ ssrPosts }) => {
+const PostFeed: React.FC<PostFeedProps> = ({ fetchedPosts }) => {
   const [posts, setPosts] = useAtom(postStore.posts)
   const user = useAtomValue(userStore.AuthUser)
 
   useEffect(() => {
-    setPosts([...ssrPosts])
-  }, [ssrPosts])
+    setPosts([...fetchedPosts])
+  }, [fetchedPosts])
 
   return (
     <div className="space-y-6">
@@ -45,13 +46,12 @@ const PostFeed: React.FC<PostFeedProps> = ({ ssrPosts }) => {
                   <div>
                     <p className="font-semibold">{name}</p>
                     <p className="text-sm text-muted-foreground">
-                      {new Date(post.created_at as string).toLocaleString()}
+                      {moment.utc(post.created_at || "").local().fromNow()}
                     </p>
                   </div>
                 </div>
-                {user?.unique_id === post.author.unique_id ? (
-                  <PostMenu postId={post.id} />
-                ) : null}
+                
+                <PostMenu post={post}  />
               </div>
             </CardHeader>
             {post.type === "text" ? (

@@ -1,4 +1,4 @@
-import AppSidebar  from "@/src/components/Dashboard/app-sidebar"
+import AppSidebar from "@/src/components/Dashboard/Sidebar.tsx/app-sidebar"
 import Header from "@/src/components/Dashboard/header"
 import {
   SidebarInset,

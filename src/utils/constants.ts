@@ -1,4 +1,4 @@
-const pageMeta = [
+export const pageMeta = [
   {
     id: "home",
     url: "/",
@@ -77,8 +77,20 @@ const pageMeta = [
     title: "Projects",
     description: "projects"
   }
-];
+]
 
-export default pageMeta;
+export const categories = [
+  "All",
+  "Programming",
+  "AI & Machine Learning",
+  "Open Source",
+  "Web Development",
+  "Mobile Development",
+  "Data Science",
+  "DevOps",
+  "Cybersecurity",
+  "Blockchain",
+  "IoT"
+]
 
-export type PageMeta = typeof pageMeta[0]
+export type PageMeta = (typeof pageMeta)[0]

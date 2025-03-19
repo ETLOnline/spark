@@ -21,7 +21,7 @@ export const usersTable = sqliteTable(
     profile_url: text(),
     meta: text(),
     bio: text(),
-    role: text().notNull().default("user"),
+    role: text().notNull().default("user")
   },
   (t) => ({
     pk: primaryKey({ columns: [t.unique_id] })
@@ -58,6 +58,9 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   }),
   comments: many(commentsTable, {
     relationName: "commentToUser"
+  }),
+  spaces: many(spacesTable, {
+    relationName: "spaceToOwner"
   })
 }))
 
@@ -401,11 +404,12 @@ export const postsTable = sqliteTable("posts", {
     .$defaultFn(() => randomUUID()),
   content: text(),
   user_id: text().notNull(),
-  is_private: int().notNull().default(0),
   type: text().notNull(),
-  channel_id: text(),
+  entity_id: text(),
+  entity_type: text(),
   likes: int().notNull().default(0),
   comments: int().notNull().default(0),
+  category: text(),
   ...timestamps
 })
 
@@ -431,6 +435,11 @@ export const postsRelations = relations(postsTable, ({ one, many }) => ({
     fields: [postsTable.id],
     references: [postFilesTable.post_id],
     relationName: "postToFile"
+  }),
+  space: one(spacesTable, {
+    fields: [postsTable.entity_id],
+    references: [spacesTable.id],
+    relationName: "spaceToPosts"
   })
 }))
 
@@ -621,3 +630,58 @@ export const postFilesRelations = relations(postFilesTable, ({ one }) => ({
 
 export type InsertPostFile = typeof postFilesTable.$inferInsert
 export type SelectPostFile = typeof postFilesTable.$inferSelect
+
+export const channelsTable = sqliteTable("channels", {
+  id: text("channel_id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  channel_slug: text().notNull(),
+  channel_name: text().notNull(),
+  description: text(),
+  channel_type: text(),
+  created_by: text().notNull(),
+  publish_channel: int().notNull().default(0),
+  ownerId: text(),
+  ...timestamps
+})
+
+export const channelsRelations = relations(channelsTable, ({ many }) => ({
+  spaces: many(spacesTable, {
+    relationName: "spaceToChannel"
+  })
+}))
+
+export type InsertChannel = typeof channelsTable.$inferInsert
+export type SelectChannel = typeof channelsTable.$inferSelect & {
+  spaces?: SelectSpace[]
+}
+
+export const spacesTable = sqliteTable("spaces", {
+  id: text("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  space_slug: text().notNull(),
+  space_name: text().notNull(),
+  description: text(),
+  channel_id: text().notNull(),
+  created_by: text().notNull(),
+  ownerId: text(),
+  ...timestamps
+})
+
+export const spacesRelations = relations(spacesTable, ({ one, many }) => ({
+  channel: one(channelsTable, {
+    fields: [spacesTable.channel_id],
+    references: [channelsTable.id],
+    relationName: "spaceToChannel"
+  }),
+  owner: one(usersTable, {
+    fields: [spacesTable.ownerId],
+    references: [usersTable.unique_id],
+    relationName: "spaceToOwner"
+  }),
+  posts: many(postsTable, { relationName: "spaceToPosts" })
+}))
+
+export type InsertSpace = typeof spacesTable.$inferInsert
+export type SelectSpace = typeof spacesTable.$inferSelect
