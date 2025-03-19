@@ -27,6 +27,7 @@ import { channelStore } from "@/src/store/channel/channelStore"
 import { navStore } from "@/src/store/nav/navStore"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
+import { checkSlugAvailability } from "@/src/utils/helpers"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { CircleCheck, CirclePlus, CircleXIcon } from "lucide-react"
@@ -85,17 +86,45 @@ function CreateSpaceModal({ space, setSpace }: spaceProps) {
 
   useEffect(() => {
     const value = form.getValues("space_name")
+    const slug = `${value}${form.getValues("space_slug")}`
 
     if (value) {
-      checkSlugAvailability(value + form.getValues("space_slug"))
+      checkSlugAvailability(
+        slug,
+        timeoutId.current,
+        async () => (await isSlugAvailable(slug, channel?.id as string))?.data,
+        setslugAvailableMessage,
+        () =>
+          form.setError("space_slug", {
+            type: "manual",
+            message: `the slug, ${slug
+              .replaceAll(" ", "-")
+              .toLowerCase()} is already taken`
+          }),
+        () => form.clearErrors("space_slug")
+      )
     }
   }, [form.watch("space_name")])
 
   useEffect(() => {
     const value = form.getValues("space_slug")
+    const slug = `${form.getValues("space_name")}${value}`
 
     if (value) {
-      checkSlugAvailability(form.getValues("space_name") + value)
+      checkSlugAvailability(
+        slug,
+        timeoutId.current,
+        async () => (await isSlugAvailable(slug, channel?.id as string))?.data,
+        setslugAvailableMessage,
+        () =>
+          form.setError("space_slug", {
+            type: "manual",
+            message: `the slug, ${slug
+              .replaceAll(" ", "-")
+              .toLowerCase()} is already taken`
+          }),
+        () => form.clearErrors("space_slug")
+      )
     }
   }, [form.watch("space_slug")])
 
@@ -180,31 +209,6 @@ function CreateSpaceModal({ space, setSpace }: spaceProps) {
         duration: 3000
       })
     }
-  }
-
-  const checkSlugAvailability = async (slug: string) => {
-    if (timeoutId.current) {
-      clearTimeout(timeoutId.current)
-    }
-    timeoutId.current = setTimeout(async () => {
-      const result = await isSlugAvailable(slug, currChannel?.id as string)
-      if (result?.success) {
-        if (!result?.data) {
-          form.setError("space_slug", {
-            type: "manual",
-            message: `the slug, ${
-              slug.replaceAll(" ", "-").toLowerCase()
-            } is already taken`
-          })
-          setslugAvailableMessage("")
-        } else {
-          form.clearErrors("space_slug")
-          setslugAvailableMessage(
-            `the slug, ${slug.replaceAll(" ", "-").toLowerCase()} is available`
-          )
-        }
-      }
-    }, 2500)
   }
 
   async function handleUpdateSpace(data: Partial<InsertSpace>) {

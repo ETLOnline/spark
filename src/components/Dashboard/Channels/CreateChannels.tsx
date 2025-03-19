@@ -40,6 +40,7 @@ import { navStore } from "@/src/store/nav/navStore"
 import Loader from "../../common/Loader/Loader"
 import { LoaderSizes } from "../../common/Loader/types/loader-types"
 import { Switch } from "../../ui/switch"
+import { checkSlugAvailability } from "@/src/utils/helpers"
 
 const channelSchema = z.object({
   channel_name: z
@@ -144,17 +145,45 @@ function CreateChannels() {
 
   useEffect(() => {
     const value = form.getValues("channel_name")
+    const slug = `${value}${form.getValues("channel_slug")}`
 
     if (value) {
-      checkSlugAvailability(value + form.getValues("channel_slug"))
+      checkSlugAvailability(
+        slug,
+        timeoutId.current,
+        async () => (await isSlugAvailable(slug))?.data,
+        setslugAvailableMessage,
+        () =>
+          form.setError("channel_slug", {
+            type: "manual",
+            message: `the slug, ${slug
+              .replaceAll(" ", "-")
+              .toLowerCase()} is already taken`
+          }),
+        () => form.clearErrors("channel_slug")
+      )
     }
   }, [form.watch("channel_name")])
 
   useEffect(() => {
     const value = form.getValues("channel_slug")
+    const slug = `${form.getValues("channel_name")}${value}`
 
     if (value) {
-      checkSlugAvailability(form.getValues("channel_name") + value)
+      checkSlugAvailability(
+        slug,
+        timeoutId.current,
+        async () => (await isSlugAvailable(slug))?.data,
+        setslugAvailableMessage,
+        () =>
+          form.setError("channel_slug", {
+            type: "manual",
+            message: `the slug, ${slug
+              .replaceAll(" ", "-")
+              .toLowerCase()} is already taken`
+          }),
+        () => form.clearErrors("channel_slug")
+      )
     }
   }, [form.watch("channel_slug")])
 
@@ -248,31 +277,6 @@ function CreateChannels() {
         duration: 3000
       })
     }
-  }
-
-  const checkSlugAvailability = async (slug: string) => {
-    if (timeoutId.current) {
-      clearTimeout(timeoutId.current)
-    }
-    timeoutId.current = setTimeout(async () => {
-      const result = await isSlugAvailable(slug)
-      if (result?.success) {
-        if (!result?.data) {
-          form.setError("channel_slug", {
-            type: "manual",
-            message: `the slug, ${slug
-              .replaceAll(" ", "-")
-              .toLowerCase()} is already taken`
-          })
-          setslugAvailableMessage("")
-        } else {
-          form.clearErrors("channel_slug")
-          setslugAvailableMessage(
-            `the slug, ${slug.replaceAll(" ", "-").toLowerCase()} is available`
-          )
-        }
-      }
-    }, 2500)
   }
 
   return (

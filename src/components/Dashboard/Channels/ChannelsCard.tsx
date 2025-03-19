@@ -93,7 +93,8 @@ function ChannelsCard({ channel }: channelProps) {
                 </h3>
                 <Badge>{channel.channel_type}</Badge>
               </div>
-              {channel.created_by === authUser?.unique_id && (
+              {channel.ownerId === authUser?.unique_id ||
+              authUser?.role.includes("admin") ? (
                 <div className="flex items-center gap-1">
                   <Button
                     onClick={(e) => {
@@ -148,7 +149,7 @@ function ChannelsCard({ channel }: channelProps) {
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
-              )}
+              ) : null}
             </div>
           </CardHeader>
           <CardContent>
