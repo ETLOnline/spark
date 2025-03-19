@@ -57,23 +57,25 @@ const SpacesPage: React.FC = () => {
   return (
     <div className="container mx-auto p-4 space-y-8 max-w-3xl">
       <CreatePostForm variant="spaces" />
-      <CardHeader className="p-0">
-        <CardTitle>Feed</CardTitle>
-        <CardDescription>Latest posts from {activeCategory}</CardDescription>
-      </CardHeader>
+      <Card className="border-none">
+        <CardHeader className="p-0 pb-6">
+          <CardTitle>Feed</CardTitle>
+          <CardDescription>Latest posts from {activeCategory}</CardDescription>
+        </CardHeader>
 
-      {postsLoading ?
-        <div className="flex justify-center h-full w-full">
-          <Loader size={LoaderSizes.xl} />
-        </div>
-        :
-        posts?.data && (
-          <PostFeed
-            fetchedPosts={
-              posts?.data as (SelectPost | SelectFilePost | SelectPollPost)[]
-            }
-          />
-        )}
+        {postsLoading ?
+          <div className="flex justify-center h-full w-full">
+            <Loader size={LoaderSizes.xl} />
+          </div>
+          :
+          posts?.data && (
+            <PostFeed
+              fetchedPosts={
+                posts?.data as (SelectPost | SelectFilePost | SelectPollPost)[]
+              }
+            />
+          )}
+      </Card>
     </div>
   )
 }
