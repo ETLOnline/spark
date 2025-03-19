@@ -18,6 +18,8 @@ import { GetSpacePostsAction } from "@/src/server-actions/Post/Post"
 import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
 import { GetSpaceIdBySlugAction } from "@/src/server-actions/Space/Space"
 import { GetChannelIdBySlugAction } from "@/src/server-actions/Channel/Channel"
+import Loader from "@/src/components/common/Loader/Loader"
+import { LoaderSizes } from "@/src/components/common/Loader/types/loader-types"
 
 const SpacesPage: React.FC = () => {
   const params = useParams()
@@ -35,7 +37,7 @@ const SpacesPage: React.FC = () => {
     useServerAction(GetChannelIdBySlugAction)
 
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       const channelId = (await getChannelId(channelSlug as string))?.data
       if (channelId) {
         getSpaceId(spaceSlug as string, channelId)
@@ -55,21 +57,23 @@ const SpacesPage: React.FC = () => {
   return (
     <div className="container mx-auto p-4 space-y-8 max-w-3xl">
       <CreatePostForm variant="spaces" />
-      <Card>
-        <CardHeader>
-          <CardTitle>Feed</CardTitle>
-          <CardDescription>Latest posts from {activeCategory}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {posts?.data && (
-            <PostFeed
-              fetchedPosts={
-                posts?.data as (SelectPost | SelectFilePost | SelectPollPost)[]
-              }
-            />
-          )}
-        </CardContent>
-      </Card>
+      <CardHeader className="p-0">
+        <CardTitle>Feed</CardTitle>
+        <CardDescription>Latest posts from {activeCategory}</CardDescription>
+      </CardHeader>
+
+      {postsLoading ?
+        <div className="flex justify-center h-full w-full">
+          <Loader size={LoaderSizes.xl} />
+        </div>
+        :
+        posts?.data && (
+          <PostFeed
+            fetchedPosts={
+              posts?.data as (SelectPost | SelectFilePost | SelectPollPost)[]
+            }
+          />
+        )}
     </div>
   )
 }
