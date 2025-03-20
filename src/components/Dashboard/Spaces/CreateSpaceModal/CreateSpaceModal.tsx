@@ -89,20 +89,25 @@ function CreateSpaceModal({ space, setSpace }: spaceProps) {
     const slug = `${value}${form.getValues("space_slug")?.trim()}`
 
     if (value) {
-      checkSlugAvailability(
-        slug,
-        timeoutId.current,
-        async () => (await isSlugAvailable(slug, channel?.id as string))?.data,
-        setslugAvailableMessage,
-        () =>
-          form.setError("space_slug", {
-            type: "manual",
-            message: `the slug, ${slug
-              .replaceAll(" ", "-")
-              .toLowerCase()} is already taken`
-          }),
-        () => form.clearErrors("space_slug")
-      )
+      ;(async () => {
+        timeoutId.current = await checkSlugAvailability(
+          slug,
+          timeoutId.current,
+          async () =>
+            (
+              await isSlugAvailable(slug, channel?.id as string)
+            )?.data,
+          setslugAvailableMessage,
+          () =>
+            form.setError("space_slug", {
+              type: "manual",
+              message: `the slug, ${slug
+                .replaceAll(" ", "-")
+                .toLowerCase()} is already taken`
+            }),
+          () => form.clearErrors("space_slug")
+        )
+      })()
     }
   }, [form.watch("space_name")])
 
@@ -111,20 +116,25 @@ function CreateSpaceModal({ space, setSpace }: spaceProps) {
     const slug = `${form.getValues("space_name")?.trim()}${value}`
 
     if (value) {
-      checkSlugAvailability(
-        slug,
-        timeoutId.current,
-        async () => (await isSlugAvailable(slug, channel?.id as string))?.data,
-        setslugAvailableMessage,
-        () =>
-          form.setError("space_slug", {
-            type: "manual",
-            message: `the slug, ${slug
-              .replaceAll(" ", "-")
-              .toLowerCase()} is already taken`
-          }),
-        () => form.clearErrors("space_slug")
-      )
+      ;(async () => {
+        timeoutId.current = await checkSlugAvailability(
+          slug,
+          timeoutId.current,
+          async () =>
+            (
+              await isSlugAvailable(slug, channel?.id as string)
+            )?.data,
+          setslugAvailableMessage,
+          () =>
+            form.setError("space_slug", {
+              type: "manual",
+              message: `the slug, ${slug
+                .replaceAll(" ", "-")
+                .toLowerCase()} is already taken`
+            }),
+          () => form.clearErrors("space_slug")
+        )
+      })()
     }
   }, [form.watch("space_slug")])
 

@@ -138,7 +138,7 @@ export const checkSlugAvailability = async (
   if (timeoutId) {
     clearTimeout(timeoutId)
   }
-  timeoutId = setTimeout(async () => {
+  return setTimeout(async () => {
     try {
       const result = await isSlugAvailable()
       if (!result) {

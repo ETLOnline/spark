@@ -148,20 +148,22 @@ function CreateChannels() {
     const slug = `${value}${form.getValues("channel_slug").trim()}`
 
     if (value) {
-      checkSlugAvailability(
-        slug,
-        timeoutId.current,
-        async () => (await isSlugAvailable(slug))?.data,
-        setslugAvailableMessage,
-        () =>
-          form.setError("channel_slug", {
-            type: "manual",
-            message: `the slug, ${slug
-              .replaceAll(" ", "-")
-              .toLowerCase()} is already taken`
-          }),
-        () => form.clearErrors("channel_slug")
-      )
+      ;(async () => {
+        timeoutId.current = await checkSlugAvailability(
+          slug,
+          timeoutId.current,
+          async () => (await isSlugAvailable(slug))?.data,
+          setslugAvailableMessage,
+          () =>
+            form.setError("channel_slug", {
+              type: "manual",
+              message: `the slug, ${slug
+                .replaceAll(" ", "-")
+                .toLowerCase()} is already taken`
+            }),
+          () => form.clearErrors("channel_slug")
+        )
+      })()
     }
   }, [form.watch("channel_name")])
 
@@ -170,20 +172,22 @@ function CreateChannels() {
     const slug = `${form.getValues("channel_name").trim()}${value}`
 
     if (value) {
-      checkSlugAvailability(
-        slug,
-        timeoutId.current,
-        async () => (await isSlugAvailable(slug))?.data,
-        setslugAvailableMessage,
-        () =>
-          form.setError("channel_slug", {
-            type: "manual",
-            message: `the slug, ${slug
-              .replaceAll(" ", "-")
-              .toLowerCase()} is already taken`
-          }),
-        () => form.clearErrors("channel_slug")
-      )
+      ;(async () => {
+        timeoutId.current = await checkSlugAvailability(
+          slug,
+          timeoutId.current,
+          async () => (await isSlugAvailable(slug))?.data,
+          setslugAvailableMessage,
+          () =>
+            form.setError("channel_slug", {
+              type: "manual",
+              message: `the slug, ${slug
+                .replaceAll(" ", "-")
+                .toLowerCase()} is already taken`
+            }),
+          () => form.clearErrors("channel_slug")
+        )
+      })()
     }
   }, [form.watch("channel_slug")])
 
