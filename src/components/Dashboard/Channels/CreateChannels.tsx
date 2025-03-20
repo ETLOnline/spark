@@ -144,8 +144,8 @@ function CreateChannels() {
   }, [selectedChannel])
 
   useEffect(() => {
-    const value = form.getValues("channel_name")
-    const slug = `${value}${form.getValues("channel_slug")}`
+    const value = form.getValues("channel_name").trim()
+    const slug = `${value}${form.getValues("channel_slug").trim()}`
 
     if (value) {
       checkSlugAvailability(
@@ -166,8 +166,8 @@ function CreateChannels() {
   }, [form.watch("channel_name")])
 
   useEffect(() => {
-    const value = form.getValues("channel_slug")
-    const slug = `${form.getValues("channel_name")}${value}`
+    const value = form.getValues("channel_slug").trim()
+    const slug = `${form.getValues("channel_name").trim()}${value}`
 
     if (value) {
       checkSlugAvailability(

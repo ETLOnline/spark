@@ -85,8 +85,8 @@ function CreateSpaceModal({ space, setSpace }: spaceProps) {
   const error = form.formState.errors
 
   useEffect(() => {
-    const value = form.getValues("space_name")
-    const slug = `${value}${form.getValues("space_slug")}`
+    const value = form.getValues("space_name")?.trim()
+    const slug = `${value}${form.getValues("space_slug")?.trim()}`
 
     if (value) {
       checkSlugAvailability(
@@ -107,8 +107,8 @@ function CreateSpaceModal({ space, setSpace }: spaceProps) {
   }, [form.watch("space_name")])
 
   useEffect(() => {
-    const value = form.getValues("space_slug")
-    const slug = `${form.getValues("space_name")}${value}`
+    const value = form.getValues("space_slug")?.trim()
+    const slug = `${form.getValues("space_name")?.trim()}${value}`
 
     if (value) {
       checkSlugAvailability(

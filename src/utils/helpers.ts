@@ -101,7 +101,10 @@ export const isUserAdmin = (user: SelectUser): boolean => {
   return getUserRoles(user).includes("admin")
 }
 
-export const CanUserIntract = (user: SelectUser, ownerId?:string|null): boolean=> {
+export const canUserIntract = (
+  user: SelectUser,
+  ownerId?: string | null
+): boolean => {
   return isUserAdmin(user) || user.unique_id === ownerId ? true : false
 }
 
@@ -130,7 +133,7 @@ export const checkSlugAvailability = async (
   isSlugAvailable: () => Promise<boolean | undefined>,
   setslugAvailableMessage: (msg: string) => void,
   setFormError: FormErrorSetter,
-  clearFormError: ClearFormError,
+  clearFormError: ClearFormError
 ) => {
   if (timeoutId) {
     clearTimeout(timeoutId)
