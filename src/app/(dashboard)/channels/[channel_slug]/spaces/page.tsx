@@ -13,6 +13,7 @@ import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/Loader/types/loader-types"
 import { userStore } from "@/src/store/user/userStore"
 import SpacesCard from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/SpacesCard"
+import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
 
 export default function ChannelPage() {
   const [spaces, setSpaces] = useAtom(spaceStore.spaces)
@@ -70,8 +71,9 @@ export default function ChannelPage() {
             <div className="flex justify-center h-full w-full">
               <Loader size={LoaderSizes.xl} />{" "}
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3  gap-4 sm:gap-6">
+          ) : (spaces.length === 0 ?
+            <NoDataCard title="No Spaces Available" /> :
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3  gap-4 sm:gap-6">
               {spaces.map((space) => (
                 <SpacesCard space={space} key={space.id} />
               ))}
