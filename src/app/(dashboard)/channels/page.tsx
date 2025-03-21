@@ -5,6 +5,7 @@ import { channelStore } from "@/src/store/channel/channelStore"
 import CreateChannels from "@/src/components/Dashboard/Channels/CreateChannels"
 import ChannelsCard from "@/src/components/Dashboard/Channels/ChannelsCard"
 import { userStore } from "@/src/store/user/userStore"
+import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
 
 const ChannelsPage: React.FC = () => {
   const channels = useAtomValue(channelStore.channels)
@@ -17,9 +18,11 @@ const ChannelsPage: React.FC = () => {
         {userRole?.includes("admin") ? <CreateChannels /> : null}
       </div>
       <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 ">
-        {channels.map((channel) => {
-          return <ChannelsCard key={channel.id} channel={channel} />
-        })}
+        {channels.length === 0 ?
+          <NoDataCard title="No channels available" /> :
+          channels.map((channel) => {
+            return <ChannelsCard key={channel.id} channel={channel} />
+          })}
       </div>
     </div>
   )

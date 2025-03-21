@@ -13,6 +13,7 @@ import { Card, CardHeader } from "@/src/components/ui/card"
 import PostMenu from "./posts/post-menu"
 import { userStore } from "@/src/store/user/userStore"
 import moment from "moment-timezone"
+import NoDataCard from "./Channels/ChannelDetails/NoDataCard"
 
 type PostFeedProps = {
   fetchedPosts: (SelectPost | SelectFilePost | SelectPollPost)[]
@@ -28,46 +29,48 @@ const PostFeed: React.FC<PostFeedProps> = ({ fetchedPosts }) => {
 
   return (
     <div className="space-y-6">
-      {posts.map((post) => {
-        const name = `${post.author.first_name} ${post.author.last_name}`
+      {posts.length === 0 ?
+        <NoDataCard title="No posts available" /> :
+        posts.map((post) => {
+          const name = `${post.author.first_name} ${post.author.last_name}`
 
-        return (
-          <Card className="bg-background shadow-lg" key={post.id}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <Avatar>
-                    <AvatarImage
-                      src={post.author.profile_url as string}
-                      alt={name}
-                    />
-                    <AvatarFallback>{name}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-semibold">{name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {moment.utc(post.created_at || "").local().fromNow()}
-                    </p>
+          return (
+            <Card className="bg-background shadow-lg" key={post.id}>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <Avatar>
+                      <AvatarImage
+                        src={post.author.profile_url as string}
+                        alt={name}
+                      />
+                      <AvatarFallback>{name}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-semibold">{name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {moment.utc(post.created_at || "").local().fromNow()}
+                      </p>
+                    </div>
                   </div>
+
+                  <PostMenu post={post} />
                 </div>
-                
-                <PostMenu post={post}  />
-              </div>
-            </CardHeader>
-            {post.type === "text" ? (
-              <TextPost key={post.id} post={post} />
-            ) : post.type === "image" ? (
-              <ImagePost key={post.id} post={post as SelectFilePost} />
-            ) : post.type === "poll" ? (
-              <PollPost key={post.id} post={post as SelectPollPost} />
-            ) : (
-              post.type === "file" && (
-                <FilePost key={post.id} post={post as SelectFilePost} />
-              )
-            )}
-          </Card>
-        )
-      })}
+              </CardHeader>
+              {post.type === "text" ? (
+                <TextPost key={post.id} post={post} />
+              ) : post.type === "image" ? (
+                <ImagePost key={post.id} post={post as SelectFilePost} />
+              ) : post.type === "poll" ? (
+                <PollPost key={post.id} post={post as SelectPollPost} />
+              ) : (
+                post.type === "file" && (
+                  <FilePost key={post.id} post={post as SelectFilePost} />
+                )
+              )}
+            </Card>
+          )
+        })}
     </div>
   )
 }
