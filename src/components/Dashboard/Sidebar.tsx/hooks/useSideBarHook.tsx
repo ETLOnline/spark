@@ -44,7 +44,6 @@ const useSideBarHook = () => {
           setChannels((preChannels) => {
             return preChannels.map((c) => {
               if (c.id === newSpace.channel_id) {
-                console.log("newSpace", newSpace)
                 c.spaces = [...(c?.spaces || []), newSpace]
               }
               return c

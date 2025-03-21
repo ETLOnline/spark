@@ -24,7 +24,6 @@ import {
   UpdateSpaceAction
 } from "@/src/server-actions/Space/Space"
 import { channelStore } from "@/src/store/channel/channelStore"
-import { navStore } from "@/src/store/nav/navStore"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
 import { checkSlugAvailability } from "@/src/utils/helpers"
@@ -48,8 +47,6 @@ function CreateSpaceModal() {
   const authUser = useAtomValue(userStore.AuthUser)
   const currChannel = useAtomValue(channelStore.selectedChannel)
   const channel = useAtomValue(channelStore.selectedChannel)
-  const setSpaces = useSetAtom(spaceStore.spaces)
-  const setChannels = useSetAtom(channelStore.channels)
   const [selectedSpace, setSelectedSpace] = useAtom(spaceStore.selectedSpace)
 
   const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
@@ -205,14 +202,15 @@ function CreateSpaceModal() {
       data.created_by = authUser?.unique_id as string
       data.channel_id = channel?.id
       data.space_name = (data.space_name as string).trim() || ""
-      data.space_slug = `${data.space_name}-${data.space_slug?.trim() || ""}`
+      data.space_slug = `${data.space_name}${data?.space_slug?.trim() || ""}`
         .replaceAll(" ", "-")
         .toLowerCase()
-
+      
       const updatedSpace = await updateSpace(
         selectedSpace?.id as string,
         data as InsertSpace
       )
+
       if (updatedSpace?.success && updatedSpace.data) {
         setSpacesFormModelVisibility(false)
         toast({
