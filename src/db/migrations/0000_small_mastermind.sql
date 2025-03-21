@@ -9,6 +9,20 @@ CREATE TABLE `activities` (
 	`deleted_at` text
 );
 --> statement-breakpoint
+CREATE TABLE `channels` (
+	`channel_id` text(36) PRIMARY KEY NOT NULL,
+	`channel_slug` text NOT NULL,
+	`channel_name` text NOT NULL,
+	`description` text,
+	`channel_type` text,
+	`created_by` text NOT NULL,
+	`publish_channel` integer DEFAULT 0 NOT NULL,
+	`ownerId` text,
+	`updated_at` text,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP,
+	`deleted_at` text
+);
+--> statement-breakpoint
 CREATE TABLE `chats` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`channel_id` text NOT NULL,
@@ -50,9 +64,8 @@ CREATE TABLE `events` (
 --> statement-breakpoint
 CREATE TABLE `files` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-	`post_id` text NOT NULL,
 	`file_name` text NOT NULL,
-	`file_size` text NOT NULL,
+	`file_size` integer NOT NULL,
 	`file_type` text NOT NULL,
 	`file_path` text NOT NULL,
 	`updated_at` text,
@@ -112,6 +125,12 @@ CREATE TABLE `poll_votes` (
 	PRIMARY KEY(`user_id`, `post_id`)
 );
 --> statement-breakpoint
+CREATE TABLE `post_files` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`post_id` text NOT NULL,
+	`file_id` integer NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE `post_hashtags` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`post_id` text NOT NULL,
@@ -122,11 +141,12 @@ CREATE TABLE `posts` (
 	`id` text PRIMARY KEY NOT NULL,
 	`content` text,
 	`user_id` text NOT NULL,
-	`is_private` integer DEFAULT 0 NOT NULL,
 	`type` text NOT NULL,
-	`channel_id` text,
+	`entity_id` text,
+	`entity_type` text,
 	`likes` integer DEFAULT 0 NOT NULL,
 	`comments` integer DEFAULT 0 NOT NULL,
+	`category` text,
 	`updated_at` text,
 	`created_at` text DEFAULT CURRENT_TIMESTAMP,
 	`deleted_at` text
@@ -147,6 +167,19 @@ CREATE TABLE `rewards` (
 	`title` text NOT NULL,
 	`description` text NOT NULL,
 	`badge_type` text NOT NULL,
+	`updated_at` text,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP,
+	`deleted_at` text
+);
+--> statement-breakpoint
+CREATE TABLE `spaces` (
+	`id` text(36) PRIMARY KEY NOT NULL,
+	`space_slug` text NOT NULL,
+	`space_name` text NOT NULL,
+	`description` text,
+	`channel_id` text NOT NULL,
+	`created_by` text NOT NULL,
+	`ownerId` text,
 	`updated_at` text,
 	`created_at` text DEFAULT CURRENT_TIMESTAMP,
 	`deleted_at` text
@@ -213,7 +246,8 @@ CREATE TABLE `users` (
 	`external_auth_id` text NOT NULL,
 	`profile_url` text,
 	`meta` text,
-	`bio` text
+	`bio` text,
+	`role` text DEFAULT 'user' NOT NULL
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `users_email_unique` ON `users` (`email`);--> statement-breakpoint

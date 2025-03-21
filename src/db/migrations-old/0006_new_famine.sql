@@ -1,1 +1,0 @@
-ALTER TABLE `channels` ADD `publish_channel` integer DEFAULT 0 NOT NULL;

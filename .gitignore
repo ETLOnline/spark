@@ -7,9 +7,6 @@
 .yarn/install-state.gz
 package-lock.json
 
-#migration
-/src/db/migrations
-
 # testing
 /coverage
 
