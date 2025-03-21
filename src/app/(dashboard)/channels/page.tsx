@@ -18,11 +18,15 @@ const ChannelsPage: React.FC = () => {
         {userRole?.includes("admin") ? <CreateChannels /> : null}
       </div>
       <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 ">
-        {channels.length === 0 ?
-          <NoDataCard title="No channels available" /> :
-          channels.map((channel) => {
-            return <ChannelsCard key={channel.id} channel={channel} />
-          })}
+        {
+          channels.length === 0 ? (
+            <NoDataCard title="No channels available" />
+          ) :(
+            channels.map((channel) => {
+              return <ChannelsCard key={channel.id} channel={channel} />
+            })
+          )
+        }
       </div>
     </div>
   )

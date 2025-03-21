@@ -1,22 +1,23 @@
 import { SelectChannel, SelectSpace } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
-  GetChannelPathsAction,
   GetChannelsAction
 } from "@/src/server-actions/Channel/Channel"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { channelStore } from "@/src/store/channel/channelStore"
 import { navStore } from "@/src/store/nav/navStore"
-import { joinChannelsAndSpacesChannel } from "@/src/utils/helpers"
-import { useAtom, useSetAtom } from "jotai"
+import { canUserIntract, isUserAdmin, joinChannelsAndSpacesChannel } from "@/src/utils/helpers"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useEffect } from "react"
 import { getChannelsNavMapped } from "../utils/helpers"
 import { useParams } from "next/navigation"
+import { userStore } from "@/src/store/user/userStore"
 
 const useSideBarHook = () => {
   const setRoutes = useSetAtom(navStore.routes)
   const setSelectedChannel = useSetAtom(channelStore.selectedChannel)
   const [channels, setChannels] = useAtom(channelStore.channels)
+  const user = useAtomValue(userStore.AuthUser)
 
   const channelSlug = useParams().channel_slug
 
@@ -24,17 +25,23 @@ const useSideBarHook = () => {
     useServerAction(GetChannelsAction)
   const [userLoading, userData, userError, getUser] =
     useServerAction(AuthUserAction)
-  const [
-    channelPathsLoading,
-    channelPathsData,
-    channelPathsError,
-    getChannelPaths
-  ] = useServerAction(GetChannelPathsAction)
 
   useEffect(() => {
     const { unsubscribe } = joinChannelsAndSpacesChannel(
       "broadcast-channels-spaces-update",
       async (data, activity) => {
+        let updateAllowed = false
+        
+        if(!user) return
+        if(activity.includes('channel')){
+          updateAllowed = canUserIntract(user,data.ownerId)
+        }
+        if(activity.includes('space')){
+          updateAllowed = canUserIntract(user,data.ownerId)
+        }
+        if(!updateAllowed) return
+
+
         if (activity === "channel-add") {
           const newChannel = data as SelectChannel
           setChannels((preChannels) => [newChannel, ...preChannels])

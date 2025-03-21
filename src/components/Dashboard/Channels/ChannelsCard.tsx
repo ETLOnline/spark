@@ -94,7 +94,7 @@ function ChannelsCard({ channel }: channelProps) {
                 </h3>
                 <Badge>{channel.channel_type}</Badge>
               </div>
-              {canUserIntract(authUser as SelectUser, channel.ownerId) ? (
+              { authUser && canUserIntract(authUser, channel.ownerId) ? (
                 <div className="flex items-center gap-1">
                   <Button
                     onClick={(e) => {
@@ -155,6 +155,9 @@ function ChannelsCard({ channel }: channelProps) {
           <CardContent>
             <p className="text-sm text-muted-foreground sm:text-base line-clamp-1">
               {channel.description}
+            </p>
+            <p className="text-sm text-muted-foreground sm:text-base line-clamp-1">
+              ({channel?.spaces?.length}) spaces
             </p>
           </CardContent>
         </Card>
