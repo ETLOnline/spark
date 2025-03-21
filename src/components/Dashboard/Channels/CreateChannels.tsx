@@ -39,7 +39,7 @@ import { CircleCheck, CircleXIcon, CirclePlus } from "lucide-react"
 import Loader from "../../common/Loader/Loader"
 import { LoaderSizes } from "../../common/Loader/types/loader-types"
 import { Switch } from "../../ui/switch"
-import { checkSlugAvailability } from "@/src/utils/helpers"
+import {useDebouncedCallback } from "use-debounce"
 
 const channelSchema = z.object({
   channel_name: z
@@ -93,6 +93,27 @@ function CreateChannels() {
 
   const error = form.formState.errors
 
+  const debouncedCheckSlugAvailability = useDebouncedCallback(
+    async (
+      slug: string,
+      onAvailable?: () => void,
+      onNotAvailable?: () => void
+    ) => {
+      try {
+        const result = await isSlugAvailable(slug);
+        
+        if (result && result.data) {
+          onAvailable ? onAvailable() : null
+        } else {
+          onNotAvailable ? onNotAvailable() : null
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    1000 // Debounce delay in milliseconds
+  );
+
   useEffect(() => {
     if (selectedChannel != null) {
       setEditChannel(true)
@@ -142,51 +163,31 @@ function CreateChannels() {
 
   useEffect(() => {
     const value = form.getValues("channel_name").trim()
-    const slug = `${value}${form.getValues("channel_slug").trim()}`
+    const slug = `${(value || '').trim().replaceAll(" ", "-").toLowerCase()}`
 
-    if (value) {
-      ;(async () => {
-        timeoutId.current = await checkSlugAvailability(
-          slug,
-          timeoutId.current,
-          async () => (await isSlugAvailable(slug))?.data,
-          setslugAvailableMessage,
-          () =>
-            form.setError("channel_slug", {
-              type: "manual",
-              message: `the slug, ${slug
-                .replaceAll(" ", "-")
-                .toLowerCase()} is already taken`
-            }),
-          () => form.clearErrors("channel_slug")
-        )
-      })()
+    if (value && slug !== selectedChannel?.channel_slug) {
+      debouncedCheckSlugAvailability(slug, 
+        ()=>{
+          form.clearErrors("channel_slug")
+          setslugAvailableMessage(
+            `${slug} is available`
+          )
+        }
+        ,
+        ()=>{
+          form.setError("channel_slug", {
+            type: "manual",
+            message: `${slug} is already taken`
+          })
+          setslugAvailableMessage(""); 
+        }
+
+      )
+    }else{
+      setslugAvailableMessage("");
     }
+    form.setValue("channel_slug", slug)
   }, [form.watch("channel_name")])
-
-  useEffect(() => {
-    const value = form.getValues("channel_slug").trim()
-    const slug = `${form.getValues("channel_name").trim()}${value}`
-
-    if (value) {
-      ;(async () => {
-        timeoutId.current = await checkSlugAvailability(
-          slug,
-          timeoutId.current,
-          async () => (await isSlugAvailable(slug))?.data,
-          setslugAvailableMessage,
-          () =>
-            form.setError("channel_slug", {
-              type: "manual",
-              message: `the slug, ${slug
-                .replaceAll(" ", "-")
-                .toLowerCase()} is already taken`
-            }),
-          () => form.clearErrors("channel_slug")
-        )
-      })()
-    }
-  }, [form.watch("channel_slug")])
 
   async function channelSubmit(data: any) {
     if (!selectedChannel) {
@@ -207,9 +208,7 @@ function CreateChannels() {
       const payLoad = {
         ...data,
         channel_name: data.channel_name.trim(),
-        channel_slug: `${data.channel_name}${data.channel_slug.trim()}`
-          .replaceAll(" ", "-")
-          .toLowerCase(),
+        channel_slug: data.channel_slug,
         created_by: authUser?.unique_id as string
       }
       const createdChannel = await CreateChannel(payLoad as InsertChannel)
@@ -236,11 +235,7 @@ function CreateChannels() {
       const payLoad = {
         ...updatedData,
         channel_name: updatedData?.channel_name?.trim() || "",
-        channel_slug: `${updatedData.channel_name}${
-          updatedData?.channel_slug?.trim() || ""
-        }`
-          .replaceAll(" ", "-")
-          .toLowerCase()
+        channel_slug: updatedData?.channel_slug?.trim() || ""
       }
       if (!selectedChannel?.id) return
       const updatedChannel = await UpdateChannel(selectedChannel.id, payLoad)
@@ -328,9 +323,7 @@ function CreateChannels() {
                       <Input
                         id="channel_slug"
                         {...field}
-                        disabled={!form.getValues("channel_name")}
-                        variant="resistive"
-                        prefix={form.getValues("channel_name")}
+                        disabled={true}
                       />
                     )}
                   />

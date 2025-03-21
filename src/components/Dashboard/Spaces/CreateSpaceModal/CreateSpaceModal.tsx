@@ -26,12 +26,12 @@ import {
 import { channelStore } from "@/src/store/channel/channelStore"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
-import { checkSlugAvailability } from "@/src/utils/helpers"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { CircleCheck, CirclePlus, CircleXIcon } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
+import { useDebouncedCallback } from "use-debounce"
 import { z } from "zod"
 
 const spaceSchema = z.object({
@@ -78,59 +78,53 @@ function CreateSpaceModal() {
   })
   const error = form.formState.errors
 
-  useEffect(() => {
-    const value = form.getValues("space_name")?.trim()
-    const slug = `${value}${form.getValues("space_slug")?.trim()}`
+  const debouncedCheckSlugAvailability = useDebouncedCallback(
+    async (
+      slug: string,
+      onAvailable?: () => void,
+      onNotAvailable?: () => void
+    ) => {
+      try {
+        const result = await isSlugAvailable(slug, channel?.id || '');
+        
+        if (result && result.data) {
+          onAvailable ? onAvailable() : null
+        } else {
+          onNotAvailable ? onNotAvailable() : null
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    1000 // Debounce delay in milliseconds
+  );
 
-    if (value) {
-      ;(async () => {
-        timeoutId.current = await checkSlugAvailability(
-          slug,
-          timeoutId.current,
-          async () =>
-            (
-              await isSlugAvailable(slug, channel?.id as string)
-            )?.data,
-          setslugAvailableMessage,
-          () =>
-            form.setError("space_slug", {
-              type: "manual",
-              message: `the slug, ${slug
-                .replaceAll(" ", "-")
-                .toLowerCase()} is already taken`
-            }),
-          () => form.clearErrors("space_slug")
-        )
-      })()
+  useEffect(() => {
+    const value = form.getValues("space_name")?.trim() || ''
+    const slug = value.replaceAll(" ", "-").toLowerCase()
+
+    if (value && selectedSpace?.space_slug !== slug) {
+      debouncedCheckSlugAvailability(
+        slug,
+        ()=>{
+          form.clearErrors("space_slug")
+          setslugAvailableMessage(
+            `${slug} is available`
+          )
+        },
+        ()=>{
+          form.setError("space_slug", {
+            type: "manual",
+            message: `${slug} is already taken`
+          })
+          setslugAvailableMessage(""); 
+        }
+      )
+    }else{
+      setslugAvailableMessage("");
     }
+    form.setValue("space_slug", slug)
   }, [form.watch("space_name")])
-
-  useEffect(() => {
-    const value = form.getValues("space_slug")?.trim()
-    const slug = `${form.getValues("space_name")?.trim()}${value}`
-
-    if (value) {
-      ;(async () => {
-        timeoutId.current = await checkSlugAvailability(
-          slug,
-          timeoutId.current,
-          async () =>
-            (
-              await isSlugAvailable(slug, channel?.id as string)
-            )?.data,
-          setslugAvailableMessage,
-          () =>
-            form.setError("space_slug", {
-              type: "manual",
-              message: `the slug, ${slug
-                .replaceAll(" ", "-")
-                .toLowerCase()} is already taken`
-            }),
-          () => form.clearErrors("space_slug")
-        )
-      })()
-    }
-  }, [form.watch("space_slug")])
 
   useEffect(() => {
     form.reset()
@@ -176,10 +170,9 @@ function CreateSpaceModal() {
     try {
       data.created_by = authUser?.unique_id as string
       data.channel_id = currChannel?.id as string
-      data.space_name = (data.space_name as string).trim()
-      data.space_slug = `${data.space_name}${data.space_slug?.trim()}`
-        .replaceAll(" ", "-")
-        .toLowerCase()
+      data.space_name = (data.space_name || '').trim()
+      data.space_slug = data.space_slug?.trim()
+
       const createdSpace = await CreateNewSpace(data as InsertSpace)
       if (createdSpace?.success && createdSpace.data) {
         setSpacesFormModelVisibility(false)
@@ -201,11 +194,9 @@ function CreateSpaceModal() {
     try {
       data.created_by = authUser?.unique_id as string
       data.channel_id = channel?.id
-      data.space_name = (data.space_name as string).trim() || ""
-      data.space_slug = `${data.space_name}${data?.space_slug?.trim() || ""}`
-        .replaceAll(" ", "-")
-        .toLowerCase()
-      
+      data.space_name = (data.space_name || '').trim()
+      data.space_slug = data?.space_slug?.trim() || ""
+
       const updatedSpace = await updateSpace(
         selectedSpace?.id as string,
         data as InsertSpace
@@ -296,8 +287,7 @@ function CreateSpaceModal() {
                           placeholder="Enter space slug"
                           {...field}
                           className="col-span-3"
-                          variant="resistive"
-                          prefix={form.getValues("space_name")}
+                          disabled={true}
                         />
                       )}
                     />
