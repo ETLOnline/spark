@@ -1,1 +1,0 @@
-ALTER TABLE `posts` ADD `category` text;
