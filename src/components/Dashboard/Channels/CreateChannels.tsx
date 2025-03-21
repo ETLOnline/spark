@@ -62,13 +62,11 @@ function CreateChannels() {
 
   const timeoutId = useRef<NodeJS.Timeout>(null)
 
-  const [channels, setChannels] = useAtom(channelStore.channels)
+  const setChannels = useSetAtom(channelStore.channels)
+  const authUser = useAtomValue(userStore.AuthUser)
   const [channelFormModelVisibility, setChannelFormModelVisibility] = useAtom(
     channelStore.channelformModalVisibility
   )
-  const setRoutes = useSetAtom(navStore.routes)
-
-  const authUser = useAtomValue(userStore.AuthUser)
   const [selectedChannel, setSelectedChannel] = useAtom(
     channelStore.selectedChannel
   )
@@ -212,24 +210,12 @@ function CreateChannels() {
         channel_name: data.channel_name.trim(),
         channel_slug: `${data.channel_name}${data.channel_slug.trim()}`
           .replaceAll(" ", "-")
-          .toLowerCase()
+          .toLowerCase(),
+        created_by: authUser?.unique_id as string
       }
-      payLoad.created_by = authUser?.unique_id as string
-
       const createdChannel = await CreateChannel(payLoad as InsertChannel)
+
       if (createdChannel?.success && createdChannel?.data) {
-        setChannels([...channels, ...createdChannel.data])
-        setRoutes((routes) => ({
-          ...routes,
-          navChannels: [
-            ...routes.navChannels,
-            {
-              title: createdChannel.data[0].channel_name,
-              url: `/channels/${createdChannel.data[0].channel_slug}/spaces`,
-              icon: Hash
-            }
-          ]
-        }))
         setChannelFormModelVisibility(false)
         toast({
           title: "Channel Created",

@@ -56,8 +56,12 @@ export const UpdateChannelAction = CreateServerAction(
   true,
   async (channelID: string, updatedData: Partial<SelectChannel>) => {
     try {
-      const updateChannel = await UpdateChannel(channelID, updatedData)
-      return { success: true, data: updateChannel }
+      const updatedChannel = await UpdateChannel(channelID, updatedData)
+      const channel = AblyClientRest.channels.get(
+        "broadcast-channels-spaces-update"
+      )
+      await channel.publish("channel-edit", updatedChannel)
+      return { success: true, data: updatedChannel }
     } catch (error) {
       return { error: error }
     }
@@ -69,6 +73,10 @@ export const DeleteChannelAction = CreateServerAction(
   async (deletedChannelData: SelectChannel) => {
     try {
       await DeleteChannel(deletedChannelData)
+      const channel = AblyClientRest.channels.get(
+        "broadcast-channels-spaces-update"
+      )
+      await channel.publish("channel-del", deletedChannelData)
       return { success: true }
     } catch (error) {
       return { error: error }

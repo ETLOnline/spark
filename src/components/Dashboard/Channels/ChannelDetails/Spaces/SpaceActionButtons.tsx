@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import {
   AlertDialog,
@@ -13,22 +13,21 @@ import {
   AlertDialogTrigger
 } from "@/src/components/ui/alert-dialog"
 import { Edit3, Settings, Trash2 } from "lucide-react"
-import { spaceStore } from '@/src/store/space/spaceStore'
-import { useSetAtom } from 'jotai'
-import { DeleteSpaceAction } from '@/src/server-actions/Space/Space'
-import { useServerAction } from '@/src/hooks/useServerAction'
-import { SelectSpace } from '@/src/db/schema'
-import { toast } from '@/src/hooks/use-toast'
-import { useRouter } from 'next/navigation'
-
+import { spaceStore } from "@/src/store/space/spaceStore"
+import { useSetAtom } from "jotai"
+import { DeleteSpaceAction } from "@/src/server-actions/Space/Space"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { SelectSpace } from "@/src/db/schema"
+import { toast } from "@/src/hooks/use-toast"
+import { useRouter } from "next/navigation"
+import { channelStore } from "@/src/store/channel/channelStore"
 
 interface Props {
   space: SelectSpace
 }
 
 function SpacesActionButtons({ space }: Props) {
-  const setSpaces = useSetAtom(spaceStore.spaces)
-  const setSelecteSpace = useSetAtom(spaceStore.selectedSpace)
+  const setSelectedSpace = useSetAtom(spaceStore.selectedSpace)
   const setSpaceFormModelVisibility = useSetAtom(
     spaceStore.spaceFormModelVisibility
   )
@@ -38,21 +37,19 @@ function SpacesActionButtons({ space }: Props) {
     addDeleteSpaceError,
     deleteSpace
   ] = useServerAction(DeleteSpaceAction)
-  const [isOpen, setIsOpen] = useState(false)
-  const router = useRouter()
 
+  const [isOpen, setIsOpen] = useState(false)
+
+  const router = useRouter()
 
   function handleEditSpace(space: SelectSpace) {
     setSpaceFormModelVisibility(true)
-    setSelecteSpace(space)
+    setSelectedSpace(space)
   }
 
   async function handleDeleteSpace(selectedSpace: SelectSpace) {
     const deletedSpace = await deleteSpace(selectedSpace)
     if (deletedSpace?.success) {
-      setSpaces((spaces) =>
-        spaces.filter((spaces) => spaces.id !== selectedSpace?.id)
-      )
       toast({
         title: "Space deleted successfully.",
         duration: 3000
@@ -66,18 +63,20 @@ function SpacesActionButtons({ space }: Props) {
         variant="ghost"
         size="icon"
         onClick={(e) => {
-          e.preventDefault();
+          e.preventDefault()
           handleEditSpace(space)
         }}
       >
         <Edit3 />
       </Button>
       <Button
-        variant="ghost" size="icon"
+        variant="ghost"
+        size="icon"
         onClick={(e) => {
-          e.preventDefault();
+          e.preventDefault()
           router.push(`./spaces/${space.space_slug}/settings`)
-        }}>
+        }}
+      >
         <Settings />
       </Button>
       <AlertDialog open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
@@ -87,7 +86,7 @@ function SpacesActionButtons({ space }: Props) {
             size="icon"
             className="text-destructive hover:bg-destructive/10 hover:text-destructive"
             onClick={(e) => {
-              e.preventDefault();
+              e.preventDefault()
               setIsOpen(true)
             }}
           >
@@ -96,9 +95,10 @@ function SpacesActionButtons({ space }: Props) {
         </AlertDialogTrigger>
         <AlertDialogOverlay
           onClick={(e) => {
-            e.preventDefault();
+            e.preventDefault()
             setIsOpen(false)
-          }}>
+          }}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -107,14 +107,18 @@ function SpacesActionButtons({ space }: Props) {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={(e) => {
-                e.preventDefault();
-                setIsOpen(false);
-              }}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel
+                onClick={(e) => {
+                  e.preventDefault()
+                  setIsOpen(false)
+                }}
+              >
+                Cancel
+              </AlertDialogCancel>
               <AlertDialogAction
                 onClick={(e) => {
-                  e.preventDefault();
-                  handleDeleteSpace(space);
+                  e.preventDefault()
+                  handleDeleteSpace(space)
                 }}
                 loading={addDeleteSpaceLoading}
               >
