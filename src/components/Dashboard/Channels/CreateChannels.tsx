@@ -35,12 +35,11 @@ import { channelStore } from "@/src/store/channel/channelStore"
 import { z } from "zod"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { CircleCheck, CircleXIcon, Hash, CirclePlus } from "lucide-react"
-import { navStore } from "@/src/store/nav/navStore"
+import { CircleCheck, CircleXIcon, CirclePlus } from "lucide-react"
 import Loader from "../../common/Loader/Loader"
 import { LoaderSizes } from "../../common/Loader/types/loader-types"
 import { Switch } from "../../ui/switch"
-import { checkSlugAvailability } from "@/src/utils/helpers"
+import {useDebouncedCallback } from "use-debounce"
 
 const channelSchema = z.object({
   channel_name: z
@@ -62,13 +61,11 @@ function CreateChannels() {
 
   const timeoutId = useRef<NodeJS.Timeout>(null)
 
-  const [channels, setChannels] = useAtom(channelStore.channels)
+  const setChannels = useSetAtom(channelStore.channels)
+  const authUser = useAtomValue(userStore.AuthUser)
   const [channelFormModelVisibility, setChannelFormModelVisibility] = useAtom(
     channelStore.channelformModalVisibility
   )
-  const setRoutes = useSetAtom(navStore.routes)
-
-  const authUser = useAtomValue(userStore.AuthUser)
   const [selectedChannel, setSelectedChannel] = useAtom(
     channelStore.selectedChannel
   )
@@ -95,6 +92,27 @@ function CreateChannels() {
   })
 
   const error = form.formState.errors
+
+  const debouncedCheckSlugAvailability = useDebouncedCallback(
+    async (
+      slug: string,
+      onAvailable?: () => void,
+      onNotAvailable?: () => void
+    ) => {
+      try {
+        const result = await isSlugAvailable(slug);
+        
+        if (result && result.data) {
+          onAvailable ? onAvailable() : null
+        } else {
+          onNotAvailable ? onNotAvailable() : null
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    1000 // Debounce delay in milliseconds
+  );
 
   useEffect(() => {
     if (selectedChannel != null) {
@@ -144,48 +162,32 @@ function CreateChannels() {
   }, [selectedChannel])
 
   useEffect(() => {
-    const value = form.getValues("channel_name")
-    const slug = `${value}${form.getValues("channel_slug")}`
+    const value = form.getValues("channel_name").trim()
+    const slug = `${(value || '').trim().replaceAll(" ", "-").toLowerCase()}`
 
-    if (value) {
-      checkSlugAvailability(
-        slug,
-        timeoutId.current,
-        async () => (await isSlugAvailable(slug))?.data,
-        setslugAvailableMessage,
-        () =>
+    if (value && slug !== selectedChannel?.channel_slug) {
+      debouncedCheckSlugAvailability(slug, 
+        ()=>{
+          form.clearErrors("channel_slug")
+          setslugAvailableMessage(
+            `${slug} is available`
+          )
+        }
+        ,
+        ()=>{
           form.setError("channel_slug", {
             type: "manual",
-            message: `the slug, ${slug
-              .replaceAll(" ", "-")
-              .toLowerCase()} is already taken`
-          }),
-        () => form.clearErrors("channel_slug")
+            message: `${slug} is already taken`
+          })
+          setslugAvailableMessage(""); 
+        }
+
       )
+    }else{
+      setslugAvailableMessage("");
     }
+    form.setValue("channel_slug", slug)
   }, [form.watch("channel_name")])
-
-  useEffect(() => {
-    const value = form.getValues("channel_slug")
-    const slug = `${form.getValues("channel_name")}${value}`
-
-    if (value) {
-      checkSlugAvailability(
-        slug,
-        timeoutId.current,
-        async () => (await isSlugAvailable(slug))?.data,
-        setslugAvailableMessage,
-        () =>
-          form.setError("channel_slug", {
-            type: "manual",
-            message: `the slug, ${slug
-              .replaceAll(" ", "-")
-              .toLowerCase()} is already taken`
-          }),
-        () => form.clearErrors("channel_slug")
-      )
-    }
-  }, [form.watch("channel_slug")])
 
   async function channelSubmit(data: any) {
     if (!selectedChannel) {
@@ -206,26 +208,12 @@ function CreateChannels() {
       const payLoad = {
         ...data,
         channel_name: data.channel_name.trim(),
-        channel_slug: `${data.channel_name}${data.channel_slug.trim()}`
-          .replaceAll(" ", "-")
-          .toLowerCase()
+        channel_slug: data.channel_slug,
+        created_by: authUser?.unique_id as string
       }
-      payLoad.created_by = authUser?.unique_id as string
-
       const createdChannel = await CreateChannel(payLoad as InsertChannel)
+
       if (createdChannel?.success && createdChannel?.data) {
-        setChannels([...channels, ...createdChannel.data])
-        setRoutes((routes) => ({
-          ...routes,
-          navChannels: [
-            ...routes.navChannels,
-            {
-              title: createdChannel.data[0].channel_name,
-              url: `/channels/${createdChannel.data[0].channel_slug}/spaces`,
-              icon: Hash
-            }
-          ]
-        }))
         setChannelFormModelVisibility(false)
         toast({
           title: "Channel Created",
@@ -247,11 +235,7 @@ function CreateChannels() {
       const payLoad = {
         ...updatedData,
         channel_name: updatedData?.channel_name?.trim() || "",
-        channel_slug: `${updatedData.channel_name}${
-          updatedData?.channel_slug?.trim() || ""
-        }`
-          .replaceAll(" ", "-")
-          .toLowerCase()
+        channel_slug: updatedData?.channel_slug?.trim() || ""
       }
       if (!selectedChannel?.id) return
       const updatedChannel = await UpdateChannel(selectedChannel.id, payLoad)
@@ -339,9 +323,7 @@ function CreateChannels() {
                       <Input
                         id="channel_slug"
                         {...field}
-                        disabled={!form.getValues("channel_name")}
-                        variant="resistive"
-                        prefix={form.getValues("channel_name")}
+                        disabled={true}
                       />
                     )}
                   />

@@ -93,15 +93,18 @@ export const joinChannelsAndSpacesChannel = (
 }
 
 export const getUserRoles = (user: SelectUser): string[] => {
-  const roles = user.role.split(",")
-  return roles
+  const roles = (user?.role || '').split(",")
+  return roles || []
 }
 
 export const isUserAdmin = (user: SelectUser): boolean => {
   return getUserRoles(user).includes("admin")
 }
 
-export const CanUserIntract = (user: SelectUser, ownerId?:string|null): boolean=> {
+export const canUserIntract = (
+  user: SelectUser,
+  ownerId?: string | null
+): boolean => {
   return isUserAdmin(user) || user.unique_id === ownerId ? true : false
 }
 
@@ -122,33 +125,4 @@ export const removeEmojis = (string: string) => {
 
 export const isOnlyEmoji = (string: string) => {
   return !removeEmojis(string).length
-}
-
-export const checkSlugAvailability = async (
-  slug: string,
-  timeoutId: NodeJS.Timeout | null,
-  isSlugAvailable: () => Promise<boolean | undefined>,
-  setslugAvailableMessage: (msg: string) => void,
-  setFormError: FormErrorSetter,
-  clearFormError: ClearFormError,
-) => {
-  if (timeoutId) {
-    clearTimeout(timeoutId)
-  }
-  timeoutId = setTimeout(async () => {
-    try {
-      const result = await isSlugAvailable()
-      if (!result) {
-        setFormError()
-        setslugAvailableMessage("")
-      } else {
-        clearFormError()
-        setslugAvailableMessage(
-          `the slug, ${slug.replaceAll(" ", "-").toLowerCase()} is available`
-        )
-      }
-    } catch (error) {
-      console.error(error)
-    }
-  }, 2500)
 }

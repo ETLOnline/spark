@@ -2,8 +2,7 @@
 
 import Image from "next/image"
 import { useParams } from "next/navigation"
-import { useAtom, useAtomValue, useSetAtom } from "jotai"
-import { spaceStore } from "@/src/store/space/spaceStore"
+import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
 import { channelStore } from "@/src/store/channel/channelStore"
 import CreateSpaceModal from "@/src/components/Dashboard/Spaces/CreateSpaceModal/CreateSpaceModal"
@@ -16,7 +15,6 @@ import SpacesCard from "@/src/components/Dashboard/Channels/ChannelDetails/Space
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
 
 export default function ChannelPage() {
-  const [spaces, setSpaces] = useAtom(spaceStore.spaces)
   const [selectedChannel, setSelectedChannel] = useAtom(
     channelStore.selectedChannel
   )
@@ -34,7 +32,6 @@ export default function ChannelPage() {
       const res = await getChannel(slug)
       if (res?.success && res.data) {
         setSelectedChannel(res?.data)
-        setSpaces(res.data.spaces)
       }
     }
     fetchChannel()
@@ -63,18 +60,18 @@ export default function ChannelPage() {
               Spaces in {selectedChannel?.channel_name}
             </h2>
             {userRole?.includes("admin") ||
-              selectedChannel?.ownerId === userId ? (
-              <CreateSpaceModal space={spaces} setSpace={setSpaces} />
+            selectedChannel?.ownerId === userId ? (
+              <CreateSpaceModal />
             ) : null}
           </div>
           {channelLoading ? (
             <div className="flex justify-center h-full w-full">
               <Loader size={LoaderSizes.xl} />{" "}
             </div>
-          ) : (spaces.length === 0 ?
+          ) : (selectedChannel?.spaces?.length === 0 ?
             <NoDataCard title="No Spaces Available" /> :
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3  gap-4 sm:gap-6">
-              {spaces.map((space) => (
+              {selectedChannel?.spaces?.map((space) => (
                 <SpacesCard space={space} key={space.id} />
               ))}
             </div>

@@ -57,8 +57,12 @@ export const UpdateSpaceAction = CreateServerAction(
   true,
   async (spaceID: string, updatedData: Partial<SelectSpace>) => {
     try {
-      const updateSapce = await UpdateSpace(spaceID, updatedData)
-      return { success: true, data: updateSapce }
+      const updatedSpace = await UpdateSpace(spaceID, updatedData)
+      const channel = AblyClientRest.channels.get(
+        "broadcast-channels-spaces-update"
+      )
+      await channel.publish("space-edit", updatedSpace)
+      return { success: true, data: updatedSpace }
     } catch (error) {
       return { error: error }
     }
@@ -67,14 +71,16 @@ export const UpdateSpaceAction = CreateServerAction(
 
 export const DeleteSpaceAction = CreateServerAction(
   true,
-  async (deleteSpaceData: SelectSpace) => {
+  async (deletedSpaceData: SelectSpace) => {
     try {
-      await DeleteSpace(deleteSpaceData)
+      await DeleteSpace(deletedSpaceData)
+      const channel = AblyClientRest.channels.get(
+        "broadcast-channels-spaces-update"
+      )
+      await channel.publish("space-del", deletedSpaceData)
       return { success: true }
     } catch (error) {
       return { error: error }
     }
   }
 )
-
-

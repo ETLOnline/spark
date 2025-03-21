@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react"
 import Link from "next/link"
 import {
   Card,
@@ -7,12 +7,12 @@ import {
   CardHeader,
   CardTitle
 } from "@/src/components/ui/card"
-import Image from 'next/image'
-import { SelectSpace } from '@/src/db/schema'
-import SpacesActionButtons from './SpaceActionButtons'
-import { userStore } from '@/src/store/user/userStore'
-import { useAtomValue } from 'jotai'
-import { CanUserIntract } from '@/src/utils/helpers'
+import Image from "next/image"
+import { SelectSpace } from "@/src/db/schema"
+import SpacesActionButtons from "./SpaceActionButtons"
+import { userStore } from "@/src/store/user/userStore"
+import { useAtomValue } from "jotai"
+import { canUserIntract } from "@/src/utils/helpers"
 
 interface Props {
   space: SelectSpace
@@ -41,7 +41,7 @@ function SpacesCard({ space }: Props) {
                 {0} members
               </CardDescription>
             </div>
-            {user && CanUserIntract(user, space?.ownerId) ? (
+            {user && canUserIntract(user, space?.ownerId) ? (
               <div className="flex-shrink-0">
                 <SpacesActionButtons space={space} />
               </div>

@@ -3,7 +3,7 @@
 import React, { useState } from "react"
 import { Card, CardContent, CardHeader } from "../../ui/card"
 import Image from "next/image"
-import { SelectChannel } from "@/src/db/schema"
+import { SelectChannel, SelectUser } from "@/src/db/schema"
 import { Button } from "../../ui/button"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import Link from "next/link"
@@ -26,6 +26,7 @@ import Loader from "../../common/Loader/Loader"
 import { toast } from "@/src/hooks/use-toast"
 import { userStore } from "@/src/store/user/userStore"
 import { Badge } from "../../ui/badge"
+import { canUserIntract } from "@/src/utils/helpers"
 
 interface channelProps {
   channel: SelectChannel
@@ -93,8 +94,7 @@ function ChannelsCard({ channel }: channelProps) {
                 </h3>
                 <Badge>{channel.channel_type}</Badge>
               </div>
-              {channel.ownerId === authUser?.unique_id ||
-              authUser?.role.includes("admin") ? (
+              { authUser && canUserIntract(authUser, channel.ownerId) ? (
                 <div className="flex items-center gap-1">
                   <Button
                     onClick={(e) => {
@@ -155,6 +155,9 @@ function ChannelsCard({ channel }: channelProps) {
           <CardContent>
             <p className="text-sm text-muted-foreground sm:text-base line-clamp-1">
               {channel.description}
+            </p>
+            <p className="text-sm text-muted-foreground sm:text-base line-clamp-1">
+              ({channel?.spaces?.length}) spaces
             </p>
           </CardContent>
         </Card>

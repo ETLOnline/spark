@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import {
   AlertDialog,
@@ -13,13 +13,14 @@ import {
   AlertDialogTrigger
 } from "@/src/components/ui/alert-dialog"
 import { MoreVertical, Pencil, Settings, Trash2 } from "lucide-react"
-import { spaceStore } from '@/src/store/space/spaceStore'
-import { useSetAtom } from 'jotai'
-import { DeleteSpaceAction } from '@/src/server-actions/Space/Space'
-import { useServerAction } from '@/src/hooks/useServerAction'
-import { SelectSpace } from '@/src/db/schema'
-import { toast } from '@/src/hooks/use-toast'
-import { useRouter } from 'next/navigation'
+import { spaceStore } from "@/src/store/space/spaceStore"
+import { useSetAtom } from "jotai"
+import { DeleteSpaceAction } from "@/src/server-actions/Space/Space"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { SelectSpace } from "@/src/db/schema"
+import { toast } from "@/src/hooks/use-toast"
+import { useRouter } from "next/navigation"
+import { channelStore } from "@/src/store/channel/channelStore"
 import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from '@/src/components/ui/dialog'
 
 
@@ -28,8 +29,7 @@ interface Props {
 }
 
 function SpacesActionButtons({ space }: Props) {
-  const setSpaces = useSetAtom(spaceStore.spaces)
-  const setSelecteSpace = useSetAtom(spaceStore.selectedSpace)
+  const setSelectedSpace = useSetAtom(spaceStore.selectedSpace)
   const setSpaceFormModelVisibility = useSetAtom(
     spaceStore.spaceFormModelVisibility
   )
@@ -39,21 +39,21 @@ function SpacesActionButtons({ space }: Props) {
     addDeleteSpaceError,
     deleteSpace
   ] = useServerAction(DeleteSpaceAction)
+
   const [isOpen, setIsOpen] = useState(false)
   const [openMenu, setOpenMenu] = useState(false)
   const router = useRouter()
+
+
   function handleEditSpace(space: SelectSpace) {
     setSpaceFormModelVisibility(true)
-    setSelecteSpace(space)
+    setSelectedSpace(space)
   }
 
 
   async function handleDeleteSpace(selectedSpace: SelectSpace) {
     const deletedSpace = await deleteSpace(selectedSpace)
     if (deletedSpace?.success) {
-      setSpaces((spaces) =>
-        spaces.filter((spaces) => spaces.id !== selectedSpace?.id)
-      )
       toast({
         title: "Space deleted successfully.",
         duration: 3000

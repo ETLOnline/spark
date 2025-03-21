@@ -15,7 +15,7 @@ import {
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import { Textarea } from "@/src/components/ui/textarea"
-import { InsertSpace, SelectSpace } from "@/src/db/schema"
+import { InsertSpace } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
@@ -24,21 +24,15 @@ import {
   UpdateSpaceAction
 } from "@/src/server-actions/Space/Space"
 import { channelStore } from "@/src/store/channel/channelStore"
-import { navStore } from "@/src/store/nav/navStore"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
-import { checkSlugAvailability } from "@/src/utils/helpers"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { CircleCheck, CirclePlus, CircleXIcon } from "lucide-react"
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
+import { useDebouncedCallback } from "use-debounce"
 import { z } from "zod"
-
-interface spaceProps {
-  space: SelectSpace[]
-  setSpace: Dispatch<SetStateAction<SelectSpace[]>>
-}
 
 const spaceSchema = z.object({
   space_name: z.string().min(1, "Space name required").max(30, "Too long"),
@@ -49,18 +43,18 @@ const spaceSchema = z.object({
     .max(50, "Description is too long")
 })
 
-function CreateSpaceModal({ space, setSpace }: spaceProps) {
+function CreateSpaceModal() {
   const authUser = useAtomValue(userStore.AuthUser)
   const currChannel = useAtomValue(channelStore.selectedChannel)
-  const setRoutes = useSetAtom(navStore.routes)
+  const channel = useAtomValue(channelStore.selectedChannel)
+  const [selectedSpace, setSelectedSpace] = useAtom(spaceStore.selectedSpace)
 
   const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
-  const [spaceFormModelVisibility, setSpaceFormModelVisibility] = useAtom(
+  const [spaceFormModelVisibility, setSpacesFormModelVisibility] = useAtom(
     spaceStore.spaceFormModelVisibility
   )
-  const [selectedSpace, setSelectedSpace] = useAtom(spaceStore.selectedSpace)
+
   const [editSpace, setEditSpace] = useState(false)
-  const [channel, setChannel] = useAtom(channelStore.selectedChannel)
 
   const timeoutId = useRef<NodeJS.Timeout>(null)
 
@@ -84,49 +78,53 @@ function CreateSpaceModal({ space, setSpace }: spaceProps) {
   })
   const error = form.formState.errors
 
-  useEffect(() => {
-    const value = form.getValues("space_name")
-    const slug = `${value}${form.getValues("space_slug")}`
+  const debouncedCheckSlugAvailability = useDebouncedCallback(
+    async (
+      slug: string,
+      onAvailable?: () => void,
+      onNotAvailable?: () => void
+    ) => {
+      try {
+        const result = await isSlugAvailable(slug, channel?.id || '');
+        
+        if (result && result.data) {
+          onAvailable ? onAvailable() : null
+        } else {
+          onNotAvailable ? onNotAvailable() : null
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    1000 // Debounce delay in milliseconds
+  );
 
-    if (value) {
-      checkSlugAvailability(
+  useEffect(() => {
+    const value = form.getValues("space_name")?.trim() || ''
+    const slug = value.replaceAll(" ", "-").toLowerCase()
+
+    if (value && selectedSpace?.space_slug !== slug) {
+      debouncedCheckSlugAvailability(
         slug,
-        timeoutId.current,
-        async () => (await isSlugAvailable(slug, channel?.id as string))?.data,
-        setslugAvailableMessage,
-        () =>
+        ()=>{
+          form.clearErrors("space_slug")
+          setslugAvailableMessage(
+            `${slug} is available`
+          )
+        },
+        ()=>{
           form.setError("space_slug", {
             type: "manual",
-            message: `the slug, ${slug
-              .replaceAll(" ", "-")
-              .toLowerCase()} is already taken`
-          }),
-        () => form.clearErrors("space_slug")
+            message: `${slug} is already taken`
+          })
+          setslugAvailableMessage(""); 
+        }
       )
+    }else{
+      setslugAvailableMessage("");
     }
+    form.setValue("space_slug", slug)
   }, [form.watch("space_name")])
-
-  useEffect(() => {
-    const value = form.getValues("space_slug")
-    const slug = `${form.getValues("space_name")}${value}`
-
-    if (value) {
-      checkSlugAvailability(
-        slug,
-        timeoutId.current,
-        async () => (await isSlugAvailable(slug, channel?.id as string))?.data,
-        setslugAvailableMessage,
-        () =>
-          form.setError("space_slug", {
-            type: "manual",
-            message: `the slug, ${slug
-              .replaceAll(" ", "-")
-              .toLowerCase()} is already taken`
-          }),
-        () => form.clearErrors("space_slug")
-      )
-    }
-  }, [form.watch("space_slug")])
 
   useEffect(() => {
     form.reset()
@@ -172,31 +170,12 @@ function CreateSpaceModal({ space, setSpace }: spaceProps) {
     try {
       data.created_by = authUser?.unique_id as string
       data.channel_id = currChannel?.id as string
-      data.space_name = (data.space_name as string).trim()
-      data.space_slug = `${data.space_name}${data.space_slug?.trim()}`
-        .replaceAll(" ", "-")
-        .toLowerCase()
+      data.space_name = (data.space_name || '').trim()
+      data.space_slug = data.space_slug?.trim()
+
       const createdSpace = await CreateNewSpace(data as InsertSpace)
       if (createdSpace?.success && createdSpace.data) {
-        setSpace([...space, ...createdSpace.data])
-        setRoutes((routes) => ({
-          ...routes,
-          navChannels: routes.navChannels.map((channel) =>
-            channel.url.includes(currChannel?.channel_slug as string)
-              ? {
-                  ...channel,
-                  items: [
-                    ...(channel.items ?? []),
-                    {
-                      title: createdSpace.data[0].space_name,
-                      url: `/channels/${currChannel?.channel_slug}/spaces/${createdSpace.data[0].space_slug}`
-                    }
-                  ]
-                }
-              : channel
-          )
-        }))
-        setSpaceFormModelVisibility(false)
+        setSpacesFormModelVisibility(false)
         toast({
           title: "Space created",
           duration: 3000
@@ -215,23 +194,16 @@ function CreateSpaceModal({ space, setSpace }: spaceProps) {
     try {
       data.created_by = authUser?.unique_id as string
       data.channel_id = channel?.id
-      data.space_name = (data.space_name as string).trim()
-      data.space_slug = `${data.space_name}-${data.space_slug?.trim()}`
-        .replaceAll(" ", "-")
-        .toLowerCase()
-      const UpdateSpaceModal = await updateSpace(
+      data.space_name = (data.space_name || '').trim()
+      data.space_slug = data?.space_slug?.trim() || ""
+
+      const updatedSpace = await updateSpace(
         selectedSpace?.id as string,
         data as InsertSpace
       )
-      if (UpdateSpaceModal?.success && UpdateSpaceModal.data) {
-        setSpace((spaces) =>
-          spaces.map((space) =>
-            space.id === selectedSpace?.id
-              ? { ...space, ...UpdateSpaceModal.data }
-              : space
-          )
-        )
-        setSpaceFormModelVisibility(false)
+
+      if (updatedSpace?.success && updatedSpace.data) {
+        setSpacesFormModelVisibility(false)
         toast({
           title: "Space updated",
           description: "Your space has been updated successfully.",
@@ -252,7 +224,7 @@ function CreateSpaceModal({ space, setSpace }: spaceProps) {
       <Dialog
         open={spaceFormModelVisibility}
         onOpenChange={(open) => {
-          setSpaceFormModelVisibility(open)
+          setSpacesFormModelVisibility(open)
         }}
       >
         <DialogTrigger asChild>
@@ -315,8 +287,7 @@ function CreateSpaceModal({ space, setSpace }: spaceProps) {
                           placeholder="Enter space slug"
                           {...field}
                           className="col-span-3"
-                          variant="resistive"
-                          prefix={form.getValues("space_name")}
+                          disabled={true}
                         />
                       )}
                     />
