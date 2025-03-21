@@ -88,9 +88,9 @@ function CreateSpaceModal() {
         const result = await isSlugAvailable(slug, channel?.id || '');
         
         if (result && result.data) {
-          onAvailable ? onAvailable() : null
+          if(onAvailable) onAvailable()
         } else {
-          onNotAvailable ? onNotAvailable() : null
+          if(onNotAvailable) onNotAvailable()
         }
       } catch (error) {
         console.error(error);
