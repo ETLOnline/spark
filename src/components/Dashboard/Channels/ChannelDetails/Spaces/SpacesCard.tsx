@@ -4,6 +4,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle
 } from "@/src/components/ui/card"
@@ -13,6 +14,10 @@ import SpacesActionButtons from "./SpaceActionButtons"
 import { userStore } from "@/src/store/user/userStore"
 import { useAtomValue } from "jotai"
 import { canUserIntract } from "@/src/utils/helpers"
+import { Badge } from "@/src/components/ui/badge"
+import { Button } from "@/src/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/src/components/ui/dropdown-menu"
+import { Edit, ExternalLink, MoreHorizontal, Settings, Trash2 } from "lucide-react"
 
 interface Props {
   space: SelectSpace
@@ -21,40 +26,35 @@ interface Props {
 function SpacesCard({ space }: Props) {
   const user = useAtomValue(userStore.AuthUser)
   return (
-    <Link href={`./spaces/${space.space_slug}`} shallow={true} >
-      <Card key={space.id} className="hover:shadow-md transition-shadow">
-        <CardHeader className="pb-2">
-          <div className="flex justify-between items-start gap-3">
-            <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-md">
-              <Image
-                src="/images/home/session-image2.jpg"
-                alt={space.space_name}
-                fill
-                className="object-cover"
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <CardTitle className="text-xl truncate">
-                {space.space_name}
-              </CardTitle>
-              <CardDescription className="text-sm text-muted-foreground truncate">
-                {0} members
-              </CardDescription>
-            </div>
-            {user && canUserIntract(user, space?.ownerId) ? (
-              <div className="flex-shrink-0">
-                <SpacesActionButtons space={space} />
-              </div>
-            ) : null}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {space.description}
-          </p>
-        </CardContent>
-      </Card>
-    </Link>
+    <Card key={space.id} className="overflow-hidden">
+      <div className="aspect-video w-full overflow-hidden">
+        <img
+          src={"/images/home/session-image2.jpg"}
+          alt={space.space_name}
+          className="w-full h-full object-cover transition-transform hover:scale-105"
+        />
+      </div>
+      <CardHeader>
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-xl">{space.space_name}</CardTitle>
+          {user && canUserIntract(user, space.ownerId) ? (
+            <SpacesActionButtons space={space} />
+          ):null}
+        </div>
+        <CardDescription>{space.description}</CardDescription>
+      </CardHeader>
+      <CardFooter className="flex flex-col sm:flex-row justify-between gap-2">
+        <Badge variant="secondary">
+          {/* {space.membersCount} {space.membersCount === 1 ? 'Member' : 'Members'} */}
+          0 Members
+        </Badge>
+        <Link href={`./spaces/${space.space_slug}`}>
+          <Button>
+            Open Space
+          </Button>
+        </Link>
+      </CardFooter>
+    </Card>
   )
 }
 

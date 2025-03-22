@@ -680,8 +680,59 @@ export const spacesRelations = relations(spacesTable, ({ one, many }) => ({
     references: [usersTable.unique_id],
     relationName: "spaceToOwner"
   }),
-  posts: many(postsTable, { relationName: "spaceToPosts" })
+  posts: many(postsTable, { relationName: "spaceToPosts" }),
+  features: many(spaceFeaturesTable, {
+    relationName: "spaceFeaturesToSpace"
+  })
 }))
 
 export type InsertSpace = typeof spacesTable.$inferInsert
 export type SelectSpace = typeof spacesTable.$inferSelect
+
+export const featuresTable = sqliteTable("features", {
+  id: int().primaryKey({ autoIncrement: true }),
+  feature_name: text().notNull(),
+  feature_slug: text().notNull(),
+  feature_type: text().notNull(),
+  feature_description: text(),
+  feature_icon: text(),
+  feature_url: text(),
+  feature_order: int().notNull().default(0),
+  feature_status: int().notNull().default(1),
+  ...timestamps
+})
+
+export type InsertFeature = typeof featuresTable.$inferInsert
+export type SelectFeature = typeof featuresTable.$inferSelect
+
+export const featuresTableRelations = relations(featuresTable, ({ many }) => ({
+  spaces: many(spaceFeaturesTable, {
+    relationName: "spaceFeaturesToFeature"
+  })
+}))
+
+export const spaceFeaturesTable = sqliteTable("space_features", {
+  id: int().primaryKey({ autoIncrement: true }),
+  space_id: text().notNull(), // space_id
+  feature_id: int().notNull(), // feature_id
+  ...timestamps
+})
+
+export type InsertSpaceFeature = typeof spaceFeaturesTable.$inferInsert
+export type SelectSpaceFeature = typeof spaceFeaturesTable.$inferSelect
+
+export const spaceFeaturesTableRelations = relations(
+  spaceFeaturesTable,
+  ({ one }) => ({
+    space: one(spacesTable, {
+      fields: [spaceFeaturesTable.space_id],
+      references: [spacesTable.id],
+      relationName: "spaceFeaturesToSpace"
+    }),
+    feature: one(featuresTable, {
+      fields: [spaceFeaturesTable.feature_id],
+      references: [featuresTable.id],
+      relationName: "spaceFeaturesToFeature"
+    })
+  })
+)

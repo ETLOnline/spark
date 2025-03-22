@@ -1,11 +1,11 @@
 import { and, eq } from "drizzle-orm"
 import { db } from "../.."
-import { InsertSpace, SelectSpace, spacesTable } from "../../schema"
+import { channelsTable, InsertSpace, SelectSpace, spaceFeaturesTable, spacesTable } from "../../schema"
 
 export async function CreateSpace(spaceData: InsertSpace) {
   try {
     const space = await db.insert(spacesTable).values(spaceData).returning()
-    return space
+    return space[0]
   } catch (e: any) {
     throw new Error(e.message)
   }
@@ -13,11 +13,37 @@ export async function CreateSpace(spaceData: InsertSpace) {
 
 export async function GetSpaces(channelId: string) {
   try {
-    const spaces = await db
-      .select()
-      .from(spacesTable)
-      .where(eq(spacesTable.channel_id, channelId))
+    const spaces = await db.query.spacesTable.findMany({
+      where: eq(spacesTable.channel_id, channelId),
+      with: {
+        features: true,
+        owner: true
+      }
+    })
     return spaces
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
+
+export async function GetSpaceBySlug(spaceSlug: string, channelSlug: string) {
+  try {
+    const channel = await db.query.channelsTable.findFirst({
+      where: eq(channelsTable.channel_slug, channelSlug),
+      with: {
+        spaces: {
+          where: eq(spacesTable.space_slug, spaceSlug),
+          with: {
+            channel: true,
+            features: true,
+          }
+        }
+      }
+    })
+    if (!channel || !channel.spaces.length) {
+      return null
+    }
+    return channel.spaces[0]
   } catch (error: any) {
     throw new Error(error.message)
   }
@@ -65,6 +91,23 @@ export async function DeleteSpace(deletedSpaceData: SelectSpace) {
       .delete(spacesTable)
       .where(eq(spacesTable.id, deletedSpaceData.id))
     return deletedSpace
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function attachSpaceFeatures(spaceId: string, featureIds: number[]) {
+  try {
+    const spaceFeatureList = featureIds.map((featureId) => ({
+      space_id: spaceId,
+      feature_id: featureId,
+    }))
+
+    const spaceFeatures = await db.transaction(async(tx)=>{
+      await tx.delete(spaceFeaturesTable).where(eq(spaceFeaturesTable.space_id, spaceId))
+      return await tx.insert(spaceFeaturesTable).values(spaceFeatureList).returning()
+    })
+    return spaceFeatures
   } catch (e: any) {
     throw new Error(e.message)
   }

@@ -12,7 +12,9 @@ export function CreateServerAction<T, Args extends any[]>(
       }
     }
     
-    return await callback(...args);
+    return await callback(...args).catch((error) => {
+      throw error;
+    });
 
   };
 }

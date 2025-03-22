@@ -6,7 +6,11 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:seed": "npx tsx src/db/seeds/index.ts",
+    "db:generate-migrations": "npx drizzle-kit generate",
+    "db:migrate": "npx drizzle-kit migrate"
+
   },
   "dependencies": {
     "@clerk/nextjs": "^6.5.1",

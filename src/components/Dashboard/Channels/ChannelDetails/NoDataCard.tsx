@@ -9,7 +9,7 @@ interface Props {
 
 function NoDataCard({ title, description }: Props) {
   return (
-    <div className="flex items-center justify-center">
+    <div className="flex items-center justify-center w-full">
       <Card className="border-none">
         <CardHeader className="items-center">
           <Search className="h-16 w-16 text-muted-foreground mb-4" />

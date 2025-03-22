@@ -29,6 +29,7 @@ import { userStore } from "@/src/store/user/userStore"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { CircleCheck, CirclePlus, CircleXIcon } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { useDebouncedCallback } from "use-debounce"
@@ -36,14 +37,15 @@ import { z } from "zod"
 
 const spaceSchema = z.object({
   space_name: z.string().min(1, "Space name required").max(30, "Too long"),
-  space_slug: z.string().max(15, "Slug is too long"),
+  space_slug: z.string().max(50, "Slug is too long"),
   description: z
     .string()
     .min(1, "Description required")
-    .max(50, "Description is too long")
+    .max(150, "Description is too long")
 })
 
 function CreateSpaceModal() {
+  const router = useRouter()
   const authUser = useAtomValue(userStore.AuthUser)
   const currChannel = useAtomValue(channelStore.selectedChannel)
   const channel = useAtomValue(channelStore.selectedChannel)
@@ -55,8 +57,6 @@ function CreateSpaceModal() {
   )
 
   const [editSpace, setEditSpace] = useState(false)
-
-  const timeoutId = useRef<NodeJS.Timeout>(null)
 
   const [addSpaceLoading, addSpaceData, addSpaceError, CreateNewSpace] =
     useServerAction(CreateSpaceAction)
@@ -175,6 +175,7 @@ function CreateSpaceModal() {
 
       const createdSpace = await CreateNewSpace(data as InsertSpace)
       if (createdSpace?.success && createdSpace.data) {
+        router.push(`./spaces/${createdSpace.data.space_slug}/settings`)
         setSpacesFormModelVisibility(false)
         toast({
           title: "Space created",

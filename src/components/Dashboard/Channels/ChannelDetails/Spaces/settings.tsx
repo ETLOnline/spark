@@ -11,8 +11,9 @@ import { ToastAction } from "@/src/components/ui/toast"
 import { Button } from "@/src/components/ui/button"
 import { toast } from "@/src/hooks/use-toast"
 import { Switch } from "@/src/components/ui/switch"
+import { SelectFeature, SelectSpace } from "@/src/db/schema"
 
-export default function SpaceSettings() {
+export default function SpaceSettings({space, featuresList}: {space:SelectSpace, featuresList: SelectFeature[]}) {
   const [settings, setSettings] = useState({
     chat: true,
     posts: true,

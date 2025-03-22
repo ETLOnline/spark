@@ -3,6 +3,7 @@
 import {
   CreateSpace,
   DeleteSpace,
+  GetSpaceBySlug,
   GetSpaces,
   IsSlugAvailable,
   UpdateSpace
@@ -19,7 +20,7 @@ export const CreateSpaceAction = CreateServerAction(
       const channel = AblyClientRest.channels.get(
         "broadcast-channels-spaces-update"
       )
-      await channel.publish("space-add", newSpace[0])
+      await channel.publish("space-add", newSpace)
       return { success: true, data: newSpace }
     } catch (error: any) {
       return {
@@ -79,6 +80,18 @@ export const DeleteSpaceAction = CreateServerAction(
       )
       await channel.publish("space-del", deletedSpaceData)
       return { success: true }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetSpaceBySlugAction = CreateServerAction(
+  true,
+  async (spaceSlug: string, channelSlug: string) => {
+    try {
+      const space = await GetSpaceBySlug(spaceSlug, channelSlug)
+      return { success: true, data: space }
     } catch (error) {
       return { error: error }
     }

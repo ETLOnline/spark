@@ -18,6 +18,7 @@ import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/Loader/types/loader-types"
 import { GetChannelBySlugAction } from "@/src/server-actions/Channel/Channel"
+import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
 
 const SpacesPage: React.FC = () => {
   const params = useParams()
@@ -32,16 +33,13 @@ const SpacesPage: React.FC = () => {
     useServerAction(GetSpacePostsAction)
 
   useEffect(() => {
-    GetChannelBySlugAction(channelSlug).then((channel)=>{
-      if(channel.success && channel.data){
-        const space = channel.data.spaces.find((space) => space.space_slug === spaceSlug)
-        if(space){
-          setSpace(space)
-          getPosts(
-            space.id,
-            activeCategory === "All" ? "" : activeCategory
-          )
-        }
+    GetSpaceBySlugAction(spaceSlug, channelSlug).then((space)=>{
+      if(space.success && space.data){
+        setSpace(space.data)
+        getPosts(
+          space.data.id,
+          activeCategory === "All" ? "" : activeCategory
+        )
       }
     })
   }, [])
