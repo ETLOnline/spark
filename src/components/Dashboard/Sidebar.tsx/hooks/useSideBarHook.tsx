@@ -31,13 +31,13 @@ const useSideBarHook = () => {
       "broadcast-channels-spaces-update",
       async (data, activity) => {
         let updateAllowed = false
-        
+                
         if(!user) return
         if(activity.includes('channel')){
-          updateAllowed = canUserIntract(user,data.ownerId)
+          updateAllowed = canUserIntract(user,data.created_by)
         }
         if(activity.includes('space')){
-          updateAllowed = canUserIntract(user,data.ownerId)
+          updateAllowed = canUserIntract(user,data.created_by)
         }
         if(!updateAllowed) return
 

@@ -5,7 +5,6 @@ import { useParams } from "next/navigation"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect } from "react"
 import { channelStore } from "@/src/store/channel/channelStore"
-import CreateSpaceModal from "@/src/components/Dashboard/Spaces/CreateSpaceModal/CreateSpaceModal"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetChannelBySlugAction } from "@/src/server-actions/Channel/Channel"
 import Loader from "@/src/components/common/Loader/Loader"
@@ -13,6 +12,7 @@ import { LoaderSizes } from "@/src/components/common/Loader/types/loader-types"
 import { userStore } from "@/src/store/user/userStore"
 import SpacesCard from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/SpacesCard"
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
+import CreateSpaceModal from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/CreateSpaceModal"
 
 export default function ChannelPage() {
   const [selectedChannel, setSelectedChannel] = useAtom(
@@ -70,7 +70,7 @@ export default function ChannelPage() {
             </div>
           ) : (selectedChannel?.spaces?.length === 0 ?
             <NoDataCard title="No Spaces Available" /> :
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3  gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {selectedChannel?.spaces?.map((space) => (
                 <SpacesCard space={space} key={space.id} />
               ))}

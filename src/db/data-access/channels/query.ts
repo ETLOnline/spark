@@ -42,31 +42,18 @@ export async function GetChannels(filters?: channelQueryFilters) {
         query = db.query.channelsTable.findMany({
           where: whereClauses.length ? or(...whereClauses) : undefined,
           with: {
-            spaces: true
+            spaces: {
+              with:{
+                features: true
+              }
+            }
+
           }
         })
       }
     }
 
     const channels = await query
-    return channels
-  } catch (e: any) {
-    throw new Error(e.message)
-  }
-}
-
-export async function GetPublicChannelPaths() {
-  try {
-    const channels = await db.query.channelsTable.findMany({
-      where: eq(channelsTable.channel_type, "public"),
-      columns: {
-        channel_name: true,
-        channel_slug: true
-      },
-      with: {
-        spaces: { columns: { space_name: true, space_slug: true } }
-      }
-    })
     return channels
   } catch (e: any) {
     throw new Error(e.message)
@@ -89,7 +76,7 @@ export async function UpdateChannel(
   }
 }
 
-export async function DeleteChannel(deletedChannelData: SelectChannel) {
+export async function DeleteChannel(deletedChannelData: Partial<SelectChannel>) {
   try {
     if (!deletedChannelData.id) {
       throw new Error("Channel ID is required")
@@ -104,11 +91,10 @@ export async function DeleteChannel(deletedChannelData: SelectChannel) {
 
 export async function IsSlugAvailable(slug: string): Promise<boolean> {
   try {
-    const searchedSlug = await db
-      .select()
-      .from(channelsTable)
-      .where(eq(channelsTable.channel_slug, slug))
-    return !searchedSlug.length
+    const searchedCount = await db
+      .$count(channelsTable, eq(channelsTable.channel_slug, slug))
+
+    return searchedCount > 0
   } catch (e: any) {
     throw new Error(e.message)
   }
@@ -119,7 +105,11 @@ export async function GetChannelBySlug(channelSlug: string) {
     const channel = await db.query.channelsTable.findFirst({
       where: eq(channelsTable.channel_slug, channelSlug),
       with: {
-        spaces: true
+        spaces: {
+          with:{
+            features: true
+          }
+        }
       }
     })
     return channel
@@ -133,7 +123,11 @@ export async function GetChannelById(id: string) {
     const channel = await db.query.channelsTable.findFirst({
       where: eq(channelsTable.id, id),
       with: {
-        spaces: true
+        spaces: {
+          with:{
+            features: true
+          }
+        }
       }
     })
     return channel
@@ -142,20 +136,3 @@ export async function GetChannelById(id: string) {
   }
 }
 
-export async function GetChannelIdBySlug(slug: string) {
-  try {
-    const channel = await db
-      .select({ id: channelsTable.id })
-      .from(channelsTable)
-      .where(eq(channelsTable.channel_slug, slug))
-      .limit(1)
-
-    if (!channel.length) {
-      throw new Error("Channel not found")
-    }
-
-    return channel[0].id
-  } catch (e: any) {
-    throw new Error(e.message)
-  }
-}

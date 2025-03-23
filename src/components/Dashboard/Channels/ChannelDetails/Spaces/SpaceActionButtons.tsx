@@ -12,7 +12,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from "@/src/components/ui/alert-dialog"
-import { MoreVertical, Pencil, Settings, Trash2 } from "lucide-react"
+import { Edit, ExternalLink, MoreHorizontal, MoreVertical, Pencil, Settings, Trash2 } from "lucide-react"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useSetAtom } from "jotai"
 import { DeleteSpaceAction } from "@/src/server-actions/Space/Space"
@@ -22,6 +22,7 @@ import { toast } from "@/src/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { channelStore } from "@/src/store/channel/channelStore"
 import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from '@/src/components/ui/dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/src/components/ui/dropdown-menu"
 
 
 interface Props {
@@ -62,97 +63,36 @@ function SpacesActionButtons({ space }: Props) {
   }
 
   return (
-    <>
-
-
-      <Dialog open={openMenu} onOpenChange={(open) => { setOpenMenu(open) }}>
-        <DialogTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => {
-            e.preventDefault();
-            setOpenMenu(true)
-          }}>
-            <MoreVertical className="h-4 w-4" />
-            <span className="sr-only">Open actions</span>
-          </Button>
-        </DialogTrigger>
-        <DialogOverlay onClick={(e) => {
-          e.preventDefault();
-          setOpenMenu(false)
-        }} />
-        <DialogContent className="sm:max-w-[425px]"
-          onClick={(e) => {
-            e.preventDefault();
-          }}>
-          <DialogTitle className="text-center mb-4">Space Actions</DialogTitle>
-          <div className="grid gap-3">
-            <Button variant="outline" className="flex justify-start"
-              onClick={(e) => {
-                e.preventDefault();
-                handleEditSpace(space);
-                setOpenMenu(false)
-              }}>
-              <Pencil className="mr-2 h-4 w-4" />
-              <span>Edit Space</span>
-            </Button>
-            <AlertDialog open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
-              <AlertDialogTrigger asChild >
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="flex justify-start w-full pl-4"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setIsOpen(true);
-                  }}
-                >
-                  <Trash2 className=" h-4 w-4" />
-                  <span>Delete Space</span>
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogOverlay
-                onClick={(e) => {
-                  e.preventDefault();
-                  setIsOpen(false)
-                }}>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action will permanently delete space.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel onClick={(e) => {
-                      e.preventDefault();
-                      setIsOpen(false);
-                    }}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleDeleteSpace(space);
-                        setOpenMenu(false)
-                      }}
-                      loading={addDeleteSpaceLoading}
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialogOverlay>
-            </AlertDialog>
-            <Button variant="outline" className="flex justify-start"
-              onClick={(e) => {
-                e.preventDefault();
-                router.push(`./spaces/${space.space_slug}/settings`)
-                setOpenMenu(false)
-              }}>
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Space Settings</span>
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <MoreHorizontal className="h-5 w-5" />
+          <span className="sr-only">More options</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => router.push(`./spaces/${space.space_slug}`)}>
+          <ExternalLink className="mr-2 h-4 w-4" />
+          Open Space
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleEditSpace(space)}>
+          <Edit className="mr-2 h-4 w-4" />
+          Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push(`./spaces/${space.space_slug}/settings`)}>
+          <Settings className="mr-2 h-4 w-4" />
+          Settings
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="text-destructive focus:text-destructive"
+          onClick={() => handleDeleteSpace(space)}
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 

@@ -45,21 +45,19 @@ const channelSchema = z.object({
   channel_name: z
     .string()
     .min(1, "Title required")
-    .max(30, "Title is too long"),
+    .max(50, "Title is too long"),
   description: z
     .string()
     .min(1, "description required")
-    .max(100, "Description is too long"),
+    .max(150, "Description is too long"),
   channel_type: z.string().min(1, " Channel type required"),
-  channel_slug: z.string().max(15, "Slug is too long"),
+  channel_slug: z.string().max(50, "Slug is too long"),
   publish_channel: z.boolean().optional()
 })
 
 function CreateChannels() {
   const [editChannel, setEditChannel] = useState<boolean>(false)
   const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
-
-  const timeoutId = useRef<NodeJS.Timeout>(null)
 
   const setChannels = useSetAtom(channelStore.channels)
   const authUser = useAtomValue(userStore.AuthUser)
