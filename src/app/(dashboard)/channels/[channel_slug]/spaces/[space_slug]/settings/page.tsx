@@ -28,9 +28,7 @@ async function settingsPage({ params }: Props) {
   })
 
   return (
-    <div>
-      <SpaceSettings space={currentSpace.data} featuresList={featuresList.data} />
-    </div>
+    <SpaceSettings space={currentSpace.data} featuresList={featuresList.data} />
   )
 }
 

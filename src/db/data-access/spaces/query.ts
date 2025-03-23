@@ -16,7 +16,11 @@ export async function GetSpaces(channelId: string) {
     const spaces = await db.query.spacesTable.findMany({
       where: eq(spacesTable.channel_id, channelId),
       with: {
-        features: true,
+        features: {
+          with: {
+            feature: true
+          }
+        },
         owner: true
       }
     })
@@ -35,7 +39,11 @@ export async function GetSpaceBySlug(spaceSlug: string, channelSlug: string) {
           where: eq(spacesTable.space_slug, spaceSlug),
           with: {
             channel: true,
-            features: true,
+            features: {
+              with: {
+                feature: true
+              }
+            },
           }
         }
       }
@@ -44,6 +52,25 @@ export async function GetSpaceBySlug(spaceSlug: string, channelSlug: string) {
       return null
     }
     return channel.spaces[0]
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
+
+export async function GetSpaceById(spaceId: string) {
+  try {
+    const space = await db.query.spacesTable.findFirst({
+      where: eq(spacesTable.id, spaceId),
+      with: {
+        channel: true,
+        features: {
+          with:{
+            feature: true
+          }
+        },
+      }
+    })
+    return space
   } catch (error: any) {
     throw new Error(error.message)
   }
@@ -107,7 +134,8 @@ export async function attachSpaceFeatures(spaceId: string, featureIds: number[])
       await tx.delete(spaceFeaturesTable).where(eq(spaceFeaturesTable.space_id, spaceId))
       return await tx.insert(spaceFeaturesTable).values(spaceFeatureList).returning()
     })
-    return spaceFeatures
+    const updatedSpace = await GetSpaceById(spaceId)
+    return updatedSpace
   } catch (e: any) {
     throw new Error(e.message)
   }

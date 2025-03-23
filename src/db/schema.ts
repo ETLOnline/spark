@@ -687,7 +687,12 @@ export const spacesRelations = relations(spacesTable, ({ one, many }) => ({
 }))
 
 export type InsertSpace = typeof spacesTable.$inferInsert
-export type SelectSpace = typeof spacesTable.$inferSelect
+export type SelectSpace = InferSelectModel<typeof spacesTable> & {
+  posts?: SelectPost[]
+  features?: SelectSpaceFeature[]
+  owner?: SelectUser
+  channel?: SelectChannel
+}
 
 export const featuresTable = sqliteTable("features", {
   id: int().primaryKey({ autoIncrement: true }),
@@ -719,7 +724,10 @@ export const spaceFeaturesTable = sqliteTable("space_features", {
 })
 
 export type InsertSpaceFeature = typeof spaceFeaturesTable.$inferInsert
-export type SelectSpaceFeature = typeof spaceFeaturesTable.$inferSelect
+export type SelectSpaceFeature = typeof spaceFeaturesTable.$inferSelect & {
+  space?: SelectSpace
+  feature?: SelectFeature
+}
 
 export const spaceFeaturesTableRelations = relations(
   spaceFeaturesTable,
