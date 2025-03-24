@@ -43,11 +43,10 @@ export async function GetChannels(filters?: channelQueryFilters) {
           where: whereClauses.length ? or(...whereClauses) : undefined,
           with: {
             spaces: {
-              with:{
+              with: {
                 features: true
               }
             }
-
           }
         })
       }
@@ -76,7 +75,9 @@ export async function UpdateChannel(
   }
 }
 
-export async function DeleteChannel(deletedChannelData: Partial<SelectChannel>) {
+export async function DeleteChannel(
+  deletedChannelData: Partial<SelectChannel>
+) {
   try {
     if (!deletedChannelData.id) {
       throw new Error("Channel ID is required")
@@ -91,10 +92,12 @@ export async function DeleteChannel(deletedChannelData: Partial<SelectChannel>) 
 
 export async function IsSlugAvailable(slug: string): Promise<boolean> {
   try {
-    const searchedCount = await db
-      .$count(channelsTable, eq(channelsTable.channel_slug, slug))
+    const searchedCount = await db.$count(
+      channelsTable,
+      eq(channelsTable.channel_slug, slug)
+    )
 
-    return searchedCount > 0
+    return searchedCount === 0
   } catch (e: any) {
     throw new Error(e.message)
   }
@@ -106,7 +109,7 @@ export async function GetChannelBySlug(channelSlug: string) {
       where: eq(channelsTable.channel_slug, channelSlug),
       with: {
         spaces: {
-          with:{
+          with: {
             features: true
           }
         }
@@ -124,7 +127,7 @@ export async function GetChannelById(id: string) {
       where: eq(channelsTable.id, id),
       with: {
         spaces: {
-          with:{
+          with: {
             features: true
           }
         }
@@ -135,4 +138,3 @@ export async function GetChannelById(id: string) {
     throw new Error(e.message)
   }
 }
-
