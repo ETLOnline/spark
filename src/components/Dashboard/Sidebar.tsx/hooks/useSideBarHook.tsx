@@ -41,7 +41,6 @@ const useSideBarHook = () => {
         }
         if(!updateAllowed) return
 
-
         if (activity === "channel-add") {
           const newChannel = data as SelectChannel
           setChannels((preChannels) => [newChannel, ...preChannels])
