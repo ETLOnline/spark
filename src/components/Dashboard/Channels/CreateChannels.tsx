@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -39,7 +39,7 @@ import { CircleCheck, CircleXIcon, CirclePlus } from "lucide-react"
 import Loader from "../../common/Loader/Loader"
 import { LoaderSizes } from "../../common/Loader/types/loader-types"
 import { Switch } from "../../ui/switch"
-import {useDebouncedCallback } from "use-debounce"
+import { useDebouncedCallback } from "use-debounce"
 
 const channelSchema = z.object({
   channel_name: z
@@ -98,19 +98,19 @@ function CreateChannels() {
       onNotAvailable?: () => void
     ) => {
       try {
-        const result = await isSlugAvailable(slug);
-        
+        const result = await isSlugAvailable(slug)
+
         if (result && result.data) {
-          if(onAvailable) onAvailable()
+          if (onAvailable) onAvailable()
         } else {
-          if(onNotAvailable) onNotAvailable()
+          if (onNotAvailable) onNotAvailable()
         }
       } catch (error) {
-        console.error(error);
+        console.error(error)
       }
     },
     1000 // Debounce delay in milliseconds
-  );
+  )
 
   useEffect(() => {
     if (selectedChannel != null) {
@@ -161,28 +161,25 @@ function CreateChannels() {
 
   useEffect(() => {
     const value = form.getValues("channel_name").trim()
-    const slug = `${(value || '').trim().replaceAll(" ", "-").toLowerCase()}`
+    const slug = `${(value || "").trim().replaceAll(" ", "-").toLowerCase()}`
 
     if (value && slug !== selectedChannel?.channel_slug) {
-      debouncedCheckSlugAvailability(slug, 
-        ()=>{
+      debouncedCheckSlugAvailability(
+        slug,
+        () => {
           form.clearErrors("channel_slug")
-          setslugAvailableMessage(
-            `${slug} is available`
-          )
-        }
-        ,
-        ()=>{
+          setslugAvailableMessage(`${slug} is available`)
+        },
+        () => {
           form.setError("channel_slug", {
             type: "manual",
             message: `${slug} is already taken`
           })
-          setslugAvailableMessage(""); 
+          setslugAvailableMessage("")
         }
-
       )
-    }else{
-      setslugAvailableMessage("");
+    } else {
+      setslugAvailableMessage("")
     }
     form.setValue("channel_slug", slug)
   }, [form.watch("channel_name")])
@@ -318,11 +315,7 @@ function CreateChannels() {
                     defaultValue=""
                     control={form.control}
                     render={({ field }) => (
-                      <Input
-                        id="channel_slug"
-                        {...field}
-                        disabled={true}
-                      />
+                      <Input id="channel_slug" {...field} disabled={true} />
                     )}
                   />
                 </div>
