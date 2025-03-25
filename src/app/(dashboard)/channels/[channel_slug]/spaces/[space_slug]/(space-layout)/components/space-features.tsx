@@ -56,26 +56,25 @@ function SpaceFeatures({ features, space }: Props) {
     <div>
       {/* Show only when there are more than 1 feature */}
 
-      <div className='grid grid-cols-3 gap-4'>
+      <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
         {
           features.length > 1 ? features.map(({ feature }) => {
             return (
               <Link key={feature?.id} href={`./${space.space_slug}?page-type=${feature?.feature_slug}`} >
-                <Card key={feature?.id} className="h-full flex flex-row items-center p-4 gap-4">
+                <Card key={feature?.id} className="h-full flex flex-row items-center py-2 px-4 sm:p-4 gap-4">
                   <DynamicIcon
                     name={feature?.feature_icon as IconName}
-                    size={30}
-                    className="flex-shrink-0"
+                    className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 "
                   />
-                  <div className="flex flex-col overflow-hidden">
+                  <div className="flex flex-col overflow-hidden mt-2 sm:mt-0">
                     <CardHeader className="p-0 pb-1">
                       <CardTitle >
                         {feature?.feature_name}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-0">
+                    <CardContent className="p-0 hidden sm:block">
                       <p
-                        className="text-sm text-muted-foreground truncate"
+                        className="text-sm text-muted-foreground truncate "
                         title={feature?.feature_description ?? undefined}
                       >
                         {feature?.feature_description}

@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import { Button } from '@/src/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/src/components/ui/dropdown-menu'
-import { Edit, MoreHorizontal, Settings } from 'lucide-react'
+import { Edit, MoreHorizontal, MoreVertical, Settings } from 'lucide-react'
 import { useAtomValue, useSetAtom } from 'jotai'
 import { spaceStore } from '@/src/store/space/spaceStore'
 import { SelectSpace } from '@/src/db/schema'
@@ -33,7 +33,7 @@ function SpaceContextMenu({ currentSpace }: Props) {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon">
-            <MoreHorizontal className="h-5 w-5" />
+            <MoreVertical className="h-5 w-5" />
             <span className="sr-only">More options</span>
           </Button>
         </DropdownMenuTrigger>
