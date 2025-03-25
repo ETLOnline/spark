@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { useParams } from "next/navigation"
 import { useAtom, useAtomValue } from "jotai"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { channelStore } from "@/src/store/channel/channelStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetChannelBySlugAction } from "@/src/server-actions/Channel/Channel"
@@ -13,6 +13,8 @@ import { userStore } from "@/src/store/user/userStore"
 import SpacesCard from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/SpacesCard"
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
 import CreateSpaceModal from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/CreateSpaceModal"
+import { Button } from "@/src/components/ui/button"
+import { CirclePlus } from "lucide-react"
 
 export default function ChannelPage() {
   const [selectedChannel, setSelectedChannel] = useAtom(
@@ -20,6 +22,8 @@ export default function ChannelPage() {
   )
   const userRole = useAtomValue(userStore.AuthUser)?.role
   const userId = useAtomValue(userStore.AuthUser)?.unique_id
+  const [spaceFormModelVisibility, setSpaceFormModelVisibility] = useState(false)
+
 
   const channelSlug = useParams().channel_slug
 
@@ -36,6 +40,10 @@ export default function ChannelPage() {
     }
     fetchChannel()
   }, [])
+
+  function handleCreateSpace() {
+    setSpaceFormModelVisibility(true)
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -60,8 +68,14 @@ export default function ChannelPage() {
               Spaces in {selectedChannel?.channel_name}
             </h2>
             {userRole?.includes("admin") ||
-            selectedChannel?.ownerId === userId ? (
-              <CreateSpaceModal />
+              selectedChannel?.ownerId === userId ? (
+              <>
+                <CreateSpaceModal spaceFormModelVisibility={spaceFormModelVisibility} setSpaceFormModelVisibility={setSpaceFormModelVisibility} />
+                <Button onClick={handleCreateSpace}>
+                  <CirclePlus className="h-4 w-4" />
+                  Create Space
+                </Button>
+              </>
             ) : null}
           </div>
           {channelLoading ? (

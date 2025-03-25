@@ -10,7 +10,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
 } from "@/src/components/ui/dialog"
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
@@ -27,13 +26,19 @@ import { channelStore } from "@/src/store/channel/channelStore"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useAtom, useAtomValue, useSetAtom } from "jotai"
-import { CircleCheck, CirclePlus, CircleXIcon } from "lucide-react"
+import { useAtom, useAtomValue } from "jotai"
+import { CircleCheck, CircleXIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { useDebouncedCallback } from "use-debounce"
 import { z } from "zod"
+
+
+interface Props {
+  spaceFormModelVisibility: boolean,
+  setSpaceFormModelVisibility: React.Dispatch<React.SetStateAction<boolean>>
+}
 
 const spaceSchema = z.object({
   space_name: z.string().min(1, "Space name required").max(30, "Too long"),
@@ -44,17 +49,16 @@ const spaceSchema = z.object({
     .max(150, "Description is too long")
 })
 
-function CreateSpaceModal() {
+
+function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibility }: Props) {
   const router = useRouter()
   const authUser = useAtomValue(userStore.AuthUser)
   const currChannel = useAtomValue(channelStore.selectedChannel)
-  const channel = useAtomValue(channelStore.selectedChannel)
+  const selectedchannel = useAtomValue(channelStore.selectedChannel)
   const [selectedSpace, setSelectedSpace] = useAtom(spaceStore.selectedSpace)
+  const [channels, setChannels] = useAtom(channelStore.channels)
 
   const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
-  const [spaceFormModelVisibility, setSpacesFormModelVisibility] = useAtom(
-    spaceStore.spaceFormModelVisibility
-  )
 
   const [editSpace, setEditSpace] = useState(false)
 
@@ -85,12 +89,12 @@ function CreateSpaceModal() {
       onNotAvailable?: () => void
     ) => {
       try {
-        const result = await isSlugAvailable(slug, channel?.id || '');
-        
+        const result = await isSlugAvailable(slug, selectedchannel?.id || '');
+
         if (result && result.data) {
-          if(onAvailable) onAvailable()
+          if (onAvailable) onAvailable()
         } else {
-          if(onNotAvailable) onNotAvailable()
+          if (onNotAvailable) onNotAvailable()
         }
       } catch (error) {
         console.error(error);
@@ -106,21 +110,21 @@ function CreateSpaceModal() {
     if (value && selectedSpace?.space_slug !== slug) {
       debouncedCheckSlugAvailability(
         slug,
-        ()=>{
+        () => {
           form.clearErrors("space_slug")
           setslugAvailableMessage(
             `${slug} is available`
           )
         },
-        ()=>{
+        () => {
           form.setError("space_slug", {
             type: "manual",
             message: `${slug} is already taken`
           })
-          setslugAvailableMessage(""); 
+          setslugAvailableMessage("");
         }
       )
-    }else{
+    } else {
       setslugAvailableMessage("");
     }
     form.setValue("space_slug", slug)
@@ -176,7 +180,7 @@ function CreateSpaceModal() {
       const createdSpace = await CreateNewSpace(data as InsertSpace)
       if (createdSpace?.success && createdSpace.data) {
         router.push(`./spaces/${createdSpace.data.space_slug}/settings`)
-        setSpacesFormModelVisibility(false)
+        setSpaceFormModelVisibility(false)
         toast({
           title: "Space created",
           duration: 3000
@@ -194,7 +198,7 @@ function CreateSpaceModal() {
   async function handleUpdateSpace(data: Partial<InsertSpace>) {
     try {
       data.created_by = authUser?.unique_id as string
-      data.channel_id = channel?.id
+      data.channel_id = selectedchannel?.id
       data.space_name = (data.space_name || '').trim()
       data.space_slug = data?.space_slug?.trim() || ""
 
@@ -204,12 +208,15 @@ function CreateSpaceModal() {
       )
 
       if (updatedSpace?.success && updatedSpace.data) {
-        setSpacesFormModelVisibility(false)
+        setSpaceFormModelVisibility(false)
         toast({
           title: "Space updated",
           description: "Your space has been updated successfully.",
           duration: 3000
         })
+        if (updatedSpace.data && !(updatedSpace.data instanceof Error)) {
+          router.push(`/channels/${selectedchannel?.channel_slug}/spaces/${updatedSpace.data.space_slug}`)
+        }
       }
     } catch {
       toast({
@@ -225,15 +232,9 @@ function CreateSpaceModal() {
       <Dialog
         open={spaceFormModelVisibility}
         onOpenChange={(open) => {
-          setSpacesFormModelVisibility(open)
+          setSpaceFormModelVisibility(open)
         }}
       >
-        <DialogTrigger asChild>
-          <Button>
-            <CirclePlus className="h-4 w-4" />
-            Create Space
-          </Button>
-        </DialogTrigger>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>

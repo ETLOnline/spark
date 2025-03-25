@@ -11,7 +11,7 @@ interface Props {
 function NoDataCard({ title, description, icon }: Props) {
   return (
     <div className="flex items-center justify-center w-full">
-      <Card className="border-none">
+      <Card className="border-none shadow-none">
         <CardHeader className="items-center">
           {
             icon ? icon : (
