@@ -27,7 +27,7 @@ async function SpacePage({ params }: Props) {
     feature_type: 'space'
   })
 
-  if (!featuresList.success || !featuresList.data || !currentSpace.data.features) {
+  if (!featuresList.success || !featuresList.data || !currentSpace.data.features.length) {
     return (
       <>No features found</>
     )
