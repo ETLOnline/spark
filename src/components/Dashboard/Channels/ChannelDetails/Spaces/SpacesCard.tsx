@@ -38,7 +38,7 @@ function SpacesCard({ space }: Props) {
         </div>
         <CardDescription>{space.description}</CardDescription>
       </CardHeader>
-      <CardFooter className="flex flex-col sm:flex-row justify-between gap-2">
+      <CardFooter className="flex justify-between">
         <Badge variant="secondary">
           {/* {space.membersCount} {space.membersCount === 1 ? 'Member' : 'Members'} */}
           0 Members

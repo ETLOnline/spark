@@ -13,6 +13,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { SelectSpace } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useRouter } from "next/navigation"
+import CreateSpaceModal from "./CreateSpaceModal"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/src/components/ui/dropdown-menu"
+import { useState } from "react"
 
 interface Props {
   space: SelectSpace
@@ -27,9 +29,6 @@ interface Props {
 
 function SpacesActionButtons({ space }: Props) {
   const setSelectedSpace = useSetAtom(spaceStore.selectedSpace)
-  const setSpaceFormModelVisibility = useSetAtom(
-    spaceStore.spaceFormModelVisibility
-  )
 
   const [
     addDeleteSpaceLoading,
@@ -37,6 +36,7 @@ function SpacesActionButtons({ space }: Props) {
     addDeleteSpaceError,
     deleteSpace
   ] = useServerAction(DeleteSpaceAction)
+  const [spaceFormModelVisibility, setSpaceFormModelVisibility] = useState(false)
 
   const router = useRouter()
 
@@ -44,6 +44,8 @@ function SpacesActionButtons({ space }: Props) {
     setSpaceFormModelVisibility(true)
     setSelectedSpace(space)
   }
+
+
 
   async function handleDeleteSpace(selectedSpace: SelectSpace) {
     const deletedSpace = await deleteSpace(selectedSpace)

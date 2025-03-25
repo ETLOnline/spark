@@ -11,7 +11,7 @@ export const FeatureSeedList : InsertFeature[] = [
     feature_slug: "chat",
     feature_type: "space",
     feature_description: "Chat with other users",
-    feature_icon: 'chat',
+    feature_icon: 'message-circle-more',
     feature_status: 1,
     feature_url: '/chat'
   },
@@ -20,7 +20,7 @@ export const FeatureSeedList : InsertFeature[] = [
     feature_slug: "posts",
     feature_type: "space",
     feature_description: "Create and share posts",
-    feature_icon: 'posts',
+    feature_icon: 'newspaper',
     feature_status: 1,
     feature_url: '/posts'
   },
@@ -29,7 +29,7 @@ export const FeatureSeedList : InsertFeature[] = [
     feature_slug: "project-management",
     feature_type: "space",
     feature_description: "Enable project tracking and management tools",
-    feature_icon: 'project-management',
+    feature_icon: 'square-kanban',
     feature_status: 1,
     feature_url: '/project-management'
   }
