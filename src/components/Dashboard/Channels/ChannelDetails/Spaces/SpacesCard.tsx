@@ -1,4 +1,3 @@
-import React from "react"
 import Link from "next/link"
 import {
   Card,
@@ -45,9 +44,7 @@ function SpacesCard({ space }: Props) {
           0 Members
         </Badge>
         <Link href={`./spaces/${space.space_slug}`}>
-          <Button>
-            Open Space
-          </Button>
+          <Button>Open Space</Button>
         </Link>
       </CardFooter>
     </Card>

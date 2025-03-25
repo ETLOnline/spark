@@ -1,6 +1,11 @@
-import { useState } from "react"
 import { Button } from "@/src/components/ui/button"
-import { Edit, ExternalLink, MoreHorizontal, MoreVertical, Pencil, Settings, Trash2 } from "lucide-react"
+import {
+  Edit,
+  ExternalLink,
+  MoreHorizontal,
+  Settings,
+  Trash2
+} from "lucide-react"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useSetAtom } from "jotai"
 import { DeleteSpaceAction } from "@/src/server-actions/Space/Space"
@@ -8,9 +13,15 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { SelectSpace } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useRouter } from "next/navigation"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/src/components/ui/dropdown-menu"
 import CreateSpaceModal from "./CreateSpaceModal"
-
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/src/components/ui/dropdown-menu"
+import { useState } from "react"
 
 interface Props {
   space: SelectSpace
@@ -18,6 +29,7 @@ interface Props {
 
 function SpacesActionButtons({ space }: Props) {
   const setSelectedSpace = useSetAtom(spaceStore.selectedSpace)
+
   const [
     addDeleteSpaceLoading,
     addDeleteSpaceData,
@@ -26,10 +38,7 @@ function SpacesActionButtons({ space }: Props) {
   ] = useServerAction(DeleteSpaceAction)
   const [spaceFormModelVisibility, setSpaceFormModelVisibility] = useState(false)
 
-  const [isOpen, setIsOpen] = useState(false)
-  const [openMenu, setOpenMenu] = useState(false)
   const router = useRouter()
-
 
   function handleEditSpace(space: SelectSpace) {
     setSpaceFormModelVisibility(true)
@@ -49,39 +58,40 @@ function SpacesActionButtons({ space }: Props) {
   }
 
   return (
-    <>
-      <CreateSpaceModal spaceFormModelVisibility={spaceFormModelVisibility} setSpaceFormModelVisibility={setSpaceFormModelVisibility} />
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
-            <MoreHorizontal className="h-5 w-5" />
-            <span className="sr-only">More options</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => router.push(`./spaces/${space.space_slug}`)}>
-            <ExternalLink className="mr-2 h-4 w-4" />
-            Open Space
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleEditSpace(space)}>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push(`./spaces/${space.space_slug}/settings`)}>
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
-            onClick={() => handleDeleteSpace(space)}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <MoreHorizontal className="h-5 w-5" />
+          <span className="sr-only">More options</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem
+          onClick={() => router.push(`./spaces/${space.space_slug}`)}
+        >
+          <ExternalLink className="mr-2 h-4 w-4" />
+          Open Space
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleEditSpace(space)}>
+          <Edit className="mr-2 h-4 w-4" />
+          Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => router.push(`./spaces/${space.space_slug}/settings`)}
+        >
+          <Settings className="mr-2 h-4 w-4" />
+          Settings
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="text-destructive focus:text-destructive"
+          onClick={() => handleDeleteSpace(space)}
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
