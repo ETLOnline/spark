@@ -46,7 +46,6 @@ import useHashtags from "./profile/hooks/useHashtags"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useParams } from "next/navigation"
 import { categories } from "@/src/utils/constants"
-import { channelStore } from "@/src/store/channel/channelStore"
 
 type Props = {
   variant?: "posts" | "spaces"
@@ -54,7 +53,6 @@ type Props = {
 
 const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   const params = useParams()
-  const spaceSlug = params.space_slug
 
   const [newPost, setNewPost] = useState<NewPost>({
     content: "",
@@ -65,7 +63,6 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
 
   const setPosts = useSetAtom(postStore.posts)
   const authUser = useAtomValue(userStore.AuthUser)
-  const currChannel = useAtomValue(channelStore.selectedChannel)
   const [activeCategory, setActiveCategory] = useAtom(spaceStore.activeCategory)
   const currentSpace = useAtomValue(spaceStore.selectedSpace)
 

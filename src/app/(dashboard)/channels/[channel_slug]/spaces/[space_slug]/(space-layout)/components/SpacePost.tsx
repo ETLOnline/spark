@@ -25,8 +25,6 @@ const SpacePostComponent: React.FC = () => {
   const spaceSlug = params.space_slug as string
   const channelSlug = params.channel_slug as string
 
-  console.log("SpacePostComponent -> spaceSlug", spaceSlug)
-
   const activeCategory = useAtomValue(spaceStore.activeCategory)
   const setSpace = useSetAtom(spaceStore.selectedSpace)
 
