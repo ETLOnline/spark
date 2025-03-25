@@ -744,3 +744,19 @@ export const spaceFeaturesTableRelations = relations(
     })
   })
 )
+
+export const spaceFileDirectoryTable = sqliteTable("space_file_directory", {
+  id: int().primaryKey({ autoIncrement: true }),
+  space_id: text(),
+  entity_name: text().notNull(),
+  entity_type: text().notNull(),
+  entity_id: text(),
+  entity_size: int(),
+  parent_id: int(),
+  ...timestamps
+})
+
+export type InsertSpaceFileDirectory =
+  typeof spaceFileDirectoryTable.$inferInsert
+export type SelectSpaceFileDirectory =
+  typeof spaceFileDirectoryTable.$inferSelect
