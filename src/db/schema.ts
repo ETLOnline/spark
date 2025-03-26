@@ -603,6 +603,11 @@ export const filesRelations = relations(filesTable, ({ one }) => ({
     fields: [filesTable.id],
     references: [postFilesTable.file_id],
     relationName: "fileToPost"
+  }),
+  directory: one(spaceFileDirectoryTable, {
+    fields: [filesTable.id],
+    references: [spaceFileDirectoryTable.entity_id],
+    relationName: "spaceFileDirectoryToFile"
   })
 }))
 
@@ -750,13 +755,26 @@ export const spaceFileDirectoryTable = sqliteTable("space_file_directory", {
   space_id: text(),
   entity_name: text().notNull(),
   entity_type: text().notNull(),
-  entity_id: text(),
+  entity_id: int(),
   entity_size: int(),
   parent_id: int(),
   ...timestamps
 })
 
+export const spaceFileDirectoryRelations = relations(
+  spaceFileDirectoryTable,
+  ({ one }) => ({
+    file: one(filesTable, {
+      fields: [spaceFileDirectoryTable.entity_id],
+      references: [filesTable.id],
+      relationName: "spaceFileDirectoryToFile"
+    })
+  })
+)
+
 export type InsertSpaceFileDirectory =
   typeof spaceFileDirectoryTable.$inferInsert
 export type SelectSpaceFileDirectory =
-  typeof spaceFileDirectoryTable.$inferSelect
+  typeof spaceFileDirectoryTable.$inferSelect & {
+    file?: SelectFile
+  }

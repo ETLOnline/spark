@@ -16,13 +16,19 @@ import { Separator } from "@/src/components/ui/separator"
 import { FileUpload } from "@/src/components/ui/file-upload"
 import { addFileToDb } from "@/src/utils/serverHelpers"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { CreateNewFolderAction } from "@/src/server-actions/FileSharing/FileSharing"
+import {
+  CreateNewFileAction,
+  CreateNewFolderAction
+} from "@/src/server-actions/FileSharing/FileSharing"
 import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
 import { GetDirectoryContentsAction } from "@/src/server-actions/FileSharing/FileSharing"
 import { useParams } from "next/navigation"
 import { SelectSpaceFileDirectory } from "@/src/db/schema"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/Loader/types/loader-types"
+import { useToast } from "@/src/hooks/use-toast"
+import { formatFileSize } from "@/src/utils/helpers"
+import Link from "next/link"
 
 interface DirItem {
   id: number
@@ -31,6 +37,7 @@ interface DirItem {
   size?: string
   updatedAt: string
   path: string
+  url?: string
   children?: DirItem[]
 }
 
@@ -56,12 +63,17 @@ export default function FileSharingPage() {
   const spaceSlug = params.space_slug as string
   const channelSlug = params.channel_slug as string
 
+  const { toast } = useToast()
+
   const [
     createFolderLoading,
     createdFolder,
     createFolderError,
     createNewFolder
   ] = useServerAction(CreateNewFolderAction)
+
+  const [createFileLoading, createdFile, createFileError, createNewFile] =
+    useServerAction(CreateNewFileAction)
 
   const [spaceLoading, space, spaceError, getSpaceBySlug] =
     useServerAction(GetSpaceBySlugAction)
@@ -86,6 +98,10 @@ export default function FileSharingPage() {
                   .toISOString()
                   .split("T")[0],
                 path: `/${item.entity_name}`,
+                size: item.file?.file_size
+                  ? formatFileSize(item.file?.file_size)
+                  : "",
+                url: item.file?.file_path,
                 children: []
               }))
               setDir(formattedData)
@@ -140,8 +156,7 @@ export default function FileSharingPage() {
     return []
   }
 
-  const getCurrentItems = (): DirItem[] => {
-    // Get files and folders at the current path
+  const getItemsAtCurrPath = (): DirItem[] => {
     if (currentPath === "/") {
       return dir
     }
@@ -165,6 +180,10 @@ export default function FileSharingPage() {
               .toISOString()
               .split("T")[0],
             path: `${path}/${item.entity_name}`,
+            size: item.file?.file_size
+              ? formatFileSize(item.file?.file_size)
+              : "",
+            url: item.file?.file_path,
             children: []
           }))
 
@@ -208,7 +227,7 @@ export default function FileSharingPage() {
     setCurrentPath(parentPath)
   }
 
-  const addFolderToPath = (
+  const addItemToPath = (
     items: DirItem[],
     path: string,
     newItem: DirItem
@@ -224,7 +243,7 @@ export default function FileSharingPage() {
         if (item.children) {
           return {
             ...item,
-            children: addFolderToPath(item.children, path, newItem)
+            children: addItemToPath(item.children, path, newItem)
           }
         }
       }
@@ -233,41 +252,55 @@ export default function FileSharingPage() {
   }
 
   const createFolder = async () => {
-    const parentFolderId = findItemByPath(dir, currentPath)?.id
-    let createdFolder: SelectSpaceFileDirectory | undefined
+    try {
+      const parentFolderId = findItemByPath(dir, currentPath)?.id
+      let createdFolder: SelectSpaceFileDirectory | undefined
 
-    if (!newFolderName.current.trim()) return
+      if (!newFolderName.current.trim()) return
 
-    if (currentPath === "/") {
-      createdFolder = (
-        await createNewFolder(spaceId.current, newFolderName.current)
-      )?.data
-    } else {
-      createdFolder = (
-        await createNewFolder(parentFolderId as number, newFolderName.current)
-      )?.data
+      if (currentPath === "/") {
+        createdFolder = (
+          await createNewFolder(spaceId.current, newFolderName.current)
+        )?.data
+      } else {
+        createdFolder = (
+          await createNewFolder(parentFolderId as number, newFolderName.current)
+        )?.data
+      }
+
+      const newFolder: DirItem = {
+        id: createdFolder?.id as number,
+        name: newFolderName.current,
+        type: "folder",
+        updatedAt: new Date(createdFolder?.created_at as string)
+          .toISOString()
+          .split("T")[0],
+        path:
+          currentPath === "/"
+            ? `/${newFolderName.current}`
+            : `${currentPath}/${newFolderName.current}`,
+        children: []
+      }
+
+      if (currentPath === "/") {
+        setDir([...dir, { ...newFolder }])
+      } else {
+        setDir(addItemToPath(dir, currentPath, newFolder))
+      }
+
+      newFolderName.current = ""
+      setIsNewFolderDialogOpen(false)
+      toast({
+        description: "Folder created!",
+        duration: 3000
+      })
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        description: "Failed to create folder",
+        duration: 3000
+      })
     }
-
-    const newFolder: DirItem = {
-      id: createdFolder?.id as number,
-      name: newFolderName.current,
-      type: "folder",
-      updatedAt: (createdFolder?.created_at as string).split("T")[0],
-      path:
-        currentPath === "/"
-          ? `/${newFolderName.current}`
-          : `${currentPath}/${newFolderName.current}`,
-      children: []
-    }
-
-    if (currentPath === "/") {
-      setDir([...dir, { ...newFolder }])
-    } else {
-      setDir(addFolderToPath(dir, currentPath, newFolder))
-    }
-
-    newFolderName.current = ""
-    setIsNewFolderDialogOpen(false)
   }
 
   const processFileForUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -289,31 +322,62 @@ export default function FileSharingPage() {
   }
 
   const handleFileUpload = async () => {
-    await addFileToDb(
-      fileData?.fileName as string,
-      fileData?.fileB64string as string,
-      process.env.S3_BUCKET_NAME as string,
-      fileData?.fileSize as number,
-      fileData?.fileType as string,
-      "/spaces"
-    )
-    setFileData(null)
-  }
+    try {
+      const uploadedFileData = await addFileToDb(
+        fileData?.fileName as string,
+        fileData?.fileB64string as string,
+        process.env.S3_BUCKET_NAME as string,
+        fileData?.fileSize as number,
+        fileData?.fileType as string,
+        "/spaces"
+      )
+      const createdFile = (
+        await createNewFile(
+          currentPath === "/"
+            ? spaceId.current
+            : (findItemByPath(dir, currentPath)?.id as number),
+          fileData?.fileName as string,
+          fileData?.fileSize as number,
+          uploadedFileData[0].id
+        )
+      )?.data
+      const newFile: DirItem = {
+        id: createdFile?.id as number,
+        name: createdFile?.entity_name as string,
+        type: "file",
+        updatedAt: new Date(createdFile?.created_at as string)
+          .toISOString()
+          .split("T")[0],
+        path:
+          currentPath === "/"
+            ? `/${createdFile?.entity_name as string}`
+            : `${currentPath}/${createdFile?.entity_name as string}`,
+        size: createdFile?.entity_size
+          ? formatFileSize(createdFile?.entity_size)
+          : "",
+        url: uploadedFileData[0].file_path,
+        children: []
+      }
 
-  const deleteItem = (id: number) => {
-    const removeItem = (items: DirItem[]): DirItem[] => {
-      return items.filter((item) => {
-        if (item.id === id) {
-          return false
-        }
-        if (item.type === "folder" && item.children) {
-          item.children = removeItem(item.children)
-        }
-        return true
+      if (currentPath === "/") {
+        setDir([...dir, { ...newFile }])
+      } else {
+        setDir(addItemToPath(dir, currentPath, newFile))
+      }
+
+      setFileData(null)
+
+      toast({
+        description: "File created!",
+        duration: 3000
+      })
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        description: "Failed to create file",
+        duration: 3000
       })
     }
-
-    setDir(removeItem(dir))
   }
 
   const filePathBreadCrumbGenerator = () =>
@@ -350,7 +414,11 @@ export default function FileSharingPage() {
               } as unknown as React.ChangeEvent<HTMLInputElement>)
             }}
           />
-          <Button onClick={handleFileUpload} disabled={!fileData}>
+          <Button
+            onClick={handleFileUpload}
+            disabled={!fileData}
+            loading={createFileLoading}
+          >
             <Upload className="mr-2 h-4 w-4" />
             Upload
           </Button>
@@ -434,44 +502,44 @@ export default function FileSharingPage() {
                 <div>Updated</div>
               </div>
               <div className="divide-y">
-                {getCurrentItems().length === 0 ? (
+                {getItemsAtCurrPath().length === 0 ? (
                   <div className="py-8 text-center text-muted-foreground">
                     This folder is empty
                   </div>
                 ) : (
-                  getCurrentItems().map((item) => (
-                    <div
-                      key={item.id}
-                      className="grid grid-cols-[auto_1fr_auto_auto] gap-4 items-center py-3 px-2 hover:bg-muted/50 rounded-md"
-                    >
-                      <div className="flex items-center justify-center w-10 h-10">
-                        {item.type === "folder" ? (
-                          <Folder className="h-6 w-6 text-blue-500" />
-                        ) : (
-                          <File className="h-6 w-6 text-gray-500" />
-                        )}
+                  getItemsAtCurrPath().map((item) => (
+                    <Link href={item.url ?? "#"} key={item.id} scroll={false}>
+                      <div className="grid grid-cols-[auto_1fr_auto_auto] gap-4 items-center py-3 px-2 hover:bg-muted/50 rounded-md">
+                        <div className="flex items-center justify-center w-10 h-10">
+                          {item.type === "folder" ? (
+                            <Folder className="h-6 w-6 text-blue-500" />
+                          ) : (
+                            <File className="h-6 w-6 text-gray-500" />
+                          )}
+                        </div>
+                        <div
+                          className={`font-medium ${
+                            item.type === "folder"
+                              ? "cursor-pointer hover:text-primary"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            item.type === "folder" &&
+                            navigateToFolder(item.path)
+                          }
+                        >
+                          {item.name}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {item.size || "-"}
+                        </div>
+                        <div>
+                          <span className="text-sm text-muted-foreground">
+                            {item.updatedAt}
+                          </span>
+                        </div>
                       </div>
-                      <div
-                        className={`font-medium ${
-                          item.type === "folder"
-                            ? "cursor-pointer hover:text-primary"
-                            : ""
-                        }`}
-                        onClick={() =>
-                          item.type === "folder" && navigateToFolder(item.path)
-                        }
-                      >
-                        {item.name}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {item.size || "-"}
-                      </div>
-                      <div>
-                        <span className="text-sm text-muted-foreground">
-                          {item.updatedAt}
-                        </span>
-                      </div>
-                    </div>
+                    </Link>
                   ))
                 )}
               </div>

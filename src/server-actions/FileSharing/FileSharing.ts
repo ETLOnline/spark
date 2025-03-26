@@ -1,4 +1,5 @@
 import {
+  CreateFile,
   CreateFolder,
   GetDirectoryContents
 } from "@/src/db/data-access/file-sharing/query"
@@ -15,6 +16,24 @@ export async function CreateNewFolderAction(
     return {
       success: false,
       error: "Failed to create folder"
+    }
+  }
+}
+
+export async function CreateNewFileAction(
+  id: string | number,
+  fileName: string,
+  fileSize: number,
+  fileId: number
+) {
+  try {
+    const result = await CreateFile(id, fileName, fileSize, fileId)
+    return { success: true, data: result[0] }
+  } catch (error) {
+    console.error("Error creating file:", error)
+    return {
+      success: false,
+      error: "Failed to create file"
     }
   }
 }
