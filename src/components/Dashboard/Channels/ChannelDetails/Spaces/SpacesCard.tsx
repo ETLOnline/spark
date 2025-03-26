@@ -13,6 +13,7 @@ import { useAtomValue } from "jotai"
 import { canUserIntract } from "@/src/utils/helpers"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
+import { Lock } from "lucide-react"
 
 interface Props {
   space: SelectSpace
@@ -31,7 +32,12 @@ function SpacesCard({ space }: Props) {
       </div>
       <CardHeader>
         <div className="flex justify-between items-start">
-          <CardTitle className="text-xl">{space.space_name}</CardTitle>
+          <CardTitle className="text-xl flex items-center gap-1">
+            {space.space_name}
+            {space.space_type === "private" && (
+              <Lock className="text-muted-foreground" />
+            )}
+          </CardTitle>
           {user && canUserIntract(user, space.ownerId) ? (
             <SpacesActionButtons space={space} />
           ) : null}
