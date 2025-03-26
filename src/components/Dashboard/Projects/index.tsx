@@ -71,7 +71,7 @@ const categories = [
   "AR/VR",
 ]
 
-export function ProjectIncubatorScreen() {
+export function ProjectScreen() {
   const [proposals, setProposals] = useState<ProjectProposal[]>(sampleProposals)
   const [newProposal, setNewProposal] = useState({
     title: "",
@@ -106,7 +106,7 @@ export function ProjectIncubatorScreen() {
         <div className="w-full lg:w-3/4">
           <Tabs defaultValue="all">
             <TabsList className="w-full justify-around lg:w-auto">
-              <TabsTrigger value="all">All Proposals</TabsTrigger>
+              <TabsTrigger value="all">All Projects</TabsTrigger>
               <TabsTrigger value="active">Active</TabsTrigger>
               <TabsTrigger value="draft">Drafts</TabsTrigger>
               <TabsTrigger value="completed">Completed</TabsTrigger>

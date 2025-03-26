@@ -68,7 +68,7 @@ function ProjectCards({ proposal }: Props) {
             {proposal.author.name}
           </span>
         </div>
-        <LinkAsButton href="/project-incubator/detail">
+        <LinkAsButton href="/project/detail">
           View Details
         </LinkAsButton>
       </CardFooter>

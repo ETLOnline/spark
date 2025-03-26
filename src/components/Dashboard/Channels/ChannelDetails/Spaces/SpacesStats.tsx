@@ -6,6 +6,8 @@ import UpcomingEventsCard from "./UpcomingEventsCard"
 import { useDetectBreakpoint } from "@/src/hooks/useBreakpoint"
 import { MessageCircle, Users } from "lucide-react"
 import { Event, Topic, Stat } from "./types/spaces-types"
+import { useAtomValue } from "jotai"
+import { spaceStore } from "@/src/store/space/spaceStore"
 
 const upcomingEvents: Event[] = [
   { name: "TechConf 2023", date: "2023-09-15" },
@@ -41,15 +43,16 @@ const stats: Stat[] = [
 
 const SpacesStats = () => {
   const isMobileOrTab = useDetectBreakpoint(945)
+  const layoutStatsVisibility = useAtomValue(spaceStore.layoutStatsVisibility)
 
   return (
-    !isMobileOrTab && (
+    !isMobileOrTab && layoutStatsVisibility ? (
       <aside className="space-y-4 space-info pt-[128px] mt-[-128px] sticky top-[16px]">
         <TrendingTopicsCard topics={trendingTopics} />
         <UpcomingEventsCard events={upcomingEvents} />
         <CommunityStatsCard stats={stats} />
       </aside>
-    )
+    ): null
   )
 }
 

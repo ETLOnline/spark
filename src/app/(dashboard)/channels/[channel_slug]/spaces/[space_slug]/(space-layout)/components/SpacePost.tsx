@@ -8,7 +8,7 @@ import {
   CardTitle,
   CardDescription
 } from "@/src/components/ui/card"
-import { useEffect } from "react"
+import { useEffect, useLayoutEffect } from "react"
 import { useParams } from "next/navigation"
 import { useAtomValue, useSetAtom } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
@@ -25,10 +25,14 @@ const SpacePostComponent: React.FC = () => {
   const spaceSlug = params.space_slug as string
   const channelSlug = params.channel_slug as string
 
-  console.log("SpacePostComponent -> spaceSlug", spaceSlug)
-
   const activeCategory = useAtomValue(spaceStore.activeCategory)
   const setSpace = useSetAtom(spaceStore.selectedSpace)
+
+  const setLayoutStatsVisibility = useSetAtom(spaceStore.layoutStatsVisibility)
+    
+  useLayoutEffect(()=>{
+    setLayoutStatsVisibility(true)
+  },[])
 
   const [postsLoading, posts, postsError, getPosts] =
     useServerAction(GetSpacePostsAction)
