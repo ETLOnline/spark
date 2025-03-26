@@ -3,6 +3,7 @@ import {
   CreateFolder,
   GetDirectoryContents
 } from "@/src/db/data-access/file-sharing/query"
+import { addFileToDb } from "@/src/utils/serverHelpers"
 
 export async function CreateNewFolderAction(
   id: string | number,
@@ -24,11 +25,28 @@ export async function CreateNewFileAction(
   id: string | number,
   fileName: string,
   fileSize: number,
-  fileId: number
+  fileB64string: string,
+  fileType: string
 ) {
   try {
-    const result = await CreateFile(id, fileName, fileSize, fileId)
-    return { success: true, data: result[0] }
+    const uploadedFileData = await addFileToDb(
+      fileName as string,
+      fileB64string as string,
+      process.env.S3_BUCKET_NAME as string,
+      fileSize as number,
+      fileType as string,
+      "/spaces"
+    )
+    const result = await CreateFile(
+      id,
+      fileName,
+      fileSize,
+      uploadedFileData[0].id
+    )
+    return {
+      success: true,
+      data: { ...result[0], url: uploadedFileData[0].file_path }
+    }
   } catch (error) {
     console.error("Error creating file:", error)
     return {

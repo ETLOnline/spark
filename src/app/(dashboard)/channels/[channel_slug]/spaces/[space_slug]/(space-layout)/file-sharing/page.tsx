@@ -14,7 +14,6 @@ import { Input } from "@/src/components/ui/input"
 import { Button } from "@/src/components/ui/button"
 import { Separator } from "@/src/components/ui/separator"
 import { FileUpload } from "@/src/components/ui/file-upload"
-import { addFileToDb } from "@/src/utils/serverHelpers"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateNewFileAction,
@@ -323,14 +322,6 @@ export default function FileSharingPage() {
 
   const handleFileUpload = async () => {
     try {
-      const uploadedFileData = await addFileToDb(
-        fileData?.fileName as string,
-        fileData?.fileB64string as string,
-        process.env.S3_BUCKET_NAME as string,
-        fileData?.fileSize as number,
-        fileData?.fileType as string,
-        "/spaces"
-      )
       const createdFile = (
         await createNewFile(
           currentPath === "/"
@@ -338,7 +329,8 @@ export default function FileSharingPage() {
             : (findItemByPath(dir, currentPath)?.id as number),
           fileData?.fileName as string,
           fileData?.fileSize as number,
-          uploadedFileData[0].id
+          fileData?.fileB64string as string,
+          fileData?.fileType as string
         )
       )?.data
       const newFile: DirItem = {
@@ -355,7 +347,7 @@ export default function FileSharingPage() {
         size: createdFile?.entity_size
           ? formatFileSize(createdFile?.entity_size)
           : "",
-        url: uploadedFileData[0].file_path,
+        url: createdFile?.url,
         children: []
       }
 
@@ -413,6 +405,7 @@ export default function FileSharingPage() {
                 target: { files: [...files] }
               } as unknown as React.ChangeEvent<HTMLInputElement>)
             }}
+            key={createdFile?.data?.id}
           />
           <Button
             onClick={handleFileUpload}
