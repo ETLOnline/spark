@@ -2,13 +2,16 @@
 'use client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card'
 import { SelectSpace, SelectSpaceFeature } from '@/src/db/schema'
-import React from 'react'
+import React, { useLayoutEffect } from 'react'
 import SpacePostComponent from './SpacePost'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import NoDataCard from '@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard'
 import { EarthLock } from 'lucide-react'
 import { DynamicIcon, IconName } from 'lucide-react/dynamic'
+import SpaceProjects from './SpaceProjects'
+import { useSetAtom } from 'jotai'
+import { spaceStore } from '@/src/store/space/spaceStore'
 interface Props {
   features: SelectSpaceFeature[]
   space: SelectSpace
@@ -18,6 +21,13 @@ function SpaceFeatures({ features, space }: Props) {
   const params = useSearchParams()
   const pageType = params.get('page-type') || null
   const featureList = features.map((sf) => sf.feature?.feature_slug)
+  const setLayoutStatsVisibility = useSetAtom(spaceStore.layoutStatsVisibility)
+  
+  useLayoutEffect(()=>{
+    if(!pageType){
+      setLayoutStatsVisibility(true)
+    }
+  },[])
 
   const renderFeatureModule = (featureSlug: string) => {
     const feature = features.find((sf) => sf.feature?.feature_slug === featureSlug)?.feature
@@ -35,6 +45,10 @@ function SpaceFeatures({ features, space }: Props) {
       return (
         <SpacePostComponent />
       )
+    }
+
+    if (featureSlug === 'project-management') {
+      return <SpaceProjects />
     }
 
     return (
