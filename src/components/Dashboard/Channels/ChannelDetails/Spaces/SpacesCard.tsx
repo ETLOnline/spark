@@ -1,14 +1,11 @@
-import React from "react"
 import Link from "next/link"
 import {
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle
 } from "@/src/components/ui/card"
-import Image from "next/image"
 import { SelectSpace } from "@/src/db/schema"
 import SpacesActionButtons from "./SpaceActionButtons"
 import { userStore } from "@/src/store/user/userStore"
@@ -16,8 +13,6 @@ import { useAtomValue } from "jotai"
 import { canUserIntract } from "@/src/utils/helpers"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/src/components/ui/dropdown-menu"
-import { Edit, ExternalLink, MoreHorizontal, Settings, Trash2 } from "lucide-react"
 
 interface Props {
   space: SelectSpace
@@ -39,19 +34,17 @@ function SpacesCard({ space }: Props) {
           <CardTitle className="text-xl">{space.space_name}</CardTitle>
           {user && canUserIntract(user, space.ownerId) ? (
             <SpacesActionButtons space={space} />
-          ):null}
+          ) : null}
         </div>
         <CardDescription>{space.description}</CardDescription>
       </CardHeader>
-      <CardFooter className="flex flex-col sm:flex-row justify-between gap-2">
+      <CardFooter className="flex justify-between">
         <Badge variant="secondary">
           {/* {space.membersCount} {space.membersCount === 1 ? 'Member' : 'Members'} */}
           0 Members
         </Badge>
         <Link href={`./spaces/${space.space_slug}`}>
-          <Button>
-            Open Space
-          </Button>
+          <Button>Open Space</Button>
         </Link>
       </CardFooter>
     </Card>

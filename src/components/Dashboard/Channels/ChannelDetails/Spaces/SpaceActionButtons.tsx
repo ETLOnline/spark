@@ -1,18 +1,11 @@
-import { useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogOverlay,
-  AlertDialogTitle,
-  AlertDialogTrigger
-} from "@/src/components/ui/alert-dialog"
-import { Edit, ExternalLink, MoreHorizontal, MoreVertical, Pencil, Settings, Trash2 } from "lucide-react"
+  Edit,
+  ExternalLink,
+  MoreHorizontal,
+  Settings,
+  Trash2
+} from "lucide-react"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useSetAtom } from "jotai"
 import { DeleteSpaceAction } from "@/src/server-actions/Space/Space"
@@ -20,10 +13,15 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { SelectSpace } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useRouter } from "next/navigation"
-import { channelStore } from "@/src/store/channel/channelStore"
-import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from '@/src/components/ui/dialog'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/src/components/ui/dropdown-menu"
-
+import CreateSpaceModal from "./CreateSpaceModal"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/src/components/ui/dropdown-menu"
+import { useState } from "react"
 
 interface Props {
   space: SelectSpace
@@ -31,25 +29,22 @@ interface Props {
 
 function SpacesActionButtons({ space }: Props) {
   const setSelectedSpace = useSetAtom(spaceStore.selectedSpace)
-  const setSpaceFormModelVisibility = useSetAtom(
-    spaceStore.spaceFormModelVisibility
-  )
+
   const [
     addDeleteSpaceLoading,
     addDeleteSpaceData,
     addDeleteSpaceError,
     deleteSpace
   ] = useServerAction(DeleteSpaceAction)
+  const [spaceFormModelVisibility, setSpaceFormModelVisibility] = useState(false)
 
-  const [isOpen, setIsOpen] = useState(false)
-  const [openMenu, setOpenMenu] = useState(false)
   const router = useRouter()
-
 
   function handleEditSpace(space: SelectSpace) {
     setSpaceFormModelVisibility(true)
     setSelectedSpace(space)
   }
+
 
 
   async function handleDeleteSpace(selectedSpace: SelectSpace) {
@@ -71,7 +66,9 @@ function SpacesActionButtons({ space }: Props) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => router.push(`./spaces/${space.space_slug}`)}>
+        <DropdownMenuItem
+          onClick={() => router.push(`./spaces/${space.space_slug}`)}
+        >
           <ExternalLink className="mr-2 h-4 w-4" />
           Open Space
         </DropdownMenuItem>
@@ -79,7 +76,9 @@ function SpacesActionButtons({ space }: Props) {
           <Edit className="mr-2 h-4 w-4" />
           Edit
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => router.push(`./spaces/${space.space_slug}/settings`)}>
+        <DropdownMenuItem
+          onClick={() => router.push(`./spaces/${space.space_slug}/settings`)}
+        >
           <Settings className="mr-2 h-4 w-4" />
           Settings
         </DropdownMenuItem>

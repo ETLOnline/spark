@@ -31,16 +31,15 @@ const useSideBarHook = () => {
       "broadcast-channels-spaces-update",
       async (data, activity) => {
         let updateAllowed = false
-                
-        if(!user) return
-        if(activity.includes('channel')){
-          updateAllowed = canUserIntract(user,data.created_by)
-        }
-        if(activity.includes('space')){
-          updateAllowed = canUserIntract(user,data.created_by)
-        }
-        if(!updateAllowed) return
 
+        if (!user) return
+        if (activity.includes('channel')) {
+          updateAllowed = canUserIntract(user, data.created_by)
+        }
+        if (activity.includes('space')) {
+          updateAllowed = canUserIntract(user, data.created_by)
+        }
+        if (!updateAllowed) return
 
         if (activity === "channel-add") {
           const newChannel = data as SelectChannel
@@ -62,7 +61,7 @@ const useSideBarHook = () => {
           setChannels((channels) =>
             channels.map((c) => {
               if (c.id === editedChannel.id) {
-                return {...editedChannel, spaces: c.spaces}
+                return { ...editedChannel, spaces: c.spaces }
               }
               return c
             })
