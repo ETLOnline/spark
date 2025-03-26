@@ -47,6 +47,7 @@ import { spaceStore } from "@/src/store/space/spaceStore"
 import { useParams } from "next/navigation"
 import { categories } from "@/src/utils/constants"
 import { channelStore } from "@/src/store/channel/channelStore"
+import { Plus, X } from "lucide-react"
 
 type Props = {
   variant?: "posts" | "spaces"
@@ -55,7 +56,7 @@ type Props = {
 const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   const params = useParams()
   const spaceSlug = params.space_slug
-
+  const [showCard, setShowCard] = useState(false)
   const [newPost, setNewPost] = useState<NewPost>({
     content: "",
     type: PostType.text as PostType,
@@ -110,12 +111,12 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         const post =
           variant === "spaces"
             ? await createPost(
-                newPost.content as string,
-                newPost.type,
-                newPost.category,
-                "space",
-                currentSpace?.id
-              )
+              newPost.content as string,
+              newPost.type,
+              newPost.category,
+              "space",
+              currentSpace?.id
+            )
             : await createPost(newPost.content as string, newPost.type)
         if (post && post.data && post.data[0]) {
           if (hashtags.length) {
@@ -123,14 +124,14 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
               post.data[0].id,
               hashtags.length
                 ? hashtags
-                    .filter((tag) => !tag.deleted)
-                    .map((tag) => {
-                      return {
-                        name: tag.name,
-                        count: tag.count,
-                        status: tag.status
-                      }
-                    })
+                  .filter((tag) => !tag.deleted)
+                  .map((tag) => {
+                    return {
+                      name: tag.name,
+                      count: tag.count,
+                      status: tag.status
+                    }
+                  })
                 : []
             )
             if (linkedHashtags?.error) {
@@ -160,18 +161,18 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         const post =
           variant === "spaces"
             ? await createPollPost(
-                newPost.content as string,
-                newPost.type,
-                pollOptions,
-                newPost.category,
-                "space",
-                currentSpace?.id
-              )
+              newPost.content as string,
+              newPost.type,
+              pollOptions,
+              newPost.category,
+              "space",
+              currentSpace?.id
+            )
             : await createPollPost(
-                newPost.content as string,
-                newPost.type,
-                pollOptions
-              )
+              newPost.content as string,
+              newPost.type,
+              pollOptions
+            )
         setPollOptions([])
         if (post && post.data) {
           if (hashtags.length) {
@@ -179,14 +180,14 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
               post.data.id,
               hashtags.length
                 ? hashtags
-                    .filter((tag) => !tag.deleted)
-                    .map((tag) => {
-                      return {
-                        name: tag.name,
-                        count: tag.count,
-                        status: tag.status
-                      }
-                    })
+                  .filter((tag) => !tag.deleted)
+                  .map((tag) => {
+                    return {
+                      name: tag.name,
+                      count: tag.count,
+                      status: tag.status
+                    }
+                  })
                 : []
             )
             if (linkedHashtags?.error) {
@@ -226,24 +227,24 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         const post =
           variant === "spaces"
             ? await createFilePost(
-                newPost.type,
-                newPost.fileSize as number,
-                newPost.fileName as string,
-                newPost.fileType as string,
-                newPost.fileBase64,
-                newPost.content,
-                newPost.category,
-                "space",
-                currentSpace?.id
-              )
+              newPost.type,
+              newPost.fileSize as number,
+              newPost.fileName as string,
+              newPost.fileType as string,
+              newPost.fileBase64,
+              newPost.content,
+              newPost.category,
+              "space",
+              currentSpace?.id
+            )
             : await createFilePost(
-                newPost.type,
-                newPost.fileSize as number,
-                newPost.fileName as string,
-                newPost.fileType as string,
-                newPost.fileBase64,
-                newPost.content
-              )
+              newPost.type,
+              newPost.fileSize as number,
+              newPost.fileName as string,
+              newPost.fileType as string,
+              newPost.fileBase64,
+              newPost.content
+            )
         if (post && post.data && post.data) {
           let linkedHashtags
           if (hashtags.length) {
@@ -251,14 +252,14 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
               post.data.id,
               hashtags.length
                 ? hashtags
-                    .filter((tag) => !tag.deleted)
-                    .map((tag) => {
-                      return {
-                        name: tag.name,
-                        count: tag.count,
-                        status: tag.status
-                      }
-                    })
+                  .filter((tag) => !tag.deleted)
+                  .map((tag) => {
+                    return {
+                      name: tag.name,
+                      count: tag.count,
+                      status: tag.status
+                    }
+                  })
                 : []
             )
             if (linkedHashtags?.error) {
@@ -315,126 +316,149 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   }
 
   return (
-    <Card className="bg-background shadow-lg">
-      <CardHeader>
-        <h2 className="text-2xl font-bold">Create a Post</h2>
-      </CardHeader>
-      <form onSubmit={handleCreatePost}>
-        <CardContent>
-          <Tabs defaultValue="text" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="text">Text</TabsTrigger>
-              <TabsTrigger value="image">Image</TabsTrigger>
-              <TabsTrigger value="poll">Poll</TabsTrigger>
-              <TabsTrigger value="file">File</TabsTrigger>
-            </TabsList>
-            {variant === "spaces" ? (
-              <div className="space-y-4 mt-4">
-                <div>
-                  <Select
-                    defaultValue={
-                      activeCategory === "All" ? "default" : activeCategory
-                    }
-                    value={newPost.category}
-                    onValueChange={(value) =>
-                      setNewPost({ ...newPost, category: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[
-                        ...categories
-                          .filter((category) => category !== "All")
-                          .map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category}
+    <div>
+      {!showCard ?
+        <Button
+          className="rounded-lg relative w-36 h-10 cursor-pointer flex items-center border group overflow-hidden"
+          onClick={() => setShowCard(true)}
+        >
+          <span
+            className=" font-semibold transform mr-3 group-hover:translate-x-20 transition-all duration-300"
+          >Add Post</span>
+          <span
+            className="absolute right-0 h-full w-10 rounded-lg bg-primary flex items-center justify-center transform group-hover:translate-x-0 group-hover:w-full transition-all duration-300">
+            <Plus className="w-8 " />
+          </span>
+        </Button> :
+        <Card className="bg-background shadow-lg">
+          <CardHeader className="flex flex-row justify-between items-center">
+            <h2 className="text-2xl font-bold">Create a Post</h2>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowCard(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </CardHeader>
+          <form onSubmit={handleCreatePost}>
+            <CardContent>
+              <Tabs defaultValue="text" className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="text">Text</TabsTrigger>
+                  <TabsTrigger value="image">Image</TabsTrigger>
+                  <TabsTrigger value="poll">Poll</TabsTrigger>
+                  <TabsTrigger value="file">File</TabsTrigger>
+                </TabsList>
+                {variant === "spaces" ? (
+                  <div className="space-y-4 mt-4">
+                    <div>
+                      <Select
+                        defaultValue={
+                          activeCategory === "All" ? "default" : activeCategory
+                        }
+                        value={newPost.category}
+                        onValueChange={(value) =>
+                          setNewPost({ ...newPost, category: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[
+                            ...categories
+                              .filter((category) => category !== "All")
+                              .map((category) => (
+                                <SelectItem key={category} value={category}>
+                                  {category}
+                                </SelectItem>
+                              )),
+                            <SelectItem
+                              key={"default"}
+                              value={"default"}
+                              disabled
+                              hidden
+                            >
+                              Select Category
                             </SelectItem>
-                          )),
-                        <SelectItem
-                          key={"default"}
-                          value={"default"}
-                          disabled
-                          hidden
-                        >
-                          Select Category
-                        </SelectItem>
-                      ]}
-                    </SelectContent>
-                  </Select>
-                </div>
+                          ]}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                ) : null}
+                <TabsContent value="text">
+                  <CreatePostInput
+                    type={PostType.text}
+                    setNewPost={setNewPost}
+                    newPost={newPost}
+                  />
+                </TabsContent>
+                <TabsContent value="image">
+                  <CreatePostInput
+                    type={PostType.image}
+                    setNewPost={setNewPost}
+                    newPost={newPost}
+                    key={createdFilePost?.data?.id}
+                  />
+                </TabsContent>
+                <TabsContent value="poll">
+                  <CreatePostInput
+                    type={PostType.poll}
+                    setNewPost={setNewPost}
+                    newPost={newPost}
+                    pollOptions={pollOptions}
+                    setPollOptions={setPollOptions}
+                  />
+                </TabsContent>
+                <TabsContent value="file">
+                  <CreatePostInput
+                    type={PostType.file}
+                    setNewPost={setNewPost}
+                    newPost={newPost}
+                    key={createdFilePost?.data?.id}
+                  />
+                </TabsContent>
+              </Tabs>
+              <div className="mt-4">
+                <Label htmlFor="hashtags">Hashtags</Label>
+                <TagsInput
+                  autocomplete
+                  tags={hashtags}
+                  updateTags={setHashtags}
+                  onChange={searchTagsForUserInput}
+                  suggestions={suggestions}
+                  loadingSuggestions={searchTagsLoading}
+                />
               </div>
-            ) : null}
-            <TabsContent value="text">
-              <CreatePostInput
-                type={PostType.text}
-                setNewPost={setNewPost}
-                newPost={newPost}
-              />
-            </TabsContent>
-            <TabsContent value="image">
-              <CreatePostInput
-                type={PostType.image}
-                setNewPost={setNewPost}
-                newPost={newPost}
-                key={createdFilePost?.data?.id}
-              />
-            </TabsContent>
-            <TabsContent value="poll">
-              <CreatePostInput
-                type={PostType.poll}
-                setNewPost={setNewPost}
-                newPost={newPost}
-                pollOptions={pollOptions}
-                setPollOptions={setPollOptions}
-              />
-            </TabsContent>
-            <TabsContent value="file">
-              <CreatePostInput
-                type={PostType.file}
-                setNewPost={setNewPost}
-                newPost={newPost}
-                key={createdFilePost?.data?.id}
-              />
-            </TabsContent>
-          </Tabs>
-          <div className="mt-4">
-            <Label htmlFor="hashtags">Hashtags</Label>
-            <TagsInput
-              autocomplete
-              tags={hashtags}
-              updateTags={setHashtags}
-              onChange={searchTagsForUserInput}
-              suggestions={suggestions}
-              loadingSuggestions={searchTagsLoading}
-            />
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button
-            className="w-full"
-            type="submit"
-            disabled={
-              createPostLoading ||
-              createFilePostLoading ||
-              createPollPostLoading
-                ? true
-                : false
-            }
-            loading={
-              createPostLoading ||
-              createFilePostLoading ||
-              createPollPostLoading
-                ? true
-                : false
-            }
-          >
-            Post
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
+            </CardContent>
+            <CardFooter>
+              <Button
+                className="w-full"
+                type="submit"
+                disabled={
+                  createPostLoading ||
+                    createFilePostLoading ||
+                    createPollPostLoading
+                    ? true
+                    : false
+                }
+                loading={
+                  createPostLoading ||
+                    createFilePostLoading ||
+                    createPollPostLoading
+                    ? true
+                    : false
+                }
+              >
+                Post
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      }
+    </div>
   )
 }
 
