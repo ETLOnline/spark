@@ -8,7 +8,7 @@ import {
 import { SelectChannel } from "@/src/db/schema"
 import { Button } from "../../ui/button"
 import Link from "next/link"
-import { Layout } from "lucide-react"
+import { Layout, Lock } from "lucide-react"
 import { Badge } from "../../ui/badge"
 import { canUserIntract } from "@/src/utils/helpers"
 import ChannelsContextMenu from "./ChannelDetails/ChannelsContextMenu"
@@ -35,7 +35,12 @@ function ChannelsCard({ channel }: ChannelProps) {
       </div>
       <CardHeader>
         <div className="flex justify-between items-start">
-          <CardTitle className="text-xl">{channel.channel_name}</CardTitle>
+          <CardTitle className="text-xl flex items-center gap-1">
+            {channel.channel_name}
+            {channel.channel_type === "private" && (
+              <Lock className="text-muted-foreground" />
+            )}
+          </CardTitle>
           {authUser && canUserIntract(authUser, channel.ownerId) ? (
             <ChannelsContextMenu channel={channel} />
           ) : null}

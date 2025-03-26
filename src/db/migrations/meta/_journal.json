@@ -15,6 +15,13 @@
       "when": 1742674738126,
       "tag": "0001_naive_gambit",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1742985232237,
+      "tag": "0002_nervous_rhino",
+      "breakpoints": true
     }
   ]
 }

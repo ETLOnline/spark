@@ -13,6 +13,7 @@ import {
 } from "@/src/components/ui/dialog"
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select"
 import { Textarea } from "@/src/components/ui/textarea"
 import { InsertSpace } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
@@ -43,20 +44,19 @@ interface Props {
 const spaceSchema = z.object({
   space_name: z.string().min(1, "Space name required").max(30, "Too long"),
   space_slug: z.string().max(50, "Slug is too long"),
-  description: z
-    .string()
+  description: z.string()
     .min(1, "Description required")
-    .max(150, "Description is too long")
+    .max(150, "Description is too long"),
+  space_type: z.string().optional()
 })
+
 
 
 function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibility }: Props) {
   const router = useRouter()
   const authUser = useAtomValue(userStore.AuthUser)
-  const currChannel = useAtomValue(channelStore.selectedChannel)
-  const selectedchannel = useAtomValue(channelStore.selectedChannel)
+  const selectedChannel = useAtomValue(channelStore.selectedChannel)
   const [selectedSpace, setSelectedSpace] = useAtom(spaceStore.selectedSpace)
-  const [channels, setChannels] = useAtom(channelStore.channels)
 
   const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
 
@@ -89,7 +89,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
       onNotAvailable?: () => void
     ) => {
       try {
-        const result = await isSlugAvailable(slug, selectedchannel?.id || '');
+        const result = await isSlugAvailable(slug, selectedChannel?.id || '');
 
         if (result && result.data) {
           if (onAvailable) onAvailable()
@@ -142,6 +142,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
       setEditSpace(true)
       form.setValue("space_name", selectedSpace.space_name)
       form.setValue("description", selectedSpace.description as string)
+      form.setValue("space_type", selectedSpace.space_type || "")
     } else {
       setEditSpace(false)
     }
@@ -153,7 +154,8 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
       form.reset({
         space_name: "",
         space_slug: "",
-        description: ""
+        description: "",
+        space_type: ""
       })
       // Clear any errors
       form.clearErrors()
@@ -173,9 +175,10 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
   async function handleCreateSpace(data: Partial<InsertSpace>) {
     try {
       data.created_by = authUser?.unique_id as string
-      data.channel_id = currChannel?.id as string
+      data.channel_id = selectedChannel?.id as string
       data.space_name = (data.space_name || '').trim()
       data.space_slug = data.space_slug?.trim()
+      data.space_type = data.space_type || "private"
 
       const createdSpace = await CreateNewSpace(data as InsertSpace)
       if (createdSpace?.success && createdSpace.data) {
@@ -198,7 +201,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
   async function handleUpdateSpace(data: Partial<InsertSpace>) {
     try {
       data.created_by = authUser?.unique_id as string
-      data.channel_id = selectedchannel?.id
+      data.channel_id = selectedChannel?.id
       data.space_name = (data.space_name || '').trim()
       data.space_slug = data?.space_slug?.trim() || ""
 
@@ -215,7 +218,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
           duration: 3000
         })
         if (updatedSpace.data && !(updatedSpace.data instanceof Error)) {
-          router.push(`/channels/${selectedchannel?.channel_slug}/spaces/${updatedSpace.data.space_slug}`)
+          router.push(`/channels/${selectedChannel?.channel_slug}/spaces/${updatedSpace.data.space_slug}`)
         }
       }
     } catch {
@@ -346,6 +349,40 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
                   )}
                 </div>
               </div>
+
+
+              <div className="flex flex-col">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="space_type">Space type</Label>
+                  <div className="w-[70%]">
+                    <Controller
+                      name="space_type"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={field.onChange}
+                          value={selectedChannel?.channel_type === "private" ? "private" : field.value}
+                          disabled={selectedChannel?.channel_type === "private"}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="public">Public</SelectItem>
+                            <SelectItem value="private">Private</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
+                </div>
+                <div className="text-left flex items-center gap-x-2 pt-1 pl-[30%]">
+                  {error.space_type && (
+                    <span className="text-red-500 text-sm">
+                      {String(error.space_type.message)}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
             <DialogFooter>
               {editSpace === true ? (
@@ -368,7 +405,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+    </div >
   )
 }
 
