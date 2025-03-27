@@ -2,7 +2,7 @@ import NotFound from '@/src/components/Dashboard/NotFound/NotFound'
 import { getFeaturesAction } from '@/src/server-actions/Feature/Feature'
 import { GetSpaceBySlugAction } from '@/src/server-actions/Space/Space'
 import React from 'react'
-import SpaceFeatures from './components/space-features'
+import SpaceFeatures from './components/SpaceFeatures'
 
 interface Props {
   params: Promise<{
