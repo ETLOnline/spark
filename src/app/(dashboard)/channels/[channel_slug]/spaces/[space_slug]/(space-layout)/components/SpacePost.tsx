@@ -8,7 +8,7 @@ import {
   CardTitle,
   CardDescription
 } from "@/src/components/ui/card"
-import { useEffect } from "react"
+import { useEffect, useLayoutEffect } from "react"
 import { useParams } from "next/navigation"
 import { useAtomValue, useSetAtom } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
@@ -28,12 +28,18 @@ const SpacePostComponent: React.FC = () => {
   const activeCategory = useAtomValue(spaceStore.activeCategory)
   const setSpace = useSetAtom(spaceStore.selectedSpace)
 
+  const setLayoutStatsVisibility = useSetAtom(spaceStore.layoutStatsVisibility)
+    
+  useLayoutEffect(()=>{
+    setLayoutStatsVisibility(true)
+  },[])
+
   const [postsLoading, posts, postsError, getPosts] =
     useServerAction(GetSpacePostsAction)
 
   useEffect(() => {
-    GetSpaceBySlugAction(spaceSlug, channelSlug).then((space)=>{
-      if(space.success && space.data){
+    GetSpaceBySlugAction(spaceSlug, channelSlug).then((space) => {
+      if (space.success && space.data) {
         setSpace(space.data)
         getPosts(
           space.data.id,
@@ -44,9 +50,9 @@ const SpacePostComponent: React.FC = () => {
   }, [])
 
   return (
-    <div className="container mx-auto p-4 space-y-8 max-w-3xl">
+    <div className="container mx-auto  space-y-8 max-w-3xl">
       <CreatePostForm variant="spaces" />
-      <Card className="border-none">
+      <Card className="border-none shadow-none">
         <CardHeader className="p-0 pb-6">
           <CardTitle>Feed</CardTitle>
           <CardDescription>Latest posts from {activeCategory}</CardDescription>

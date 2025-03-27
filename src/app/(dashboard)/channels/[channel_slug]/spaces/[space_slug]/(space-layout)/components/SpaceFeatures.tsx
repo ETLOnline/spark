@@ -7,7 +7,6 @@ import {
   CardTitle
 } from "@/src/components/ui/card"
 import { SelectSpace, SelectSpaceFeature } from "@/src/db/schema"
-import React from "react"
 import SpacePostComponent from "./SpacePost"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
@@ -15,6 +14,10 @@ import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDat
 import { EarthLock } from "lucide-react"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import FileSharing from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/FileSharing"
+import { useLayoutEffect } from "react"
+import SpaceProjects from "./SpaceProjects"
+import { useSetAtom } from "jotai"
+import { spaceStore } from "@/src/store/space/spaceStore"
 interface Props {
   features: SelectSpaceFeature[]
   space: SelectSpace
@@ -24,6 +27,13 @@ function SpaceFeatures({ features, space }: Props) {
   const params = useSearchParams()
   const pageType = params.get("page-type") || null
   const featureList = features.map((sf) => sf.feature?.feature_slug)
+  const setLayoutStatsVisibility = useSetAtom(spaceStore.layoutStatsVisibility)
+
+  useLayoutEffect(() => {
+    if (!pageType) {
+      setLayoutStatsVisibility(true)
+    }
+  }, [])
 
   const renderFeatureModule = (featureSlug: string) => {
     const feature = features.find(
@@ -32,7 +42,7 @@ function SpaceFeatures({ features, space }: Props) {
     if (!feature) return null
 
     if (feature.feature_status === 0) {
-      <NoDataCard
+      ;<NoDataCard
         icon={<EarthLock className="h-16 w-16 text-muted-foreground mb-4" />}
         title="Feature not found"
         description="Feature not available at the moment, or might have been diabled by the admin"
@@ -43,6 +53,10 @@ function SpaceFeatures({ features, space }: Props) {
       return <SpacePostComponent />
     } else if (featureSlug === "file-sharing") {
       return <FileSharing />
+    }
+
+    if (featureSlug === "project-management") {
+      return <SpaceProjects />
     }
 
     return (

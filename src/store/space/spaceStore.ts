@@ -8,6 +8,7 @@ const spaceFormModelVisibility = atom<boolean>(false)
 const selectedSpace = atom<SelectSpace | null>(null)
 const dir = atom<DirItem[]>([])
 const currDirPath = atom<string>("/")
+const layoutStatsVisibility = atom<boolean>(true)
 
 export const spaceStore = {
   spaces,
@@ -15,5 +16,6 @@ export const spaceStore = {
   spaceFormModelVisibility,
   selectedSpace,
   dir,
-  currDirPath
+  currDirPath,
+  layoutStatsVisibility
 }

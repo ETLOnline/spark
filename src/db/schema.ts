@@ -671,6 +671,7 @@ export const spacesTable = sqliteTable("spaces", {
   channel_id: text().notNull(),
   created_by: text().notNull(),
   ownerId: text(),
+  space_type: text(),
   ...timestamps
 })
 
