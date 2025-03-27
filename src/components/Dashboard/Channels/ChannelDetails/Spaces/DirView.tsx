@@ -1,11 +1,8 @@
-import { formatFileSize } from "@/src/utils/helpers"
 import { File, Folder } from "lucide-react"
 import Link from "next/link"
 import { DirItem } from "./types/spaces-types"
-import { useAtom, useAtomValue } from "jotai"
+import { useAtomValue } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
-import { GetDirectoryContentsAction } from "@/src/server-actions/FileSharing/FileSharing"
-import { useServerAction } from "@/src/hooks/useServerAction"
 
 type DirViewProps = {
   navigateToFolder: (path: string) => Promise<void>
@@ -14,9 +11,6 @@ type DirViewProps = {
 const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
   const dir = useAtomValue(spaceStore.dir)
   const currentPath = useAtomValue(spaceStore.currDirPath)
-
-  const [dirContentLoading, dirContent, dirContentError, getDirContent] =
-    useServerAction(GetDirectoryContentsAction)
 
   const getItemsAtCurrPath = (): DirItem[] => {
     if (currentPath === "/") {

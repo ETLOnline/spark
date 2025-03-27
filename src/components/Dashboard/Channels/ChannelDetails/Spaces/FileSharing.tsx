@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card } from "@/src/components/ui/card"
 import { Button } from "@/src/components/ui/button"
 import { Separator } from "@/src/components/ui/separator"
@@ -14,6 +14,7 @@ import { DirItem } from "@/src/components/Dashboard/Channels/ChannelDetails/Spac
 import { useAtom, useAtomValue } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import FileDir from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/FileDir"
+import { useSearchParams } from "next/navigation"
 
 type FileData = {
   fileName: string
@@ -22,17 +23,26 @@ type FileData = {
   fileB64string: string
 }
 
-export default function FileSharingPage() {
+export default function FileSharing() {
   const [dir, setDir] = useAtom(spaceStore.dir)
+  const [currentPath, setCurrentPath] = useAtom(spaceStore.currDirPath)
   const currSpace = useAtomValue(spaceStore.selectedSpace)
 
-  const currentPath = useAtomValue(spaceStore.currDirPath)
   const [fileData, setFileData] = useState<FileData | null>(null)
+
+  const searchParams = useSearchParams()
 
   const { toast } = useToast()
 
   const [createFileLoading, createdFile, createFileError, createNewFile] =
     useServerAction(CreateNewFileAction)
+
+  useEffect(() => {
+    const dirPath = searchParams.get("dir-path")
+    if (dirPath) {
+      setCurrentPath(dirPath)
+    }
+  }, [])
 
   const addItemToPath = (
     items: DirItem[],
