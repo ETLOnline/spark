@@ -22,7 +22,7 @@ export const config = {
     "/connections",
     "/dashboard",
     "/admin",
-    "/project"
+    "/project(.*)"
     // Always run for API routes
     // '/(api|trpc)(.*)',
     // '/sign-in(.*)',

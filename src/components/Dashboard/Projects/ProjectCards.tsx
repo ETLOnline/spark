@@ -68,9 +68,14 @@ function ProjectCards({ proposal }: Props) {
             {proposal.author.name}
           </span>
         </div>
-        <LinkAsButton href="/project/detail">
-          View Details
-        </LinkAsButton>
+        <div className='flex items-center space-x-2'>
+          <LinkAsButton href={`/project/${proposal.id}/board`}>
+            Launch Board
+          </LinkAsButton>
+          <LinkAsButton href={`/project/${proposal.id}`}>
+            View Details
+          </LinkAsButton>
+        </div>
       </CardFooter>
     </Card>
   )
