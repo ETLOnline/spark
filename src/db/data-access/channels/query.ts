@@ -1,10 +1,12 @@
-import { eq, or } from "drizzle-orm"
+import { eq, or, sql } from "drizzle-orm"
 import { db } from "../.."
 import { channelsTable, InsertChannel, SelectChannel } from "../../schema"
 
 type channelQueryFilters = {
   channelType?: "public" | "private"
   ownerId?: string
+  page?: number
+  limit?: number
 }
 
 export async function CreateChannel(channelData: InsertChannel) {
@@ -21,6 +23,10 @@ export async function CreateChannel(channelData: InsertChannel) {
 
 export async function GetChannels(filters?: channelQueryFilters) {
   try {
+    const page = filters?.page || 0
+    const limit = filters?.limit || 0
+    const offset = (page - 1) * limit
+
     let query = db.query.channelsTable.findMany({
       with: {
         spaces: true
@@ -38,22 +44,35 @@ export async function GetChannels(filters?: channelQueryFilters) {
         whereClauses.push(eq(channelsTable.ownerId, filters.ownerId))
       }
 
-      if (whereClauses.length > 0) {
-        query = db.query.channelsTable.findMany({
-          where: whereClauses.length ? or(...whereClauses) : undefined,
-          with: {
-            spaces: {
-              with: {
-                features: true
-              }
+      query = db.query.channelsTable.findMany({
+        limit: limit,
+        offset: offset,
+        where: whereClauses.length ? or(...whereClauses) : undefined,
+        with: {
+          spaces: {
+            with: {
+              features: true
             }
           }
-        })
-      }
+        }
+      })
     }
 
+    // Get total count for pagination
+    const totalCount = await db
+      .select({ count: sql`count(*)` })
+      .from(channelsTable)
     const channels = await query
-    return channels
+
+    return {
+      channels,
+      pagination: {
+        total: Number(totalCount[0].count),
+        page,
+        limit,
+        totalPages: Math.ceil(Number(totalCount[0].count) / limit)
+      }
+    }
   } catch (e: any) {
     throw new Error(e.message)
   }
