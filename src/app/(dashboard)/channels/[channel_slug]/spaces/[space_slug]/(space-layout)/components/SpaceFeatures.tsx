@@ -53,9 +53,7 @@ function SpaceFeatures({ features, space }: Props) {
       return <SpacePostComponent />
     } else if (featureSlug === "file-sharing") {
       return <FileSharing />
-    }
-
-    if (featureSlug === "project-management") {
+    } else if (featureSlug === "project-management") {
       return <SpaceProjects />
     }
 
