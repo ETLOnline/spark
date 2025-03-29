@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
 import FilePost from "./posts/post-file"
 import ImagePost from "./posts/post-image"
@@ -18,6 +18,7 @@ import {
   GetSpacePostsAction
 } from "@/src/server-actions/Post/Post"
 import { useServerAction } from "@/src/hooks/useServerAction"
+import { useDebouncedCallback } from "use-debounce"
 
 type PostFeedProps = {
   fetchedPosts: (SelectPost | SelectFilePost | SelectPollPost)[]
@@ -31,64 +32,71 @@ const PostFeed: React.FC<PostFeedProps> = ({
   category
 }) => {
   const [posts, setPosts] = useAtom(postStore.posts)
-  const [offset, setOffset] = useState(0)
+  const offset = useRef<number>(10)
+  const isLoading = useRef<boolean>(false)
 
   const [spacePostsLoading, oldSpacePosts, spacePostsError, getSpacePosts] =
     useServerAction(GetSpacePostsAction)
   const [postsLoading, oldPosts, postsError, getPosts] =
     useServerAction(GetPostsAction)
 
-  useEffect(() => {
-    setPosts([...fetchedPosts])
-  }, [fetchedPosts, setPosts])
+  const handleScroll = useDebouncedCallback(() => {
+    if (isLoading.current) return
+
+    const scrolledToBottom =
+      window.innerHeight + document.documentElement.scrollTop >=
+      document.documentElement.offsetHeight - 100
+
+    if (scrolledToBottom) {
+      isLoading.current = true
+      fetchOldPosts()
+    }
+  }, 200)
 
   useEffect(() => {
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [handleScroll])
+
+  useEffect(() => {
+    setPosts([...fetchedPosts])
+  }, [fetchedPosts])
+
+  useEffect(() => {
+    console.log(oldPosts)
+
     if (oldPosts && oldPosts.success) {
       setPosts((prevPosts) => [
         ...prevPosts,
-        ...(
-          oldPosts?.data as (SelectPost | SelectFilePost | SelectPollPost)[]
-        ).reverse()
+        ...(oldPosts?.data as (SelectPost | SelectFilePost | SelectPollPost)[])
       ])
     }
-  }, [oldPosts, setPosts])
+  }, [oldPosts])
 
   useEffect(() => {
     if (oldSpacePosts && oldSpacePosts.success) {
       setPosts((prevPosts) => [
         ...prevPosts,
-        ...(
-          oldSpacePosts?.data as (
-            | SelectPost
-            | SelectFilePost
-            | SelectPollPost
-          )[]
-        ).reverse()
+        ...(oldSpacePosts?.data as (
+          | SelectPost
+          | SelectFilePost
+          | SelectPollPost
+        )[])
       ])
     }
-  }, [oldSpacePosts, setPosts])
+  }, [oldSpacePosts])
 
   const fetchOldPosts = () => {
     if (spaceId) {
-      getSpacePosts(spaceId, category === "All" ? "" : category, offset)
+      getSpacePosts(spaceId, category === "All" ? "" : category, offset.current)
     } else {
-      getPosts(offset)
+      getPosts(offset.current)
     }
-    setOffset((prevOffset) => prevOffset + 10)
+    offset.current += 10
+    setTimeout(() => {
+      isLoading.current = false
+    }, 1000)
   }
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrolledToBottom =
-        window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.offsetHeight - 100
-      if (scrolledToBottom && !postsLoading && !spacePostsLoading) {
-        fetchOldPosts()
-      }
-    }
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [offset, postsLoading, spacePostsLoading, spaceId, category])
 
   return (
     <div className="space-y-6">
