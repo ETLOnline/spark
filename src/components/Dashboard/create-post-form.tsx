@@ -111,12 +111,12 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         const post =
           variant === "spaces"
             ? await createPost(
-              newPost.content as string,
-              newPost.type,
-              newPost.category,
-              "space",
-              currentSpace?.id
-            )
+                newPost.content as string,
+                newPost.type,
+                newPost.category,
+                "space",
+                currentSpace?.id
+              )
             : await createPost(newPost.content as string, newPost.type)
         if (post && post.data && post.data[0]) {
           if (hashtags.length) {
@@ -124,14 +124,14 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
               post.data[0].id,
               hashtags.length
                 ? hashtags
-                  .filter((tag) => !tag.deleted)
-                  .map((tag) => {
-                    return {
-                      name: tag.name,
-                      count: tag.count,
-                      status: tag.status
-                    }
-                  })
+                    .filter((tag) => !tag.deleted)
+                    .map((tag) => {
+                      return {
+                        name: tag.name,
+                        count: tag.count,
+                        status: tag.status
+                      }
+                    })
                 : []
             )
             if (linkedHashtags?.error) {
@@ -161,18 +161,18 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         const post =
           variant === "spaces"
             ? await createPollPost(
-              newPost.content as string,
-              newPost.type,
-              pollOptions,
-              newPost.category,
-              "space",
-              currentSpace?.id
-            )
+                newPost.content as string,
+                newPost.type,
+                pollOptions,
+                newPost.category,
+                "space",
+                currentSpace?.id
+              )
             : await createPollPost(
-              newPost.content as string,
-              newPost.type,
-              pollOptions
-            )
+                newPost.content as string,
+                newPost.type,
+                pollOptions
+              )
         setPollOptions([])
         if (post && post.data) {
           if (hashtags.length) {
@@ -180,14 +180,14 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
               post.data.id,
               hashtags.length
                 ? hashtags
-                  .filter((tag) => !tag.deleted)
-                  .map((tag) => {
-                    return {
-                      name: tag.name,
-                      count: tag.count,
-                      status: tag.status
-                    }
-                  })
+                    .filter((tag) => !tag.deleted)
+                    .map((tag) => {
+                      return {
+                        name: tag.name,
+                        count: tag.count,
+                        status: tag.status
+                      }
+                    })
                 : []
             )
             if (linkedHashtags?.error) {
@@ -227,24 +227,24 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         const post =
           variant === "spaces"
             ? await createFilePost(
-              newPost.type,
-              newPost.fileSize as number,
-              newPost.fileName as string,
-              newPost.fileType as string,
-              newPost.fileBase64,
-              newPost.content,
-              newPost.category,
-              "space",
-              currentSpace?.id
-            )
+                newPost.type,
+                newPost.fileSize as number,
+                newPost.fileName as string,
+                newPost.fileType as string,
+                newPost.fileBase64,
+                newPost.content,
+                newPost.category,
+                "space",
+                currentSpace?.id
+              )
             : await createFilePost(
-              newPost.type,
-              newPost.fileSize as number,
-              newPost.fileName as string,
-              newPost.fileType as string,
-              newPost.fileBase64,
-              newPost.content
-            )
+                newPost.type,
+                newPost.fileSize as number,
+                newPost.fileName as string,
+                newPost.fileType as string,
+                newPost.fileBase64,
+                newPost.content
+              )
         if (post && post.data && post.data) {
           let linkedHashtags
           if (hashtags.length) {
@@ -252,14 +252,14 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
               post.data.id,
               hashtags.length
                 ? hashtags
-                  .filter((tag) => !tag.deleted)
-                  .map((tag) => {
-                    return {
-                      name: tag.name,
-                      count: tag.count,
-                      status: tag.status
-                    }
-                  })
+                    .filter((tag) => !tag.deleted)
+                    .map((tag) => {
+                      return {
+                        name: tag.name,
+                        count: tag.count,
+                        status: tag.status
+                      }
+                    })
                 : []
             )
             if (linkedHashtags?.error) {
@@ -317,19 +317,19 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
 
   return (
     <div>
-      {!showCard ?
+      {!showCard ? (
         <Button
           className="rounded-lg relative w-36 h-10 cursor-pointer flex items-center border group overflow-hidden"
           onClick={() => setShowCard(true)}
         >
-          <span
-            className=" font-semibold transform mr-3 group-hover:translate-x-20 transition-all duration-300"
-          >Add Post</span>
-          <span
-            className="absolute right-0 h-full w-10 rounded-lg bg-primary flex items-center justify-center transform group-hover:translate-x-0 group-hover:w-full transition-all duration-300">
+          <span className=" font-semibold transform mr-3 group-hover:translate-x-20 transition-all duration-300">
+            Add Post
+          </span>
+          <span className="absolute right-0 h-full w-10 rounded-lg bg-primary flex items-center justify-center transform group-hover:translate-x-0 group-hover:w-full transition-all duration-300">
             <Plus className="w-8 " />
           </span>
-        </Button> :
+        </Button>
+      ) : (
         <Card className="bg-background shadow-lg">
           <CardHeader className="flex flex-row justify-between items-center">
             <h2 className="text-2xl font-bold">Create a Post</h2>
@@ -439,15 +439,15 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 type="submit"
                 disabled={
                   createPostLoading ||
-                    createFilePostLoading ||
-                    createPollPostLoading
+                  createFilePostLoading ||
+                  createPollPostLoading
                     ? true
                     : false
                 }
                 loading={
                   createPostLoading ||
-                    createFilePostLoading ||
-                    createPollPostLoading
+                  createFilePostLoading ||
+                  createPollPostLoading
                     ? true
                     : false
                 }
@@ -457,7 +457,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             </CardFooter>
           </form>
         </Card>
-      }
+      )}
     </div>
   )
 }

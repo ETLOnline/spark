@@ -16,7 +16,7 @@ import {
   spacesTable,
   channelsTable
 } from "../../schema"
-import { eq, and, desc, inArray, sql, or, isNull, SQL } from "drizzle-orm"
+import { eq, and, desc, inArray, or, isNull, SQL } from "drizzle-orm"
 import { like } from "drizzle-orm"
 import { Tag } from "@/src/components/TagsInput/tags-input-types"
 
