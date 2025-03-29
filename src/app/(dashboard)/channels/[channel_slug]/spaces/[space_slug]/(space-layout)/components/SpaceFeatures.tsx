@@ -42,28 +42,28 @@ function SpaceFeatures({ features, space }: Props) {
     if (!feature) return null
 
     if (feature.feature_status === 0) {
-      ;<NoDataCard
-        icon={<EarthLock className="h-16 w-16 text-muted-foreground mb-4" />}
-        title="Feature not found"
-        description="Feature not available at the moment, or might have been diabled by the admin"
-      />
-    }
-
-    if (featureSlug === "posts") {
-      return <SpacePostComponent />
-    } else if (featureSlug === "file-sharing") {
-      return <FileSharing />
-    } else if (featureSlug === "project-management") {
-      return <SpaceProjects />
-    }
-
-    return (
       <NoDataCard
         icon={<EarthLock className="h-16 w-16 text-muted-foreground mb-4" />}
         title="Feature not found"
-        description="Feature not available at the moment, or might have been diabled by the admin"
+        description="Feature not available at the moment, or might have been disabled by the admin"
       />
-    )
+    }
+
+    switch(featureSlug) {
+      case "posts":
+        return <SpacePostComponent />
+      case "file-sharing":
+        return <FileSharing />
+      case "project-management":
+        return <SpaceProjects />
+      default:
+        return <NoDataCard
+          icon={<EarthLock className="h-16 w-16 text-muted-foreground mb-4" />}
+          title="Feature not found"
+          description="Feature not available at the moment, or might have been diabled by the admin"
+        />
+    }
+
   }
 
   if (pageType) {
