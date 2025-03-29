@@ -3,7 +3,7 @@ CREATE TABLE `space_file_directory` (
 	`space_id` text,
 	`entity_name` text NOT NULL,
 	`entity_type` text NOT NULL,
-	`entity_id` text,
+	`entity_id` integer,
 	`entity_size` integer,
 	`parent_id` integer,
 	`updated_at` text,

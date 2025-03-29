@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "516c12d1-41e0-4c75-bd4c-a794f41b1267",
-  "prevId": "25520529-19e2-406b-957a-fd9878941871",
+  "id": "443d2cfa-60d5-400b-91d9-95616cecb115",
+  "prevId": "93cc8363-9ed6-47d4-96a1-1f117164293b",
   "tables": {
     "activities": {
       "name": "activities",
@@ -1348,6 +1348,13 @@
         },
         "ownerId": {
           "name": "ownerId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "space_type": {
+          "name": "space_type",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
