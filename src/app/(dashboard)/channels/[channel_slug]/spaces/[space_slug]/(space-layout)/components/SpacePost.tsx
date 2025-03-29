@@ -57,7 +57,6 @@ const SpacePostComponent: React.FC = () => {
           <CardTitle>Feed</CardTitle>
           <CardDescription>Latest posts from {activeCategory}</CardDescription>
         </CardHeader>
-
         {postsLoading ?
           <div className="flex justify-center h-full w-full">
             <Loader size={LoaderSizes.xl} />
