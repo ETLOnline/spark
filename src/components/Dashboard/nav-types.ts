@@ -12,6 +12,7 @@ export type NavItem = {
   icon: React.ComponentType
   isActive?: boolean
   items?: NavSubItem[]
+  isPrivate?: boolean
 }
 
 export type SiteRoutes = {

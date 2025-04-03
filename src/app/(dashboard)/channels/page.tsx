@@ -4,9 +4,16 @@ import { GetChannelsAction } from "@/src/server-actions/Channel/Channel"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import ChannelsCards from "@/src/components/Dashboard/Channels/ChannelsCards"
 
-const ChannelsPage: React.FC = async () => {
+interface Props {
+  searchParams: Promise<{
+    page?: number
+  }>
+}
+
+const ChannelsPage = async ({ searchParams }: Props) => {
+  const {page} = await searchParams
   const userRole = (await AuthUserAction())?.role
-  const result = (await GetChannelsAction({ page: 1, limit: 3 })).data
+  const result = (await GetChannelsAction({ page: page ? page : 1 , limit: 3 })).data
 
   return (
     <div className="flex-1 p-4 sm:p-6">

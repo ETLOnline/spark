@@ -17,7 +17,7 @@ import { userStore } from "@/src/store/user/userStore"
 const useSideBarHook = () => {
   const setRoutes = useSetAtom(navStore.routes)
   const setSelectedChannel = useSetAtom(channelStore.selectedChannel)
-  const [channels, setChannels] = useAtom(channelStore.channels)
+  const [channels, setChannels] = useAtom(channelStore.sideBarChannels)
   const user = useAtomValue(userStore.AuthUser)
 
   const channelSlug = useParams().channel_slug

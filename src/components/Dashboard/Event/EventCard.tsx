@@ -14,7 +14,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { userStore } from "@/src/store/user/userStore";
 import moment from "moment";
 import { eventStore } from "@/src/store/event/eventStore";
-import { EventType } from "../../common/Loader/types/event.types";
+import { EventType } from "../../common/types/event.types";
 
 
 interface EventcardProps {

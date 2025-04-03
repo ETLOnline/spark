@@ -16,7 +16,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetSpacePostsAction } from "@/src/server-actions/Post/Post"
 import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
 import Loader from "@/src/components/common/Loader/Loader"
-import { LoaderSizes } from "@/src/components/common/Loader/types/loader-types"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
 
 const SpacePostComponent: React.FC = () => {
