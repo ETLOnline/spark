@@ -7,7 +7,7 @@ import {
   DialogTrigger
 } from "@/src/components/ui/dialog"
 import Loader from "@/src/components/common/Loader/Loader"
-import { LoaderSizes } from "@/src/components/common/Loader/types/loader-types"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
 import { Card } from "@/src/components/ui/card"

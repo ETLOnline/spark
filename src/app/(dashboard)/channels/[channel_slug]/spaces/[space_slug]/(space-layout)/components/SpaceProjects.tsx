@@ -1,6 +1,6 @@
 'use client'
 import Loader from '@/src/components/common/Loader/Loader'
-import { LoaderSizes } from '@/src/components/common/Loader/types/loader-types'
+import { LoaderSizes } from '@/src/components/common/types/loader-types'
 import NoDataCard from '@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard'
 import { spaceStore } from '@/src/store/space/spaceStore'
 import { useSetAtom } from 'jotai'

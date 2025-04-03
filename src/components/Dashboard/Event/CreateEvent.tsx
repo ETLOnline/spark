@@ -45,7 +45,7 @@ import {
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { eventStore } from "@/src/store/event/eventStore"
-import { EventType } from "../../common/Loader/types/event.types"
+import { EventType } from "../../common/types/event.types"
 
 interface Props {
   events: SelectEvent[]
