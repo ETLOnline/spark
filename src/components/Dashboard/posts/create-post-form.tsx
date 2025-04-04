@@ -22,8 +22,8 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/src/components/ui/select"
-import { NewPost, PostType } from "./posts/types/posts-types"
-import CreatePostInput from "./posts/create-post-input"
+import { NewPost, PostType } from "./types/posts-types"
+import CreatePostInput from "./create-post-input"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { postStore } from "@/src/store/post/postStore"
@@ -34,7 +34,7 @@ import {
   SelectUser
 } from "@/src/db/schema"
 import { useToast } from "@/src/hooks/use-toast"
-import TagsInput from "../TagsInput/TagsInput"
+import TagsInput from "../../TagsInput/TagsInput"
 import { userStore } from "@/src/store/user/userStore"
 import {
   CreateFilePostAction,
@@ -42,7 +42,7 @@ import {
   CreatePostAction,
   LinkHashtagsToPostAction
 } from "@/src/server-actions/Post/Post"
-import useHashtags from "./profile/hooks/useHashtags"
+import useHashtags from "../profile/hooks/useHashtags"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useParams } from "next/navigation"
 import { categories } from "@/src/utils/constants"

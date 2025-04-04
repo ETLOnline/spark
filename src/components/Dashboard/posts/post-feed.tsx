@@ -2,17 +2,17 @@
 
 import { useEffect, useRef } from "react"
 import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
-import FilePost from "./posts/post-file"
-import ImagePost from "./posts/post-image"
-import PollPost from "./posts/post-poll"
-import TextPost from "./posts/post-text"
+import FilePost from "./post-file"
+import ImagePost from "./post-image"
+import PollPost from "./post-poll"
+import TextPost from "./post-text"
 import { useAtom } from "jotai"
 import { postStore } from "@/src/store/post/postStore"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Card, CardContent, CardHeader } from "@/src/components/ui/card"
-import PostMenu from "./posts/post-menu"
+import PostMenu from "./post-menu"
 import moment from "moment-timezone"
-import NoDataCard from "./Channels/ChannelDetails/NoDataCard"
+import NoDataCard from "../Channels/ChannelDetails/NoDataCard"
 import {
   GetPostsAction,
   GetSpacePostsAction

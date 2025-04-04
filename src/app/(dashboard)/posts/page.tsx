@@ -1,5 +1,5 @@
-import PostFeed from "@/src/components/Dashboard/post-feed"
-import CreatePostForm from "@/src/components/Dashboard/create-post-form"
+import PostFeed from "@/src/components/Dashboard/posts/post-feed"
+import CreatePostForm from "@/src/components/Dashboard/posts/create-post-form"
 import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
 import { GetPostsAction } from "@/src/server-actions/Post/Post"
 
