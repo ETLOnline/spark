@@ -1,4 +1,4 @@
-import { FolderPlus } from "lucide-react"
+import { FolderPlus, UploadCloud } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -207,39 +207,44 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
     <section className="directory">
       <div className="flex justify-between items-center mb-4">
         <DirNav navigateToFolder={navigateToFolder} />
-        <Dialog
-          open={isNewFolderDialogOpen}
-          onOpenChange={setIsNewFolderDialogOpen}
-        >
-          <DialogTrigger asChild>
-            <Button>
-              <FolderPlus className="mr-2 h-4 w-4" />
-              New Folder
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Folder</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <Input
-                placeholder="Folder name"
-                onChange={(e) => (newFolderName.current = e.target.value)}
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsNewFolderDialogOpen(false)}
-              >
-                Cancel
+        <div className="flex gap-4">
+          <Button>
+            <UploadCloud /> Upload File
+          </Button>
+          <Dialog
+            open={isNewFolderDialogOpen}
+            onOpenChange={setIsNewFolderDialogOpen}
+          >
+            <DialogTrigger asChild>
+              <Button>
+                <FolderPlus className="mr-2 h-4 w-4" />
+                New Folder
               </Button>
-              <Button onClick={createFolder} loading={createFolderLoading}>
-                Create
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Folder</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <Input
+                  placeholder="Folder name"
+                  onChange={(e) => (newFolderName.current = e.target.value)}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsNewFolderDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={createFolder} loading={createFolderLoading}>
+                  Create
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
       <Card>
         {dirContentLoading || spaceLoading ? (
