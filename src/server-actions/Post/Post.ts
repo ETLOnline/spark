@@ -227,28 +227,35 @@ export const VotePollAction = CreateServerAction(
   }
 )
 
-export const GetPostsAction = CreateServerAction(true, async () => {
-  try {
-    const posts = await GetPosts()
-    const sanitizedPosts = posts.map((post) => ({
-      ...post,
-      hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
-      file: post.file?.postFile
-    }))
-    return { success: true, data: sanitizedPosts }
-  } catch (error: any) {
-    return {
-      success: false,
-      error: error.message || "Failed to fetch user posts"
+export const GetPostsAction = CreateServerAction(
+  true,
+  async (offset?: number) => {
+    try {
+      const posts = await GetPosts({ offset })
+      const sanitizedPosts = posts.map((post) => ({
+        ...post,
+        hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
+        file: post.file?.postFile
+      }))
+      return { success: true, data: sanitizedPosts }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to fetch user posts"
+      }
     }
   }
-})
+)
 
 export const GetSpacePostsAction = CreateServerAction(
   true,
-  async (spaceId: string, category: string = "") => {
+  async (spaceId: string, category: string = "", offset?: number) => {
     try {
-      const posts = await GetPosts({ entityId: spaceId, category: category })
+      const posts = await GetPosts({
+        entityId: spaceId,
+        category: category,
+        offset
+      })
       const sanitizedPosts = posts.map((post) => ({
         ...post,
         hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),

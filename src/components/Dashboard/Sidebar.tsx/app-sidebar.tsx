@@ -1,8 +1,8 @@
 "use client"
 
-import NavMain from "@/src/components/Dashboard/nav-main"
-import NavSecondary from "@/src/components/Dashboard/nav-secondary"
-import NavUser from "@/src/components/Dashboard/nav-user"
+import NavMain from "@/src/components/Dashboard/Sidebar.tsx/nav-main"
+import NavSecondary from "@/src/components/Dashboard/Sidebar.tsx/nav-secondary"
+import NavUser from "@/src/components/Dashboard/Sidebar.tsx/nav-user"
 import {
   Sidebar,
   SidebarContent,

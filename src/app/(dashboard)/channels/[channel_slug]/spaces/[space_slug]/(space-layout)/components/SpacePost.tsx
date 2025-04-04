@@ -1,7 +1,7 @@
 "use client"
 
-import CreatePostForm from "@/src/components/Dashboard/create-post-form"
-import PostFeed from "@/src/components/Dashboard/post-feed"
+import CreatePostForm from "@/src/components/Dashboard/posts/create-post-form"
+import PostFeed from "@/src/components/Dashboard/posts/post-feed"
 import {
   Card,
   CardHeader,
@@ -10,7 +10,7 @@ import {
 } from "@/src/components/ui/card"
 import { useEffect, useLayoutEffect } from "react"
 import { useParams } from "next/navigation"
-import { useAtomValue, useSetAtom } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetSpacePostsAction } from "@/src/server-actions/Post/Post"
@@ -26,13 +26,12 @@ const SpacePostComponent: React.FC = () => {
   const channelSlug = params.channel_slug as string
 
   const activeCategory = useAtomValue(spaceStore.activeCategory)
-  const setSpace = useSetAtom(spaceStore.selectedSpace)
-
+  const [space, setSpace] = useAtom(spaceStore.selectedSpace)
   const setLayoutStatsVisibility = useSetAtom(spaceStore.layoutStatsVisibility)
-    
-  useLayoutEffect(()=>{
+
+  useLayoutEffect(() => {
     setLayoutStatsVisibility(true)
-  },[])
+  }, [])
 
   const [postsLoading, posts, postsError, getPosts] =
     useServerAction(GetSpacePostsAction)
@@ -41,10 +40,7 @@ const SpacePostComponent: React.FC = () => {
     GetSpaceBySlugAction(spaceSlug, channelSlug).then((space) => {
       if (space.success && space.data) {
         setSpace(space.data)
-        getPosts(
-          space.data.id,
-          activeCategory === "All" ? "" : activeCategory
-        )
+        getPosts(space.data.id, activeCategory === "All" ? "" : activeCategory)
       }
     })
   }, [])
@@ -57,18 +53,22 @@ const SpacePostComponent: React.FC = () => {
           <CardTitle>Feed</CardTitle>
           <CardDescription>Latest posts from {activeCategory}</CardDescription>
         </CardHeader>
-        {postsLoading ?
+
+        {postsLoading ? (
           <div className="flex justify-center h-full w-full">
             <Loader size={LoaderSizes.xl} />
           </div>
-          :
+        ) : (
           posts?.data && (
             <PostFeed
               fetchedPosts={
                 posts?.data as (SelectPost | SelectFilePost | SelectPollPost)[]
               }
+              spaceId={space?.id}
+              category={activeCategory}
             />
-          )}
+          )
+        )}
       </Card>
     </div>
   )
