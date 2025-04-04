@@ -18,7 +18,7 @@ const PaginationComponent = ({pagination}: props) => {
     const halfVisible = Math.floor(maxVisiblePages / 2)
     
     let startPage = Math.max(1, page - halfVisible)
-    let endPage = Math.min(
+    const endPage = Math.min(
       pagination.totalPages,
       startPage + maxVisiblePages - 1
     )
