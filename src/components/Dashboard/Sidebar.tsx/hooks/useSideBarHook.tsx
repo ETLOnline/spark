@@ -1,12 +1,13 @@
 import { SelectChannel, SelectSpace } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import {
-  GetChannelsAction
-} from "@/src/server-actions/Channel/Channel"
+import { GetChannelsAction } from "@/src/server-actions/Channel/Channel"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { channelStore } from "@/src/store/channel/channelStore"
 import { navStore } from "@/src/store/nav/navStore"
-import { canUserIntract, isUserAdmin, joinChannelsAndSpacesChannel } from "@/src/utils/helpers"
+import {
+  canUserIntract,
+  joinChannelsAndSpacesChannel
+} from "@/src/utils/helpers"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useEffect } from "react"
 import { getChannelsNavMapped } from "../utils/helpers"
@@ -16,7 +17,7 @@ import { userStore } from "@/src/store/user/userStore"
 const useSideBarHook = () => {
   const setRoutes = useSetAtom(navStore.routes)
   const setSelectedChannel = useSetAtom(channelStore.selectedChannel)
-  const [channels, setChannels] = useAtom(channelStore.channels)
+  const [channels, setChannels] = useAtom(channelStore.sideBarChannels)
   const user = useAtomValue(userStore.AuthUser)
 
   const channelSlug = useParams().channel_slug
@@ -33,10 +34,10 @@ const useSideBarHook = () => {
         let updateAllowed = false
 
         if (!user) return
-        if (activity.includes('channel')) {
+        if (activity.includes("channel")) {
           updateAllowed = canUserIntract(user, data.created_by)
         }
-        if (activity.includes('space')) {
+        if (activity.includes("space")) {
           updateAllowed = canUserIntract(user, data.created_by)
         }
         if (!updateAllowed) return
@@ -123,14 +124,14 @@ const useSideBarHook = () => {
       if (userData.role?.includes("admin")) {
         getChannels()
       } else {
-        getChannels("public", userData.unique_id)
+        getChannels({ channelType: "public", ownerId: userData.unique_id })
       }
     }
   }, [userData])
 
   useEffect(() => {
     if (channelsData?.data && channelsData.success) {
-      const allChannels = channelsData.data
+      const allChannels = channelsData.data.channels
       setChannels(allChannels)
     }
   }, [channelsData])

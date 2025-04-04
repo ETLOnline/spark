@@ -1,4 +1,4 @@
-import { SiteRoutes } from "@/src/components/Dashboard/nav-types"
+import { SiteRoutes } from "@/src/components/Dashboard/Sidebar.tsx/nav-types"
 
 import {
   Beaker,

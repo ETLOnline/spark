@@ -7,7 +7,7 @@ import {
   UpdateChannel,
   IsSlugAvailable,
   GetChannelBySlug,
-  GetChannelById,
+  GetChannelById
 } from "@/src/db/data-access/channels/query"
 import { CreateServerAction } from ".."
 import { InsertChannel, SelectChannel } from "@/src/db/schema"
@@ -31,16 +31,20 @@ export const CreateChannelAction = CreateServerAction(
 
 export const GetChannelsAction = CreateServerAction(
   true,
-  async (channelType?: "public" | "private", ownerId?: string) => {
+  async (params?: {
+    channelType?: "public" | "private"
+    ownerId?: string
+    page?: number
+    limit?: number
+  }) => {
     try {
-      const channels = await GetChannels({ channelType, ownerId })
-      return { success: true, data: channels }
+      const result = await GetChannels(params)
+      return { success: true, data: result }
     } catch (error) {
       return { error: error }
     }
   }
 )
-
 
 export const UpdateChannelAction = CreateServerAction(
   true,
@@ -109,4 +113,3 @@ export const GetChannelByIdAction = CreateServerAction(
     }
   }
 )
-
