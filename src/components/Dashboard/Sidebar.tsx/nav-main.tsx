@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronRight, GanttChart, type LucideIcon } from "lucide-react"
+import { ChevronRight, GanttChart, Lock, type LucideIcon } from "lucide-react"
 import {
   Collapsible,
   CollapsibleContent,
@@ -43,6 +43,7 @@ export default function NavMain({
                   <Link href={item.url}>
                     <item.icon />
                     <span>{item.title}</span>
+                    {item.isPrivate ? <Lock scale={0.8} /> : null}
                   </Link>
                 </SidebarMenuButton>
                 {item.items?.length ? (

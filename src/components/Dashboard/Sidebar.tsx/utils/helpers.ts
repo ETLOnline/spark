@@ -16,6 +16,7 @@ return channels.map((c) => ({
   icon: Hash,
   items: c?.spaces && c.spaces.length
     ? getSpaceNavMapped(c.spaces, c)
-    : []
+    : [],
+  isPrivate: c.channel_type === "private",
 }))
 }

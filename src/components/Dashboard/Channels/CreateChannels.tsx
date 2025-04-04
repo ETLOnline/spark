@@ -37,7 +37,7 @@ import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CircleCheck, CircleXIcon, CirclePlus } from "lucide-react"
 import Loader from "../../common/Loader/Loader"
-import { LoaderSizes } from "../../common/Loader/types/loader-types"
+import { LoaderSizes } from "../../common/types/loader-types"
 import { Switch } from "../../ui/switch"
 import { useDebouncedCallback } from "use-debounce"
 

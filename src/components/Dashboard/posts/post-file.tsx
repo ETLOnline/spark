@@ -7,21 +7,13 @@ import PostInteractions from "./post-interactions"
 import { Separator } from "@/src/components/ui/separator"
 import PostComments from "./post-comments"
 import PostCommentForm from "./post-comment-form"
+import { formatFileSize } from "@/src/utils/helpers"
 
 type Props = {
   post: SelectFilePost
 }
 
 const FilePost: React.FC<Props> = ({ post }) => {
-  const formatFileSize = (sizeInBytes: number) => {
-    const kb = sizeInBytes / 1024
-    const mb = kb / 1024
-    if (mb >= 1) {
-      return `${mb.toFixed(2)} MB`
-    }
-    return `${kb.toFixed(2)} KB`
-  }
-
   return (
     <>
       <CardContent>

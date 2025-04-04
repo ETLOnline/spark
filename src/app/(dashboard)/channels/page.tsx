@@ -3,11 +3,17 @@ import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDat
 import { GetChannelsAction } from "@/src/server-actions/Channel/Channel"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import ChannelsCards from "@/src/components/Dashboard/Channels/ChannelsCards"
-import { SelectChannel } from "@/src/db/schema"
 
-const ChannelsPage: React.FC = async () => {
+interface Props {
+  searchParams: Promise<{
+    page?: number
+  }>
+}
+
+const ChannelsPage = async ({ searchParams }: Props) => {
+  const {page} = await searchParams
   const userRole = (await AuthUserAction())?.role
-  const channels = (await GetChannelsAction()).data
+  const result = (await GetChannelsAction({ page: page ? page : 1 , limit: 3 })).data
 
   return (
     <div className="flex-1 p-4 sm:p-6">
@@ -15,10 +21,13 @@ const ChannelsPage: React.FC = async () => {
         <h2 className="text-xl font-bold sm:text-2xl">Channels</h2>
         {userRole?.includes("admin") ? <CreateChannels /> : null}
       </div>
-      {!channels || channels?.length === 0 ? (
+      {!result?.channels || result.channels.length === 0 ? (
         <NoDataCard title="No channels available" />
       ) : (
-        <ChannelsCards fetchedChannels={channels as SelectChannel[]} />
+        <ChannelsCards
+          fetchedChannels={result.channels}
+          pagination={result.pagination}
+        />
       )}
     </div>
   )

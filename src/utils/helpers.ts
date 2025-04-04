@@ -8,9 +8,6 @@ import {
 } from "../db/schema"
 import { AblyClient } from "../services/realtime/AblyClient"
 
-type FormErrorSetter = () => void
-type ClearFormError = () => void
-
 export const joinRequestChannel = (
   channelId: string,
   onRequestReceived: (request: ProfileActivity, activity: string) => void,
@@ -93,7 +90,7 @@ export const joinChannelsAndSpacesChannel = (
 }
 
 export const getUserRoles = (user: SelectUser): string[] => {
-  const roles = (user?.role || '').split(",")
+  const roles = (user?.role || "").split(",")
   return roles || []
 }
 
@@ -125,4 +122,13 @@ export const removeEmojis = (string: string) => {
 
 export const isOnlyEmoji = (string: string) => {
   return !removeEmojis(string).length
+}
+
+export const formatFileSize = (sizeInBytes: number) => {
+  const kb = sizeInBytes / 1024
+  const mb = kb / 1024
+  if (mb >= 1) {
+    return `${mb.toFixed(2)} MB`
+  }
+  return `${kb.toFixed(2)} KB`
 }

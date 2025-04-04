@@ -13,3 +13,14 @@ export type Stat = {
   amount: number
   icon: React.ReactNode
 }
+
+export type DirItem = {
+  id: number
+  name: string
+  type: "file" | "folder"
+  size?: string
+  updatedAt: string
+  path: string
+  url?: string
+  children?: DirItem[]
+}
