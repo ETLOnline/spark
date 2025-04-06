@@ -17,6 +17,7 @@ import {
 } from "../utils/helpers"
 import { useParams } from "next/navigation"
 import { userStore } from "@/src/store/user/userStore"
+import { PageMeta } from "@/src/utils/constants"
 
 const useSideBarHook = () => {
   const setRoutes = useSetAtom(navStore.routes)
@@ -143,6 +144,8 @@ const useSideBarHook = () => {
 
   useEffect(() => {
     if (userData) {
+      let mappedCrumbs: PageMeta[] = []
+
       setRoutes((routes) => {
         return {
           ...routes,
@@ -150,28 +153,27 @@ const useSideBarHook = () => {
         }
       })
       setCrumbRoutes((crumbRoutes) => {
-        const mappedChannels = getChannelsCrumbsMapped(channels)
+        mappedCrumbs = getChannelsCrumbsMapped(channels)
         return [
           ...crumbRoutes,
-          ...(Array.isArray(mappedChannels) ? mappedChannels : [mappedChannels])
+          ...(Array.isArray(mappedCrumbs) ? mappedCrumbs : [mappedCrumbs])
         ]
       })
+      mappedCrumbs = []
       channels.forEach((channel) => {
         if (channel.spaces && channel.spaces.length) {
-          setCrumbRoutes((crumbRoutes) => {
-            const mappedChannels = getSpacesCrumbsMapped(
-              channel.spaces as SelectSpace[],
-              channel
-            )
-            return [
-              ...crumbRoutes,
-              ...(Array.isArray(mappedChannels)
-                ? mappedChannels
-                : [mappedChannels])
-            ]
-          })
+          mappedCrumbs = [
+            ...mappedCrumbs,
+            ...getSpacesCrumbsMapped(channel.spaces as SelectSpace[], channel)
+          ]
         }
       })
+      if (mappedCrumbs.length) {
+        setCrumbRoutes((crumbRoutes) => [
+          ...crumbRoutes,
+          ...(Array.isArray(mappedCrumbs) ? mappedCrumbs : [mappedCrumbs])
+        ])
+      }
     }
 
     if (channelSlug) {
