@@ -132,3 +132,12 @@ export const formatFileSize = (sizeInBytes: number) => {
   }
   return `${kb.toFixed(2)} KB`
 }
+
+
+export const isEntityChannel = (entity: SelectChannel | SelectSpace): entity is SelectChannel => {
+  return (entity as SelectChannel).channel_name !== undefined
+}
+
+export const isEntitySpace = (entity: SelectChannel | SelectSpace): entity is SelectSpace => {
+  return (entity as SelectSpace).space_name !== undefined
+}

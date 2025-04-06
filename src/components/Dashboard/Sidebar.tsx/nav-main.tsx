@@ -43,7 +43,7 @@ export default function NavMain({
                   <Link href={item.url}>
                     <item.icon />
                     <span>{item.title}</span>
-                    {item.isPrivate ? <Lock scale={0.8} /> : null}
+                    {item?.isPrivate ? <Lock className="text-sm" height={10} /> : null}
                   </Link>
                 </SidebarMenuButton>
                 {item.items?.length ? (
