@@ -10,12 +10,17 @@ import {
 } from "@/src/utils/helpers"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useEffect } from "react"
-import { getChannelsNavMapped } from "../utils/helpers"
+import {
+  getChannelsCrumbsMapped,
+  getChannelsNavMapped,
+  getSpacesCrumbsMapped
+} from "../utils/helpers"
 import { useParams } from "next/navigation"
 import { userStore } from "@/src/store/user/userStore"
 
 const useSideBarHook = () => {
   const setRoutes = useSetAtom(navStore.routes)
+  const setCrumbRoutes = useSetAtom(navStore.crumbRoutes)
   const setSelectedChannel = useSetAtom(channelStore.selectedChannel)
   const [channels, setChannels] = useAtom(channelStore.sideBarChannels)
   const user = useAtomValue(userStore.AuthUser)
@@ -142,6 +147,29 @@ const useSideBarHook = () => {
         return {
           ...routes,
           navChannels: getChannelsNavMapped(channels)
+        }
+      })
+      setCrumbRoutes((crumbRoutes) => {
+        const mappedChannels = getChannelsCrumbsMapped(channels)
+        return [
+          ...crumbRoutes,
+          ...(Array.isArray(mappedChannels) ? mappedChannels : [mappedChannels])
+        ]
+      })
+      channels.forEach((channel) => {
+        if (channel.spaces && channel.spaces.length) {
+          setCrumbRoutes((crumbRoutes) => {
+            const mappedChannels = getSpacesCrumbsMapped(
+              channel.spaces as SelectSpace[],
+              channel
+            )
+            return [
+              ...crumbRoutes,
+              ...(Array.isArray(mappedChannels)
+                ? mappedChannels
+                : [mappedChannels])
+            ]
+          })
         }
       })
     }
