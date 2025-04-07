@@ -11,6 +11,11 @@ export const AuthUserAction = CreateServerAction(true, async () => {
       throw new Error("Unauthorized", { cause: 401 })
     }
     const user = await SelectUserByExternalId(clerkUser.userId)
+
+    if (!user) {
+      throw new Error("User not found", { cause: 401 })
+    }
+  
     return user
   } catch (error) {
     throw new Error("Unauthorized", { cause: 401 })

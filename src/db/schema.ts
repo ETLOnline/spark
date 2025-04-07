@@ -59,13 +59,35 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   comments: many(commentsTable, {
     relationName: "commentToUser"
   }),
-  spaces: many(spacesTable, {
-    relationName: "spaceToOwner"
+  // spaces: many(spacesTable, {
+  //   relationName: "spaceToOwner"
+  // }),
+  spaces: many(SpaceUsersTable, {
+    relationName: "spaceUserToUser",
+  }),
+  channels: many(ChannelUsersTable, {
+    relationName: "channelUserToUser"
   })
+
 }))
 
 export type InsertUser = typeof usersTable.$inferInsert
-export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta">
+export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> &{
+  // meta?: string
+  chats?: SelectChat[]
+  contacts?: SelectUserContact[]
+  users?: SelectUserContact[]
+  userActivities?: SelectUserActivity[]
+  userRewards?: SelectUserReward[]
+  userTags?: SelectUserTag[]
+  recommendations?: SelectRecommendation[]
+  notifications?: SelectNotification[]
+  posts?: SelectPost[]
+  comments?: SelectComment[]
+  // spaces?: SelectSpace[]
+  spaces?: SelectSpaceUser[]
+  channels?: SelectChannelUser[]
+}
 
 export const chatsTable = sqliteTable("chats", {
   id: int().primaryKey({ autoIncrement: true }),
@@ -653,12 +675,16 @@ export const channelsTable = sqliteTable("channels", {
 export const channelsRelations = relations(channelsTable, ({ many }) => ({
   spaces: many(spacesTable, {
     relationName: "spaceToChannel"
-  })
+  }),
+  users: many(ChannelUsersTable, {
+    relationName: "channelToChannelUser"
+  }),
 }))
 
 export type InsertChannel = typeof channelsTable.$inferInsert
 export type SelectChannel = typeof channelsTable.$inferSelect & {
   spaces?: SelectSpace[]
+  users?: SelectChannelUser[]
 }
 
 export const spacesTable = sqliteTable("spaces", {
@@ -689,15 +715,19 @@ export const spacesRelations = relations(spacesTable, ({ one, many }) => ({
   posts: many(postsTable, { relationName: "spaceToPosts" }),
   features: many(spaceFeaturesTable, {
     relationName: "spaceFeaturesToSpace"
-  })
+  }),
+  users: many(SpaceUsersTable, {
+    relationName: "spaceToSpaceUser"
+  }),
 }))
 
 export type InsertSpace = typeof spacesTable.$inferInsert
 export type SelectSpace = InferSelectModel<typeof spacesTable> & {
   posts?: SelectPost[]
   features?: SelectSpaceFeature[]
-  owner?: SelectUser
+  owner?: SelectUser | null
   channel?: SelectChannel
+  users?: SelectSpaceUser[]
 }
 
 export const featuresTable = sqliteTable("features", {
@@ -779,3 +809,66 @@ export type SelectSpaceFileDirectory =
   typeof spaceFileDirectoryTable.$inferSelect & {
     file?: SelectFile
   }
+
+
+export const SpaceUsersTable = sqliteTable("space_users", {
+  id: int().primaryKey({ autoIncrement: true }),
+  space_id: text().notNull(),
+  user_id: text().notNull(),
+  role: text().default("member"),
+  status: text().default("active"),
+},
+  (t) => ({
+    pk: primaryKey({ columns: [t.space_id, t.user_id] })
+  })
+)
+
+export type InsertSpaceUser = typeof SpaceUsersTable.$inferInsert
+export type SelectSpaceUser = typeof SpaceUsersTable.$inferSelect & { 
+  space?: SelectSpace
+  user?: SelectUser
+}
+
+export const SpaceUsersRelations = relations(SpaceUsersTable, ({ one }) => ({
+  space: one(spacesTable, {
+    fields: [SpaceUsersTable.space_id],
+    references: [spacesTable.id],
+    relationName: "spaceToSpaceUser",
+  }),
+  user: one(usersTable, {
+    fields: [SpaceUsersTable.user_id],
+    references: [usersTable.unique_id],
+    relationName: "spaceUserToUser",
+  }),
+}))
+
+export const ChannelUsersTable = sqliteTable("channel_users", {
+  id: int().primaryKey({ autoIncrement: true }),  
+  channel_id: text().notNull(),
+  user_id: text().notNull(),
+  role: text().default("member"),
+  status: text().default("active"),
+
+},
+  (t) => ({
+    pk: primaryKey({ columns: [t.channel_id, t.user_id] })
+  })
+)
+export type InsertChannelUser = typeof ChannelUsersTable.$inferInsert
+export type SelectChannelUser = typeof ChannelUsersTable.$inferSelect & { 
+  channel?: SelectChannel
+  user?: SelectUser
+}
+
+export const ChannelUsersRelations = relations(ChannelUsersTable, ({ one }) => ({
+  channel: one(channelsTable, {
+    fields: [ChannelUsersTable.channel_id],
+    references: [channelsTable.id],
+    relationName: "channelToChannelUser",
+  }),
+  user: one(usersTable, {
+    fields: [ChannelUsersTable.user_id],
+    references: [usersTable.unique_id],
+    relationName: "channelUserToUser",
+  }),
+}))

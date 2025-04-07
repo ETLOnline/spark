@@ -19,26 +19,26 @@ interface ChannelProps {
   channel: SelectChannel
 }
 
-function ChannelsCard({ channel }: ChannelProps) {
+function ChannelCard({ channel }: ChannelProps) {
   const authUser = useAtomValue(userStore.AuthUser)
 
   const spacesCount = channel?.spaces ? channel.spaces.length : 0
 
   return (
     <Card key={channel.id} className="overflow-hidden">
-      <div className="aspect-video w-full overflow-hidden">
+      {/* <div className="aspect-video w-full overflow-hidden">
         <img
           src={"/images/home/session-image2.jpg"}
           alt={channel.channel_name}
           className="w-full h-full object-cover transition-transform hover:scale-105"
         />
-      </div>
+      </div> */}
       <CardHeader>
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl flex items-center gap-1">
             {channel.channel_name}
             {channel.channel_type === "private" && (
-              <Lock className="text-muted-foreground" />
+              <Lock className="text-muted-foreground text-sm" height={14} />
             )}
           </CardTitle>
           {authUser && canUserIntract(authUser, channel.ownerId) ? (
@@ -47,7 +47,7 @@ function ChannelsCard({ channel }: ChannelProps) {
         </div>
         <CardDescription>{channel.description}</CardDescription>
       </CardHeader>
-      <CardFooter className="flex justify-between">
+      <CardFooter className="flex flex-col items-start gap-2">
         <Badge variant="secondary" className="flex items-center">
           <Layout className="mr-1 h-3 w-3" />
           {spacesCount} {spacesCount === 1 ? "Space" : "Spaces"}
@@ -60,4 +60,4 @@ function ChannelsCard({ channel }: ChannelProps) {
   )
 }
 
-export default ChannelsCard
+export default ChannelCard
