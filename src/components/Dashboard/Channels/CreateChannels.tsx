@@ -168,12 +168,18 @@ function CreateChannels() {
         slug,
         () => {
           form.clearErrors("channel_slug")
-          setslugAvailableMessage(`${slug} is available`)
+          setslugAvailableMessage(
+            `${
+              slug.length > 15 ? slug.substring(0, 15) + "..." : slug
+            } is available`
+          )
         },
         () => {
           form.setError("channel_slug", {
             type: "manual",
-            message: `${slug} is already taken`
+            message: `${
+              slug.length > 15 ? slug.substring(0, 15) + "..." : slug
+            } is already taken`
           })
           setslugAvailableMessage("")
         }
