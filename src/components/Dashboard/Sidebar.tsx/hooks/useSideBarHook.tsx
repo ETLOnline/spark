@@ -1,12 +1,14 @@
-import { SelectChannel, SelectSpace } from "@/src/db/schema"
+import { SelectChannel, SelectSpace, SelectUser } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import {
-  GetChannelsAction
-} from "@/src/server-actions/Channel/Channel"
+import { GetChannelsAction } from "@/src/server-actions/Channel/Channel"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { channelStore } from "@/src/store/channel/channelStore"
 import { navStore } from "@/src/store/nav/navStore"
-import { canUserIntract, isUserAdmin, joinChannelsAndSpacesChannel } from "@/src/utils/helpers"
+import {
+  canUserIntract,
+  isUserAdmin,
+  joinChannelsAndSpacesChannel
+} from "@/src/utils/helpers"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useEffect } from "react"
 import { getChannelsNavMapped } from "../utils/helpers"
@@ -16,15 +18,15 @@ import { userStore } from "@/src/store/user/userStore"
 const useSideBarHook = () => {
   const setRoutes = useSetAtom(navStore.routes)
   const setSelectedChannel = useSetAtom(channelStore.selectedChannel)
-  const [channels, setChannels] = useAtom(channelStore.channels)
+  const [channels, setChannels] = useAtom(channelStore.sideBarChannels)
   const user = useAtomValue(userStore.AuthUser)
 
   const channelSlug = useParams().channel_slug
 
   const [channelsLoading, channelsData, channelsError, getChannels] =
     useServerAction(GetChannelsAction)
-  const [userLoading, userData, userError, getUser] =
-    useServerAction(AuthUserAction)
+
+  const userData = user
 
   useEffect(() => {
     const { unsubscribe } = joinChannelsAndSpacesChannel(
@@ -33,10 +35,10 @@ const useSideBarHook = () => {
         let updateAllowed = false
 
         if (!user) return
-        if (activity.includes('channel')) {
+        if (activity.includes("channel")) {
           updateAllowed = canUserIntract(user, data.created_by)
         }
-        if (activity.includes('space')) {
+        if (activity.includes("space")) {
           updateAllowed = canUserIntract(user, data.created_by)
         }
         if (!updateAllowed) return
@@ -111,7 +113,7 @@ const useSideBarHook = () => {
       ]
     )
 
-    getUser()
+    // getUser()
 
     return () => {
       unsubscribe()
@@ -120,20 +122,26 @@ const useSideBarHook = () => {
 
   useEffect(() => {
     if (userData) {
-      if (userData.role?.includes("admin")) {
-        getChannels()
-      } else {
-        getChannels("public", userData.unique_id)
-      }
+      updateChannelsList(userData)
     }
   }, [userData])
 
-  useEffect(() => {
-    if (channelsData?.data && channelsData.success) {
-      const allChannels = channelsData.data
-      setChannels(allChannels)
-    }
-  }, [channelsData])
+  const updateChannelsList = async (userData: SelectUser) => {
+    if(!userData || !userData.channels) return
+    const navChannels = await getChannels()
+    setChannels([...(navChannels?.joinedChannels || []),...(navChannels?.data?.channels || [])])
+    // if (isUserAdmin(userData)) {
+    //   const adminChannels = await getChannels()
+    //   setChannels(adminChannels?.data?.channels || [])
+
+    // } else {
+    //   const publicChannels = await getChannels({channelType: "public", isPublished: true}) 
+    //   const joinedChannels = userData?.channels.map((uc)=> uc.channel).filter((c) => typeof c !== 'undefined' )
+
+    //   setChannels([...(joinedChannels || []), ...(publicChannels?.data?.channels || []) ])
+    // }
+
+  }
 
   useEffect(() => {
     if (userData) {
