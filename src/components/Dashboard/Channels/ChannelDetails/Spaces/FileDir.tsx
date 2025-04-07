@@ -1,4 +1,4 @@
-import { FolderPlus, UploadCloud } from "lucide-react"
+import { FolderPlus, Upload, UploadCloud } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -6,6 +6,16 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/src/components/ui/dialog"
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/src/components/ui/drawer"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { Button } from "@/src/components/ui/button"
@@ -27,6 +37,17 @@ import { SelectSpaceFileDirectory } from "@/src/db/schema"
 import { useToast } from "@/src/hooks/use-toast"
 import DirView from "./DirView"
 import DirNav from "./DirNav"
+import { FileUpload } from "@/src/components/ui/file-upload"
+import { useSearchParams } from "next/navigation"
+import { CreateNewFileAction } from "@/src/server-actions/FileSharing/FileSharing"
+
+
+type FileData = {
+  fileName: string
+  fileSize: number
+  fileType: string
+  fileB64string: string
+}
 
 type FileDirProps = {
   addItemToPath: (items: DirItem[], path: string, newItem: DirItem) => DirItem[]
@@ -37,9 +58,19 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
   const [isNewFolderDialogOpen, setIsNewFolderDialogOpen] =
     useState<boolean>(false)
 
+
   const [dir, setDir] = useAtom(spaceStore.dir)
-  const [currentPath, setCurrentPath] = useAtom(spaceStore.currDirPath)
-  const [currSpace, setCurrSpace] = useAtom(spaceStore.selectedSpace)
+    const [currentPath, setCurrentPath] = useAtom(spaceStore.currDirPath)
+    const [currSpace, setCurrSpace] = useAtom(spaceStore.selectedSpace)
+  
+    const [fileData, setFileData] = useState<FileData | null>(null)
+  
+    const searchParams = useSearchParams()
+  
+  
+    const [createFileLoading, createdFile, createFileError, createNewFile] =
+      useServerAction(CreateNewFileAction)
+  
 
   const newFolderName = useRef<string>("")
 
@@ -63,7 +94,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
   ] = useServerAction(CreateNewFolderAction)
 
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       try {
         const space = await getSpaceBySlug(spaceSlug, channelSlug)
         if (space?.success && space.data) {
@@ -203,14 +234,119 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
     setCurrentPath(path)
   }
 
+  const processFileForUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Convert file to Base64
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64String = reader.result as string
+        setFileData({
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type,
+          fileB64string: base64String
+        })
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+  const handleFileUpload = async () => {
+      try {
+        const createdFile = (
+          await createNewFile(
+            currentPath === "/"
+              ? (currSpace?.id as string)
+              : (findItemByPath(dir, currentPath)?.id as number),
+            fileData?.fileName as string,
+            fileData?.fileSize as number,
+            fileData?.fileB64string as string,
+            fileData?.fileType as string
+          )
+        )?.data
+        const newFile: DirItem = {
+          id: createdFile?.id as number,
+          name: createdFile?.entity_name as string,
+          type: "file",
+          updatedAt: new Date(createdFile?.created_at as string)
+            .toISOString()
+            .split("T")[0],
+          path:
+            currentPath === "/"
+              ? `/${createdFile?.entity_name as string}`
+              : `${currentPath}/${createdFile?.entity_name as string}`,
+          size: createdFile?.entity_size
+            ? formatFileSize(createdFile?.entity_size)
+            : "",
+          url: createdFile?.url,
+          children: []
+        }
+  
+        if (currentPath === "/") {
+          setDir([...dir, { ...newFile }])
+        } else {
+          setDir(addItemToPath(dir, currentPath, newFile))
+        }
+  
+        setFileData(null)
+  
+        toast({
+          description: "File created!",
+          duration: 3000
+        })
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          description: "Failed to create file",
+          duration: 3000
+        })
+      }
+    }
+
   return (
     <section className="directory">
       <div className="flex justify-between items-center mb-4">
         <DirNav navigateToFolder={navigateToFolder} />
         <div className="flex gap-4">
-          <Button>
+          {/* <Button>
             <UploadCloud /> Upload File
-          </Button>
+          </Button> */}
+          <Drawer>
+            <DrawerTrigger asChild>
+              <Button variant="outline">
+                <FolderPlus className="mr-2 h-4 w-4" />
+                Upload File
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <div className="mx-auto w-full max-w-lg">
+
+                <div className="p-4 pb-0">
+                  <div className="flex items-center justify-center space-x-2">
+                    <Card className="mb-8 flex flex-col items-center gap-4 pb-8">
+                      <FileUpload
+                        onChange={(files: File[]) => {
+                          processFileForUpload({
+                            target: { files: [...files] }
+                          } as unknown as React.ChangeEvent<HTMLInputElement>)
+                        }}
+                        key={createdFile?.data?.id}
+                      />
+                      <Button
+                        onClick={handleFileUpload}
+                        disabled={!fileData}
+                        loading={createFileLoading}
+                      >
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload
+                      </Button>
+                    </Card>
+                  </div>
+                </div>
+                
+              </div>
+            </DrawerContent>
+          </Drawer>
           <Dialog
             open={isNewFolderDialogOpen}
             onOpenChange={setIsNewFolderDialogOpen}
