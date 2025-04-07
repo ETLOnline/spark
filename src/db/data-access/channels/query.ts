@@ -29,8 +29,6 @@ export async function GetChannels(filters?: channelQueryFilters) {
     const limit = filters?.limit 
     const offset = page && limit ? (page - 1) * limit :0
 
-    let channels
-    let totalCount
     const whereClauses:(SQLWrapper | undefined)[] = []
 
     if (filters) {
@@ -49,7 +47,7 @@ export async function GetChannels(filters?: channelQueryFilters) {
 
     } 
     
-    channels = await db.query.channelsTable.findMany({
+    const channels = await db.query.channelsTable.findMany({
       limit: limit,
       offset: offset,
       where: whereClauses.length ? and(...whereClauses) : undefined,
@@ -62,7 +60,7 @@ export async function GetChannels(filters?: channelQueryFilters) {
       }
     })
 
-    totalCount = await db.$count(
+    const totalCount = await db.$count(
       channelsTable,
       whereClauses.length ? and(...whereClauses) : undefined
     )
