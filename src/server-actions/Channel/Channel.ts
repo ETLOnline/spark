@@ -7,11 +7,19 @@ import {
   UpdateChannel,
   IsSlugAvailable,
   GetChannelBySlug,
-  GetChannelById
+  GetChannelById,
+  attachChannelUser,
+  dettachChannelUser,
+  updateChannelUser,
+  getChannelUsers,
+  channelQueryFilters
 } from "@/src/db/data-access/channels/query"
 import { CreateServerAction } from ".."
-import { InsertChannel, SelectChannel } from "@/src/db/schema"
+import { InsertChannel, SelectChannel, SelectChannelUser } from "@/src/db/schema"
 import { AblyClientRest } from "@/src/services/realtime/AblyClient"
+import { AuthUserAction } from "../User/AuthUserAction"
+import { isUserAdmin } from "@/src/utils/helpers"
+import { PaginationType } from "@/src/components/common/types/pagination.type"
 
 export const CreateChannelAction = CreateServerAction(
   true,
@@ -29,17 +37,27 @@ export const CreateChannelAction = CreateServerAction(
   }
 )
 
+export interface GetChannelsResponseType {
+  channels: SelectChannel[]
+  pagination: PaginationType
+}
 export const GetChannelsAction = CreateServerAction(
   true,
-  async (params?: {
-    channelType?: "public" | "private"
-    ownerId?: string
-    page?: number
-    limit?: number
-  }) => {
+  async (filters?: channelQueryFilters) => {
     try {
-      const result = await GetChannels(params)
-      return { success: true, data: result }
+      const authUser = await AuthUserAction()
+      let channels: GetChannelsResponseType 
+      let joinedChannels: SelectChannel[] = [] 
+      if (isUserAdmin(authUser)) {
+        channels = await GetChannels({...filters})
+      } else {
+        channels = await GetChannels({...filters, channelType: "public", isPublished: true}) 
+        joinedChannels = authUser?.channels.map((uc)=> uc.channel).filter((c) => typeof c !== 'undefined' )
+        
+      }
+
+      // const result = await GetChannels(filters)
+      return { success: true, data: channels, joinedChannels }
     } catch (error) {
       return { error: error }
     }
@@ -108,6 +126,55 @@ export const GetChannelByIdAction = CreateServerAction(
     try {
       const channel = await GetChannelById(id)
       return { success: true, data: channel }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const AttachChannelUserAction = CreateServerAction(
+  true,
+  async (channelId: string, userId: string) => {
+    try {
+      const channelUser = await attachChannelUser(channelId, userId)
+      return { success: true, data: channelUser }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const DettachChannelUserAction = CreateServerAction(
+  true,
+  async (channelId: string, userId: string) => {
+    try{
+      const channelUser = await dettachChannelUser(channelId, userId)
+      return { success: true, data: channelUser }
+    }
+    catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const UpdateChannelUserAction = CreateServerAction(
+  true,
+  async (channelId: string, userId: string, updatedData: Partial<SelectChannelUser>) => {
+    try {
+      const updatedChannelUser = await updateChannelUser(channelId, userId, updatedData)
+      return { success: true, data: updatedChannelUser }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetChannelUsersAction = CreateServerAction(
+  true,
+  async (channelId: string) => {
+    try {
+      const channelUsers = await getChannelUsers(channelId)
+      return { success: true, data: channelUsers }
     } catch (error) {
       return { error: error }
     }

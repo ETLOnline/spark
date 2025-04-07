@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/src/components/ui/dropdown-menu"
-import { Edit, Layout, MoreHorizontal, Trash2 } from "lucide-react"
+import { Edit, Layout, MoreHorizontal, Trash2, User } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 
 interface ChannelProps {
@@ -79,10 +79,10 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({ channel }) => {
           <Edit className="mr-2 h-4 w-4" />
           Edit
         </DropdownMenuItem>
-        {/* <DropdownMenuItem onClick={() => router.push(`/channels/${channel.channel_slug}/settings`)}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </DropdownMenuItem> */}
+        <DropdownMenuItem onClick={() => router.push(`/channels/${channel.channel_slug}/users`)}>
+          <User className="mr-2 h-4 w-4" />
+          Users
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="text-destructive focus:text-destructive"
