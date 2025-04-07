@@ -40,6 +40,7 @@ import Loader from "../../common/Loader/Loader"
 import { LoaderSizes } from "../../common/types/loader-types"
 import { Switch } from "../../ui/switch"
 import { useDebouncedCallback } from "use-debounce"
+import { slugAvailibilityMsgGenerator } from "@/src/utils/helpers"
 
 const channelSchema = z.object({
   channel_name: z
@@ -168,18 +169,12 @@ function CreateChannels() {
         slug,
         () => {
           form.clearErrors("channel_slug")
-          setslugAvailableMessage(
-            `${
-              slug.length > 15 ? slug.substring(0, 15) + "..." : slug
-            } is available`
-          )
+          setslugAvailableMessage(slugAvailibilityMsgGenerator(true, slug))
         },
         () => {
           form.setError("channel_slug", {
             type: "manual",
-            message: `${
-              slug.length > 15 ? slug.substring(0, 15) + "..." : slug
-            } is already taken`
+            message: slugAvailibilityMsgGenerator(false, slug)
           })
           setslugAvailableMessage("")
         }

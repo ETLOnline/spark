@@ -33,7 +33,9 @@ function SpacesCard({ space }: Props) {
       <CardHeader>
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl flex items-center gap-1">
-            {space.space_name}
+            <span className="truncate max-w-[200px] block">
+              {space.space_name}
+            </span>
             {space.space_type === "private" && (
               <Lock className="text-muted-foreground" height={14} />
             )}
@@ -50,7 +52,9 @@ function SpacesCard({ space }: Props) {
           0 Members
         </Badge>
         <Link href={`./spaces/${space.space_slug}`}>
-          <Button>Launch Space <ArrowRight /></Button>
+          <Button>
+            Launch Space <ArrowRight />
+          </Button>
         </Link>
       </CardFooter>
     </Card>

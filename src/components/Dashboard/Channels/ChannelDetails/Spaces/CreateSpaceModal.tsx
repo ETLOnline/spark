@@ -9,11 +9,17 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/src/components/ui/dialog"
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/src/components/ui/select"
 import { Textarea } from "@/src/components/ui/textarea"
 import { InsertSpace } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
@@ -26,6 +32,7 @@ import {
 import { channelStore } from "@/src/store/channel/channelStore"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
+import { slugAvailibilityMsgGenerator } from "@/src/utils/helpers"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAtom, useAtomValue } from "jotai"
 import { CircleCheck, CircleXIcon } from "lucide-react"
@@ -35,24 +42,25 @@ import { Controller, useForm } from "react-hook-form"
 import { useDebouncedCallback } from "use-debounce"
 import { z } from "zod"
 
-
 interface Props {
-  spaceFormModelVisibility: boolean,
+  spaceFormModelVisibility: boolean
   setSpaceFormModelVisibility: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 const spaceSchema = z.object({
   space_name: z.string().min(1, "Space name required").max(30, "Too long"),
   space_slug: z.string().max(50, "Slug is too long"),
-  description: z.string()
+  description: z
+    .string()
     .min(1, "Description required")
     .max(150, "Description is too long"),
   space_type: z.string().optional()
 })
 
-
-
-function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibility }: Props) {
+function CreateSpaceModal({
+  spaceFormModelVisibility,
+  setSpaceFormModelVisibility
+}: Props) {
   const router = useRouter()
   const authUser = useAtomValue(userStore.AuthUser)
   const selectedChannel = useAtomValue(channelStore.selectedChannel)
@@ -89,7 +97,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
       onNotAvailable?: () => void
     ) => {
       try {
-        const result = await isSlugAvailable(slug, selectedChannel?.id || '');
+        const result = await isSlugAvailable(slug, selectedChannel?.id || "")
 
         if (result && result.data) {
           if (onAvailable) onAvailable()
@@ -97,14 +105,14 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
           if (onNotAvailable) onNotAvailable()
         }
       } catch (error) {
-        console.error(error);
+        console.error(error)
       }
     },
     1000 // Debounce delay in milliseconds
-  );
+  )
 
   useEffect(() => {
-    const value = form.getValues("space_name")?.trim() || ''
+    const value = form.getValues("space_name")?.trim() || ""
     const slug = value.replaceAll(" ", "-").toLowerCase()
 
     if (value && selectedSpace?.space_slug !== slug) {
@@ -112,20 +120,18 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
         slug,
         () => {
           form.clearErrors("space_slug")
-          setslugAvailableMessage(
-            `${slug} is available`
-          )
+          setslugAvailableMessage(slugAvailibilityMsgGenerator(true, slug))
         },
         () => {
           form.setError("space_slug", {
             type: "manual",
-            message: `${slug} is already taken`
+            message: slugAvailibilityMsgGenerator(false, slug)
           })
-          setslugAvailableMessage("");
+          setslugAvailableMessage("")
         }
       )
     } else {
-      setslugAvailableMessage("");
+      setslugAvailableMessage("")
     }
     form.setValue("space_slug", slug)
   }, [form.watch("space_name")])
@@ -176,7 +182,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
     try {
       data.created_by = authUser?.unique_id as string
       data.channel_id = selectedChannel?.id as string
-      data.space_name = (data.space_name || '').trim()
+      data.space_name = (data.space_name || "").trim()
       data.space_slug = data.space_slug?.trim()
       data.space_type = data.space_type || "private"
 
@@ -202,7 +208,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
     try {
       data.created_by = authUser?.unique_id as string
       data.channel_id = selectedChannel?.id
-      data.space_name = (data.space_name || '').trim()
+      data.space_name = (data.space_name || "").trim()
       data.space_slug = data?.space_slug?.trim() || ""
 
       const updatedSpace = await updateSpace(
@@ -218,7 +224,9 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
           duration: 3000
         })
         if (updatedSpace.data && !(updatedSpace.data instanceof Error)) {
-          router.push(`/channels/${selectedChannel?.channel_slug}/spaces/${updatedSpace.data.space_slug}`)
+          router.push(
+            `/channels/${selectedChannel?.channel_slug}/spaces/${updatedSpace.data.space_slug}`
+          )
         }
       }
     } catch {
@@ -350,7 +358,6 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
                 </div>
               </div>
 
-
               <div className="flex flex-col">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="space_type">Space type</Label>
@@ -361,8 +368,13 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
                       render={({ field }) => (
                         <Select
                           onValueChange={field.onChange}
-                          value={selectedChannel?.channel_type === "private" ? "private" : field.value}
-                          disabled={selectedChannel?.channel_type === "private"}>
+                          value={
+                            selectedChannel?.channel_type === "private"
+                              ? "private"
+                              : field.value
+                          }
+                          disabled={selectedChannel?.channel_type === "private"}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
@@ -405,7 +417,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
           </form>
         </DialogContent>
       </Dialog>
-    </div >
+    </div>
   )
 }
 
