@@ -21,33 +21,45 @@ import { SelectChannel, SelectChannelUser, SelectUser } from "@/src/db/schema"
 import { getUserRoles } from "@/src/utils/helpers"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { DettachChannelUserAction } from "@/src/server-actions/Channel/Channel"
 
 interface Props {
   channel: SelectChannel
   userList: SelectChannelUser[]
 }
 
-export default function ChannelUserList({channel, userList}: Props) {
+export default function ChannelUserList({ channel, userList }: Props) {
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [channelUsers, setChannelUsers] = useState<SelectChannelUser[]>(userList)
   const [filteredUsers, setFilteredUsers] = useState<SelectChannelUser[]>(userList)
   const authUser = useAtomValue(userStore.AuthUser)
+  const [dettachChannelUserLoading, dettachChannelUserData, errorDettachChannelUser, DettachChannelUser] = useServerAction(DettachChannelUserAction)
 
-  useEffect(()=>{
+  useEffect(() => {
     const filtered = channelUsers.filter(
       (cu) =>
         cu?.user?.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         cu?.user?.email?.toLowerCase().includes(searchQuery.toLowerCase())
     )
     setFilteredUsers(filtered)
-  },[searchQuery, channelUsers])
+  }, [searchQuery, channelUsers])
 
-  const handleRemoveUser = async () => {
-    // if (authUser){
-
-    // }
+  const handleRemoveUser = async (userId: string, channelId: string) => {
+    try {
+      if (authUser?.role.includes("admin")) {
+        const delUser = await DettachChannelUser(channelId, userId)
+        console.log("delUser", delUser, userId)
+        if (delUser?.success) {
+          setChannelUsers((prev) => prev.filter((cu) => cu.user?.unique_id !== userId))
+        }
+      }
+    } catch {
+      console.error("Error removing user")
+    }
   }
+
 
   return (
     <div className="p-6">
@@ -88,7 +100,7 @@ export default function ChannelUserList({channel, userList}: Props) {
               {filteredUsers.map((cu) => {
                 const user = cu.user
                 if (!user) return null
-                return(
+                return (
                   <div key={user.unique_id} className="grid grid-cols-12 p-4 items-center">
                     <div className="col-span-4 flex items-center gap-3">
                       <Avatar>
@@ -102,7 +114,7 @@ export default function ChannelUserList({channel, userList}: Props) {
                     </div>
                     <div className="col-span-4 text-sm text-muted-foreground">{user.email}</div>
                     <div className="col-span-3 flex items-center gap-1">
-                      <Badge  variant={cu.role === "admin" ? "default" : "outline"}>{cu.role}</Badge>
+                      <Badge variant={cu.role === "admin" ? "default" : "outline"}>{cu.role}</Badge>
                     </div>
                     <div className="col-span-1 text-right">
                       <DropdownMenu>
@@ -117,7 +129,7 @@ export default function ChannelUserList({channel, userList}: Props) {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem>Change Role</DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive" onClick={() => handleRemoveUser()}>Remove User</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => cu.user?.unique_id && handleRemoveUser(cu.user.unique_id, cu.channel_id)}>Remove User</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -133,12 +145,12 @@ export default function ChannelUserList({channel, userList}: Props) {
         </CardContent>
       </Card>
 
-      <InviteUserDialog 
-        open={isInviteDialogOpen} 
-        onOpenChange={setIsInviteDialogOpen} 
-        spaceName="Platform" 
+      <InviteUserDialog
+        open={isInviteDialogOpen}
+        onOpenChange={setIsInviteDialogOpen}
+        spaceName="Platform"
         type={['link']}
-        entityType="channel" 
+        entityType="channel"
         entity={channel}
       />
     </div>

@@ -149,7 +149,7 @@ export const DettachChannelUserAction = CreateServerAction(
   async (channelId: string, userId: string) => {
     try{
       const channelUser = await dettachChannelUser(channelId, userId)
-      return { success: true, data: channelUser }
+      return { success: true}
     }
     catch (error) {
       return { error: error }
