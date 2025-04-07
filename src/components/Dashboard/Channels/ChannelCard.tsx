@@ -35,12 +35,14 @@ function ChannelCard({ channel }: ChannelProps) {
       </div> */}
       <CardHeader>
         <div className="flex justify-between items-start">
-          <CardTitle className="text-xl flex items-center gap-1">
-            {channel.channel_name}
+            <CardTitle className="text-xl flex items-center gap-1">
+            <span className="truncate max-w-[200px] block">
+              {channel.channel_name}
+            </span>
             {channel.channel_type === "private" && (
               <Lock className="text-muted-foreground text-sm" height={14} />
             )}
-          </CardTitle>
+            </CardTitle>
           {authUser && canUserIntract(authUser, channel.ownerId) ? (
             <ChannelsContextMenu channel={channel} />
           ) : null}
