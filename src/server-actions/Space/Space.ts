@@ -132,7 +132,7 @@ export const DetachSpaceUserAction = CreateServerAction(
   async (spaceId: string, userId: string) => {
     try {
       const spaceUser = await dettachSpaceUser(spaceId, userId)
-      return { success: true, data: spaceUser }
+      return { success: true}
     } catch (error) {
       return { error: error }
     }

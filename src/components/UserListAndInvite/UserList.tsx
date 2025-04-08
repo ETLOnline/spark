@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { MoreHorizontal, Search, UserPlus } from "lucide-react"
+import { ArrowBigRightDash, MoreHorizontal, Search, UserPlus } from "lucide-react"
 
 import { Button } from "@/src/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card"
@@ -17,25 +17,29 @@ import {
   DropdownMenuTrigger,
 } from "@/src/components/ui/dropdown-menu"
 import { InviteUserDialog } from "./UserInviteDialog"
-import { SelectChannel, SelectChannelUser, SelectUser } from "@/src/db/schema"
+import { SelectChannel, SelectChannelUser, SelectSpace, SelectSpaceUser } from "@/src/db/schema"
 import { getUserRoles } from "@/src/utils/helpers"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { DettachChannelUserAction } from "@/src/server-actions/Channel/Channel"
+import { DetachSpaceUserAction } from "@/src/server-actions/Space/Space"
+import Link from "next/link"
 
 interface Props {
-  channel: SelectChannel
-  userList: SelectChannelUser[]
+  entityType: "channel" | "space"
+  entity: SelectChannel | SelectSpace
+  userList: SelectChannelUser[] | SelectSpaceUser[]
 }
 
-export default function ChannelUserList({ channel, userList }: Props) {
+export default function ChannelUserList({ entity, userList, entityType }: Props) {
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [channelUsers, setChannelUsers] = useState<SelectChannelUser[]>(userList)
-  const [filteredUsers, setFilteredUsers] = useState<SelectChannelUser[]>(userList)
+  const [channelUsers, setChannelUsers] = useState(userList)
+  const [filteredUsers, setFilteredUsers] = useState<(SelectChannelUser | SelectSpaceUser)[]>(userList)
   const authUser = useAtomValue(userStore.AuthUser)
   const [dettachChannelUserLoading, dettachChannelUserData, errorDettachChannelUser, DettachChannelUser] = useServerAction(DettachChannelUserAction)
+  const [dettachSpaceUserLoading, dettachSpaceUserData, errorDettachSpaceUser, DettachSpaceUser] = useServerAction(DetachSpaceUserAction)
 
   useEffect(() => {
     const filtered = channelUsers.filter(
@@ -46,14 +50,27 @@ export default function ChannelUserList({ channel, userList }: Props) {
     setFilteredUsers(filtered)
   }, [searchQuery, channelUsers])
 
-  const handleRemoveUser = async (userId: string, channelId: string) => {
+  const entityName = entityType === "channel" ? (entity as SelectChannel).channel_name : (entity as SelectSpace).space_name
+
+  const handleRemoveUser = async (userId: string, entityId: string) => {
     try {
       if (authUser?.role.includes("admin")) {
-        const delUser = await DettachChannelUser(channelId, userId)
-        console.log("delUser", delUser, userId)
-        if (delUser?.success) {
-          setChannelUsers((prev) => prev.filter((cu) => cu.user?.unique_id !== userId))
+        let delUser;
+        if (entityType === "channel") {
+          delUser = await DettachChannelUser(entityId, userId)
+        } else {
+          delUser = await DettachSpaceUser(entityId, userId)
         }
+        if (delUser?.success) {
+          setChannelUsers((prev) => {
+            if (entityType === "channel") {
+              return (prev as SelectChannelUser[]).filter((cu) => cu.user?.unique_id !== userId)
+            } else {
+              return (prev as SelectSpaceUser[]).filter((cu) => cu.user?.unique_id !== userId)
+            }
+          })
+        }
+
       }
     } catch {
       console.error("Error removing user")
@@ -64,7 +81,16 @@ export default function ChannelUserList({ channel, userList }: Props) {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">User Management</h1>
+        <div className="flex items-center space-x-2">
+          <Link href={
+            entityType === "channel"
+              ? `/channels/${(entity as SelectChannel).channel_slug}/spaces`
+              : `/channels/${(entity as SelectSpace).channel?.channel_slug}/spaces/${(entity as SelectSpace).space_slug}`}>
+            <h1 className="text-2xl font-bold">{entityName}</h1>
+          </Link>
+          <ArrowBigRightDash />
+          <h1 className="text-2xl font-bold">User Management</h1>
+        </div>
         <Button onClick={() => setIsInviteDialogOpen(true)}>
           <UserPlus className="mr-2 h-4 w-4" />
           Invite User
@@ -86,7 +112,7 @@ export default function ChannelUserList({ channel, userList }: Props) {
               />
             </div>
           </div>
-          <CardDescription>Manage all users across your channel. {channelUsers.length} users total.</CardDescription>
+          <CardDescription>Manage all users across your {entityType === "channel" ? "channel" : "space"}. {channelUsers.length} users total.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
@@ -129,7 +155,16 @@ export default function ChannelUserList({ channel, userList }: Props) {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem>Change Role</DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive" onClick={() => cu.user?.unique_id && handleRemoveUser(cu.user.unique_id, cu.channel_id)}>Remove User</DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => {
+                              if (cu.user?.unique_id) {
+                                handleRemoveUser(cu.user.unique_id, entity.id)
+                              }
+                            }}
+                          >
+                            Remove User
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -150,8 +185,8 @@ export default function ChannelUserList({ channel, userList }: Props) {
         onOpenChange={setIsInviteDialogOpen}
         spaceName="Platform"
         type={['link']}
-        entityType="channel"
-        entity={channel}
+        entityType={entityType}
+        entity={entity}
       />
     </div>
   )

@@ -208,10 +208,10 @@ export async function updateChannelUser(channelId: string, userId: string, updat
   }
 }
 
-export async function getChannelUsers(spaceId: string) {
+export async function getChannelUsers(channelId: string) {
   try{
     const channelUsers = await db.query.ChannelUsersTable.findMany({
-      where: eq(ChannelUsersTable.channel_id, spaceId),
+      where: eq(ChannelUsersTable.channel_id, channelId),
       with: {
         user: true
       }
