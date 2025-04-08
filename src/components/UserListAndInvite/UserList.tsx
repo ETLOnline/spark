@@ -18,13 +18,17 @@ import {
 } from "@/src/components/ui/dropdown-menu"
 import { InviteUserDialog } from "./UserInviteDialog"
 import { SelectChannel, SelectChannelUser, SelectSpace, SelectSpaceUser } from "@/src/db/schema"
-import { getUserRoles } from "@/src/utils/helpers"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { DettachChannelUserAction } from "@/src/server-actions/Channel/Channel"
-import { DetachSpaceUserAction } from "@/src/server-actions/Space/Space"
+import { DettachChannelUserAction, UpdateChannelUserAction } from "@/src/server-actions/Channel/Channel"
+import { DetachSpaceUserAction, UpdateSpaceUserAction } from "@/src/server-actions/Space/Space"
 import Link from "next/link"
+import { toast } from "@/src/hooks/use-toast"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
+import { Label } from "../ui/label"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog"
 
 interface Props {
   entityType: "channel" | "space"
@@ -37,9 +41,14 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
   const [searchQuery, setSearchQuery] = useState("")
   const [channelUsers, setChannelUsers] = useState(userList)
   const [filteredUsers, setFilteredUsers] = useState<(SelectChannelUser | SelectSpaceUser)[]>(userList)
+  const [isOpen, setIsOpen] = useState(false)
+  const [isAlertOpen, setIsAlertOpen] = useState(false)
+  const [userRole, setUserRole] = useState("")
   const authUser = useAtomValue(userStore.AuthUser)
   const [dettachChannelUserLoading, dettachChannelUserData, errorDettachChannelUser, DettachChannelUser] = useServerAction(DettachChannelUserAction)
   const [dettachSpaceUserLoading, dettachSpaceUserData, errorDettachSpaceUser, DettachSpaceUser] = useServerAction(DetachSpaceUserAction)
+  const [updateChannelUserLoading, updateChannelUserData, updateChannelUserError, UpdateChannelUser] = useServerAction(UpdateChannelUserAction)
+  const [updateSpaceUserLoading, updateSpaceUserData, updateSpaceUserError, UpdateSpaceUser] = useServerAction(UpdateSpaceUserAction)
 
   useEffect(() => {
     const filtered = channelUsers.filter(
@@ -49,8 +58,45 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
     )
     setFilteredUsers(filtered)
   }, [searchQuery, channelUsers])
-
   const entityName = entityType === "channel" ? (entity as SelectChannel).channel_name : (entity as SelectSpace).space_name
+
+  async function handleUPdateuser(userId: string, entityId: string) {
+    try {
+      let updatedUser;
+      if (entityType === "channel") {
+        updatedUser = await UpdateChannelUser(entityId, userId, { role: userRole })
+      } else {
+        updatedUser = await UpdateSpaceUser(entityId, userId, { role: userRole })
+      }
+      console.log(updatedUser)
+      if (updatedUser?.success && updatedUser.data) {
+        setChannelUsers((prev) => {
+          if (entityType === "channel") {
+            return (prev as SelectChannelUser[]).map((cu) => {
+              if (cu.user?.unique_id === userId) {
+                return { ...cu, updatedUser }
+              }
+              return cu
+            })
+          } else {
+            return (prev as SelectSpaceUser[]).map((cu) => {
+              if (cu.user?.unique_id === userId) {
+                return { ...cu, updatedUser }
+              }
+              return cu
+            })
+          }
+        })
+        toast({
+          title: "User role updated",
+          variant: "default"
+        })
+      }
+    } catch {
+      console.error("Error updating user")
+    }
+  }
+
 
   const handleRemoveUser = async (userId: string, entityId: string) => {
     try {
@@ -68,6 +114,11 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
             } else {
               return (prev as SelectSpaceUser[]).filter((cu) => cu.user?.unique_id !== userId)
             }
+          })
+          toast({
+            title: "User removed",
+            description: `User has been removed from ${entityName}`,
+            variant: "default",
           })
         }
 
@@ -153,14 +204,14 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem>Change Role</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setIsOpen(true)}>
+                            Change Role
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="text-destructive"
                             onClick={() => {
-                              if (cu.user?.unique_id) {
-                                handleRemoveUser(cu.user.unique_id, entity.id)
-                              }
+                              setIsAlertOpen(true)
                             }}
                           >
                             Remove User
@@ -168,6 +219,66 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
+                    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Change Role</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="channel_type">Channel type</Label>
+                            <div className="w-[70%]">
+                              <Select
+                                value={userRole}
+                                onValueChange={(value) => {
+                                  setUserRole(value)
+                                }}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={cu.role} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="admin">Admin</SelectItem>
+                                  <SelectItem value="member">Member</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button
+                            loading={updateChannelUserLoading || updateSpaceUserLoading}
+                            onClick={() => {
+                              handleUPdateuser(cu.user?.unique_id || "", entity.id)
+                              setIsOpen(false)
+                            }}>
+                            Save
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+
+                    <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action  will remove the user from {entityName}.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => {
+                              if (cu.user?.unique_id) {
+                                handleRemoveUser(cu.user.unique_id, entity.id)
+                                setIsAlertOpen(false)
+                              }
+                            }}
+                            loading={dettachChannelUserLoading || dettachSpaceUserLoading}
+                          >Remove</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 )
               })}
