@@ -9,7 +9,7 @@ const NotFound = () => {
         <div className="mx-auto max-w-screen-sm text-center">
           <div className='flex justify-center'>
             <Image
-              src={'/images/404/404error(1).svg'}
+              src={'/images/errors/404.svg'}
               alt="404 Error"
               width={300}
               height={300}
