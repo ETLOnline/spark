@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import { Button } from '@/src/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/src/components/ui/dropdown-menu'
-import { Edit, MoreHorizontal, MoreVertical, Settings } from 'lucide-react'
+import { Edit, MoreHorizontal, MoreVertical, Settings, User } from 'lucide-react'
 import { useAtomValue, useSetAtom } from 'jotai'
 import { spaceStore } from '@/src/store/space/spaceStore'
 import { SelectSpace } from '@/src/db/schema'
@@ -48,6 +48,11 @@ function SpaceContextMenu({ currentSpace }: Props) {
             <Edit className="mr-2 h-4 w-4" />
             Edit
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push(`./${currentSpace.space_slug}/users`)}>
+            <User className="mr-2 h-4 w-4" />
+            Users
+          </DropdownMenuItem>
+
         </DropdownMenuContent>
       </DropdownMenu>
     </>

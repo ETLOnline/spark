@@ -234,11 +234,11 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
                                   setUserRole(value)
                                 }}>
                                 <SelectTrigger>
-                                  <SelectValue placeholder={cu.role} />
+                                  <SelectValue placeholder={userRole || cu.role} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="admin">Admin</SelectItem>
-                                  <SelectItem value="member">Member</SelectItem>
+                                  <SelectItem value="admin">admin</SelectItem>
+                                  <SelectItem value="member">member</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
