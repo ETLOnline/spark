@@ -195,13 +195,13 @@ export async function dettachChannelUser(channelId: string, userId: string) {
 
 export async function updateChannelUser(channelId: string, userId: string, updatedData: Partial<SelectChannelUser>) {
   try{
-    const spaceUser = await db.update(ChannelUsersTable).set(updatedData).where(
+    const channelUser = await db.update(ChannelUsersTable).set(updatedData).where(
       and(
         eq(ChannelUsersTable.channel_id, channelId),
         eq(ChannelUsersTable.user_id, userId)
       )
     ).returning()
-    return spaceUser
+    return channelUser
   }
   catch (e: any) {
     throw new Error(e.message)

@@ -28,16 +28,16 @@ const ChannelUsersPage = async ({ params }: Props) => {
 
   const authUser = await AuthUserAction()
 
-  if (authUser) {
+  // if (authUser) {
 
-    const channelRole = getChannelRole(currentChannel.data.id, authUser)
+  //   const channelRole = getChannelRole(currentChannel.data.id, authUser)
 
-    if (!channelRole || (!channelRole.includes('admin') && !isUserAdmin(authUser))) {
-      return (
-        <UnauthorizedAccessScreen />
-      )
-    }
-  }
+  //   if (!channelRole || (!channelRole.includes('admin') && !isUserAdmin(authUser))) {
+  //     return (
+  //       <UnauthorizedAccessScreen />
+  //     )
+  //   }
+  // }
 
   const channelUsers = (await GetChannelUsersAction(currentChannel.data.id)).data
 

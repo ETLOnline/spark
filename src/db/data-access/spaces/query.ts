@@ -190,7 +190,7 @@ export async function updateSpaceUser(spaceId: string, userId: string, updatedDa
         eq(SpaceUsersTable.space_id, spaceId),
         eq(SpaceUsersTable.user_id, userId)
       )
-    )
+    ).returning()
     return spaceUser
   }
   catch (e: any) {
