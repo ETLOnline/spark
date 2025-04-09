@@ -817,10 +817,7 @@ export const SpaceUsersTable = sqliteTable("space_users", {
   user_id: text().notNull(),
   role: text().default("member"),
   status: text().default("active"),
-},
-  (t) => ({
-    pk: primaryKey({ columns: [t.space_id, t.user_id] })
-  })
+}
 )
 
 export type InsertSpaceUser = typeof SpaceUsersTable.$inferInsert
@@ -849,10 +846,7 @@ export const ChannelUsersTable = sqliteTable("channel_users", {
   role: text().default("member"),
   status: text().default("active"),
 
-},
-  (t) => ({
-    pk: primaryKey({ columns: [t.channel_id, t.user_id] })
-  })
+}
 )
 export type InsertChannelUser = typeof ChannelUsersTable.$inferInsert
 export type SelectChannelUser = typeof ChannelUsersTable.$inferSelect & { 
@@ -872,3 +866,21 @@ export const ChannelUsersRelations = relations(ChannelUsersTable, ({ one }) => (
     relationName: "channelUserToUser",
   }),
 }))
+
+
+export const projectTable = sqliteTable("project", {
+  id: text("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+    project_name: text().notNull(),
+    project_slug: text().notNull(),
+    description: text(),
+    channel_id: text().notNull(),
+    space_id: text().notNull(),
+    created_by: text().notNull(),
+    project_type: text(),
+    ...timestamps
+})
+
+export type InsertProject = typeof projectTable.$inferInsert
+export type SelectProject = typeof projectTable.$inferSelect

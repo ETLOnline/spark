@@ -64,6 +64,8 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
     const [currSpace, setCurrSpace] = useAtom(spaceStore.selectedSpace)
   
     const [fileData, setFileData] = useState<FileData | null>(null)
+
+    const [openDrawer, setOpenDrawer] = useState(false)
   
     const searchParams = useSearchParams()
   
@@ -294,12 +296,14 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
           description: "File created!",
           duration: 3000
         })
+        setOpenDrawer(false)
       } catch (error) {
         toast({
           variant: "destructive",
           description: "Failed to create file",
           duration: 3000
         })
+        setOpenDrawer(false)
       }
     }
 
@@ -311,7 +315,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
           {/* <Button>
             <UploadCloud /> Upload File
           </Button> */}
-          <Drawer>
+          <Drawer open={openDrawer} onOpenChange={(open)=>{setOpenDrawer(open)}}>
             <DrawerTrigger asChild>
               <Button variant="outline">
                 <FolderPlus className="mr-2 h-4 w-4" />
@@ -319,6 +323,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
               </Button>
             </DrawerTrigger>
             <DrawerContent>
+              <DrawerTitle></DrawerTitle>
               <div className="mx-auto w-full max-w-lg">
 
                 <div className="p-4 pb-0">
