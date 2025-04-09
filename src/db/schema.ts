@@ -744,4 +744,111 @@ export const spaceFeaturesTableRelations = relations(
       relationName: "spaceFeaturesToFeature"
     })
   })
+
 )
+
+
+export const spaceFileDirectoryTable = sqliteTable("space_file_directory", {
+  id: int().primaryKey({ autoIncrement: true }),
+  space_id: text(),
+  entity_name: text().notNull(),
+  entity_type: text().notNull(),
+  entity_id: int(),
+  entity_size: int(),
+  parent_id: int(),
+  ...timestamps
+})
+
+export const spaceFileDirectoryRelations = relations(
+  spaceFileDirectoryTable,
+  ({ one }) => ({
+    file: one(filesTable, {
+      fields: [spaceFileDirectoryTable.entity_id],
+      references: [filesTable.id],
+      relationName: "spaceFileDirectoryToFile"
+    })
+  })
+)
+
+export type InsertSpaceFileDirectory =
+  typeof spaceFileDirectoryTable.$inferInsert
+export type SelectSpaceFileDirectory =
+  typeof spaceFileDirectoryTable.$inferSelect & {
+    file?: SelectFile
+  }
+
+
+export const SpaceUsersTable = sqliteTable("space_users", {
+  id: int().primaryKey({ autoIncrement: true }),
+  space_id: text().notNull(),
+  user_id: text().notNull(),
+  role: text().default("member"),
+  status: text().default("active"),
+}
+)
+
+export type InsertSpaceUser = typeof SpaceUsersTable.$inferInsert
+export type SelectSpaceUser = typeof SpaceUsersTable.$inferSelect & { 
+  space?: SelectSpace
+  user?: SelectUser
+}
+
+export const SpaceUsersRelations = relations(SpaceUsersTable, ({ one }) => ({
+  space: one(spacesTable, {
+    fields: [SpaceUsersTable.space_id],
+    references: [spacesTable.id],
+    relationName: "spaceToSpaceUser",
+  }),
+  user: one(usersTable, {
+    fields: [SpaceUsersTable.user_id],
+    references: [usersTable.unique_id],
+    relationName: "spaceUserToUser",
+  }),
+}))
+
+export const ChannelUsersTable = sqliteTable("channel_users", {
+  id: int().primaryKey({ autoIncrement: true }),  
+  channel_id: text().notNull(),
+  user_id: text().notNull(),
+  role: text().default("member"),
+  status: text().default("active"),
+
+}
+)
+export type InsertChannelUser = typeof ChannelUsersTable.$inferInsert
+export type SelectChannelUser = typeof ChannelUsersTable.$inferSelect & { 
+  channel?: SelectChannel
+  user?: SelectUser
+}
+
+export const ChannelUsersRelations = relations(ChannelUsersTable, ({ one }) => ({
+  channel: one(channelsTable, {
+    fields: [ChannelUsersTable.channel_id],
+    references: [channelsTable.id],
+    relationName: "channelToChannelUser",
+  }),
+  user: one(usersTable, {
+    fields: [ChannelUsersTable.user_id],
+    references: [usersTable.unique_id],
+    relationName: "channelUserToUser",
+  }),
+}))
+
+
+export const projectTable = sqliteTable("project", {
+  id: text("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+    project_name: text().notNull(),
+    project_slug: text().notNull(),
+    description: text(),
+    channel_id: text().notNull(),
+    space_id: text().notNull(),
+    created_by: text().notNull(),
+    project_type: text(),
+    ...timestamps
+})
+
+export type InsertProject = typeof projectTable.$inferInsert
+export type SelectProject = typeof projectTable.$inferSelect
+

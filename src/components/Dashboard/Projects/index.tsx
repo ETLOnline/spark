@@ -1,5 +1,5 @@
 'use client'
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
 import { ScrollArea } from "../../ui/scroll-area"
 import WelcomeCard from "./ProjectWelcomeCard"
@@ -7,6 +7,11 @@ import ProjectCards from "./ProjectCards"
 import ProjectIncubatorStats from "./ProjectIncubatorStats"
 import ProjectTopCatagories from "./ProjectTopCatagories"
 import Contribute from "./ProjectFAQ"
+import { SelectProject } from "@/src/db/schema"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { GetProjectsAction } from "@/src/server-actions/ProjectManagement/projectManagement"
+import { useAtom } from "jotai"
+import { projectStore } from "@/src/store/project/projectStore"
 
 
 export interface ProjectProposal {
@@ -72,35 +77,30 @@ const categories = [
 ]
 
 export function ProjectScreen() {
-  const [proposals, setProposals] = useState<ProjectProposal[]>(sampleProposals)
+  const [projects, setProjects] = useAtom(projectStore.projects)
   const [newProposal, setNewProposal] = useState({
     title: "",
     description: "",
-    category: "",
+    project_type: "",
   })
-  const [detailedViewOpen, setDetailedViewOpen] = useState(false)
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
+  
+const [getProjectLoading, getProjectData, getProjectError, getProjects] = useServerAction(GetProjectsAction)
 
-  const handleCreateProposal = () => {
-    if (newProposal.title && newProposal.description && newProposal.category) {
-      const createdProposal: ProjectProposal = {
-        id: (proposals.length + 1).toString(),
-        ...newProposal,
-        author: { name: "Current User", avatar: "/avatars/04.png" },
-        status: "draft",
-        likes: 0,
-        comments: 0,
-        contributors: 1,
-      }
-      setProposals([createdProposal, ...proposals])
-      setNewProposal({ title: "", description: "", category: "" })
-    }
+useEffect(()=>{
+    getProjects()
+},[])
+
+useEffect(()=>{
+  if(getProjectData !== null){
+    setProjects(getProjectData.data ? getProjectData.data : [])
   }
+},[getProjectData])
+  
 
 
   return (
     <div className="flex flex-col space-y-4">
-      <WelcomeCard newProposal={newProposal} setNewProposal={setNewProposal} categories={categories} handleCreateProposal={handleCreateProposal} />
+      <WelcomeCard />
 
       <div className="flex-grow flex space-x-4">
         <div className="w-full lg:w-3/4">
@@ -113,12 +113,12 @@ export function ProjectScreen() {
             </TabsList>
             <TabsContent value="all">
               <ScrollArea>
-                {proposals.map((proposal) => (
-                  <ProjectCards key={proposal.id} proposal={proposal} />
+                {projects.map((project) => (
+                  <ProjectCards key={project.id} project={project} />
                 ))}
               </ScrollArea>
             </TabsContent>
-            <TabsContent value="active">
+            {/* <TabsContent value="active">
               <ScrollArea>
                 {proposals
                   .filter((p) => p.status === "active")
@@ -144,12 +144,12 @@ export function ProjectScreen() {
                     <ProjectCards key={proposal.id} proposal={proposal} />
                   ))}
               </ScrollArea>
-            </TabsContent>
+            </TabsContent> */}
           </Tabs>
         </div>
 
         <div className="w-1/4 hidden lg:block space-y-4">
-          <ProjectIncubatorStats proposals={proposals} />
+          {/* <ProjectIncubatorStats proposals={proposals} /> */}
 
           <ProjectTopCatagories categories={categories} />
 
