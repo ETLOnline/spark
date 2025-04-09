@@ -32,7 +32,7 @@ const ChannelUsersPage = async ({ params }: Props) => {
 
     const channelRole = getChannelRole(currentChannel.data.id, authUser)
 
-    if (!channelRole || (!channelRole.includes('admin') && !isUserAdmin(authUser))) {
+    if (!channelRole?.includes('admin') && !isUserAdmin(authUser)) {
       return (
         <UnauthorizedAccessScreen />
       )

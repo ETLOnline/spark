@@ -39,9 +39,9 @@ interface Props {
 export default function ChannelUserList({ entity, userList, entityType }: Props) {
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [channelUsers, setChannelUsers] = useState(userList)
+  const [usersList, setUsersList] = useState(userList)
   const [filteredUsers, setFilteredUsers] = useState<SelectChannelUser[] | SelectSpaceUser[]>(userList)
-  const [isOpen, setIsOpen] = useState(false)
+  const [changeRoleModelVisibility, setChangeRoleModelVisibility] = useState(false)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<SelectChannelUser | SelectSpaceUser | null>(null)
   const [userRole, setUserRole] = useState("")
@@ -52,7 +52,7 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
   const [updateSpaceUserLoading, updateSpaceUserData, updateSpaceUserError, UpdateSpaceUser] = useServerAction(UpdateSpaceUserAction)
 
   useEffect(() => {
-    const filtered = channelUsers.filter(
+    const filtered = usersList.filter(
       (cu) =>
         cu?.user?.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         cu?.user?.email?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -62,7 +62,7 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
         ? (filtered as SelectChannelUser[])
         : (filtered as SelectSpaceUser[])
     )
-  }, [searchQuery, channelUsers])
+  }, [searchQuery, usersList])
 
 
   const entityName = entityType === "channel" ? (entity as SelectChannel).channel_name : (entity as SelectSpace).space_name
@@ -72,28 +72,32 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
       let updatedUser;
       if (entityType === "channel") {
         updatedUser = await UpdateChannelUser(entityId, userId, { role: userRole })
+        setUsersList((prev) => {
+          return (prev as SelectChannelUser[]).map((users) => {
+            return users.user_id === userId ? { ...users, role: userRole } : users
+          })
+        })
       } else {
         updatedUser = await UpdateSpaceUser(entityId, userId, { role: userRole })
-      }
-      if (updatedUser?.success && updatedUser.data) {
-        setChannelUsers((prev) => {
-          if (entityType === "channel") {
-            return (prev as SelectChannelUser[]).map((users) => {
-              return users.user_id === userId ? { ...users, role: userRole } : users
-            })
-          } else {
-            return (prev as SelectSpaceUser[]).map((users) => {
-              return users.user_id === userId ? { ...users, role: userRole } : users
-            })
-          }
-        })
-        toast({
-          title: "User role updated",
-          variant: "default"
+        setUsersList((prev) => {
+          return (prev as SelectSpaceUser[]).map((users) => {
+            return users.user_id === userId ? { ...users, role: userRole } : users
+          })
         })
       }
+      toast({
+        title: "User updated",
+        duration: 3000,
+      })
     } catch {
       console.error("Error updating user")
+      toast({
+        title: "Failed to update user",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setChangeRoleModelVisibility(false)
     }
   }
 
@@ -108,7 +112,7 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
           delUser = await DettachSpaceUser(entityId, userId)
         }
         if (delUser?.success) {
-          setChannelUsers((prev) => {
+          setUsersList((prev) => {
             if (entityType === "channel") {
               return (prev as SelectChannelUser[]).filter((cu) => cu.user?.unique_id !== userId)
             } else {
@@ -125,6 +129,8 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
       }
     } catch {
       console.error("Error removing user")
+    } finally {
+      setIsAlertOpen(false)
     }
   }
 
@@ -162,7 +168,7 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
               />
             </div>
           </div>
-          <CardDescription>Manage all users across your {entityType === "channel" ? "channel" : "space"}. {channelUsers.length} users total.</CardDescription>
+          <CardDescription>Manage all users across your {entityType === "channel" ? "channel" : "space"}. {usersList.length} users total.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
@@ -204,9 +210,8 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => {
-                            setUserRole(cu.role || "")
                             setSelectedUser(cu)
-                            setIsOpen(true)
+                            setChangeRoleModelVisibility(true)
                           }}>
                             Change Role
                           </DropdownMenuItem>
@@ -235,7 +240,7 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
         </CardContent>
       </Card>
 
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={changeRoleModelVisibility} onOpenChange={setChangeRoleModelVisibility}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Change Role</DialogTitle>
@@ -250,7 +255,7 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
                     setUserRole(value)
                   }}>
                   <SelectTrigger>
-                    <SelectValue placeholder={userRole || selectedUser?.role} />
+                    <SelectValue placeholder={selectedUser?.role} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">Admin</SelectItem>
@@ -265,7 +270,7 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
               loading={updateChannelUserLoading || updateSpaceUserLoading}
               onClick={() => {
                 handleUPdateuser(selectedUser?.user_id || "", entity.id)
-                setIsOpen(false)
+
               }}>
               Save
             </Button>
@@ -288,7 +293,6 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
                 if (selectedUser?.user_id) {
                   handleRemoveUser(selectedUser.user_id, entity.id)
                 }
-                setIsAlertOpen(false)
               }}
               loading={dettachChannelUserLoading || dettachSpaceUserLoading}
             >Remove</AlertDialogAction>
