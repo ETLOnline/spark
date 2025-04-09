@@ -192,12 +192,7 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
                     <div className="col-span-3 flex items-center gap-1">
                       <Badge variant={cu.role === "admin" ? "default" : "outline"}>{cu.role}</Badge>
                     </div>
-                    <Button onClick={() => {
-                      setUserRole(cu.role || "")
-                      setSelectedUser(cu)
-                      setIsOpen(true)
-                    }}>changerole</Button>
-                    <div className="col-span-1 text-right">
+                    <div className="col-span-1 text-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon">
@@ -208,9 +203,13 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          {/* <DropdownMenuItem onClick={() => setIsOpen(true)}>
+                          <DropdownMenuItem onClick={() => {
+                            setUserRole(cu.role || "")
+                            setSelectedUser(cu)
+                            setIsOpen(true)
+                          }}>
                             Change Role
-                          </DropdownMenuItem> */}
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="text-destructive"
@@ -237,7 +236,6 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
       </Card>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger>changerole</DialogTrigger>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Change Role</DialogTitle>
