@@ -1,6 +1,6 @@
 import React, { SetStateAction } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card'
-import CreateNewProposal from './CreateNewProposal';
+import CreateNewProject from './CreateNewProject'
 
 
 
@@ -19,7 +19,7 @@ function WelcomeCard() {
               contribute to existing ones.
             </p>
           </div>
-          <CreateNewProposal />
+          <CreateNewProject />
         </div>
       </CardContent>
     </Card>

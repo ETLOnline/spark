@@ -875,6 +875,8 @@ export const projectTable = sqliteTable("project", {
     project_name: text().notNull(),
     project_slug: text().notNull(),
     description: text(),
+    project_startDate: text().notNull(),
+    project_targetDate: text().notNull(),
     channel_id: text().notNull(),
     space_id: text().notNull(),
     created_by: text().notNull(),

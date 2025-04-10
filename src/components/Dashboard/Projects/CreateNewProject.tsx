@@ -17,9 +17,20 @@ import { CreateProjectAction } from '@/src/server-actions/ProjectManagement/proj
 import { useSearchParams } from 'next/navigation'
 import { toast } from '@/src/hooks/use-toast'
 import { projectStore } from '@/src/store/project/projectStore'
+import moment from 'moment'
+
+
 
 const channelSchema = z.object({
   project_name: z
+    .string()
+    .min(1, "Title required")
+    .max(50, "Title is too long"),
+  project_startDate: z
+    .string()
+    .min(1, "Title required")
+    .max(50, "Title is too long"),
+  project_targetDate: z
     .string()
     .min(1, "Title required")
     .max(50, "Title is too long"),
@@ -33,12 +44,14 @@ const channelSchema = z.object({
 
 
 
-function CreateNewProposal() {
+function CreateNewProject() {
 
   const [space, setSpace] = useState<SelectSpace>()
   const [isOpen, setIsOpen] = useState(false)
   const [projects, setProjects] = useAtom(projectStore.projects)
   const [createProjectLoading, createProjectData, createProjectError, createProject] = useServerAction(CreateProjectAction)
+
+  const [startDate, setStartDate] = React.useState<Date>()
 
   const form = useForm({
     resolver: zodResolver(channelSchema)
@@ -49,26 +62,26 @@ function CreateNewProposal() {
 
   const searchParams = useSearchParams()
 
-  const channelSlug =  searchParams.get("channel")
-  const spaceSlug =  searchParams.get("space")
+  const channelSlug = searchParams.get("channel")
+  const spaceSlug = searchParams.get("space")
 
   useEffect(() => {
-    GetSpaceBySlugAction(spaceSlug || "", channelSlug || "").then((currentSpace)=>{
-      if(currentSpace.success && currentSpace.data){
+    GetSpaceBySlugAction(spaceSlug || "", channelSlug || "").then((currentSpace) => {
+      if (currentSpace.success && currentSpace.data) {
         setSpace(currentSpace.data)
       }
     })
-  },[])
+  }, [])
 
   useEffect(() => {
     form.reset()
-  },[isOpen])
+  }, [isOpen])
 
   async function projectSubmit(data: any) {
-    if(data.project_type === true){
+    if (data.project_type === true) {
       data.project_type = "active"
     }
-    else{
+    else {
       data.project_type = "draft"
     }
     handleCreateProject(data)
@@ -76,16 +89,19 @@ function CreateNewProposal() {
 
   async function handleCreateProject(data: InsertProject) {
     try {
-      const payLoad = {...data,
+      const payLoad = {
+        ...data,
         created_by: AuthUser?.unique_id,
         project_slug: data.project_name,
         space_id: space?.id,
-        channel_id: space?.channel_id
+        channel_id: space?.channel_id,
+        project_startDate: moment.utc(data.project_startDate).format("DD-MM-YYYY"),
+        project_targetDate: moment.utc(data.project_targetDate).format("DD-MM-YYYY"),
       }
       const createdProject = await createProject(payLoad as InsertProject)
 
-      if(createdProject?.success && createdProject?.data){
-        
+      if (createdProject?.success && createdProject?.data) {
+        setProjects([...projects, createdProject.data])
         setIsOpen(false)
         toast({
           title: "Project Successfully Created",
@@ -95,14 +111,14 @@ function CreateNewProposal() {
     } catch (error) {
       setIsOpen(false)
       toast({
-          title: "Failed to create Project",
-          duration: 3000,
-          variant: "destructive"
-        })
+        title: "Failed to create Project",
+        duration: 3000,
+        variant: "destructive"
+      })
     }
   }
   return (
-    <Dialog open={isOpen} onOpenChange={(open)=>{
+    <Dialog open={isOpen} onOpenChange={(open) => {
       setIsOpen(open)
     }}>
       <DialogTrigger asChild>
@@ -130,7 +146,7 @@ function CreateNewProposal() {
                   <Input id="project_name" {...field} className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
                 )}
               />
-              
+
             </div>
             {/* <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="category" className="text-right">
@@ -156,13 +172,39 @@ function CreateNewProposal() {
             </select>
           </div> */}
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="project_type">Project Type</Label>
-              
+              <Label htmlFor="project_type" className="text-right">Project Type</Label>
+
               <Controller
                 name="project_type"
                 control={form.control}
                 render={({ field }) => (
                   <Switch id="project_type" checked={field.value} onCheckedChange={field.onChange} />
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="project_startDate" className="text-right">
+                Start Date
+              </Label>
+              <Controller
+                name="project_startDate"
+                defaultValue=""
+                control={form.control}
+                render={({ field }) => (
+                  <Input id="project_startDate" {...field} type="date" className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="project_targetDate" className="text-right">
+                Target Date
+              </Label>
+              <Controller
+                name="project_targetDate"
+                defaultValue=""
+                control={form.control}
+                render={({ field }) => (
+                  <Input id="project_targetDate" {...field} type="date" className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
                 )}
               />
             </div>
@@ -176,7 +218,7 @@ function CreateNewProposal() {
                 control={form.control}
                 render={({ field }) => (
                   <Textarea id="description" {...field} className="col-span-3"
-                  rows={5} />
+                    rows={5} />
                 )}
               />
               {/* <Textarea
@@ -205,4 +247,4 @@ function CreateNewProposal() {
   )
 }
 
-export default CreateNewProposal
+export default CreateNewProject

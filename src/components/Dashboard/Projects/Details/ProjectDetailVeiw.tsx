@@ -8,6 +8,7 @@ import ProjectContributers from "./ProjectContributers"
 import ProjectResources from "./ProjectResources"
 import ProjectComments from "./ProjectComments"
 import moment from "moment"
+import { SelectProject } from "@/src/db/schema"
 
 
 
@@ -65,6 +66,10 @@ interface Update {
   }
 }
 
+interface Props{
+  selectedProject: SelectProject
+}
+
 const sampleProject: ProjectDetails = {
   id: "1",
   title: "AI-Powered Code Review Assistant",
@@ -96,7 +101,7 @@ const sampleProject: ProjectDetails = {
   ],
 }
 
-export function ProjectDetailView() {
+export function ProjectDetailView({selectedProject}: Props) {
   const [project, setProject] = useState<ProjectDetails>(sampleProject)
   const [newUpdate, setNewUpdate] = useState("")
 
@@ -116,9 +121,9 @@ export function ProjectDetailView() {
     <div className=" flex flex-wrap  w-full">
       {/* Left Sidebar - Project Details */}
       <ScrollArea className="w-full sm:w-1/3 lg:w-1/4  sm:border-r p-4 overflow-auto">
-        <h2 className="text-2xl font-bold mb-4">{project.title}</h2>
+        <h2 className="text-2xl font-bold mb-4">{selectedProject.project_name}</h2>
         <div className="space-y-4">
-          <ProjectStatusAndTimeline project={project} />
+          <ProjectStatusAndTimeline project={selectedProject} />
           <Separator />
           <ProjectContributers contributors={project.contributors} />
           <Separator />
@@ -128,7 +133,7 @@ export function ProjectDetailView() {
 
       {/* Main Content - Project Description and Updates */}
       <div className="w-full sm:w-2/3 lg:w-2/4  p-4 overflow-auto">
-        <ProjectDescriptionDetail project={project} handleAddUpdate={handleAddUpdate} newUpdate={newUpdate} setNewUpdate={setNewUpdate} />
+        <ProjectDescriptionDetail selectedProject={selectedProject} />
       </div>
 
       {/* Right Sidebar - Comments */}

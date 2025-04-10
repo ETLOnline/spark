@@ -43,6 +43,13 @@
       "when": 1744123476030,
       "tag": "0005_shocking_nehzno",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1744289833631,
+      "tag": "0006_faulty_vermin",
+      "breakpoints": true
     }
   ]
 }
