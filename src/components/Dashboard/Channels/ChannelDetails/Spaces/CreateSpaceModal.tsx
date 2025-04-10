@@ -361,8 +361,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
                       render={({ field }) => (
                         <Select
                           onValueChange={field.onChange}
-                          value={selectedChannel?.channel_type === "private" ? "private" : field.value}
-                          disabled={selectedChannel?.channel_type === "private"}>
+                          value={field.value}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
