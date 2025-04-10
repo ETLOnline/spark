@@ -190,7 +190,7 @@ export async function updateSpaceUser(spaceId: string, userId: string, updatedDa
         eq(SpaceUsersTable.space_id, spaceId),
         eq(SpaceUsersTable.user_id, userId)
       )
-    )
+    ).returning()
     return spaceUser
   }
   catch (e: any) {
@@ -199,18 +199,15 @@ export async function updateSpaceUser(spaceId: string, userId: string, updatedDa
 }
 
 export async function getSpaceUsers(spaceId: string) {
-  try{
-    const spaceUsers = await db.query.SpaceUsersTable.findMany({
-      where: eq(SpaceUsersTable.space_id, spaceId),
-      with: {
-        user: true
-      }
-    })
-    const users = spaceUsers.map((spaceUser) => {
-      return spaceUser.user
-    })
-    return users
-  }
+ try{
+     const spaceUsers = await db.query.SpaceUsersTable.findMany({
+       where: eq(SpaceUsersTable.space_id, spaceId),
+       with: {
+         user: true
+       }
+     })
+     return spaceUsers
+   }
   catch (e: any) {
     throw new Error(e.message)
   }

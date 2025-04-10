@@ -4,7 +4,8 @@ import {
   ExternalLink,
   MoreHorizontal,
   Settings,
-  Trash2
+  Trash2,
+  User
 } from "lucide-react"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useSetAtom } from "jotai"
@@ -77,6 +78,10 @@ function SpacesActionButtons({ space }: Props) {
           <DropdownMenuItem onClick={() => handleEditSpace(space)}>
             <Edit className="mr-2 h-4 w-4" />
             Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push(`./spaces/${space.space_slug}/users`)}>
+            <User className="mr-2 h-4 w-4" />
+            Users
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => router.push(`./spaces/${space.space_slug}/settings`)}
