@@ -15,13 +15,14 @@ import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDat
 import CreateSpaceModal from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/CreateSpaceModal"
 import { Button } from "@/src/components/ui/button"
 import { CirclePlus } from "lucide-react"
+import { canControlChannel } from "@/src/utils/channelRoleHelper"
 
 export default function ChannelPage() {
   const [selectedChannel, setSelectedChannel] = useAtom(
     channelStore.selectedChannel
   )
   const userRole = useAtomValue(userStore.AuthUser)?.role
-  const userId = useAtomValue(userStore.AuthUser)?.unique_id
+  const user = useAtomValue(userStore.AuthUser)
   const [spaceFormModelVisibility, setSpaceFormModelVisibility] = useState(false)
 
 
@@ -67,16 +68,18 @@ export default function ChannelPage() {
             <h2 className="text-xl font-bold">
               Spaces in {selectedChannel?.channel_name}
             </h2>
-            {userRole?.includes("admin") ||
-              selectedChannel?.ownerId === userId ? (
-              <>
-                <CreateSpaceModal spaceFormModelVisibility={spaceFormModelVisibility} setSpaceFormModelVisibility={setSpaceFormModelVisibility} />
-                <Button onClick={handleCreateSpace}>
-                  <CirclePlus className="h-4 w-4" />
-                  Create Space
-                </Button>
-              </>
-            ) : null}
+            <div>
+
+              {selectedChannel?.id && user && canControlChannel(selectedChannel.id, user) ? (
+                <>
+                  <CreateSpaceModal spaceFormModelVisibility={spaceFormModelVisibility} setSpaceFormModelVisibility={setSpaceFormModelVisibility} />
+                  <Button onClick={handleCreateSpace}>
+                    <CirclePlus className="h-4 w-4" />
+                    Create Space
+                  </Button>
+                </>
+              ) : null}
+            </div>
           </div>
           {channelLoading ? (
             <div className="flex justify-center h-full w-full">

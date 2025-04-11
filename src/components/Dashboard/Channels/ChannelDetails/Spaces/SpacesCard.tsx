@@ -14,6 +14,7 @@ import { canUserIntract } from "@/src/utils/helpers"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
 import { ArrowRight, Lock } from "lucide-react"
+import { canControlSpace } from "@/src/utils/spaceRoleHelper"
 
 interface Props {
   space: SelectSpace
@@ -37,8 +38,12 @@ function SpacesCard({ space }: Props) {
             {space.space_type === "private" && (
               <Lock className="text-muted-foreground" height={14} />
             )}
+            {space.publish_space ? (
+              <Badge variant={'outline'}>Published</Badge>
+            ) :
+              <Badge variant={'secondary'}>Draft</Badge>}
           </CardTitle>
-          {user && canUserIntract(user, space.ownerId) ? (
+          {user && canControlSpace(space.channel_id, space.id, user) ? (
             <SpacesActionButtons space={space} />
           ) : null}
         </div>

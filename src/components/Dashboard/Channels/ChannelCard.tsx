@@ -37,9 +37,16 @@ function ChannelCard({ channel }: ChannelProps) {
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl flex items-center gap-1">
             {channel.channel_name}
-            {channel.channel_type === "private" && (
+            {channel.channel_type === "private" ? (
               <Lock className="text-muted-foreground text-sm" height={14} />
-            )}
+            ) : channel.channel_type === "public" && channel.publish_channel ? (
+              <Badge variant="outline" className="text-xs">
+                Published
+              </Badge>
+            ) : <Badge variant="secondary" className="text-xs">
+              Draft
+            </Badge>
+            }
           </CardTitle>
           {authUser && canUserIntract(authUser, channel.ownerId) ? (
             <ChannelsContextMenu channel={channel} />

@@ -407,8 +407,9 @@ function CreateChannels() {
                     control={form.control}
                     render={({ field }) => (
                       <Switch
-                        checked={field.value}
+                        checked={form.watch("channel_type") === "public" && field.value}
                         onCheckedChange={field.onChange}
+                        disabled={form.watch("channel_type") !== "public"}
                       />
                     )}
                   />
