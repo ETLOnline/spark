@@ -6,7 +6,6 @@ import { useAtom, useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
 import { channelStore } from "@/src/store/channel/channelStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { GetChannelBySlugAction } from "@/src/server-actions/Channel/Channel"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { userStore } from "@/src/store/user/userStore"
@@ -16,27 +15,33 @@ import CreateSpaceModal from "@/src/components/Dashboard/Channels/ChannelDetails
 import { Button } from "@/src/components/ui/button"
 import { CirclePlus } from "lucide-react"
 import { canControlChannel } from "@/src/utils/channelRoleHelper"
+import { GetSpacesAction } from "@/src/server-actions/Space/Space"
+import { spaceStore } from "@/src/store/space/spaceStore"
 
 export default function ChannelPage() {
   const [selectedChannel, setSelectedChannel] = useAtom(
     channelStore.selectedChannel
   )
-  const userRole = useAtomValue(userStore.AuthUser)?.role
+  const [spaces, setSpaces] = useAtom(spaceStore.spaces)
   const user = useAtomValue(userStore.AuthUser)
   const [spaceFormModelVisibility, setSpaceFormModelVisibility] = useState(false)
 
 
   const channelSlug = useParams().channel_slug
 
-  const [channelLoading, channelData, channelError, getChannel] =
-    useServerAction(GetChannelBySlugAction)
+  const [spacesLoading, spacesData, spacesError, getSpaces] = useServerAction(GetSpacesAction)
 
   useEffect(() => {
     const fetchChannel = async () => {
       const slug = decodeURIComponent(channelSlug as string)
-      const res = await getChannel(slug)
+      const res = await getSpaces({ channel_slug: slug })
       if (res?.success && res.data) {
-        setSelectedChannel(res?.data)
+        if (res.data.channel) {
+          setSelectedChannel(res?.data.channel)
+        }
+        if (res.data.paginatedSpaces && res.data.joinedSpaces) {
+          setSpaces([...res.data.joinedSpaces, ...res.data.paginatedSpaces.spaces])
+        }
       }
     }
     fetchChannel()
@@ -81,14 +86,14 @@ export default function ChannelPage() {
               ) : null}
             </div>
           </div>
-          {channelLoading ? (
+          {spacesLoading ? (
             <div className="flex justify-center h-full w-full">
               <Loader size={LoaderSizes.xl} />{" "}
             </div>
-          ) : (selectedChannel?.spaces?.length === 0 ?
+          ) : (spaces?.length === 0 ?
             <NoDataCard title="No Spaces Available" /> :
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3  2xl:grid-cols-5   gap-6">
-              {selectedChannel?.spaces?.map((space) => (
+              {spaces?.map((space) => (
                 <SpacesCard space={space} key={space.id} />
               ))}
             </div>

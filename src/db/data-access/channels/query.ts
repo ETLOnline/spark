@@ -17,7 +17,7 @@ export async function CreateChannel(channelData: InsertChannel) {
       .insert(channelsTable)
       .values(channelData)
       .returning()
-    return newChannel
+    return newChannel[0]
   } catch (e: any) {
     throw new Error(e.message)
   }

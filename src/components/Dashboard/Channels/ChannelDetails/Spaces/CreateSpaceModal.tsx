@@ -31,6 +31,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useAtom, useAtomValue } from "jotai"
 import { CircleCheck, CircleXIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { space } from "postcss/lib/list"
 import React, { useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { useDebouncedCallback } from "use-debounce"
@@ -59,6 +60,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
   const authUser = useAtomValue(userStore.AuthUser)
   const selectedChannel = useAtomValue(channelStore.selectedChannel)
   const [selectedSpace, setSelectedSpace] = useAtom(spaceStore.selectedSpace)
+  const [spaces, setSpaces] = useAtom(spaceStore.spaces)
 
   const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
 
@@ -195,6 +197,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
 
       const createdSpace = await CreateNewSpace(data as InsertSpace)
       if (createdSpace?.success && createdSpace.data) {
+        setSpaces([...spaces, createdSpace.data])
         router.push(`./spaces/${createdSpace.data.space_slug}/settings`)
         setSpaceFormModelVisibility(false)
         toast({
@@ -224,6 +227,12 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
       )
 
       if (updatedSpace?.success && updatedSpace.data) {
+        setSpaces((prevSpace) =>
+          prevSpace.map((space) =>
+            space.id === selectedSpace?.id
+              ? { ...space, ...updatedSpace.data } : space
+          )
+        )
         setSpaceFormModelVisibility(false)
         toast({
           title: "Space updated",
@@ -405,9 +414,8 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
                     control={form.control}
                     render={({ field }) => (
                       <Switch
-                        checked={form.watch("space_type") === "public" && field.value}
+                        checked={field.value}
                         onCheckedChange={field.onChange}
-                        disabled={form.watch("space_type") !== "public"}
                       />
                     )}
                   />
