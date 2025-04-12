@@ -407,7 +407,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
 
 
               <div className="flex items-center justify-between">
-                <Label htmlFor="publish_space">Space type</Label>
+                <Label htmlFor="publish_space">Publish Space</Label>
                 <div className="w-[70%]">
                   <Controller
                     name="publish_space"

@@ -68,9 +68,16 @@ export const GetSpacesAction = CreateServerAction(
       const authUser = await AuthUserAction()
 
       if(filters?.channel_slug){
-         channel = await GetChannelBySlug(filters?.channel_slug || "")
+        channel = await GetChannelBySlug(filters?.channel_slug || "")
       }else if(filters?.channel_id){
-         channel = await GetChannelById(filters?.channel_id || "")
+        channel = await GetChannelById(filters?.channel_id || "")
+      }
+
+      if(channel){
+        filters = {
+          ...filters,
+          channel_id: channel.id
+        }
       }
 
       if (isUserAdmin(authUser)) {
@@ -78,7 +85,7 @@ export const GetSpacesAction = CreateServerAction(
       } else {
         spaces = await GetSpaces({...filters, space_type: "public", isPublished: true }) 
         const spaceIds = spaces.spaces.map((s)=> s.id)
-        const joinedSpaces = authUser?.spaces.filter((s)=> spaceIds.includes(s.space_id))
+        joinedSpaces = (authUser?.spaces || []).filter((s)=> spaceIds.includes(s.space_id)).map((s)=> s.space)
                 
       }
 

@@ -29,7 +29,11 @@ export async function SelectUserByExternalId(id: string) {
           }
         }
       },
-      spaces: true, 
+      spaces: {
+        with:{
+          space: true
+        }
+      }, 
     }
   })
 
