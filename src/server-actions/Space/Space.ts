@@ -40,19 +40,6 @@ export const CreateSpaceAction = CreateServerAction(
   }
 )
 
-// export const GetSpacesAction = CreateServerAction(
-//   true,
-//   async (channelId: string) => {
-//     try {
-//       const spaces = await GetSpaces(channelId)
-//       return { success: true, data: spaces }
-//     } catch (error: any) {
-//       return { error: error.message }
-//     }
-//   }
-// )
-
-
 export interface GetSpacesResponseType {
   spaces: SelectSpace[]
   pagination: PaginationType
@@ -84,12 +71,10 @@ export const GetSpacesAction = CreateServerAction(
         spaces = await GetSpaces({...filters})
       } else {
         spaces = await GetSpaces({...filters, space_type: "public", isPublished: true }) 
-        const spaceIds = spaces.spaces.map((s)=> s.id)
+        const spaceIds = (channel?.spaces || []).map((s)=> s.id)
         joinedSpaces = (authUser?.spaces || []).filter((s)=> spaceIds.includes(s.space_id)).map((s)=> s.space)
-                
       }
 
-      // const result = await GetChannels(filters)
       return { success: true, data: {channel, paginatedSpaces: spaces, joinedSpaces}}
     } catch (error) {
       return { error: error }
