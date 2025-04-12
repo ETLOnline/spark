@@ -698,6 +698,7 @@ export const spacesTable = sqliteTable("spaces", {
   created_by: text().notNull(),
   ownerId: text(),
   space_type: text(),
+  publish_space: int().notNull().default(0),
   ...timestamps
 })
 

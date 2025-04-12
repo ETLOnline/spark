@@ -2,6 +2,10 @@ import React, { Suspense } from 'react'
 import { GetSpaceBySlugAction, GetSpaceUsersAction } from '@/src/server-actions/Space/Space'
 import NotFound from '@/src/components/Dashboard/NotFound/NotFound'
 import ChannelUserList from '@/src/components/UserListAndInvite/UserList'
+import { AuthUserAction } from '@/src/server-actions/User/AuthUserAction'
+import { getSpaceRole } from '@/src/utils/spaceRoleHelper'
+import { isUserAdmin } from '@/src/utils/helpers'
+import UnauthorizedAccessScreen from '@/src/components/common/UnauthorizedAccessScreen'
 
 interface Props {
   params: Promise<{
@@ -20,6 +24,20 @@ async function SpaceUsersPage({ params }: Props) {
     return (
       <NotFound />
     )
+  }
+
+
+  const authUser = await AuthUserAction()
+
+  if (authUser) {
+
+    const channelRole = getSpaceRole(currentSpace.data.id, authUser)
+
+    if (!channelRole?.includes('admin') && !isUserAdmin(authUser)) {
+      return (
+        <UnauthorizedAccessScreen />
+      )
+    }
   }
 
   const spaceUsers = (await GetSpaceUsersAction(currentSpace.data.id)).data
