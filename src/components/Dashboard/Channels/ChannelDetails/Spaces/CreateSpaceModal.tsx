@@ -40,7 +40,8 @@ import { z } from "zod"
 
 interface Props {
   spaceFormModelVisibility: boolean,
-  setSpaceFormModelVisibility: React.Dispatch<React.SetStateAction<boolean>>
+  setSpaceFormModelVisibility: React.Dispatch<React.SetStateAction<boolean>>,
+  shouldRedirect: boolean
 }
 
 const spaceSchema = z.object({
@@ -55,7 +56,7 @@ const spaceSchema = z.object({
 
 
 
-function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibility }: Props) {
+function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibility, shouldRedirect }: Props) {
   const router = useRouter()
   const authUser = useAtomValue(userStore.AuthUser)
   const selectedChannel = useAtomValue(channelStore.selectedChannel)
@@ -239,8 +240,10 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
           description: "Your space has been updated successfully.",
           duration: 3000
         })
-        if (updatedSpace.data && !(updatedSpace.data instanceof Error)) {
-          router.push(`/channels/${selectedChannel?.channel_slug}/spaces/${updatedSpace.data.space_slug}`)
+        if (shouldRedirect === true) {
+          if ('space_slug' in updatedSpace.data) {
+            router.push(`/channels/${selectedChannel?.channel_slug}/spaces/${updatedSpace.data.space_slug}`)
+          }
         }
       }
     } catch {

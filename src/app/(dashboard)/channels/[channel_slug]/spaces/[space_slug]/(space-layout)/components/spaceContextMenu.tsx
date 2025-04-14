@@ -19,17 +19,19 @@ function SpaceContextMenu({ currentSpace }: Props) {
   const [spaceFormModelVisibility, setSpaceFormModelVisibility] = useState(false)
   const setSelectedSpace = useSetAtom(spaceStore.selectedSpace)
   const channel = useAtomValue(channelStore.selectedChannel)
+  const [shouldRedirect, setShouldRedirect] = useState(false)
   const router = useRouter()
 
 
   function handleEditSpace(currentSpace: SelectSpace) {
     setSpaceFormModelVisibility(true)
     setSelectedSpace(currentSpace)
+    setShouldRedirect(true)
   }
 
   return (
     <>
-      <CreateSpaceModal spaceFormModelVisibility={spaceFormModelVisibility} setSpaceFormModelVisibility={setSpaceFormModelVisibility} />
+      <CreateSpaceModal spaceFormModelVisibility={spaceFormModelVisibility} setSpaceFormModelVisibility={setSpaceFormModelVisibility} shouldRedirect={shouldRedirect} />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon">

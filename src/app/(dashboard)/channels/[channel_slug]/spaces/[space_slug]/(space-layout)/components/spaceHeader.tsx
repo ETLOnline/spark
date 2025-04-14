@@ -1,15 +1,20 @@
+"use client"
 import { Card, CardHeader, CardTitle } from '@/src/components/ui/card'
 import { ArrowBigRightDash } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 import { SelectSpace } from '@/src/db/schema'
 import SpaceContextMenu from './spaceContextMenu'
+import { canControlSpace } from '@/src/utils/spaceRoleHelper'
+import { useAtomValue } from 'jotai'
+import { userStore } from '@/src/store/user/userStore'
 
 interface Props {
   currentSpace: SelectSpace
 }
 
 function SpaceHeader({ currentSpace }: Props) {
+  const authUser = useAtomValue(userStore.AuthUser)
   return (
     <Card className="w-full">
       <CardHeader className="pb-2 pt-2 flex flex-row items-center justify-between">
@@ -26,7 +31,11 @@ function SpaceHeader({ currentSpace }: Props) {
             </h1>
           </Link>
         </CardTitle>
-        <SpaceContextMenu currentSpace={currentSpace} />
+        {
+          authUser && canControlSpace(currentSpace.channel_id, currentSpace.id, authUser) ?
+            <SpaceContextMenu currentSpace={currentSpace} />
+            : null
+        }
       </CardHeader>
     </Card>
   )

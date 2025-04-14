@@ -38,12 +38,14 @@ function SpacesActionButtons({ space }: Props) {
     deleteSpace
   ] = useServerAction(DeleteSpaceAction)
   const [spaceFormModelVisibility, setSpaceFormModelVisibility] = useState(false)
+  const [shouldRedirect, setShouldRedirect] = useState(false)
 
   const router = useRouter()
 
   function handleEditSpace(space: SelectSpace) {
     setSpaceFormModelVisibility(true)
     setSelectedSpace(space)
+    setShouldRedirect(false)
   }
 
 
@@ -60,7 +62,7 @@ function SpacesActionButtons({ space }: Props) {
 
   return (
     <>
-      <CreateSpaceModal spaceFormModelVisibility={spaceFormModelVisibility} setSpaceFormModelVisibility={setSpaceFormModelVisibility} />
+      <CreateSpaceModal spaceFormModelVisibility={spaceFormModelVisibility} setSpaceFormModelVisibility={setSpaceFormModelVisibility} shouldRedirect={shouldRedirect} />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon">

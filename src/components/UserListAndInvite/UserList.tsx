@@ -69,26 +69,28 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
 
   async function handleUPdateuser(userId: string, entityId: string) {
     try {
-      let updatedUser;
-      if (entityType === "channel") {
-        updatedUser = await UpdateChannelUser(entityId, userId, { role: userRole })
-        setUsersList((prev) => {
-          return (prev as SelectChannelUser[]).map((users) => {
-            return users.user_id === userId ? { ...users, role: userRole } : users
+      if (userRole) {
+        let updatedUser;
+        if (entityType === "channel") {
+          updatedUser = await UpdateChannelUser(entityId, userId, { role: userRole })
+          setUsersList((prev) => {
+            return (prev as SelectChannelUser[]).map((users) => {
+              return users.user_id === userId ? { ...users, role: userRole } : users
+            })
           })
-        })
-      } else {
-        updatedUser = await UpdateSpaceUser(entityId, userId, { role: userRole })
-        setUsersList((prev) => {
-          return (prev as SelectSpaceUser[]).map((users) => {
-            return users.user_id === userId ? { ...users, role: userRole } : users
+        } else {
+          updatedUser = await UpdateSpaceUser(entityId, userId, { role: userRole })
+          setUsersList((prev) => {
+            return (prev as SelectSpaceUser[]).map((users) => {
+              return users.user_id === userId ? { ...users, role: userRole } : users
+            })
           })
+        }
+        toast({
+          title: "User updated",
+          duration: 3000,
         })
       }
-      toast({
-        title: "User updated",
-        duration: 3000,
-      })
     } catch {
       console.error("Error updating user")
       toast({
@@ -125,7 +127,7 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
             variant: "default",
           })
         }
-
+        return null
       }
     } catch {
       console.error("Error removing user")
@@ -196,7 +198,7 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
                     </div>
                     <div className="col-span-4 text-sm text-muted-foreground">{user.email}</div>
                     <div className="col-span-3 flex items-center gap-1">
-                      <Badge variant={cu.role === "admin" ? "default" : "outline"}>{cu.role}</Badge>
+                      <Badge variant={cu.role === "Admin" ? "default" : "outline"}>{cu.role}</Badge>
                     </div>
                     <div className="col-span-1 text-center">
                       <DropdownMenu>
@@ -255,11 +257,11 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
                     setUserRole(value)
                   }}>
                   <SelectTrigger>
-                    <SelectValue placeholder={selectedUser?.role} />
+                    <SelectValue placeholder={selectedUser?.role ? selectedUser.role : "Select User Role"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="Admin">Admin</SelectItem>
+                    <SelectItem value="Member">Member</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
