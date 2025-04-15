@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import { useParams } from "next/navigation"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
@@ -19,8 +18,6 @@ import { GetSpacesAction } from "@/src/server-actions/Space/Space"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { SelectSpace } from "@/src/db/schema"
 import { isUserAdmin } from "@/src/utils/helpers"
-import { GridPattern } from "@/src/components/magicui/grid-pattern"
-import { cn } from "@/src/lib/utils"
 
 export default function ChannelPage() {
   const [selectedChannel, setSelectedChannel] = useAtom(
