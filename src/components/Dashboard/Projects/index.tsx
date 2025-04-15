@@ -10,8 +10,10 @@ import Contribute from "./ProjectFAQ"
 import { SelectProject } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetProjectsAction } from "@/src/server-actions/ProjectManagement/projectManagement"
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
+import { useSearchParams } from "next/navigation"
+import { spaceStore } from "@/src/store/space/spaceStore"
 
 
 export interface ProjectProposal {
@@ -78,26 +80,27 @@ const categories = [
 
 export function ProjectScreen() {
   const [projects, setProjects] = useAtom(projectStore.projects)
-  const [newProposal, setNewProposal] = useState({
-    title: "",
-    description: "",
-    project_type: "",
-  })
-  
-const [getProjectLoading, getProjectData, getProjectError, getProjects] = useServerAction(GetProjectsAction)
+  const spaceId = useAtomValue(spaceStore.selectedSpaceId)
+  const setSpaceId = useSetAtom(spaceStore.selectedSpaceId)
 
-useEffect(()=>{
-    getProjects()
-},[])
+  const [getProjectLoading, getProjectData, getProjectError, getProjects] =
+    useServerAction(GetProjectsAction)
 
-useEffect(()=>{
-  if(getProjectData !== null){
-    setProjects(getProjectData.data ? getProjectData.data : [])
+  useEffect(() => {
+    if (spaceId) {
+      getProjects(spaceId)
+    }
+
+  }, [])
+
+  useEffect(() => {
+    if (getProjectData !== null) {
+      setProjects(getProjectData.data ?? [])
+    }
+  }, [getProjectData])
+  if (getProjectLoading) {
+    return <p>Loading projects...</p>
   }
-},[getProjectData])
-  
-
-
   return (
     <div className="flex flex-col space-y-4">
       <WelcomeCard />

@@ -122,11 +122,11 @@ function CreateNewProject() {
       setIsOpen(open)
     }}>
       <DialogTrigger asChild>
-        <Button>Submit New Proposal</Button>
+        <Button>Create New Project</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create a New Project Proposal</DialogTitle>
+          <DialogTitle>Create a New Project</DialogTitle>
           <DialogDescription>
             Share your innovative idea with the community. Be clear and
             concise.
@@ -172,7 +172,7 @@ function CreateNewProject() {
             </select>
           </div> */}
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="project_type" className="text-right">Project Type</Label>
+              <Label htmlFor="project_type" className="text-right">Active / Draft</Label>
 
               <Controller
                 name="project_type"
@@ -237,7 +237,7 @@ function CreateNewProject() {
           </div>
           <DialogFooter>
             <Button type="submit" loading={createProjectLoading}>
-              Submit Proposal
+              Submit Project
             </Button>
           </DialogFooter>
         </form>

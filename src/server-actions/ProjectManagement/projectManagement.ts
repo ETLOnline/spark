@@ -17,15 +17,18 @@ export const CreateProjectAction = CreateServerAction(true, async (project_data:
 
 )
 
-export const GetProjectsAction = CreateServerAction(true, async ()=>{
-    try {
-        const projects = await getProjects()
-        return {suceess: true, data: projects}
-    } catch (error) {
-        return {error: error}
+export const GetProjectsAction = CreateServerAction(
+    true,
+    async (spaceId: string) => {
+      try {
+        const projects = await getProjects(spaceId)
+        return { success: true, data: projects }
+      } catch (error) {
+        return { error }
+      }
     }
-})
-
+  )
+  
 
 export const GetProjectByIdAction = CreateServerAction(true, async (projectId: string) => {
     try {

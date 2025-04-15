@@ -26,6 +26,7 @@ interface Props {
 function SpaceFeatures({ features, space }: Props) {
   const params = useSearchParams()
   const pageType = params.get("page-type") || null
+  const setSpaceId = useSetAtom(spaceStore.selectedSpaceId)
   const featureList = features.map((sf) => sf.feature?.feature_slug)
   const setLayoutStatsVisibility = useSetAtom(spaceStore.layoutStatsVisibility)
 
@@ -49,7 +50,7 @@ function SpaceFeatures({ features, space }: Props) {
       />
     }
 
-    switch(featureSlug) {
+    switch (featureSlug) {
       case "posts":
         return <SpacePostComponent />
       case "file-sharing":
@@ -69,7 +70,8 @@ function SpaceFeatures({ features, space }: Props) {
   if (pageType) {
     return <>{renderFeatureModule(pageType)}</>
   }
-
+  console
+    .log(space.id, 'space')
   return (
     <div>
       {/* Show only when there are more than 1 feature */}
@@ -77,44 +79,47 @@ function SpaceFeatures({ features, space }: Props) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {features.length > 1
           ? features.map(({ feature }) => {
-              return (
-                <Link
+            return (
+              <Link
+                key={feature?.id}
+                href={`./${space.space_slug}?page-type=${feature?.feature_slug}`}
+                onClick={() => {
+                  setSpaceId(space.id)
+                }}
+              >
+                <Card
                   key={feature?.id}
-                  href={`./${space.space_slug}?page-type=${feature?.feature_slug}`}
+                  className="h-full flex flex-row items-center py-2 px-4 sm:p-4 gap-4"
                 >
-                  <Card
-                    key={feature?.id}
-                    className="h-full flex flex-row items-center py-2 px-4 sm:p-4 gap-4"
-                  >
-                    <DynamicIcon
-                      name={feature?.feature_icon as IconName}
-                      className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 "
-                    />
-                    <div className="flex flex-col overflow-hidden mt-2 sm:mt-0">
-                      <CardHeader className="p-0 pb-1">
-                        <CardTitle>{feature?.feature_name}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-0 hidden sm:block">
-                        <p
-                          className="text-sm text-muted-foreground truncate "
-                          title={feature?.feature_description ?? undefined}
-                        >
-                          {feature?.feature_description}
-                        </p>
-                      </CardContent>
-                    </div>
-                  </Card>
-                </Link>
-              )
-            })
+                  <DynamicIcon
+                    name={feature?.feature_icon as IconName}
+                    className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 "
+                  />
+                  <div className="flex flex-col overflow-hidden mt-2 sm:mt-0">
+                    <CardHeader className="p-0 pb-1">
+                      <CardTitle>{feature?.feature_name}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0 hidden sm:block">
+                      <p
+                        className="text-sm text-muted-foreground truncate "
+                        title={feature?.feature_description ?? undefined}
+                      >
+                        {feature?.feature_description}
+                      </p>
+                    </CardContent>
+                  </div>
+                </Card>
+              </Link>
+            )
+          })
           : null}
       </div>
       {features.length === 1
         ? features.map((sf) => {
-            const feature = sf.feature
-            if (!feature) return null
-            return <>{renderFeatureModule(feature.feature_slug)}</>
-          })
+          const feature = sf.feature
+          if (!feature) return null
+          return <>{renderFeatureModule(feature.feature_slug)}</>
+        })
         : null}
     </div>
   )

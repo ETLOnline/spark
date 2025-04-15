@@ -1,6 +1,6 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "../..";
-import { InsertProject, projectTable } from "../../schema";
+import { InsertProject, projectTable, spacesTable } from "../../schema";
 
 export async function CreateProject(project_data:InsertProject) {
     try {
@@ -11,9 +11,11 @@ export async function CreateProject(project_data:InsertProject) {
     }
 }
 
-export async function getProjects() {
+export async function getProjects(spaceId: string) {
     try {
-        const projects = await db.select().from(projectTable).orderBy(desc(projectTable.created_at))
+        const projects = await db.select().from(projectTable).where(
+            eq(projectTable.space_id, spaceId)
+        )
         return projects
     } catch (e:any) {
         throw new Error(e.message)
