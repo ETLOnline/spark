@@ -77,7 +77,7 @@ export default function ChannelPage() {
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <h1 className="text-xl font-bold">
-              Spaces in <span className="text-2xl sm:text-3xl font-bold">
+              Spaces in <span className="text-2xl  font-bold">
                 {selectedChannel?.channel_name}
               </span>
             </h1>
@@ -117,7 +117,11 @@ export default function ChannelPage() {
                   <NoDataCard title="No Spaces Available" />
                 ) : (
                   <>
-                    <h2 className="text-xl font-bold sm:text-2xl">Spaces</h2>
+                    {
+                      joinedSpaces.length > 0 ? (
+                        <h2 className="text-xl font-bold sm:text-2xl">Spaces</h2>
+                      ) : null
+                    }
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3  2xl:grid-cols-5   gap-6">
                       {spaces?.map((space) => (
                         <SpacesCard space={space} key={space.id} />
