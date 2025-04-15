@@ -19,6 +19,8 @@ import { GetSpacesAction } from "@/src/server-actions/Space/Space"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { SelectSpace } from "@/src/db/schema"
 import { isUserAdmin } from "@/src/utils/helpers"
+import { GridPattern } from "@/src/components/magicui/grid-pattern"
+import { cn } from "@/src/lib/utils"
 
 export default function ChannelPage() {
   const [selectedChannel, setSelectedChannel] = useAtom(
@@ -63,7 +65,7 @@ export default function ChannelPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <div className="relative h-40 sm:h-25 w-full">
+      {/* <div className="relative h-40 sm:h-25 w-full">
         <Image
           src="/images/channels/channel_sample_image.jpg"
           alt="Sample image"
@@ -72,19 +74,11 @@ export default function ChannelPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
         <div className="absolute bottom-0 left-0 p-4 sm:p-6">
-          {/* <h1 className="text-xl font-bold">
-            Spaces in <span className="text-2xl sm:text-3xl font-bold">
-              {selectedChannel?.channel_name}
-            </span>
-          </h1> */}
         </div>
-      </div>
+      </div> */}
       <main className="flex-1 p-4 sm:p-6">
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            {/* <h2 className="text-xl font-bold">
-              Spaces in {selectedChannel?.channel_name}
-            </h2> */}
             <h1 className="text-xl font-bold">
               Spaces in <span className="text-2xl sm:text-3xl font-bold">
                 {selectedChannel?.channel_name}
@@ -103,21 +97,6 @@ export default function ChannelPage() {
               ) : null}
             </div>
           </div>
-          {/* {
-            spacesLoading ? (
-              <div className="flex justify-center h-full w-full">
-                <Loader size={LoaderSizes.xl} />{" "}
-              </div>
-            ) : (
-              joinedSpaces.length === 0 ?
-                <NoDataCard title="No Joined Space Available" /> :
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3  2xl:grid-cols-5   gap-6">
-                  {joinedSpaces.map((js) => (
-                    <SpacesCard space={js} key={js.id} />
-                  ))}
-                </div>
-            )
-          } */}
           {
             spacesLoading ? (
               <div className="flex justify-center h-full w-full">
