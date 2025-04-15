@@ -43,6 +43,13 @@
       "when": 1744386796058,
       "tag": "0005_fast_masque",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1744712576046,
+      "tag": "0006_tired_fenris",
+      "breakpoints": true
     }
   ]
 }
