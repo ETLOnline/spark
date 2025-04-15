@@ -59,13 +59,35 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   comments: many(commentsTable, {
     relationName: "commentToUser"
   }),
-  spaces: many(spacesTable, {
-    relationName: "spaceToOwner"
+  // spaces: many(spacesTable, {
+  //   relationName: "spaceToOwner"
+  // }),
+  spaces: many(SpaceUsersTable, {
+    relationName: "spaceUserToUser",
+  }),
+  channels: many(ChannelUsersTable, {
+    relationName: "channelUserToUser"
   })
+
 }))
 
 export type InsertUser = typeof usersTable.$inferInsert
-export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta">
+export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> &{
+  // meta?: string
+  chats?: SelectChat[]
+  contacts?: SelectUserContact[]
+  users?: SelectUserContact[]
+  userActivities?: SelectUserActivity[]
+  userRewards?: SelectUserReward[]
+  userTags?: SelectUserTag[]
+  recommendations?: SelectRecommendation[]
+  notifications?: SelectNotification[]
+  posts?: SelectPost[]
+  comments?: SelectComment[]
+  // spaces?: SelectSpace[]
+  spaces?: SelectSpaceUser[]
+  channels?: SelectChannelUser[]
+}
 
 export const chatsTable = sqliteTable("chats", {
   id: int().primaryKey({ autoIncrement: true }),
@@ -603,6 +625,11 @@ export const filesRelations = relations(filesTable, ({ one }) => ({
     fields: [filesTable.id],
     references: [postFilesTable.file_id],
     relationName: "fileToPost"
+  }),
+  directory: one(spaceFileDirectoryTable, {
+    fields: [filesTable.id],
+    references: [spaceFileDirectoryTable.entity_id],
+    relationName: "spaceFileDirectoryToFile"
   })
 }))
 
@@ -648,12 +675,16 @@ export const channelsTable = sqliteTable("channels", {
 export const channelsRelations = relations(channelsTable, ({ many }) => ({
   spaces: many(spacesTable, {
     relationName: "spaceToChannel"
-  })
+  }),
+  users: many(ChannelUsersTable, {
+    relationName: "channelToChannelUser"
+  }),
 }))
 
 export type InsertChannel = typeof channelsTable.$inferInsert
 export type SelectChannel = typeof channelsTable.$inferSelect & {
   spaces?: SelectSpace[]
+  users?: SelectChannelUser[]
 }
 
 export const spacesTable = sqliteTable("spaces", {
@@ -667,6 +698,7 @@ export const spacesTable = sqliteTable("spaces", {
   created_by: text().notNull(),
   ownerId: text(),
   space_type: text(),
+  publish_space: int().notNull().default(0),
   ...timestamps
 })
 
@@ -684,15 +716,19 @@ export const spacesRelations = relations(spacesTable, ({ one, many }) => ({
   posts: many(postsTable, { relationName: "spaceToPosts" }),
   features: many(spaceFeaturesTable, {
     relationName: "spaceFeaturesToSpace"
-  })
+  }),
+  users: many(SpaceUsersTable, {
+    relationName: "spaceToSpaceUser"
+  }),
 }))
 
 export type InsertSpace = typeof spacesTable.$inferInsert
 export type SelectSpace = InferSelectModel<typeof spacesTable> & {
   posts?: SelectPost[]
   features?: SelectSpaceFeature[]
-  owner?: SelectUser
+  owner?: SelectUser | null
   channel?: SelectChannel
+  users?: SelectSpaceUser[]
 }
 
 export const featuresTable = sqliteTable("features", {
@@ -744,9 +780,7 @@ export const spaceFeaturesTableRelations = relations(
       relationName: "spaceFeaturesToFeature"
     })
   })
-
 )
-
 
 export const spaceFileDirectoryTable = sqliteTable("space_file_directory", {
   id: int().primaryKey({ autoIncrement: true }),
@@ -784,8 +818,7 @@ export const SpaceUsersTable = sqliteTable("space_users", {
   user_id: text().notNull(),
   role: text().default("member"),
   status: text().default("active"),
-}
-)
+})
 
 export type InsertSpaceUser = typeof SpaceUsersTable.$inferInsert
 export type SelectSpaceUser = typeof SpaceUsersTable.$inferSelect & { 
@@ -813,8 +846,7 @@ export const ChannelUsersTable = sqliteTable("channel_users", {
   role: text().default("member"),
   status: text().default("active"),
 
-}
-)
+})
 export type InsertChannelUser = typeof ChannelUsersTable.$inferInsert
 export type SelectChannelUser = typeof ChannelUsersTable.$inferSelect & { 
   channel?: SelectChannel

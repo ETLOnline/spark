@@ -15,11 +15,11 @@ async function SpacePage({ params }: Props) {
   const { channel_slug, space_slug } = await params
 
 
-  const currentSpace = await  GetSpaceBySlugAction(space_slug, channel_slug)
+  const currentSpace = await GetSpaceBySlugAction(space_slug, channel_slug)
 
   if (!currentSpace.success || !currentSpace.data) {
     return (
-      <NotFound/>
+      <NotFound />
     )
   }
 

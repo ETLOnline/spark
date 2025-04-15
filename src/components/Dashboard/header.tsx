@@ -14,14 +14,19 @@ import ModeToggle from "../ThemeProvider/ThemeToggle"
 import { usePathname } from "next/navigation"
 import CommandCenter from "./CommandCenter/CommandCenter"
 import { SignedIn } from "@clerk/nextjs"
-import { PageMeta, pageMeta } from "@/src/utils/constants"
+import { PageMeta } from "@/src/utils/constants"
 import Notifications from "./Notifications/Notifications"
+import { useAtomValue } from "jotai"
+import { navStore } from "@/src/store/nav/navStore"
+import { useMemo } from "react"
 
 type Crumb = {
   href: string
   path: string
 }
 const Header = () => {
+  const crumbPaths = useAtomValue(navStore.crumbRoutes)
+
   const path: string = usePathname().substring(1)
   const hrefs: string[] = path
     .split("/")
@@ -29,16 +34,16 @@ const Header = () => {
       (pathName) =>
         "/" + path.substring(0, path.indexOf(pathName) + pathName.length)
     )
-  const crumbs: Crumb[] = (() => {
+  const crumbs: Crumb[] = useMemo(() => {
     const tempCrumbs: Crumb[] = []
     hrefs.forEach((href) => {
-      const meta = pageMeta.find((meta: PageMeta) => meta.url === href)
-      if (meta) {
-        tempCrumbs.push({ href, path: meta.title })
+      const crumb = crumbPaths.find((crumb: PageMeta) => crumb.url === href)
+      if (crumb) {
+        tempCrumbs.push({ href, path: crumb.title })
       }
     })
     return [...tempCrumbs]
-  })()
+  }, [crumbPaths, path])
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 sticky top-0 bg-background z-10 rounded-xl border-b ">

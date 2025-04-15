@@ -162,7 +162,7 @@ export default function FileSharing() {
     <div className="container mx-auto py-8 px-4">
       <section className="file-upload">
         <h1 className="text-3xl font-bold mb-8">File Sharing</h1>
-        {/* <Card className="mb-8 flex flex-col items-center gap-4 pb-8">
+        <Card className="mb-8 flex flex-col items-center gap-4 pb-8">
           <FileUpload
             onChange={(files: File[]) => {
               processFileForUpload({
@@ -179,7 +179,7 @@ export default function FileSharing() {
             <Upload className="mr-2 h-4 w-4" />
             Upload
           </Button>
-        </Card> */}
+        </Card>
       </section>
       <Separator className="my-8" />
       <FileDir addItemToPath={addItemToPath} findItemByPath={findItemByPath} />

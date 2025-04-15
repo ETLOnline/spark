@@ -37,7 +37,7 @@ import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CircleCheck, CircleXIcon, CirclePlus } from "lucide-react"
 import Loader from "../../common/Loader/Loader"
-import { LoaderSizes } from "../../common/Loader/types/loader-types"
+import { LoaderSizes } from "../../common/types/loader-types"
 import { Switch } from "../../ui/switch"
 import { useDebouncedCallback } from "use-debounce"
 
@@ -59,7 +59,7 @@ function CreateChannels() {
   const [editChannel, setEditChannel] = useState<boolean>(false)
   const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
 
-  const setChannels = useSetAtom(channelStore.channels)
+  const [channels, setChannels] = useAtom(channelStore.channels)
   const authUser = useAtomValue(userStore.AuthUser)
   const [channelFormModelVisibility, setChannelFormModelVisibility] = useAtom(
     channelStore.channelformModalVisibility
@@ -209,6 +209,7 @@ function CreateChannels() {
       const createdChannel = await CreateChannel(payLoad as InsertChannel)
 
       if (createdChannel?.success && createdChannel?.data) {
+        setChannels([...channels, createdChannel.data])
         setChannelFormModelVisibility(false)
         toast({
           title: "Channel Created",
@@ -398,23 +399,21 @@ function CreateChannels() {
                 )}
               </div>
             </div>
-            {editChannel === true && (
-              <div className="flex items-center justify-between">
-                <Label htmlFor="publish_channel">Publish Channel</Label>
-                <div className="w-[70%]">
-                  <Controller
-                    name="publish_channel"
-                    control={form.control}
-                    render={({ field }) => (
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    )}
-                  />
-                </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="publish_channel">Publish Channel</Label>
+              <div className="w-[70%]">
+                <Controller
+                  name="publish_channel"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
+                />
               </div>
-            )}
+            </div>
           </div>
           <DialogFooter>
             {editChannel === true ? (

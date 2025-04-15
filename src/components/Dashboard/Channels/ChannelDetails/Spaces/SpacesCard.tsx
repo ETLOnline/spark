@@ -13,7 +13,9 @@ import { useAtomValue } from "jotai"
 import { canUserIntract } from "@/src/utils/helpers"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
-import { Lock } from "lucide-react"
+import { ArrowRight, Check, Lock, PencilRuler } from "lucide-react"
+import { canControlSpace } from "@/src/utils/spaceRoleHelper"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/src/components/ui/tooltip"
 
 interface Props {
   space: SelectSpace
@@ -23,34 +25,61 @@ function SpacesCard({ space }: Props) {
   const user = useAtomValue(userStore.AuthUser)
   return (
     <Card key={space.id} className="overflow-hidden">
-      <div className="aspect-video w-full overflow-hidden">
+      {/* <div className="aspect-video w-full overflow-hidden">
         <img
           src={"/images/home/session-image2.jpg"}
           alt={space.space_name}
           className="w-full h-full object-cover transition-transform hover:scale-105"
         />
-      </div>
+      </div> */}
       <CardHeader>
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl flex items-center gap-1">
             {space.space_name}
-            {space.space_type === "private" && (
-              <Lock className="text-muted-foreground" />
-            )}
+            {
+              space.space_type === "private" && (
+                <Lock className="text-muted-foreground" height={14} />
+              )
+            }
+            {
+              space.publish_space ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Check className="text-muted-foreground" height={14} />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Published</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <PencilRuler className="text-muted-foreground" height={14} />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Darft</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )
+            }
           </CardTitle>
-          {user && canUserIntract(user, space.ownerId) ? (
+          {user && canControlSpace(space.channel_id, space.id, user) ? (
             <SpacesActionButtons space={space} />
           ) : null}
         </div>
         <CardDescription>{space.description}</CardDescription>
       </CardHeader>
-      <CardFooter className="flex justify-between">
+      <CardFooter className="flex flex-col items-start gap-2">
         <Badge variant="secondary">
           {/* {space.membersCount} {space.membersCount === 1 ? 'Member' : 'Members'} */}
           0 Members
         </Badge>
         <Link href={`./spaces/${space.space_slug}`}>
-          <Button>Open Space</Button>
+          <Button>Launch Space <ArrowRight /></Button>
         </Link>
       </CardFooter>
     </Card>

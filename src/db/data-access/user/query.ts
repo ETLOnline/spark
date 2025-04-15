@@ -18,7 +18,23 @@ export async function SelectUserByExternalId(id: string) {
       bio: true,
       role: true
     },
-    where: eq(usersTable.external_auth_id, id)
+    where: eq(usersTable.external_auth_id, id),
+    with:{
+      channels: {
+        with: {
+          channel: {
+            with: {
+              spaces: true
+            }
+          }
+        }
+      },
+      spaces: {
+        with:{
+          space: true
+        }
+      }, 
+    }
   })
 
   return user

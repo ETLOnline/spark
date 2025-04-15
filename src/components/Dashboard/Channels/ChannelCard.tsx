@@ -8,38 +8,68 @@ import {
 import { SelectChannel } from "@/src/db/schema"
 import { Button } from "../../ui/button"
 import Link from "next/link"
-import { Layout, Lock } from "lucide-react"
+import { Check, Layout, Lock, PencilRuler } from "lucide-react"
 import { Badge } from "../../ui/badge"
 import { canUserIntract } from "@/src/utils/helpers"
 import ChannelsContextMenu from "./ChannelDetails/ChannelsContextMenu"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../ui/tooltip"
 
 interface ChannelProps {
   channel: SelectChannel
 }
 
-function ChannelsCard({ channel }: ChannelProps) {
+function ChannelCard({ channel }: ChannelProps) {
   const authUser = useAtomValue(userStore.AuthUser)
 
   const spacesCount = channel?.spaces ? channel.spaces.length : 0
 
   return (
     <Card key={channel.id} className="overflow-hidden">
-      <div className="aspect-video w-full overflow-hidden">
+      {/* <div className="aspect-video w-full overflow-hidden">
         <img
           src={"/images/home/session-image2.jpg"}
           alt={channel.channel_name}
           className="w-full h-full object-cover transition-transform hover:scale-105"
         />
-      </div>
+      </div> */}
       <CardHeader>
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl flex items-center gap-1">
             {channel.channel_name}
-            {channel.channel_type === "private" && (
-              <Lock className="text-muted-foreground" />
-            )}
+            {
+              channel.channel_type === "private" ? (
+                <Lock className="text-muted-foreground text-sm" height={14} />
+              ) : null
+            }
+
+            {
+              channel.publish_channel ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Check className="text-muted-foreground" height={14} />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Published</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <PencilRuler className="text-muted-foreground" height={14} />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Draft</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )
+            }
+
           </CardTitle>
           {authUser && canUserIntract(authUser, channel.ownerId) ? (
             <ChannelsContextMenu channel={channel} />
@@ -47,7 +77,7 @@ function ChannelsCard({ channel }: ChannelProps) {
         </div>
         <CardDescription>{channel.description}</CardDescription>
       </CardHeader>
-      <CardFooter className="flex justify-between">
+      <CardFooter className="flex flex-col items-start gap-2">
         <Badge variant="secondary" className="flex items-center">
           <Layout className="mr-1 h-3 w-3" />
           {spacesCount} {spacesCount === 1 ? "Space" : "Spaces"}
@@ -60,4 +90,4 @@ function ChannelsCard({ channel }: ChannelProps) {
   )
 }
 
-export default ChannelsCard
+export default ChannelCard
