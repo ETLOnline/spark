@@ -12,9 +12,11 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetProjectsAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
-import { useSearchParams } from "next/navigation"
 import { spaceStore } from "@/src/store/space/spaceStore"
-
+import { get } from "http"
+import Loader from "../../common/Loader/Loader"
+import { LoaderSizes } from "../../common/types/loader-types"
+import { useParams, usePathname, useSearchParams } from 'next/navigation'
 
 export interface ProjectProposal {
   id: string
@@ -79,10 +81,9 @@ const categories = [
 ]
 
 export function ProjectScreen() {
+
   const [projects, setProjects] = useAtom(projectStore.projects)
   const spaceId = useAtomValue(spaceStore.selectedSpaceId)
-  const setSpaceId = useSetAtom(spaceStore.selectedSpaceId)
-
   const [getProjectLoading, getProjectData, getProjectError, getProjects] =
     useServerAction(GetProjectsAction)
 
@@ -98,67 +99,78 @@ export function ProjectScreen() {
       setProjects(getProjectData.data ?? [])
     }
   }, [getProjectData])
-  if (getProjectLoading) {
-    return <p>Loading projects...</p>
-  }
+
   return (
     <div className="flex flex-col space-y-4">
       <WelcomeCard />
+      {
+        getProjectLoading ? (
+          <div className="flex items-center justify-center h-full w-full flex justify-center align-center">
+            <div className="w-full h-full flex justify-center align-center">
+              <Loader size={LoaderSizes.lg} />
 
-      <div className="flex-grow flex space-x-4">
-        <div className="w-full lg:w-3/4">
-          <Tabs defaultValue="all">
-            <TabsList className="w-full justify-around lg:w-auto">
-              <TabsTrigger value="all">All Projects</TabsTrigger>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="draft">Drafts</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
-            </TabsList>
-            <TabsContent value="all">
-              <ScrollArea>
-                {projects.map((project) => (
-                  <ProjectCards key={project.id} project={project} />
-                ))}
-              </ScrollArea>
-            </TabsContent>
-            {/* <TabsContent value="active">
-              <ScrollArea>
-                {proposals
-                  .filter((p) => p.status === "active")
-                  .map((proposal) => (
-                    <ProjectCards key={proposal.id} proposal={proposal} />
-                  ))}
-              </ScrollArea>
-            </TabsContent>
-            <TabsContent value="draft">
-              <ScrollArea>
-                {proposals
-                  .filter((p) => p.status === "draft")
-                  .map((proposal) => (
-                    <ProjectCards key={proposal.id} proposal={proposal} />
-                  ))}
-              </ScrollArea>
-            </TabsContent>
-            <TabsContent value="completed">
-              <ScrollArea>
-                {proposals
-                  .filter((p) => p.status === "completed")
-                  .map((proposal) => (
-                    <ProjectCards key={proposal.id} proposal={proposal} />
-                  ))}
-              </ScrollArea>
-            </TabsContent> */}
-          </Tabs>
-        </div>
+            </div>
+          </div>
+        ) : (
 
-        <div className="w-1/4 hidden lg:block space-y-4">
-          {/* <ProjectIncubatorStats proposals={proposals} /> */}
+          <div className="flex-grow flex space-x-4">
+            <div className="w-full lg:w-3/4">
+              <Tabs defaultValue="all">
+                <TabsList className="w-full justify-around lg:w-auto">
+                  <TabsTrigger value="all">All Projects</TabsTrigger>
+                  <TabsTrigger value="active">Active</TabsTrigger>
+                  <TabsTrigger value="draft">Drafts</TabsTrigger>
+                  <TabsTrigger value="completed">Completed</TabsTrigger>
+                </TabsList>
+                <TabsContent value="all">
+                  <ScrollArea>
+                    {projects.map((project) => (
+                      <ProjectCards key={project.id} project={project} />
+                    ))}
+                  </ScrollArea>
+                </TabsContent>
+                {/* <TabsContent value="active">
+                    <ScrollArea>
+                      {proposals
+                        .filter((p) => p.status === "active")
+                        .map((proposal) => (
+                          <ProjectCards key={proposal.id} proposal={proposal} />
+                        ))}
+                    </ScrollArea>
+                  </TabsContent>
+                  <TabsContent value="draft">
+                    <ScrollArea>
+                      {proposals
+                        .filter((p) => p.status === "draft")
+                        .map((proposal) => (
+                          <ProjectCards key={proposal.id} proposal={proposal} />
+                        ))}
+                    </ScrollArea>
+                  </TabsContent>
+                  <TabsContent value="completed">
+                    <ScrollArea>
+                      {proposals
+                        .filter((p) => p.status === "completed")
+                        .map((proposal) => (
+                          <ProjectCards key={proposal.id} proposal={proposal} />
+                        ))}
+                    </ScrollArea>
+                  </TabsContent> */}
+              </Tabs>
+            </div>
 
-          <ProjectTopCatagories categories={categories} />
+            <div className="w-1/4 hidden lg:block space-y-4">
+              {/* <ProjectIncubatorStats proposals={proposals} /> */}
 
-          <Contribute />
-        </div>
-      </div>
+              <ProjectTopCatagories categories={categories} />
+
+              <Contribute />
+            </div>
+          </div>
+        )
+      }
+
+
     </div>
   );
 }

@@ -70,13 +70,12 @@ function SpaceFeatures({ features, space }: Props) {
   if (pageType) {
     return <>{renderFeatureModule(pageType)}</>
   }
-  console
-    .log(space.id, 'space')
+  console.log(space.id, 'space')
   return (
     <div>
-      {/* Show only when there are more than 1 feature */}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap}-4">
         {features.length > 1
           ? features.map(({ feature }) => {
             return (
@@ -85,6 +84,7 @@ function SpaceFeatures({ features, space }: Props) {
                 href={`./${space.space_slug}?page-type=${feature?.feature_slug}`}
                 onClick={() => {
                   setSpaceId(space.id)
+               
                 }}
               >
                 <Card

@@ -6,7 +6,7 @@ const spaces = atom<SelectSpace[]>([])
 const activeCategory = atom<string>("All")
 const spaceFormModelVisibility = atom<boolean>(false)
 const selectedSpace = atom<SelectSpace | null>(null)
-const selectedSpaceId = atom<string | null>(null)
+const selectedSpaceId = atom<string>("")
 
 const dir = atom<DirItem[]>([])
 const currDirPath = atom<string>("/")
