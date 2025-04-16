@@ -30,6 +30,7 @@ interface Props {
 
 function SpacesActionButtons({ space }: Props) {
   const setSelectedSpace = useSetAtom(spaceStore.selectedSpace)
+  const setSpaces = useSetAtom(spaceStore.spaces)
 
   const [
     addDeleteSpaceLoading,
@@ -51,6 +52,9 @@ function SpacesActionButtons({ space }: Props) {
   async function handleDeleteSpace(selectedSpace: SelectSpace) {
     const deletedSpace = await deleteSpace(selectedSpace)
     if (deletedSpace?.success) {
+      setSpaces((prev) =>
+        prev.filter((s) => s.id !== selectedSpace.id)
+      )
       toast({
         title: "Space deleted successfully.",
         duration: 3000

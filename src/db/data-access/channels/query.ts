@@ -201,7 +201,7 @@ export async function updateChannelUser(channelId: string, userId: string, updat
         eq(ChannelUsersTable.user_id, userId)
       )
     ).returning()
-    return channelUser
+    return channelUser[0]
   }
   catch (e: any) {
     throw new Error(e.message)
