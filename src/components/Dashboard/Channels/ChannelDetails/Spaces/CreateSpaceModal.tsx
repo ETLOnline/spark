@@ -41,7 +41,7 @@ import { z } from "zod"
 interface Props {
   spaceFormModelVisibility: boolean,
   setSpaceFormModelVisibility: React.Dispatch<React.SetStateAction<boolean>>,
-  shouldRedirect: boolean
+  shouldRedirect?: boolean
 }
 
 const spaceSchema = z.object({
@@ -240,7 +240,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
           description: "Your space has been updated successfully.",
           duration: 3000
         })
-        if (shouldRedirect === true) {
+        if (shouldRedirect) {
           if ('space_slug' in updatedSpace.data) {
             router.push(`/channels/${selectedChannel?.channel_slug}/spaces/${updatedSpace.data.space_slug}`)
           }

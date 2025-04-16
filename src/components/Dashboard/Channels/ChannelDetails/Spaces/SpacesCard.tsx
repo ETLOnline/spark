@@ -10,19 +10,27 @@ import { SelectSpace } from "@/src/db/schema"
 import SpacesActionButtons from "./SpaceActionButtons"
 import { userStore } from "@/src/store/user/userStore"
 import { useAtomValue } from "jotai"
-import { canUserIntract } from "@/src/utils/helpers"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
 import { ArrowRight, Check, Lock, PencilRuler } from "lucide-react"
 import { canControlSpace } from "@/src/utils/spaceRoleHelper"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/src/components/ui/tooltip"
+import { useEffect, useState } from "react"
 
 interface Props {
   space: SelectSpace
 }
 
 function SpacesCard({ space }: Props) {
+  const [spaceControl, setSpaceControl] = useState(false)
   const user = useAtomValue(userStore.AuthUser)
+
+  useEffect(() => {
+    if (user && canControlSpace(space.channel_id, space.id, user)) {
+      setSpaceControl(true)
+    }
+  }, [user, space])
+
   return (
     <Card key={space.id} className="overflow-hidden">
       {/* <div className="aspect-video w-full overflow-hidden">
@@ -67,7 +75,7 @@ function SpacesCard({ space }: Props) {
               )
             }
           </CardTitle>
-          {user && canControlSpace(space.channel_id, space.id, user) ? (
+          {spaceControl ? (
             <SpacesActionButtons space={space} />
           ) : null}
         </div>

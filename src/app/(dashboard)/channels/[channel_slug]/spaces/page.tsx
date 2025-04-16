@@ -34,8 +34,6 @@ export default function ChannelPage() {
   const channelSlug = useParams().channel_slug
 
   const [spacesLoading, spacesData, spacesError, getSpaces] = useServerAction(GetSpacesAction)
-  const [shouldRedirect, setShouldRedirect] = useState(false)
-
 
   useEffect(() => {
     const fetchChannel = async () => {
@@ -56,23 +54,11 @@ export default function ChannelPage() {
 
   function handleCreateSpace() {
     setSpaceFormModelVisibility(true)
-    setShouldRedirect(false)
 
   }
 
   return (
     <div className="flex min-h-screen flex-col">
-      {/* <div className="relative h-40 sm:h-25 w-full">
-        <Image
-          src="/images/channels/channel_sample_image.jpg"
-          alt="Sample image"
-          fill
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
-        <div className="absolute bottom-0 left-0 p-4 sm:p-6">
-        </div>
-      </div> */}
       <main className="flex-1 p-4 sm:p-6">
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -85,7 +71,7 @@ export default function ChannelPage() {
 
               {selectedChannel?.id && user && canControlChannel(selectedChannel.id, user) ? (
                 <>
-                  <CreateSpaceModal spaceFormModelVisibility={spaceFormModelVisibility} setSpaceFormModelVisibility={setSpaceFormModelVisibility} shouldRedirect={shouldRedirect} />
+                  <CreateSpaceModal spaceFormModelVisibility={spaceFormModelVisibility} setSpaceFormModelVisibility={setSpaceFormModelVisibility} />
                   <Button onClick={handleCreateSpace}>
                     <CirclePlus className="h-4 w-4" />
                     Create Space
@@ -97,7 +83,7 @@ export default function ChannelPage() {
           {
             spacesLoading ? (
               <div className="flex justify-center h-full w-full">
-                <Loader size={LoaderSizes.xl} />{" "}
+                <Loader size={LoaderSizes.xl} />
               </div>
             ) : (
               <>
