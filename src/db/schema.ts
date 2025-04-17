@@ -698,6 +698,7 @@ export const spacesTable = sqliteTable("spaces", {
   created_by: text().notNull(),
   ownerId: text(),
   space_type: text(),
+  publish_space: int().notNull().default(0),
   ...timestamps
 })
 
@@ -817,11 +818,7 @@ export const SpaceUsersTable = sqliteTable("space_users", {
   user_id: text().notNull(),
   role: text().default("member"),
   status: text().default("active"),
-},
-  (t) => ({
-    pk: primaryKey({ columns: [t.space_id, t.user_id] })
-  })
-)
+})
 
 export type InsertSpaceUser = typeof SpaceUsersTable.$inferInsert
 export type SelectSpaceUser = typeof SpaceUsersTable.$inferSelect & { 
@@ -849,11 +846,7 @@ export const ChannelUsersTable = sqliteTable("channel_users", {
   role: text().default("member"),
   status: text().default("active"),
 
-},
-  (t) => ({
-    pk: primaryKey({ columns: [t.channel_id, t.user_id] })
-  })
-)
+})
 export type InsertChannelUser = typeof ChannelUsersTable.$inferInsert
 export type SelectChannelUser = typeof ChannelUsersTable.$inferSelect & { 
   channel?: SelectChannel

@@ -14,6 +14,7 @@ import {
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select"
+import { Switch } from "@/src/components/ui/switch"
 import { Textarea } from "@/src/components/ui/textarea"
 import { InsertSpace } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
@@ -30,6 +31,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useAtom, useAtomValue } from "jotai"
 import { CircleCheck, CircleXIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { space } from "postcss/lib/list"
 import React, { useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { useDebouncedCallback } from "use-debounce"
@@ -38,7 +40,8 @@ import { z } from "zod"
 
 interface Props {
   spaceFormModelVisibility: boolean,
-  setSpaceFormModelVisibility: React.Dispatch<React.SetStateAction<boolean>>
+  setSpaceFormModelVisibility: React.Dispatch<React.SetStateAction<boolean>>,
+  shouldRedirect?: boolean
 }
 
 const spaceSchema = z.object({
@@ -47,16 +50,18 @@ const spaceSchema = z.object({
   description: z.string()
     .min(1, "Description required")
     .max(150, "Description is too long"),
-  space_type: z.string().optional()
+  space_type: z.string().optional(),
+  publish_space: z.boolean().optional()
 })
 
 
 
-function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibility }: Props) {
+function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibility, shouldRedirect }: Props) {
   const router = useRouter()
   const authUser = useAtomValue(userStore.AuthUser)
   const selectedChannel = useAtomValue(channelStore.selectedChannel)
   const [selectedSpace, setSelectedSpace] = useAtom(spaceStore.selectedSpace)
+  const [spaces, setSpaces] = useAtom(spaceStore.spaces)
 
   const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
 
@@ -143,6 +148,11 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
       form.setValue("space_name", selectedSpace.space_name)
       form.setValue("description", selectedSpace.description as string)
       form.setValue("space_type", selectedSpace.space_type || "")
+      if (selectedSpace.publish_space === 1) {
+        form.setValue("publish_space", true)
+      } else {
+        form.setValue("publish_space", false)
+      }
     } else {
       setEditSpace(false)
     }
@@ -167,6 +177,11 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
   }, [spaceFormModelVisibility])
 
   function submitData(data: any) {
+    if (data.publish_space === true) {
+      data.publish_space = 1
+    } else {
+      data.publish_space = 0
+    }
     if (!selectedSpace) {
       handleCreateSpace(data)
     } else handleUpdateSpace(data)
@@ -179,9 +194,11 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
       data.space_name = (data.space_name || '').trim()
       data.space_slug = data.space_slug?.trim()
       data.space_type = data.space_type || "private"
+      data.publish_space = data.publish_space ? 1 : 0
 
       const createdSpace = await CreateNewSpace(data as InsertSpace)
       if (createdSpace?.success && createdSpace.data) {
+        setSpaces([...spaces, createdSpace.data])
         router.push(`./spaces/${createdSpace.data.space_slug}/settings`)
         setSpaceFormModelVisibility(false)
         toast({
@@ -211,14 +228,22 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
       )
 
       if (updatedSpace?.success && updatedSpace.data) {
+        setSpaces((prevSpace) =>
+          prevSpace.map((space) =>
+            space.id === selectedSpace?.id
+              ? { ...space, ...updatedSpace.data } : space
+          )
+        )
         setSpaceFormModelVisibility(false)
         toast({
           title: "Space updated",
           description: "Your space has been updated successfully.",
           duration: 3000
         })
-        if (updatedSpace.data && !(updatedSpace.data instanceof Error)) {
-          router.push(`/channels/${selectedChannel?.channel_slug}/spaces/${updatedSpace.data.space_slug}`)
+        if (shouldRedirect) {
+          if ('space_slug' in updatedSpace.data) {
+            router.push(`/channels/${selectedChannel?.channel_slug}/spaces/${updatedSpace.data.space_slug}`)
+          }
         }
       }
     } catch {
@@ -361,8 +386,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
                       render={({ field }) => (
                         <Select
                           onValueChange={field.onChange}
-                          value={selectedChannel?.channel_type === "private" ? "private" : field.value}
-                          disabled={selectedChannel?.channel_type === "private"}>
+                          value={field.value}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
@@ -381,6 +405,23 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
                       {String(error.space_type.message)}
                     </span>
                   )}
+                </div>
+              </div>
+
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="publish_space">Publish Space</Label>
+                <div className="w-[70%]">
+                  <Controller
+                    name="publish_space"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    )}
+                  />
                 </div>
               </div>
             </div>

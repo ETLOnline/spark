@@ -29,7 +29,7 @@ export const CreateChannelAction = CreateServerAction(
       const channel = AblyClientRest.channels.get(
         "broadcast-channels-spaces-update"
       )
-      await channel.publish("channel-add", newChannel[0])
+      await channel.publish("channel-add", newChannel)
       return { success: true, data: newChannel }
     } catch (error) {
       return { error: error }
@@ -52,7 +52,7 @@ export const GetChannelsAction = CreateServerAction(
         channels = await GetChannels({...filters})
       } else {
         channels = await GetChannels({...filters, channelType: "public", isPublished: true}) 
-        joinedChannels = authUser?.channels.map((uc)=> uc.channel).filter((c) => typeof c !== 'undefined' )
+        joinedChannels = authUser?.channels.map((uc)=> uc.channel).filter((c)=> c.publish_channel === 1).filter((c) => typeof c !== 'undefined' )
         
       }
 
@@ -149,7 +149,7 @@ export const DettachChannelUserAction = CreateServerAction(
   async (channelId: string, userId: string) => {
     try{
       const channelUser = await dettachChannelUser(channelId, userId)
-      return { success: true, data: channelUser }
+      return { success: true}
     }
     catch (error) {
       return { error: error }

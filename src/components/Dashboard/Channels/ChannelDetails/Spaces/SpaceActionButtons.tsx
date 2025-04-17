@@ -4,7 +4,8 @@ import {
   ExternalLink,
   MoreHorizontal,
   Settings,
-  Trash2
+  Trash2,
+  User
 } from "lucide-react"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useSetAtom } from "jotai"
@@ -29,6 +30,7 @@ interface Props {
 
 function SpacesActionButtons({ space }: Props) {
   const setSelectedSpace = useSetAtom(spaceStore.selectedSpace)
+  const setSpaces = useSetAtom(spaceStore.spaces)
 
   const [
     addDeleteSpaceLoading,
@@ -50,6 +52,9 @@ function SpacesActionButtons({ space }: Props) {
   async function handleDeleteSpace(selectedSpace: SelectSpace) {
     const deletedSpace = await deleteSpace(selectedSpace)
     if (deletedSpace?.success) {
+      setSpaces((prev) =>
+        prev.filter((s) => s.id !== selectedSpace.id)
+      )
       toast({
         title: "Space deleted successfully.",
         duration: 3000
@@ -77,6 +82,10 @@ function SpacesActionButtons({ space }: Props) {
           <DropdownMenuItem onClick={() => handleEditSpace(space)}>
             <Edit className="mr-2 h-4 w-4" />
             Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push(`./spaces/${space.space_slug}/users`)}>
+            <User className="mr-2 h-4 w-4" />
+            Users
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => router.push(`./spaces/${space.space_slug}/settings`)}
