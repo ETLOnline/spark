@@ -102,7 +102,7 @@ export function ProjectScreen() {
     <div className="flex flex-col space-y-4">
       <WelcomeCard newProposal={newProposal} setNewProposal={setNewProposal} categories={categories} handleCreateProposal={handleCreateProposal} />
 
-      <div className="flex-grow flex space-x-4">
+      <div className="grow flex space-x-4">
         <div className="w-full lg:w-3/4">
           <Tabs defaultValue="all">
             <TabsList className="w-full justify-around lg:w-auto">

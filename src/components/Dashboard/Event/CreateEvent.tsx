@@ -313,7 +313,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
     >
       <DialogTrigger asChild>
         <button className="p-1 relative w-max mb-2">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg" />
+          <div className="absolute inset-0 bg-linear-to-r from-indigo-500 to-purple-500 rounded-lg" />
           <div className="px-8 py-2  bg-primary rounded-[6px]  relative group transition duration-200 text-primary-foreground hover:bg-transparent">
             Add Event
           </div>

@@ -21,7 +21,7 @@ const ImagePost: React.FC<Props> = ({ post }) => {
             <Image
               src={post.file?.file_path}
               alt="Post image"
-              className="rounded-lg max-h-96 w-full object-cover bg-gradient-to-r from-accent to-secondary"
+              className="rounded-lg max-h-96 w-full object-cover bg-linear-to-r from-accent to-secondary"
               width={1000}
               height={1000}
               style={{ objectFit: "contain" }}

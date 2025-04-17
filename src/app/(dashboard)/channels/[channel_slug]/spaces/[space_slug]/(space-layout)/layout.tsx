@@ -27,7 +27,7 @@ async function Layout({ params, children }: Props) {
 
   return (
     <div className="flex flex-col space-y-4 w-full">
-      <div className="flex-grow flex justify-center items-start space-x-4">
+      <div className="grow flex justify-center items-start space-x-4">
         <main className="grow space-y-4 post-feed">
           <SpaceHeader currentSpace={currentSpace.data} />
           <Suspense>

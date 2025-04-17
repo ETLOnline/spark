@@ -36,7 +36,7 @@ const CategorySelection = () => {
                 key={category}
                 variant={activeCategory === category ? "default" : "outline"}
                 onClick={() => setActiveCategory(category)}
-                className="flex-shrink-0"
+                className="shrink-0"
               >
                 {category}
               </Button>

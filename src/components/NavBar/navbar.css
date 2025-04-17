@@ -1,4 +1,3 @@
-
 .navbar{
     @apply flex flex-col md:flex-col lg:flex-row
 }

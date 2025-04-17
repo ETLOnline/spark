@@ -5,8 +5,8 @@ import Image from 'next/image'
 const NotFound = () => {
   return (
     <section className="bg-white dark:bg-gray-900 min-h-screen flex items-center justify-center">
-      <div className="px-4 mx-auto max-w-screen-xl lg:px-6 w-full">
-        <div className="mx-auto max-w-screen-sm text-center">
+      <div className="px-4 mx-auto max-w-(--breakpoint-xl) lg:px-6 w-full">
+        <div className="mx-auto max-w-(--breakpoint-sm) text-center">
           <div className='flex justify-center'>
             <Image
               src={'/images/errors/404.svg'}

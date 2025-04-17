@@ -187,7 +187,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   return (
     <div className="flex h-full gap-4">
       {/* Contacts list - visible on desktop, hidden on mobile */}
-      <Card className="w-80 flex-shrink-0 border-r hidden md:flex md:flex-col">
+      <Card className="w-80 shrink-0 border-r hidden md:flex md:flex-col">
         <CardHeader>
           <CardTitle>Chats</CardTitle>
           <div className="relative">

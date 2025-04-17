@@ -9,7 +9,7 @@ const PostFeedLayout = ({ children }: { children: ReactNode }) => {
       <div className="flex-1 overflow-auto">
         {children}
       </div>
-      <div className="hidden w-80 flex-shrink-0 border-l lg:block">
+      <div className="hidden w-80 shrink-0 border-l lg:block">
         <div className="p-4">
           <TrendingTagsCard />
           <Separator className="my-4" />

@@ -117,7 +117,7 @@ export function SpacesScreen() {
   return (
     <div className=" flex flex-col space-y-4">
       <div className="flex space-x-4 sticky top-0">
-        <Card className="flex-grow">
+        <Card className="grow">
           <CardHeader className="pb-2">
             <CardTitle>Categories</CardTitle>
           </CardHeader>
@@ -131,7 +131,7 @@ export function SpacesScreen() {
                       activeCategory === category ? "default" : "outline"
                     }
                     onClick={() => setActiveCategory(category)}
-                    className="flex-shrink-0"
+                    className="shrink-0"
                   >
                     {category}
                   </Button>
@@ -143,7 +143,7 @@ export function SpacesScreen() {
         </Card>
       </div>
 
-      <div className="flex-grow flex space-x-4">
+      <div className="grow flex space-x-4">
         <div className="w-3/4 space-y-4">
           <Card>
             <CardHeader>

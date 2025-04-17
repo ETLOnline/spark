@@ -88,7 +88,7 @@ function SpaceFeatures({ features, space }: Props) {
                   >
                     <DynamicIcon
                       name={feature?.feature_icon as IconName}
-                      className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 "
+                      className="shrink-0 h-6 w-6 sm:h-8 sm:w-8 "
                     />
                     <div className="flex flex-col overflow-hidden mt-2 sm:mt-0">
                       <CardHeader className="p-0 pb-1">
