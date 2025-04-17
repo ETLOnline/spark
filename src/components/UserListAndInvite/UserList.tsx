@@ -29,6 +29,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Label } from "../ui/label"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog"
+import { SpaceUserRole } from "../common/types/spaceuser.role"
 
 interface Props {
   entityType: "channel" | "space"
@@ -67,28 +68,33 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
 
   const entityName = entityType === "channel" ? (entity as SelectChannel).channel_name : (entity as SelectSpace).space_name
 
-  async function handleUPdateuser(userId: string, entityId: string) {
+  async function handleUpdateuser(userId: string, entityId: string) {
     try {
-      let updatedUser;
-      if (entityType === "channel") {
-        updatedUser = await UpdateChannelUser(entityId, userId, { role: userRole })
-        setUsersList((prev) => {
-          return (prev as SelectChannelUser[]).map((users) => {
-            return users.user_id === userId ? { ...users, role: userRole } : users
-          })
-        })
-      } else {
-        updatedUser = await UpdateSpaceUser(entityId, userId, { role: userRole })
-        setUsersList((prev) => {
-          return (prev as SelectSpaceUser[]).map((users) => {
-            return users.user_id === userId ? { ...users, role: userRole } : users
-          })
+      if (userRole) {
+        if (entityType === "channel") {
+          const updatedChannelUser = await UpdateChannelUser(entityId, userId, { role: userRole })
+          if (updatedChannelUser?.success && updatedChannelUser.data) {
+            setUsersList((prev) => {
+              return (prev as SelectChannelUser[]).map((user) => {
+                return user.user_id === userId ? { ...user, ...updatedChannelUser.data } : user
+              })
+            })
+          }
+        } else {
+          const updatedSpaceUser = await UpdateSpaceUser(entityId, userId, { role: userRole })
+          if (updatedSpaceUser?.success && updatedSpaceUser.data) {
+            setUsersList((prev) => {
+              return (prev as SelectSpaceUser[]).map((user) => {
+                return user.user_id === userId ? { ...user, ...updatedSpaceUser?.data } : user
+              })
+            })
+          }
+        }
+        toast({
+          title: "User updated",
+          duration: 3000,
         })
       }
-      toast({
-        title: "User updated",
-        duration: 3000,
-      })
     } catch {
       console.error("Error updating user")
       toast({
@@ -125,7 +131,7 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
             variant: "default",
           })
         }
-
+        return null
       }
     } catch {
       console.error("Error removing user")
@@ -196,7 +202,7 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
                     </div>
                     <div className="col-span-4 text-sm text-muted-foreground">{user.email}</div>
                     <div className="col-span-3 flex items-center gap-1">
-                      <Badge variant={cu.role === "admin" ? "default" : "outline"}>{cu.role}</Badge>
+                      <Badge className="capitalize" variant={cu.role === SpaceUserRole.Admin ? "default" : "outline"}>{cu.role}</Badge>
                     </div>
                     <div className="col-span-1 text-center">
                       <DropdownMenu>
@@ -243,23 +249,24 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
       <Dialog open={changeRoleModelVisibility} onOpenChange={setChangeRoleModelVisibility}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Change Role</DialogTitle>
+            <DialogTitle>Change User Role</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="flex items-center justify-between">
-              <Label htmlFor="channel_type">Channel type</Label>
+              <Label htmlFor="channel_type">User Role</Label>
               <div className="w-[70%]">
                 <Select
-                  value={userRole}
                   onValueChange={(value) => {
                     setUserRole(value)
-                  }}>
+                  }}
+                  defaultValue={selectedUser?.role || ''}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder={selectedUser?.role} />
+                    <SelectValue className="capitalize" placeholder="Select Role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value={SpaceUserRole.Admin}>Admin</SelectItem>
+                    <SelectItem value={SpaceUserRole.Member}>Member</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -269,7 +276,7 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
             <Button
               loading={updateChannelUserLoading || updateSpaceUserLoading}
               onClick={() => {
-                handleUPdateuser(selectedUser?.user_id || "", entity.id)
+                handleUpdateuser(selectedUser?.user_id || "", entity.id)
 
               }}>
               Save
@@ -308,7 +315,7 @@ export default function ChannelUserList({ entity, userList, entityType }: Props)
         entityType={entityType}
         entity={entity}
       />
-    </div>
+    </div >
   )
 }
 

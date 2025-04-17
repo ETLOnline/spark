@@ -268,7 +268,7 @@ export async function updateSpaceUser(spaceId: string, userId: string, updatedDa
         eq(SpaceUsersTable.user_id, userId)
       )
     ).returning()
-    return spaceUser
+    return spaceUser[0]
   }
   catch (e: any) {
     throw new Error(e.message)
