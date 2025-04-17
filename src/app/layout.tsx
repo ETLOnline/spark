@@ -40,9 +40,10 @@ export default function RootLayout({
             attribute="class"
             defaultTheme="system"
             enableSystem
+            themes={['light', 'dark', 'orange', 'dark-orange', 'green', 'green-dark']}
             disableTransitionOnChange
           >
-            <Toaster/>
+            <Toaster />
             {children}
           </ThemeProvider>
         </body>
