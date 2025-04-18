@@ -20,7 +20,7 @@ import { InsertSpace, SelectChannel, SelectSpace, SelectSpaceUser } from "@/src/
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import { AuthUserAction } from "../User/AuthUserAction"
 import { isUserAdmin } from "@/src/utils/helpers"
-import { GetChannelById, GetChannelBySlug, GetChannels } from "@/src/db/data-access/channels/query"
+import { attachChannelUser, GetChannelById, GetChannelBySlug, GetChannels, getChannelUsers } from "@/src/db/data-access/channels/query"
 
 export const CreateSpaceAction = CreateServerAction(
   true,
@@ -154,6 +154,31 @@ export const AttachSpaceUserAction = CreateServerAction(
   true,
   async (spaceId: string, userId: string) => {
     try {
+      const space = await GetSpaceById(spaceId, true)
+      const spaceUserIds = space?.users.map((su)=>(
+        su.user_id
+      )) || []
+
+      const isUserSpaceMember = spaceUserIds.includes(userId)
+
+      if(isUserSpaceMember){
+        return {success: true, data: null}
+      }
+
+
+      if(space?.channel_id){
+        
+        const channelUsers = await getChannelUsers(space?.channel_id)
+        const channelUserIds = channelUsers.map((cu)=>(
+          cu.user_id
+        ))
+
+        const isUserChannelMember = channelUserIds.includes(userId)
+
+        if(!isUserChannelMember){
+          await attachChannelUser(space.channel_id, userId)
+        }
+      }
       const spaceUser = await attachSpaceUser(spaceId, userId)
       return { success: true, data: spaceUser }
     } catch (error) {
