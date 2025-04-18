@@ -76,7 +76,7 @@ function ProjectCards({ project }: Props) {
           <LinkAsButton href={`/project/${project.id}/board`}>
             Launch Board
           </LinkAsButton>
-          <LinkAsButton href={`/project/${project.id}`} onClick={()=>{setSelectedProject(project)}}>
+          <LinkAsButton href={`/project/${project.id}`} >
             View Details
           </LinkAsButton>
         </div>

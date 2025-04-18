@@ -7,7 +7,7 @@ import ProjectCards from "./ProjectCards"
 import ProjectIncubatorStats from "./ProjectIncubatorStats"
 import ProjectTopCatagories from "./ProjectTopCatagories"
 import Contribute from "./ProjectFAQ"
-import { SelectProject } from "@/src/db/schema"
+import { SelectProject, SelectSpace } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetProjectsAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
@@ -16,7 +16,10 @@ import { spaceStore } from "@/src/store/space/spaceStore"
 import { get } from "http"
 import Loader from "../../common/Loader/Loader"
 import { LoaderSizes } from "../../common/types/loader-types"
-import { useParams, usePathname, useSearchParams } from 'next/navigation'
+import { useParams, useSearchParams } from "next/navigation"
+import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
+import { space } from "postcss/lib/list"
+
 
 export interface ProjectProposal {
   id: string
@@ -83,16 +86,39 @@ const categories = [
 export function ProjectScreen() {
 
   const [projects, setProjects] = useAtom(projectStore.projects)
-  const spaceId = useAtomValue(spaceStore.selectedSpaceId)
+  const [currSpace, setCurrSpace] = useState<SelectSpace>()
+
   const [getProjectLoading, getProjectData, getProjectError, getProjects] =
     useServerAction(GetProjectsAction)
 
-  useEffect(() => {
-    if (spaceId) {
-      getProjects(spaceId)
-    }
+  const [getSpaceLoading, getSpaceData, getSpaceError, getSpaceBySlug] =
+    useServerAction(GetSpaceBySlugAction)
 
-  }, [])
+
+  const searchParam = useSearchParams()
+  const spaceSlug = searchParam.get("space")
+  const channel_slug = searchParam.get("channel")
+
+
+  useEffect(() => {
+    const getSpace = async () => {
+      if (spaceSlug && channel_slug) {
+        const space = await getSpaceBySlug(spaceSlug, channel_slug)
+        if (space?.success && space.data) {
+          setCurrSpace(space.data)
+        }
+      }
+    }
+    getSpace()
+  }, [spaceSlug, channel_slug])
+
+
+  useEffect(() => {
+    if (currSpace) {
+      getProjects(currSpace.id)
+    }
+  }, [currSpace])
+
 
   useEffect(() => {
     if (getProjectData !== null) {
@@ -100,12 +126,15 @@ export function ProjectScreen() {
     }
   }, [getProjectData])
 
+
+
+
   return (
     <div className="flex flex-col space-y-4">
       <WelcomeCard />
       {
         getProjectLoading ? (
-          <div className="flex items-center justify-center h-full w-full flex justify-center align-center">
+          <div className="flex items-center justify-center h-full w-full align-center">
             <div className="w-full h-full flex justify-center align-center">
               <Loader size={LoaderSizes.lg} />
 

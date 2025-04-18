@@ -26,7 +26,6 @@ interface Props {
 function SpaceFeatures({ features, space }: Props) {
   const params = useSearchParams()
   const pageType = params.get("page-type") || null
-  const setSpaceId = useSetAtom(spaceStore.selectedSpaceId)
   const featureList = features.map((sf) => sf.feature?.feature_slug)
   const setLayoutStatsVisibility = useSetAtom(spaceStore.layoutStatsVisibility)
 
@@ -82,10 +81,6 @@ function SpaceFeatures({ features, space }: Props) {
               <Link
                 key={feature?.id}
                 href={`./${space.space_slug}?page-type=${feature?.feature_slug}`}
-                onClick={() => {
-                  setSpaceId(space.id)
-               
-                }}
               >
                 <Card
                   key={feature?.id}
