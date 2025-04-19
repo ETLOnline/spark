@@ -33,35 +33,7 @@ const CreateNewChat = () => {
   const { space_slug, channel_slug } = useParams()
   const currentSpace = useAtomValue(spaceStore.currentSpace)
   const [contactFilter , setContactFilter] = useState<ChatContactFilters>()
-  // console.log(options)
-
-  // [
-  //   {
-  //       "label": "USama  test wq",
-  //       "value": "9530a555-141a-4ca3-9d75-7b3003112972"
-  //   },
-  //   {
-  //       "label": "Hunzla Khalid b",
-  //       "value": "ef411be6-bd1b-49f9-a830-780d234d343dsaf"
-  //   },
-  //   {
-  //     "label": "USama  test wer",
-  //     "value": "9530a555-141a-4ca3-9d75-7b3003112972sf"
-  //   },
-  //   {
-  //       "label": "Hunzla Khalid a",
-  //       "value": "ef411be6-bd1b-49f9-a830-780d234d343ds"
-  //   },
-  //   {
-  //     "label": "USama  test asfw",
-  //     "value": "9530a555-141a-4ca3-9d75-7b3003112972sftt"
-  //   },
-  //   {
-  //       "label": "Hunzla Khalid c",
-  //       "value": "ef411be6-bd1b-49f9-a830-780d234d343dsyu"
-  //   },
-  // ]
-
+  
   const isSpacePage = space_slug ? true : false
 
   const getOptionsFromUserList = (users: SelectUser[])=>{

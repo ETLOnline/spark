@@ -14,21 +14,21 @@ interface ChatsListProps {
 
 
 
-const ChatsList = ({}: ChatsListProps) => {
+const ChatsList = ({ }: ChatsListProps) => {
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
   const authUser = useAtomValue(userStore.AuthUser)
 
   return (
     <ScrollArea className="h-[calc(100vh-20rem)] px-2">
-			{
-				authUser ? (
-					<>
-						{myChats.map((chat) => (
-							<ChatContactItem key={chat.id} chat={chat} />
-						))}
-					</>
-				): <div className='flex items-center justify-center'><Loader /></div>
-			}
+      {
+        authUser ? (
+          <>
+            {myChats.map((chat) => (
+              <ChatContactItem key={chat.id} chat={chat} />
+            ))}
+          </>
+        ) : <div className='flex items-center justify-center'><Loader /></div>
+      }
     </ScrollArea>
   )
 }

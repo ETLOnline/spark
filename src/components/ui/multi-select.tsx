@@ -78,12 +78,7 @@ export default function MultiSelect({
       }
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          {/* <Textarea readOnly value={selected.length > 0
-              ? selected.map((o) => `(${o.label})`).join(", ")
-              : placeholder} className={className ?? "w-full justify-start "}>
-            
-          </Textarea> */}
-
+      
           <Button variant="outline" className={className ?? "w-full justify-start "}>
             {placeholder}
           </Button>
