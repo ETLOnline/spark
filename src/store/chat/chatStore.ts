@@ -5,9 +5,11 @@ import { atom } from "jotai";
 const myChats = atom<SelectChat[]>([])
 const currentChat = atom<SelectChat | null>(null)
 const switchedChat = atom<SelectChat | null>(null)
+const isMobileMenuOpen = atom<boolean>(false)
 
 export const chatStore = {
     myChats,
     currentChat,
-    switchedChat
+    switchedChat,
+    isMobileMenuOpen,
 }

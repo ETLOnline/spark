@@ -149,7 +149,10 @@ export const messagesRelations = relations(messagesTable, ({ one }) => ({
 }))
 
 export type InsertMessage = typeof messagesTable.$inferInsert
-export type SelectMessage = typeof messagesTable.$inferSelect
+export type SelectMessage = typeof messagesTable.$inferSelect & {
+  chat?: SelectChat
+  sender?: SelectUser
+}
 
 export const userChatsTable = sqliteTable(
   "user_chats",
@@ -720,6 +723,9 @@ export const spacesRelations = relations(spacesTable, ({ one, many }) => ({
   users: many(SpaceUsersTable, {
     relationName: "spaceToSpaceUser"
   }),
+  chats: many(SpaceChatsTable, {
+    relationName: "spaceToSpaceChat"
+  }),
 }))
 
 export type InsertSpace = typeof spacesTable.$inferInsert
@@ -863,5 +869,31 @@ export const ChannelUsersRelations = relations(ChannelUsersTable, ({ one }) => (
     fields: [ChannelUsersTable.user_id],
     references: [usersTable.unique_id],
     relationName: "channelUserToUser",
+  }),
+}))
+
+export const SpaceChatsTable = sqliteTable("space_chats", {
+  id: int().primaryKey({ autoIncrement: true }),
+  space_id: text().notNull(),
+  chat_id: int().notNull(),
+  ...timestamps
+})
+
+export type InsertSpaceChat = typeof SpaceChatsTable.$inferInsert
+export type SelectSpaceChat = typeof SpaceChatsTable.$inferSelect & {
+  space?: SelectSpace
+  chat?: SelectChat
+}
+
+export const SpaceChatsRelations = relations(SpaceChatsTable, ({ one }) => ({
+  space: one(spacesTable, {
+    fields: [SpaceChatsTable.space_id],
+    references: [spacesTable.id],
+    relationName: "spaceToSpaceChat",
+  }),
+  chat: one(chatsTable, {
+    fields: [SpaceChatsTable.chat_id],
+    references: [chatsTable.id],
+    relationName: "spaceChatToChat",
   }),
 }))
