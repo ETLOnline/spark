@@ -9,12 +9,7 @@ import { SelectChat, SelectUser } from '@/src/db/schema'
 import Loader from '../../../common/Loader/Loader'
 import ChatContactItem from './ChatContactItem'
 
-interface ChatsListProps {
-}
-
-
-
-const ChatsList = ({ }: ChatsListProps) => {
+const ChatsList = () => {
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
   const authUser = useAtomValue(userStore.AuthUser)
 
