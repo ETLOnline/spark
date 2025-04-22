@@ -886,3 +886,21 @@ export const projectTable = sqliteTable("project", {
 export type InsertProject = typeof projectTable.$inferInsert
 export type SelectProject = typeof projectTable.$inferSelect
 
+
+export const taskTable = sqliteTable("task", {
+  id: text("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+    task_num: text(),
+    task_title: text().notNull(),
+    description: text().notNull(),
+    task_type: text().notNull(),
+    task_priority: text().notNull(),
+    story_points: text().notNull(),
+    project_id: text().notNull(),
+    created_by: text().notNull(),
+    ...timestamps
+})
+
+export type InsertTask = typeof taskTable.$inferInsert
+export type SelectTask = typeof taskTable.$inferSelect
