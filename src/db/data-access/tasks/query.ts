@@ -1,13 +1,16 @@
 import { count, eq } from "drizzle-orm"
 import { db } from "../.."
 import { InsertTask, SelectTask, taskTable } from "../../schema"
+import { getProjectById } from "../project-management/query"
 
 export async function CreateTask(taskData: InsertTask){
   try{
     const existingTaskCountResult = await db.$count(taskTable)
     const taskCount = existingTaskCountResult + 1
 
-    const titleInitials = taskData.task_title.split(' ').map(word => word[0]?.toUpperCase()).join('');
+
+    const project = await getProjectById(taskData.project_id)
+    const titleInitials = project.project_name.split(' ').map(word => word[0]?.toUpperCase()).join('');
 
     const task_num = `${titleInitials} - ${taskCount}`
 

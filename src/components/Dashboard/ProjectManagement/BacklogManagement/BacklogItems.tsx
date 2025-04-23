@@ -9,7 +9,7 @@ import { useServerAction } from '@/src/hooks/useServerAction'
 import { DeleteTaskAction } from '@/src/server-actions/Tasks/Task'
 import { projectStore } from '@/src/store/project/projectStore'
 import { useSetAtom } from 'jotai'
-import { MoreHorizontal } from 'lucide-react'
+import { CircleHelp, MoreHorizontal } from 'lucide-react'
 import React, { Dispatch, SetStateAction, useState } from 'react'
 
 interface Props {
@@ -143,9 +143,9 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
             Unassigned
           </Badge>
         )} */}
-          <Badge variant="outline" className="text-xs">
-            Unassigned
-          </Badge>
+
+          <CircleHelp />
+
         </div>
         <div className="col-span-1 text-right">
           <DropdownMenu open={isDropdownOpen} onOpenChange={(open) => setIsDropDownOpen(open)}>

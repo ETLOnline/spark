@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
 import { Calendar, Settings, Users } from "lucide-react"
@@ -11,6 +11,7 @@ import { ProjectSettings } from "./ProjectSettings/ProjectSettings"
 import ProjectOverView from "./ProjectOverView/ProjectOverView"
 import { SelectProject } from "@/src/db/schema"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../ui/hover-card"
+import { useRouter, useSearchParams } from "next/navigation"
 
 interface Props {
   currProject: SelectProject
@@ -18,7 +19,17 @@ interface Props {
 
 
 export function ProjectDashboard({ currProject }: Props) {
-  const [activeTab, setActiveTab] = useState("overview")
+
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const UrlTab = searchParams.get("tab")
+  const [activeTab, setActiveTab] = useState(UrlTab || "overview")
+
+  useEffect(() => {
+    if (UrlTab !== activeTab) {
+      router.push(`./board?tab=${activeTab}`)
+    }
+  }, [activeTab, UrlTab])
 
   return (
     <div className="grid grid-cols-1  p-4">
