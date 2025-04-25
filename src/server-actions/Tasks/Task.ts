@@ -28,17 +28,6 @@ export const CreateTaskAction = CreateServerAction(
 )
 
 
-// export const GetTaskAction = CreateServerAction(
-//   true,
-//   async (projectId: string) => {
-//     try{
-//       const tasks = await GetTasks(projectId)
-//       return {success: true, data: tasks}
-//     }catch(error){
-//       return {error: error}
-//     }
-//   }
-// )
 export interface GetTaskResponseType {
   
   tasks: SelectTask[]

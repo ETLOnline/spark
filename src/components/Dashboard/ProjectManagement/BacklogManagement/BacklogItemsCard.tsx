@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src
 import { Checkbox } from '@/src/components/ui/checkbox'
 import React, { useEffect, useState } from 'react'
 import BacklogItems from './BacklogItems'
-import { useAtom, useAtomValue } from 'jotai'
+import { useAtom } from 'jotai'
 import { projectStore } from '@/src/store/project/projectStore'
 import { useServerAction } from '@/src/hooks/useServerAction'
 import { GetTaskAction } from '@/src/server-actions/Tasks/Task'
