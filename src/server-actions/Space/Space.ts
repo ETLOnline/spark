@@ -10,12 +10,17 @@ import {
   GetSpaces,
   getSpaceUsers,
   IsSlugAvailable,
+  spaceQueryFilters,
   UpdateSpace,
   updateSpaceUser
 } from "@/src/db/data-access/spaces/query"
 import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 import { CreateServerAction } from ".."
-import { InsertSpace, SelectSpace, SelectSpaceUser } from "@/src/db/schema"
+import { InsertSpace, SelectChannel, SelectSpace, SelectSpaceUser } from "@/src/db/schema"
+import { PaginationType } from "@/src/components/common/types/pagination.type"
+import { AuthUserAction } from "../User/AuthUserAction"
+import { isUserAdmin } from "@/src/utils/helpers"
+import { attachChannelUser, GetChannelById, GetChannelBySlug, GetChannels, getChannelUsers } from "@/src/db/data-access/channels/query"
 
 export const CreateSpaceAction = CreateServerAction(
   true,
@@ -35,14 +40,44 @@ export const CreateSpaceAction = CreateServerAction(
   }
 )
 
+export interface GetSpacesResponseType {
+  spaces: SelectSpace[]
+  pagination: PaginationType
+}
 export const GetSpacesAction = CreateServerAction(
   true,
-  async (channelId: string) => {
+  async (filters?: spaceQueryFilters) => {
     try {
-      const spaces = await GetSpaces(channelId)
-      return { success: true, data: spaces }
-    } catch (error: any) {
-      return { error: error.message }
+      let spaces: GetSpacesResponseType 
+      let joinedSpaces: SelectSpace[] = [] 
+      let channel: SelectChannel | undefined
+
+      const authUser = await AuthUserAction()
+
+      if(filters?.channel_slug){
+        channel = await GetChannelBySlug(filters?.channel_slug || "")
+      }else if(filters?.channel_id){
+        channel = await GetChannelById(filters?.channel_id || "")
+      }
+
+      if(channel){
+        filters = {
+          ...filters,
+          channel_id: channel.id
+        }
+      }
+
+      if (isUserAdmin(authUser)) {
+        spaces = await GetSpaces({...filters})
+      } else {
+        spaces = await GetSpaces({...filters, space_type: "public", isPublished: true }) 
+        const spaceIds = (channel?.spaces || []).map((s)=> s.id)
+        joinedSpaces = (authUser?.spaces || []).filter((s)=> spaceIds.includes(s.space_id)).map((s)=> s.space)
+      }
+
+      return { success: true, data: {channel, paginatedSpaces: spaces, joinedSpaces}}
+    } catch (error) {
+      return { error: error }
     }
   }
 )
@@ -119,6 +154,31 @@ export const AttachSpaceUserAction = CreateServerAction(
   true,
   async (spaceId: string, userId: string) => {
     try {
+      const space = await GetSpaceById(spaceId, true)
+      const spaceUserIds = space?.users.map((su)=>(
+        su.user_id
+      )) || []
+
+      const isUserSpaceMember = spaceUserIds.includes(userId)
+
+      if(isUserSpaceMember){
+        return {success: true, data: null}
+      }
+
+
+      if(space?.channel_id){
+        
+        const channelUsers = await getChannelUsers(space?.channel_id)
+        const channelUserIds = channelUsers.map((cu)=>(
+          cu.user_id
+        ))
+
+        const isUserChannelMember = channelUserIds.includes(userId)
+
+        if(!isUserChannelMember){
+          await attachChannelUser(space.channel_id, userId)
+        }
+      }
       const spaceUser = await attachSpaceUser(spaceId, userId)
       return { success: true, data: spaceUser }
     } catch (error) {
@@ -132,7 +192,7 @@ export const DetachSpaceUserAction = CreateServerAction(
   async (spaceId: string, userId: string) => {
     try {
       const spaceUser = await dettachSpaceUser(spaceId, userId)
-      return { success: true, data: spaceUser }
+      return { success: true}
     } catch (error) {
       return { error: error }
     }

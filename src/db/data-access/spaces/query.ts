@@ -1,6 +1,18 @@
-import { and, eq } from "drizzle-orm"
+import { and, eq, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
 import { channelsTable, InsertSpace, SelectSpace, SelectSpaceUser, spaceFeaturesTable, spacesTable, SpaceUsersTable } from "../../schema"
+
+export type spaceQueryFilters = {
+  space_type?: "public" | "private"
+  isPublished?: boolean
+  ownerId?: string
+  page?: number
+  limit?: number
+  channel_id?: string
+  channel_slug?: string
+}
+
+
 
 export async function CreateSpace(spaceData: InsertSpace) {
   try {
@@ -11,22 +23,87 @@ export async function CreateSpace(spaceData: InsertSpace) {
   }
 }
 
-export async function GetSpaces(channelId: string) {
+// export async function GetSpaces(channelId: string) {
+//   try {
+//     const spaces = await db.query.spacesTable.findMany({
+//       where: eq(spacesTable.channel_id, channelId),
+//       with: {
+//         features: {
+//           with: {
+//             feature: true
+//           }
+//         },
+//         owner: true
+//       }
+//     })
+//     return spaces
+//   } catch (error: any) {
+//     throw new Error(error.message)
+//   }
+// }
+
+
+
+export async function GetSpaces(filters?: spaceQueryFilters) {
   try {
+    const page = filters?.page 
+    const limit = filters?.limit 
+    const offset = page && limit ? (page - 1) * limit :0
+
+    const whereClauses:(SQLWrapper | undefined)[] = []
+
+    if (filters) {
+      
+      if (filters.space_type) {
+        whereClauses.push(eq(spacesTable.space_type, filters.space_type))
+      }
+
+      if (filters.isPublished) {
+        whereClauses.push(eq(spacesTable.publish_space, filters.isPublished ? 1 : 0))
+      }
+
+      if (filters.ownerId) {
+        whereClauses.push(eq(spacesTable.ownerId, filters.ownerId))
+      }
+
+      if(filters.channel_id) {
+        whereClauses.push(eq(spacesTable.channel_id, filters.channel_id))
+      }
+
+    } 
+    
+
     const spaces = await db.query.spacesTable.findMany({
-      where: eq(spacesTable.channel_id, channelId),
-      with: {
+      limit: limit,
+      offset: offset,
+      where: whereClauses.length ? and(...whereClauses) : undefined,
+      with:{
         features: {
-          with: {
+          with:{
             feature: true
           }
         },
-        owner: true
+        channel:true
       }
+      
     })
-    return spaces
-  } catch (error: any) {
-    throw new Error(error.message)
+
+    const totalCount = await db.$count(
+      spacesTable,
+      whereClauses.length ? and(...whereClauses) : undefined
+    )
+
+    return {
+      spaces,
+      pagination: {
+        total: Number(totalCount),
+        page: page || 1,
+        limit: limit || 0,
+        totalPages: limit && limit !== 0 ?  Math.ceil(Number(totalCount) / limit) : 1 
+      }
+    }
+  } catch (e: any) {
+    throw new Error(e.message)
   }
 }
 
@@ -190,8 +267,8 @@ export async function updateSpaceUser(spaceId: string, userId: string, updatedDa
         eq(SpaceUsersTable.space_id, spaceId),
         eq(SpaceUsersTable.user_id, userId)
       )
-    )
-    return spaceUser
+    ).returning()
+    return spaceUser[0]
   }
   catch (e: any) {
     throw new Error(e.message)
@@ -199,18 +276,15 @@ export async function updateSpaceUser(spaceId: string, userId: string, updatedDa
 }
 
 export async function getSpaceUsers(spaceId: string) {
-  try{
-    const spaceUsers = await db.query.SpaceUsersTable.findMany({
-      where: eq(SpaceUsersTable.space_id, spaceId),
-      with: {
-        user: true
-      }
-    })
-    const users = spaceUsers.map((spaceUser) => {
-      return spaceUser.user
-    })
-    return users
-  }
+ try{
+     const spaceUsers = await db.query.SpaceUsersTable.findMany({
+       where: eq(SpaceUsersTable.space_id, spaceId),
+       with: {
+         user: true
+       }
+     })
+     return spaceUsers
+   }
   catch (e: any) {
     throw new Error(e.message)
   }

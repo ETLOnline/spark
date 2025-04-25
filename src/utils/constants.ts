@@ -9,7 +9,7 @@ export const pageMeta = [
     id: "profile",
     url: "/profile",
     title: "Profile",
-    description: "user profiule containing bio, rewards, activity and schedule"
+    description: "user profile containing bio, rewards, activity and schedule"
   },
   {
     id: "events",
@@ -76,6 +76,18 @@ export const pageMeta = [
     url: "/projects",
     title: "Projects",
     description: "projects"
+  },
+  {
+    id: "channels",
+    url: "/channels",
+    title: "Channels",
+    description: "channels"
+  },
+  {
+    id: "connections",
+    url: "/connections",
+    title: "Connections",
+    description: "connections"
   }
 ]
 

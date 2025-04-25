@@ -34,7 +34,7 @@ async function Layout({ params, children }: Props) {
             {children}
           </Suspense>
         </main>
-        <SpacesStats />
+        {/* <SpacesStats /> */}
       </div>
     </div>
   )

@@ -11,12 +11,18 @@ import {
 } from "@/src/utils/helpers"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useEffect } from "react"
-import { getChannelsNavMapped } from "../utils/helpers"
+import {
+  getChannelsCrumbsMapped,
+  getChannelsNavMapped,
+  getSpacesCrumbsMapped
+} from "../utils/helpers"
 import { useParams } from "next/navigation"
 import { userStore } from "@/src/store/user/userStore"
+import { PageMeta } from "@/src/utils/constants"
 
 const useSideBarHook = () => {
   const setRoutes = useSetAtom(navStore.routes)
+  const setCrumbRoutes = useSetAtom(navStore.crumbRoutes)
   const setSelectedChannel = useSetAtom(channelStore.selectedChannel)
   const [channels, setChannels] = useAtom(channelStore.sideBarChannels)
   const user = useAtomValue(userStore.AuthUser)
@@ -145,12 +151,36 @@ const useSideBarHook = () => {
 
   useEffect(() => {
     if (userData) {
+      let mappedCrumbs: PageMeta[] = []
+
       setRoutes((routes) => {
         return {
           ...routes,
           navChannels: getChannelsNavMapped(channels)
         }
       })
+      setCrumbRoutes((crumbRoutes) => {
+        mappedCrumbs = getChannelsCrumbsMapped(channels)
+        return [
+          ...crumbRoutes,
+          ...(Array.isArray(mappedCrumbs) ? mappedCrumbs : [mappedCrumbs])
+        ]
+      })
+      mappedCrumbs = []
+      channels.forEach((channel) => {
+        if (channel.spaces && channel.spaces.length) {
+          mappedCrumbs = [
+            ...mappedCrumbs,
+            ...getSpacesCrumbsMapped(channel.spaces as SelectSpace[], channel)
+          ]
+        }
+      })
+      if (mappedCrumbs.length) {
+        setCrumbRoutes((crumbRoutes) => [
+          ...crumbRoutes,
+          ...(Array.isArray(mappedCrumbs) ? mappedCrumbs : [mappedCrumbs])
+        ])
+      }
     }
 
     if (channelSlug) {

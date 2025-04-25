@@ -23,29 +23,29 @@ interface Props {
 }
 
 const InviteScreen = ({ entityType, entity }: Props) => {
-  const entityName =  isEntityChannel(entity) ? entity.channel_name : entity.space_name
+  const entityName = isEntityChannel(entity) ? entity.channel_name : entity.space_name
   const entityDescription = entity.description
-  
-  const title = `Join ${entityName} ${entityType}` 
+
+  const title = `Join ${entityName} ${entityType}`
   const description = `You have been invited to Join the ${entityType} to start collaborating.`
 
-  const {toast} = useToast()
+  const { toast } = useToast()
   const router = useRouter()
   const authUser = useAtomValue(userStore.AuthUser)
-  const [loadingChannelAttach, _ , errorAttachingChannel, attachChannelUser] = useServerAction(AttachChannelUserAction)
-  const [loadingSpaceAttach, __ , errorAttachingSpace, attachSpaceUser] = useServerAction(AttachSpaceUserAction)
+  const [loadingChannelAttach, _, errorAttachingChannel, attachChannelUser] = useServerAction(AttachChannelUserAction)
+  const [loadingSpaceAttach, __, errorAttachingSpace, attachSpaceUser] = useServerAction(AttachSpaceUserAction)
 
 
-  const handleJoin = async() => {
-    if(authUser?.unique_id && entity.id){
-      try{
+  const handleJoin = async () => {
+    if (authUser?.unique_id && entity.id) {
+      try {
 
-        if(isEntityChannel(entity)){
-          await attachChannelUser(entity.id, authUser.unique_id )
+        if (isEntityChannel(entity)) {
+          await attachChannelUser(entity.id, authUser.unique_id)
         }
-  
-        if(!isEntitySpace(entity)){
-          await attachSpaceUser( entity.id, authUser.unique_id )
+
+        if (isEntitySpace(entity)) {
+          await attachSpaceUser(entity.id, authUser.unique_id)
         }
 
         toast({
@@ -54,20 +54,20 @@ const InviteScreen = ({ entityType, entity }: Props) => {
           variant: "default",
         })
 
-        if(isEntityChannel(entity)){
-          router.push(`/channels/${isEntityChannel(entity) ? entity.channel_slug : '' }/spaces`)
-        }else{
-          router.push(`/channels/${entity.channel?.channel_slug }/spaces/${isEntitySpace(entity) ? entity.space_slug : ''}`)
+        if (isEntityChannel(entity)) {
+          router.push(`/channels/${isEntityChannel(entity) ? entity.channel_slug : ''}/spaces`)
+        } else {
+          router.push(`/channels/${entity.channel?.channel_slug}/spaces/${isEntitySpace(entity) ? entity.space_slug : ''}`)
         }
 
-      }catch(err){
+      } catch (err) {
         console.error(`Error joining ${entityType}:`, err)
         toast({
           title: `Error joining ${entityType}`,
           description: `An error occurred while trying to join the ${entityType}.`,
           variant: "destructive",
         })
-        
+
 
       }
 
@@ -89,45 +89,45 @@ const InviteScreen = ({ entityType, entity }: Props) => {
         </CardHeader>
 
         <CardContent>
-          
+
           <div className="bg-muted p-4 rounded-lg mb-6">
             <div className="flex items-start gap-3">
               <Info className="h-5 w-5 text-muted-foreground mt-0.5" />
               <div>
                 <p className="text-sm font-medium">About this {entityType}</p>
                 <p className="text-sm text-muted-foreground mt-1">{entityDescription}</p>
-              
+
                 <div className="flex items-center gap-3 mt-2">
                   <div className="flex items-center text-sm text-muted-foreground">
                     <Users className="h-4 w-4 mr-1" />
                     0 members
                   </div>
-                  
+
                   <Badge variant="secondary" className="text-xs">
                     Public
                   </Badge>
-                  
+
                 </div>
               </div>
             </div>
           </div>
 
-        
+
         </CardContent>
 
-        
+
         <CardFooter className="flex flex-col sm:flex-row gap-3">
-          <Button 
-            loading={loadingChannelAttach || loadingSpaceAttach} 
-            disabled={loadingChannelAttach || loadingSpaceAttach} 
-            className="w-full sm:w-auto" 
+          <Button
+            loading={loadingChannelAttach || loadingSpaceAttach}
+            disabled={loadingChannelAttach || loadingSpaceAttach}
+            className="w-full sm:w-auto"
             onClick={handleJoin}
           >
             Continue to Join
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </CardFooter>
-        
+
       </Card>
     </div>
   )

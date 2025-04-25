@@ -9,6 +9,8 @@ const selectedSpace = atom<SelectSpace | null>(null)
 const dir = atom<DirItem[]>([])
 const currDirPath = atom<string>("/")
 const layoutStatsVisibility = atom<boolean>(true)
+const selectedChannelSpaces = atom<SelectSpace[]>([])
+const currentSpace = atom<SelectSpace | null>(null)
 
 export const spaceStore = {
   spaces,
@@ -17,5 +19,7 @@ export const spaceStore = {
   selectedSpace,
   dir,
   currDirPath,
-  layoutStatsVisibility
+  layoutStatsVisibility,
+  selectedChannelSpaces,
+  currentSpace,
 }

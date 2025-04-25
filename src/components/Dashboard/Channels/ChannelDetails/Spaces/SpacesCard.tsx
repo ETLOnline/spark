@@ -10,17 +10,27 @@ import { SelectSpace } from "@/src/db/schema"
 import SpacesActionButtons from "./SpaceActionButtons"
 import { userStore } from "@/src/store/user/userStore"
 import { useAtomValue } from "jotai"
-import { canUserIntract } from "@/src/utils/helpers"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
-import { ArrowRight, Lock } from "lucide-react"
+import { ArrowRight, Check, Lock, PencilRuler } from "lucide-react"
+import { canControlSpace } from "@/src/utils/spaceRoleHelper"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/src/components/ui/tooltip"
+import { useEffect, useState } from "react"
 
 interface Props {
   space: SelectSpace
 }
 
 function SpacesCard({ space }: Props) {
+  const [spaceControl, setSpaceControl] = useState(false)
   const user = useAtomValue(userStore.AuthUser)
+
+  useEffect(() => {
+    if (user && canControlSpace(space.channel_id, space.id, user)) {
+      setSpaceControl(true)
+    }
+  }, [user, space])
+
   return (
     <Card key={space.id} className="overflow-hidden">
       {/* <div className="aspect-video w-full overflow-hidden">
@@ -34,11 +44,38 @@ function SpacesCard({ space }: Props) {
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl flex items-center gap-1">
             {space.space_name}
-            {space.space_type === "private" && (
-              <Lock className="text-muted-foreground" height={14} />
-            )}
+            {
+              space.space_type === "private" && (
+                <Lock className="text-muted-foreground" height={14} />
+              )
+            }
+            {
+              space.publish_space ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Check className="text-muted-foreground" height={14} />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Published</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <PencilRuler className="text-muted-foreground" height={14} />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Darft</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )
+            }
           </CardTitle>
-          {user && canUserIntract(user, space.ownerId) ? (
+          {spaceControl ? (
             <SpacesActionButtons space={space} />
           ) : null}
         </div>
