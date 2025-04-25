@@ -58,6 +58,9 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
   const [isNewFolderDialogOpen, setIsNewFolderDialogOpen] =
     useState<boolean>(false)
 
+  const [isNewFileDrawerOpen, setIsNewFileDrawerOpen] =
+    useState<boolean>(false)
+
 
   const [dir, setDir] = useAtom(spaceStore.dir)
     const [currentPath, setCurrentPath] = useAtom(spaceStore.currDirPath)
@@ -289,6 +292,8 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
         }
   
         setFileData(null)
+
+        setIsNewFileDrawerOpen(false)
   
         toast({
           description: "File created!",
@@ -311,7 +316,8 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
           {/* <Button>
             <UploadCloud /> Upload File
           </Button> */}
-          <Drawer>
+          
+          <Drawer open={isNewFileDrawerOpen} onOpenChange={setIsNewFileDrawerOpen}>
             <DrawerTrigger asChild>
               <Button variant="outline">
                 <FolderPlus className="mr-2 h-4 w-4" />
@@ -320,7 +326,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
             </DrawerTrigger>
             <DrawerContent>
               <div className="mx-auto w-full max-w-lg">
-
+              <DrawerTitle></DrawerTitle>
                 <div className="p-4 pb-0">
                   <div className="flex items-center justify-center space-x-2">
                     <Card className="mb-8 flex flex-col items-center gap-4 pb-8">
