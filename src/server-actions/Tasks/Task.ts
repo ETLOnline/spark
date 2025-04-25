@@ -1,9 +1,10 @@
 "use server"
-import { CreateTask, DeleteTask, GetTaskCount, GetTasks, UpdateTask} from "@/src/db/data-access/tasks/query";
+import { CreateTask, DeleteTask, GetTaskCount, GetTasks, taskQueryFilters, UpdateTask} from "@/src/db/data-access/tasks/query";
 import { CreateServerAction } from "..";
 import { InsertTask, SelectTask } from "@/src/db/schema";
 import { getProjectById } from "@/src/db/data-access/project-management/query";
 import { getInitials } from "@/src/utils/helpers";
+import { PaginationType } from "@/src/components/common/types/pagination.type";
 
 export const CreateTaskAction = CreateServerAction(
   true,
@@ -27,28 +28,40 @@ export const CreateTaskAction = CreateServerAction(
 )
 
 
-export const GetTaskAction = CreateServerAction(
-  true,
-  async (projectId: string) => {
-    try{
-      const tasks = await GetTasks(projectId)
-      return {success: true, data: tasks}
-    }catch(error){
-      return {error: error}
-    }
-  }
-)
-// export const getTaskCountAction = CreateServerAction(
+// export const GetTaskAction = CreateServerAction(
 //   true,
-//   async() => {
+//   async (projectId: string) => {
 //     try{
-//       const taskCount = await TasksCount()
-//       return {success: true, data: taskCount}
+//       const tasks = await GetTasks(projectId)
+//       return {success: true, data: tasks}
 //     }catch(error){
-//       return{error: error}
+//       return {error: error}
 //     }
 //   }
 // )
+export interface GetTaskResponseType {
+  
+  tasks: SelectTask[]
+  pagination: PaginationType
+}
+
+export const GetTaskAction = CreateServerAction(
+  true,
+  async (filters?: taskQueryFilters) => {
+    try{
+      let tasks: GetTaskResponseType 
+      
+      tasks =  await GetTasks({...filters})
+
+      return {success:true, data: tasks}
+
+    }catch(error){
+      return {error: error}
+    }
+
+  }
+)
+
 
 export const UpdateTaskAction = CreateServerAction(
   true,
