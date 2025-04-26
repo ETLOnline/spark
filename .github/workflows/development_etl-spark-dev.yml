@@ -17,6 +17,8 @@ jobs:
       TURSO_AUTH_TOKEN : ${{ secrets.TURSO_AUTH_TOKEN }}
       WEBHOOK_SECRET : ${{ secrets.WEBHOOK_SECRET }}
       ABLY_API_KEY : ${{ secrets.ABLY_API_KEY }}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY : ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      CLERK_SECRET_KEY : ${{ secrets.CLERK_SECRET_KEY }}
     permissions:
       contents: read #This is required for actions/checkout
 
