@@ -4,7 +4,7 @@ on:
   push:
     # Change to the branch you want this to deploy from
     branches:
-      - development 
+      - development_del
   workflow_dispatch:
 
 jobs:
