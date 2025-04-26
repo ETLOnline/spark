@@ -35,7 +35,23 @@ jobs:
           npm install --force
           npm run build --if-present
           npm run test --if-present
+      # ---- START ADDED VERIFICATION STEPS ----
+      - name: Check directory contents after build
+        run: ls -la # List all files/folders, including hidden ones
 
+      - name: Verify .next directory existence and contents
+        run: |
+          echo "Checking for .next directory..."
+          if [ -d ".next" ]; then
+            echo ".next directory FOUND."
+            echo "Listing contents of .next:"
+            ls -la .next # List contents of .next
+          else
+            echo "ERROR: .next directory NOT FOUND after build!"
+            exit 1 # Fail the workflow immediately if .next is missing
+          fi
+      # ---- END ADDED VERIFICATION STEPS ----
+      
       - name: Zip artifact for deployment
         run: zip -r release.zip . -x ".git/*" -x ".github/*"
     
