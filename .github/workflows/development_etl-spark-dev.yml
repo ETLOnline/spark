@@ -12,6 +12,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env: # <-- Define environment variables for the build job here
+      TURSO_DATABASE_URL : ${{ secrets.TURSO_DATABASE_URL }}
+      TURSO_AUTH_TOKEN : ${{ secrets.TURSO_AUTH_TOKEN }}
+      WEBHOOK_SECRET : ${{ secrets.WEBHOOK_SECRET }}
     permissions:
       contents: read #This is required for actions/checkout
 
