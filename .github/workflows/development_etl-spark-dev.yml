@@ -16,6 +16,7 @@ jobs:
       TURSO_DATABASE_URL : ${{ secrets.TURSO_DATABASE_URL }}
       TURSO_AUTH_TOKEN : ${{ secrets.TURSO_AUTH_TOKEN }}
       WEBHOOK_SECRET : ${{ secrets.WEBHOOK_SECRET }}
+      ABLY_API_KEY : ${{ secrets.ABLY_API_KEY }}
     permissions:
       contents: read #This is required for actions/checkout
 
