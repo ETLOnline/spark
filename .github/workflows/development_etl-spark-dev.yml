@@ -6,7 +6,7 @@ name: Build and deploy Node.js app to Azure Web App - etl-spark-dev
 on:
   push:
     branches:
-      - development_del
+      - development
   workflow_dispatch:
 
 jobs:
@@ -37,8 +37,8 @@ jobs:
           npm run test --if-present
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
-
+        run: zip -r release.zip . -x ".git/*" -x ".github/*"
+    
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
