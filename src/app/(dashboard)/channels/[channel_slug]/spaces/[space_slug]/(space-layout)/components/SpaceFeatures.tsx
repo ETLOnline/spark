@@ -18,6 +18,7 @@ import { useLayoutEffect } from "react"
 import SpaceProjects from "./SpaceProjects"
 import { useSetAtom } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
+import SpaceChat from "./spaceChat"
 interface Props {
   features: SelectSpaceFeature[]
   space: SelectSpace
@@ -56,6 +57,8 @@ function SpaceFeatures({ features, space }: Props) {
         return <FileSharing />
       case "project-management":
         return <SpaceProjects />
+      case "chat":
+        return <SpaceChat />
       default:
         return <NoDataCard
           icon={<EarthLock className="h-16 w-16 text-muted-foreground mb-4" />}

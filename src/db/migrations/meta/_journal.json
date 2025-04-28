@@ -47,15 +47,8 @@
     {
       "idx": 6,
       "version": "6",
-      "when": 1744712576046,
-      "tag": "0006_tired_fenris",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "6",
-      "when": 1745227299263,
-      "tag": "0007_premium_oracle",
+      "when": 1745056028182,
+      "tag": "0006_woozy_thunderbird",
       "breakpoints": true
     }
   ]

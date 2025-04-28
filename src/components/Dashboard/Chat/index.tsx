@@ -7,13 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/src/comp
 import { Input } from "@/src/components/ui/input"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger } from "@/src/components/ui/sheet"
-import { Menu, Search, Send, SmileIcon } from 'lucide-react'
+import { Menu, PlusCircle, Search, Send, SmileIcon } from 'lucide-react'
 import {  useAtom, useAtomValue } from "jotai"
 import { chatStore } from "@/src/store/chat/chatStore"
 import { InsertMessage, SelectChat, SelectMessage, SelectUser, SelectUserChat } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
 import { AblyClient } from "@/src/services/realtime/AblyClient"
-import ChatsList from "./ChatsList"
+import ChatsList from "./components/ChatsList"
 import { AddMessageToChatAction, GetChatWithMessagesAction } from "@/src/server-actions/Chat/Chat"
 import moment from 'moment-timezone'
 import Link from "next/link"
@@ -23,6 +23,8 @@ import data from '@emoji-mart/data'
 import Picker from '@emoji-mart/react'
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
 import { isOnlyEmoji } from "@/src/utils/helpers"
+import CreateNewChat from "./components/CreateNewChat"
+import Avvvatars from "avvvatars-react"
 
 
 interface ChatScreenProps {
@@ -96,7 +98,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
   const [messages, setMessages] = useState<SelectMessage[]>([])
   const [newMessage, setNewMessage] = useState("")
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useAtom(chatStore.isMobileMenuOpen)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [currentChat, setCurrentChat] = useAtom(chatStore.currentChat)
   const [switchedChat, setSwitchedChat] = useAtom(chatStore.switchedChat)
@@ -105,12 +107,18 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const [chatRealTime, setChatRealtime] = useState<any>(null);
   const [chatContact , setChatContact] = useState<SelectUser | null>(null);
   const [fetchingChatMessages , switchedChatState , switchedChatError, fetchChatWithMessages] = useServerAction(GetChatWithMessagesAction)
+  const [newMessageLoading, newMessageState, newMessageError, addMessageToChat] = useServerAction(AddMessageToChatAction)
 
   useEffect(()=>{
     setCurrentChat(currentChatSSR || null)
     setMyChats(allChatsSSR || [])
     setMessages(currentChatSSR?.messages || [])
     scrollToBottom()
+    return()=>{
+      setCurrentChat(null)
+      setMyChats([])
+      setMessages([])
+    }
   },[])
 
 
@@ -181,22 +189,25 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       type: "text"
     }
     setNewMessage("")
-    await AddMessageToChatAction(newMsg)
+    await addMessageToChat(newMsg)
   }
 
   return (
-    <div className="flex h-full gap-4">
+    <div className={`flex h-full gap-4`}>
       {/* Contacts list - visible on desktop, hidden on mobile */}
       <Card className="w-80 flex-shrink-0 border-r hidden md:flex md:flex-col">
-        <CardHeader>
-          <CardTitle>Chats</CardTitle>
+        <CardHeader className="px-3">
+          <CardTitle className="flex items-center justify-between">
+            Chats 
+            <CreateNewChat />
+          </CardTitle>
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Search chats..." className="pl-8" />
           </div>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden p-0">
-          <ChatsList setIsMobileMenuOpen={setIsMobileMenuOpen} />
+          <ChatsList />
         </CardContent>
       </Card>
 
@@ -214,30 +225,36 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[80%] sm:w-[385px] p-0">
                   <CardHeader>
-                    <CardTitle>Chats</CardTitle>
+                    <CardTitle>Chats <CreateNewChat /></CardTitle>
                     <div className="relative">
                       <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input placeholder="Search chats..." className="pl-8" />
                     </div>
                   </CardHeader>
-                  <ChatsList setIsMobileMenuOpen={setIsMobileMenuOpen} />
+                  <ChatsList />
                 </SheetContent>
               </Sheet>
               {
                 currentChat ? (
                   <Link href={currentChat.is_group ? '#' : `/profile/${chatContact?.unique_id}`}>
                     <div className="flex ">
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={currentChat && !currentChat.is_group ? chatContact?.profile_url || undefined : undefined} alt={currentChat.name || ''} />
-                        <AvatarFallback>{currentChat && !currentChat.is_group ? chatContact?.first_name[0] : currentChat.name}</AvatarFallback>
-                      </Avatar>
+                      {
+                        currentChat.is_group?(
+                          <Avvvatars value={currentChat.name || ''} style='shape' />
+                        ):(
+                          <Avatar className="h-9 w-9">
+                            <AvatarImage src={currentChat && !currentChat.is_group ? chatContact?.profile_url || undefined : undefined} alt={currentChat.name || ''} />
+                            <AvatarFallback>{currentChat && !currentChat.is_group ? chatContact?.first_name[0] : currentChat.name}</AvatarFallback>
+                          </Avatar>
+                        )
+                      }
                       <div className="ml-4 space-y-1">
                         {
                           !currentChat?.is_group && chatContact ? (
                             <>
                               <p className="text-sm font-medium leading-none">{`${chatContact?.first_name} ${chatContact?.last_name}`}</p>
                               <p className="text-sm text-muted-foreground">
-                                {currentChat.is_group ? "Group Chat" : chatContact?.email}
+                                {chatContact?.email}
                               </p>
                             </>
 
@@ -246,7 +263,12 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
                         {
                           currentChat?.is_group ? (
-                            <p className="text-sm font-medium leading-none">{currentChat.name}</p>
+                            <>
+                              <p className="text-sm font-medium leading-none">{currentChat.name}</p>
+                              <p className="text-sm text-muted-foreground truncate">
+                                Group Chat ({currentChat.users?.map(user=> `${user.user?.first_name} ${user.user?.last_name}`).join(', ')})
+                              </p>
+                            </>
                           ): null
                         }
                       
@@ -285,20 +307,24 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                         {messages.map((message) => (                          
                           <div
                             key={message.id}
-                            className={`mb-4 flex ${
-                              message.sender_id === authUser?.unique_id ? "justify-end" : "justify-start"
-                            }`}
+                            className={` group mb-4 flex items-center ${
+                                message.sender_id === authUser?.unique_id ? "justify-end" : "justify-start"
+                              }
+                            `}
                           >
                             {
                               isOnlyEmoji(message.message) ? (
-                                <div >
+                                <div className="" >
+                                  {
+                                    message.sender_id !== authUser?.unique_id && currentChat.is_group ? (
+                                      <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">~ {message.sender?.first_name}</p>
+                                    ):null
+                                  }
                                   <p className="text-4xl">{message.message}</p>
-                                  <p className="text-xs mt-1 opacity-70 text-right">
-                                    {moment.utc(message.created_at).local().format('hh:mm A')}
-                                  </p>
+                                  
                                 </div>
                               ) : (
-
+                                
                                 <div
                                   className={`rounded-lg p-3 max-w-[70%] ${
                                     message.sender_id === authUser?.unique_id
@@ -306,13 +332,19 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                       : "bg-muted"
                                   }`}
                                 >
+                                  {
+                                    message.sender_id !== authUser?.unique_id && currentChat.is_group ? (
+                                      <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">~ {message.sender?.first_name}</p>
+                                    ):null
+                                  }
                                   <p className="text-sm">{message.message}</p>
-                                  <p className="text-xs mt-1 opacity-70 text-right">
-                                    {moment.utc(message.created_at).local().format('hh:mm A')}
-                                  </p>
+                                  
                                 </div>
                               )
                             }
+                            <p className="text-xs ml-2 text-right hidden group-hover:block">
+                              {moment.utc(message.created_at).local().format('hh:mm A')}
+                            </p>
                           </div>
                         ))}
                         <div ref={messagesEndRef} />
@@ -347,8 +379,10 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       </PopoverContent>
                     </Popover>
                     <Button type="submit" size="icon">
-                      <Send className="h-4 w-4" />
-                      <span className="sr-only">Send message</span>
+                      {
+                        newMessageLoading ? <Loader/> : (
+                        <Send className="h-4 w-4" />
+                      )}
                     </Button>
                   </form>
                 </CardFooter>
