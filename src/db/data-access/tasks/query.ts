@@ -45,15 +45,22 @@ export async function GetTasks(filters?: taskQueryFilters) {
     if(filters){
   
       if(filters.project_id){
-        whereClauses.push(and(
+        whereClauses.push(
           eq(taskTable.project_id, filters.project_id),
+        )
+      }
+
+
+      if(filters.searchedItem){
+        whereClauses.push(
           or(
             like(taskTable.task_title, `%${filters.searchedItem}%`),
             like(taskTable.description, `%${filters.searchedItem}%`),
             like(taskTable.task_num, `%${filters.searchedItem}%`)
           )
-        ))
+        )
       }
+      
     }
   
     const tasks = await db.query.taskTable.findMany({

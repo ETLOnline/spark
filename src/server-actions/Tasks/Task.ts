@@ -16,7 +16,7 @@ export const CreateTaskAction = CreateServerAction(
       const project = await getProjectById(taskData.project_id)
       const titleInitials = getInitials(project.project_name)
       
-      const task_num = `${titleInitials} - ${taskCount}`
+      const task_num = `${titleInitials}-${taskCount}`
 
       const task = await CreateTask({...taskData, task_num: task_num})
       return { success: true, data: task }
