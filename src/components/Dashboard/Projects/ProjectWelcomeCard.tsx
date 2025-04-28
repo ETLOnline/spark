@@ -1,27 +1,10 @@
 import React, { SetStateAction } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card'
-import CreateNewProposal from './CreateNewProposal';
-
-
-interface Props {
-  newProposal: {
-    title: string;
-    description: string;
-    category: string;
-  }
-  setNewProposal: (value: SetStateAction<{
-    title: string;
-    description: string;
-    category: string;
-  }>) => void
-  categories: string[]
-  handleCreateProposal: () => void
-
-}
+import CreateNewProject from './CreateNewProject'
 
 
 
-function WelcomeCard({ newProposal, setNewProposal, categories, handleCreateProposal }: Props) {
+function WelcomeCard() {
   return (
     <Card className=" p-0 pt-4" >
 
@@ -36,7 +19,7 @@ function WelcomeCard({ newProposal, setNewProposal, categories, handleCreateProp
               contribute to existing ones.
             </p>
           </div>
-          <CreateNewProposal newProposal={newProposal} setNewProposal={setNewProposal} categories={categories} handleCreateProposal={handleCreateProposal} />
+          <CreateNewProject />
         </div>
       </CardContent>
     </Card>

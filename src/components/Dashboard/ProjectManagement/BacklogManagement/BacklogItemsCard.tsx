@@ -1,16 +1,23 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar'
-import { Badge } from '@/src/components/ui/badge'
-import { Button } from '@/src/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card'
 import { Checkbox } from '@/src/components/ui/checkbox'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/src/components/ui/dropdown-menu'
-import { MoreHorizontal } from 'lucide-react'
-import React, { useState } from 'react'
-import BacklogItemList from './BacklogItemList'
+import React, { useEffect, useState } from 'react'
+import BacklogItems from './BacklogItems'
+import { useAtom } from 'jotai'
+import { projectStore } from '@/src/store/project/projectStore'
+import { useServerAction } from '@/src/hooks/useServerAction'
+import { GetTasksAction } from '@/src/server-actions/Tasks/Task'
+import { useParams, useSearchParams } from 'next/navigation'
+import Loader from '@/src/components/common/Loader/Loader'
+import { LoaderSizes } from '@/src/components/common/types/loader-types'
+import { PaginationType } from '@/src/components/common/types/pagination.type'
+import PaginationComponent from '@/src/components/common/Pagination'
 
 
 interface Props {
   backlogItems: BacklogItem[]
+  searchedItem: string
+  orderList: string
+  limit: number
 }
 
 
@@ -30,9 +37,28 @@ interface BacklogItem {
 }
 
 
-function BacklogItemsCard({ backlogItems }: Props) {
+function BacklogItemsCard({ backlogItems, searchedItem, orderList, limit }: Props) {
   const [selectedItems, setSelectedItems] = useState<string[]>([])
-  const [searchQuery, setSearchQuery] = useState("")
+  const [tasks, setTasks] = useAtom(projectStore.tasks)
+  const [Pagination, setPagination] = useState<PaginationType>()
+  const [tasksLoading, tasksData, tasksError, GetTasks] = useServerAction(GetTasksAction)
+
+  const projectId = useParams().id as string
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const fatchTasks = async () => {
+      const page = parseInt(searchParams.get('page') || '1', 10)
+      const res = await GetTasks({ project_id: projectId, page: page ? page : 1, limit: limit, searchedItem, orderList })
+      if (res?.success && res.data) {
+        const tasks = res?.data
+        setTasks(tasks?.tasks)
+        setPagination(tasks.pagination)
+      }
+    }
+    fatchTasks()
+  }, [projectId, searchParams, searchedItem, orderList, limit])
+
 
 
   const handleSelectAll = () => {
@@ -43,13 +69,6 @@ function BacklogItemsCard({ backlogItems }: Props) {
     }
   }
 
-  const filteredItems = backlogItems.filter(
-    (item) =>
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.labels.some((label) => label.toLowerCase().includes(searchQuery.toLowerCase())),
-  )
-
   return (
     <>
       <Card>
@@ -57,32 +76,54 @@ function BacklogItemsCard({ backlogItems }: Props) {
           <CardTitle>Backlog Items</CardTitle>
           <CardDescription>Manage your project backlog items</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <div className="grid grid-cols-12 gap-2 p-4 bg-muted/50 text-sm font-medium">
-              <div className="col-span-1">
-                <Checkbox
-                  checked={selectedItems.length === backlogItems.length && backlogItems.length > 0}
-                  onCheckedChange={handleSelectAll}
-                />
+        <div className='w-full overflow-x-auto'>
+          <CardContent>
+            <div className="rounded-md border">
+              <div className="grid grid-cols-12 gap-2 p-4 bg-muted/50 text-sm font-medium">
+                <div className="col-span-1">
+                  <Checkbox
+                    checked={selectedItems.length === backlogItems.length && backlogItems.length > 0}
+                    onCheckedChange={handleSelectAll}
+                  />
+                </div>
+                <div className="col-span-1">ID</div>
+                <div className="col-span-3">Title</div>
+                <div className="col-span-2">Type</div>
+                <div className="col-span-2">Priority</div>
+                <div className="col-span-1">Points</div>
+                <div className="col-span-1">Assignee</div>
+                <div className="col-span-1"></div>
               </div>
-              <div className="col-span-1">ID</div>
-              <div className="col-span-3 sm:col-span-4">Title</div>
-              <div className="col-span-2 hidden md:block">Type</div>
-              <div className="col-span-2 hidden sm:block">Priority</div>
-              <div className="col-span-1 hidden lg:block">Points</div>
-              <div className="col-span-2 sm:col-span-1">Assignee</div>
-              <div className="col-span-1"></div>
+              {
+                tasksLoading ? (
+                  <div className="flex justify-center h-full w-full my-4">
+                    <Loader size={LoaderSizes.lg} />
+                  </div>
+                ) : (
+                  tasks.length === 0 ? (
+                    <div className="p-4 text-center text-muted-foreground my-4">No backlog items found</div>
+                  ) : (
+                    <div className='pb-2'>
+                      {tasks && tasks.map((task) => (
+                        <BacklogItems
+                          key={task.id}
+                          task={task}
+                          selectedItems={selectedItems}
+                          setSelectedItems={setSelectedItems}
+                        />
+                      ))}
+                      {
+                        Pagination &&
+                        <PaginationComponent pagination={Pagination} />
+                      }
+
+                    </div>
+                  )
+                )
+              }
             </div>
-            {filteredItems.length === 0 ? (
-              <div className="p-4 text-center text-muted-foreground">No backlog items found</div>
-            ) : (
-              filteredItems.map((item) => (
-                <BacklogItemList key={item.id} item={item} selectedItems={selectedItems} setSelectedItems={setSelectedItems} />
-              ))
-            )}
-          </div>
-        </CardContent>
+          </CardContent>
+        </div>
       </Card>
     </>
   )

@@ -6,6 +6,8 @@ const spaces = atom<SelectSpace[]>([])
 const activeCategory = atom<string>("All")
 const spaceFormModelVisibility = atom<boolean>(false)
 const selectedSpace = atom<SelectSpace | null>(null)
+const selectedSpaceId = atom<string>("")
+
 const dir = atom<DirItem[]>([])
 const currDirPath = atom<string>("/")
 const layoutStatsVisibility = atom<boolean>(true)
@@ -19,5 +21,6 @@ export const spaceStore = {
   dir,
   currDirPath,
   layoutStatsVisibility,
-  selectedChannelSpaces
+  selectedChannelSpaces,
+  selectedSpaceId
 }

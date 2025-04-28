@@ -865,3 +865,42 @@ export const ChannelUsersRelations = relations(ChannelUsersTable, ({ one }) => (
     relationName: "channelUserToUser",
   }),
 }))
+
+
+export const projectTable = sqliteTable("project", {
+  id: text("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+    project_name: text().notNull(),
+    project_slug: text().notNull(),
+    description: text(),
+    project_startDate: text().notNull(),
+    project_targetDate: text().notNull(),
+    channel_id: text().notNull(),
+    space_id: text().notNull(),
+    created_by: text().notNull(),
+    project_type: text(),
+    ...timestamps
+})
+
+export type InsertProject = typeof projectTable.$inferInsert
+export type SelectProject = typeof projectTable.$inferSelect
+
+
+export const taskTable = sqliteTable("task", {
+  id: text("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+    task_num: text(),
+    task_title: text().notNull(),
+    description: text().notNull(),
+    task_type: text().notNull(),
+    task_priority: text().notNull(),
+    story_points: text().notNull(),
+    project_id: text().notNull(),
+    created_by: text().notNull(),
+    ...timestamps
+})
+
+export type InsertTask = typeof taskTable.$inferInsert
+export type SelectTask = typeof taskTable.$inferSelect
