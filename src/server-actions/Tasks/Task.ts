@@ -1,9 +1,10 @@
 "use server"
-import { CreateTask, DeleteTask, GetTaskCount, GetTasks, UpdateTask} from "@/src/db/data-access/tasks/query";
+import { CreateTask, DeleteTask, GetTaskCount, GetTasks, taskQueryFilters, UpdateTask} from "@/src/db/data-access/tasks/query";
 import { CreateServerAction } from "..";
 import { InsertTask, SelectTask } from "@/src/db/schema";
 import { getProjectById } from "@/src/db/data-access/project-management/query";
 import { getInitials } from "@/src/utils/helpers";
+import { PaginationType } from "@/src/components/common/types/pagination.type";
 
 export const CreateTaskAction = CreateServerAction(
   true,
@@ -15,7 +16,7 @@ export const CreateTaskAction = CreateServerAction(
       const project = await getProjectById(taskData.project_id)
       const titleInitials = getInitials(project.project_name)
       
-      const task_num = `${titleInitials} - ${taskCount}`
+      const task_num = `${titleInitials}-${taskCount}`
 
       const task = await CreateTask({...taskData, task_num: task_num})
       return { success: true, data: task }
@@ -27,28 +28,29 @@ export const CreateTaskAction = CreateServerAction(
 )
 
 
-export const GetTaskAction = CreateServerAction(
+export interface GetTaskResponseType {
+  
+  tasks: SelectTask[]
+  pagination: PaginationType
+}
+
+export const GetTasksAction = CreateServerAction(
   true,
-  async (projectId: string) => {
+  async (filters?: taskQueryFilters) => {
     try{
-      const tasks = await GetTasks(projectId)
-      return {success: true, data: tasks}
+      let tasks: GetTaskResponseType 
+      
+      tasks =  await GetTasks({...filters})
+
+      return {success:true, data: tasks}
+
     }catch(error){
       return {error: error}
     }
+
   }
 )
-// export const getTaskCountAction = CreateServerAction(
-//   true,
-//   async() => {
-//     try{
-//       const taskCount = await TasksCount()
-//       return {success: true, data: taskCount}
-//     }catch(error){
-//       return{error: error}
-//     }
-//   }
-// )
+
 
 export const UpdateTaskAction = CreateServerAction(
   true,

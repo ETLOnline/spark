@@ -99,8 +99,15 @@ export function BacklogManagement() {
   const [backlogItems, setBacklogItems] = useState<BacklogItem[]>(sampleBacklogItems)
   const setIsCreateItemOpen = useSetAtom(projectStore.isCreateItemOpen)
   const [searchQuery, setSearchQuery] = useState("")
+  const [searchedItem, setSearchedItem] = useState("")
+  const [orderList, setOrderList] = useState('asc')
+  const [limit, setLimit] = useState(10)
 
-
+  function handleSearch() {
+    if (searchQuery) {
+      setSearchedItem(searchQuery)
+    }
+  }
 
 
   return (
@@ -115,25 +122,48 @@ export function BacklogManagement() {
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-        <div className="relative w-full sm:w-64">
+        <div className="relative w-full sm:w-64 flex">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search backlog..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8"
+            className="pl-8 rounded-r-none"
           />
+          <Button className="rounded-l-none"
+            variant={'secondary'}
+            onClick={handleSearch} >
+            <Search />
+          </Button>
         </div>
         <div className="flex items-center space-x-2">
           {/* <Button variant="outline" size="sm">
             <Filter className="mr-2 h-4 w-4" />
             Filter
           </Button> */}
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm"
+            onClick={() =>
+              setOrderList(orderList === 'asc' ? 'desc' : 'asc')
+            }>
             <ArrowUpDown className="mr-2 h-4 w-4" />
             Sort
           </Button>
-          <Select defaultValue="planning">
+
+
+          <Select value={String(limit)} onValueChange={(value) => setLimit(Number(value))} >
+            <SelectTrigger className="w-20">
+              <SelectValue placeholder="Limit" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+              <SelectItem value="30">30</SelectItem>
+            </SelectContent>
+          </Select>
+
+
+
+          {/* <Select defaultValue="planning">
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select view" />
             </SelectTrigger>
@@ -142,11 +172,11 @@ export function BacklogManagement() {
               <SelectItem value="sprint">Sprint Planning</SelectItem>
               <SelectItem value="refinement">Refinement</SelectItem>
             </SelectContent>
-          </Select>
+          </Select> */}
         </div>
       </div>
 
-      <BacklogItemsCard backlogItems={backlogItems} />
+      <BacklogItemsCard limit={limit} orderList={orderList} searchedItem={searchedItem} backlogItems={backlogItems} />
 
     </div>
   )

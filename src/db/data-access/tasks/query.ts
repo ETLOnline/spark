@@ -1,6 +1,14 @@
-import { count, eq } from "drizzle-orm"
+import { and, count, eq, like, or, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
 import { InsertTask, SelectTask, taskTable } from "../../schema"
+
+export type taskQueryFilters = {
+  page?: number,
+  limit?: number,
+  project_id?: string,
+  searchedItem?: string
+  orderList?: string
+}
 
 export async function CreateTask(taskData: InsertTask){
   try{
@@ -23,25 +31,69 @@ export async function GetTaskCount(projectId: string) {
   }
 }
 
-export async function GetTasks(projectId: string){
+
+export async function GetTasks(filters?: taskQueryFilters) {
   try{
-    const tasks = await db.select().from(taskTable).where(
-      eq(taskTable.project_id, projectId)
+
+    const page =  filters?.page
+    const limit =  filters?.limit
+    const offset = page && limit ? (page - 1) * limit : 0
+  
+    const whereClauses:(SQLWrapper | undefined )[]= []
+  
+  
+    if(filters){
+  
+      if(filters.project_id){
+        whereClauses.push(
+          eq(taskTable.project_id, filters.project_id),
+        )
+      }
+
+
+      if(filters.searchedItem){
+        whereClauses.push(
+          or(
+            like(taskTable.task_title, `%${filters.searchedItem}%`),
+            like(taskTable.description, `%${filters.searchedItem}%`),
+            like(taskTable.task_num, `%${filters.searchedItem}%`)
+          )
+        )
+      }
+      
+    }
+  
+    const tasks = await db.query.taskTable.findMany({
+      limit: limit,
+      offset: offset,
+      where: whereClauses.length ? and(...whereClauses) : undefined,
+      orderBy: (taskTable, {asc, desc}) => [
+        filters?.orderList === 'desc' 
+        ? desc(taskTable.created_at)
+        : asc(taskTable.created_at)
+      ]
+    })
+  
+    const totalCount = await db.$count(
+      taskTable,
+      whereClauses.length ? and(...whereClauses) : undefined
     )
-    return tasks
+  
+    return{
+      tasks, 
+      pagination: {
+        total: Number(totalCount),
+        page: page || 1,
+        limit: limit || 0,
+        totalPages: limit && limit !== 0 ?  Math.ceil(Number(totalCount) / limit) : 1 
+      }
+    }
   }catch(e:any){
     throw new Error(e.message)
   }
 }
 
-// export async function TasksCount() {
-//   try{
-//     const taskCount = db.select({count: count()}).from(taskTable)
-//     return taskCount
-//   }catch(e:any){
-//     throw new Error(e.message)
-//   }
-// }
+
 
 export async function UpdateTask(taskId: string, updatedData: SelectTask){
   try{

@@ -135,12 +135,6 @@ function AddBabklogItem() {
 
   return (
     <Dialog open={isCreateItemOpen} onOpenChange={setIsCreateItemOpen}>
-      {/* <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Item
-        </Button>
-      </DialogTrigger> */}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{editTask === true ? "Edit Backlog Item" : "Create Backlog Item"}</DialogTitle>
