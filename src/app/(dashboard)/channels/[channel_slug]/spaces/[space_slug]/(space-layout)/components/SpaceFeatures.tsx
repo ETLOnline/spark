@@ -69,7 +69,7 @@ function SpaceFeatures({ features, space }: Props) {
   if (pageType) {
     return <>{renderFeatureModule(pageType)}</>
   }
-  console.log(space.id, 'space')
+
   return (
     <div>
 
@@ -77,10 +77,16 @@ function SpaceFeatures({ features, space }: Props) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {features.length > 1
           ? features.map(({ feature }) => {
+            let featureUrl;
+            if (feature?.feature_slug === "project-management") {
+              featureUrl = `/project?channel=${space.channel?.channel_slug}&space=${space.space_slug}`
+            } else {
+              featureUrl = `./${space.space_slug}?page-type=${feature?.feature_slug}`
+            }
             return (
               <Link
                 key={feature?.id}
-                href={`./${space.space_slug}?page-type=${feature?.feature_slug}`}
+                href={featureUrl}
               >
                 <Card
                   key={feature?.id}

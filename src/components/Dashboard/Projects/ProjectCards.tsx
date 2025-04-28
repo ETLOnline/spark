@@ -16,10 +16,9 @@ interface Props {
 }
 
 function ProjectCards({ project }: Props) {
-  const setSelectedProject = useSetAtom(projectStore.selectedProject)
   return (
     <Card key={project.id} className="mb-4">
-      <CardHeader>
+      <CardHeader >
         <div className="flex justify-between items-start">
           <div>
             <CardTitle>{project.project_name}</CardTitle>
@@ -32,14 +31,13 @@ function ProjectCards({ project }: Props) {
                 : project.project_type === "draft"
                   ? "secondary"
                   : "outline"
-            }
-          >
+            }>
             {project.project_type}
           </Badge>
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground mb-4">
+        <p className="text-sm text-muted-foreground">
           {project.description}
         </p>
         {/* <div className="flex items-center space-x-4 text-sm">

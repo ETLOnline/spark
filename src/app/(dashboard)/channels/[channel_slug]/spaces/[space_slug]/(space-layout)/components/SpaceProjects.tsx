@@ -14,18 +14,18 @@ const SpaceProjects = () => {
 
   const spaceSlug = params.space_slug as string
   const channelSlug = params.channel_slug as string
-  
-  useLayoutEffect(()=>{
-    setLayoutStatsVisibility(false)
-  },[])
 
-  useEffect(()=>{
-    if(spaceSlug && channelSlug){
-      setTimeout(()=>{
+  useLayoutEffect(() => {
+    setLayoutStatsVisibility(false)
+  }, [])
+
+  useEffect(() => {
+    if (spaceSlug && channelSlug) {
+      setTimeout(() => {
         router.push(`/project?channel=${channelSlug}&space=${spaceSlug}`)
-      },1000)
+      }, 1000)
     }
-  },[spaceSlug, channelSlug])
+  }, [spaceSlug, channelSlug])
 
   return (
     <NoDataCard
