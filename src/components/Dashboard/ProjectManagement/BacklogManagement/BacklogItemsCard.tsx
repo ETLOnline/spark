@@ -5,7 +5,7 @@ import BacklogItems from './BacklogItems'
 import { useAtom } from 'jotai'
 import { projectStore } from '@/src/store/project/projectStore'
 import { useServerAction } from '@/src/hooks/useServerAction'
-import { GetTaskAction } from '@/src/server-actions/Tasks/Task'
+import { GetTasksAction } from '@/src/server-actions/Tasks/Task'
 import { useParams, useSearchParams } from 'next/navigation'
 import Loader from '@/src/components/common/Loader/Loader'
 import { LoaderSizes } from '@/src/components/common/types/loader-types'
@@ -17,6 +17,7 @@ interface Props {
   backlogItems: BacklogItem[]
   searchedItem: string
   orderList: string
+  limit: number
 }
 
 
@@ -36,11 +37,11 @@ interface BacklogItem {
 }
 
 
-function BacklogItemsCard({ backlogItems, searchedItem, orderList }: Props) {
+function BacklogItemsCard({ backlogItems, searchedItem, orderList, limit }: Props) {
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [tasks, setTasks] = useAtom(projectStore.tasks)
   const [Pagination, setPagination] = useState<PaginationType>()
-  const [tasksLoading, tasksData, tasksError, GetTask] = useServerAction(GetTaskAction)
+  const [tasksLoading, tasksData, tasksError, GetTasks] = useServerAction(GetTasksAction)
 
   const projectId = useParams().id as string
   const searchParams = useSearchParams()
@@ -48,7 +49,7 @@ function BacklogItemsCard({ backlogItems, searchedItem, orderList }: Props) {
   useEffect(() => {
     const fatchTasks = async () => {
       const page = parseInt(searchParams.get('page') || '1', 10)
-      const res = await GetTask({ project_id: projectId, page: page ? page : 1, limit: 3, searchedItem, orderList })
+      const res = await GetTasks({ project_id: projectId, page: page ? page : 1, limit: limit, searchedItem, orderList })
       if (res?.success && res.data) {
         const tasks = res?.data
         setTasks(tasks?.tasks)
@@ -56,7 +57,7 @@ function BacklogItemsCard({ backlogItems, searchedItem, orderList }: Props) {
       }
     }
     fatchTasks()
-  }, [projectId, searchParams, searchedItem, orderList])
+  }, [projectId, searchParams, searchedItem, orderList, limit])
 
 
 

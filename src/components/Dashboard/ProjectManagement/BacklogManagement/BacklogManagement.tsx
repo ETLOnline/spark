@@ -101,6 +101,7 @@ export function BacklogManagement() {
   const [searchQuery, setSearchQuery] = useState("")
   const [searchedItem, setSearchedItem] = useState("")
   const [orderList, setOrderList] = useState('asc')
+  const [limit, setLimit] = useState(10)
 
   function handleSearch() {
     if (searchQuery) {
@@ -148,6 +149,20 @@ export function BacklogManagement() {
             Sort
           </Button>
 
+
+          <Select value={String(limit)} onValueChange={(value) => setLimit(Number(value))} >
+            <SelectTrigger className="w-20">
+              <SelectValue placeholder="Limit" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+              <SelectItem value="30">30</SelectItem>
+            </SelectContent>
+          </Select>
+
+
+
           {/* <Select defaultValue="planning">
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select view" />
@@ -161,7 +176,7 @@ export function BacklogManagement() {
         </div>
       </div>
 
-      <BacklogItemsCard orderList={orderList} searchedItem={searchedItem} backlogItems={backlogItems} />
+      <BacklogItemsCard limit={limit} orderList={orderList} searchedItem={searchedItem} backlogItems={backlogItems} />
 
     </div>
   )

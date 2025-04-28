@@ -34,7 +34,7 @@ export interface GetTaskResponseType {
   pagination: PaginationType
 }
 
-export const GetTaskAction = CreateServerAction(
+export const GetTasksAction = CreateServerAction(
   true,
   async (filters?: taskQueryFilters) => {
     try{
