@@ -160,28 +160,6 @@ export default function FileSharing() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <section className="file-upload">
-        <h1 className="text-3xl font-bold mb-8">File Sharing</h1>
-        <Card className="mb-8 flex flex-col items-center gap-4 pb-8">
-          <FileUpload
-            onChange={(files: File[]) => {
-              processFileForUpload({
-                target: { files: [...files] }
-              } as unknown as React.ChangeEvent<HTMLInputElement>)
-            }}
-            key={createdFile?.data?.id}
-          />
-          <Button
-            onClick={handleFileUpload}
-            disabled={!fileData}
-            loading={createFileLoading}
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            Upload
-          </Button>
-        </Card>
-      </section>
-      <Separator className="my-8" />
       <FileDir addItemToPath={addItemToPath} findItemByPath={findItemByPath} />
     </div>
   )
