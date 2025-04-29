@@ -5,74 +5,76 @@ import { MessageSquare, ThumbsUp, Users } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar'
 import { LinkAsButton } from '../../LinkAsButton/LinkAsButton'
 import { ProjectProposal } from '.'
+import { SelectProject } from '@/src/db/schema'
+import { useSetAtom } from 'jotai'
+import { projectStore } from '@/src/store/project/projectStore'
 
 
 
 interface Props {
-  proposal: ProjectProposal
+  project: SelectProject
 }
 
-function ProjectCards({ proposal }: Props) {
+function ProjectCards({ project }: Props) {
   return (
-    <Card key={proposal.id} className="mb-4">
-      <CardHeader>
+    <Card key={project.id} className="mb-4">
+      <CardHeader >
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle>{proposal.title}</CardTitle>
-            <CardDescription>{proposal.category}</CardDescription>
+            <CardTitle>{project.project_name}</CardTitle>
+            {/* <CardDescription>{project.category}</CardDescription> */}
           </div>
           <Badge
             variant={
-              proposal.status === "active"
+              project.project_type === "active"
                 ? "default"
-                : proposal.status === "completed"
+                : project.project_type === "draft"
                   ? "secondary"
                   : "outline"
-            }
-          >
-            {proposal.status}
+            }>
+            {project.project_type}
           </Badge>
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground mb-4">
-          {proposal.description}
+        <p className="text-sm text-muted-foreground">
+          {project.description}
         </p>
-        <div className="flex items-center space-x-4 text-sm">
+        {/* <div className="flex items-center space-x-4 text-sm">
           <div className="flex items-center">
             <ThumbsUp className="mr-1 h-4 w-4" />
-            {proposal.likes}
+            {project.likes}
           </div>
           <div className="flex items-center">
             <MessageSquare className="mr-1 h-4 w-4" />
-            {proposal.comments}
+            {project.comments}
           </div>
           <div className="flex items-center">
             <Users className="mr-1 h-4 w-4" />
-            {proposal.contributors}
+            {project.contributors}
           </div>
-        </div>
+        </div> */}
       </CardContent>
       <CardFooter className="flex justify-between">
         <div className="flex items-center space-x-2">
-          <Avatar className="h-8 w-8">
+          {/* <Avatar className="h-8 w-8">
             <AvatarImage
-              src={proposal.author.avatar}
-              alt={proposal.author.name}
+              src={project.author.avatar}
+              alt={project.author.name}
             />
             <AvatarFallback>
-              {proposal.author.name[0]}
+              {project.author.name[0]}
             </AvatarFallback>
           </Avatar>
           <span className="text-sm font-medium">
-            {proposal.author.name}
-          </span>
+            {project.author.name}
+          </span> */}
         </div>
         <div className='flex items-center space-x-2'>
-          <LinkAsButton href={`/project/${proposal.id}/board`}>
+          <LinkAsButton href={`/project/${project.id}/board`}>
             Launch Board
           </LinkAsButton>
-          <LinkAsButton href={`/project/${proposal.id}`}>
+          <LinkAsButton href={`/project/${project.id}`} >
             View Details
           </LinkAsButton>
         </div>
