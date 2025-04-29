@@ -313,10 +313,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
       <div className="flex justify-between items-center mb-4">
         <DirNav navigateToFolder={navigateToFolder} />
         <div className="flex gap-4">
-          {/* <Button>
-            <UploadCloud /> Upload File
-          </Button> */}
-          
+          {/* add new file drawer */}
           <Drawer open={isNewFileDrawerOpen} onOpenChange={setIsNewFileDrawerOpen}>
             <DrawerTrigger asChild>
               <Button variant="outline">
@@ -353,6 +350,8 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
               </div>
             </DrawerContent>
           </Drawer>
+
+          {/* add new folder dialog */}
           <Dialog
             open={isNewFolderDialogOpen}
             onOpenChange={setIsNewFolderDialogOpen}
