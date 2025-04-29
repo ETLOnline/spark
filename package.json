@@ -12,7 +12,7 @@
     "db:migrate": "npx drizzle-kit migrate"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.5.1",
+    "@clerk/nextjs": "^6.18.0",
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
     "@hookform/resolvers": "^4.0.0",

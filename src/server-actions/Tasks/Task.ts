@@ -38,9 +38,8 @@ export const GetTasksAction = CreateServerAction(
   true,
   async (filters?: taskQueryFilters) => {
     try{
-      let tasks: GetTaskResponseType 
       
-      tasks =  await GetTasks({...filters})
+      const tasks: GetTaskResponseType =  await GetTasks({...filters})
 
       return {success:true, data: tasks}
 
