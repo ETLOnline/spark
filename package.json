@@ -12,7 +12,7 @@
     "db:migrate": "npx drizzle-kit migrate"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.5.1",
+    "@clerk/nextjs": "^6.18.0",
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
     "@hookform/resolvers": "^4.0.0",
@@ -24,6 +24,7 @@
     "@radix-ui/react-collapsible": "^1.1.1",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-dropdown-menu": "^2.1.2",
+    "@radix-ui/react-hover-card": "^1.1.7",
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-popover": "^1.1.4",
     "@radix-ui/react-progress": "^1.1.0",

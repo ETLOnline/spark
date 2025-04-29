@@ -141,3 +141,7 @@ export const isEntityChannel = (entity: SelectChannel | SelectSpace): entity is 
 export const isEntitySpace = (entity: SelectChannel | SelectSpace): entity is SelectSpace => {
   return (entity as SelectSpace).space_name !== undefined
 }
+
+export const getInitials = (string: string) => {
+  return string.split(' ').map(word => word[0]?.toUpperCase()).join('');
+}

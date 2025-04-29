@@ -5,16 +5,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '../../../ui/avatar';
 import { Textarea } from '../../../ui/textarea';
 import { Button } from '../../../ui/button';
 import { ProjectDetails } from './ProjectDetailVeiw';
+import { SelectProject } from '@/src/db/schema';
 
 
 interface Props {
-  project: ProjectDetails
-  handleAddUpdate: () => void
-  newUpdate: string
-  setNewUpdate: (value: SetStateAction<string>) => void
+  selectedProject: SelectProject
 }
 
-function ProjectDescriptionDetail({ project, handleAddUpdate, newUpdate, setNewUpdate }: Props) {
+function ProjectDescriptionDetail({selectedProject}: Props) {
 
   return (
     <Tabs defaultValue="description">
@@ -28,7 +26,7 @@ function ProjectDescriptionDetail({ project, handleAddUpdate, newUpdate, setNewU
             <CardTitle>Project Description</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>{project.description}</p>
+            <p>{selectedProject.description}</p>
           </CardContent>
         </Card>
       </TabsContent>
@@ -38,8 +36,8 @@ function ProjectDescriptionDetail({ project, handleAddUpdate, newUpdate, setNewU
             <CardTitle>Project Updates</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {project.updates.map((update) => (
+            {/* <div className="space-y-4">
+              {selectedProject.updates.map((update) => (
                 <div key={update.id} className="flex space-x-4">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={update.author.avatar} alt={update.author.name} />
@@ -52,10 +50,10 @@ function ProjectDescriptionDetail({ project, handleAddUpdate, newUpdate, setNewU
                   </div>
                 </div>
               ))}
-            </div>
+            </div> */}
           </CardContent>
           <CardFooter>
-            <form onSubmit={(e) => { e.preventDefault(); handleAddUpdate(); }} className="w-full">
+            {/* <form onSubmit={(e) => { e.preventDefault(); handleAddUpdate(); }} className="w-full">
               <Textarea
                 placeholder="Add a project update..."
                 value={newUpdate}
@@ -63,7 +61,7 @@ function ProjectDescriptionDetail({ project, handleAddUpdate, newUpdate, setNewU
                 className="mb-2"
               />
               <Button type="submit">Post Update</Button>
-            </form>
+            </form> */}
           </CardFooter>
         </Card>
       </TabsContent>

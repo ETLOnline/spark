@@ -1,9 +1,11 @@
 import { ProjectScreen } from '@/src/components/Dashboard/Projects'
-import React from 'react'
+import React, { Suspense } from 'react'
 
 const ProjectManagement = () => {
   return (
-    <ProjectScreen />
+    <Suspense>
+      <ProjectScreen />
+    </Suspense>
   )
 }
 

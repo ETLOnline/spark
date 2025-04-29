@@ -1,98 +1,64 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/src/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
-import { BarChart3, Calendar, CheckCircle2, Clock, ListTodo, Settings, Users } from "lucide-react"
-import { Badge } from "@/src/components/ui/badge"
-import { Progress } from "@/src/components/ui/progress"
-import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import { SprintManagement } from "./SprintManagement"
-import { BacklogManagement } from "./BacklogManagement"
+import { Calendar, Settings, Users } from "lucide-react"
+import { SprintManagement } from "./SprintManagement/SprintManagement"
+import { BacklogManagement } from "./BacklogManagement/BacklogManagement"
 import { FileSharing } from "./FileSharing"
-import { ProjectSettings } from "./ProjectSettings"
+import { ProjectSettings } from "./ProjectSettings/ProjectSettings"
+import ProjectOverView from "./ProjectOverView/ProjectOverView"
+import { SelectProject } from "@/src/db/schema"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../ui/hover-card"
+import { useRouter, useSearchParams } from "next/navigation"
 
-interface ProjectStats {
-  totalTasks: number
-  completedTasks: number
-  inProgressTasks: number
-  backlogTasks: number
-  currentSprint: string
-  sprintProgress: number
-  teamMembers: number
-  daysLeft: number
+interface Props {
+  currProject: SelectProject
 }
 
-const projectStats: ProjectStats = {
-  totalTasks: 124,
-  completedTasks: 78,
-  inProgressTasks: 18,
-  backlogTasks: 28,
-  currentSprint: "Sprint 4",
-  sprintProgress: 65,
-  teamMembers: 8,
-  daysLeft: 6,
-}
 
-const recentActivity = [
-  {
-    id: "1",
-    user: "Alex Johnson",
-    avatar: "/avatars/01.png",
-    action: "completed task",
-    item: "Implement user authentication",
-    time: "2 hours ago",
-  },
-  {
-    id: "2",
-    user: "Sarah Miller",
-    avatar: "/avatars/02.png",
-    action: "commented on",
-    item: "API integration issues",
-    time: "4 hours ago",
-  },
-  {
-    id: "3",
-    user: "David Chen",
-    avatar: "/avatars/03.png",
-    action: "uploaded file",
-    item: "UI mockups.fig",
-    time: "Yesterday",
-  },
-  {
-    id: "4",
-    user: "Emma Wilson",
-    avatar: "/avatars/04.png",
-    action: "moved task",
-    item: "Database optimization",
-    time: "Yesterday",
-  },
-  {
-    id: "5",
-    user: "James Taylor",
-    avatar: "/avatars/05.png",
-    action: "created task",
-    item: "Fix navigation bug",
-    time: "2 days ago",
-  },
-]
+export function ProjectDashboard({ currProject }: Props) {
 
-export function ProjectDashboard() {
-  const [activeTab, setActiveTab] = useState("overview")
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const UrlTab = searchParams.get("tab")
+  const [activeTab, setActiveTab] = useState(UrlTab || "overview")
+
+  useEffect(() => {
+    if (UrlTab !== activeTab) {
+      router.push(`./board?tab=${activeTab}`)
+    }
+  }, [activeTab, UrlTab])
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="grid grid-cols-1  p-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold">E-Commerce Platform</h1>
-          <p className="text-muted-foreground">Web application development project</p>
+          <h1 className="text-2xl font-bold">{currProject.project_name}</h1>
+          <p className="text-muted-foreground">{currProject.description}</p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            <Calendar className="mr-2 h-4 w-4" />
-            Timeline
-          </Button>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Calendar className="mr-2 h-4 w-4" />
+                Timeline
+              </Button>
+            </HoverCardTrigger>
+            <HoverCardContent>
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-500">Start Date</span>
+                  <span className="text-sm font-semibold">2023-11-15</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-500">Target Date</span>
+                  <span className="text-sm font-semibold text-primary">2024-03-20</span>
+                </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
           <Button variant="outline" size="sm">
             <Users className="mr-2 h-4 w-4" />
             Team
@@ -103,135 +69,17 @@ export function ProjectDashboard() {
           </Button>
         </div>
       </div>
-
       <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-2 md:grid-cols-5 gap-2">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="sprints">Sprints</TabsTrigger>
-          <TabsTrigger value="backlog">Backlog</TabsTrigger>
-          <TabsTrigger value="files">Files</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+        <TabsList className="flex justify-between gap-2">
+          <TabsTrigger className="w-full" value="overview">Overview</TabsTrigger>
+          <TabsTrigger className="w-full" value="sprints">Sprints</TabsTrigger>
+          <TabsTrigger className="w-full" value="backlog">Backlog</TabsTrigger>
+          <TabsTrigger className="w-full" value="files">Files</TabsTrigger>
+          <TabsTrigger className="w-full" value="settings">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
-                <ListTodo className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{projectStats.totalTasks}</div>
-                <div className="flex items-center space-x-2 mt-2">
-                  <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100">
-                    <CheckCircle2 className="mr-1 h-3 w-3" />
-                    {projectStats.completedTasks} Completed
-                  </Badge>
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-                    <Clock className="mr-1 h-3 w-3" />
-                    {projectStats.inProgressTasks} In Progress
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Current Sprint</CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{projectStats.currentSprint}</div>
-                <div className="mt-2">
-                  <div className="flex justify-between mb-1 text-xs">
-                    <span>{projectStats.sprintProgress}% Complete</span>
-                    <span>{projectStats.daysLeft} days left</span>
-                  </div>
-                  <Progress value={projectStats.sprintProgress} className="h-2" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Backlog</CardTitle>
-                <ListTodo className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{projectStats.backlogTasks}</div>
-                <p className="text-xs text-muted-foreground mt-2">Tasks waiting to be scheduled</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Team</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{projectStats.teamMembers}</div>
-                <div className="flex -space-x-2 mt-2">
-                  <Avatar className="h-8 w-8 border-2 border-background">
-                    <AvatarImage src="/avatars/01.png" />
-                    <AvatarFallback>AJ</AvatarFallback>
-                  </Avatar>
-                  <Avatar className="h-8 w-8 border-2 border-background">
-                    <AvatarImage src="/avatars/02.png" />
-                    <AvatarFallback>SM</AvatarFallback>
-                  </Avatar>
-                  <Avatar className="h-8 w-8 border-2 border-background">
-                    <AvatarImage src="/avatars/03.png" />
-                    <AvatarFallback>DC</AvatarFallback>
-                  </Avatar>
-                  <Avatar className="h-8 w-8 border-2 border-background">
-                    <AvatarImage src="/avatars/04.png" />
-                    <AvatarFallback>EW</AvatarFallback>
-                  </Avatar>
-                  <Avatar className="h-8 w-8 border-2 border-background">
-                    <AvatarFallback>+{projectStats.teamMembers - 4}</AvatarFallback>
-                  </Avatar>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="md:col-span-2">
-              <CardHeader>
-                <CardTitle>Sprint Burndown</CardTitle>
-                <CardDescription>Task completion over time</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[200px] flex items-center justify-center bg-muted/20 rounded-md">
-                  <BarChart3 className="h-16 w-16 text-muted" />
-                  <span className="ml-2 text-muted">Sprint burndown chart will appear here</span>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Latest updates from the team</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentActivity.map((activity) => (
-                    <div key={activity.id} className="flex items-start space-x-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={activity.avatar} />
-                        <AvatarFallback>{activity.user[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="space-y-1">
-                        <p className="text-sm">
-                          <span className="font-medium">{activity.user}</span>{" "}
-                          <span className="text-muted-foreground">{activity.action}</span>{" "}
-                          <span className="font-medium">{activity.item}</span>
-                        </p>
-                        <p className="text-xs text-muted-foreground">{activity.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <ProjectOverView />
         </TabsContent>
 
         <TabsContent value="sprints">

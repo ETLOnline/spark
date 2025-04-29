@@ -1,5 +1,5 @@
 'use client'
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
 import { ScrollArea } from "../../ui/scroll-area"
 import WelcomeCard from "./ProjectWelcomeCard"
@@ -7,6 +7,18 @@ import ProjectCards from "./ProjectCards"
 import ProjectIncubatorStats from "./ProjectIncubatorStats"
 import ProjectTopCatagories from "./ProjectTopCatagories"
 import Contribute from "./ProjectFAQ"
+import { SelectProject, SelectSpace } from "@/src/db/schema"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { GetProjectsAction } from "@/src/server-actions/ProjectManagement/projectManagement"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
+import { projectStore } from "@/src/store/project/projectStore"
+import { spaceStore } from "@/src/store/space/spaceStore"
+import { get } from "http"
+import Loader from "../../common/Loader/Loader"
+import { LoaderSizes } from "../../common/types/loader-types"
+import { useParams, useSearchParams } from "next/navigation"
+import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
+import { space } from "postcss/lib/list"
 
 
 export interface ProjectProposal {
@@ -72,90 +84,122 @@ const categories = [
 ]
 
 export function ProjectScreen() {
-  const [proposals, setProposals] = useState<ProjectProposal[]>(sampleProposals)
-  const [newProposal, setNewProposal] = useState({
-    title: "",
-    description: "",
-    category: "",
-  })
-  const [detailedViewOpen, setDetailedViewOpen] = useState(false)
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
 
-  const handleCreateProposal = () => {
-    if (newProposal.title && newProposal.description && newProposal.category) {
-      const createdProposal: ProjectProposal = {
-        id: (proposals.length + 1).toString(),
-        ...newProposal,
-        author: { name: "Current User", avatar: "/avatars/04.png" },
-        status: "draft",
-        likes: 0,
-        comments: 0,
-        contributors: 1,
+  const [projects, setProjects] = useAtom(projectStore.projects)
+  const [currSpace, setCurrSpace] = useState<SelectSpace>()
+
+  const [getProjectLoading, getProjectData, getProjectError, getProjects] =
+    useServerAction(GetProjectsAction)
+
+  const [getSpaceLoading, getSpaceData, getSpaceError, getSpaceBySlug] =
+    useServerAction(GetSpaceBySlugAction)
+
+
+  const searchParam = useSearchParams()
+  const spaceSlug = searchParam.get("space")
+  const channel_slug = searchParam.get("channel")
+
+
+  useEffect(() => {
+    const getSpace = async () => {
+      if (spaceSlug && channel_slug) {
+        const space = await getSpaceBySlug(spaceSlug, channel_slug)
+        if (space?.success && space.data) {
+          setCurrSpace(space.data)
+        }
       }
-      setProposals([createdProposal, ...proposals])
-      setNewProposal({ title: "", description: "", category: "" })
     }
-  }
+    getSpace()
+  }, [spaceSlug, channel_slug])
+
+
+  useEffect(() => {
+    if (currSpace) {
+      getProjects(currSpace.id)
+    }
+  }, [currSpace])
+
+
+  useEffect(() => {
+    if (getProjectData !== null) {
+      setProjects(getProjectData.data ?? [])
+    }
+  }, [getProjectData])
+
+
 
 
   return (
     <div className="flex flex-col space-y-4">
-      <WelcomeCard newProposal={newProposal} setNewProposal={setNewProposal} categories={categories} handleCreateProposal={handleCreateProposal} />
+      <WelcomeCard />
+      {
+        getProjectLoading ? (
+          <div className="flex items-center justify-center h-full w-full align-center">
+            <div className="w-full h-full flex justify-center align-center">
+              <Loader size={LoaderSizes.lg} />
 
-      <div className="flex-grow flex space-x-4">
-        <div className="w-full lg:w-3/4">
-          <Tabs defaultValue="all">
-            <TabsList className="w-full justify-around lg:w-auto">
-              <TabsTrigger value="all">All Projects</TabsTrigger>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="draft">Drafts</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
-            </TabsList>
-            <TabsContent value="all">
-              <ScrollArea>
-                {proposals.map((proposal) => (
-                  <ProjectCards key={proposal.id} proposal={proposal} />
-                ))}
-              </ScrollArea>
-            </TabsContent>
-            <TabsContent value="active">
-              <ScrollArea>
-                {proposals
-                  .filter((p) => p.status === "active")
-                  .map((proposal) => (
-                    <ProjectCards key={proposal.id} proposal={proposal} />
-                  ))}
-              </ScrollArea>
-            </TabsContent>
-            <TabsContent value="draft">
-              <ScrollArea>
-                {proposals
-                  .filter((p) => p.status === "draft")
-                  .map((proposal) => (
-                    <ProjectCards key={proposal.id} proposal={proposal} />
-                  ))}
-              </ScrollArea>
-            </TabsContent>
-            <TabsContent value="completed">
-              <ScrollArea>
-                {proposals
-                  .filter((p) => p.status === "completed")
-                  .map((proposal) => (
-                    <ProjectCards key={proposal.id} proposal={proposal} />
-                  ))}
-              </ScrollArea>
-            </TabsContent>
-          </Tabs>
-        </div>
+            </div>
+          </div>
+        ) : (
 
-        <div className="w-1/4 hidden lg:block space-y-4">
-          <ProjectIncubatorStats proposals={proposals} />
+          <div className="flex-grow flex space-x-4">
+            <div className="w-full lg:w-3/4">
+              <Tabs defaultValue="all">
+                <TabsList className="w-full justify-around lg:w-auto">
+                  <TabsTrigger value="all">All Projects</TabsTrigger>
+                  <TabsTrigger value="active">Active</TabsTrigger>
+                  <TabsTrigger value="draft">Drafts</TabsTrigger>
+                  <TabsTrigger value="completed">Completed</TabsTrigger>
+                </TabsList>
+                <TabsContent value="all">
+                  <ScrollArea>
+                    {projects.map((project) => (
+                      <ProjectCards key={project.id} project={project} />
+                    ))}
+                  </ScrollArea>
+                </TabsContent>
+                {/* <TabsContent value="active">
+                    <ScrollArea>
+                      {proposals
+                        .filter((p) => p.status === "active")
+                        .map((proposal) => (
+                          <ProjectCards key={proposal.id} proposal={proposal} />
+                        ))}
+                    </ScrollArea>
+                  </TabsContent>
+                  <TabsContent value="draft">
+                    <ScrollArea>
+                      {proposals
+                        .filter((p) => p.status === "draft")
+                        .map((proposal) => (
+                          <ProjectCards key={proposal.id} proposal={proposal} />
+                        ))}
+                    </ScrollArea>
+                  </TabsContent>
+                  <TabsContent value="completed">
+                    <ScrollArea>
+                      {proposals
+                        .filter((p) => p.status === "completed")
+                        .map((proposal) => (
+                          <ProjectCards key={proposal.id} proposal={proposal} />
+                        ))}
+                    </ScrollArea>
+                  </TabsContent> */}
+              </Tabs>
+            </div>
 
-          <ProjectTopCatagories categories={categories} />
+            <div className="w-1/4 hidden lg:block space-y-4">
+              {/* <ProjectIncubatorStats proposals={proposals} /> */}
 
-          <Contribute />
-        </div>
-      </div>
+              <ProjectTopCatagories categories={categories} />
+
+              <Contribute />
+            </div>
+          </div>
+        )
+      }
+
+
     </div>
   );
 }

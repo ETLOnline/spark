@@ -11,7 +11,7 @@ import SpacePostComponent from "./SpacePost"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
-import { EarthLock } from "lucide-react"
+import { EarthLock, TriangleAlert } from "lucide-react"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import FileSharing from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/FileSharing"
 import { useLayoutEffect } from "react"
@@ -19,6 +19,13 @@ import SpaceProjects from "./SpaceProjects"
 import { useSetAtom } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import SpaceChat from "./spaceChat"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/src/components/ui/tooltip"
+
 interface Props {
   features: SelectSpaceFeature[]
   space: SelectSpace
@@ -50,7 +57,7 @@ function SpaceFeatures({ features, space }: Props) {
       />
     }
 
-    switch(featureSlug) {
+    switch (featureSlug) {
       case "posts":
         return <SpacePostComponent />
       case "file-sharing":
@@ -73,17 +80,27 @@ function SpaceFeatures({ features, space }: Props) {
     return <>{renderFeatureModule(pageType)}</>
   }
 
+  function getFeatureUrl(feature_slug: string) {
+    if (feature_slug === "project-management") {
+      return `/project?channel=${space.channel?.channel_slug}&space=${space.space_slug}`
+    } else {
+      return `./${space.space_slug}?page-type=${feature_slug}`
+    }
+  }
+
   return (
     <div>
-      {/* Show only when there are more than 1 feature */}
+
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {features.length > 1
           ? features.map(({ feature }) => {
+
+            if (feature?.feature_status === 1) {
               return (
                 <Link
                   key={feature?.id}
-                  href={`./${space.space_slug}?page-type=${feature?.feature_slug}`}
+                  href={feature ? getFeatureUrl(feature.feature_slug) : "#"}
                 >
                   <Card
                     key={feature?.id}
@@ -109,15 +126,59 @@ function SpaceFeatures({ features, space }: Props) {
                   </Card>
                 </Link>
               )
-            })
+            } else if (feature?.feature_status === 0) {
+              return (
+                <Link href={"#"} key={feature?.id}>
+                  <Card
+                    key={feature?.id}
+                    className="h-full flex flex-row items-center py-2 px-4 sm:p-4 gap-4"
+                  >
+                    <DynamicIcon
+                      name={feature?.feature_icon as IconName}
+                      className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 "
+                    />
+                    <div className="flex flex-col overflow-hidden mt-2 sm:mt-0">
+                      <CardHeader className="p-0 pb-1">
+                        <div className="flex items-center justify-between">
+                          <CardTitle>{feature?.feature_name}</CardTitle>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <TriangleAlert className="h-4 w-4 text-yellow-400" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Feature not available at the moment, or might have been diabled by the admin</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-0 hidden sm:block">
+                        <p
+                          className="text-sm text-muted-foreground truncate "
+                          title={feature?.feature_description ?? undefined}
+                        >
+                          {feature?.feature_description}
+                        </p>
+                      </CardContent>
+                    </div>
+                  </Card>
+                </Link>
+
+              )
+
+            }
+
+
+          })
           : null}
       </div>
       {features.length === 1
         ? features.map((sf) => {
-            const feature = sf.feature
-            if (!feature) return null
-            return <>{renderFeatureModule(feature.feature_slug)}</>
-          })
+          const feature = sf.feature
+          if (!feature) return null
+          return <>{renderFeatureModule(feature.feature_slug)}</>
+        })
         : null}
     </div>
   )
