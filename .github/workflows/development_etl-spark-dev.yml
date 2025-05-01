@@ -32,7 +32,7 @@ jobs:
 
       - name: npm install, build, and test
         run: |
-          npm install --force
+          npm ci
           npm run build --if-present
           npm run test --if-present
       # ---- START ADDED VERIFICATION STEPS ----
@@ -94,4 +94,4 @@ jobs:
           app-name: 'etl-spark-dev'
           slot-name: 'Production'
           package: .
-          
+          remove-additional-files: true 
