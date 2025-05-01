@@ -5,6 +5,7 @@ import ProjectInformation from "./ProjectInformation"
 import TeamMembers from "./TeamMembers"
 import ProjectNotifications from "./ProjectNotifications"
 import Integrations from "./Integrations"
+import TaskStatus from "./TaskStatus"
 
 
 export function ProjectSettings() {
@@ -16,6 +17,7 @@ export function ProjectSettings() {
           <TabsTrigger value="team">Team</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
+          <TabsTrigger value="taskStatus">Task status</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">
@@ -32,6 +34,10 @@ export function ProjectSettings() {
 
         <TabsContent value="integrations">
           <Integrations />
+        </TabsContent>
+
+        <TabsContent value="taskStatus">
+          <TaskStatus />
         </TabsContent>
       </Tabs>
     </div>

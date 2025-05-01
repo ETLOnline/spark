@@ -1,13 +1,15 @@
 import React from 'react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../ui/card'
 import { Badge } from '../../ui/badge'
-import { MessageSquare, ThumbsUp, Users } from 'lucide-react'
+import { MessageSquare, Settings, ThumbsUp, Users } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar'
 import { LinkAsButton } from '../../LinkAsButton/LinkAsButton'
 import { ProjectProposal } from '.'
 import { SelectProject } from '@/src/db/schema'
 import { useSetAtom } from 'jotai'
 import { projectStore } from '@/src/store/project/projectStore'
+import { Button } from '../../ui/button'
+import Link from 'next/link'
 
 
 
@@ -20,20 +22,27 @@ function ProjectCards({ project }: Props) {
     <Card key={project.id} className="mb-4">
       <CardHeader >
         <div className="flex justify-between items-start">
-          <div>
+          <div className='flex flex-row items-center gap-2'>
             <CardTitle>{project.project_name}</CardTitle>
             {/* <CardDescription>{project.category}</CardDescription> */}
+            <Badge
+              variant={
+                project.project_type === "active"
+                  ? "default"
+                  : project.project_type === "draft"
+                    ? "secondary"
+                    : "outline"
+              }>
+              {project.project_type}
+            </Badge>
           </div>
-          <Badge
-            variant={
-              project.project_type === "active"
-                ? "default"
-                : project.project_type === "draft"
-                  ? "secondary"
-                  : "outline"
-            }>
-            {project.project_type}
-          </Badge>
+          <div>
+            <Link href={`project/${project.id}/settings/taskStatus`}>
+              <Button variant={"outline"} size={"icon"}>
+                <Settings />
+              </Button>
+            </Link>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -79,7 +88,7 @@ function ProjectCards({ project }: Props) {
           </LinkAsButton>
         </div>
       </CardFooter>
-    </Card>
+    </Card >
   )
 }
 

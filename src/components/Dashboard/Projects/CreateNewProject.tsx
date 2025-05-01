@@ -14,7 +14,7 @@ import { userStore } from '@/src/store/user/userStore'
 import { GetSpaceBySlugAction } from '@/src/server-actions/Space/Space'
 import { useServerAction } from '@/src/hooks/useServerAction'
 import { CreateProjectAction } from '@/src/server-actions/ProjectManagement/projectManagement'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from '@/src/hooks/use-toast'
 import { projectStore } from '@/src/store/project/projectStore'
 import moment from 'moment'
@@ -61,6 +61,7 @@ function CreateNewProject() {
   const AuthUser = useAtomValue(userStore.AuthUser)
 
   const searchParams = useSearchParams()
+  const router = useRouter()
 
   const channelSlug = searchParams.get("channel")
   const spaceSlug = searchParams.get("space")
@@ -107,6 +108,7 @@ function CreateNewProject() {
           title: "Project Successfully Created",
           duration: 3000,
         })
+        router.push(`project/${createdProject.data.id}/settings/taskStatus`)
       }
     } catch (error) {
       setIsOpen(false)

@@ -1,7 +1,7 @@
 "use server"
-import { CreateTask, DeleteTask, GetTaskCount, GetTasks, taskQueryFilters, UpdateTask} from "@/src/db/data-access/tasks/query";
+import { CreateTask, CreateTaskStatus, DeleteTask, DeleteTaskStatus, GetTaskCount, GetTasks, GetTaskSatatus, taskQueryFilters, UpdateTask, UpdateTaskStatus} from "@/src/db/data-access/tasks/query";
 import { CreateServerAction } from "..";
-import { InsertTask, SelectTask } from "@/src/db/schema";
+import { InsertTask, InsertTaskStatus, SelectTask } from "@/src/db/schema";
 import { getProjectById } from "@/src/db/data-access/project-management/query";
 import { getInitials } from "@/src/utils/helpers";
 import { PaginationType } from "@/src/components/common/types/pagination.type";
@@ -21,7 +21,6 @@ export const CreateTaskAction = CreateServerAction(
       const task = await CreateTask({...taskData, task_num: task_num})
       return { success: true, data: task }
     } catch (error) {
-      console.log(error)
       return { error:error }
     }
   }
@@ -70,6 +69,65 @@ export const DeleteTaskAction = CreateServerAction(
     try{
       await DeleteTask(task)
       return {success: true}
+    }catch(error){
+      return {error: error}
+    }
+  }
+)
+
+
+
+export const CreateTaskStatusAction = CreateServerAction(
+  true,
+  async (data: InsertTaskStatus) => {
+    try {
+      
+      const status_slug = data.name.toLowerCase().replace(/\s+/g, "-")
+
+      const taskStatus = await CreateTaskStatus({...data, status_slug: status_slug})
+
+      return { success: true, data: taskStatus}
+
+    } catch (error) {
+      return {error: error}
+    }
+  }
+)
+
+export const GetTaskSatatusAction = CreateServerAction(
+  true,
+  async (projectId: string) => {
+    try {
+      const taskStatus = await GetTaskSatatus(projectId)
+
+      return { success: true, data: taskStatus}
+
+    }catch (error) {
+      return {error: error}
+    }
+  }
+)
+
+
+export const UpdateTaskStatusAction = CreateServerAction(
+  true,
+  async (statusId: string, updatedData: InsertTaskStatus) => {
+    try{
+      const UpdatedTaskStatus = await UpdateTaskStatus(statusId, updatedData)
+
+      return { success: true, data: UpdatedTaskStatus}
+    }catch(error){
+      return {error: error}
+    }
+  }
+)
+
+export const DeleteTaskStatusAction = CreateServerAction(
+  true,
+  async (statusId: string) => {
+    try{
+      await DeleteTaskStatus(statusId)
+      return { success: true}
     }catch(error){
       return {error: error}
     }

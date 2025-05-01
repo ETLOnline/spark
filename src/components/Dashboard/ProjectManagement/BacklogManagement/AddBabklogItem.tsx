@@ -7,8 +7,9 @@ import { Textarea } from '@/src/components/ui/textarea'
 import { InsertTask, SelectTask } from '@/src/db/schema'
 import { toast } from '@/src/hooks/use-toast'
 import { useServerAction } from '@/src/hooks/useServerAction'
-import { CreateTaskAction, UpdateTaskAction } from '@/src/server-actions/Tasks/Task'
+import { CreateTaskAction, GetTaskSatatusAction, UpdateTaskAction } from '@/src/server-actions/Tasks/Task'
 import { projectStore } from '@/src/store/project/projectStore'
+import { taskStatusesStore } from '@/src/store/taskstatuses/StatusesStore'
 import { userStore } from '@/src/store/user/userStore'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useAtom, useAtomValue } from 'jotai'
@@ -22,7 +23,8 @@ const projectSchema = z.object({
   description: z.string().min(1, "Title required").max(100, "Title is too long"),
   task_type: z.string().min(1, "Title required"),
   task_priority: z.string().min(1, "Title required"),
-  story_points: z.string().optional()
+  story_points: z.string().optional(),
+  status_id: z.string().optional()
 })
 
 
@@ -32,6 +34,7 @@ function AddBabklogItem() {
   const [tasks, setTasks] = useAtom(projectStore.tasks)
   const [editTask, setEditTask] = useState(false)
   const [selectedTask, setSelectedTask] = useAtom(projectStore.selectedTask)
+  const [statuses, setStatuses] = useAtom(taskStatusesStore.statuses)
 
   const authUser = useAtomValue(userStore.AuthUser)
   const [createTaskLoading, createTaskData, createTaskError, CreateTask] = useServerAction(CreateTaskAction)
@@ -42,6 +45,18 @@ function AddBabklogItem() {
   })
 
   const projectId = useParams().id as string
+  const backlogStatus = statuses.find(s => s.name === "Backlog")
+
+
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      const status = await GetTaskSatatusAction(projectId)
+      if (status.success && status.data) {
+        setStatuses(status.data)
+      }
+    }
+    fetchStatuses()
+  }, [isCreateItemOpen])
 
 
   useEffect(() => {
@@ -55,12 +70,14 @@ function AddBabklogItem() {
 
   useEffect(() => {
     if (selectedTask) {
+      const status = statuses.find(s => s.id === selectedTask.status_id)
       setEditTask(true)
       form.setValue("task_title", selectedTask.task_title)
       form.setValue("description", selectedTask.description)
       form.setValue("task_type", selectedTask.task_type)
       form.setValue("task_priority", selectedTask.task_priority)
       form.setValue("story_points", selectedTask.story_points)
+      form.setValue("status", status?.name)
     } else {
       setEditTask(false)
     }
@@ -237,6 +254,33 @@ function AddBabklogItem() {
                     {...field}
                     className="col-span-3"
                   />
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="status_id" className="text-right">
+                Status
+              </Label>
+              <Controller
+                name="status_id"
+                defaultValue={backlogStatus?.id}
+                control={form.control}
+                render={({ field }) => (
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={backlogStatus?.id}>
+                    <SelectTrigger id="status_id" className="col-span-3">
+                      <SelectValue placeholder={backlogStatus?.name || "Select type"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statuses.map(s => (
+                        s.id && <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+
                 )}
               />
             </div>
