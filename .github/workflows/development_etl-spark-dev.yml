@@ -6,7 +6,7 @@ name: Build and deploy Node.js app to Azure Web App - etl-spark-dev
 on:
   push:
     branches:
-      - development
+      - deploy_azure_dev
   workflow_dispatch:
 
 jobs:
