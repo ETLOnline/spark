@@ -15,6 +15,7 @@ import { useAtom, useAtomValue } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import FileDir from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/FileDir"
 import { useSearchParams } from "next/navigation"
+import { userStore } from "@/src/store/user/userStore"
 
 type FileData = {
   fileName: string
@@ -31,7 +32,8 @@ export default function FileSharing() {
   const [fileData, setFileData] = useState<FileData | null>(null)
 
   const searchParams = useSearchParams()
-
+  const [user] = useAtom(userStore.AuthUser)
+  const userId = user?.unique_id
   const { toast } = useToast()
 
   const [createFileLoading, createdFile, createFileError, createNewFile] =
@@ -116,7 +118,8 @@ export default function FileSharing() {
           fileData?.fileName as string,
           fileData?.fileSize as number,
           fileData?.fileB64string as string,
-          fileData?.fileType as string
+          fileData?.fileType as string,
+          userId as string
         )
       )?.data
       const newFile: DirItem = {

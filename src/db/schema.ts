@@ -620,6 +620,7 @@ export const filesTable = sqliteTable("files", {
   file_size: int().notNull(),
   file_type: text().notNull(),
   file_path: text().notNull(),
+  created_by:text().notNull(),
   ...timestamps
 })
 

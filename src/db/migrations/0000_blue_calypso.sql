@@ -1,3 +1,28 @@
+CREATE TABLE `channel_users` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`channel_id` text NOT NULL,
+	`user_id` text NOT NULL,
+	`role` text DEFAULT 'member',
+	`status` text DEFAULT 'active'
+);
+--> statement-breakpoint
+CREATE TABLE `space_chats` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`space_id` text NOT NULL,
+	`chat_id` integer NOT NULL,
+	`updated_at` text,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP,
+	`deleted_at` text
+);
+--> statement-breakpoint
+CREATE TABLE `space_users` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`space_id` text NOT NULL,
+	`user_id` text NOT NULL,
+	`role` text DEFAULT 'member',
+	`status` text DEFAULT 'active'
+);
+--> statement-breakpoint
 CREATE TABLE `activities` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`title` text NOT NULL,
@@ -62,12 +87,28 @@ CREATE TABLE `events` (
 	`deleted_at` text
 );
 --> statement-breakpoint
+CREATE TABLE `features` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`feature_name` text NOT NULL,
+	`feature_slug` text NOT NULL,
+	`feature_type` text NOT NULL,
+	`feature_description` text,
+	`feature_icon` text,
+	`feature_url` text,
+	`feature_order` integer DEFAULT 0 NOT NULL,
+	`feature_status` integer DEFAULT 1 NOT NULL,
+	`updated_at` text,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP,
+	`deleted_at` text
+);
+--> statement-breakpoint
 CREATE TABLE `files` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`file_name` text NOT NULL,
 	`file_size` integer NOT NULL,
 	`file_type` text NOT NULL,
 	`file_path` text NOT NULL,
+	`created_by` text NOT NULL,
 	`updated_at` text,
 	`created_at` text DEFAULT CURRENT_TIMESTAMP,
 	`deleted_at` text
@@ -152,6 +193,22 @@ CREATE TABLE `posts` (
 	`deleted_at` text
 );
 --> statement-breakpoint
+CREATE TABLE `project` (
+	`id` text(36) PRIMARY KEY NOT NULL,
+	`project_name` text NOT NULL,
+	`project_slug` text NOT NULL,
+	`description` text,
+	`project_startDate` text NOT NULL,
+	`project_targetDate` text NOT NULL,
+	`channel_id` text NOT NULL,
+	`space_id` text NOT NULL,
+	`created_by` text NOT NULL,
+	`project_type` text,
+	`updated_at` text,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP,
+	`deleted_at` text
+);
+--> statement-breakpoint
 CREATE TABLE `recommendations` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`content` text NOT NULL,
@@ -172,6 +229,28 @@ CREATE TABLE `rewards` (
 	`deleted_at` text
 );
 --> statement-breakpoint
+CREATE TABLE `space_features` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`space_id` text NOT NULL,
+	`feature_id` integer NOT NULL,
+	`updated_at` text,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP,
+	`deleted_at` text
+);
+--> statement-breakpoint
+CREATE TABLE `space_file_directory` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`space_id` text,
+	`entity_name` text NOT NULL,
+	`entity_type` text NOT NULL,
+	`entity_id` integer,
+	`entity_size` integer,
+	`parent_id` integer,
+	`updated_at` text,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP,
+	`deleted_at` text
+);
+--> statement-breakpoint
 CREATE TABLE `spaces` (
 	`id` text(36) PRIMARY KEY NOT NULL,
 	`space_slug` text NOT NULL,
@@ -180,6 +259,8 @@ CREATE TABLE `spaces` (
 	`channel_id` text NOT NULL,
 	`created_by` text NOT NULL,
 	`ownerId` text,
+	`space_type` text,
+	`publish_space` integer DEFAULT 0 NOT NULL,
 	`updated_at` text,
 	`created_at` text DEFAULT CURRENT_TIMESTAMP,
 	`deleted_at` text
@@ -190,6 +271,21 @@ CREATE TABLE `tags` (
 	`name` text NOT NULL,
 	`type` text NOT NULL,
 	`count` integer DEFAULT 1 NOT NULL,
+	`updated_at` text,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP,
+	`deleted_at` text
+);
+--> statement-breakpoint
+CREATE TABLE `task` (
+	`id` text(36) PRIMARY KEY NOT NULL,
+	`task_num` text,
+	`task_title` text NOT NULL,
+	`description` text NOT NULL,
+	`task_type` text NOT NULL,
+	`task_priority` text NOT NULL,
+	`story_points` text NOT NULL,
+	`project_id` text NOT NULL,
+	`created_by` text NOT NULL,
 	`updated_at` text,
 	`created_at` text DEFAULT CURRENT_TIMESTAMP,
 	`deleted_at` text

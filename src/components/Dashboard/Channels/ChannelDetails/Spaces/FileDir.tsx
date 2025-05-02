@@ -14,7 +14,7 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
+  DrawerTrigger
 } from "@/src/components/ui/drawer"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
@@ -26,6 +26,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
 import {
   CreateNewFolderAction,
+
   GetDirectoryContentsAction
 } from "@/src/server-actions/FileSharing/FileSharing"
 import { useParams } from "next/navigation"
@@ -40,7 +41,7 @@ import DirNav from "./DirNav"
 import { FileUpload } from "@/src/components/ui/file-upload"
 import { useSearchParams } from "next/navigation"
 import { CreateNewFileAction } from "@/src/server-actions/FileSharing/FileSharing"
-
+import { userStore } from "@/src/store/user/userStore"
 
 type FileData = {
   fileName: string
@@ -58,22 +59,19 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
   const [isNewFolderDialogOpen, setIsNewFolderDialogOpen] =
     useState<boolean>(false)
 
-  const [isNewFileDrawerOpen, setIsNewFileDrawerOpen] =
-    useState<boolean>(false)
-
+  const [isNewFileDrawerOpen, setIsNewFileDrawerOpen] = useState<boolean>(false)
 
   const [dir, setDir] = useAtom(spaceStore.dir)
-    const [currentPath, setCurrentPath] = useAtom(spaceStore.currDirPath)
-    const [currSpace, setCurrSpace] = useAtom(spaceStore.selectedSpace)
-  
-    const [fileData, setFileData] = useState<FileData | null>(null)
-  
-    const searchParams = useSearchParams()
-  
-  
-    const [createFileLoading, createdFile, createFileError, createNewFile] =
-      useServerAction(CreateNewFileAction)
-  
+  const [currentPath, setCurrentPath] = useAtom(spaceStore.currDirPath)
+  const [currSpace, setCurrSpace] = useAtom(spaceStore.selectedSpace)
+  const [user] = useAtom(userStore.AuthUser)
+  const userId = user?.unique_id
+  const [fileData, setFileData] = useState<FileData | null>(null)
+
+  const searchParams = useSearchParams()
+
+  const [createFileLoading, createdFile, createFileError, createNewFile] =
+    useServerAction(CreateNewFileAction)
 
   const newFolderName = useRef<string>("")
 
@@ -96,8 +94,12 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
     createNewFolder
   ] = useServerAction(CreateNewFolderAction)
 
+
+ 
+
+
   useEffect(() => {
-    ; (async () => {
+    ;(async () => {
       try {
         const space = await getSpaceBySlug(spaceSlug, channelSlug)
         if (space?.success && space.data) {
@@ -254,59 +256,62 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
       reader.readAsDataURL(file)
     }
   }
-  const handleFileUpload = async () => {
-      try {
-        const createdFile = (
-          await createNewFile(
-            currentPath === "/"
-              ? (currSpace?.id as string)
-              : (findItemByPath(dir, currentPath)?.id as number),
-            fileData?.fileName as string,
-            fileData?.fileSize as number,
-            fileData?.fileB64string as string,
-            fileData?.fileType as string
-          )
-        )?.data
-        const newFile: DirItem = {
-          id: createdFile?.id as number,
-          name: createdFile?.entity_name as string,
-          type: "file",
-          updatedAt: new Date(createdFile?.created_at as string)
-            .toISOString()
-            .split("T")[0],
-          path:
-            currentPath === "/"
-              ? `/${createdFile?.entity_name as string}`
-              : `${currentPath}/${createdFile?.entity_name as string}`,
-          size: createdFile?.entity_size
-            ? formatFileSize(createdFile?.entity_size)
-            : "",
-          url: createdFile?.url,
-          children: []
-        }
-  
-        if (currentPath === "/") {
-          setDir([...dir, { ...newFile }])
-        } else {
-          setDir(addItemToPath(dir, currentPath, newFile))
-        }
-  
-        setFileData(null)
 
-        setIsNewFileDrawerOpen(false)
-  
-        toast({
-          description: "File created!",
-          duration: 3000
-        })
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          description: "Failed to create file",
-          duration: 3000
-        })
+
+  const handleFileUpload = async () => {
+    try {
+      const createdFile = (
+        await createNewFile(
+          currentPath === "/"
+            ? (currSpace?.id as string)
+            : (findItemByPath(dir, currentPath)?.id as number),
+          fileData?.fileName as string,
+          fileData?.fileSize as number,
+          fileData?.fileB64string as string,
+          fileData?.fileType as string,
+          userId  as string
+        )
+      )?.data
+      const newFile: DirItem = {
+        id: createdFile?.id as number,
+        name: createdFile?.entity_name as string,
+        type: "file",
+        updatedAt: new Date(createdFile?.created_at as string)
+          .toISOString()
+          .split("T")[0],
+        path:
+          currentPath === "/"
+            ? `/${createdFile?.entity_name as string}`
+            : `${currentPath}/${createdFile?.entity_name as string}`,
+        size: createdFile?.entity_size
+          ? formatFileSize(createdFile?.entity_size)
+          : "",
+        url: createdFile?.url,
+        children: []
       }
+
+      if (currentPath === "/") {
+        setDir([...dir, { ...newFile }])
+      } else {
+        setDir(addItemToPath(dir, currentPath, newFile))
+      }
+
+      setFileData(null)
+
+      setIsNewFileDrawerOpen(false)
+
+      toast({
+        description: "File created!",
+        duration: 3000
+      })
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        description: "Failed to create file",
+        duration: 3000
+      })
     }
+  }
 
   return (
     <section className="directory">
@@ -314,7 +319,10 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
         <DirNav navigateToFolder={navigateToFolder} />
         <div className="flex gap-4">
           {/* add new file drawer */}
-          <Drawer open={isNewFileDrawerOpen} onOpenChange={setIsNewFileDrawerOpen}>
+          <Drawer
+            open={isNewFileDrawerOpen}
+            onOpenChange={setIsNewFileDrawerOpen}
+          >
             <DrawerTrigger asChild>
               <Button variant="outline">
                 <FolderPlus className="mr-2 h-4 w-4" />
@@ -323,7 +331,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
             </DrawerTrigger>
             <DrawerContent>
               <div className="mx-auto w-full max-w-lg">
-              <DrawerTitle></DrawerTitle>
+                <DrawerTitle></DrawerTitle>
                 <div className="p-4 pb-0">
                   <div className="flex items-center justify-center space-x-2">
                     <Card className="mb-8 flex flex-col items-center gap-4 pb-8">
@@ -346,7 +354,6 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
                     </Card>
                   </div>
                 </div>
-                
               </div>
             </DrawerContent>
           </Drawer>
