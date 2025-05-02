@@ -8,7 +8,8 @@ import { toast } from '@/src/hooks/use-toast'
 import { useServerAction } from '@/src/hooks/useServerAction'
 import { DeleteTaskAction } from '@/src/server-actions/Tasks/Task'
 import { projectStore } from '@/src/store/project/projectStore'
-import { useSetAtom } from 'jotai'
+import { taskStatusesStore } from '@/src/store/taskstatuses/StatusesStore'
+import { useAtom, useSetAtom } from 'jotai'
 import { CircleHelp, MoreHorizontal } from 'lucide-react'
 import React, { Dispatch, SetStateAction, useState } from 'react'
 
@@ -24,6 +25,7 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
   const setSelectedTask = useSetAtom(projectStore.selectedTask)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
   const SetTasks = useSetAtom(projectStore.tasks)
+  const [status, setStatus] = useAtom(taskStatusesStore.statuses)
 
   const [deleteTaskLoading, deleteTaskData, deleteTaskError, DeleteTask] = useServerAction(DeleteTaskAction)
 
@@ -129,8 +131,13 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
           ))}
         </div> */}
         </div>
-        <div className="col-span-2">{getTypeLabel(task.task_type)}</div>
-        <div className="col-span-2">{getPriorityLabel(task.task_priority)}</div>
+        <div className="col-span-1">{getTypeLabel(task.task_type)}</div>
+        <div className="col-span-3 flex justify-around items-center">
+          <Badge variant={"secondary"}>
+            {status.find(s => s.id === task.status_id)?.name}
+          </Badge>
+          <div >{getPriorityLabel(task.task_priority)}</div>
+        </div>
         <div className="col-span-1">{task.story_points}</div>
         <div className="col-span-1">
           {/* {task.assignee ? (
@@ -169,7 +176,7 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
+      </div >
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

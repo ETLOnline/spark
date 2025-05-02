@@ -88,8 +88,11 @@ function BacklogItemsCard({ backlogItems, searchedItem, orderList, limit }: Prop
                 </div>
                 <div className="col-span-1">ID</div>
                 <div className="col-span-3">Title</div>
-                <div className="col-span-2">Type</div>
-                <div className="col-span-2">Priority</div>
+                <div className="col-span-1">Type</div>
+                <div className="col-span-3 flex justify-around items-center">
+                  status
+                  <div>Priority</div>
+                </div>
                 <div className="col-span-1">Points</div>
                 <div className="col-span-1">Assignee</div>
                 <div className="col-span-1"></div>

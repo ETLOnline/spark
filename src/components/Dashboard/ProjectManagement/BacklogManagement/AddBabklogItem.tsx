@@ -61,7 +61,16 @@ function AddBabklogItem() {
 
   useEffect(() => {
     if (!isCreateItemOpen) {
-      form.reset()
+      form.reset(
+        {
+          task_title: "",
+          description: "",
+          task_type: "",
+          task_priority: "",
+          story_points: "",
+          status_id: backlogStatus?.id
+        }
+      )
       form.clearErrors()
       setSelectedTask(null)
       setEditTask(false)
@@ -77,7 +86,7 @@ function AddBabklogItem() {
       form.setValue("task_type", selectedTask.task_type)
       form.setValue("task_priority", selectedTask.task_priority)
       form.setValue("story_points", selectedTask.story_points)
-      form.setValue("status", status?.name)
+      form.setValue("status_id", status?.name)
     } else {
       setEditTask(false)
     }
@@ -96,6 +105,7 @@ function AddBabklogItem() {
 
   async function handleCreateTask(data: InsertTask) {
     try {
+      console.log("statuses", statuses.find(s => s.id === data.status_id)?.name)
       if (authUser) {
         const payload = {
           ...data,
@@ -125,6 +135,7 @@ function AddBabklogItem() {
 
   async function handleUpdateTask(data: SelectTask) {
     try {
+      console.log("statuses", statuses.find(s => s.id === data.status_id)?.name)
       if (selectedTask?.id) {
         const updatedTask = await UpdateTask(selectedTask?.id, data)
         if (updatedTask?.success && updatedTask.data) {
@@ -269,9 +280,9 @@ function AddBabklogItem() {
                 render={({ field }) => (
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={backlogStatus?.id}>
+                    defaultValue={selectedTask?.status_id ? selectedTask?.status_id : backlogStatus?.id}>
                     <SelectTrigger id="status_id" className="col-span-3">
-                      <SelectValue placeholder={backlogStatus?.name || "Select type"} />
+                      <SelectValue placeholder={statuses.find(s => s.id === selectedTask?.status_id)?.name || backlogStatus?.name || "Select type"} />
                     </SelectTrigger>
                     <SelectContent>
                       {statuses.map(s => (
