@@ -126,3 +126,34 @@ Spark is licensed under the [MIT License](LICENSE).
 Feel free to suggest changes or improvements to make Spark even better! Let's build something meaningful together. 🌟  
 
 --- 
+
+## 📜 How To Run Optimized Production Build  
+
+> delete existing .next and node_modules directories
+
+> make sure next.config.mjs file has -> const nextConfig = { output: 'standalone',..} 
+
+```bash  
+npm install
+npm run build  
+```  
+> Verify this completes successfully and creates the .next/standalone directory
+# Copy public folder if it exists
+```bash 
+if [ -d "public" ]; then cp -r public .next/standalone/public; fi
+
+# Copy .next/static folder if it exists
+if [ -d ".next/static" ]; then cp -r .next/static .next/standalone/.next/static; fi
+```
+> Verify: Check inside your local .next/standalone folder. It should now contain server.js, a minimal node_modules, parts of .next, the public folder (if applicable), and a .next/static folder.
+
+> RUN node server.js from within the .next/standalone directly
+---
+
+## 📜 How To Run Production Build on Azure  
+> Set Startup Command: Go to Configuration -> General settings -> Startup Command. Set it to:
+node server.js
+
+> Disable Oryx Build: Go to Configuration -> Application settings. Add or set the application setting SCM_DO_BUILD_DURING_DEPLOYMENT to false.
+
+---
