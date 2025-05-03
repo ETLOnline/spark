@@ -1,12 +1,12 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy Node.js app to Azure Web App - etl-spark-dev
+name: etl-spark-dev build + deploy
 
 on:
   push:
     branches:
-      - deploy_azure_dev
+      - deploy_azure_dev_del
   workflow_dispatch:
 
 jobs:
@@ -24,7 +24,22 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
+      - name: Verify Checked-Out Files # <-- ADD THIS STEP
+        run: |
+          echo ">>> Current Commit SHA:"
+          git rev-parse HEAD
+          echo ">>> package-lock.json Timestamp:"
+          ls -l package-lock.json
+          echo ">>> React version in package.json:"
+          grep '"react":' package.json
+          echo ">>> Emoji-Mart version in package.json:"
+          grep '"@emoji-mart/react":' package.json
+          echo ">>> React version info from lock file (check version):"
+          grep -A 3 -B 1 '"react":' package-lock.json | head -n 10 # Show first few lines
+          echo ">>> Emoji-Mart version info from lock file (check version & requires):"
+          grep -A 8 -B 1 '"@emoji-mart/react":' package-lock.json | head -n 15 # Show first few lines
+          echo ">>> END FILE VERIFICATION <<<"
+          
       - name: Set up Node.js version
         uses: actions/setup-node@v3
         with:
@@ -32,7 +47,7 @@ jobs:
 
       - name: npm install, build, and test
         run: |
-          npm ci
+          npm install
           npm run build --if-present
           npm run test --if-present
       # ---- START ADDED VERIFICATION STEPS ----
