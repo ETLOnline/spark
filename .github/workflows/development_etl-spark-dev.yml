@@ -6,7 +6,7 @@ name: etl-spark-dev build + deploy
 on:
   push:
     branches:
-      - deploy_azure_dev
+      - deploy_azure_dev_del
   workflow_dispatch:
 
 jobs:
