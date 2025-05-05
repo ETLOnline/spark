@@ -13,7 +13,7 @@ function Navbaritems() {
             <ul className='nav'>
                 <li className='nav-item'>
                     <Link className='nav-link' href="/dashboard">
-                        Dashboard</Link>
+                        Spark</Link>
                 </li>
                 <li className='nav-item'>
                     <Link className='nav-link' href="#">
