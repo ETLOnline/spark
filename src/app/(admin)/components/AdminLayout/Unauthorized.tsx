@@ -24,7 +24,7 @@ const UnauthorizedScreen = () => {
       </AnimatePresence>
       <div className='absolute text:white text-4xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
           <IconShield size={120} className='text-center w-full' />
-          <div>Unauthorized Access</div>
+          <div>Unauthorize</div>
       </div>
     </>
   )
