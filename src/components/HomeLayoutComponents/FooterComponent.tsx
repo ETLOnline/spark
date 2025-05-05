@@ -15,7 +15,7 @@ function Footer() {
 				<div className='footer-section'>
 					<h2 className='footer-section-title'>About Us</h2>
 					<p className='footer-section-text pr-3'>
-						Empowering growth through mentorship. Connect learn and succed with our globalcommunity of mentors.
+						Empowering growth through mentorship. Connect learn and succeed with our global community of mentors.
 					</p>
 				</div>
 				<div className="footer-section">
@@ -28,10 +28,10 @@ function Footer() {
 							<Link className='footer-nav-link' href='#'>About</Link>
 						</li>
 						<li >
-							<Link className='footer-nav-link' href='contact-us'>contact</Link>
+							<Link className='footer-nav-link' href='contact-us'>Contact</Link>
 						</li>
 						<li >
-							<Link className='footer-nav-link' href='#'>FAQ</Link>
+							<Link className='footer-nav-link' href='#'>FAQs</Link>
 						</li>
 					</ul>
 				</div>
