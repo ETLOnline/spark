@@ -18,7 +18,7 @@ export default function Home() {
 				<Container>
 					<div className='flex items-center justify-center h-screen w-full '>
 						<div className="hero-content ">
-							<h1 className="Main-Heading">Find and Book a Mentor for your 1:1 help today!</h1>
+							<h1 className="Main-Heading">Find and Book a Mentor for your one-on-one  help today!</h1>
 							<p>We have our 200 Mentor available, qualified in over 300 subjects</p>
 							<Button size={'lg'} variant={'outline'} width={'fit'} >Find a Mentor</Button>
 						</div>
