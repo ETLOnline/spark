@@ -8,6 +8,7 @@ import { ProjectProposal } from '.'
 import { SelectProject } from '@/src/db/schema'
 import { useSetAtom } from 'jotai'
 import { projectStore } from '@/src/store/project/projectStore'
+import CreateNewProject from './CreateNewProject' // adjust path if needed
 
 
 
@@ -76,6 +77,13 @@ function ProjectCards({ project }: Props) {
           </LinkAsButton>
           <LinkAsButton href={`/project/${project.id}`} >
             View Details
+          </LinkAsButton>
+          
+          <LinkAsButton asChild>
+            <CreateNewProject
+              defaultValues={project}
+              isEditing={true}
+            />
           </LinkAsButton>
         </div>
       </CardFooter>
