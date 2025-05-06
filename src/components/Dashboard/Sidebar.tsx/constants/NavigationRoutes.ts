@@ -70,34 +70,34 @@ export const siteRoutes: SiteRoutes = {
       url: "/channels",
       icon: Boxes
     },
-    {
-      title: "Project Incubator",
-      url: "/project-incubator",
-      icon: Lightbulb
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "#"
-        },
-        {
-          title: "Team",
-          url: "#"
-        },
-        {
-          title: "Billing",
-          url: "#"
-        },
-        {
-          title: "Limits",
-          url: "#"
-        }
-      ]
-    }
+    // {
+    //   title: "Project Incubator",
+    //   url: "/project-incubator",
+    //   icon: Lightbulb
+    // },
+    // {
+    //   title: "Settings",
+    //   url: "#",
+    //   icon: Settings2,
+    //   items: [
+    //     {
+    //       title: "General",
+    //       url: "#"
+    //     },
+    //     {
+    //       title: "Team",
+    //       url: "#"
+    //     },
+    //     {
+    //       title: "Billing",
+    //       url: "#"
+    //     },
+    //     {
+    //       title: "Limits",
+    //       url: "#"
+    //     }
+    //   ]
+    // }
   ],
   testNav: [
     {
