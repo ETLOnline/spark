@@ -1,7 +1,7 @@
 import React from 'react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../ui/card'
 import { Badge } from '../../ui/badge'
-import { MessageSquare, ThumbsUp, Users } from 'lucide-react'
+import { MessageSquare, ThumbsUp, UserPen, Users } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar'
 import { LinkAsButton } from '../../LinkAsButton/LinkAsButton'
 import { ProjectProposal } from '.'
@@ -22,10 +22,10 @@ function ProjectCards({ project }: Props) {
             <div className="flex justify-between items-start">
               <div className='flex-grow'>
                 <CardTitle className='text-md leading-tight line-clamp-2'>{project.project_name}</CardTitle>
-                {/* <CardDescription>{project.category}</CardDescription> */}
                 <CardDescription className='mt-1'>Category</CardDescription>
               </div>
               <Badge
+                title='Status'
                 className='flex-shrink-0 mt-1'
                 variant={
                   project.project_type === "active"
@@ -37,11 +37,9 @@ function ProjectCards({ project }: Props) {
                 {project.project_type}
               </Badge>
             </div>
-
             <p className="text-sm text-muted-foreground line-clamp-3">
               {project.description}
             </p>
-
           </CardHeader>
 
           <CardContent className='pt-1 pb-2'>
@@ -49,43 +47,26 @@ function ProjectCards({ project }: Props) {
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1" title='Likes'>
                   <ThumbsUp className="h-4 w-4" />
-                  {/* {project.likes} */}
-                  00
-                </div>
-                <div className="flex items-center gap-1" title='Comments'>
-                  <MessageSquare className="h-4 w-4" />
-                  {/* {project.comments} */}
                   00
                 </div>
                 <div className="flex items-center gap-1" title='Contributors'>
                   <Users className="h-4 w-4" />
-                  {/* {project.contributors} */}
                   abdul
                 </div>
               </div>
-
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" title='Author'>
                 <Avatar className="h-8 w-8">
-                  <AvatarImage
-                  // // src={project.author.avatar}
-                  // // alt={project.author.name}
-                  // src={avatar}
-                  // alt={"author name"}
-                  />
                   <AvatarFallback>
-                    {/* {project.author.name[0]} */}
-                    Author Name
+                    <UserPen />
                   </AvatarFallback>
                 </Avatar>
                 <span className="text-sm font-medium">
-                  {/* {project.author.name} */}
                   Abdul
                 </span>
               </div>
             </div>
           </CardContent>
         </div>
-
         <CardFooter className='pt-4 border-t'>
           <div className='w-full flex flex-col sm:flex-row justify-end gap-2'>
             <LinkAsButton variant="outline" className='w-full sm:w-auto' href={`/project/${project.id}/board`}>
@@ -96,7 +77,6 @@ function ProjectCards({ project }: Props) {
             </LinkAsButton>
           </div>
         </CardFooter>
-
       </Card>
     </div>
   )
