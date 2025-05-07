@@ -19,7 +19,7 @@ import { LoaderSizes } from "../../common/types/loader-types"
 import { useParams, useSearchParams } from "next/navigation"
 import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
 import { space } from "postcss/lib/list"
-
+import CreateNewProject from "./CreateNewProject"
 
 export interface ProjectProposal {
   id: string
@@ -88,6 +88,14 @@ export function ProjectScreen() {
   const [projects, setProjects] = useAtom(projectStore.projects)
   const [currSpace, setCurrSpace] = useState<SelectSpace>()
 
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedProject, setSelectedProject] = useState<SelectProject | null>(null)
+
+  const handleEdit = (project: SelectProject) => {
+    setSelectedProject(project)
+    setIsModalOpen(true)
+  }
+
   const [getProjectLoading, getProjectData, getProjectError, getProjects] =
     useServerAction(GetProjectsAction)
 
@@ -154,7 +162,11 @@ export function ProjectScreen() {
                 <TabsContent value="all">
                   <ScrollArea>
                     {projects.map((project) => (
-                      <ProjectCards key={project.id} project={project} />
+                      <ProjectCards
+                        key={project.id}
+                        project={project}
+                        onEdit={handleEdit}
+                      />
                     ))}
                   </ScrollArea>
                 </TabsContent>
@@ -199,7 +211,14 @@ export function ProjectScreen() {
         )
       }
 
-
+      {isModalOpen && selectedProject && (
+        <CreateNewProject
+          defaultValues={selectedProject}
+          isEditing={true}
+          isOpen={isModalOpen}
+          setIsOpen={setIsModalOpen}
+        />
+      )}
     </div>
   );
 }

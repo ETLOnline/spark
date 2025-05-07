@@ -33,7 +33,7 @@ export async function getProjectById(projectId: string) {
     }
 }
 
-export async function UpdateProject(project_data: InsertProject) {
+export async function updateProject(project_data: Partial<InsertProject>){
     try {
       if (!project_data.id) {
         throw new Error("Project ID is required for update.");

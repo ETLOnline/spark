@@ -21,7 +21,7 @@ import moment from 'moment'
 
 
 
-const channelSchema = z.object({
+const projectSchema = z.object({
   project_name: z
     .string()
     .min(1, "Title required")
@@ -41,26 +41,30 @@ const channelSchema = z.object({
   project_type: z.boolean().optional()
 })
 
-type ProjectFormData = z.infer<typeof channelSchema>;
+type ProjectFormData = z.infer<typeof projectSchema>
 
-function CreateNewProject({ defaultValues, isEditing = false }: {
+function ProjectFormModal({
+  defaultValues,
+  isEditing = false,
+  isOpen: externalOpen,
+  setIsOpen: setExternalOpen,
+}: {
   defaultValues?: Partial<InsertProject>,
   isEditing?: boolean,
+  isOpen?: boolean,
+  setIsOpen?: React.Dispatch<SetStateAction<boolean>>
 }) {
   const [space, setSpace] = useState<SelectSpace>()
-  const [isOpen, setIsOpen] = useState(false)
   const [projects, setProjects] = useAtom(projectStore.projects)
   const [createProjectLoading, , , createProject] = useServerAction(CreateProjectAction)
   const [updateLoading, , , updateProject] = useServerAction(UpdateProjectAction)
-  const [isClient, setIsClient] = useState(false)
 
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isOpen = externalOpen !== undefined ? externalOpen : internalOpen
+  const setIsOpen = setExternalOpen !== undefined ? setExternalOpen : setInternalOpen
 
-  // Initialize form with default empty values
   const form = useForm<ProjectFormData>({
-    resolver: zodResolver(channelSchema),
+    resolver: zodResolver(projectSchema),
     defaultValues: {
       project_name: '',
       description: '',
@@ -83,16 +87,16 @@ function CreateNewProject({ defaultValues, isEditing = false }: {
   }, [searchParams])
 
   useEffect(() => {
-    if (!isClient) return
+    if (!spaceSlug || !channelSlug) return
     GetSpaceBySlugAction(spaceSlug || "", channelSlug || "").then((currentSpace) => {
       if (currentSpace.success && currentSpace.data) {
         setSpace(currentSpace.data)
       }
     })
-  }, [isClient, spaceSlug, channelSlug])
+  }, [spaceSlug, channelSlug])
 
   useEffect(() => {
-    if (!isClient || !defaultValues) return;
+    if (!defaultValues) return;
 
     try {
       const formattedStartDate = defaultValues.project_startDate 
@@ -120,7 +124,7 @@ function CreateNewProject({ defaultValues, isEditing = false }: {
         project_targetDate: ''
       });
     }
-  }, [isOpen, defaultValues, isClient, form]);
+  }, [isOpen, defaultValues, form]);
 
   async function projectSubmit(data: ProjectFormData) {
     const projectType = data.project_type === true ? "active" : "draft";
@@ -201,12 +205,12 @@ function CreateNewProject({ defaultValues, isEditing = false }: {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      setIsOpen(open)
-    }}>
-      <DialogTrigger asChild>
-        <Button>{isEditing ? "Edit Project" : "Create New Project"}</Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      {!isEditing && (
+        <DialogTrigger asChild>
+          <Button>Create New Project</Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{isEditing ? "Update Project" : "Create a New Project"}</DialogTitle>
@@ -330,4 +334,4 @@ function CreateNewProject({ defaultValues, isEditing = false }: {
   )
 }
 
-export default CreateNewProject
+export default ProjectFormModal
