@@ -5,9 +5,13 @@ import ProjectInformation from "./ProjectInformation"
 import TeamMembers from "./TeamMembers"
 import ProjectNotifications from "./ProjectNotifications"
 import Integrations from "./Integrations"
+import { SelectProject } from "@/src/db/schema"
 
+interface Props {
+  currProject: SelectProject
+}
 
-export function ProjectSettings() {
+export function ProjectSettings({ currProject }: Props) {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="general" className="space-y-4">
@@ -19,7 +23,7 @@ export function ProjectSettings() {
         </TabsList>
 
         <TabsContent value="general">
-          <ProjectInformation />
+          <ProjectInformation currProjectData={currProject} />
         </TabsContent>
 
         <TabsContent value="team">
