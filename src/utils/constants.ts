@@ -88,6 +88,18 @@ export const pageMeta = [
     url: "/connections",
     title: "Connections",
     description: "connections"
+  },
+  {
+    id: "feedback",
+    url: "/feedback",
+    title: "Feedback",
+    description: "feedback"
+  },
+  {
+    id: "support",
+    url: "/support",
+    title: "Support",
+    description: "support"
   }
 ]
 
