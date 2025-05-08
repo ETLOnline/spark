@@ -12,6 +12,8 @@ import { SelectProject } from "@/src/db/schema"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../ui/hover-card"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { useAtom } from "jotai"
+import { projectStore } from "@/src/store/project/projectStore"
 
 interface Props {
   currProject: SelectProject
@@ -24,12 +26,17 @@ export function ProjectDashboard({ currProject }: Props) {
   const searchParams = useSearchParams()
   const UrlTab = searchParams.get("tab")
   const [activeTab, setActiveTab] = useState(UrlTab || "overview")
+  const [project, setProject] = useAtom(projectStore.currPtoject)
 
   useEffect(() => {
     if (UrlTab !== activeTab) {
       router.push(`./board?tab=${activeTab}`)
     }
   }, [activeTab, UrlTab])
+
+  useEffect(() => {
+    setProject(currProject)
+  }, [currProject])
 
   return (
     <div className="grid grid-cols-1  p-4">

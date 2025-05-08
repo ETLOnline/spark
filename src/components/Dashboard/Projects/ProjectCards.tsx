@@ -22,27 +22,18 @@ function ProjectCards({ project }: Props) {
     <Card key={project.id} className="mb-4">
       <CardHeader >
         <div className="flex justify-between items-start">
-          <div className='flex flex-row items-center gap-2'>
-            <CardTitle>{project.project_name}</CardTitle>
-            {/* <CardDescription>{project.category}</CardDescription> */}
-            <Badge
-              variant={
-                project.project_type === "active"
-                  ? "default"
-                  : project.project_type === "draft"
-                    ? "secondary"
-                    : "outline"
-              }>
-              {project.project_type}
-            </Badge>
-          </div>
-          <div>
-            <Link href={`project/${project.id}/settings/taskStatus`}>
-              <Button variant={"outline"} size={"icon"}>
-                <Settings />
-              </Button>
-            </Link>
-          </div>
+          <CardTitle>{project.project_name}</CardTitle>
+          {/* <CardDescription>{project.category}</CardDescription> */}
+          <Badge
+            variant={
+              project.project_type === "active"
+                ? "default"
+                : project.project_type === "draft"
+                  ? "secondary"
+                  : "outline"
+            }>
+            {project.project_type}
+          </Badge>
         </div>
       </CardHeader>
       <CardContent>

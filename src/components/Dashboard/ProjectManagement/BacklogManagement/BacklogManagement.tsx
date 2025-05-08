@@ -9,6 +9,7 @@ import AddBabklogItem from "./AddBabklogItem"
 import BacklogItemsCard from "./BacklogItemsCard"
 import { useSetAtom } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
+import { taskStore } from "@/src/store/tasks/taskStore"
 
 
 interface BacklogItem {
@@ -97,7 +98,7 @@ const sampleBacklogItems: BacklogItem[] = [
 
 export function BacklogManagement() {
   const [backlogItems, setBacklogItems] = useState<BacklogItem[]>(sampleBacklogItems)
-  const setIsCreateItemOpen = useSetAtom(projectStore.isCreateItemOpen)
+  const setIsTicketFormModelOpen = useSetAtom(taskStore.isTaskFormModelOpen)
   const [searchQuery, setSearchQuery] = useState("")
   const [searchedItem, setSearchedItem] = useState("")
   const [orderList, setOrderList] = useState('asc')
@@ -111,59 +112,60 @@ export function BacklogManagement() {
 
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-xl font-bold">Backlog</h2>
-        <AddBabklogItem />
-        <Button onClick={() => setIsCreateItemOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Item
-        </Button>
-      </div>
-
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-        <div className="relative w-full sm:w-64 flex">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search backlog..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 rounded-r-none"
-          />
-          <Button className="rounded-l-none"
-            variant={'secondary'}
-            onClick={handleSearch} >
-            <Search />
+    <>
+      <AddBabklogItem />
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <h2 className="text-xl font-bold">Backlog</h2>
+          <Button onClick={() => setIsTicketFormModelOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Item
           </Button>
         </div>
-        <div className="flex items-center space-x-2">
-          {/* <Button variant="outline" size="sm">
+
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+          <div className="relative w-full sm:w-64 flex">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search backlog..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 rounded-r-none"
+            />
+            <Button className="rounded-l-none"
+              variant={'secondary'}
+              onClick={handleSearch} >
+              <Search />
+            </Button>
+          </div>
+          <div className="flex items-center space-x-2">
+            {/* <Button variant="outline" size="sm">
             <Filter className="mr-2 h-4 w-4" />
             Filter
           </Button> */}
-          <Button variant="outline" size="sm"
-            onClick={() =>
-              setOrderList(orderList === 'asc' ? 'desc' : 'asc')
-            }>
-            <ArrowUpDown className="mr-2 h-4 w-4" />
-            Sort
-          </Button>
+            <Button variant="outline" size="sm"
+              onClick={() =>
+                setOrderList(orderList === 'asc' ? 'desc' : 'asc')
+              }>
+              <ArrowUpDown className="mr-2 h-4 w-4" />
+              Sort
+            </Button>
 
 
-          <Select value={String(limit)} onValueChange={(value) => setLimit(Number(value))} >
-            <SelectTrigger className="w-20">
-              <SelectValue placeholder="Limit" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-              <SelectItem value="30">30</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={String(limit)} onValueChange={(value) => setLimit(Number(value))} >
+              <SelectTrigger className="w-20">
+                <SelectValue placeholder="Limit" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="30">30</SelectItem>
+              </SelectContent>
+            </Select>
 
 
 
-          {/* <Select defaultValue="planning">
+            {/* <Select defaultValue="planning">
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select view" />
             </SelectTrigger>
@@ -173,12 +175,13 @@ export function BacklogManagement() {
               <SelectItem value="refinement">Refinement</SelectItem>
             </SelectContent>
           </Select> */}
+          </div>
         </div>
+
+        <BacklogItemsCard limit={limit} orderList={orderList} searchedItem={searchedItem} backlogItems={backlogItems} />
+
       </div>
-
-      <BacklogItemsCard limit={limit} orderList={orderList} searchedItem={searchedItem} backlogItems={backlogItems} />
-
-    </div>
+    </>
   )
 }
 

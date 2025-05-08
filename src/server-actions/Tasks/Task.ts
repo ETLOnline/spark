@@ -1,5 +1,5 @@
 "use server"
-import { CreateTask, CreateTaskStatus, DeleteTask, DeleteTaskStatus, GetTaskCount, GetTasks, GetTaskSatatus, taskQueryFilters, UpdateTask, UpdateTaskStatus} from "@/src/db/data-access/tasks/query";
+import { CreateTask, CreateTaskStatus, DeleteTask, DeleteTaskStatus, GetTaskById, GetTaskByStatusId, GetTaskCount, GetTasks, GetTaskSatatus, taskQueryFilters, UpdateTask, UpdateTaskStatus} from "@/src/db/data-access/tasks/query";
 import { CreateServerAction } from "..";
 import { InsertTask, InsertTaskStatus, SelectTask } from "@/src/db/schema";
 import { getProjectById } from "@/src/db/data-access/project-management/query";
@@ -48,6 +48,20 @@ export const GetTasksAction = CreateServerAction(
 
   }
 )
+
+export const GetTaskByIdAction = CreateServerAction(
+  true,
+  async (taskId: string) => {
+    try{
+      const task = await GetTaskById(taskId)
+
+      return {success: true, data: task}
+    }catch(error){
+      return{error: error}
+    }
+  }
+)
+
 
 
 export const UpdateTaskAction = CreateServerAction(

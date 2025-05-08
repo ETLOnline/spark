@@ -93,6 +93,20 @@ export async function GetTasks(filters?: taskQueryFilters) {
   }
 }
 
+export async function GetTaskById(taskId: string){
+  try{
+    const task = await db.select().from(taskTable).where(
+      eq(taskTable.id, taskId)
+    )
+
+    return task[0]
+  }catch(e:any){
+    throw new Error(e.message)
+  }
+}
+
+
+
 
 
 export async function UpdateTask(taskId: string, updatedData: SelectTask){

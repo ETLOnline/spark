@@ -145,3 +145,6 @@ export const isEntitySpace = (entity: SelectChannel | SelectSpace): entity is Se
 export const getInitials = (string: string) => {
   return string.split(' ').map(word => word[0]?.toUpperCase()).join('');
 }
+export function ToUpperCase(string: string) {
+  return string.charAt(0).toUpperCase() + string.slice(1)
+}
