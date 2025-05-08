@@ -935,3 +935,32 @@ export const SpaceChatsRelations = relations(SpaceChatsTable, ({ one }) => ({
     relationName: "spaceChatToChat",
   }),
 }))
+
+export const projectCommentsTable = sqliteTable(
+  "project_comments",
+  {
+    id: text("unique_id", { length: 36 })
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    author_id: text().notNull(),
+    project_id: text().notNull(),
+    comment: text().notNull(),
+    ...timestamps
+  }
+)
+
+export type InsertProjectComment = typeof projectCommentsTable.$inferInsert
+export type SelectProjectComment = typeof projectCommentsTable.$inferSelect
+
+export const ProjectCommentsRelations = relations(projectCommentsTable, ({ one }) => ({
+  authorUser: one(usersTable, {
+    fields: [projectCommentsTable.author_id],
+    references: [usersTable.unique_id],
+    relationName: "commentAuthor",
+  }),
+  project: one(projectTable, {
+    fields: [projectCommentsTable.project_id],
+    references: [projectTable.id],
+    relationName: "commentProject",
+  }),
+}))
