@@ -18,7 +18,7 @@ function ProjectTopCatagories({ categories }: Props) {
             <li key={index} className="flex justify-between items-center">
               <span>{category}</span>
               <Badge variant="secondary">
-                {Math.floor(Math.random() * 20) + 1}
+                0
               </Badge>
             </li>
           ))}

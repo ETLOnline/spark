@@ -8,14 +8,16 @@ import { ProjectProposal } from '.'
 import { SelectProject } from '@/src/db/schema'
 import { useSetAtom } from 'jotai'
 import { projectStore } from '@/src/store/project/projectStore'
+import { Button } from '../../ui/button'
 
 
 
 interface Props {
   project: SelectProject
+  onEdit: (project: SelectProject) => void
 }
 
-function ProjectCards({ project }: Props) {
+function ProjectCards({ project, onEdit }: Props) {
   return (
     <Card key={project.id} className="mb-4">
       <CardHeader >
@@ -77,6 +79,9 @@ function ProjectCards({ project }: Props) {
           <LinkAsButton href={`/project/${project.id}`} >
             View Details
           </LinkAsButton>
+          <Button onClick={() => onEdit(project)}>
+            Edit Project
+          </Button>
         </div>
       </CardFooter>
     </Card>

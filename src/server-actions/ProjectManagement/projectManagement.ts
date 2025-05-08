@@ -3,7 +3,7 @@
 
 import { InsertProject } from "@/src/db/schema";
 import { CreateServerAction } from "..";
-import { CreateProject, getProjectById, getProjects } from "@/src/db/data-access/project-management/query";
+import { CreateProject, getProjectById, getProjects ,updateProject } from "@/src/db/data-access/project-management/query";
 
 export const CreateProjectAction = CreateServerAction(true, async (project_data:InsertProject) => {
     try{
@@ -16,6 +16,15 @@ export const CreateProjectAction = CreateServerAction(true, async (project_data:
 }
 
 )
+
+export const UpdateProjectAction = CreateServerAction(true, async (project_data: Partial<InsertProject>) => {
+  try {
+    const updatedProject = await updateProject(project_data)
+    return { success: true, data: updatedProject }
+  } catch (error) {
+    return { error }
+  }
+})
 
 export const GetProjectsAction = CreateServerAction(
     true,
