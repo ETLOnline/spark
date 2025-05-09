@@ -11,6 +11,7 @@ import Loader from '@/src/components/common/Loader/Loader'
 import { LoaderSizes } from '@/src/components/common/types/loader-types'
 import { PaginationType } from '@/src/components/common/types/pagination.type'
 import PaginationComponent from '@/src/components/common/Pagination'
+import { taskStore } from '@/src/store/tasks/taskStore'
 
 
 interface Props {
@@ -39,7 +40,7 @@ interface BacklogItem {
 
 function BacklogItemsCard({ backlogItems, searchedItem, orderList, limit }: Props) {
   const [selectedItems, setSelectedItems] = useState<string[]>([])
-  const [tasks, setTasks] = useAtom(projectStore.tasks)
+  const [tasks, setTasks] = useAtom(taskStore.tasks)
   const [Pagination, setPagination] = useState<PaginationType>()
   const [tasksLoading, tasksData, tasksError, GetTasks] = useServerAction(GetTasksAction)
 

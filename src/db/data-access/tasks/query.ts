@@ -105,7 +105,17 @@ export async function GetTaskById(taskId: string){
   }
 }
 
+export async function GetTaskByStatusId(statusId: string){
+  try{
+    const tasks = await db.select().from(taskTable).where(
+      eq(taskTable.status_id, statusId)
+    )
 
+    return tasks
+  }catch(e:any){
+    throw new Error(e.message)
+  }
+}
 
 
 

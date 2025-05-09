@@ -6,16 +6,21 @@ import { useEffect, useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/src/components/ui/card"
-import { ArrowBigRightDash, ArrowDown, ArrowUp, Plus, Save, StepForward, Trash2 } from "lucide-react"
+import { AlertTriangle, ArrowBigRightDash, ArrowDown, ArrowUp, CircleHelp, Plus, Save, Trash2 } from "lucide-react"
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { InsertTaskStatus, SelectTaskStatus } from "@/src/db/schema"
-import { CreateTaskStatusAction, DeleteTaskStatusAction, GetTaskSatatusAction, UpdateTaskStatusAction } from "@/src/server-actions/Tasks/Task"
+import { SelectTask, SelectTaskStatus } from "@/src/db/schema"
+import { CreateTaskStatusAction, DeleteTaskStatusAction, GetTaskByStatusIdAction, GetTaskSatatusAction, UpdateTaskAction, UpdateTaskStatusAction } from "@/src/server-actions/Tasks/Task"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/src/components/ui/dialog'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/src/components/ui/table'
 import { useParams } from "next/navigation"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { useAtom } from "jotai"
 import { taskStatusesStore } from "@/src/store/taskstatuses/StatusesStore"
+import { Badge } from "@/src/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select"
+import Link from "next/link"
 
 // Default statuses that cannot be removed
 const DEFAULT_STATUSES = ["Backlog", "To Do", "In Progress", "Done"];
@@ -26,10 +31,16 @@ export default function TaskStatus() {
   const [isSaving, setIsSaving] = useState(false); // Saving state
   const [editStatus, setEditStatus] = useState(false)
   const [removedStatus, setRemovedStatus] = useState<SelectTaskStatus[]>([])
+  const [tasks, setTasks] = useState<SelectTask[]>([])
+  const [isDeleteStatusModelOpen, setIsDeleteStatusModelOpen] = useState(false)
+  const [newStatusId, setNewStatusId] = useState("")
+
 
   const [loading, data, error, createTaskStatus] = useServerAction(CreateTaskStatusAction);
   const [getStatusLoading, getStatusData, getStatusError, GetStatus] = useServerAction(GetTaskSatatusAction)
   const [updateStatusLoading, updateStatusData, updateStatusError, UpdateTaskStatus] = useServerAction(UpdateTaskStatusAction)
+  const [tasksLoading, tasksdata, taskserror, GetTasks] = useServerAction(GetTaskByStatusIdAction)
+  const [updateTaskLoading, updateTaskData, updateTaskError, UpdateTask] = useServerAction(UpdateTaskAction)
 
 
   const projectId = useParams().id as string
@@ -54,10 +65,29 @@ export default function TaskStatus() {
   }, [projectId])
 
 
+  useEffect(() => {
+    if (removedStatus.length > 0) {
+      const fetchTasks = async () => {
+        for (const status of removedStatus) {
+          const getTasks = await GetTasks(status.id)
+
+          if (getTasks?.success && getTasks.data) {
+            setTasks(getTasks.data)
+          }
+
+        }
+      }
+      fetchTasks();
+      setIsDeleteStatusModelOpen(true)
+
+    }
+
+  }, [removedStatus])
+
+
 
   const handleAddStatus = (e: React.FormEvent) => {
     e.preventDefault();
-
 
     if (!newStatus.trim()) {
       toast({
@@ -78,7 +108,6 @@ export default function TaskStatus() {
       });
       return;
     }
-
     // Find the index of "Done" to insert before it
     const doneIndex = statuses.findIndex((status) => status.name === "Done");
     const newStatuses = [...statuses];
@@ -156,15 +185,8 @@ export default function TaskStatus() {
 
     if (statusRemove?.id) {
       setRemovedStatus([statusRemove as SelectTaskStatus]);
+
     }
-
-    setStatuses(statuses.filter((s) => s.name !== status));
-
-    toast({
-      title: "Success",
-      description: `Status "${status}" has been removed`,
-      duration: 2000,
-    });
   };
 
   // Function to save the current status configuration
@@ -229,6 +251,14 @@ export default function TaskStatus() {
         })
 
       }
+
+      if (tasks.length > 0) {
+        for (const task of tasks) {
+          const updatedTaskStatus = await UpdateTask(task.id, { ...task, status_id: newStatusId });
+        }
+      }
+
+
       toast({
         title: "Changes saved",
         description: "Your status configuration has been saved successfully",
@@ -248,167 +278,294 @@ export default function TaskStatus() {
   }
 
 
+
+  async function handleUpdateTaskStatus() {
+    try {
+      if (newStatusId) {
+
+        setTasks(tasks.map(task => ({ ...task, status_id: newStatusId })))
+
+        setStatuses(statuses.filter((s) => s.name !== removedStatus[0].name));
+
+        setIsDeleteStatusModelOpen(false)
+        toast({
+          title: "Success",
+          description: `Click save button to save the cahnges`,
+          duration: 2000,
+        });
+      } else {
+        toast({
+          title: "Please reasssign the Tickets first",
+          duration: 2000
+        })
+      }
+
+    } catch {
+      toast({
+        title: "Unable to remove status",
+        duration: 2000,
+      })
+    }
+  }
+
+
   return (
+    <>
+      <Card className="shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle>Project Status Settings</CardTitle>
+          <CardDescription>Manage the workflow statuses for your project</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6">
+            <Card className="border shadow-none">
+              <CardHeader className="py-3">
+                <CardTitle className="text-base">{editStatus ? "Edit Task Status" : "Add New Status"}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleAddStatus} className="flex gap-2">
+                  <Input
+                    placeholder="Enter status name..."
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value)}
+                    className="max-w-sm"
+                  />
+                  <Button type="submit" size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
 
-    <Card className="shadow-sm">
-      <CardHeader className="pb-3">
-        <CardTitle>Project Status Settings</CardTitle>
-        <CardDescription>Manage the workflow statuses for your project</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-6">
-          <Card className="border shadow-none">
-            <CardHeader className="py-3">
-              <CardTitle className="text-base">{editStatus ? "Edit Task Status" : "Add New Status"}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleAddStatus} className="flex gap-2">
-                <Input
-                  placeholder="Enter status name..."
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value)}
-                  className="max-w-sm"
-                />
-                <Button type="submit" size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add
+            <Card className="border shadow-none">
+              <CardHeader className="py-3">
+                <CardTitle className="text-base">Manage Statuses</CardTitle>
+                <CardDescription className="text-xs">
+                  Reorder or remove statuses. Default statuses cannot be removed.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="rounded-md overflow-hidden border">
+                  <div className="grid grid-cols-[1fr_100px] font-medium py-2 px-4 bg-muted/50 text-sm">
+                    <div>Status Name</div>
+                    <div className="text-right">Actions</div>
+                  </div>
+
+                  {
+                    getStatusLoading ? (
+                      <div className="flex justify-center h-full w-full my-4">
+                        <Loader size={LoaderSizes.lg} />
+                      </div>
+                    ) : (
+                      statuses.length === 0 ? (
+                        <div className="py-6 text-center text-muted-foreground">No statuses added yet</div>
+                      ) : (
+                        <div className="divide-y">
+                          {statuses.map((status, index) => (
+                            <div
+                              key={index}
+                              className="grid grid-cols-[1fr_100px] items-center py-3 px-4 hover:bg-muted/20 transition-colors"
+                            >
+                              <div className="flex items-center">
+                                <span className="font-medium">{status.name}</span>
+                                {DEFAULT_STATUSES.includes(status.name) && (
+                                  <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                                    Default
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  onClick={() => moveStatus(index, "up")}
+                                  disabled={
+                                    index === 0 ||
+                                    status.name === "Backlog" ||
+                                    status.name === "Done" ||
+                                    statuses[index - 1].name === "Backlog"
+                                  }
+                                >
+                                  <ArrowUp className="h-3.5 w-3.5" />
+                                  <span className="sr-only">Move up</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  onClick={() => moveStatus(index, "down")}
+                                  disabled={
+                                    index === statuses.length - 1 ||
+                                    status.name === "Backlog" ||
+                                    status.name === "Done" ||
+                                    statuses[index + 1].name === "Done"
+                                  }
+                                >
+                                  <ArrowDown className="h-3.5 w-3.5" />
+                                  <span className="sr-only">Move down</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  onClick={() => handleRemoveStatus(status.name)}
+                                  disabled={DEFAULT_STATUSES.includes(status.name)}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                  <span className="sr-only">Delete</span>
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )
+                    )
+                  }
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border shadow-none">
+              <CardHeader className="py-3">
+                <CardTitle className="text-base">Current Status Order</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {statuses.map((status, index) => (
+                    <div key={index} className="flex items-center">
+                      <div
+                        key={index}
+                        className={`px-3 py-1.5 rounded-md text-sm border ${DEFAULT_STATUSES.includes(status.name)
+                          ? "bg-primary/5 border-primary/20"
+                          : "bg-muted"
+                          }`}
+                      >
+                        {index + 1}. {status.name}
+                      </div>
+                      {index !== statuses.length - 1 && (
+                        <ArrowBigRightDash className="w-6 h-6 ml-2 text-muted-foreground" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-end pt-2 gap-2">
+          {
+            editStatus ? (
+              <Button onClick={handleEditStatus} disabled={isSaving} className="w-full sm:w-auto">
+                <Save className="h-4 w-4 mr-2" />
+                {isSaving ? "Saving Changes..." : "Save Changes"}
+              </Button>
+            ) : (
+              <>
+                <Link href={`/project/${projectId}/board?tab=sprints`}>
+                  <Button variant={"outline"}>Go to Project</Button>
+                </Link>
+
+                <Button onClick={saveStatusConfiguration} disabled={isSaving} className="w-full sm:w-auto">
+                  <Save className="h-4 w-4 mr-2" />
+                  {isSaving ? "Saving Changes..." : "Save"}
                 </Button>
-              </form>
-            </CardContent>
-          </Card>
+              </>
+            )
+          }
+        </CardFooter>
+      </Card>
 
-          <Card className="border shadow-none">
-            <CardHeader className="py-3">
-              <CardTitle className="text-base">Manage Statuses</CardTitle>
-              <CardDescription className="text-xs">
-                Reorder or remove statuses. Default statuses cannot be removed.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="rounded-md overflow-hidden border">
-                <div className="grid grid-cols-[1fr_100px] font-medium py-2 px-4 bg-muted/50 text-sm">
-                  <div>Status Name</div>
-                  <div className="text-right">Actions</div>
+
+      {/* Task status reassign dialog */}
+
+      <Dialog open={isDeleteStatusModelOpen} onOpenChange={(open) => setIsDeleteStatusModelOpen(open)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              Delete Status:
+              {removedStatus.length > 0 ? removedStatus[0].name : 'Unknown Status'}
+            </DialogTitle>
+            <DialogDescription>
+              This status has {tasks.length} tickets assigned to it. Please select a new status for these
+              tickets before deleting.
+            </DialogDescription>
+          </DialogHeader>
+
+          {
+            tasksLoading ? (
+              <div className=" flex justify-center h-full w-full my-4">
+                <Loader />
+              </div>
+            ) : (
+              <>
+                <div className="max-h-[300px] overflow-y-auto border rounded-md">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Ticket ID</TableHead>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Assignee</TableHead>
+                        <TableHead>Current Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {tasks.map((task) => (
+                        <TableRow key={task.id}>
+                          <TableCell>#{task.task_num}</TableCell>
+                          <TableCell>{task.task_title}</TableCell>
+                          <TableCell className="text-center">
+                            <CircleHelp />
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={"secondary"}>
+                              {removedStatus.find(s => s.id === task.status_id)?.name}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
 
-                {
-                  getStatusLoading ? (
-                    <div className="flex justify-center h-full w-full my-4">
-                      <Loader size={LoaderSizes.lg} />
-                    </div>
-                  ) : (
-                    statuses.length === 0 ? (
-                      <div className="py-6 text-center text-muted-foreground">No statuses added yet</div>
-                    ) : (
-                      <div className="divide-y">
-                        {statuses.map((status, index) => (
-                          <div
-                            key={index}
-                            className="grid grid-cols-[1fr_100px] items-center py-3 px-4 hover:bg-muted/20 transition-colors"
-                          >
-                            <div className="flex items-center">
-                              <span className="font-medium">{status.name}</span>
-                              {DEFAULT_STATUSES.includes(status.name) && (
-                                <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                                  Default
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                onClick={() => moveStatus(index, "up")}
-                                disabled={
-                                  index === 0 ||
-                                  status.name === "Backlog" ||
-                                  status.name === "Done" ||
-                                  statuses[index - 1].name === "Backlog"
-                                }
-                              >
-                                <ArrowUp className="h-3.5 w-3.5" />
-                                <span className="sr-only">Move up</span>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                onClick={() => moveStatus(index, "down")}
-                                disabled={
-                                  index === statuses.length - 1 ||
-                                  status.name === "Backlog" ||
-                                  status.name === "Done" ||
-                                  statuses[index + 1].name === "Done"
-                                }
-                              >
-                                <ArrowDown className="h-3.5 w-3.5" />
-                                <span className="sr-only">Move down</span>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                onClick={() => handleRemoveStatus(status.name)}
-                                disabled={DEFAULT_STATUSES.includes(status.name)}
-                              >
-                                <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                                <span className="sr-only">Delete</span>
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )
-                  )
-                }
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border shadow-none">
-            <CardHeader className="py-3">
-              <CardTitle className="text-base">Current Status Order</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {statuses.map((status, index) => (
-                  <div key={index} className="flex items-center">
-                    <div
-                      key={index}
-                      className={`px-3 py-1.5 rounded-md text-sm border ${DEFAULT_STATUSES.includes(status.name)
-                        ? "bg-primary/5 border-primary/20"
-                        : "bg-muted"
-                        }`}
-                    >
-                      {index + 1}. {status.name}
-                    </div>
-                    {index !== statuses.length - 1 && (
-                      <ArrowBigRightDash className="w-6 h-6 ml-2 text-muted-foreground" />
-                    )}
+                <div className="grid gap-4 py-4">
+                  <div className="space-y-2">
+                    <h3 className="font-medium">Select new status for these tickets:</h3>
+                    <Select value={newStatusId} onValueChange={setNewStatusId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a new status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {statuses
+                          .filter((status) => !removedStatus[0] || status.id !== removedStatus[0].id)
+                          .map((status) => (
+                            <SelectItem key={status.id} value={status?.id || ""}>
+                              {status.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-end pt-2">
-        {
-          editStatus ? (
-            <Button onClick={handleEditStatus} disabled={isSaving} className="w-full sm:w-auto">
-              <Save className="h-4 w-4 mr-2" />
-              {isSaving ? "Saving Changes..." : "Save Changes"}
+                </div>
+              </>
+            )
+          }
+
+          <DialogFooter>
+            <Button variant="outline">
+              Cancel
             </Button>
-          ) : (
-            <Button onClick={saveStatusConfiguration} disabled={isSaving} className="w-full sm:w-auto">
-              <Save className="h-4 w-4 mr-2" />
-              {isSaving ? "Saving Changes..." : "Save"}
+            <Button
+              variant="destructive"
+              onClick={() => handleUpdateTaskStatus()}>
+              Reassign & Delete
             </Button>
-          )
-        }
-      </CardFooter>
-    </Card>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog >
+    </>
   );
 }
 

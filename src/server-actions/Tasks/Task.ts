@@ -64,6 +64,21 @@ export const GetTaskByIdAction = CreateServerAction(
 
 
 
+
+export const GetTaskByStatusIdAction = CreateServerAction(
+  true,
+  async (statusId: string) => {
+    try{
+      const tasks = await GetTaskByStatusId(statusId)
+
+      return {success: true, data: tasks}
+    }catch(error){
+      return {error:error}
+    }
+  }
+)
+
+
 export const UpdateTaskAction = CreateServerAction(
   true,
   async (taskId: string, updatedData: SelectTask) => {
