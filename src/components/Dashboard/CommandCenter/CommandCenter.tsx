@@ -1,8 +1,6 @@
 "use client"
 
 import {
-  Calendar,
-  Calculator,
   MessageSquare,
   User,
   LifeBuoy,
@@ -81,22 +79,6 @@ export default function CommandCenter() {
             </div>
           }
           <CommandEmpty>No results found.</CommandEmpty>
-
-          {/* <CommandGroup heading="Users">
-            {peopleList.map((person) => (
-              <CommandItem
-                value={`${person.first_name} ${person.last_name}`}
-                key={person.unique_id}
-                onSelect={() => handleItemPress(`/profile/${person.unique_id}`)}
-              >
-                <Avatar>
-                  <AvatarImage src={person?.profile_url || ''} alt={person.first_name} />
-                </Avatar>
-                <span>{person.first_name} {person.last_name}</span>
-              </CommandItem>
-            ))}
-          </CommandGroup> */}
-
           <CommandSeparator />
 
           <CommandGroup heading="Quick Links">
