@@ -18,6 +18,7 @@ import {
   Heading1,
   Heading2,
 } from "lucide-react"
+import { Textarea } from "../ui/textarea"
 
 interface RichTextEditorProps {
   value: string
@@ -132,7 +133,7 @@ export default function RichTextEditor({ value, onChange, onBlur }: RichTextEdit
   };
 
   return (
-    <div className={`border rounded-md ${isFocused ? "ring-2 ring-ring ring-offset-2" : ""}`}>
+    <div className={`border rounded-md ${isFocused ? "ring-1 ring-ring " : ""}`}>
       <TooltipProvider>
         <div className="flex flex-wrap items-center gap-0.5 p-2 border-b bg-muted/50">
           <Tooltip>
@@ -389,8 +390,35 @@ export default function RichTextEditor({ value, onChange, onBlur }: RichTextEdit
             </TooltipTrigger>
             <TooltipContent>Code Block</TooltipContent>
           </Tooltip>
+
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={handleButtonClick}
+              >
+                <ImageIcon className="h-4 w-4" />
+                <span className="sr-only">Insert Image from Device</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Insert Image from Device</TooltipContent>
+          </Tooltip>
+
         </div>
       </TooltipProvider>
+
+      <input
+        type="file"
+        accept="image/*"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        style={{ display: "none" }}
+      />
+
 
       <div
         ref={editorRef}
@@ -398,10 +426,8 @@ export default function RichTextEditor({ value, onChange, onBlur }: RichTextEdit
         contentEditable
         onInput={handleInput}
         onFocus={() => setIsFocused(true)}
-        onBlur={() => {
-          setIsFocused(false)
-          if (onBlur) onBlur()
-        }}
+
+
       />
     </div>
   )

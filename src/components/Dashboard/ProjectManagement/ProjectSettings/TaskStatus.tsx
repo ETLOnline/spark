@@ -34,34 +34,22 @@ export default function TaskStatus() {
   const [tasks, setTasks] = useState<SelectTask[]>([])
   const [isDeleteStatusModelOpen, setIsDeleteStatusModelOpen] = useState(false)
   const [newStatusId, setNewStatusId] = useState("")
+  const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false)
+  const [isChangesSaved, setIsChangesSaved] = useState(false)
 
 
-  const [loading, data, error, createTaskStatus] = useServerAction(CreateTaskStatusAction);
+  const [createLoading, data, error, createTaskStatus] = useServerAction(CreateTaskStatusAction);
   const [getStatusLoading, getStatusData, getStatusError, GetStatus] = useServerAction(GetTaskSatatusAction)
   const [updateStatusLoading, updateStatusData, updateStatusError, UpdateTaskStatus] = useServerAction(UpdateTaskStatusAction)
   const [tasksLoading, tasksdata, taskserror, GetTasks] = useServerAction(GetTaskByStatusIdAction)
   const [updateTaskLoading, updateTaskData, updateTaskError, UpdateTask] = useServerAction(UpdateTaskAction)
+  const [deleteStatusLoading, deleteData, deleteError, DeleteStatus] = useServerAction(DeleteTaskStatusAction)
 
 
   const projectId = useParams().id as string
 
   useEffect(() => {
-    const fetchStatuses = async () => {
-      const res = await GetStatus(projectId)
-      if (res?.success && res.data.length > 0) {
-        const taskStatuses = res.data
-        setStatuses([...taskStatuses])
-        setEditStatus(true)
-      } else {
-        setEditStatus(false)
-        setStatuses(DEFAULT_STATUSES.map((status, index) => ({
-          name: status,
-          project_id: projectId,
-          position: index,
-        })))
-      }
-    }
-    fetchStatuses()
+    fetchStatuses();
   }, [projectId])
 
 
@@ -78,12 +66,31 @@ export default function TaskStatus() {
         }
       }
       fetchTasks();
-      setIsDeleteStatusModelOpen(true)
+      if (!showUnsavedChangesDialog) {
+        setIsDeleteStatusModelOpen(true)
+      }
 
     }
 
   }, [removedStatus])
 
+
+  const fetchStatuses = async () => {
+    const res = await GetStatus(projectId)
+    if (res?.success && res.data.length > 0) {
+      const taskStatuses = res.data
+      setStatuses([...taskStatuses])
+      setEditStatus(true)
+    } else {
+      setEditStatus(false)
+      setStatuses(DEFAULT_STATUSES.map((status, index) => ({
+        name: status,
+        project_id: projectId,
+        position: index,
+      })))
+    }
+    setIsChangesSaved(false)
+  }
 
 
   const handleAddStatus = (e: React.FormEvent) => {
@@ -99,7 +106,7 @@ export default function TaskStatus() {
       return;
     }
 
-    if (statuses.some((status) => status.name === newStatus.trim())) {
+    if (statuses.some((status) => status.name.toLowerCase() === newStatus.trim().toLowerCase())) {
       toast({
         title: "Error",
         description: "Status already exists",
@@ -119,6 +126,8 @@ export default function TaskStatus() {
 
     setStatuses(newStatuses);
     setNewStatus(""); // Reset input
+
+    setIsChangesSaved(true)
 
     toast({
       title: "Success",
@@ -169,8 +178,17 @@ export default function TaskStatus() {
     setStatuses(newStatuses);
   };
 
+
+  const hasUnsavedChanges = () => {
+    return statuses.some((s) => !s.id);
+  };
+
+
   // Remove status handler
   const handleRemoveStatus = (status: string) => {
+    if (hasUnsavedChanges()) {
+      setShowUnsavedChangesDialog(true)
+    }
     if (DEFAULT_STATUSES.includes(status)) {
       toast({
         title: "Error",
@@ -181,11 +199,14 @@ export default function TaskStatus() {
       return;
     }
 
-    const statusRemove = statuses.find(s => s.name === status)
+    if (!isChangesSaved) {
+      const statusRemove = statuses.find(s => s.name === status)
 
-    if (statusRemove?.id) {
-      setRemovedStatus([statusRemove as SelectTaskStatus]);
+      if (statusRemove?.id) {
+        setRemovedStatus([statusRemove as SelectTaskStatus]);
 
+      }
+      console.log(removedStatus)
     }
   };
 
@@ -230,33 +251,29 @@ export default function TaskStatus() {
       const taskStatus = await Promise.all(
         statuses.map(async (status) => {
           if (status.id) {
+
             const payload = {
               ...status,
               position: statuses.findIndex(s => s.name === status.name),
               id: status.id
             }
-            return await UpdateTaskStatus(payload.id, payload);
+            await UpdateTaskStatus(payload.id, payload);
+
           } else {
+
             const payload = {
               ...status,
               position: statuses.findIndex(s => s.name === status.name),
             }
-            return await createTaskStatus(payload)
+            const AddedStatus = await createTaskStatus(payload)
+            if (AddedStatus?.success && AddedStatus.data) {
+              fetchStatuses()
+            }
           }
         }),
       )
-      if (removedStatus.length > 0) {
-        removedStatus.map(async (s) => {
-          const deleted = await DeleteTaskStatusAction(s.id)
-        })
 
-      }
 
-      if (tasks.length > 0) {
-        for (const task of tasks) {
-          const updatedTaskStatus = await UpdateTask(task.id, { ...task, status_id: newStatusId });
-        }
-      }
 
 
       toast({
@@ -283,19 +300,29 @@ export default function TaskStatus() {
     try {
       if (newStatusId) {
 
-        setTasks(tasks.map(task => ({ ...task, status_id: newStatusId })))
+        for (const task of tasks) {
+          const updatedTaskStatus = await UpdateTask(task.id, { ...task, status_id: newStatusId });
+        }
 
+
+        if (removedStatus.length > 0) {
+          removedStatus.map(async (s) => {
+            const deleted = await DeleteStatus(s.id)
+          })
+
+        }
         setStatuses(statuses.filter((s) => s.name !== removedStatus[0].name));
 
         setIsDeleteStatusModelOpen(false)
+        fetchStatuses()
         toast({
-          title: "Success",
-          description: `Click save button to save the cahnges`,
-          duration: 2000,
-        });
+          title: "Status deleted",
+          duration: 2000
+        })
+
       } else {
         toast({
-          title: "Please reasssign the Tickets first",
+          title: "Please reassign the task first",
           duration: 2000
         })
       }
@@ -457,9 +484,11 @@ export default function TaskStatus() {
         <CardFooter className="flex justify-end pt-2 gap-2">
           {
             editStatus ? (
-              <Button onClick={handleEditStatus} disabled={isSaving} className="w-full sm:w-auto">
+              <Button
+                loading={createLoading || updateStatusLoading}
+                onClick={handleEditStatus} className="w-full sm:w-auto">
                 <Save className="h-4 w-4 mr-2" />
-                {isSaving ? "Saving Changes..." : "Save Changes"}
+                Save Changes
               </Button>
             ) : (
               <>
@@ -467,9 +496,11 @@ export default function TaskStatus() {
                   <Button variant={"outline"}>Go to Project</Button>
                 </Link>
 
-                <Button onClick={saveStatusConfiguration} disabled={isSaving} className="w-full sm:w-auto">
+                <Button
+                  loading={createLoading}
+                  onClick={saveStatusConfiguration} className="w-full sm:w-auto">
                   <Save className="h-4 w-4 mr-2" />
-                  {isSaving ? "Saving Changes..." : "Save"}
+                  Save
                 </Button>
               </>
             )
@@ -481,90 +512,125 @@ export default function TaskStatus() {
       {/* Task status reassign dialog */}
 
       <Dialog open={isDeleteStatusModelOpen} onOpenChange={(open) => setIsDeleteStatusModelOpen(open)}>
-        <DialogContent className="max-w-3xl">
+        {
+          tasksLoading ? (
+            <div className=" flex justify-center h-full w-full my-4">
+              <Loader />
+            </div>
+          ) : (
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                  Delete Status:
+                  {removedStatus.length > 0 ? removedStatus[0].name : 'Unknown Status'}
+                </DialogTitle>
+                <DialogDescription>
+                  This status has {tasks.length} tickets assigned to it. Please select a new status for these
+                  tickets before deleting.
+                </DialogDescription>
+              </DialogHeader>
+              {
+                tasks.length > 0 ? (
+                  <>
+                    <div className="max-h-[300px] overflow-y-auto border rounded-md">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Ticket ID</TableHead>
+                            <TableHead>Title</TableHead>
+                            <TableHead>Assignee</TableHead>
+                            <TableHead>Current Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {tasks.map((task) => (
+                            <TableRow key={task.id}>
+                              <TableCell>#{task.task_num}</TableCell>
+                              <TableCell>{task.task_title}</TableCell>
+                              <TableCell className="text-center">
+                                <CircleHelp />
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={"secondary"}>
+                                  {removedStatus.find(s => s.id === task.status_id)?.name}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    <div className="grid gap-4 py-4">
+                      <div className="space-y-2">
+                        <h3 className="font-medium">Select new status for these tickets:</h3>
+                        <Select value={newStatusId} onValueChange={setNewStatusId}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a new status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {statuses
+                              .filter((status) => !removedStatus[0] || status.id !== removedStatus[0].id)
+                              .map((status) => (
+                                <SelectItem key={status.id} value={status?.id || ""}>
+                                  {status.name}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </>
+                ) : null
+              }
+
+
+
+              <DialogFooter>
+                <Button variant="outline">
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => handleUpdateTaskStatus()}
+                  loading={deleteStatusLoading}>
+                  {tasks.length > 0 ? "Reassign & Delete" : "Delete"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          )}
+      </Dialog >
+
+      {/* UnsavedChanges Dialog */}
+
+
+      <Dialog open={showUnsavedChangesDialog} onOpenChange={(open) => setShowUnsavedChangesDialog(open)}>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-yellow-500" />
-              Delete Status:
-              {removedStatus.length > 0 ? removedStatus[0].name : 'Unknown Status'}
+              Unsaved Changes
             </DialogTitle>
             <DialogDescription>
-              This status has {tasks.length} tickets assigned to it. Please select a new status for these
-              tickets before deleting.
+              You have unsaved status changes. Please save them before removing or modifying statuses.
             </DialogDescription>
           </DialogHeader>
-
-          {
-            tasksLoading ? (
-              <div className=" flex justify-center h-full w-full my-4">
-                <Loader />
-              </div>
-            ) : (
-              <>
-                <div className="max-h-[300px] overflow-y-auto border rounded-md">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Ticket ID</TableHead>
-                        <TableHead>Title</TableHead>
-                        <TableHead>Assignee</TableHead>
-                        <TableHead>Current Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {tasks.map((task) => (
-                        <TableRow key={task.id}>
-                          <TableCell>#{task.task_num}</TableCell>
-                          <TableCell>{task.task_title}</TableCell>
-                          <TableCell className="text-center">
-                            <CircleHelp />
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={"secondary"}>
-                              {removedStatus.find(s => s.id === task.status_id)?.name}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                <div className="grid gap-4 py-4">
-                  <div className="space-y-2">
-                    <h3 className="font-medium">Select new status for these tickets:</h3>
-                    <Select value={newStatusId} onValueChange={setNewStatusId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a new status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {statuses
-                          .filter((status) => !removedStatus[0] || status.id !== removedStatus[0].id)
-                          .map((status) => (
-                            <SelectItem key={status.id} value={status?.id || ""}>
-                              {status.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </>
-            )
-          }
-
           <DialogFooter>
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => setShowUnsavedChangesDialog(false)}>
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={() => handleUpdateTaskStatus()}>
-              Reassign & Delete
+            <Button onClick={() => {
+              setShowUnsavedChangesDialog(false);
+            }}>
+              OK
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog >
+      </Dialog>
+
+
+
     </>
   );
 }

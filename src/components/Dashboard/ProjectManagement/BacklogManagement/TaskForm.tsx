@@ -2,14 +2,13 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import { Card, CardContent } from "@/src/components/ui/card"
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select"
 import { AlertCircle, BarChart2, Bug, CheckCircle2, Flag, Lightbulb, Rocket } from "lucide-react"
-import RichTextEditor from "@/src/components/common/rich-text-editor"
 import { Controller, useForm } from "react-hook-form"
 import { InsertTask, InsertTaskStatus, SelectTask, SelectTaskStatus } from '@/src/db/schema'
 import { toast } from '@/src/hooks/use-toast'
@@ -23,6 +22,7 @@ import { useParams } from 'next/navigation'
 import { z } from 'zod'
 import { ToUpperCase } from "@/src/utils/helpers"
 import { taskStore } from "@/src/store/tasks/taskStore"
+import RichTextEditor from "@/src/components/common/rich-text-editor"
 
 interface Props {
   statuses?: InsertTaskStatus[]
@@ -41,11 +41,9 @@ export default function TaskForm({ statuses }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null)
 
 
-  // Orignal data store, update or delete
   const [isTaskFormModelOpen, setIsTaskFormModelOpen] = useAtom(taskStore.isTaskFormModelOpen)
   const [tasks, setTasks] = useAtom(taskStore.tasks)
   const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
-  // const [statuses, setStatuses] = useAtom(taskStatusesStore.statuses)
 
   const authUser = useAtomValue(userStore.AuthUser)
   const [createTaskLoading, createTaskData, createTaskError, CreateTask] = useServerAction(CreateTaskAction)
@@ -57,6 +55,15 @@ export default function TaskForm({ statuses }: Props) {
 
   const projectId = useParams().id as string
   const backlogStatus = statuses?.find(s => s.name === "Backlog")
+
+  const descriptionInputRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (activeField === "description" && descriptionInputRef.current?.focus) {
+      descriptionInputRef.current.focus();
+    }
+  }, [activeField]);
+
 
 
   useEffect(() => {
@@ -220,7 +227,7 @@ export default function TaskForm({ statuses }: Props) {
     <form onSubmit={form.handleSubmit(taskSubmit)}>
       <div className="flex flex-col md:flex-row gap-2 mt-4">
         {/* Main content area (left side) */}
-        <div className="flex-1">
+        <div className="flex-1 px-2">
           <div className="space-y-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-2">
@@ -269,7 +276,10 @@ export default function TaskForm({ statuses }: Props) {
               ) : (
                 <div
                   className="border-b border-dashed border-gray-300 py-2  cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2"
-                  onClick={() => setActiveField("description")}
+                  onClick={() => setActiveField("description")
+
+                  }
+
                 >
                   {(selectedTask?.description ?? form.watch("description")) ? (
                     <div dangerouslySetInnerHTML={{ __html: selectedTask?.description ?? form.watch("description") }} />
@@ -321,7 +331,13 @@ export default function TaskForm({ statuses }: Props) {
                   ) : (
                     <div
                       className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
-                      onClick={() => setActiveField("status")}
+                      onClick={() => {
+                        setActiveField("status");
+                        requestAnimationFrame(() => {
+                          document.getElementById("status_id")?.click();
+                        });
+                      }}
+
                     >
                       <StatusIcon status={statuses?.find((s) => s.id === selectedTask?.id)?.name || ""} />
                       <span>
@@ -361,7 +377,13 @@ export default function TaskForm({ statuses }: Props) {
                     ) : (
                       <div
                         className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
-                        onClick={() => setActiveField("issueType")}
+                        onClick={() => {
+                          setActiveField("issueType");
+                          requestAnimationFrame(() => {
+                            document.getElementById("task_type")?.click();
+                          });
+                        }}
+
                       >
                         <IssueTypeIcon type={selectedTask?.task_type || form.watch("task_type")} />
                         <span>
@@ -381,6 +403,7 @@ export default function TaskForm({ statuses }: Props) {
                       render={({ field }) => (
                         <Input
                           id="story_points"
+                          type='number'
                           placeholder="Select Points"
                           {...field}
                           className="col-span-3"
@@ -390,7 +413,13 @@ export default function TaskForm({ statuses }: Props) {
                   ) : (
                     <div
                       className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
-                      onClick={() => setActiveField("points")}
+                      onClick={() => {
+                        setActiveField("points");
+                        requestAnimationFrame(() => {
+                          document.getElementById("story_points")?.focus();
+                        });
+                      }}
+
                     >
                       <BarChart2 className="h-4 w-4 text-gray-500" />
                       <span>{selectedTask?.story_points
@@ -425,7 +454,14 @@ export default function TaskForm({ statuses }: Props) {
                   ) : (
                     <div
                       className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
-                      onClick={() => setActiveField("priority")}>
+                      onClick={() => {
+                        setActiveField("priority");
+                        requestAnimationFrame(() => {
+                          document.getElementById("task_priority")?.click();
+                        });
+                      }}
+
+                    >
                       <PriorityIcon priority={selectedTask?.task_priority || form.watch("task_priority")} />
                       <span>
                         {
