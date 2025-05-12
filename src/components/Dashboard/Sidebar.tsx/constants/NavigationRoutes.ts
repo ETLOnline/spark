@@ -69,34 +69,6 @@ export const siteRoutes: SiteRoutes = {
       title: "Channels",
       url: "/channels",
       icon: Boxes
-    },
-    {
-      title: "Project Incubator",
-      url: "/project-incubator",
-      icon: Lightbulb
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "#"
-        },
-        {
-          title: "Team",
-          url: "#"
-        },
-        {
-          title: "Billing",
-          url: "#"
-        },
-        {
-          title: "Limits",
-          url: "#"
-        }
-      ]
     }
   ],
   testNav: [
@@ -123,12 +95,12 @@ export const siteRoutes: SiteRoutes = {
   navSecondary: [
     {
       title: "Support",
-      url: "#",
+      url: "/support",
       icon: LifeBuoy
     },
     {
       title: "Feedback",
-      url: "#",
+      url: "/feedback",
       icon: Send
     }
   ]
