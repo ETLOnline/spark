@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/src/components/ui/card"
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select"
-import { AlertCircle, BarChart2, Bug, CheckCircle2, Flag, Lightbulb, Rocket } from "lucide-react"
+import { AlertCircle, BarChart2, Bug, CheckCircle2, CircleAlert, Flag, Lightbulb, Rocket } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
 import { InsertTask, InsertTaskStatus, SelectTask, SelectTaskStatus } from '@/src/db/schema'
 import { toast } from '@/src/hooks/use-toast'
@@ -29,10 +29,10 @@ interface Props {
 }
 
 const projectSchema = z.object({
-  task_title: z.string().min(1, "Title required").max(50, "Title is too long"),
-  description: z.string().min(1, "Title required").max(100, "Title is too long"),
-  task_type: z.string().min(1, "Title required"),
-  task_priority: z.string().min(1, "Title required"),
+  task_title: z.string().min(1, "Required").max(50, "Title is too long"),
+  description: z.string().optional(),
+  task_type: z.string().min(1, "Required"),
+  task_priority: z.string().min(1, "Required"),
   story_points: z.string().optional(),
   status_id: z.string().optional()
 })
@@ -95,7 +95,7 @@ export default function TaskForm({ statuses }: Props) {
     }
   }, [selectedTask])
 
-  // console.log(form.formState.errors)
+  const error = form.formState.errors
 
   function taskSubmit(data: any) {
     if (!selectedTask) {
@@ -225,7 +225,7 @@ export default function TaskForm({ statuses }: Props) {
 
   return (
     <form onSubmit={form.handleSubmit(taskSubmit)}>
-      <div className="flex flex-col md:flex-row gap-2 mt-4">
+      <div className="flex flex-col md:flex-row gap-2 ">
         {/* Main content area (left side) */}
         <div className="flex-1 px-2">
           <div className="space-y-6">
@@ -254,6 +254,14 @@ export default function TaskForm({ statuses }: Props) {
                     className="border-b border-dashed border-gray-300 py-2 text-xl cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2"
                     onClick={() => setActiveField("title")}
                   >
+                    <div>
+                      {error.task_title && (
+                        <span className="text-red-500 text-sm flex items-center gap-2 mb-1">
+                          <CircleAlert size={16} />
+                          {String(error.task_title.message)}
+                        </span>
+                      )}
+                    </div>
                     {(selectedTask?.task_title ?? form.watch("task_title"))
                       ? (selectedTask?.task_title ?? form.watch("task_title"))
                       : "Click to add title..."}
@@ -263,7 +271,7 @@ export default function TaskForm({ statuses }: Props) {
             </div>
 
             <div className="space-y-2">
-              <Label>Description:</Label>
+              <Label className="pl-2">Description:</Label>
               {activeField === "description" ? (
                 <Controller
                   name="description"
@@ -277,10 +285,8 @@ export default function TaskForm({ statuses }: Props) {
                 <div
                   className="border-b border-dashed border-gray-300 py-2  cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2"
                   onClick={() => setActiveField("description")
+                  }>
 
-                  }
-
-                >
                   {(selectedTask?.description ?? form.watch("description")) ? (
                     <div dangerouslySetInnerHTML={{ __html: selectedTask?.description ?? form.watch("description") }} />
                   ) : (
@@ -337,8 +343,16 @@ export default function TaskForm({ statuses }: Props) {
                           document.getElementById("status_id")?.click();
                         });
                       }}
-
                     >
+                      <div>
+                        {error.status_id && (
+                          <span className="text-red-500 text-sm flex items-center gap-2">
+                            <CircleAlert size={16} />
+                            {String(error.status_id.message)}
+                          </span>
+                        )}
+                      </div>
+
                       <StatusIcon status={statuses?.find((s) => s.id === selectedTask?.id)?.name || ""} />
                       <span>
                         {
@@ -375,21 +389,32 @@ export default function TaskForm({ statuses }: Props) {
                         )}
                       />
                     ) : (
-                      <div
-                        className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
-                        onClick={() => {
-                          setActiveField("issueType");
-                          requestAnimationFrame(() => {
-                            document.getElementById("task_type")?.click();
-                          });
-                        }}
+                      <>
+                        <div>
+                          {error.task_type && (
+                            <span className="text-red-500 text-sm flex items-center gap-2">
+                              <CircleAlert size={16} />
+                              {String(error.task_type.message)}
+                            </span>
+                          )}
+                        </div>
 
-                      >
-                        <IssueTypeIcon type={selectedTask?.task_type || form.watch("task_type")} />
-                        <span>
-                          {(selectedTask?.task_type ?? form.watch("task_type") ? ToUpperCase(selectedTask?.task_type ?? form.watch("task_type")) : "Select Type")}
-                        </span>
-                      </div>
+                        <div
+                          className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
+                          onClick={() => {
+                            setActiveField("issueType");
+                            requestAnimationFrame(() => {
+                              document.getElementById("task_type")?.click();
+                            });
+                          }}
+
+                        >
+                          <IssueTypeIcon type={selectedTask?.task_type || form.watch("task_type")} />
+                          <span>
+                            {(selectedTask?.task_type ?? form.watch("task_type") ? ToUpperCase(selectedTask?.task_type ?? form.watch("task_type")) : "Select Type")}
+                          </span>
+                        </div>
+                      </>
                     )}
                 </div>
 
@@ -421,6 +446,15 @@ export default function TaskForm({ statuses }: Props) {
                       }}
 
                     >
+
+                      <div>
+                        {error.story_points && (
+                          <span className="text-red-500 text-sm flex items-center gap-2">
+                            <CircleAlert size={16} />
+                            {String(error.story_points.message)}
+                          </span>
+                        )}
+                      </div>
                       <BarChart2 className="h-4 w-4 text-gray-500" />
                       <span>{selectedTask?.story_points
                         || form.watch("story_points")
@@ -452,25 +486,36 @@ export default function TaskForm({ statuses }: Props) {
                       )}
                     />
                   ) : (
-                    <div
-                      className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
-                      onClick={() => {
-                        setActiveField("priority");
-                        requestAnimationFrame(() => {
-                          document.getElementById("task_priority")?.click();
-                        });
-                      }}
+                    <>
+                      <div>
+                        {error.task_priority && (
+                          <span className="text-red-500 text-sm flex items-center gap-2">
+                            <CircleAlert size={16} />
+                            {String(error.task_priority.message)}
+                          </span>
+                        )}
+                      </div>
 
-                    >
-                      <PriorityIcon priority={selectedTask?.task_priority || form.watch("task_priority")} />
-                      <span>
-                        {
-                          (selectedTask?.task_priority ?? form.watch("task_priority")
-                            ? ToUpperCase(selectedTask?.task_priority ?? form.watch("task_priority"))
-                            : "Select Priority")
-                        }
-                      </span>
-                    </div>
+                      <div
+                        className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
+                        onClick={() => {
+                          setActiveField("priority");
+                          requestAnimationFrame(() => {
+                            document.getElementById("task_priority")?.click();
+                          });
+                        }}
+
+                      >
+                        <PriorityIcon priority={selectedTask?.task_priority || form.watch("task_priority")} />
+                        <span>
+                          {
+                            (selectedTask?.task_priority ?? form.watch("task_priority")
+                              ? ToUpperCase(selectedTask?.task_priority ?? form.watch("task_priority"))
+                              : "Select Priority")
+                          }
+                        </span>
+                      </div>
+                    </>
                   )}
                 </div>
 

@@ -206,7 +206,6 @@ export default function TaskStatus() {
         setRemovedStatus([statusRemove as SelectTaskStatus]);
 
       }
-      console.log(removedStatus)
     }
   };
 
