@@ -1,30 +1,30 @@
 import { randomUUID } from "crypto"
 import { InferSelectModel, relations, sql } from "drizzle-orm"
-import { int, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { int,varchar,timestamp, primaryKey, mysqlTable, text } from "drizzle-orm/mysql-core"
 
 const timestamps = {
-  updated_at: text("updated_at").$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
-  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updated_at: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
+  created_at: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`), 
   deleted_at: text("deleted_at")
 }
 
-export const usersTable = sqliteTable(
+export const usersTable = mysqlTable(
   "users",
   {
-    unique_id: text("unique_id", { length: 36 })
+    unique_id: varchar("unique_id", { length: 36 })
       .primaryKey()
       .$defaultFn(() => randomUUID()),
-    first_name: text().notNull(),
-    last_name: text().notNull(),
-    email: text().notNull().unique(),
-    external_auth_id: text().notNull().unique(),
-    profile_url: text(),
-    meta: text(),
-    bio: text(),
-    role: text().notNull().default("user")
+    first_name: varchar("first_name", { length: 255 }).notNull(),
+    last_name: varchar("last_name", { length: 255 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull().unique(),
+    external_auth_id: varchar("external_auth_id", { length: 255 }).notNull().unique(),
+    profile_url: varchar("profile_url", { length: 255 }),
+    meta: text("meta"),
+    bio: text("bio"),
+    role: varchar("role", { length: 50 }).notNull().default("user"),
   },
   (t) => ({
-    pk: primaryKey({ columns: [t.unique_id] })
+    pk: primaryKey(t.unique_id),
   })
 )
 
@@ -89,19 +89,19 @@ export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> &{
   channels?: SelectChannelUser[]
 }
 
-export const chatsTable = sqliteTable("chats", {
-  id: int().primaryKey({ autoIncrement: true }),
-  channel_id: text().notNull(),
-  chat_slug: text()
+export const chatsTable = mysqlTable("chats", {
+  id: int("id").primaryKey().autoincrement(),
+  channel_id: varchar("channel_id", { length: 36 }).notNull(),
+  chat_slug: varchar("chat_slug", { length: 36 })
     .notNull()
     .$defaultFn(() => randomUUID()),
-  name: text(),
-  type: text(),
-  avatar: text(),
-  last_message: text(),
-  unread_count: int().notNull().default(0),
-  is_group: int().notNull().default(0),
-  ...timestamps
+  name: varchar("name", { length: 255 }),
+  type: varchar("type", { length: 50 }),
+  avatar: varchar("avatar", { length: 255 }),
+  last_message: text("last_message"),
+  unread_count: int("unread_count").notNull().default(0),
+  is_group: int("is_group").notNull().default(0),
+  ...timestamps,
 })
 
 export const chatsRelations = relations(chatsTable, ({ many }) => ({
@@ -120,18 +120,18 @@ export type SelectChat = InferSelectModel<typeof chatsTable> & {
 }
 export type SelectChatWithRelation = typeof chatsRelations
 
-export const messagesTable = sqliteTable(
+export const messagesTable = mysqlTable(
   "messages",
   {
-    id: int().primaryKey({ autoIncrement: true }),
-    chat_id: int().notNull(),
-    type: text().notNull(),
-    sender_id: text().notNull(),
-    message: text().notNull(),
-    ...timestamps
+    id: int("id").primaryKey().autoincrement(),
+    chat_id: int("chat_id").notNull(),
+    type: varchar("type", { length: 50 }).notNull(),
+    sender_id: varchar("sender_id", { length: 36 }).notNull(),
+    message: text("message").notNull(),
+    ...timestamps,
   },
   (t) => ({
-    pk: primaryKey({ columns: [t.id] })
+    pk: primaryKey(t.id),
   })
 )
 
@@ -154,14 +154,14 @@ export type SelectMessage = typeof messagesTable.$inferSelect & {
   sender?: SelectUser
 }
 
-export const userChatsTable = sqliteTable(
+export const userChatsTable = mysqlTable(
   "user_chats",
   {
-    user_id: text().notNull(),
-    chat_id: int().notNull()
+    user_id: varchar("user_id", { length: 36 }).notNull(),
+    chat_id: int("chat_id").notNull(),
   },
   (t) => ({
-    pk: primaryKey({ columns: [t.user_id, t.chat_id] })
+    pk: primaryKey(t.user_id, t.chat_id)
   })
 )
 
@@ -184,7 +184,7 @@ export type SelectUserChat = typeof userChatsTable.$inferSelect & {
   chat?: SelectChat
 }
 
-export const userMessagesTable = sqliteTable("user_messages", {
+export const userMessagesTable = mysqlTable("user_messages", {
   user_id: text().notNull(),
   message_id: int().notNull()
 })
@@ -192,20 +192,20 @@ export const userMessagesTable = sqliteTable("user_messages", {
 export type InsertUserMessage = typeof userMessagesTable.$inferInsert
 export type SelectUserMessage = typeof userMessagesTable.$inferSelect
 
-export const userContactsTable = sqliteTable(
+export const userContactsTable = mysqlTable(
   "user_contacts",
   {
-    user_id: text().notNull(),
-    contact_id: text().notNull(),
-    is_requested: int().notNull().default(0),
-    is_accepted: int().notNull().default(0),
-    is_blocked: int().notNull().default(0),
-    is_following: int().notNull().default(0),
-    is_followed_by: int().notNull().default(0),
-    ...timestamps
+    user_id: varchar("user_id", { length: 36 }).notNull(),
+    contact_id: varchar("contact_id", { length: 36 }).notNull(),
+    is_requested: int("is_requested").notNull().default(0),
+    is_accepted: int("is_accepted").notNull().default(0),
+    is_blocked: int("is_blocked").notNull().default(0),
+    is_following: int("is_following").notNull().default(0),
+    is_followed_by: int("is_followed_by").notNull().default(0),
+    ...timestamps,
   },
   (t) => ({
-    pk: primaryKey({ columns: [t.user_id, t.contact_id] })
+    pk: primaryKey(t.user_id, t.contact_id),
   })
 )
 
@@ -228,11 +228,11 @@ export const userContactsRelations = relations(
 export type InsertUserContact = typeof userContactsTable.$inferInsert
 export type SelectUserContact = typeof userContactsTable.$inferSelect
 
-export const tagsTable = sqliteTable("tags", {
-  id: int().primaryKey({ autoIncrement: true }),
-  name: text().notNull(),
-  type: text().notNull(),
-  count: int().notNull().default(1),
+export const tagsTable = mysqlTable("tags", {
+  id: int("id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: varchar("type", { length: 255 }).notNull(),
+  count: int("count").notNull().default(1),
   ...timestamps
 })
 
@@ -248,10 +248,10 @@ export const tagsRelations = relations(tagsTable, ({ many }) => ({
 export type InsertTag = typeof tagsTable.$inferInsert
 export type SelectTag = typeof tagsTable.$inferSelect
 
-export const userTagsTable = sqliteTable("user_tags", {
-  id: int().primaryKey({ autoIncrement: true }),
-  user_id: text().notNull(),
-  tag_id: int().notNull()
+export const userTagsTable = mysqlTable("user_tags", {
+  id: int("id").primaryKey().autoincrement(),
+  user_id: varchar("user_id", { length: 36 }).notNull(),
+  tag_id: int("tag_id").notNull(),
 })
 
 export const userTagsRelations = relations(userTagsTable, ({ one }) => ({
@@ -270,11 +270,11 @@ export const userTagsRelations = relations(userTagsTable, ({ one }) => ({
 export type InsertUserTag = typeof userTagsTable.$inferInsert
 export type SelectUserTag = typeof userTagsTable.$inferSelect
 
-export const rewardsTable = sqliteTable("rewards", {
-  id: int().primaryKey({ autoIncrement: true }),
-  title: text().notNull(),
-  description: text().notNull(),
-  badge_type: text().notNull(),
+export const rewardsTable = mysqlTable("rewards", {
+  id: int("id").primaryKey().autoincrement(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  badge_type: varchar("badge_type", { length: 100 }).notNull(),
   ...timestamps
 })
 
@@ -287,10 +287,10 @@ export const rewardsRelations = relations(rewardsTable, ({ many }) => ({
 export type InsertReward = typeof rewardsTable.$inferInsert
 export type SelectReward = typeof rewardsTable.$inferSelect
 
-export const userRewardsTable = sqliteTable("user_rewards", {
-  id: int().primaryKey({ autoIncrement: true }),
-  user_id: text().notNull(),
-  reward_id: int().notNull()
+export const userRewardsTable = mysqlTable("user_rewards", {
+  id: int("id").primaryKey().autoincrement(),
+  user_id: varchar("user_id", { length: 36 }).notNull(),
+  reward_id: int("reward_id").notNull()
 })
 
 export const userRewardsRelations = relations(userRewardsTable, ({ one }) => ({
@@ -309,12 +309,12 @@ export const userRewardsRelations = relations(userRewardsTable, ({ one }) => ({
 export type InsertUserReward = typeof userRewardsTable.$inferInsert
 export type SelectUserReward = typeof userRewardsTable.$inferSelect
 
-export const activitiesTable = sqliteTable("activities", {
-  id: int().primaryKey({ autoIncrement: true }),
-  title: text().notNull(),
-  date: text().notNull(),
-  description: text().notNull(),
-  type: text().notNull(),
+export const activitiesTable = mysqlTable("activities", {
+  id: int("id").primaryKey().autoincrement(),
+  title: varchar("title", { length: 255 }).notNull(),
+  date: varchar("date", { length: 50 }).notNull(),
+  description: text("description").notNull(),
+  type: varchar("type", { length: 100 }).notNull(),
   ...timestamps
 })
 
@@ -327,10 +327,10 @@ export const activitiesRelations = relations(activitiesTable, ({ many }) => ({
 export type InsertActivity = typeof activitiesTable.$inferInsert
 export type SelectActivity = typeof activitiesTable.$inferSelect
 
-export const userActivitiesTable = sqliteTable("user_activities", {
-  id: int().primaryKey({ autoIncrement: true }),
-  user_id: text().notNull(),
-  activity_id: int().notNull()
+export const userActivitiesTable = mysqlTable("user_activities", {
+  id: int("id").primaryKey().autoincrement(),
+  user_id: varchar("user_id", { length: 36 }).notNull(),
+  activity_id: int("activity_id").notNull()
 })
 
 export const userActivitiesRelations = relations(
@@ -352,11 +352,11 @@ export const userActivitiesRelations = relations(
 export type InsertUserActivity = typeof userActivitiesTable.$inferInsert
 export type SelectUserActivity = typeof userActivitiesTable.$inferSelect
 
-export const recommendationsTable = sqliteTable("recommendations", {
-  id: int().primaryKey({ autoIncrement: true }),
-  content: text().notNull(),
-  recommender_id: text().notNull(),
-  receiver_id: text().notNull(),
+export const recommendationsTable = mysqlTable("recommendations", {
+  id: int("id").primaryKey().autoincrement(),
+  content: text("content").notNull(),
+  recommender_id: varchar("recommender_id", { length: 36 }).notNull(),
+  receiver_id: varchar("receiver_id", { length: 36 }).notNull(),
   ...timestamps
 })
 
@@ -379,16 +379,16 @@ export const recommendationsRelations = relations(
 export type InsertRecommendation = typeof recommendationsTable.$inferInsert
 export type SelectRecommendation = typeof recommendationsTable.$inferSelect
 
-export const notificationsTable = sqliteTable("notifications", {
-  id: int().primaryKey({ autoIncrement: true }),
-  created_by: text().notNull(),
-  received_by: text().notNull(),
-  type: text().notNull(),
-  link: text(),
-  is_read: int().notNull().default(0),
-  counter: int().notNull().default(0),
-  entity_id: text(),
-  entity_type: text().notNull(),
+export const notificationsTable = mysqlTable("notifications", {
+  id: int("id").primaryKey().autoincrement(),
+  created_by: varchar("created_by", { length: 36 }).notNull(),
+  received_by: varchar("received_by", { length: 36 }).notNull(),
+  type: varchar("type", { length: 50 }).notNull(),
+  link: text("link"),
+  is_read: int("is_read").notNull().default(0),
+  counter: int("counter").notNull().default(0),
+  entity_id: varchar("entity_id", { length: 36 }),
+  entity_type: varchar("entity_type", { length: 50 }).notNull(),
   ...timestamps
 })
 
@@ -408,33 +408,33 @@ export type SelectNotification = InferSelectModel<typeof notificationsTable> & {
   creator: SelectUser
 }
 
-export const eventsTable = sqliteTable("events", {
-  id: int().primaryKey({ autoIncrement: true }),
-  title: text().notNull(),
-  description: text(),
-  start_date_time: text(),
-  end_date_time: text(),
-  type: text(),
-  metadata: text(),
-  host_id: text().notNull(),
+export const eventsTable = mysqlTable("events", {
+  id: int("id").primaryKey().autoincrement(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  start_date_time: varchar("start_date_time", { length: 50 }),
+  end_date_time: varchar("end_date_time", { length: 50 }),
+  type: varchar("type", { length: 50 }),
+  metadata: text("metadata"),
+  host_id: varchar("host_id", { length: 36 }).notNull(),
   ...timestamps
 })
 
 export type InsertEvent = typeof eventsTable.$inferInsert
 export type SelectEvent = typeof eventsTable.$inferSelect
 
-export const postsTable = sqliteTable("posts", {
-  id: text()
+export const postsTable = mysqlTable("posts", {
+  id: varchar("id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
-  content: text(),
-  user_id: text().notNull(),
-  type: text().notNull(),
-  entity_id: text(),
-  entity_type: text(),
-  likes: int().notNull().default(0),
-  comments: int().notNull().default(0),
-  category: text(),
+  content: text("content"),
+  user_id: varchar("user_id", { length: 36 }).notNull(),
+  type: varchar("type", { length: 255 }).notNull(),
+  entity_id: varchar("entity_id", { length: 36 }),
+  entity_type: varchar("entity_type", { length: 255 }),
+  likes: int("likes").notNull().default(0),
+  comments: int("comments").notNull().default(0),
+  category: varchar("category", { length: 255 }),
   ...timestamps
 })
 
@@ -482,11 +482,11 @@ export type SelectPollPost = SelectPost & {
   options: SelectPollOption[]
 }
 
-export const commentsTable = sqliteTable("comments", {
-  id: int().primaryKey({ autoIncrement: true }),
-  content: text().notNull(),
-  user_id: text().notNull(),
-  post_id: text().notNull(),
+export const commentsTable = mysqlTable("comments", {
+  id: int("id").primaryKey().autoincrement(),
+  content: text("content").notNull(),
+  user_id: varchar("user_id", { length: 36 }).notNull(),
+  post_id: varchar("post_id", { length: 36 }).notNull(),
   ...timestamps
 })
 
@@ -508,10 +508,10 @@ export type SelectComment = typeof commentsTable.$inferSelect & {
   commentor: SelectUser
 }
 
-export const postHashtagsTable = sqliteTable("post_hashtags", {
-  id: int().primaryKey({ autoIncrement: true }),
-  post_id: text().notNull(),
-  hashtag_id: int().notNull()
+export const postHashtagsTable = mysqlTable("post_hashtags", {
+  id: int("id").primaryKey().autoincrement(),
+  post_id: varchar("post_id", { length: 36 }).notNull(),
+  hashtag_id: int("hashtag_id").notNull()
 })
 
 export const postHashtagsRelations = relations(
@@ -533,15 +533,15 @@ export const postHashtagsRelations = relations(
 export type InsertPostHashtag = typeof postHashtagsTable.$inferInsert
 export type SelectPostHashtag = typeof postHashtagsTable.$inferSelect
 
-export const likesTable = sqliteTable(
+export const likesTable = mysqlTable(
   "likes",
   {
-    user_id: text().notNull(),
-    post_id: text().notNull(),
+    user_id: varchar("user_id", { length: 36 }).notNull(),
+    post_id: varchar("post_id", { length: 36 }).notNull(),
     ...timestamps
   },
   (t) => ({
-    pk: primaryKey({ columns: [t.user_id, t.post_id] })
+     pk: primaryKey(t.user_id, t.post_id),  
   })
 )
 
@@ -561,16 +561,16 @@ export const likesRelations = relations(likesTable, ({ one }) => ({
 export type InsertLike = typeof likesTable.$inferInsert
 export type SelectLike = typeof likesTable.$inferSelect
 
-export const pollOptionsTable = sqliteTable(
+export const pollOptionsTable = mysqlTable(
   "poll_options",
   {
-    post_id: text().notNull(),
-    option_text: text().notNull(),
-    vote_count: int().notNull().default(0)
+    post_id: varchar("post_id", { length: 36 }).notNull(),
+    option_text: varchar("option_text", { length: 255 }).notNull(),
+    vote_count: int("vote_count").notNull().default(0),
   },
-  (t) => {
-    return { pk: primaryKey({ columns: [t.post_id, t.option_text] }) }
-  }
+  (t) => ({
+    pk: primaryKey(t.post_id, t.option_text),
+  })
 )
 
 export const pollOptionsRelations = relations(
@@ -592,15 +592,17 @@ export type SelectPollOption = typeof pollOptionsTable.$inferSelect & {
   votes?: SelectPollVote[]
 }
 
-export const pollVotesTable = sqliteTable(
+export const pollVotesTable = mysqlTable(
   "poll_votes",
   {
-    user_id: text().notNull(),
-    post_id: text().notNull(),
-    option_text: text().notNull(),
-    ...timestamps
+    user_id: varchar("user_id", { length: 36 }).notNull(),
+    post_id: varchar("post_id", { length: 36 }).notNull(),
+    option_text: varchar("option_text", { length: 255 }).notNull(),
+    ...timestamps,
   },
-  (t) => ({ pk: primaryKey({ columns: [t.user_id, t.post_id] }) })
+  (t) => ({
+    pk: primaryKey(t.user_id, t.post_id),
+  })
 )
 
 export const pollVotesRelations = relations(pollVotesTable, ({ one }) => ({
@@ -614,12 +616,12 @@ export const pollVotesRelations = relations(pollVotesTable, ({ one }) => ({
 export type InsertPollVote = typeof pollVotesTable.$inferInsert
 export type SelectPollVote = typeof pollVotesTable.$inferSelect
 
-export const filesTable = sqliteTable("files", {
-  id: int().primaryKey({ autoIncrement: true }),
-  file_name: text().notNull(),
-  file_size: int().notNull(),
-  file_type: text().notNull(),
-  file_path: text().notNull(),
+export const filesTable = mysqlTable("files", {
+  id: int("id").primaryKey().autoincrement(),
+  file_name: varchar("file_name", { length: 255 }).notNull(),
+  file_size: int("file_size").notNull(),
+  file_type: varchar("file_type", { length: 50 }).notNull(),
+  file_path: varchar("file_path", { length: 512 }).notNull(),
   ...timestamps
 })
 
@@ -639,10 +641,10 @@ export const filesRelations = relations(filesTable, ({ one }) => ({
 export type InsertFile = typeof filesTable.$inferInsert
 export type SelectFile = typeof filesTable.$inferSelect
 
-export const postFilesTable = sqliteTable("post_files", {
-  id: int().primaryKey({ autoIncrement: true }),
-  post_id: text().notNull(),
-  file_id: int().notNull()
+export const postFilesTable = mysqlTable("post_files", {
+  id: int("id").primaryKey().autoincrement(),
+  post_id: varchar("post_id", { length: 36 }).notNull(),
+  file_id: int("file_id").notNull(),
 })
 
 export const postFilesRelations = relations(postFilesTable, ({ one }) => ({
@@ -661,17 +663,17 @@ export const postFilesRelations = relations(postFilesTable, ({ one }) => ({
 export type InsertPostFile = typeof postFilesTable.$inferInsert
 export type SelectPostFile = typeof postFilesTable.$inferSelect
 
-export const channelsTable = sqliteTable("channels", {
-  id: text("channel_id", { length: 36 })
+export const channelsTable = mysqlTable("channels", {
+  id: varchar("channel_id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
-  channel_slug: text().notNull(),
-  channel_name: text().notNull(),
-  description: text(),
-  channel_type: text(),
-  created_by: text().notNull(),
-  publish_channel: int().notNull().default(0),
-  ownerId: text(),
+  channel_slug: varchar("channel_slug", { length: 255 }).notNull(),
+  channel_name: varchar("channel_name", { length: 255 }).notNull(),
+  description: text("description"),
+  channel_type: varchar("channel_type", { length: 100 }),
+  created_by: varchar("created_by", { length: 36 }).notNull(),
+  publish_channel: int("publish_channel").notNull().default(0),
+  ownerId: varchar("ownerId", { length: 36 }),
   ...timestamps
 })
 
@@ -690,18 +692,18 @@ export type SelectChannel = typeof channelsTable.$inferSelect & {
   users?: SelectChannelUser[]
 }
 
-export const spacesTable = sqliteTable("spaces", {
-  id: text("id", { length: 36 })
+export const spacesTable = mysqlTable("spaces", {
+  id: varchar("id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
-  space_slug: text().notNull(),
-  space_name: text().notNull(),
-  description: text(),
-  channel_id: text().notNull(),
-  created_by: text().notNull(),
-  ownerId: text(),
-  space_type: text(),
-  publish_space: int().notNull().default(0),
+  space_slug: varchar("space_slug", { length: 255 }).notNull(),
+  space_name: varchar("space_name", { length: 255 }).notNull(),
+  description: text("description"),
+  channel_id: varchar("channel_id", { length: 36 }).notNull(),
+  created_by: varchar("created_by", { length: 36 }).notNull(),
+  ownerId: varchar("ownerId", { length: 36 }),
+  space_type: varchar("space_type", { length: 100 }),
+  publish_space: int("publish_space").notNull().default(0),
   ...timestamps
 })
 
@@ -737,16 +739,16 @@ export type SelectSpace = InferSelectModel<typeof spacesTable> & {
   users?: SelectSpaceUser[]
 }
 
-export const featuresTable = sqliteTable("features", {
-  id: int().primaryKey({ autoIncrement: true }),
-  feature_name: text().notNull(),
-  feature_slug: text().notNull(),
-  feature_type: text().notNull(),
-  feature_description: text(),
-  feature_icon: text(),
-  feature_url: text(),
-  feature_order: int().notNull().default(0),
-  feature_status: int().notNull().default(1),
+export const featuresTable = mysqlTable("features", {
+  id: int("id").primaryKey().autoincrement(),
+  feature_name: varchar("feature_name", { length: 255 }).notNull(),
+  feature_slug: varchar("feature_slug", { length: 255 }).notNull(),
+  feature_type: varchar("feature_type", { length: 100 }).notNull(),
+  feature_description: text("feature_description"),
+  feature_icon: text("feature_icon"),
+  feature_url: text("feature_url"),
+  feature_order: int("feature_order").notNull().default(0),
+  feature_status: int("feature_status").notNull().default(1),
   ...timestamps
 })
 
@@ -759,10 +761,10 @@ export const featuresTableRelations = relations(featuresTable, ({ many }) => ({
   })
 }))
 
-export const spaceFeaturesTable = sqliteTable("space_features", {
-  id: int().primaryKey({ autoIncrement: true }),
-  space_id: text().notNull(), // space_id
-  feature_id: int().notNull(), // feature_id
+export const spaceFeaturesTable = mysqlTable("space_features", {
+  id: int("id").primaryKey().autoincrement(),
+  space_id: varchar("space_id", { length: 36 }).notNull(),
+  feature_id: int("feature_id").notNull(),
   ...timestamps
 })
 
@@ -788,14 +790,14 @@ export const spaceFeaturesTableRelations = relations(
   })
 )
 
-export const spaceFileDirectoryTable = sqliteTable("space_file_directory", {
-  id: int().primaryKey({ autoIncrement: true }),
-  space_id: text(),
-  entity_name: text().notNull(),
-  entity_type: text().notNull(),
-  entity_id: int(),
-  entity_size: int(),
-  parent_id: int(),
+export const spaceFileDirectoryTable = mysqlTable("space_file_directory", {
+  id: int("id").primaryKey().autoincrement(),
+  space_id: varchar("space_id", { length: 36 }),
+  entity_name: varchar("entity_name", { length: 255 }).notNull(),
+  entity_type: varchar("entity_type", { length: 100 }).notNull(),
+  entity_id: int("entity_id"),
+  entity_size: int("entity_size"),
+  parent_id: int("parent_id"),
   ...timestamps
 })
 
@@ -818,13 +820,13 @@ export type SelectSpaceFileDirectory =
   }
 
 
-export const SpaceUsersTable = sqliteTable("space_users", {
-  id: int().primaryKey({ autoIncrement: true }),
-  space_id: text().notNull(),
-  user_id: text().notNull(),
-  role: text().default("member"),
-  status: text().default("active"),
-})
+export const SpaceUsersTable = mysqlTable("space_users", {
+  id: int("id").primaryKey().autoincrement(),
+  space_id: varchar("space_id", { length: 36 }).notNull(),
+  user_id: varchar("user_id", { length: 36 }).notNull(),
+  role: varchar("role", { length: 50 }).default("member"),
+  status: varchar("status", { length: 50 }).default("active"),
+});
 
 export type InsertSpaceUser = typeof SpaceUsersTable.$inferInsert
 export type SelectSpaceUser = typeof SpaceUsersTable.$inferSelect & { 
@@ -845,12 +847,12 @@ export const SpaceUsersRelations = relations(SpaceUsersTable, ({ one }) => ({
   }),
 }))
 
-export const ChannelUsersTable = sqliteTable("channel_users", {
-  id: int().primaryKey({ autoIncrement: true }),  
-  channel_id: text().notNull(),
-  user_id: text().notNull(),
-  role: text().default("member"),
-  status: text().default("active"),
+export const ChannelUsersTable = mysqlTable("channel_users", {
+  id: int("id").primaryKey().autoincrement(),
+  channel_id: varchar("channel_id", { length: 36 }).notNull(),
+  user_id: varchar("user_id", { length: 36 }).notNull(),
+  role: varchar("role", { length: 50 }).default("member"),
+  status: varchar("status", { length: 50 }).default("active"),
 
 })
 export type InsertChannelUser = typeof ChannelUsersTable.$inferInsert
@@ -873,19 +875,19 @@ export const ChannelUsersRelations = relations(ChannelUsersTable, ({ one }) => (
 }))
 
 
-export const projectTable = sqliteTable("project", {
-  id: text("id", { length: 36 })
+export const projectTable = mysqlTable("project", {
+  id: varchar("id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
-    project_name: text().notNull(),
-    project_slug: text().notNull(),
-    description: text(),
-    project_startDate: text().notNull(),
-    project_targetDate: text().notNull(),
-    channel_id: text().notNull(),
-    space_id: text().notNull(),
-    created_by: text().notNull(),
-    project_type: text(),
+    project_name: varchar("project_name", { length: 255 }).notNull(),
+    project_slug: varchar("project_slug", { length: 255 }).notNull(),
+    description: text("description"),
+    project_startDate: varchar("project_startDate", { length: 50 }).notNull(),
+    project_targetDate: varchar("project_targetDate", { length: 50 }).notNull(),
+    channel_id: varchar("channel_id", { length: 36 }).notNull(),
+    space_id: varchar("space_id", { length: 36 }).notNull(),
+    created_by: varchar("created_by", { length: 36 }).notNull(),
+    project_type: varchar("project_type", { length: 100 }),
     ...timestamps
 })
 
@@ -893,26 +895,25 @@ export type InsertProject = typeof projectTable.$inferInsert
 export type SelectProject = typeof projectTable.$inferSelect
 
 
-export const taskTable = sqliteTable("task", {
-  id: text("id", { length: 36 })
+export const taskTable = mysqlTable("task", {
+  id: varchar("id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
-    task_num: text(),
-    task_title: text().notNull(),
-    description: text().notNull(),
-    task_type: text().notNull(),
-    task_priority: text().notNull(),
-    story_points: text().notNull(),
-    project_id: text().notNull(),
-    created_by: text().notNull(),
-    status_id: text(),
-    ...timestamps
+  task_num: varchar("task_num", { length: 50 }),
+  task_title: varchar("task_title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  task_type: varchar("task_type", { length: 100 }).notNull(),
+  task_priority: varchar("task_priority", { length: 50 }).notNull(),
+  story_points: varchar("story_points", { length: 50 }).notNull(),
+  project_id: varchar("project_id", { length: 36 }).notNull(),
+  created_by: varchar("created_by", { length: 36 }).notNull(),
+  ...timestamps
 })
 
 export type InsertTask = typeof taskTable.$inferInsert
 export type SelectTask = typeof taskTable.$inferSelect
-export const SpaceChatsTable = sqliteTable("space_chats", {
-  id: int().primaryKey({ autoIncrement: true }),
+export const SpaceChatsTable = mysqlTable("space_chats", {
+  id: int("id").primaryKey().autoincrement(),
   space_id: text().notNull(),
   chat_id: int().notNull(),
   ...timestamps

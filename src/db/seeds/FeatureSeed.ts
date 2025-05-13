@@ -44,22 +44,27 @@ export const FeatureSeedList: InsertFeature[] = [
   }
 ]
 
-export const FeatureSeed = async()=>{
-  return await db.transaction(async(tx)=>{
-    try{
+export const FeatureSeed = async () => {
+  return await db.transaction(async (tx) => {
+    try {
+      await tx.delete(featuresTable).execute();
 
-      await tx.delete(featuresTable).run()
-      await tx.run(sql`DELETE FROM sqlite_sequence WHERE name = 'features';`);
-      const features = await tx.insert(featuresTable).values(FeatureSeedList)
+      console.log("Inserting seed data...");
+      const result = await tx.insert(featuresTable).values(FeatureSeedList);
 
-      if(features.rowsAffected === FeatureSeedList.length){
-        console.log('✅ Features seeded successfully')
+      // Access affectedRows from the ResultSetHeader
+      const affectedRows = result[0]?.affectedRows;
+
+      if (affectedRows === FeatureSeedList.length) {
+        console.log('✅ Features seeded successfully');
+      } else {
+        console.log(`❌ Some features were not inserted correctly. Expected ${FeatureSeedList.length}, but got ${affectedRows}`);
       }
-    }catch(e){
-      console.error(e)
-      tx.rollback()
-      console.log('❌ Error seeding features')
-      process.exit(1)
+    } catch (e) {
+      console.error("Error seeding:", e);
+      tx.rollback();  // Rollback on error
+      console.log('❌ Error seeding features');
+      process.exit(1);
     }
   })
 }

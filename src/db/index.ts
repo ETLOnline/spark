@@ -1,13 +1,20 @@
 import { config } from 'dotenv';
+import { drizzle } from 'drizzle-orm/mysql2';
 import * as schema from './schema';
-import { drizzle } from 'drizzle-orm/libsql';
-import { createClient } from '@libsql/client';
+import mysql from 'mysql2';
 
 config({ path: '.env.local' });
 
-const client = createClient({
-  url: process.env.TURSO_DATABASE_URL!,
-  authToken: process.env.TURSO_AUTH_TOKEN!,
-});
+const dbUrl = process.env.DATABASE_URL;
 
-export const db = drizzle(client , {schema });
+if (!dbUrl) {
+  throw new Error('DATABASE_URL environment variable is not set');
+}
+
+const connection = mysql.createConnection(dbUrl);
+
+// Initialize Drizzle with the connection
+export const db = drizzle(connection, {
+  schema,
+  mode: 'default'
+});

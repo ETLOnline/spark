@@ -1,25 +1,17 @@
-import { sql } from "drizzle-orm";
 import { db } from "..";
 import { usersTable } from "../schema";
-import UserSeedList from '../seeds/UserSeedList.json'
+import UserSeedList from '../seeds/UserSeedList.json';
 
+export const UserSeed = async () => {
+  return await db.transaction(async (tx) => {
+    try {
+      await tx.delete(usersTable);
 
-export const UserSeed = async()=>{
-  return await db.transaction(async(tx)=>{
-    try{
-
-      await tx.delete(usersTable).run()
-      await tx.run(sql`DELETE FROM sqlite_sequence WHERE name = 'users';`);
-      const res = await tx.insert(usersTable).values(UserSeedList)
-
-      if(res.rowsAffected === UserSeedList.length){
-        console.log('✅ Users seeded successfully')
-      }
-    }catch(e){
-      console.error(e)
-      tx.rollback()
-      console.log('❌ Error seeding Users')
-      process.exit(1)
+      const res = await tx.insert(usersTable).values(UserSeedList);
+      console.log('✅ Users seeded successfully');
+    } catch (e) {
+      console.log('❌ Error seeding Users');
+      process.exit(1);
     }
-  })
-}
+  });
+};
