@@ -26,7 +26,7 @@ export function ProjectDashboard({ currProject }: Props) {
   const searchParams = useSearchParams()
   const UrlTab = searchParams.get("tab")
   const [activeTab, setActiveTab] = useState(UrlTab || "overview")
-  const [project, setProject] = useAtom(projectStore.currPtoject)
+  const [project, setProject] = useAtom(projectStore.currProject)
 
   useEffect(() => {
     if (UrlTab !== activeTab) {

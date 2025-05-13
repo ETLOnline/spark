@@ -139,10 +139,7 @@ export function BacklogManagement() {
             </Button>
           </div>
           <div className="flex items-center space-x-2">
-            {/* <Button variant="outline" size="sm">
-            <Filter className="mr-2 h-4 w-4" />
-            Filter
-          </Button> */}
+
             <Button variant="outline" size="sm"
               onClick={() =>
                 setOrderList(orderList === 'asc' ? 'desc' : 'asc')
@@ -163,18 +160,6 @@ export function BacklogManagement() {
               </SelectContent>
             </Select>
 
-
-
-            {/* <Select defaultValue="planning">
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select view" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="planning">Planning</SelectItem>
-              <SelectItem value="sprint">Sprint Planning</SelectItem>
-              <SelectItem value="refinement">Refinement</SelectItem>
-            </SelectContent>
-          </Select> */}
           </div>
         </div>
 

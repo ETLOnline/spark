@@ -18,13 +18,13 @@ async function page({ params, searchParams }: Props) {
   const task_Id = await searchParams
   const taskId = task_Id.task
 
-  const status = await GetTaskStatusAction(projectId)
+  const projectStatusList = await GetTaskStatusAction(projectId)
 
-  const task = await GetTaskByIdAction(taskId)
+  const currTask = await GetTaskByIdAction(taskId)
 
 
   return (
-    <TaskScreenPage statuses={status.data || []} task={task.data} />
+    <TaskScreenPage statuses={projectStatusList.data || []} task={currTask.data} />
   )
 }
 

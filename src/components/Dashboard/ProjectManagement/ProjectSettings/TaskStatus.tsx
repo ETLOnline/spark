@@ -10,23 +10,23 @@ import { AlertTriangle, ArrowBigRightDash, ArrowDown, ArrowUp, CircleHelp, Plus,
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { SelectTask, SelectTaskStatus } from "@/src/db/schema"
-import { CreateTaskStatusAction, DeleteTaskStatusAction, GetTaskByStatusIdAction, GetTaskStatusAction, UpdateTaskAction, UpdateTaskStatusAction } from "@/src/server-actions/Tasks/Task"
+import { CreateTaskStatusAction, DeleteTaskStatusAction, GetTasksByStatusIdAction, GetTaskStatusAction, UpdateTaskAction, UpdateTaskStatusAction } from "@/src/server-actions/Tasks/Task"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/src/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/src/components/ui/table'
 import { useParams } from "next/navigation"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { useAtom } from "jotai"
-import { taskStatusesStore } from "@/src/store/taskstatuses/StatusesStore"
 import { Badge } from "@/src/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select"
 import Link from "next/link"
+import { projectStore } from "@/src/store/project/projectStore"
 
 // Default statuses that cannot be removed
 const DEFAULT_STATUSES = ["Backlog", "To Do", "In Progress", "Done"];
 
 export default function TaskStatus() {
-  const [statuses, setStatuses] = useAtom(taskStatusesStore.statuses) // Default statuses as initial state
+  const [statuses, setStatuses] = useAtom(projectStore.projectStatusList) // Default statuses as initial state
   const [newStatus, setNewStatus] = useState(""); // State to hold the new status input
   const [isSaving, setIsSaving] = useState(false); // Saving state
   const [editStatus, setEditStatus] = useState(false)
@@ -41,7 +41,7 @@ export default function TaskStatus() {
   const [createLoading, data, error, createTaskStatus] = useServerAction(CreateTaskStatusAction);
   const [getStatusLoading, getStatusData, getStatusError, GetStatus] = useServerAction(GetTaskStatusAction)
   const [updateStatusLoading, updateStatusData, updateStatusError, UpdateTaskStatus] = useServerAction(UpdateTaskStatusAction)
-  const [tasksLoading, tasksdata, taskserror, GetTasks] = useServerAction(GetTaskByStatusIdAction)
+  const [tasksLoading, tasksdata, taskserror, GetTasks] = useServerAction(GetTasksByStatusIdAction)
   const [updateTaskLoading, updateTaskData, updateTaskError, UpdateTask] = useServerAction(UpdateTaskAction)
   const [deleteStatusLoading, deleteData, deleteError, DeleteStatus] = useServerAction(DeleteTaskStatusAction)
 

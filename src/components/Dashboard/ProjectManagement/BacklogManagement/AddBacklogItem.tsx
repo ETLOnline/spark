@@ -1,7 +1,6 @@
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/src/components/ui/dialog'
 import { GetTaskStatusAction } from '@/src/server-actions/Tasks/Task'
 import { projectStore } from '@/src/store/project/projectStore'
-import { taskStatusesStore } from '@/src/store/taskstatuses/StatusesStore'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useAtom } from 'jotai'
 import { useParams } from 'next/navigation'
@@ -28,7 +27,7 @@ function AddBacklogItem() {
   const [isTaskFormModelOpen, setIsTaskFormModelOpen] = useAtom(taskStore.isTaskFormModelOpen)
   const [editTask, setEditTask] = useState(false)
   const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
-  const [statuses, setStatuses] = useAtom(taskStatusesStore.statuses)
+  const [statuses, setStatuses] = useAtom(projectStore.projectStatusList)
 
   const form = useForm({
     resolver: zodResolver(taskSchema)
@@ -82,7 +81,6 @@ function AddBacklogItem() {
     }
   }, [selectedTask])
 
-  // console.log(form.formState.errors)
 
 
 

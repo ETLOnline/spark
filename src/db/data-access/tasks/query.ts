@@ -105,7 +105,7 @@ export async function GetTaskById(taskId: string){
   }
 }
 
-export async function GetTaskByStatusId(statusId: string){
+export async function GetTasksByStatusId(statusId: string){
   try{
     const tasks = await db.select().from(taskTable).where(
       eq(taskTable.status_id, statusId)
@@ -156,7 +156,7 @@ export async function CreateTaskStatus(data: InsertTaskStatus) {
 }
 
 
-export async function GetTaskStatus(projectId: string){
+export async function GetTaskStatusList(projectId: string){
   try{
       const taskStatus = await db.select().from(TaskStatusTable).where(
         eq(TaskStatusTable.project_id, projectId)

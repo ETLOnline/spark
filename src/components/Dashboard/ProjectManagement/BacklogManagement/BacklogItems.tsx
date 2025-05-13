@@ -9,7 +9,6 @@ import { useServerAction } from '@/src/hooks/useServerAction'
 import { DeleteTaskAction } from '@/src/server-actions/Tasks/Task'
 import { projectStore } from '@/src/store/project/projectStore'
 import { taskStore } from '@/src/store/tasks/taskStore'
-import { taskStatusesStore } from '@/src/store/taskstatuses/StatusesStore'
 import { useAtom, useSetAtom } from 'jotai'
 import { CircleHelp, MoreHorizontal } from 'lucide-react'
 import React, { Dispatch, SetStateAction, useState } from 'react'
@@ -26,7 +25,7 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
   const SetTasks = useSetAtom(taskStore.tasks)
-  const [status, setStatus] = useAtom(taskStatusesStore.statuses)
+  const [status, setStatus] = useAtom(projectStore.projectStatusList)
 
   const [deleteTaskLoading, deleteTaskData, deleteTaskError, DeleteTask] = useServerAction(DeleteTaskAction)
 
@@ -123,14 +122,6 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
         <div className="col-span-1 text-sm font-medium">{task.task_num}</div>
         <div className="col-span-3">
           <div className="font-medium">{task.task_title}</div>
-          <div className="text-xs text-muted-foreground hidden sm:block" dangerouslySetInnerHTML={{ __html: task.description }} />
-          {/* <div className="flex flex-wrap gap-1 mt-1  sm:flex">
-          {task.labels.map((label, index) => (
-            <Badge key={index} variant="outline" className="text-xs">
-              {label}
-            </Badge>
-          ))}
-        </div> */}
         </div>
         <div className="col-span-1">{getTypeLabel(task.task_type)}</div>
         <div className="col-span-3 flex justify-around items-center">

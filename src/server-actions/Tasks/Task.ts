@@ -1,5 +1,5 @@
 "use server"
-import { CreateTask, CreateTaskStatus, DeleteTask, DeleteTaskStatus, GetTaskById, GetTaskByStatusId, GetTaskCount, GetTasks, GetTaskStatus, taskQueryFilters, UpdateTask, UpdateTaskStatus} from "@/src/db/data-access/tasks/query";
+import { CreateTask, CreateTaskStatus, DeleteTask, DeleteTaskStatus, GetTaskById, GetTasksByStatusId, GetTaskCount, GetTasks, GetTaskStatusList, taskQueryFilters, UpdateTask, UpdateTaskStatus} from "@/src/db/data-access/tasks/query";
 import { CreateServerAction } from "..";
 import { InsertTask, InsertTaskStatus, SelectTask } from "@/src/db/schema";
 import { getProjectById } from "@/src/db/data-access/project-management/query";
@@ -65,11 +65,11 @@ export const GetTaskByIdAction = CreateServerAction(
 
 
 
-export const GetTaskByStatusIdAction = CreateServerAction(
+export const GetTasksByStatusIdAction = CreateServerAction(
   true,
   async (statusId: string) => {
     try{
-      const tasks = await GetTaskByStatusId(statusId)
+      const tasks = await GetTasksByStatusId(statusId)
 
       return {success: true, data: tasks}
     }catch(error){
@@ -127,7 +127,7 @@ export const GetTaskStatusAction = CreateServerAction(
   true,
   async (projectId: string) => {
     try {
-      const taskStatus = await GetTaskStatus(projectId)
+      const taskStatus = await GetTaskStatusList(projectId)
 
       return { success: true, data: taskStatus}
 

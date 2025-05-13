@@ -14,7 +14,7 @@ interface Props {
 }
 
 function TaskFormHeader({ selectedTask }: Props) {
-  const [project, setProject] = useAtom(projectStore.currPtoject)
+  const [project, setProject] = useAtom(projectStore.currProject)
 
   const [space, setSpace] = useState<SelectSpace>()
 
