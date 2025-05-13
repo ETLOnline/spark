@@ -278,7 +278,7 @@ export default function TaskForm({ statuses }: Props) {
                   defaultValue=""
                   control={form.control}
                   render={({ field }) => (
-                    <RichTextEditor {...field} />
+                    <RichTextEditor {...field} value={field.value ?? ""} />
                   )}
                 />
               ) : (
