@@ -7,11 +7,13 @@ import { Calendar, Settings, Users } from "lucide-react"
 import { SprintManagement } from "./SprintManagement/SprintManagement"
 import { BacklogManagement } from "./BacklogManagement/BacklogManagement"
 import { FileSharing } from "./FileSharing"
-import { ProjectSettings } from "./ProjectSettings/ProjectSettings"
 import ProjectOverView from "./ProjectOverView/ProjectOverView"
 import { SelectProject } from "@/src/db/schema"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../ui/hover-card"
 import { useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
+import { useAtom } from "jotai"
+import { projectStore } from "@/src/store/project/projectStore"
 
 interface Props {
   currProject: SelectProject
@@ -24,12 +26,17 @@ export function ProjectDashboard({ currProject }: Props) {
   const searchParams = useSearchParams()
   const UrlTab = searchParams.get("tab")
   const [activeTab, setActiveTab] = useState(UrlTab || "overview")
+  const [project, setProject] = useAtom(projectStore.currProject)
 
   useEffect(() => {
     if (UrlTab !== activeTab) {
       router.push(`./board?tab=${activeTab}`)
     }
   }, [activeTab, UrlTab])
+
+  useEffect(() => {
+    setProject(currProject)
+  }, [currProject])
 
   return (
     <div className="grid grid-cols-1  p-4">
@@ -63,10 +70,12 @@ export function ProjectDashboard({ currProject }: Props) {
             <Users className="mr-2 h-4 w-4" />
             Team
           </Button>
-          <Button variant="outline" size="sm">
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
-          </Button>
+          <Link href={`./settings`}>
+            <Button variant="outline" size="sm">
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+            </Button>
+          </Link>
         </div>
       </div>
       <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -75,7 +84,6 @@ export function ProjectDashboard({ currProject }: Props) {
           <TabsTrigger className="w-full" value="sprints">Sprints</TabsTrigger>
           <TabsTrigger className="w-full" value="backlog">Backlog</TabsTrigger>
           <TabsTrigger className="w-full" value="files">Files</TabsTrigger>
-          <TabsTrigger className="w-full" value="settings">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -94,9 +102,6 @@ export function ProjectDashboard({ currProject }: Props) {
           <FileSharing />
         </TabsContent>
 
-        <TabsContent value="settings">
-          <ProjectSettings />
-        </TabsContent>
       </Tabs>
     </div>
   )

@@ -905,6 +905,7 @@ export const taskTable = sqliteTable("task", {
     story_points: text().notNull(),
     project_id: text().notNull(),
     created_by: text().notNull(),
+    status_id: text(),
     ...timestamps
 })
 
@@ -935,3 +936,18 @@ export const SpaceChatsRelations = relations(SpaceChatsTable, ({ one }) => ({
     relationName: "spaceChatToChat",
   }),
 }))
+
+
+export const TaskStatusTable = sqliteTable("tasks_status", {
+  id: text("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+    project_id: text().notNull(),
+    name: text().notNull(),
+    position: int().notNull(),
+    status_slug: text(),
+    ...timestamps
+})
+
+export type InsertTaskStatus = typeof TaskStatusTable.$inferInsert
+export type SelectTaskStatus = typeof TaskStatusTable.$inferSelect

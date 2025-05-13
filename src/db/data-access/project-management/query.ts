@@ -1,6 +1,6 @@
-import { and, desc, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "../..";
-import { InsertProject, projectTable, spacesTable } from "../../schema";
+import { InsertProject,  projectTable } from "../../schema";
 
 export async function CreateProject(project_data:InsertProject) {
     try {

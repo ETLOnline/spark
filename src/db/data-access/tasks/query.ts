@@ -1,6 +1,6 @@
-import { and, count, eq, like, or, SQLWrapper } from "drizzle-orm"
+import { and, asc, count, eq, like, or, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
-import { InsertTask, SelectTask, taskTable } from "../../schema"
+import { InsertTask, InsertTaskStatus, SelectTask, TaskStatusTable, taskTable } from "../../schema"
 
 export type taskQueryFilters = {
   page?: number,
@@ -93,6 +93,30 @@ export async function GetTasks(filters?: taskQueryFilters) {
   }
 }
 
+export async function GetTaskById(taskId: string){
+  try{
+    const task = await db.select().from(taskTable).where(
+      eq(taskTable.id, taskId)
+    )
+
+    return task[0]
+  }catch(e:any){
+    throw new Error(e.message)
+  }
+}
+
+export async function GetTasksByStatusId(statusId: string){
+  try{
+    const tasks = await db.select().from(taskTable).where(
+      eq(taskTable.status_id, statusId)
+    )
+
+    return tasks
+  }catch(e:any){
+    throw new Error(e.message)
+  }
+}
+
 
 
 export async function UpdateTask(taskId: string, updatedData: SelectTask){
@@ -116,6 +140,51 @@ export async function DeleteTask(Task: SelectTask){
 
     return deletedTask
 
+  }catch(e:any){
+    throw new Error(e.message)
+  }
+}
+
+
+export async function CreateTaskStatus(data: InsertTaskStatus) {
+  try{
+      const taskStatus = await db.insert(TaskStatusTable).values(data).returning()
+      return taskStatus
+  }catch(e:any){
+      throw new Error(e.message)
+  }
+}
+
+
+export async function GetTaskStatusList(projectId: string){
+  try{
+      const taskStatus = await db.select().from(TaskStatusTable).where(
+        eq(TaskStatusTable.project_id, projectId)
+      ).orderBy(asc(TaskStatusTable.position))
+      return taskStatus
+  }catch(e:any){
+      throw new Error(e.message)
+  }
+}
+
+
+export async function UpdateTaskStatus(statusId: string, updatedData: InsertTaskStatus){
+  try{
+    const UpdatedTaskStatus = db.update(TaskStatusTable).set(updatedData).where(
+      eq(TaskStatusTable.id, statusId)
+    ).returning()
+    return UpdatedTaskStatus
+  }catch(e:any){
+    throw new Error(e.message)
+  }
+}
+
+
+export async function DeleteTaskStatus(statusId: string){
+  try{
+    await db.delete(TaskStatusTable).where(
+      eq(TaskStatusTable.id, statusId)
+    )
   }catch(e:any){
     throw new Error(e.message)
   }
