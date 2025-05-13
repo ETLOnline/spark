@@ -21,7 +21,7 @@ interface Props {
 }
 
 function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
-  const setIsTicketFormModelOpen = useSetAtom(taskStore.isTaskFormModelOpen)
+  const setIsTaskFormModelOpen = useSetAtom(taskStore.isTaskFormModelOpen)
   const [isDropdownOpen, setIsDropDownOpen] = useState(false)
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
@@ -39,7 +39,7 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
 
   function EditTask(task: SelectTask) {
     setSelectedTask(task)
-    setIsTicketFormModelOpen(true)
+    setIsTaskFormModelOpen(true)
     setIsDropDownOpen(false)
   }
 

@@ -156,7 +156,7 @@ export async function CreateTaskStatus(data: InsertTaskStatus) {
 }
 
 
-export async function GetTaskSatatus(projectId: string){
+export async function GetTaskStatus(projectId: string){
   try{
       const taskStatus = await db.select().from(TaskStatusTable).where(
         eq(TaskStatusTable.project_id, projectId)

@@ -46,12 +46,7 @@ function TaskFormHeader({ selectedTask }: Props) {
   return (
     <header className=" border-b  px-4 py-3 flex items-center">
       <nav className="flex items-center text-sm">
-        {/* <Link href="/" className="flex items-center text-gray-500 hover:text-gray-900">
-          <Home size={16} className="mr-1" />
-          <span>Home</span>
-        </Link> */}
 
-        {/* <ChevronRight size={16} className="mx-2 text-gray-400" /> */}
 
         <Link href={space ? `/project?channel=${space?.channel?.channel_slug}&space=${space?.space_slug}` : "./board?tab=backlog"} className="text-gray-500 hover:text-gray-300">
           Projects

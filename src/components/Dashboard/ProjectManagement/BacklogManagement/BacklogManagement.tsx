@@ -5,11 +5,11 @@ import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select"
 import { Plus, Search, Filter, ArrowUpDown } from "lucide-react"
-import AddBabklogItem from "./AddBabklogItem"
 import BacklogItemsCard from "./BacklogItemsCard"
 import { useSetAtom } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
+import AddBacklogItem from "./AddBacklogItem"
 
 
 interface BacklogItem {
@@ -98,7 +98,7 @@ const sampleBacklogItems: BacklogItem[] = [
 
 export function BacklogManagement() {
   const [backlogItems, setBacklogItems] = useState<BacklogItem[]>(sampleBacklogItems)
-  const setIsTicketFormModelOpen = useSetAtom(taskStore.isTaskFormModelOpen)
+  const setIsTaskFormModelOpen = useSetAtom(taskStore.isTaskFormModelOpen)
   const [searchQuery, setSearchQuery] = useState("")
   const [searchedItem, setSearchedItem] = useState("")
   const [orderList, setOrderList] = useState('asc')
@@ -113,11 +113,11 @@ export function BacklogManagement() {
 
   return (
     <>
-      <AddBabklogItem />
+      <AddBacklogItem />
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h2 className="text-xl font-bold">Backlog</h2>
-          <Button onClick={() => setIsTicketFormModelOpen(true)}>
+          <Button onClick={() => setIsTaskFormModelOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add Item
           </Button>

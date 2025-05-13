@@ -10,7 +10,7 @@ import { AlertTriangle, ArrowBigRightDash, ArrowDown, ArrowUp, CircleHelp, Plus,
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { SelectTask, SelectTaskStatus } from "@/src/db/schema"
-import { CreateTaskStatusAction, DeleteTaskStatusAction, GetTaskByStatusIdAction, GetTaskSatatusAction, UpdateTaskAction, UpdateTaskStatusAction } from "@/src/server-actions/Tasks/Task"
+import { CreateTaskStatusAction, DeleteTaskStatusAction, GetTaskByStatusIdAction, GetTaskStatusAction, UpdateTaskAction, UpdateTaskStatusAction } from "@/src/server-actions/Tasks/Task"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/src/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/src/components/ui/table'
 import { useParams } from "next/navigation"
@@ -39,7 +39,7 @@ export default function TaskStatus() {
 
 
   const [createLoading, data, error, createTaskStatus] = useServerAction(CreateTaskStatusAction);
-  const [getStatusLoading, getStatusData, getStatusError, GetStatus] = useServerAction(GetTaskSatatusAction)
+  const [getStatusLoading, getStatusData, getStatusError, GetStatus] = useServerAction(GetTaskStatusAction)
   const [updateStatusLoading, updateStatusData, updateStatusError, UpdateTaskStatus] = useServerAction(UpdateTaskStatusAction)
   const [tasksLoading, tasksdata, taskserror, GetTasks] = useServerAction(GetTaskByStatusIdAction)
   const [updateTaskLoading, updateTaskData, updateTaskError, UpdateTask] = useServerAction(UpdateTaskAction)

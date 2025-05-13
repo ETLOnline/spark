@@ -1,5 +1,5 @@
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/src/components/ui/dialog'
-import { GetTaskSatatusAction } from '@/src/server-actions/Tasks/Task'
+import { GetTaskStatusAction } from '@/src/server-actions/Tasks/Task'
 import { projectStore } from '@/src/store/project/projectStore'
 import { taskStatusesStore } from '@/src/store/taskstatuses/StatusesStore'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -13,7 +13,7 @@ import TaskForm from './TaskForm'
 import TaskFormHeader from './TaskFormHeader'
 import { taskStore } from '@/src/store/tasks/taskStore'
 
-const ticketSchema = z.object({
+const taskSchema = z.object({
   task_title: z.string().min(1, "Title required").max(50, "Title is too long"),
   description: z.string().min(1, "Title required").max(100, "Title is too long"),
   task_type: z.string().min(1, "Title required"),
@@ -24,14 +24,14 @@ const ticketSchema = z.object({
 
 
 
-function AddBabklogItem() {
-  const [isTicketFormModelOpen, setIsTicketFormModelOpen] = useAtom(taskStore.isTaskFormModelOpen)
+function AddBacklogItem() {
+  const [isTaskFormModelOpen, setIsTaskFormModelOpen] = useAtom(taskStore.isTaskFormModelOpen)
   const [editTask, setEditTask] = useState(false)
   const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
   const [statuses, setStatuses] = useAtom(taskStatusesStore.statuses)
 
   const form = useForm({
-    resolver: zodResolver(ticketSchema)
+    resolver: zodResolver(taskSchema)
   })
 
   const projectId = useParams().id as string
@@ -40,17 +40,17 @@ function AddBabklogItem() {
 
   useEffect(() => {
     const fetchStatuses = async () => {
-      const status = await GetTaskSatatusAction(projectId)
+      const status = await GetTaskStatusAction(projectId)
       if (status.success && status.data) {
         setStatuses(status.data)
       }
     }
     fetchStatuses()
-  }, [isTicketFormModelOpen])
+  }, [isTaskFormModelOpen])
 
 
   useEffect(() => {
-    if (!isTicketFormModelOpen) {
+    if (!isTaskFormModelOpen) {
       form.reset(
         {
           task_title: "",
@@ -65,7 +65,7 @@ function AddBabklogItem() {
       setSelectedTask(null)
       setEditTask(false)
     }
-  }, [isTicketFormModelOpen])
+  }, [isTaskFormModelOpen])
 
   useEffect(() => {
     if (selectedTask) {
@@ -87,7 +87,7 @@ function AddBabklogItem() {
 
 
   return (
-    <Dialog open={isTicketFormModelOpen} onOpenChange={setIsTicketFormModelOpen}>
+    <Dialog open={isTaskFormModelOpen} onOpenChange={setIsTaskFormModelOpen}>
       <DialogContent className='sm:max-w-5xl [&>button]:w-6 [&>button]:h-6 [&>button>svg]:w-6 [&>button>svg]:h-6'>
         <DialogHeader>
           <TaskFormHeader selectedTask={selectedTask} />
@@ -101,4 +101,4 @@ function AddBabklogItem() {
   )
 }
 
-export default AddBabklogItem
+export default AddBacklogItem

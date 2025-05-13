@@ -1,5 +1,5 @@
 import TaskScreenPage from '@/src/components/Dashboard/ProjectManagement/BacklogManagement/TaskScreen'
-import { GetTaskByIdAction, GetTaskSatatusAction } from '@/src/server-actions/Tasks/Task'
+import { GetTaskByIdAction, GetTaskStatusAction } from '@/src/server-actions/Tasks/Task'
 import React from 'react'
 
 interface Props {
@@ -18,7 +18,7 @@ async function page({ params, searchParams }: Props) {
   const task_Id = await searchParams
   const taskId = task_Id.task
 
-  const status = await GetTaskSatatusAction(projectId)
+  const status = await GetTaskStatusAction(projectId)
 
   const task = await GetTaskByIdAction(taskId)
 
