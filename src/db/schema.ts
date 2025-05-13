@@ -939,8 +939,8 @@ export const SpaceChatsRelations = relations(SpaceChatsTable, ({ one }) => ({
 }))
 
 
-export const TaskStatusTable = sqliteTable("tasks_status", {
-  id: text("id", { length: 36 })
+export const TaskStatusTable = mysqlTable("tasks_status", {
+   id: varchar("id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
     project_id: text().notNull(),
