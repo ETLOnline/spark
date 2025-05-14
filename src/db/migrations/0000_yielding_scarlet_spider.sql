@@ -26,6 +26,18 @@ CREATE TABLE `space_users` (
 	CONSTRAINT `space_users_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
+CREATE TABLE `tasks_status` (
+	`id` varchar(36) NOT NULL,
+	`project_id` text NOT NULL,
+	`name` text NOT NULL,
+	`position` int NOT NULL,
+	`status_slug` text,
+	`updated_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+	`created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+	`deleted_at` text,
+	CONSTRAINT `tasks_status_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
 CREATE TABLE `activities` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`title` varchar(255) NOT NULL,

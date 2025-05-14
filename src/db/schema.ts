@@ -940,14 +940,14 @@ export const SpaceChatsRelations = relations(SpaceChatsTable, ({ one }) => ({
 
 
 export const TaskStatusTable = mysqlTable("tasks_status", {
-   id: varchar("id", { length: 36 })
+  id: varchar("id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
-    project_id: text().notNull(),
-    name: text().notNull(),
-    position: int().notNull(),
-    status_slug: text(),
-    ...timestamps
+  project_id: text().notNull(),
+  name: text().notNull(),
+  position: int().notNull(),
+  status_slug: text(),
+  ...timestamps
 })
 
 export type InsertTaskStatus = typeof TaskStatusTable.$inferInsert

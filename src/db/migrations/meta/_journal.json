@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1747138875268,
-      "tag": "0000_nosy_rogue",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "6",
-      "when": 1746029256576,
-      "tag": "0007_black_valkyrie",
+      "when": 1747249631601,
+      "tag": "0000_yielding_scarlet_spider",
       "breakpoints": true
     }
   ]
