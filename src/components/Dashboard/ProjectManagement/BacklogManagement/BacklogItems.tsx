@@ -121,7 +121,7 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
         </div>
         <div className="col-span-1 text-sm font-medium">{task.task_num}</div>
         <div className="col-span-3">
-          <div className="font-medium">{task.task_title}</div>
+          <div className="font-medium break-words whitespace-normal">{task.task_title}</div>
         </div>
         <div className="col-span-1">{getTypeLabel(task.task_type)}</div>
         <div className="col-span-3 flex justify-around items-center">
