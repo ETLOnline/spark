@@ -82,7 +82,7 @@ export default function TaskForm({ statuses }: Props) {
       form.setValue("task_type", selectedTask.task_type)
       form.setValue("task_priority", selectedTask.task_priority)
       form.setValue("story_points", selectedTask.story_points)
-      form.setValue("status_id", selectedTask.status_id)
+      form.setValue("status_id", selectedTask?.status_id ?? undefined)
     } else {
       form.setValue("status_id", backlogStatus?.id)
     }
