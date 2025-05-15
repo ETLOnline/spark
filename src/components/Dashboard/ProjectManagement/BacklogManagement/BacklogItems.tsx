@@ -12,6 +12,7 @@ import { taskStore } from '@/src/store/tasks/taskStore'
 import { useAtom, useSetAtom } from 'jotai'
 import { CircleHelp, MoreHorizontal } from 'lucide-react'
 import React, { Dispatch, SetStateAction, useState } from 'react'
+import { projectTaskPriority, projectTaskTypes } from '../constants/projectManagment'
 
 interface Props {
   selectedItems: string[]
@@ -63,51 +64,23 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
   }
 
   const getTypeLabel = (type: string) => {
-    switch (type) {
-      case "story":
-        return (
-          <Badge variant="default" className="bg-blue-500">
-            Story
-          </Badge>
-        )
-      case "bug":
-        return <Badge variant="destructive">Bug</Badge>
-      case "task":
-        return <Badge variant="secondary">Task</Badge>
-      case "epic":
-        return (
-          <Badge variant="default" className="bg-purple-500">
-            Epic
-          </Badge>
-        )
-      default:
-        return <Badge variant="outline">Unknown</Badge>
-    }
+    const matchedType = projectTaskTypes.find(t => t.key === type)
+    return matchedType ?
+      <Badge variant={matchedType?.badgeVariant as "default" | "destructive" | "secondary" | "outline"}>
+        {matchedType.title}
+      </Badge>
+      : <Badge variant={"outline"} />
   }
 
   const getPriorityLabel = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return (
-          <Badge variant="outline" className="border-red-500 text-red-500">
-            High
-          </Badge>
-        )
-      case "medium":
-        return (
-          <Badge variant="outline" className="border-yellow-500 text-yellow-500">
-            Medium
-          </Badge>
-        )
-      case "low":
-        return (
-          <Badge variant="outline" className="border-green-500 text-green-500">
-            Low
-          </Badge>
-        )
-      default:
-        return <Badge variant="outline">Unknown</Badge>
-    }
+    const priorityMap = projectTaskPriority.find(p => p.key === priority)
+    return priorityMap ?
+      <Badge variant={"outline"}
+        style={{ color: priorityMap.badgeTextColor, borderColor: priorityMap.badgeBorderColor }}
+      >
+        {priorityMap?.title}
+      </Badge >
+      : <Badge variant="outline">Unknown</Badge>
   }
 
   return (

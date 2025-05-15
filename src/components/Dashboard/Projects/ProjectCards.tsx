@@ -3,7 +3,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../../ui/c
 import { Badge } from '../../ui/badge'
 import { LinkAsButton } from '../../LinkAsButton/LinkAsButton'
 import { SelectProject } from '@/src/db/schema'
-import { ProjectType } from '../../common/types/project.type'
+import { ProjectType } from '../ProjectManagement/types/project.type'
 
 
 

@@ -21,9 +21,9 @@ import { Badge } from "@/src/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select"
 import Link from "next/link"
 import { projectStore } from "@/src/store/project/projectStore"
+import { projectDefaultStatuses } from "../constants/projectManagment"
 
-// Default statuses that cannot be removed
-const DEFAULT_STATUSES = ["Backlog", "To Do", "In Progress", "Done"];
+
 
 export default function TaskStatus() {
   const [statuses, setStatuses] = useAtom(projectStore.projectStatusList) // Default statuses as initial state
@@ -83,10 +83,10 @@ export default function TaskStatus() {
       setEditStatus(true)
     } else {
       setEditStatus(false)
-      setStatuses(DEFAULT_STATUSES.map((status, index) => ({
-        name: status,
+      setStatuses(projectDefaultStatuses.map(status => ({
+        name: status.name || "",
         project_id: projectId,
-        position: index,
+        position: status.position || 0,
       })))
     }
     setIsChangesSaved(false)
@@ -189,7 +189,7 @@ export default function TaskStatus() {
     if (hasUnsavedChanges()) {
       setShowUnsavedChangesDialog(true)
     }
-    if (DEFAULT_STATUSES.includes(status)) {
+    if (projectDefaultStatuses.some(defaultStatus => defaultStatus.name === status)) {
       toast({
         title: "Error",
         description: "Default statuses cannot be removed",
@@ -395,7 +395,7 @@ export default function TaskStatus() {
                             >
                               <div className="flex items-center">
                                 <span className="font-medium">{status.name}</span>
-                                {DEFAULT_STATUSES.includes(status.name) && (
+                                {projectDefaultStatuses.some(defaultStatus => defaultStatus.name === status.name) && (
                                   <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
                                     Default
                                   </span>
@@ -437,7 +437,7 @@ export default function TaskStatus() {
                                   size="icon"
                                   className="h-7 w-7"
                                   onClick={() => handleRemoveStatus(status.name)}
-                                  disabled={DEFAULT_STATUSES.includes(status.name)}
+                                  disabled={projectDefaultStatuses.some(defaultStatus => defaultStatus.name === status.name)}
                                 >
                                   <Trash2 className="h-3.5 w-3.5 text-destructive" />
                                   <span className="sr-only">Delete</span>
@@ -463,7 +463,7 @@ export default function TaskStatus() {
                     <div key={index} className="flex items-center">
                       <div
                         key={index}
-                        className={`px-3 py-1.5 rounded-md text-sm border ${DEFAULT_STATUSES.includes(status.name)
+                        className={`px-3 py-1.5 rounded-md text-sm border ${projectDefaultStatuses.some(defaultStatus => defaultStatus.name === status.name)
                           ? "bg-primary/5 border-primary/20"
                           : "bg-muted"
                           }`}

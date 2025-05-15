@@ -23,6 +23,8 @@ import { z } from 'zod'
 import { ToUpperCase } from "@/src/utils/helpers"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import RichTextEditor from "@/src/components/common/rich-text-editor"
+import { projectDefaultStatuses, projectTaskPriority, projectTaskTypes } from "../constants/projectManagment"
+import { DynamicIcon, IconName } from "lucide-react/dynamic"
 
 interface Props {
   statuses?: InsertTaskStatus[]
@@ -56,11 +58,6 @@ export default function TaskForm({ statuses }: Props) {
   const projectId = useParams().id as string
   const backlogStatus = statuses?.find(s => s.name === "Backlog")
 
-
-
-
-
-
   useEffect(() => {
     if (!isTaskFormModelOpen) {
       form.reset(
@@ -86,6 +83,8 @@ export default function TaskForm({ statuses }: Props) {
       form.setValue("task_priority", selectedTask.task_priority)
       form.setValue("story_points", selectedTask.story_points)
       form.setValue("status_id", selectedTask.status_id)
+    } else {
+      form.setValue("status_id", backlogStatus?.id)
     }
   }, [selectedTask])
 
@@ -168,54 +167,30 @@ export default function TaskForm({ statuses }: Props) {
 
 
   function IssueTypeIcon({ type }: { type: string }) {
-    switch (type) {
-      case "bug":
-        return <Bug className="h-5 w-5 text-red-500" />
-      case "task":
-        return <CheckCircle2 className="h-5 w-5 text-blue-500" />
-      case "story":
-        return <Lightbulb className="h-5 w-5 text-green-500" />
-      case "epic":
-        return <Rocket className="h-5 w-5 text-purple-500" />
-      default:
-        return <AlertCircle className="h-5 w-5" />
-    }
+    const typeMap = projectTaskTypes.find(t => t.key === type);
+    return typeMap ?
+      <DynamicIcon name={typeMap.icon as IconName} className="h-5 w-5"
+        style={{ color: typeMap.iconColor }}
+      />
+      : <AlertCircle className="h-5 w-5" />;
   }
 
   function PriorityIcon({ priority }: { priority: string }) {
-    switch (priority) {
-      case "highest":
-        return <Flag className="h-4 w-4 text-red-600" />
-      case "high":
-        return <Flag className="h-4 w-4 text-orange-500" />
-      case "medium":
-        return <Flag className="h-4 w-4 text-yellow-500" />
-      case "low":
-        return <Flag className="h-4 w-4 text-blue-500" />
-      case "lowest":
-        return <Flag className="h-4 w-4 text-gray-500" />
-      default:
-        return <Flag className="h-4 w-4 text-yellow-500" />
-    }
+    const priorityMap = projectTaskPriority.find(p => p.key === priority)
+    return priorityMap ?
+      <DynamicIcon name={priorityMap.icon as IconName} className="h-5 w-5"
+        style={{ color: priorityMap.iconColor }}
+      />
+      : <Flag className="h-5 w-5" />
   }
 
   function StatusIcon({ status }: { status: string }) {
-    switch (status) {
-      case "Backlog":
-        return <div className="h-3 w-3 rounded-full bg-gray-500" />
-      case "To Do":
-        return <div className="h-3 w-3 rounded-full bg-blue-500" />
-      case "In Progress":
-        return <div className="h-3 w-3 rounded-full bg-yellow-500" />
-      case "In Review":
-        return <div className="h-3 w-3 rounded-full bg-purple-500" />
-      case "Done":
-        return <div className="h-3 w-3 rounded-full bg-green-500" />
-      case "Blocked":
-        return <div className="h-3 w-3 rounded-full bg-red-500" />
-      default:
-        return <div className="h-3 w-3 rounded-full bg-gray-500" />
-    }
+    const statusMap = projectDefaultStatuses.find(s => s.name === status)
+    return statusMap ?
+      <div className={`h-3 w-3 rounded-full`}
+        style={{ backgroundColor: statusMap.iconColor }}
+      />
+      : <div className="h-3 w-3 rounded-full bg-gray-500" />
   }
 
 
@@ -227,7 +202,6 @@ export default function TaskForm({ statuses }: Props) {
           <div className="space-y-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-2">
-                {/* <IssueTypeIcon type={issueType} /> */}
 
                 <Controller
                   name="task_title"
@@ -330,7 +304,6 @@ export default function TaskForm({ statuses }: Props) {
 
                   <Controller
                     name="status_id"
-                    defaultValue={backlogStatus?.id}
                     control={form.control}
                     render={({ field }) => {
                       const selectedValue = statuses?.find(s => s.id === field.value)?.name;
@@ -339,9 +312,10 @@ export default function TaskForm({ statuses }: Props) {
 
                         < Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value} >
+                          value={field.value}
+                        >
                           <SelectTrigger id="status_id" className="col-span-3">
-                            <SelectValue placeholder={selectedValue || "Select status"} />
+                            <SelectValue placeholder={"Select status"} />
                           </SelectTrigger>
                           <SelectContent>
                             {statuses?.map(s => (
@@ -397,10 +371,9 @@ export default function TaskForm({ statuses }: Props) {
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="story">Story</SelectItem>
-                            <SelectItem value="bug">Bug</SelectItem>
-                            <SelectItem value="task">Task</SelectItem>
-                            <SelectItem value="epic">Epic</SelectItem>
+                            {projectTaskTypes.map((type, index) => (
+                              <SelectItem key={index} value={type.key}>{type.title}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
 
@@ -474,7 +447,7 @@ export default function TaskForm({ statuses }: Props) {
                               </span>
                             )}
                           </div>
-                          <BarChart2 className="h-4 w-4 text-gray-500" />
+                          <BarChart2 className="h-5 w-5 text-gray-500" />
                           <span>{field.value
                             || "Select Points"}</span>
                         </div>
@@ -499,9 +472,9 @@ export default function TaskForm({ statuses }: Props) {
                             <SelectValue placeholder="Select priority" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="low">Low</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
+                            {projectTaskPriority.map((priority, index) => (
+                              <SelectItem key={index} value={priority.key}>{priority.title}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
 
