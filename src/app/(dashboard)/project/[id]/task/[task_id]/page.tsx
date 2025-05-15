@@ -3,20 +3,19 @@ import { GetTaskByIdAction, GetTaskStatusAction } from '@/src/server-actions/Tas
 import React from 'react'
 
 interface Props {
-  params: Promise<{ id: string }>
-  searchParams: Promise<{
-    task: string
+  params: Promise<{
+    id: string
+    task_id: string
   }>
+
 }
 
-async function page({ params, searchParams }: Props) {
+async function page({ params }: Props) {
 
 
-  const { id } = await params
-  const projectId = id
+  const projectId = (await params).id
+  const taskId = (await params).task_id
 
-  const task_Id = await searchParams
-  const taskId = task_Id.task
 
   const projectStatusList = await GetTaskStatusAction(projectId)
 

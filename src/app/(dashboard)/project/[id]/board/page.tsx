@@ -1,6 +1,7 @@
 import NotFound from '@/src/components/Dashboard/NotFound/NotFound'
 import { ProjectDashboard } from '@/src/components/Dashboard/ProjectManagement'
 import { GetProjectByIdAction } from '@/src/server-actions/ProjectManagement/projectManagement'
+import { GetTaskStatusAction } from '@/src/server-actions/Tasks/Task'
 import React from 'react'
 
 interface Props {
@@ -20,8 +21,12 @@ const ProjectBoardPage = async ({ params }: Props) => {
     )
   }
 
+
+  const projectStatusList = await GetTaskStatusAction(projectId)
+
+
   return (
-    <ProjectDashboard currProject={currProject.data} />
+    <ProjectDashboard statusList={projectStatusList.data ?? []} currProject={currProject.data} />
   )
 }
 

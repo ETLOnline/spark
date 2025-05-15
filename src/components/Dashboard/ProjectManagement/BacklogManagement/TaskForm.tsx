@@ -23,6 +23,8 @@ import { z } from 'zod'
 import { ToUpperCase } from "@/src/utils/helpers"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import RichTextEditor from "@/src/components/common/rich-text-editor"
+import { projectDefaultStatuses, projectTaskPriority, projectTaskTypes } from "../constants/projectManagment"
+import { DynamicIcon, IconName } from "lucide-react/dynamic"
 
 interface Props {
   statuses?: InsertTaskStatus[]
@@ -56,16 +58,6 @@ export default function TaskForm({ statuses }: Props) {
   const projectId = useParams().id as string
   const backlogStatus = statuses?.find(s => s.name === "Backlog")
 
-  const descriptionInputRef = useRef<any>(null);
-
-  useEffect(() => {
-    if (activeField === "description" && descriptionInputRef.current?.focus) {
-      descriptionInputRef.current.focus();
-    }
-  }, [activeField]);
-
-
-
   useEffect(() => {
     if (!isTaskFormModelOpen) {
       form.reset(
@@ -85,17 +77,20 @@ export default function TaskForm({ statuses }: Props) {
 
   useEffect(() => {
     if (selectedTask) {
-      const status = statuses?.find(s => s.id === selectedTask.status_id)
       form.setValue("task_title", selectedTask.task_title)
       form.setValue("description", selectedTask.description)
       form.setValue("task_type", selectedTask.task_type)
       form.setValue("task_priority", selectedTask.task_priority)
       form.setValue("story_points", selectedTask.story_points)
-      form.setValue("status_id", status?.name)
+      form.setValue("status_id", selectedTask.status_id)
+    } else {
+      form.setValue("status_id", backlogStatus?.id)
     }
   }, [selectedTask])
 
   const error = form.formState.errors
+
+
 
   function taskSubmit(data: any) {
     if (!selectedTask) {
@@ -172,54 +167,30 @@ export default function TaskForm({ statuses }: Props) {
 
 
   function IssueTypeIcon({ type }: { type: string }) {
-    switch (type) {
-      case "bug":
-        return <Bug className="h-5 w-5 text-red-500" />
-      case "task":
-        return <CheckCircle2 className="h-5 w-5 text-blue-500" />
-      case "story":
-        return <Lightbulb className="h-5 w-5 text-green-500" />
-      case "epic":
-        return <Rocket className="h-5 w-5 text-purple-500" />
-      default:
-        return <AlertCircle className="h-5 w-5" />
-    }
+    const typeMap = projectTaskTypes.find(t => t.key === type);
+    return typeMap ?
+      <DynamicIcon name={typeMap.icon as IconName} className="h-5 w-5"
+        style={{ color: typeMap.iconColor }}
+      />
+      : <AlertCircle className="h-5 w-5" />;
   }
 
   function PriorityIcon({ priority }: { priority: string }) {
-    switch (priority) {
-      case "highest":
-        return <Flag className="h-4 w-4 text-red-600" />
-      case "high":
-        return <Flag className="h-4 w-4 text-orange-500" />
-      case "medium":
-        return <Flag className="h-4 w-4 text-yellow-500" />
-      case "low":
-        return <Flag className="h-4 w-4 text-blue-500" />
-      case "lowest":
-        return <Flag className="h-4 w-4 text-gray-500" />
-      default:
-        return <Flag className="h-4 w-4 text-yellow-500" />
-    }
+    const priorityMap = projectTaskPriority.find(p => p.key === priority)
+    return priorityMap ?
+      <DynamicIcon name={priorityMap.icon as IconName} className="h-5 w-5"
+        style={{ color: priorityMap.iconColor }}
+      />
+      : <Flag className="h-5 w-5" />
   }
 
   function StatusIcon({ status }: { status: string }) {
-    switch (status) {
-      case "backlog":
-        return <div className="h-3 w-3 rounded-full bg-gray-500" />
-      case "todo":
-        return <div className="h-3 w-3 rounded-full bg-blue-500" />
-      case "in-progress":
-        return <div className="h-3 w-3 rounded-full bg-yellow-500" />
-      case "in-review":
-        return <div className="h-3 w-3 rounded-full bg-purple-500" />
-      case "done":
-        return <div className="h-3 w-3 rounded-full bg-green-500" />
-      case "blocked":
-        return <div className="h-3 w-3 rounded-full bg-red-500" />
-      default:
-        return <div className="h-3 w-3 rounded-full bg-gray-500" />
-    }
+    const statusMap = projectDefaultStatuses.find(s => s.name === status)
+    return statusMap ?
+      <div className={`h-3 w-3 rounded-full`}
+        style={{ backgroundColor: statusMap.iconColor }}
+      />
+      : <div className="h-3 w-3 rounded-full bg-gray-500" />
   }
 
 
@@ -231,13 +202,14 @@ export default function TaskForm({ statuses }: Props) {
           <div className="space-y-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-2">
-                {/* <IssueTypeIcon type={issueType} /> */}
-                {activeField === "title" ? (
-                  <Controller
-                    name="task_title"
-                    defaultValue=""
-                    control={form.control}
-                    render={({ field }) => (
+
+                <Controller
+                  name="task_title"
+                  defaultValue=""
+                  control={form.control}
+                  render={({ field }) => (
+                    activeField === "title" ? (
+
                       <Input
                         id="task_title"
                         {...field}
@@ -247,55 +219,68 @@ export default function TaskForm({ statuses }: Props) {
                         required
                         onBlur={() => setActiveField(null)}
                       />
-                    )}
-                  />
-                ) : (
-                  <div
-                    className="border-b border-dashed border-gray-300 py-2 text-xl cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2"
-                    onClick={() => setActiveField("title")}
-                  >
-                    <div>
-                      {error.task_title && (
-                        <span className="text-red-500 text-sm flex items-center gap-2 mb-1">
-                          <CircleAlert size={16} />
-                          {String(error.task_title.message)}
+
+                    ) : (
+
+                      <div
+                        className="border-b border-dashed border-gray-300 py-2 text-xl cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2"
+                        onClick={() => setActiveField("title")}>
+
+                        <div>
+                          {error.task_title && (
+                            <span className="text-red-500 text-sm flex items-center gap-2 mb-1">
+                              <CircleAlert size={16} />
+                              {String(error.task_title.message)}
+                            </span>
+                          )}
+                        </div>
+
+                        <span>
+                          {field.value
+                            ? field.value
+                            : " Click to add title..."
+                          }
                         </span>
-                      )}
-                    </div>
-                    {(selectedTask?.task_title ?? form.watch("task_title"))
-                      ? (selectedTask?.task_title ?? form.watch("task_title"))
-                      : "Click to add title..."}
-                  </div>
-                )}
+
+                      </div>
+                    )
+                  )}
+                />
               </div>
             </div>
 
             <div className="space-y-2">
               <Label className="pl-2">Description:</Label>
-              {activeField === "description" ? (
-                <Controller
-                  name="description"
-                  defaultValue=""
-                  control={form.control}
-                  render={({ field }) => (
+
+              <Controller
+                name="description"
+                defaultValue=""
+                control={form.control}
+                render={({ field }) => (
+                  activeField === "description" ? (
+
                     <RichTextEditor
                       value={field.value ?? ""}
                       onChange={field.onChange} />
-                  )}
-                />
-              ) : (
-                <div
-                  className="border-b border-dashed border-gray-300 py-2  cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2"
-                  onClick={() => setActiveField("description")
-                  }>
 
-                  {(selectedTask?.description ?? form.watch("description")) ? (
-                    <div dangerouslySetInnerHTML={{ __html: selectedTask?.description ?? form.watch("description") }} />
                   ) : (
-                    "Click to add description..."
-                  )}
-                </div>
-              )}
+
+                    <div
+                      className="border-b border-dashed border-gray-300 py-2  cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2"
+                      onClick={() => setActiveField("description")
+                      }>
+
+                      {field.value ? (
+                        <div dangerouslySetInnerHTML={{ __html: field.value ?? "" }} />
+                      ) : (
+                        <span>
+                          Click to add description...
+                        </span>
+                      )}
+                    </div>
+                  )
+                )}
+              />
             </div>
           </div>
         </div>
@@ -316,17 +301,21 @@ export default function TaskForm({ statuses }: Props) {
 
                 <div className="space-y-2">
                   <Label>Status</Label>
-                  {activeField === "status" ? (
-                    <Controller
-                      name="status_id"
-                      defaultValue={backlogStatus?.id}
-                      control={form.control}
-                      render={({ field }) => (
-                        <Select
+
+                  <Controller
+                    name="status_id"
+                    control={form.control}
+                    render={({ field }) => {
+                      const selectedValue = statuses?.find(s => s.id === field.value)?.name;
+
+                      return activeField === "status" ? (
+
+                        < Select
                           onValueChange={field.onChange}
-                          defaultValue={selectedTask?.status_id ? selectedTask?.status_id : backlogStatus?.id}>
+                          value={field.value}
+                        >
                           <SelectTrigger id="status_id" className="col-span-3">
-                            <SelectValue placeholder={statuses?.find(s => s.id === (selectedTask?.status_id ?? form.watch("status_id")))?.name || "Select type"} />
+                            <SelectValue placeholder={"Select status"} />
                           </SelectTrigger>
                           <SelectContent>
                             {statuses?.map(s => (
@@ -334,100 +323,102 @@ export default function TaskForm({ statuses }: Props) {
                             ))}
                           </SelectContent>
                         </Select>
-                      )}
-                    />
-                  ) : (
-                    <div
-                      className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
-                      onClick={() => {
-                        setActiveField("status");
-                        requestAnimationFrame(() => {
-                          document.getElementById("status_id")?.click();
-                        });
-                      }}
-                    >
-                      <div>
-                        {error.status_id && (
-                          <span className="text-red-500 text-sm flex items-center gap-2">
-                            <CircleAlert size={16} />
-                            {String(error.status_id.message)}
-                          </span>
-                        )}
-                      </div>
 
-                      <StatusIcon status={statuses?.find((s) => s.id === selectedTask?.id)?.name || ""} />
-                      <span>
-                        {
-                          (statuses?.find(s => s.id === (selectedTask?.status_id ?? form.watch("status_id")))?.name) ||
-                          backlogStatus?.name
-                        }
-                      </span>
-                    </div>
-                  )}
+                      ) : (
+
+                        <div
+                          className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
+                          onClick={() => {
+                            setActiveField("status");
+                            requestAnimationFrame(() => {
+                              document.getElementById("status_id")?.click();
+                            });
+                          }}
+                        >
+                          <div>
+                            {error.status_id && (
+                              <span className="text-red-500 text-sm flex items-center gap-2">
+                                <CircleAlert size={16} />
+                                {String(error.status_id.message)}
+                              </span>
+                            )}
+                          </div>
+
+                          <StatusIcon status={selectedValue || ""} />
+                          <span>
+                            {
+                              (selectedValue)
+                            }
+                          </span>
+                        </div>
+                      )
+                    }}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Issue Type</Label>
 
-                  {activeField === "issueType" ?
-                    (
-                      <Controller
-                        name="task_type"
-                        defaultValue=""
-                        control={form.control}
-                        render={({ field }) => (
-                          <Select value={field.value} onValueChange={field.onChange}>
-                            <SelectTrigger id="task_type" className="col-span-3">
-                              <SelectValue placeholder="Select type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="story">Story</SelectItem>
-                              <SelectItem value="bug">Bug</SelectItem>
-                              <SelectItem value="task">Task</SelectItem>
-                              <SelectItem value="epic">Epic</SelectItem>
-                            </SelectContent>
-                          </Select>
+                  <Controller
+                    name="task_type"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) => (
+                      activeField === "issueType" ? (
 
-                        )}
-                      />
-                    ) : (
-                      <>
-                        <div>
-                          {error.task_type && (
-                            <span className="text-red-500 text-sm flex items-center gap-2">
-                              <CircleAlert size={16} />
-                              {String(error.task_type.message)}
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger id="task_type" className="col-span-3">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {projectTaskTypes.map((type, index) => (
+                              <SelectItem key={index} value={type.key}>{type.title}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                      ) : (
+                        <>
+                          <div>
+                            {error.task_type && (
+                              <span className="text-red-500 text-sm flex items-center gap-2">
+                                <CircleAlert size={16} />
+                                {String(error.task_type.message)}
+                              </span>
+                            )}
+                          </div>
+
+                          <div
+                            className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
+                            onClick={() => {
+                              setActiveField("issueType");
+                              requestAnimationFrame(() => {
+                                document.getElementById("task_type")?.click();
+                              });
+                            }}
+
+                          >
+                            <IssueTypeIcon type={field.value} />
+                            <span>
+                              {field.value ? ToUpperCase(field.value) : "Select Type"}
                             </span>
-                          )}
-                        </div>
+                          </div>
+                        </>
+                      )
 
-                        <div
-                          className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
-                          onClick={() => {
-                            setActiveField("issueType");
-                            requestAnimationFrame(() => {
-                              document.getElementById("task_type")?.click();
-                            });
-                          }}
-
-                        >
-                          <IssueTypeIcon type={selectedTask?.task_type || form.watch("task_type")} />
-                          <span>
-                            {(selectedTask?.task_type ?? form.watch("task_type") ? ToUpperCase(selectedTask?.task_type ?? form.watch("task_type")) : "Select Type")}
-                          </span>
-                        </div>
-                      </>
                     )}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Story Points</Label>
-                  {activeField === "points" ? (
-                    <Controller
-                      name="story_points"
-                      defaultValue=""
-                      control={form.control}
-                      render={({ field }) => (
+                  <Controller
+                    name="story_points"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) => (
+                      activeField === "points" ? (
+
                         <Input
                           id="story_points"
                           type='number'
@@ -435,90 +426,93 @@ export default function TaskForm({ statuses }: Props) {
                           {...field}
                           className="col-span-3"
                         />
-                      )}
-                    />
-                  ) : (
-                    <div
-                      className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
-                      onClick={() => {
-                        setActiveField("points");
-                        requestAnimationFrame(() => {
-                          document.getElementById("story_points")?.focus();
-                        });
-                      }}
 
-                    >
+                      ) : (
+                        <div
+                          className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
+                          onClick={() => {
+                            setActiveField("points");
+                            requestAnimationFrame(() => {
+                              document.getElementById("story_points")?.focus();
+                            });
+                          }}
 
-                      <div>
-                        {error.story_points && (
-                          <span className="text-red-500 text-sm flex items-center gap-2">
-                            <CircleAlert size={16} />
-                            {String(error.story_points.message)}
-                          </span>
-                        )}
-                      </div>
-                      <BarChart2 className="h-4 w-4 text-gray-500" />
-                      <span>{selectedTask?.story_points
-                        || form.watch("story_points")
-                        || "Select Points"}</span>
-                    </div>
-                  )}
+                        >
+
+                          <div>
+                            {error.story_points && (
+                              <span className="text-red-500 text-sm flex items-center gap-2">
+                                <CircleAlert size={16} />
+                                {String(error.story_points.message)}
+                              </span>
+                            )}
+                          </div>
+                          <BarChart2 className="h-5 w-5 text-gray-500" />
+                          <span>{field.value
+                            || "Select Points"}</span>
+                        </div>
+                      )
+                    )}
+                  />
                 </div>
 
 
                 <div className="space-y-2">
                   <Label>Priority</Label>
-                  {activeField === "priority" ? (
-                    <Controller
-                      name="task_priority"
-                      defaultValue=""
-                      control={form.control}
-                      render={({ field }) => (
+
+                  <Controller
+                    name="task_priority"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) => (
+                      activeField === "priority" ? (
+
                         <Select value={field.value} onValueChange={field.onChange}>
                           <SelectTrigger id="task_priority" className="col-span-3">
                             <SelectValue placeholder="Select priority" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="low">Low</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
+                            {projectTaskPriority.map((priority, index) => (
+                              <SelectItem key={index} value={priority.key}>{priority.title}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
 
-                      )}
-                    />
-                  ) : (
-                    <>
-                      <div>
-                        {error.task_priority && (
-                          <span className="text-red-500 text-sm flex items-center gap-2">
-                            <CircleAlert size={16} />
-                            {String(error.task_priority.message)}
-                          </span>
-                        )}
-                      </div>
+                      ) : (
+                        <>
+                          <div>
+                            {error.task_priority && (
+                              <span className="text-red-500 text-sm flex items-center gap-2">
+                                <CircleAlert size={16} />
+                                {String(error.task_priority.message)}
+                              </span>
+                            )}
+                          </div>
 
-                      <div
-                        className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
-                        onClick={() => {
-                          setActiveField("priority");
-                          requestAnimationFrame(() => {
-                            document.getElementById("task_priority")?.click();
-                          });
-                        }}
+                          <div
+                            className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
+                            onClick={() => {
+                              setActiveField("priority");
+                              requestAnimationFrame(() => {
+                                document.getElementById("task_priority")?.click();
+                              });
+                            }}
 
-                      >
-                        <PriorityIcon priority={selectedTask?.task_priority || form.watch("task_priority")} />
-                        <span>
-                          {
-                            (selectedTask?.task_priority ?? form.watch("task_priority")
-                              ? ToUpperCase(selectedTask?.task_priority ?? form.watch("task_priority"))
-                              : "Select Priority")
-                          }
-                        </span>
-                      </div>
-                    </>
-                  )}
+                          >
+                            <PriorityIcon priority={field.value} />
+                            <span>
+                              {
+                                (field.value
+                                  ? ToUpperCase(field.value)
+                                  : "Select Priority")
+                              }
+                            </span>
+                          </div>
+                        </>
+                      )
+
+                    )}
+                  />
                 </div>
 
                 {/* <div className="space-y-2">

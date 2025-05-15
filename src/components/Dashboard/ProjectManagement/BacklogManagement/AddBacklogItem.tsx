@@ -1,5 +1,4 @@
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/src/components/ui/dialog'
-import { GetTaskStatusAction } from '@/src/server-actions/Tasks/Task'
 import { projectStore } from '@/src/store/project/projectStore'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useAtom } from 'jotai'
@@ -35,17 +34,6 @@ function AddBacklogItem() {
 
   const projectId = useParams().id as string
   const backlogStatus = statuses.find(s => s.name === "Backlog")
-
-
-  useEffect(() => {
-    const fetchStatuses = async () => {
-      const status = await GetTaskStatusAction(projectId)
-      if (status.success && status.data) {
-        setStatuses(status.data)
-      }
-    }
-    fetchStatuses()
-  }, [isTaskFormModelOpen])
 
 
   useEffect(() => {

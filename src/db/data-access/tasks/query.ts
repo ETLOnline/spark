@@ -1,4 +1,4 @@
-import { and, asc, count, eq, like, or, SQLWrapper } from "drizzle-orm"
+import { and, asc, count, eq, isNull, like, or, sql, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
 import { InsertTask, InsertTaskStatus, SelectTask, TaskStatusTable, taskTable } from "../../schema"
 
@@ -41,7 +41,8 @@ export async function GetTasks(filters?: taskQueryFilters) {
   
     const whereClauses:(SQLWrapper | undefined )[]= []
   
-  
+    whereClauses.push(isNull(taskTable.deleted_at))
+
     if(filters){
   
       if(filters.project_id){
@@ -96,7 +97,10 @@ export async function GetTasks(filters?: taskQueryFilters) {
 export async function GetTaskById(taskId: string){
   try{
     const task = await db.select().from(taskTable).where(
-      eq(taskTable.id, taskId)
+      and(
+        isNull(taskTable.deleted_at),
+        eq(taskTable.id, taskId)
+      )
     )
 
     return task[0]
@@ -108,7 +112,10 @@ export async function GetTaskById(taskId: string){
 export async function GetTasksByStatusId(statusId: string){
   try{
     const tasks = await db.select().from(taskTable).where(
-      eq(taskTable.status_id, statusId)
+     and(
+        isNull(taskTable.deleted_at),
+        eq(taskTable.status_id, statusId)
+      )
     )
 
     return tasks
@@ -134,11 +141,11 @@ export async function UpdateTask(taskId: string, updatedData: SelectTask){
 
 export async function DeleteTask(Task: SelectTask){
   try{
-    const deletedTask = await db.delete(taskTable).where(
+    const deletedTask = await db.update(taskTable)
+    .set({deleted_at: sql`CURRENT_TIMESTAMP`})
+    .where(
       eq(taskTable.id, Task.id)
     )
-
-    return deletedTask
 
   }catch(e:any){
     throw new Error(e.message)

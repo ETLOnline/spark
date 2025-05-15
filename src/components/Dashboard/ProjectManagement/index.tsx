@@ -1,32 +1,42 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Button } from "@/src/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
-import { Calendar, Settings, Users } from "lucide-react"
 import { SprintManagement } from "./SprintManagement/SprintManagement"
 import { BacklogManagement } from "./BacklogManagement/BacklogManagement"
 import { FileSharing } from "./FileSharing"
 import ProjectOverView from "./ProjectOverView/ProjectOverView"
-import { SelectProject } from "@/src/db/schema"
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../ui/hover-card"
+import { InsertTaskStatus, SelectProject } from "@/src/db/schema"
 import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
 import { useAtom } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../../ui/dialog"
+import { AlertCircle, Settings } from "lucide-react"
+import { Button } from "../../ui/button"
 
 interface Props {
   currProject: SelectProject
+  statusList: InsertTaskStatus[]
 }
 
 
-export function ProjectDashboard({ currProject }: Props) {
+export function ProjectDashboard({ currProject, statusList }: Props) {
 
   const router = useRouter()
   const searchParams = useSearchParams()
   const UrlTab = searchParams.get("tab")
   const [activeTab, setActiveTab] = useState(UrlTab || "overview")
   const [project, setProject] = useAtom(projectStore.currProject)
+  const [projectStatusList, setProjectStatusList] = useAtom(projectStore.projectStatusList)
+  const [openDialog, setOpenDialog] = useState(false)
 
   useEffect(() => {
     if (UrlTab !== activeTab) {
@@ -38,46 +48,21 @@ export function ProjectDashboard({ currProject }: Props) {
     setProject(currProject)
   }, [currProject])
 
+  useEffect(() => {
+    if (statusList) {
+      setProjectStatusList(statusList)
+    }
+  }, [statusList])
+
+  useEffect(() => {
+    if (projectStatusList.length === 0) {
+      setOpenDialog(true)
+    }
+  }, [projectStatusList])
+
+
   return (
-    <div className="grid grid-cols-1  p-4">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">{currProject.project_name}</h1>
-          <p className="text-muted-foreground">{currProject.description}</p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Calendar className="mr-2 h-4 w-4" />
-                Timeline
-              </Button>
-            </HoverCardTrigger>
-            <HoverCardContent>
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-500">Start Date</span>
-                  <span className="text-sm font-semibold">2023-11-15</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-500">Target Date</span>
-                  <span className="text-sm font-semibold text-primary">2024-03-20</span>
-                </div>
-              </div>
-            </HoverCardContent>
-          </HoverCard>
-          <Button variant="outline" size="sm">
-            <Users className="mr-2 h-4 w-4" />
-            Team
-          </Button>
-          <Link href={`./settings`}>
-            <Button variant="outline" size="sm">
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
-            </Button>
-          </Link>
-        </div>
-      </div>
+    projectStatusList.length > 0 ? (
       <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="flex justify-between gap-2">
           <TabsTrigger className="w-full" value="overview">Overview</TabsTrigger>
@@ -103,7 +88,30 @@ export function ProjectDashboard({ currProject }: Props) {
         </TabsContent>
 
       </Tabs>
-    </div>
+    ) : (
+      <Dialog open={openDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-amber-500" />
+              Status Required
+            </DialogTitle>
+            <DialogDescription>
+              You need to add a statuses to access this project. Please go to the project settings page to set up project
+              statuses.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button className="gap-2"
+              onClick={() => router.push(`./settings?tab=taskStatus`)}
+            >
+              <Settings className="h-4 w-4" />
+              Go to Project Settings
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
   )
 }
 

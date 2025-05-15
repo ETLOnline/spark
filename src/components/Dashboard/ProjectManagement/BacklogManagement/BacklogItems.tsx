@@ -11,7 +11,9 @@ import { projectStore } from '@/src/store/project/projectStore'
 import { taskStore } from '@/src/store/tasks/taskStore'
 import { useAtom, useSetAtom } from 'jotai'
 import { CircleHelp, MoreHorizontal } from 'lucide-react'
-import React, { Dispatch, SetStateAction, useState } from 'react'
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import { projectTaskPriority, projectTaskTypes } from '../constants/projectManagment'
+import { useRouter } from 'next/navigation'
 
 interface Props {
   selectedItems: string[]
@@ -20,7 +22,7 @@ interface Props {
 }
 
 function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
-  const setIsTaskFormModelOpen = useSetAtom(taskStore.isTaskFormModelOpen)
+  const [isTaskFormModelOpen, setIsTaskFormModelOpen] = useAtom(taskStore.isTaskFormModelOpen)
   const [isDropdownOpen, setIsDropDownOpen] = useState(false)
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
@@ -63,65 +65,45 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
   }
 
   const getTypeLabel = (type: string) => {
-    switch (type) {
-      case "story":
-        return (
-          <Badge variant="default" className="bg-blue-500">
-            Story
-          </Badge>
-        )
-      case "bug":
-        return <Badge variant="destructive">Bug</Badge>
-      case "task":
-        return <Badge variant="secondary">Task</Badge>
-      case "epic":
-        return (
-          <Badge variant="default" className="bg-purple-500">
-            Epic
-          </Badge>
-        )
-      default:
-        return <Badge variant="outline">Unknown</Badge>
-    }
+    const matchedType = projectTaskTypes.find(t => t.key === type)
+    return matchedType ?
+      <Badge variant={matchedType?.badgeVariant as "default" | "destructive" | "secondary" | "outline"}>
+        {matchedType.title}
+      </Badge>
+      : <Badge variant={"outline"} />
   }
 
   const getPriorityLabel = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return (
-          <Badge variant="outline" className="border-red-500 text-red-500">
-            High
-          </Badge>
-        )
-      case "medium":
-        return (
-          <Badge variant="outline" className="border-yellow-500 text-yellow-500">
-            Medium
-          </Badge>
-        )
-      case "low":
-        return (
-          <Badge variant="outline" className="border-green-500 text-green-500">
-            Low
-          </Badge>
-        )
-      default:
-        return <Badge variant="outline">Unknown</Badge>
-    }
+    const priorityMap = projectTaskPriority.find(p => p.key === priority)
+    return priorityMap ?
+      <Badge variant={"outline"}
+        style={{ color: priorityMap.badgeTextColor, borderColor: priorityMap.badgeBorderColor }}
+      >
+        {priorityMap?.title}
+      </Badge >
+      : <Badge variant="outline">Unknown</Badge>
   }
 
   return (
     <>
-      <div key={task.id} className="grid grid-cols-12 gap-2 p-4 border-t items-center">
+      <div key={task.id} className="grid grid-cols-12 gap-2 p-4 border-t items-center hover:bg-muted/50  transition delay-150 duration-300">
         <div className="col-span-1">
           <Checkbox
             checked={task.task_num ? selectedItems.includes(task.task_num) : false}
             onCheckedChange={() => task.task_num && handleSelectItem(task.task_num)}
           />
         </div>
-        <div className="col-span-1 text-sm font-medium">{task.task_num}</div>
+        <div className="col-span-1 text-sm font-medium cursor-pointer"
+          onClick={() => EditTask(task)}
+        >
+          {task.task_num}
+        </div>
         <div className="col-span-3">
-          <div className="font-medium">{task.task_title}</div>
+          <div className="font-medium break-words whitespace-normal cursor-pointer"
+            onClick={() => EditTask(task)}
+          >
+            {task.task_title}
+          </div>
         </div>
         <div className="col-span-1">{getTypeLabel(task.task_type)}</div>
         <div className="col-span-3 flex justify-around items-center">

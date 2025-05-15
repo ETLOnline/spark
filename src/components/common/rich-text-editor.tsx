@@ -391,33 +391,8 @@ export default function RichTextEditor({ value, onChange, onBlur }: RichTextEdit
             <TooltipContent>Code Block</TooltipContent>
           </Tooltip>
 
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={handleButtonClick}
-              >
-                <ImageIcon className="h-4 w-4" />
-                <span className="sr-only">Insert Image from Device</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Insert Image from Device</TooltipContent>
-          </Tooltip>
-
         </div>
       </TooltipProvider>
-
-      <input
-        type="file"
-        accept="image/*"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        style={{ display: "none" }}
-      />
 
 
       <div
