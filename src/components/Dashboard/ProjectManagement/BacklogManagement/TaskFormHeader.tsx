@@ -64,7 +64,7 @@ function TaskFormHeader({ selectedTask }: Props) {
             (
               <>
                 <ChevronRight size={16} className="mx-2 text-gray-400" />
-                <a target="_blank" href={`/project/${project?.id}/${selectedTask.id}/task`} className="flex items-center gap-2 text-gray-500 hover:text-gray-300">
+                <a target="_blank" href={`/project/${project?.id}/task/${selectedTask.id}`} className="flex items-center gap-2 text-gray-500 hover:text-gray-300">
                   <Ticket size={16} />
                   {selectedTask.task_num}
                 </a  >
