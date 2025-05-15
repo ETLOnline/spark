@@ -481,6 +481,9 @@ export default function TaskStatus() {
           </div>
         </CardContent>
         <CardFooter className="flex justify-end pt-2 gap-2">
+          <Link href={`/project/${projectId}/board?tab=sprints`}>
+            <Button variant={"outline"}>Go to Project</Button>
+          </Link>
           {
             editStatus ? (
               <Button
@@ -490,18 +493,12 @@ export default function TaskStatus() {
                 Save Changes
               </Button>
             ) : (
-              <>
-                <Link href={`/project/${projectId}/board?tab=sprints`}>
-                  <Button variant={"outline"}>Go to Project</Button>
-                </Link>
-
-                <Button
-                  loading={createLoading}
-                  onClick={saveStatusConfiguration} className="w-full sm:w-auto">
-                  <Save className="h-4 w-4 mr-2" />
-                  Save
-                </Button>
-              </>
+              <Button
+                loading={createLoading}
+                onClick={saveStatusConfiguration} className="w-full sm:w-auto">
+                <Save className="h-4 w-4 mr-2" />
+                Save
+              </Button>
             )
           }
         </CardFooter>

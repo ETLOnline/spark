@@ -11,8 +11,9 @@ import { projectStore } from '@/src/store/project/projectStore'
 import { taskStore } from '@/src/store/tasks/taskStore'
 import { useAtom, useSetAtom } from 'jotai'
 import { CircleHelp, MoreHorizontal } from 'lucide-react'
-import React, { Dispatch, SetStateAction, useState } from 'react'
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { projectTaskPriority, projectTaskTypes } from '../constants/projectManagment'
+import { useRouter } from 'next/navigation'
 
 interface Props {
   selectedItems: string[]
@@ -21,7 +22,7 @@ interface Props {
 }
 
 function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
-  const setIsTaskFormModelOpen = useSetAtom(taskStore.isTaskFormModelOpen)
+  const [isTaskFormModelOpen, setIsTaskFormModelOpen] = useAtom(taskStore.isTaskFormModelOpen)
   const [isDropdownOpen, setIsDropDownOpen] = useState(false)
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
@@ -85,16 +86,24 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
 
   return (
     <>
-      <div key={task.id} className="grid grid-cols-12 gap-2 p-4 border-t items-center">
+      <div key={task.id} className="grid grid-cols-12 gap-2 p-4 border-t items-center hover:bg-muted/50  transition delay-150 duration-300">
         <div className="col-span-1">
           <Checkbox
             checked={task.task_num ? selectedItems.includes(task.task_num) : false}
             onCheckedChange={() => task.task_num && handleSelectItem(task.task_num)}
           />
         </div>
-        <div className="col-span-1 text-sm font-medium">{task.task_num}</div>
+        <div className="col-span-1 text-sm font-medium cursor-pointer"
+          onClick={() => EditTask(task)}
+        >
+          {task.task_num}
+        </div>
         <div className="col-span-3">
-          <div className="font-medium break-words whitespace-normal">{task.task_title}</div>
+          <div className="font-medium break-words whitespace-normal cursor-pointer"
+            onClick={() => EditTask(task)}
+          >
+            {task.task_title}
+          </div>
         </div>
         <div className="col-span-1">{getTypeLabel(task.task_type)}</div>
         <div className="col-span-3 flex justify-around items-center">

@@ -108,7 +108,7 @@ function CreateNewProject() {
           title: "Project Successfully Created",
           duration: 3000,
         })
-        router.push(`project/${createdProject.data.id}/settings/taskStatus`)
+        router.push(`project/${createdProject.data.id}/settings?tab=taskStatus`)
       }
     } catch (error) {
       setIsOpen(false)
