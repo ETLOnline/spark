@@ -10,6 +10,7 @@ import { UserSeed } from "./UserSeed";
 
 
     console.log("✅ Seeding Completed")
+    process.exit(0)
   }catch(e){
     console.log("❌ Error seeding")
     process.exit(1)

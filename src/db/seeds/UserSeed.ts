@@ -8,11 +8,11 @@ export const UserSeed = async()=>{
   return await db.transaction(async(tx)=>{
     try{
 
-      await tx.delete(usersTable).run()
-      await tx.run(sql`DELETE FROM sqlite_sequence WHERE name = 'users';`);
+      await tx.delete(usersTable)
+      // await tx.execute(sql`ALTER SEQUENCE users_id_seq RESTART; UPDATE tablename SET id = DEFAULT;`);
       const res = await tx.insert(usersTable).values(UserSeedList)
 
-      if(res.rowsAffected === UserSeedList.length){
+      if(res.count === UserSeedList.length){
         console.log('✅ Users seeded successfully')
       }
     }catch(e){

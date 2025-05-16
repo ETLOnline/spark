@@ -1,14 +1,16 @@
+'use server'
 import {
   CreateFile,
   CreateFolder,
   GetDirectoryContents
 } from "@/src/db/data-access/file-sharing/query"
 import { addFileToDb } from "@/src/utils/serverHelpers"
+import { CreateServerAction } from ".."
 
-export async function CreateNewFolderAction(
+export const CreateNewFolderAction = CreateServerAction(true, async(
   id: string | number,
   folderName: string
-) {
+)=>{
   try {
     const result = await CreateFolder(id, folderName)
     return { success: true, data: result[0] }
@@ -19,15 +21,15 @@ export async function CreateNewFolderAction(
       error: "Failed to create folder"
     }
   }
-}
+})
 
-export async function CreateNewFileAction(
+export const CreateNewFileAction = CreateServerAction(true, async(
   id: string | number,
   fileName: string,
   fileSize: number,
   fileB64string: string,
   fileType: string
-) {
+)=>{
   try {
     const uploadedFileData = await addFileToDb(
       fileName as string,
@@ -54,9 +56,9 @@ export async function CreateNewFileAction(
       error: "Failed to create file"
     }
   }
-}
+})
 
-export async function GetDirectoryContentsAction(id: string | number) {
+export const GetDirectoryContentsAction = CreateServerAction(true, async(id: string | number)=>{
   try {
     const results = await GetDirectoryContents(id)
     return {
@@ -70,4 +72,4 @@ export async function GetDirectoryContentsAction(id: string | number) {
       error: "Failed to fetch directory contents"
     }
   }
-}
+})
