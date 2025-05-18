@@ -4,8 +4,10 @@ import {
   CreateFolder,
   GetDirectoryContents
 } from "@/src/db/data-access/file-sharing/query"
-import { addFileToDb } from "@/src/utils/serverHelpers"
+import { getStorageAdapter } from "@/src/lib/storage"
 import { CreateServerAction } from ".."
+import { AddFile } from "@/src/db/data-access/file/query" // Your DB insert function
+import { randomUUID } from "crypto"
 
 export const CreateNewFolderAction = CreateServerAction(true, async(
   id: string | number,
@@ -31,14 +33,20 @@ export const CreateNewFileAction = CreateServerAction(true, async(
   fileType: string
 )=>{
   try {
-    const uploadedFileData = await addFileToDb(
-      fileName as string,
-      fileB64string as string,
-      process.env.S3_BUCKET_NAME as string,
-      fileSize as number,
-      fileType as string,
-      "/spaces"
-    )
+    const fileBuffer = Buffer.from(fileB64string.split(",")[1], "base64")
+
+    const adapter = getStorageAdapter()
+
+    const uniqueFileName = `${randomUUID()}-${fileName}`
+    const fileUrl = await adapter.uploadFile(fileBuffer, uniqueFileName, fileType)
+    const uploadedFileData = await AddFile({
+      file_name: fileName,
+      file_size: fileSize,
+      file_type: fileType,
+      file_path: fileUrl,
+    })
+
+    // 6. Link file to folder or parent entity
     const result = await CreateFile(
       id,
       fileName,
@@ -47,7 +55,7 @@ export const CreateNewFileAction = CreateServerAction(true, async(
     )
     return {
       success: true,
-      data: { ...result[0], url: uploadedFileData[0].file_path }
+      data: { ...result[0], url: fileUrl }
     }
   } catch (error) {
     console.error("Error creating file:", error)
