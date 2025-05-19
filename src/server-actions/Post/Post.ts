@@ -18,9 +18,7 @@ import {
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import { TagStatus } from "@/src/components/TagsInput/tags-input-types"
-import { getStorageAdapter } from "@/src/lib/storage"
-import { randomUUID } from "crypto"
-import { AddFile } from "@/src/db/data-access/file/query"
+import { uploadFileAndSaveMetadata } from "@/src/services/storage/fileUtils";
 
 export const CreatePostAction = CreateServerAction(
   true,
@@ -55,59 +53,42 @@ export const CreatePostAction = CreateServerAction(
   }
 )
 
-export const CreateFilePostAction = CreateServerAction(
-  true,
-  async (
-    type: string,
-    fileSize: number,
-    fileName: string,
-    fileType: string,
-    fileBase64: string,
-    content?: string,
-    category?: string,
-    entityType?: string,
-    entityId?: string
-  ) => {
-    try {
-      const userId = (await AuthUserAction())?.unique_id
-      if (!userId) throw new Error("Unauthorized", { cause: 401 })
+export const CreateFilePostAction = CreateServerAction(true, async (
+  type: string,
+  fileSize: number,
+  fileName: string,
+  fileType: string,
+  fileBase64: string,
+  content?: string,
+  category?: string,
+  entityType?: string,
+  entityId?: string,
+  folderPath: string = "/"
+) => {
+  try {
+    const userId = (await AuthUserAction())?.unique_id;
+    if (!userId) throw new Error("Unauthorized", { cause: 401 });
 
-      const postData = await CreatePost({
-        type,
-        user_id: userId,
-        content,
-        category,
-        entity_type: entityType,
-        entity_id: entityId
-      })
+    // Create post in DB
+    const postData = await CreatePost({
+      type,
+      user_id: userId,
+      content,
+      category,
+      entity_type: entityType,
+      entity_id: entityId
+    });
 
-      if (!postData || postData.length === 0) {
-        throw new Error("Failed to create post")
-      }
+    if (!postData || postData.length === 0) {
+      throw new Error("Failed to create post");
+    }
 
-      // Decode base64 to buffer
-      const fileBuffer = Buffer.from(fileBase64.split(",")[1], "base64")
-
-      // Create unique filename
-      const uniqueFileName = `${randomUUID()}-${fileName}`
-
-      // Get storage adapter (S3, Azure, Minio)
-      const adapter = getStorageAdapter()
-
-      // Upload file
-      const fileUrl = await adapter.uploadFile(fileBuffer, uniqueFileName, fileType)
-
-      // Save file metadata to DB
-      const fileRecord = await AddFile({
-        file_name: fileName,
-        file_size: fileSize,
-        file_type: fileType,
-        file_path: fileUrl,
-      });
+    const fileBuffer = Buffer.from(fileBase64.split(",")[1], "base64");
+    const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(fileBuffer, fileName, fileType, folderPath);
 
       await AddPostFileLink(postData[0].id, fileRecord[0].id);
 
-            return {
+      return {
         success: true,
         data: {
           ...postData[0],

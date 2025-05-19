@@ -219,6 +219,15 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           })
           return
         }
+
+        // Compute folderPath dynamically
+        const folderPath =
+          newPost.category
+            ? `/posts/${newPost.category}`
+            : newPost.category && currentSpace?.id
+            ? `/posts/${newPost.category}/${currentSpace.id}/`
+            : "/posts";
+
         const post =
           variant === "spaces"
             ? await createFilePost(
@@ -230,7 +239,8 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 newPost.content,
                 newPost.category,
                 "space",
-                currentSpace?.id
+                currentSpace?.id,
+                folderPath
               )
             : await createFilePost(
                 newPost.type,
@@ -238,9 +248,14 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 newPost.fileName as string,
                 newPost.fileType as string,
                 newPost.fileBase64,
-                newPost.content
-              )
-        if (post && post.data && post.data) {
+                newPost.content,
+                undefined,
+                undefined,
+                undefined,
+                folderPath
+              );
+
+        if (post && post.data) {
           let linkedHashtags
           if (hashtags.length) {
             linkedHashtags = await linkHashtagsToPost(

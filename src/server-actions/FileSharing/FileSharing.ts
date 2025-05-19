@@ -4,10 +4,8 @@ import {
   CreateFolder,
   GetDirectoryContents
 } from "@/src/db/data-access/file-sharing/query"
-import { getStorageAdapter } from "@/src/lib/storage"
+import { uploadFileAndSaveMetadata } from "@/src/services/storage/fileUtils";
 import { CreateServerAction } from ".."
-import { AddFile } from "@/src/db/data-access/file/query" // Your DB insert function
-import { randomUUID } from "crypto"
 
 export const CreateNewFolderAction = CreateServerAction(true, async(
   id: string | number,
@@ -25,33 +23,24 @@ export const CreateNewFolderAction = CreateServerAction(true, async(
   }
 })
 
-export const CreateNewFileAction = CreateServerAction(true, async(
+export const CreateNewFileAction = CreateServerAction(true, async (
   id: string | number,
   fileName: string,
   fileSize: number,
   fileB64string: string,
-  fileType: string
-)=>{
+  fileType: string,
+  folderPath: string = "/"
+) => {
   try {
     const fileBuffer = Buffer.from(fileB64string.split(",")[1], "base64")
 
-    const adapter = getStorageAdapter()
+    const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(fileBuffer, fileName, fileType, folderPath);
 
-    const uniqueFileName = `${randomUUID()}-${fileName}`
-    const fileUrl = await adapter.uploadFile(fileBuffer, uniqueFileName, fileType)
-    const uploadedFileData = await AddFile({
-      file_name: fileName,
-      file_size: fileSize,
-      file_type: fileType,
-      file_path: fileUrl,
-    })
-
-    // 6. Link file to folder or parent entity
     const result = await CreateFile(
       id,
       fileName,
       fileSize,
-      uploadedFileData[0].id
+      fileRecord[0].id
     )
     return {
       success: true,
