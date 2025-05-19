@@ -12,6 +12,7 @@
     "db:migrate": "npx drizzle-kit migrate"
   },
   "dependencies": {
+    "@azure/storage-blob": "^12.27.0",
     "@clerk/nextjs": "^6.18.0",
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
