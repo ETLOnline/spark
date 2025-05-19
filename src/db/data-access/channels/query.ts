@@ -19,6 +19,7 @@ export async function CreateChannel(channelData: InsertChannel) {
       .returning()
     return newChannel[0]
   } catch (e: any) {
+    console.error(e)
     throw new Error(e.message)
   }
 }

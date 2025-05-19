@@ -1,31 +1,29 @@
 import { randomUUID } from "crypto"
 import { InferSelectModel, relations, sql } from "drizzle-orm"
-import { int, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { integer, pgTable, primaryKey, varchar } from "drizzle-orm/pg-core"
+// import { integer, primaryKey, pgTable, varchar } from "drizzle-orm/sqlite-core"
 
 const timestamps = {
-  updated_at: text("updated_at").$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
-  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
-  deleted_at: text("deleted_at")
+  updated_at: varchar("updated_at").$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
+  created_at: varchar("created_at").default(sql`CURRENT_TIMESTAMP`),
+  deleted_at: varchar("deleted_at")
 }
 
-export const usersTable = sqliteTable(
+export const usersTable = pgTable(
   "users",
   {
-    unique_id: text("unique_id", { length: 36 })
+    unique_id: varchar("unique_id", { length: 36 })
       .primaryKey()
       .$defaultFn(() => randomUUID()),
-    first_name: text().notNull(),
-    last_name: text().notNull(),
-    email: text().notNull().unique(),
-    external_auth_id: text().notNull().unique(),
-    profile_url: text(),
-    meta: text(),
-    bio: text(),
-    role: text().notNull().default("user")
-  },
-  (t) => ({
-    pk: primaryKey({ columns: [t.unique_id] })
-  })
+    first_name: varchar().notNull(),
+    last_name: varchar().notNull(),
+    email: varchar().notNull().unique(),
+    external_auth_id: varchar().notNull().unique(),
+    profile_url: varchar(),
+    meta: varchar(),
+    bio: varchar(),
+    role: varchar().notNull().default("user")
+  }
 )
 
 export const usersRelations = relations(usersTable, ({ many }) => ({
@@ -89,18 +87,18 @@ export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> &{
   channels?: SelectChannelUser[]
 }
 
-export const chatsTable = sqliteTable("chats", {
-  id: int().primaryKey({ autoIncrement: true }),
-  channel_id: text().notNull(),
-  chat_slug: text()
+export const chatsTable = pgTable("chats", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  channel_id: varchar().notNull(),
+  chat_slug: varchar()
     .notNull()
     .$defaultFn(() => randomUUID()),
-  name: text(),
-  type: text(),
-  avatar: text(),
-  last_message: text(),
-  unread_count: int().notNull().default(0),
-  is_group: int().notNull().default(0),
+  name: varchar(),
+  type: varchar(),
+  avatar: varchar(),
+  last_message: varchar(),
+  unread_count: integer().notNull().default(0),
+  is_group: integer().notNull().default(0),
   ...timestamps
 })
 
@@ -120,19 +118,16 @@ export type SelectChat = InferSelectModel<typeof chatsTable> & {
 }
 export type SelectChatWithRelation = typeof chatsRelations
 
-export const messagesTable = sqliteTable(
+export const messagesTable = pgTable(
   "messages",
   {
-    id: int().primaryKey({ autoIncrement: true }),
-    chat_id: int().notNull(),
-    type: text().notNull(),
-    sender_id: text().notNull(),
-    message: text().notNull(),
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    chat_id: integer().notNull(),
+    type: varchar().notNull(),
+    sender_id: varchar().notNull(),
+    message: varchar().notNull(),
     ...timestamps
-  },
-  (t) => ({
-    pk: primaryKey({ columns: [t.id] })
-  })
+  }
 )
 
 export const messagesRelations = relations(messagesTable, ({ one }) => ({
@@ -154,15 +149,12 @@ export type SelectMessage = typeof messagesTable.$inferSelect & {
   sender?: SelectUser
 }
 
-export const userChatsTable = sqliteTable(
+export const userChatsTable = pgTable(
   "user_chats",
   {
-    user_id: text().notNull(),
-    chat_id: int().notNull()
-  },
-  (t) => ({
-    pk: primaryKey({ columns: [t.user_id, t.chat_id] })
-  })
+    user_id: varchar().notNull(),
+    chat_id: integer().notNull()
+  }
 )
 
 export const userChatsRelations = relations(userChatsTable, ({ one }) => ({
@@ -184,29 +176,26 @@ export type SelectUserChat = typeof userChatsTable.$inferSelect & {
   chat?: SelectChat
 }
 
-export const userMessagesTable = sqliteTable("user_messages", {
-  user_id: text().notNull(),
-  message_id: int().notNull()
+export const userMessagesTable = pgTable("user_messages", {
+  user_id: varchar().notNull(),
+  message_id: integer().notNull()
 })
 
 export type InsertUserMessage = typeof userMessagesTable.$inferInsert
 export type SelectUserMessage = typeof userMessagesTable.$inferSelect
 
-export const userContactsTable = sqliteTable(
+export const userContactsTable = pgTable(
   "user_contacts",
   {
-    user_id: text().notNull(),
-    contact_id: text().notNull(),
-    is_requested: int().notNull().default(0),
-    is_accepted: int().notNull().default(0),
-    is_blocked: int().notNull().default(0),
-    is_following: int().notNull().default(0),
-    is_followed_by: int().notNull().default(0),
+    user_id: varchar().notNull(),
+    contact_id: varchar().notNull(),
+    is_requested: integer().notNull().default(0),
+    is_accepted: integer().notNull().default(0),
+    is_blocked: integer().notNull().default(0),
+    is_following: integer().notNull().default(0),
+    is_followed_by: integer().notNull().default(0),
     ...timestamps
-  },
-  (t) => ({
-    pk: primaryKey({ columns: [t.user_id, t.contact_id] })
-  })
+  }
 )
 
 export const userContactsRelations = relations(
@@ -228,11 +217,11 @@ export const userContactsRelations = relations(
 export type InsertUserContact = typeof userContactsTable.$inferInsert
 export type SelectUserContact = typeof userContactsTable.$inferSelect
 
-export const tagsTable = sqliteTable("tags", {
-  id: int().primaryKey({ autoIncrement: true }),
-  name: text().notNull(),
-  type: text().notNull(),
-  count: int().notNull().default(1),
+export const tagsTable = pgTable("tags", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  name: varchar().notNull(),
+  type: varchar().notNull(),
+  count: integer().notNull().default(1),
   ...timestamps
 })
 
@@ -245,13 +234,15 @@ export const tagsRelations = relations(tagsTable, ({ many }) => ({
   })
 }))
 
-export type InsertTag = typeof tagsTable.$inferInsert
+export type InsertTag = typeof tagsTable.$inferInsert & {
+  id?: number
+}
 export type SelectTag = typeof tagsTable.$inferSelect
 
-export const userTagsTable = sqliteTable("user_tags", {
-  id: int().primaryKey({ autoIncrement: true }),
-  user_id: text().notNull(),
-  tag_id: int().notNull()
+export const userTagsTable = pgTable("user_tags", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  user_id: varchar().notNull(),
+  tag_id: integer().notNull()
 })
 
 export const userTagsRelations = relations(userTagsTable, ({ one }) => ({
@@ -270,11 +261,11 @@ export const userTagsRelations = relations(userTagsTable, ({ one }) => ({
 export type InsertUserTag = typeof userTagsTable.$inferInsert
 export type SelectUserTag = typeof userTagsTable.$inferSelect
 
-export const rewardsTable = sqliteTable("rewards", {
-  id: int().primaryKey({ autoIncrement: true }),
-  title: text().notNull(),
-  description: text().notNull(),
-  badge_type: text().notNull(),
+export const rewardsTable = pgTable("rewards", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  title: varchar().notNull(),
+  description: varchar().notNull(),
+  badge_type: varchar().notNull(),
   ...timestamps
 })
 
@@ -287,10 +278,10 @@ export const rewardsRelations = relations(rewardsTable, ({ many }) => ({
 export type InsertReward = typeof rewardsTable.$inferInsert
 export type SelectReward = typeof rewardsTable.$inferSelect
 
-export const userRewardsTable = sqliteTable("user_rewards", {
-  id: int().primaryKey({ autoIncrement: true }),
-  user_id: text().notNull(),
-  reward_id: int().notNull()
+export const userRewardsTable = pgTable("user_rewards", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  user_id: varchar().notNull(),
+  reward_id: integer().notNull()
 })
 
 export const userRewardsRelations = relations(userRewardsTable, ({ one }) => ({
@@ -309,12 +300,12 @@ export const userRewardsRelations = relations(userRewardsTable, ({ one }) => ({
 export type InsertUserReward = typeof userRewardsTable.$inferInsert
 export type SelectUserReward = typeof userRewardsTable.$inferSelect
 
-export const activitiesTable = sqliteTable("activities", {
-  id: int().primaryKey({ autoIncrement: true }),
-  title: text().notNull(),
-  date: text().notNull(),
-  description: text().notNull(),
-  type: text().notNull(),
+export const activitiesTable = pgTable("activities", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  title: varchar().notNull(),
+  date: varchar().notNull(),
+  description: varchar().notNull(),
+  type: varchar().notNull(),
   ...timestamps
 })
 
@@ -327,10 +318,10 @@ export const activitiesRelations = relations(activitiesTable, ({ many }) => ({
 export type InsertActivity = typeof activitiesTable.$inferInsert
 export type SelectActivity = typeof activitiesTable.$inferSelect
 
-export const userActivitiesTable = sqliteTable("user_activities", {
-  id: int().primaryKey({ autoIncrement: true }),
-  user_id: text().notNull(),
-  activity_id: int().notNull()
+export const userActivitiesTable = pgTable("user_activities", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  user_id: varchar().notNull(),
+  activity_id: integer().notNull()
 })
 
 export const userActivitiesRelations = relations(
@@ -352,11 +343,11 @@ export const userActivitiesRelations = relations(
 export type InsertUserActivity = typeof userActivitiesTable.$inferInsert
 export type SelectUserActivity = typeof userActivitiesTable.$inferSelect
 
-export const recommendationsTable = sqliteTable("recommendations", {
-  id: int().primaryKey({ autoIncrement: true }),
-  content: text().notNull(),
-  recommender_id: text().notNull(),
-  receiver_id: text().notNull(),
+export const recommendationsTable = pgTable("recommendations", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  content: varchar().notNull(),
+  recommender_id: varchar().notNull(),
+  receiver_id: varchar().notNull(),
   ...timestamps
 })
 
@@ -379,16 +370,16 @@ export const recommendationsRelations = relations(
 export type InsertRecommendation = typeof recommendationsTable.$inferInsert
 export type SelectRecommendation = typeof recommendationsTable.$inferSelect
 
-export const notificationsTable = sqliteTable("notifications", {
-  id: int().primaryKey({ autoIncrement: true }),
-  created_by: text().notNull(),
-  received_by: text().notNull(),
-  type: text().notNull(),
-  link: text(),
-  is_read: int().notNull().default(0),
-  counter: int().notNull().default(0),
-  entity_id: text(),
-  entity_type: text().notNull(),
+export const notificationsTable = pgTable("notifications", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  created_by: varchar().notNull(),
+  received_by: varchar().notNull(),
+  type: varchar().notNull(),
+  link: varchar(),
+  is_read: integer().notNull().default(0),
+  counter: integer().notNull().default(0),
+  entity_id: varchar(),
+  entity_type: varchar().notNull(),
   ...timestamps
 })
 
@@ -408,33 +399,33 @@ export type SelectNotification = InferSelectModel<typeof notificationsTable> & {
   creator: SelectUser
 }
 
-export const eventsTable = sqliteTable("events", {
-  id: int().primaryKey({ autoIncrement: true }),
-  title: text().notNull(),
-  description: text(),
-  start_date_time: text(),
-  end_date_time: text(),
-  type: text(),
-  metadata: text(),
-  host_id: text().notNull(),
+export const eventsTable = pgTable("events", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  title: varchar().notNull(),
+  description: varchar(),
+  start_date_time: varchar(),
+  end_date_time: varchar(),
+  type: varchar(),
+  metadata: varchar(),
+  host_id: varchar().notNull(),
   ...timestamps
 })
 
 export type InsertEvent = typeof eventsTable.$inferInsert
 export type SelectEvent = typeof eventsTable.$inferSelect
 
-export const postsTable = sqliteTable("posts", {
-  id: text()
+export const postsTable = pgTable("posts", {
+  id: varchar()
     .primaryKey()
     .$defaultFn(() => randomUUID()),
-  content: text(),
-  user_id: text().notNull(),
-  type: text().notNull(),
-  entity_id: text(),
-  entity_type: text(),
-  likes: int().notNull().default(0),
-  comments: int().notNull().default(0),
-  category: text(),
+  content: varchar(),
+  user_id: varchar().notNull(),
+  type: varchar().notNull(),
+  entity_id: varchar(),
+  entity_type: varchar(),
+  likes: integer().notNull().default(0),
+  comments: integer().notNull().default(0),
+  category: varchar(),
   ...timestamps
 })
 
@@ -482,11 +473,11 @@ export type SelectPollPost = SelectPost & {
   options: SelectPollOption[]
 }
 
-export const commentsTable = sqliteTable("comments", {
-  id: int().primaryKey({ autoIncrement: true }),
-  content: text().notNull(),
-  user_id: text().notNull(),
-  post_id: text().notNull(),
+export const commentsTable = pgTable("comments", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  content: varchar().notNull(),
+  user_id: varchar().notNull(),
+  post_id: varchar().notNull(),
   ...timestamps
 })
 
@@ -508,10 +499,10 @@ export type SelectComment = typeof commentsTable.$inferSelect & {
   commentor: SelectUser
 }
 
-export const postHashtagsTable = sqliteTable("post_hashtags", {
-  id: int().primaryKey({ autoIncrement: true }),
-  post_id: text().notNull(),
-  hashtag_id: int().notNull()
+export const postHashtagsTable = pgTable("post_hashtags", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  post_id: varchar().notNull(),
+  hashtag_id: integer().notNull()
 })
 
 export const postHashtagsRelations = relations(
@@ -533,16 +524,13 @@ export const postHashtagsRelations = relations(
 export type InsertPostHashtag = typeof postHashtagsTable.$inferInsert
 export type SelectPostHashtag = typeof postHashtagsTable.$inferSelect
 
-export const likesTable = sqliteTable(
+export const likesTable = pgTable(
   "likes",
   {
-    user_id: text().notNull(),
-    post_id: text().notNull(),
+    user_id: varchar().notNull(),
+    post_id: varchar().notNull(),
     ...timestamps
-  },
-  (t) => ({
-    pk: primaryKey({ columns: [t.user_id, t.post_id] })
-  })
+  }
 )
 
 export const likesRelations = relations(likesTable, ({ one }) => ({
@@ -561,15 +549,12 @@ export const likesRelations = relations(likesTable, ({ one }) => ({
 export type InsertLike = typeof likesTable.$inferInsert
 export type SelectLike = typeof likesTable.$inferSelect
 
-export const pollOptionsTable = sqliteTable(
+export const pollOptionsTable = pgTable(
   "poll_options",
   {
-    post_id: text().notNull(),
-    option_text: text().notNull(),
-    vote_count: int().notNull().default(0)
-  },
-  (t) => {
-    return { pk: primaryKey({ columns: [t.post_id, t.option_text] }) }
+    post_id: varchar().notNull(),
+    option_text: varchar().notNull(),
+    vote_count: integer().notNull().default(0)
   }
 )
 
@@ -592,15 +577,14 @@ export type SelectPollOption = typeof pollOptionsTable.$inferSelect & {
   votes?: SelectPollVote[]
 }
 
-export const pollVotesTable = sqliteTable(
+export const pollVotesTable = pgTable(
   "poll_votes",
   {
-    user_id: text().notNull(),
-    post_id: text().notNull(),
-    option_text: text().notNull(),
+    user_id: varchar().notNull(),
+    post_id: varchar().notNull(),
+    option_text: varchar().notNull(),
     ...timestamps
-  },
-  (t) => ({ pk: primaryKey({ columns: [t.user_id, t.post_id] }) })
+  }
 )
 
 export const pollVotesRelations = relations(pollVotesTable, ({ one }) => ({
@@ -614,12 +598,12 @@ export const pollVotesRelations = relations(pollVotesTable, ({ one }) => ({
 export type InsertPollVote = typeof pollVotesTable.$inferInsert
 export type SelectPollVote = typeof pollVotesTable.$inferSelect
 
-export const filesTable = sqliteTable("files", {
-  id: int().primaryKey({ autoIncrement: true }),
-  file_name: text().notNull(),
-  file_size: int().notNull(),
-  file_type: text().notNull(),
-  file_path: text().notNull(),
+export const filesTable = pgTable("files", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  file_name: varchar().notNull(),
+  file_size: integer().notNull(),
+  file_type: varchar().notNull(),
+  file_path: varchar().notNull(),
   ...timestamps
 })
 
@@ -639,10 +623,10 @@ export const filesRelations = relations(filesTable, ({ one }) => ({
 export type InsertFile = typeof filesTable.$inferInsert
 export type SelectFile = typeof filesTable.$inferSelect
 
-export const postFilesTable = sqliteTable("post_files", {
-  id: int().primaryKey({ autoIncrement: true }),
-  post_id: text().notNull(),
-  file_id: int().notNull()
+export const postFilesTable = pgTable("post_files", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  post_id: varchar().notNull(),
+  file_id: integer().notNull()
 })
 
 export const postFilesRelations = relations(postFilesTable, ({ one }) => ({
@@ -661,17 +645,17 @@ export const postFilesRelations = relations(postFilesTable, ({ one }) => ({
 export type InsertPostFile = typeof postFilesTable.$inferInsert
 export type SelectPostFile = typeof postFilesTable.$inferSelect
 
-export const channelsTable = sqliteTable("channels", {
-  id: text("channel_id", { length: 36 })
+export const channelsTable = pgTable("channels", {
+  id: varchar("channel_id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
-  channel_slug: text().notNull(),
-  channel_name: text().notNull(),
-  description: text(),
-  channel_type: text(),
-  created_by: text().notNull(),
-  publish_channel: int().notNull().default(0),
-  ownerId: text(),
+  channel_slug: varchar().notNull(),
+  channel_name: varchar().notNull(),
+  description: varchar(),
+  channel_type: varchar(),
+  created_by: varchar().notNull(),
+  publish_channel: integer().notNull().default(0),
+  ownerId: varchar(),
   ...timestamps
 })
 
@@ -690,18 +674,18 @@ export type SelectChannel = typeof channelsTable.$inferSelect & {
   users?: SelectChannelUser[]
 }
 
-export const spacesTable = sqliteTable("spaces", {
-  id: text("id", { length: 36 })
+export const spacesTable = pgTable("spaces", {
+  id: varchar("id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
-  space_slug: text().notNull(),
-  space_name: text().notNull(),
-  description: text(),
-  channel_id: text().notNull(),
-  created_by: text().notNull(),
-  ownerId: text(),
-  space_type: text(),
-  publish_space: int().notNull().default(0),
+  space_slug: varchar().notNull(),
+  space_name: varchar().notNull(),
+  description: varchar(),
+  channel_id: varchar().notNull(),
+  created_by: varchar().notNull(),
+  ownerId: varchar(),
+  space_type: varchar(),
+  publish_space: integer().notNull().default(0),
   ...timestamps
 })
 
@@ -737,16 +721,16 @@ export type SelectSpace = InferSelectModel<typeof spacesTable> & {
   users?: SelectSpaceUser[]
 }
 
-export const featuresTable = sqliteTable("features", {
-  id: int().primaryKey({ autoIncrement: true }),
-  feature_name: text().notNull(),
-  feature_slug: text().notNull(),
-  feature_type: text().notNull(),
-  feature_description: text(),
-  feature_icon: text(),
-  feature_url: text(),
-  feature_order: int().notNull().default(0),
-  feature_status: int().notNull().default(1),
+export const featuresTable = pgTable("features", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  feature_name: varchar().notNull(),
+  feature_slug: varchar().notNull(),
+  feature_type: varchar().notNull(),
+  feature_description: varchar(),
+  feature_icon: varchar(),
+  feature_url: varchar(),
+  feature_order: integer().notNull().default(0),
+  feature_status: integer().notNull().default(1),
   ...timestamps
 })
 
@@ -759,10 +743,10 @@ export const featuresTableRelations = relations(featuresTable, ({ many }) => ({
   })
 }))
 
-export const spaceFeaturesTable = sqliteTable("space_features", {
-  id: int().primaryKey({ autoIncrement: true }),
-  space_id: text().notNull(), // space_id
-  feature_id: int().notNull(), // feature_id
+export const spaceFeaturesTable = pgTable("space_features", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  space_id: varchar().notNull(), // space_id
+  feature_id: integer().notNull(), // feature_id
   ...timestamps
 })
 
@@ -788,14 +772,14 @@ export const spaceFeaturesTableRelations = relations(
   })
 )
 
-export const spaceFileDirectoryTable = sqliteTable("space_file_directory", {
-  id: int().primaryKey({ autoIncrement: true }),
-  space_id: text(),
-  entity_name: text().notNull(),
-  entity_type: text().notNull(),
-  entity_id: int(),
-  entity_size: int(),
-  parent_id: int(),
+export const spaceFileDirectoryTable = pgTable("space_file_directory", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  space_id: varchar(),
+  entity_name: varchar().notNull(),
+  entity_type: varchar().notNull(),
+  entity_id: integer(),
+  entity_size: integer(),
+  parent_id: integer(),
   ...timestamps
 })
 
@@ -818,12 +802,12 @@ export type SelectSpaceFileDirectory =
   }
 
 
-export const SpaceUsersTable = sqliteTable("space_users", {
-  id: int().primaryKey({ autoIncrement: true }),
-  space_id: text().notNull(),
-  user_id: text().notNull(),
-  role: text().default("member"),
-  status: text().default("active"),
+export const SpaceUsersTable = pgTable("space_users", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  space_id: varchar().notNull(),
+  user_id: varchar().notNull(),
+  role: varchar().default("member"),
+  status: varchar().default("active"),
 })
 
 export type InsertSpaceUser = typeof SpaceUsersTable.$inferInsert
@@ -845,12 +829,12 @@ export const SpaceUsersRelations = relations(SpaceUsersTable, ({ one }) => ({
   }),
 }))
 
-export const ChannelUsersTable = sqliteTable("channel_users", {
-  id: int().primaryKey({ autoIncrement: true }),  
-  channel_id: text().notNull(),
-  user_id: text().notNull(),
-  role: text().default("member"),
-  status: text().default("active"),
+export const ChannelUsersTable = pgTable("channel_users", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),  
+  channel_id: varchar().notNull(),
+  user_id: varchar().notNull(),
+  role: varchar().default("member"),
+  status: varchar().default("active"),
 
 })
 export type InsertChannelUser = typeof ChannelUsersTable.$inferInsert
@@ -873,19 +857,19 @@ export const ChannelUsersRelations = relations(ChannelUsersTable, ({ one }) => (
 }))
 
 
-export const projectTable = sqliteTable("project", {
-  id: text("id", { length: 36 })
+export const projectTable = pgTable("project", {
+  id: varchar("id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
-    project_name: text().notNull(),
-    project_slug: text().notNull(),
-    description: text(),
-    project_startDate: text().notNull(),
-    project_targetDate: text().notNull(),
-    channel_id: text().notNull(),
-    space_id: text().notNull(),
-    created_by: text().notNull(),
-    project_type: text(),
+    project_name: varchar().notNull(),
+    project_slug: varchar().notNull(),
+    description: varchar(),
+    project_startDate: varchar().notNull(),
+    project_targetDate: varchar().notNull(),
+    channel_id: varchar().notNull(),
+    space_id: varchar().notNull(),
+    created_by: varchar().notNull(),
+    project_type: varchar(),
     ...timestamps
 })
 
@@ -893,28 +877,28 @@ export type InsertProject = typeof projectTable.$inferInsert
 export type SelectProject = typeof projectTable.$inferSelect
 
 
-export const taskTable = sqliteTable("task", {
-  id: text("id", { length: 36 })
+export const taskTable = pgTable("task", {
+  id: varchar("id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
-    task_num: text(),
-    task_title: text().notNull(),
-    description: text().notNull(),
-    task_type: text().notNull(),
-    task_priority: text().notNull(),
-    story_points: text().notNull(),
-    project_id: text().notNull(),
-    created_by: text().notNull(),
-    status_id: text(),
+    task_num: varchar(),
+    task_title: varchar().notNull(),
+    description: varchar().notNull(),
+    task_type: varchar().notNull(),
+    task_priority: varchar().notNull(),
+    story_points: varchar().notNull(),
+    project_id: varchar().notNull(),
+    created_by: varchar().notNull(),
+    status_id: varchar(),
     ...timestamps
 })
 
 export type InsertTask = typeof taskTable.$inferInsert
 export type SelectTask = typeof taskTable.$inferSelect
-export const SpaceChatsTable = sqliteTable("space_chats", {
-  id: int().primaryKey({ autoIncrement: true }),
-  space_id: text().notNull(),
-  chat_id: int().notNull(),
+export const SpaceChatsTable = pgTable("space_chats", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  space_id: varchar().notNull(),
+  chat_id: integer().notNull(),
   ...timestamps
 })
 
@@ -938,14 +922,14 @@ export const SpaceChatsRelations = relations(SpaceChatsTable, ({ one }) => ({
 }))
 
 
-export const TaskStatusTable = sqliteTable("tasks_status", {
-  id: text("id", { length: 36 })
+export const TaskStatusTable = pgTable("tasks_status", {
+  id: varchar("id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
-    project_id: text().notNull(),
-    name: text().notNull(),
-    position: int().notNull(),
-    status_slug: text(),
+    project_id: varchar().notNull(),
+    name: varchar().notNull(),
+    position: integer().notNull(),
+    status_slug: varchar(),
     ...timestamps
 })
 

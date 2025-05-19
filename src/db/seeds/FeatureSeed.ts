@@ -48,11 +48,11 @@ export const FeatureSeed = async()=>{
   return await db.transaction(async(tx)=>{
     try{
 
-      await tx.delete(featuresTable).run()
-      await tx.run(sql`DELETE FROM sqlite_sequence WHERE name = 'features';`);
+      await tx.delete(featuresTable)
+      await tx.execute(sql`ALTER SEQUENCE features_id_seq RESTART; UPDATE features SET id = DEFAULT;`);
       const features = await tx.insert(featuresTable).values(FeatureSeedList)
 
-      if(features.rowsAffected === FeatureSeedList.length){
+      if(features.count === FeatureSeedList.length){
         console.log('✅ Features seeded successfully')
       }
     }catch(e){

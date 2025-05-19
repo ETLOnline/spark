@@ -1,1 +1,0 @@
-ALTER TABLE `spaces` ADD `publish_space` integer DEFAULT 0 NOT NULL;
