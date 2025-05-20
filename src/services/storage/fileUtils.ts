@@ -15,7 +15,13 @@ export const uploadFileAndSaveMetadata = async (
 
     const adapter = getStorageAdapter();
 
-    const fileUrl = await adapter.uploadFile(fileBuffer, uniqueFileName, fileType, folderPath);
+    const fileUrl = await adapter.uploadFile({
+      fileBuffer,
+      fileName: uniqueFileName,
+      mimeType: fileType,
+      folderPath,
+    });
+
 
     const fileRecord = await AddFile({
       file_name: fileName,
@@ -24,7 +30,7 @@ export const uploadFileAndSaveMetadata = async (
       file_path: fileUrl,
     });
 
-    return { fileUrl, fileRecord };
+    return { fileUrl, fileRecord : fileRecord[0] };
   } catch (error :any) {
     throw new Error(`Error uploading file: ${error.message}`);
   }

@@ -12,8 +12,18 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(azureConnection
 const containerClient = blobServiceClient.getContainerClient(AZURE_CONTAINER_NAME);
 
 export const AzureStorageAdapter: StorageAdapter = {
-  async uploadFile(fileBuffer, fileName, mimeType, folderPath = "/") {
-    const blobName = `${randomUUID()}-${folderPath +fileName}`;
+  async uploadFile({
+  fileBuffer,
+  fileName,
+  mimeType,
+  folderPath = "/",
+}: {
+  fileBuffer: Buffer;
+  fileName: string;
+  mimeType: string;
+  folderPath?: string;
+}) {
+    const blobName = `${folderPath}${randomUUID()}-${fileName}`;
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
     // Upload file buffer to Azure

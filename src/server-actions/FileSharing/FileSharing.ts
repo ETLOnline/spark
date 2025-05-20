@@ -40,7 +40,7 @@ export const CreateNewFileAction = CreateServerAction(true, async (
       id,
       fileName,
       fileSize,
-      fileRecord[0].id
+      fileRecord.id
     )
     return {
       success: true,

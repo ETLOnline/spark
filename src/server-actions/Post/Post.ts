@@ -53,18 +53,31 @@ export const CreatePostAction = CreateServerAction(
   }
 )
 
-export const CreateFilePostAction = CreateServerAction(true, async (
-  type: string,
-  fileSize: number,
-  fileName: string,
-  fileType: string,
-  fileBase64: string,
-  content?: string,
-  category?: string,
-  entityType?: string,
-  entityId?: string,
-  folderPath: string = "/"
-) => {
+export const CreateFilePostAction = CreateServerAction(true, async (args: {
+  type: string;
+  fileSize: number;
+  fileName: string;
+  fileType: string;
+  fileBase64: string;
+  content?: string;
+  category?: string;
+  entityType?: string;
+  entityId?: string;
+  folderPath?: string;
+}) => {
+  const {
+    type,
+    fileSize,
+    fileName,
+    fileType,
+    fileBase64,
+    content,
+    category,
+    entityType,
+    entityId,
+    folderPath = "/",
+  } = args;
+
   try {
     const userId = (await AuthUserAction())?.unique_id;
     if (!userId) throw new Error("Unauthorized", { cause: 401 });
@@ -76,7 +89,7 @@ export const CreateFilePostAction = CreateServerAction(true, async (
       content,
       category,
       entity_type: entityType,
-      entity_id: entityId
+      entity_id: entityId,
     });
 
     if (!postData || postData.length === 0) {
@@ -84,26 +97,31 @@ export const CreateFilePostAction = CreateServerAction(true, async (
     }
 
     const fileBuffer = Buffer.from(fileBase64.split(",")[1], "base64");
-    const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(fileBuffer, fileName, fileType, folderPath);
+    const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(
+      fileBuffer,
+      fileName,
+      fileType,
+      folderPath
+    );
 
-      await AddPostFileLink(postData[0].id, fileRecord[0].id);
+    await AddPostFileLink(postData[0].id, fileRecord.id);
 
-      return {
-        success: true,
-        data: {
-          ...postData[0],
-          file: fileRecord[0],
-          url: fileUrl,
-        },
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error
-      }
-    }
+    return {
+      success: true,
+      data: {
+        ...postData[0],
+        file: fileRecord,
+        url: fileUrl,
+      },
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error,
+    };
   }
-)
+});
+
 
 export const CreatePollPostAction = CreateServerAction(
   true,

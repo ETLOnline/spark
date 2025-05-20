@@ -221,39 +221,46 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         }
 
         // Compute folderPath dynamically
-        const folderPath =
-          newPost.category
-            ? `/posts/${newPost.category}`
-            : newPost.category && currentSpace?.id
-            ? `/posts/${newPost.category}/${currentSpace.id}/`
-            : "/posts";
+        let folderPath = "/";
 
-        const post =
-          variant === "spaces"
-            ? await createFilePost(
-                newPost.type,
-                newPost.fileSize as number,
-                newPost.fileName as string,
-                newPost.fileType as string,
-                newPost.fileBase64,
-                newPost.content,
-                newPost.category,
-                "space",
-                currentSpace?.id,
-                folderPath
-              )
-            : await createFilePost(
-                newPost.type,
-                newPost.fileSize as number,
-                newPost.fileName as string,
-                newPost.fileType as string,
-                newPost.fileBase64,
-                newPost.content,
-                undefined,
-                undefined,
-                undefined,
-                folderPath
-              );
+        if (newPost.category) {
+          if (currentSpace?.id) {
+            folderPath = `/posts/${newPost.category}/${currentSpace.id}/`;
+          } else {
+            folderPath = `/posts/${newPost.category}`;
+          }
+        }
+
+        let post;
+
+        if (variant === "spaces") {
+          post = await createFilePost({
+            type: newPost.type,
+            fileSize: newPost.fileSize as number,
+            fileName: newPost.fileName as string,
+            fileType: newPost.fileType as string,
+            fileBase64: newPost.fileBase64,
+            content: newPost.content,
+            category: newPost.category,
+            entityType: "space",
+            entityId: currentSpace?.id ?? "",
+            folderPath,
+          });
+        } else {
+          post = await createFilePost({
+            type: newPost.type,
+            fileSize: newPost.fileSize as number,
+            fileName: newPost.fileName as string,
+            fileType: newPost.fileType as string,
+            fileBase64: newPost.fileBase64,
+            content: newPost.content,
+            category: "",
+            entityType: "",
+            entityId: "",  
+            folderPath,
+          });
+        }
+
 
         if (post && post.data) {
           let linkedHashtags
