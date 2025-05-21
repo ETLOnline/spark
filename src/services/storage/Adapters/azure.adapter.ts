@@ -1,15 +1,7 @@
-import { BlobServiceClient } from "@azure/storage-blob";
 import { StorageAdapter, UploadFileParams } from "../types/interface";
 import { randomUUID } from "crypto";
-import {
-  AZURE_STORAGE_ACCOUNT_NAME,
-  AZURE_STORAGE_ACCOUNT_KEY,
-  AZURE_CONTAINER_NAME,
-} from "../config";
+import { azureClient } from "../client/azure.client";
 
-const azureConnectionString = `DefaultEndpointsProtocol=https;AccountName=${AZURE_STORAGE_ACCOUNT_NAME};AccountKey=${AZURE_STORAGE_ACCOUNT_KEY};EndpointSuffix=core.windows.net`;
-const blobServiceClient = BlobServiceClient.fromConnectionString(azureConnectionString);
-const containerClient = blobServiceClient.getContainerClient(AZURE_CONTAINER_NAME);
 
 export const AzureStorageAdapter: StorageAdapter = {
   async uploadFile({
@@ -19,7 +11,7 @@ export const AzureStorageAdapter: StorageAdapter = {
   folderPath = "/",
 }: UploadFileParams) {
     const blobName = `${folderPath}${randomUUID()}-${fileName}`;
-    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+    const blockBlobClient = azureClient().getBlockBlobClient(blobName);
 
     // Upload file buffer to Azure
     await blockBlobClient.uploadData(fileBuffer, {

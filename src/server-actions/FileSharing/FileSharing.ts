@@ -4,7 +4,7 @@ import {
   CreateFolder,
   GetDirectoryContents
 } from "@/src/db/data-access/file-sharing/query"
-import { base64ToBuffer, uploadFileAndSaveMetadata } from "@/src/services/storage/fileUtils";
+import { base64ToBuffer, uploadFileAndSaveMetadata } from "@/src/services/storage/utils/fileUtils";
 import { CreateServerAction } from ".."
 
 export const CreateNewFolderAction = CreateServerAction(true, async(

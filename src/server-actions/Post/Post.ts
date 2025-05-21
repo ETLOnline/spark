@@ -18,7 +18,7 @@ import {
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import { TagStatus } from "@/src/components/TagsInput/tags-input-types"
-import { base64ToBuffer, uploadFileAndSaveMetadata } from "@/src/services/storage/fileUtils";
+import { base64ToBuffer, uploadFileAndSaveMetadata } from "@/src/services/storage/utils/fileUtils";
 import { CreateFilePostParams } from "@/src/services/storage/types/interface"
 
 export const CreatePostAction = CreateServerAction(

@@ -1,6 +1,6 @@
 // services/storage/fileUtils.ts
 import { randomUUID } from "crypto";
-import { getStorageAdapter } from "@/src/services/storage/client/storageClient";
+import { getStorageClient } from "@/src/services/storage/client/storage.client";
 import { AddFile } from "@/src/db/data-access/file/query";
 
 // Utility function to handle file upload
@@ -13,9 +13,9 @@ export const uploadFileAndSaveMetadata = async (
   try {
     const uniqueFileName = `${randomUUID()}-${fileName}`;
 
-    const adapter = getStorageAdapter();
+    const storageClient = getStorageClient();
 
-    const fileUrl = await adapter.uploadFile({
+    const fileUrl = await storageClient.uploadFile({
       fileBuffer,
       fileName: uniqueFileName,
       mimeType: fileType,

@@ -1,10 +1,3 @@
-export interface UploadFileParams {
-  fileBuffer: Buffer;
-  fileName: string;
-  mimeType: string;
-  folderPath?: string;
-}
-
 export interface CreateFilePostParams {
   type: string;
   fileSize: number;
@@ -15,6 +8,13 @@ export interface CreateFilePostParams {
   category?: string;
   entityType?: string;
   entityId?: string;
+  folderPath?: string;
+}
+
+export interface UploadFileParams {
+  fileBuffer: Buffer;
+  fileName: string;
+  mimeType: string;
   folderPath?: string;
 }
 
