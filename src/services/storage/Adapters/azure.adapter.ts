@@ -8,9 +8,9 @@ export const AzureStorageAdapter: StorageAdapter = {
   fileBuffer,
   fileName,
   mimeType,
-  folderPath = "/",
+  folderPath,
 }: UploadFileParams) {
-    const blobName = `${folderPath}${randomUUID()}-${fileName}`;
+    const blobName = `${folderPath}/${randomUUID()}-${fileName}`;
     const blockBlobClient = azureClient().getBlockBlobClient(blobName);
 
     // Upload file buffer to Azure

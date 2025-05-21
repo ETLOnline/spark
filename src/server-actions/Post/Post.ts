@@ -65,9 +65,8 @@ export const CreateFilePostAction = CreateServerAction(true, async (args: Create
     category,
     entityType,
     entityId,
-    folderPath = "/",
+    folderPath,
   } = args;
-
   try {
     const userId = (await AuthUserAction())?.unique_id;
     if (!userId) throw new Error("Unauthorized", { cause: 401 });
@@ -91,7 +90,7 @@ export const CreateFilePostAction = CreateServerAction(true, async (args: Create
       fileBuffer,
       fileName,
       fileType,
-      folderPath
+      folderPath == 'spaces' ? 'spaces' : 'posts'
     );
 
     await AddPostFileLink(postData[0].id, fileRecord.id);

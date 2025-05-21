@@ -29,11 +29,10 @@ export const CreateNewFileAction = CreateServerAction(true, async (
   fileSize: number,
   fileB64string: string,
   fileType: string,
-  folderPath: string = "/"
+  folderPath: string
 ) => {
   try {
     const fileBuffer = base64ToBuffer(fileB64string)
-
     const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(fileBuffer, fileName, fileType, folderPath);
 
     const result = await CreateFile(

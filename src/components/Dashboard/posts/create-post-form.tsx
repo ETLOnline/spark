@@ -223,14 +223,6 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         // Compute folderPath dynamically
         let folderPath = "/";
 
-        if (newPost.category) {
-          if (currentSpace?.id) {
-            folderPath = `/posts/${newPost.category}/${currentSpace.id}/`;
-          } else {
-            folderPath = `/posts/${newPost.category}`;
-          }
-        }
-
         let postData;
 
         if (variant === "spaces") {
@@ -244,7 +236,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             category: newPost.category,
             entityType: "space",
             entityId: currentSpace?.id ?? "",
-            folderPath,
+            folderPath:'spaces',
           };
         } else {
           postData = {
@@ -257,7 +249,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             category: "",
             entityType: "",
             entityId: "",  
-            folderPath,
+            folderPath:'posts',
           };
         }
 

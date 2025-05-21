@@ -8,7 +8,7 @@ export const uploadFileAndSaveMetadata = async (
   fileBuffer: Buffer,
   fileName: string,
   fileType: string,
-  folderPath: string = "/"
+  folderPath: string
 ) => {
   try {
     const uniqueFileName = `${randomUUID()}-${fileName}`;
