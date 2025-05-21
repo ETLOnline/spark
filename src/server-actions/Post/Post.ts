@@ -18,7 +18,8 @@ import {
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import { TagStatus } from "@/src/components/TagsInput/tags-input-types"
-import { uploadFileAndSaveMetadata } from "@/src/services/storage/fileUtils";
+import { base64ToBuffer, uploadFileAndSaveMetadata } from "@/src/services/storage/fileUtils";
+import { CreateFilePostParams } from "@/src/services/storage/types/interface"
 
 export const CreatePostAction = CreateServerAction(
   true,
@@ -53,18 +54,7 @@ export const CreatePostAction = CreateServerAction(
   }
 )
 
-export const CreateFilePostAction = CreateServerAction(true, async (args: {
-  type: string;
-  fileSize: number;
-  fileName: string;
-  fileType: string;
-  fileBase64: string;
-  content?: string;
-  category?: string;
-  entityType?: string;
-  entityId?: string;
-  folderPath?: string;
-}) => {
+export const CreateFilePostAction = CreateServerAction(true, async (args: CreateFilePostParams) => {
   const {
     type,
     fileSize,
@@ -96,7 +86,7 @@ export const CreateFilePostAction = CreateServerAction(true, async (args: {
       throw new Error("Failed to create post");
     }
 
-    const fileBuffer = Buffer.from(fileBase64.split(",")[1], "base64");
+    const fileBuffer = base64ToBuffer(fileBase64)
     const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(
       fileBuffer,
       fileName,

@@ -35,3 +35,11 @@ export const uploadFileAndSaveMetadata = async (
     throw new Error(`Error uploading file: ${error.message}`);
   }
 };
+
+export function base64ToBuffer(base64String: string): Buffer {
+  const base64Data = base64String.includes(",")
+    ? base64String.split(",")[1]
+    : base64String;
+
+  return Buffer.from(base64Data, "base64");
+}

@@ -231,10 +231,10 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           }
         }
 
-        let post;
+        let postData;
 
         if (variant === "spaces") {
-          post = await createFilePost({
+          postData = {
             type: newPost.type,
             fileSize: newPost.fileSize as number,
             fileName: newPost.fileName as string,
@@ -245,9 +245,9 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             entityType: "space",
             entityId: currentSpace?.id ?? "",
             folderPath,
-          });
+          };
         } else {
-          post = await createFilePost({
+          postData = {
             type: newPost.type,
             fileSize: newPost.fileSize as number,
             fileName: newPost.fileName as string,
@@ -258,9 +258,10 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             entityType: "",
             entityId: "",  
             folderPath,
-          });
+          };
         }
 
+        const post = await createFilePost(postData)
 
         if (post && post.data) {
           let linkedHashtags

@@ -2,7 +2,7 @@ import * as Minio from "minio";
 import { promises as fs } from "fs";
 import * as path from "path";
 import { randomUUID } from "crypto";
-import { StorageAdapter } from "../types/interface";
+import { StorageAdapter, UploadFileParams } from "../types/interface";
 import {
   S3_ENDPOINT,
   S3_ACCESS_KEY,
@@ -14,7 +14,12 @@ import {
 const tempFolderPath = "/tmp"; // Adjust if Windows or else
 
 export const S3StorageAdapter: StorageAdapter = {
-  async uploadFile(fileBuffer, fileName, mimeType, folderPath = "/") {
+  async uploadFile({
+    fileBuffer,
+    fileName,
+    mimeType,
+    folderPath = "/",
+  }: UploadFileParams) {
     if (!S3_ENDPOINT) {
       throw new Error("S3_ENDPOINT not set");
     }

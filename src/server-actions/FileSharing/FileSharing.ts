@@ -4,7 +4,7 @@ import {
   CreateFolder,
   GetDirectoryContents
 } from "@/src/db/data-access/file-sharing/query"
-import { uploadFileAndSaveMetadata } from "@/src/services/storage/fileUtils";
+import { base64ToBuffer, uploadFileAndSaveMetadata } from "@/src/services/storage/fileUtils";
 import { CreateServerAction } from ".."
 
 export const CreateNewFolderAction = CreateServerAction(true, async(
@@ -32,7 +32,7 @@ export const CreateNewFileAction = CreateServerAction(true, async (
   folderPath: string = "/"
 ) => {
   try {
-    const fileBuffer = Buffer.from(fileB64string.split(",")[1], "base64")
+    const fileBuffer = base64ToBuffer(fileB64string)
 
     const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(fileBuffer, fileName, fileType, folderPath);
 
