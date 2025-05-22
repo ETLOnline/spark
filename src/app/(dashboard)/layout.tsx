@@ -9,10 +9,10 @@ import { ReactNode } from "react"
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar collapsible="icon" />
       <SidebarInset>
         <Header />
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0 ">
+        <div className="flex flex-1 gap-4 p-4 pt-0  h-full">
           {children}
         </div>
       </SidebarInset>
