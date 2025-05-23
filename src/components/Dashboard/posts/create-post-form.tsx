@@ -220,9 +220,6 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           return
         }
 
-        // Compute folderPath dynamically
-        let folderPath = "/";
-
         let postData;
 
         if (variant === "spaces") {
