@@ -12,7 +12,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <AppSidebar collapsible="icon" />
       <SidebarInset>
         <Header />
-        <div className="flex flex-1 gap-4 p-4 pt-0  h-full">
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0 !w-full h-full">
           {children}
         </div>
       </SidebarInset>
