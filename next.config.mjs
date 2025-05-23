@@ -10,9 +10,8 @@ const nextConfig = {
     ]
   },
   env: {
+    DATABASE_URL: process.env.DATABASE_URL,
     ABLY_API_KEY: process.env.ABLY_API_KEY,
-    TURSO_DATABASE_URL: process.env.TURSO_DATABASE_URL,
-    TURSO_AUTH_TOKEN: process.env.TURSO_AUTH_TOKEN,
     WEBHOOK_SECRET: process.env.WEBHOOK_SECRET,
     S3_SECRET_KEY: process.env.S3_SECRET_KEY,
     S3_ACCESS_KEY: process.env.S3_ACCESS_KEY,
