@@ -25,19 +25,6 @@ function ProjectSidebar({ statusList, currProject }: Props) {
 
   const pathName = usePathname()
 
-  const getActivePage = () => {
-    if (pathName.includes('/overview')) return 'overview'
-    if (pathName.includes('/sprint')) return 'sprint'
-    if (pathName.includes('/board')) return 'board'
-    if (pathName.includes('/backlog')) return 'backlog'
-    if (pathName.includes('/files')) return 'files'
-    if (pathName.includes('/settings')) return 'settings'
-    if (pathName.includes('/teams')) return 'teams'
-    return null
-  }
-
-  const activePage = getActivePage()
-
   useEffect(() => {
     setSideBarCollapse(false)
   }, [])
@@ -55,9 +42,9 @@ function ProjectSidebar({ statusList, currProject }: Props) {
       <SidebarGroupContent>
         <SidebarMenu>
           {ProjectManagementPages.map((page) => (
-            <Link href={page.link} key={page.key}>
+            <Link href={`.${page.link}`} key={page.key}>
               <SidebarMenuItem className={`flex flex-row items-center gap-2 p-2 rounded
-              ${activePage === page.key ? "bg-muted" : "hover:bg-muted"}`}>
+             ${pathName.includes(page.link) ? "bg-muted" : "hover:bg-muted"}`}>
                 <DynamicIcon name={page.icon as IconName} className='h-4 w-4' />
                 {page.title}
               </SidebarMenuItem>
