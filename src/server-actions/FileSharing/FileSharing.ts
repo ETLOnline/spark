@@ -4,7 +4,7 @@ import {
   CreateFolder,
   GetDirectoryContents
 } from "@/src/db/data-access/file-sharing/query"
-import { addFileToDb } from "@/src/utils/serverHelpers"
+import { base64ToBuffer, uploadFileAndSaveMetadata } from "@/src/services/storage/utils/fileUtils";
 import { CreateServerAction } from ".."
 
 export const CreateNewFolderAction = CreateServerAction(true, async(
@@ -23,31 +23,27 @@ export const CreateNewFolderAction = CreateServerAction(true, async(
   }
 })
 
-export const CreateNewFileAction = CreateServerAction(true, async(
+export const CreateNewFileAction = CreateServerAction(true, async (
   id: string | number,
   fileName: string,
   fileSize: number,
   fileB64string: string,
-  fileType: string
-)=>{
+  fileType: string,
+  folderPath: string
+) => {
   try {
-    const uploadedFileData = await addFileToDb(
-      fileName as string,
-      fileB64string as string,
-      process.env.S3_BUCKET_NAME as string,
-      fileSize as number,
-      fileType as string,
-      "/spaces"
-    )
+    const fileBuffer = base64ToBuffer(fileB64string)
+    const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(fileBuffer, fileName, fileType, folderPath);
+
     const result = await CreateFile(
       id,
       fileName,
       fileSize,
-      uploadedFileData[0].id
+      fileRecord.id
     )
     return {
       success: true,
-      data: { ...result[0], url: uploadedFileData[0].file_path }
+      data: { ...result[0], url: fileUrl }
     }
   } catch (error) {
     console.error("Error creating file:", error)

@@ -18,7 +18,8 @@ import {
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import { TagStatus } from "@/src/components/TagsInput/tags-input-types"
-import { addFileToDb } from "@/src/utils/serverHelpers"
+import { base64ToBuffer, uploadFileAndSaveMetadata } from "@/src/services/storage/utils/fileUtils";
+import { CreateFilePostParams } from "@/src/services/storage/types/interface"
 
 export const CreatePostAction = CreateServerAction(
   true,
@@ -53,62 +54,63 @@ export const CreatePostAction = CreateServerAction(
   }
 )
 
-export const CreateFilePostAction = CreateServerAction(
-  true,
-  async (
-    type: string,
-    fileSize: number,
-    fileName: string,
-    fileType: string,
-    fileBase64: string,
-    content?: string,
-    category?: string,
-    entityType?: string,
-    entityId?: string
-  ) => {
-    try {
-      const userId = (await AuthUserAction())?.unique_id
-      if (userId) {
-        const postData = await CreatePost({
-          type,
-          user_id: userId,
-          content,
-          category,
-          entity_type: entityType,
-          entity_id: entityId
-        })
-        if (postData) {
-          if (process.env.S3_BUCKET_NAME) {
-            const fileData = await addFileToDb(
-              fileName,
-              fileBase64,
-              process.env.S3_BUCKET_NAME,
-              fileSize,
-              fileType,
-              "/posts"
-            )
-            await AddPostFileLink(postData[0].id, fileData[0].id)
-            return {
-              success: true,
-              data: { ...postData[0], file: { ...fileData[0] } }
-            }
-          } else {
-            throw new Error("S3 Bucket name not found", {
-              cause: 500
-            })
-          }
-        }
-      } else {
-        throw new Error("Unauthorized", { cause: 401 })
-      }
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error
-      }
+export const CreateFilePostAction = CreateServerAction(true, async (args: CreateFilePostParams) => {
+  const {
+    type,
+    fileSize,
+    fileName,
+    fileType,
+    fileBase64,
+    content,
+    category,
+    entityType,
+    entityId,
+    folderPath,
+  } = args;
+  try {
+    const userId = (await AuthUserAction())?.unique_id;
+    if (!userId) throw new Error("Unauthorized", { cause: 401 });
+
+    // Create post in DB
+    const postData = await CreatePost({
+      type,
+      user_id: userId,
+      content,
+      category,
+      entity_type: entityType,
+      entity_id: entityId,
+    });
+
+    if (!postData || postData.length === 0) {
+      throw new Error("Failed to create post");
     }
+
+    const fileBuffer = base64ToBuffer(fileBase64)
+    const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(
+      fileBuffer,
+      fileName,
+      fileType,
+      folderPath == 'spaces' ? 'spaces' : 'posts'
+    );
+
+    await AddPostFileLink(postData[0].id, fileRecord.id);
+
+    return {
+      success: true,
+      data: {
+        ...postData[0],
+        file: fileRecord,
+        url: fileUrl,
+      },
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error,
+    };
   }
-)
+});
+
 
 export const CreatePollPostAction = CreateServerAction(
   true,

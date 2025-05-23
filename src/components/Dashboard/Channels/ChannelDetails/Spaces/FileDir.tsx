@@ -264,7 +264,8 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
             fileData?.fileName as string,
             fileData?.fileSize as number,
             fileData?.fileB64string as string,
-            fileData?.fileType as string
+            fileData?.fileType as string,
+            "spaces"
           )
         )?.data
         const newFile: DirItem = {
