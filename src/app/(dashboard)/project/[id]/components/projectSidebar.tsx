@@ -7,6 +7,8 @@ import Link from 'next/link'
 import { InsertTaskStatus, SelectProject } from '@/src/db/schema'
 import { useAtom } from 'jotai'
 import { projectStore } from '@/src/store/project/projectStore'
+import { DynamicIcon, IconName } from 'lucide-react/dynamic'
+import { ProjectManagementPages } from '@/src/components/Dashboard/ProjectManagement/constants/projectManagment'
 
 interface Props {
   statusList: InsertTaskStatus[]
@@ -16,7 +18,6 @@ interface Props {
 function ProjectSidebar({ statusList, currProject }: Props) {
 
   const [projectStatusList, setProjectStatusList] = useAtom(projectStore.projectStatusList)
-  // const [activeTab, setActiveTab] = useState<string | null>(null)
 
   const { setOpen: setSideBarCollapse } = useSidebar()
 
@@ -24,7 +25,7 @@ function ProjectSidebar({ statusList, currProject }: Props) {
 
   const pathName = usePathname()
 
-  const getActiveTab = () => {
+  const getActivePage = () => {
     if (pathName.includes('/overview')) return 'overview'
     if (pathName.includes('/sprint')) return 'sprint'
     if (pathName.includes('/board')) return 'board'
@@ -35,7 +36,7 @@ function ProjectSidebar({ statusList, currProject }: Props) {
     return null
   }
 
-  const activeTab = getActiveTab()
+  const activePage = getActivePage()
 
   useEffect(() => {
     setSideBarCollapse(false)
@@ -53,55 +54,15 @@ function ProjectSidebar({ statusList, currProject }: Props) {
       <SidebarGroupLabel >{currProject.project_name}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          <Link href={`./overview`} >
-            <SidebarMenuItem className={`flex flex-row items-center gap-2 p-2 rounded
-              ${activeTab === "overview" ? "bg-muted" : "hover:bg-muted"}`}>
-              <PictureInPicture2 className='h-4 w-4' />
-              Overview
-            </SidebarMenuItem>
-          </Link>
-          <Link href={`./sprint`} >
-            <SidebarMenuItem className={`flex flex-row items-center gap-2 p-2 rounded
-              ${activeTab === "sprint" ? "bg-muted" : "hover:bg-muted"}`}>
-              <ChartGantt className='h-4 w-4' />
-              Sprints
-            </SidebarMenuItem>
-          </Link>
-          <Link href={`./board`} >
-            <SidebarMenuItem className={`flex flex-row items-center gap-2 p-2 rounded
-              ${activeTab === "board" ? "bg-muted" : "hover:bg-muted"}`}>
-              <SquareKanban className='h-4 w-4' />
-              Board
-            </SidebarMenuItem>
-          </Link>
-          <Link href={`./backlog`} >
-            <SidebarMenuItem className={`flex flex-row items-center gap-2 p-2 rounded
-              ${activeTab === "backlog" ? "bg-muted" : "hover:bg-muted"}`}>
-              <ListTodo className='h-4 w-4' />
-              Backlog
-            </SidebarMenuItem>
-          </Link>
-          <Link href={`./files`} >
-            <SidebarMenuItem className={`flex flex-row items-center gap-2 p-2 rounded
-              ${activeTab === "files" ? "bg-muted" : "hover:bg-muted"}`}>
-              <Files className='h-4 w-4' />
-              Files
-            </SidebarMenuItem>
-          </Link>
-          <Link href={`#`} >
-            <SidebarMenuItem className={`flex flex-row items-center gap-2 p-2 rounded
-              ${activeTab === "teams" ? "bg-muted" : "hover:bg-muted"}`}>
-              <Users className='h-4 w-4' />
-              Teams
-            </SidebarMenuItem>
-          </Link>
-          <Link href={`./settings`} >
-            <SidebarMenuItem className={`flex flex-row items-center gap-2 p-2 rounded
-              ${activeTab === "settings" ? "bg-muted" : "hover:bg-muted"}`}>
-              <Settings className='h-4 w-4' />
-              Settings
-            </SidebarMenuItem>
-          </Link>
+          {ProjectManagementPages.map((page) => (
+            <Link href={page.link} key={page.key}>
+              <SidebarMenuItem className={`flex flex-row items-center gap-2 p-2 rounded
+              ${activePage === page.key ? "bg-muted" : "hover:bg-muted"}`}>
+                <DynamicIcon name={page.icon as IconName} className='h-4 w-4' />
+                {page.title}
+              </SidebarMenuItem>
+            </Link>
+          ))}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
