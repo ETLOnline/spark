@@ -129,6 +129,12 @@ export const ProjectManagementPages = [
     icon: "square-kanban"
   },
   {
+    key: "backlog",
+    link: "/backlog",
+    title: "Backlog",
+    icon: "list-todo"
+  },
+  {
     key: "files",
     link: "/files",
     title: "Files",
