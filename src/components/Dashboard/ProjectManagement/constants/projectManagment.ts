@@ -107,3 +107,49 @@ export const projectDefaultStatuses : Partial<InsertTaskStatusEx>[]  = [
   },
 
 ]
+
+
+export const ProjectManagementPages = [
+  {
+    key: "overview",
+    link: "/overview",
+    title: "Overview",
+    icon: "picture-in-picture-2"
+  },
+  {
+    key: "sprint",
+    link: "/sprint",
+    title: "Sprint",
+    icon: "chart-gantt"
+  },
+  {
+    key: "board",
+    link: "/board",
+    title: "Board",
+    icon: "square-kanban"
+  },
+  {
+    key: "backlog",
+    link: "/backlog",
+    title: "Backlog",
+    icon: "list-todo"
+  },
+  {
+    key: "files",
+    link: "/files",
+    title: "Files",
+    icon: "files"
+  },
+  {
+    key: "teams",
+    link: "/teams",
+    title: "Teams",
+    icon: "users"
+  },
+  {
+    key: "settings",
+    link: "/settings",
+    title: "Settings",
+    icon: "settings"
+  },
+]

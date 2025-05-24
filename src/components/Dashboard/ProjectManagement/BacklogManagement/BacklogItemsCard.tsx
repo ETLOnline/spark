@@ -72,63 +72,57 @@ function BacklogItemsCard({ backlogItems, searchedItem, orderList, limit }: Prop
 
   return (
     <>
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle>Backlog Items</CardTitle>
-          <CardDescription>Manage your project backlog items</CardDescription>
-        </CardHeader>
-        <div className='w-full overflow-x-auto'>
-          <CardContent>
-            <div className="rounded-md border">
-              <div className="grid grid-cols-12 gap-2 p-4 bg-muted/50 text-sm font-medium">
-                <div className="col-span-1">
-                  <Checkbox
-                    checked={selectedItems.length === backlogItems.length && backlogItems.length > 0}
-                    onCheckedChange={handleSelectAll}
-                  />
-                </div>
-                <div className="col-span-1">ID</div>
-                <div className="col-span-3">Title</div>
-                <div className="col-span-1">Type</div>
-                <div className="col-span-3 flex justify-around items-center">
-                  status
-                  <div>Priority</div>
-                </div>
-                <div className="col-span-1">Points</div>
-                <div className="col-span-1">Assignee</div>
-                <div className="col-span-1"></div>
-              </div>
-              {
-                tasksLoading ? (
-                  <div className="flex justify-center h-full w-full my-4">
-                    <Loader size={LoaderSizes.lg} />
-                  </div>
-                ) : (
-                  tasks.length === 0 ? (
-                    <div className="p-4 text-center text-muted-foreground my-4">No backlog items found</div>
-                  ) : (
-                    <div className='pb-2'>
-                      {tasks && tasks.map((task) => (
-                        <BacklogItems
-                          key={task.id}
-                          task={task}
-                          selectedItems={selectedItems}
-                          setSelectedItems={setSelectedItems}
-                        />
-                      ))}
-                      {
-                        Pagination &&
-                        <PaginationComponent pagination={Pagination} />
-                      }
-
-                    </div>
-                  )
-                )
-              }
+      <h2 className='font-semibold leading-none tracking-tight'>Backlog Items</h2 >
+      <p className='text-sm text-muted-foreground !mt-2'>Manage your project backlog items</p>
+      <div className='w-full overflow-x-auto'>
+        <div className="rounded-md border">
+          <div className="grid grid-cols-12 gap-2 p-4 bg-muted/50 text-sm font-medium">
+            <div className="col-span-1">
+              <Checkbox
+                checked={selectedItems.length === backlogItems.length && backlogItems.length > 0}
+                onCheckedChange={handleSelectAll}
+              />
             </div>
-          </CardContent>
+            <div className="col-span-1">ID</div>
+            <div className="col-span-3">Title</div>
+            <div className="col-span-1">Type</div>
+            <div className="col-span-3 flex justify-around items-center">
+              status
+              <div>Priority</div>
+            </div>
+            <div className="col-span-1">Points</div>
+            <div className="col-span-1">Assignee</div>
+            <div className="col-span-1"></div>
+          </div>
+          {
+            tasksLoading ? (
+              <div className="flex justify-center h-full w-full my-4">
+                <Loader size={LoaderSizes.lg} />
+              </div>
+            ) : (
+              tasks.length === 0 ? (
+                <div className="p-4 text-center text-muted-foreground my-4">No backlog items found</div>
+              ) : (
+                <div className='pb-2'>
+                  {tasks && tasks.map((task) => (
+                    <BacklogItems
+                      key={task.id}
+                      task={task}
+                      selectedItems={selectedItems}
+                      setSelectedItems={setSelectedItems}
+                    />
+                  ))}
+                  {
+                    Pagination &&
+                    <PaginationComponent pagination={Pagination} />
+                  }
+
+                </div>
+              )
+            )
+          }
         </div>
-      </Card>
+      </div>
     </>
   )
 }
