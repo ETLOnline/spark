@@ -1,5 +1,5 @@
 import Footer from "@/src/components/HomeLayoutComponents/FooterComponent"
-import Header from '@/src/components/HomeLayoutComponents/HeaderComponent'
+import Header from "@/src/components/HomeLayoutComponents/HeaderComponent"
 import React, { ReactNode } from "react"
 import "./style.css"
 
