@@ -9,7 +9,8 @@
     "lint": "next lint",
     "db:seed": "npx tsx src/db/seeds/index.ts",
     "db:generate-migrations": "npx drizzle-kit generate",
-    "db:migrate": "npx drizzle-kit migrate"
+    "db:migrate": "npx drizzle-kit migrate",
+    "prepare": "husky"
   },
   "dependencies": {
     "@azure/storage-blob": "^12.27.0",
@@ -86,6 +87,7 @@
     "drizzle-kit": "^0.28.1",
     "eslint": "^8",
     "eslint-config-next": "15.2.0",
+    "husky": "^9.1.7",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.19.4",
