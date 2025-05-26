@@ -27,7 +27,7 @@ export default function Home() {
 							<div className="absolute md:top-[-260px] md:left-[20px] top-[-220px] left-[140px]">
 								<Avatar className="w-16 h-16">
 									<AvatarImage src="/images/home/avatar1.jpg" />
-									<AvatarFallback>avatar-1</AvatarFallback>
+									<AvatarFallback>avatar1</AvatarFallback>
 								</Avatar>
 							</div>
 
