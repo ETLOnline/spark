@@ -3,7 +3,7 @@
 
 import { InsertProject } from "@/src/db/schema";
 import { CreateServerAction } from "..";
-import { CreateProject, getProjectById, getProjects , createAttachProjectUser, getProjectUsers, removeProjectUser } from "@/src/db/data-access/project-management/query";
+import { CreateProject, getProjectById, getProjects , createProjectUser, getProjectUsers, removeProjectUser, updateProjectUserRole } from "@/src/db/data-access/project-management/query";
 
 export const CreateProjectAction = CreateServerAction(true, async (project_data:InsertProject) => {
     try{
@@ -41,9 +41,9 @@ export const GetProjectByIdAction = CreateServerAction(true, async (projectId: s
 
 export const AttachProjectUserAction = CreateServerAction(
   true,
-  async (projectId: string, userId: string, role: string = "member") => {
+  async (projectId: string, userId: string, role?: string ) => {
     try {
-       const newProjectUser = await createAttachProjectUser(projectId, userId, "member")
+       const newProjectUser = await createProjectUser(projectId, userId, role ?? "viewer")
 
       return { success: true, data: newProjectUser }
     } catch (error) {
@@ -81,3 +81,17 @@ export const RemoveProjectUserAction = CreateServerAction(
     }
   }
 )
+
+export const UpdateProjectUserRoleAction = CreateServerAction(
+  true,
+  async (projectId: string, userId: string, role: string) => {
+    try {
+      
+      const projectUsers = await updateProjectUserRole(projectId, userId, role)
+      return { success: true, data: projectUsers }
+    } catch (error) {
+      console.error("Failed to update project user role:", error);
+      return { success: false, error };
+    }
+  }
+);

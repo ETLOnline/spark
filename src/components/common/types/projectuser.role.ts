@@ -1,4 +1,5 @@
-export enum SpaceUserRole {
+export enum ProjectUserRole {
   Admin = "admin",
-  Member = "member"
+  Editor = "editor",
+  Viewer = "viewer"
 }

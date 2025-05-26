@@ -99,7 +99,7 @@ const TeamPage: React.FC = () => {
 
   return (
     <div className="p-6">
-      <ProjectTeamList projectId={currProject.id} spaceId={currSpace.id} projectUsers={projectUsers} />
+      <ProjectTeamList projectId={currProject.id} spaceId={currSpace.id} projectUsers={projectUsers}  projectCreatorId={currProject.created_by}/>
     </div>
   )
 }

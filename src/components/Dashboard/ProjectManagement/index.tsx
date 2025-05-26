@@ -124,6 +124,7 @@ export function ProjectDashboard({ currProject, statusList, currSpace, spaceUser
             projectId={currProject.id}
             spaceId={currSpace.id}
             projectUsers={projectUsers}
+            projectCreatorId={currProject.created_by}
           />
         </TabsContent>
 

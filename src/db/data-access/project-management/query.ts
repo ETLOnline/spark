@@ -32,7 +32,7 @@ export async function getProjectById(projectId: string) {
         throw new Error(e.message)
     }
 }
-export async function createAttachProjectUser(projectId: string, userId: string, role: string = "member") {
+export async function createProjectUser(projectId: string, userId: string, role: string = "member") {
     try {
         const newProjectUser = await db.insert(ProjectUsersTable).values({
         project_id: projectId,
@@ -90,6 +90,24 @@ export async function removeProjectUser(projectId: string, userId: string) {
       )
       .returning()
     return result.length > 0
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
+export async function updateProjectUserRole(projectId: string, userId: string, role: string) {
+  try {
+    const result = await db
+        .update(ProjectUsersTable)
+        .set({ role })
+        .where(
+           and(
+            eq(ProjectUsersTable.project_id, projectId),
+            eq(ProjectUsersTable.user_id, userId)
+          )
+        )
+        .returning();
+
+    return result[0]
   } catch (error: any) {
     throw new Error(error.message)
   }
