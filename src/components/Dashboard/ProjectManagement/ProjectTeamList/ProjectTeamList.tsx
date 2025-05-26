@@ -3,12 +3,23 @@
 import { SelectProjectUser, SelectUser } from "@/src/db/schema"
 import { useEffect, useState } from "react"
 import { Button } from "@/src/components/ui/button"
-import MultiSelect, { MultiSelectOption } from "@/src/components/ui/multi-select"
+import MultiSelect, {
+  MultiSelectOption
+} from "@/src/components/ui/multi-select"
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { AttachProjectUserAction, RemoveProjectUserAction, UpdateProjectUserRoleAction } from "@/src/server-actions/ProjectManagement/projectManagement"
+import {
+  AttachProjectUserAction,
+  RemoveProjectUserAction,
+  UpdateProjectUserRoleAction
+} from "@/src/server-actions/ProjectManagement/projectManagement"
 import { GetSpaceUsersAction } from "@/src/server-actions/Space/Space"
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
+} from "@/src/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   DropdownMenu,
@@ -16,9 +27,15 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/src/components/ui/dropdown-menu"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/src/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/src/components/ui/dialog"
 import { MoreHorizontal, PlusCircle } from "lucide-react"
 import { Badge } from "@/src/components/ui/badge"
 import { ProjectUserRole } from "@/src/components/common/types/projectuser.role"
@@ -32,19 +49,30 @@ export interface ProjectUser extends SelectProjectUser {
 interface Props {
   projectId: string
   spaceId: string
-  projectUsers: ProjectUser[],
+  projectUsers: ProjectUser[]
   projectCreatorId: string
 }
 
-export default function ProjectTeamList({ projectId, spaceId, projectUsers = [] ,projectCreatorId }: Props) {
+export default function ProjectTeamList({
+  projectId,
+  spaceId,
+  projectUsers = [],
+  projectCreatorId
+}: Props) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [spaceUsers, setSpaceUsers] = useState<SelectUser[]>([])
   const [selectedUsers, setSelectedUsers] = useState<MultiSelectOption[]>([])
   const [usersList, setUsersList] = useState<ProjectUser[]>(projectUsers)
 
-  const [attachUserLoading, , , AttachUser] = useServerAction(AttachProjectUserAction)
-  const [removeUserLoading, , , RemoveUser] = useServerAction(RemoveProjectUserAction)
-  const [updateRoleLoading, , , UpdateProjectUserRole] = useServerAction(UpdateProjectUserRoleAction)
+  const [attachUserLoading, , , AttachUser] = useServerAction(
+    AttachProjectUserAction
+  )
+  const [removeUserLoading, , , RemoveUser] = useServerAction(
+    RemoveProjectUserAction
+  )
+  const [updateRoleLoading, , , UpdateProjectUserRole] = useServerAction(
+    UpdateProjectUserRoleAction
+  )
 
   const [roleDialogOpen, setRoleDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<ProjectUser | null>(null)
@@ -77,7 +105,7 @@ export default function ProjectTeamList({ projectId, spaceId, projectUsers = [] 
           status: response.data.status ?? "active",
           updated_at: response.data.updated_at ?? null,
           created_at: response.data.created_at ?? null,
-          user: matchingUser,
+          user: matchingUser
         }
         setUsersList((prev) => [...prev, newProjectUser])
       }
@@ -94,17 +122,29 @@ export default function ProjectTeamList({ projectId, spaceId, projectUsers = [] 
         setUsersList((prev) => prev.filter((user) => user.user_id !== userId))
         toast({ title: "User removed from project" })
       } else {
-        toast({ title: "Error", description: "Could not remove user", variant: "destructive" })
+        toast({
+          title: "Error",
+          description: "Could not remove user",
+          variant: "destructive"
+        })
       }
     } catch {
-      toast({ title: "Error", description: "Could not remove user", variant: "destructive" })
+      toast({
+        title: "Error",
+        description: "Could not remove user",
+        variant: "destructive"
+      })
     }
   }
 
   const handleSaveRole = async () => {
     if (!selectedUser) return
     try {
-      const response = await UpdateProjectUserRole(projectId, selectedUser.user_id, newRole)
+      const response = await UpdateProjectUserRole(
+        projectId,
+        selectedUser.user_id,
+        newRole
+      )
       if (response?.success) {
         setUsersList((prev) =>
           prev.map((u) =>
@@ -123,7 +163,7 @@ export default function ProjectTeamList({ projectId, spaceId, projectUsers = [] 
 
   const options: MultiSelectOption[] = spaceUsers.map((u) => ({
     label: `${u.first_name} ${u.last_name}`,
-    value: u.unique_id,
+    value: u.unique_id
   }))
 
   return (
@@ -149,16 +189,24 @@ export default function ProjectTeamList({ projectId, spaceId, projectUsers = [] 
             </div>
             <div className="divide-y">
               {usersList.length === 0 ? (
-                <div className="text-center py-6 text-muted-foreground">No users in project yet.</div>
+                <div className="text-center py-6 text-muted-foreground">
+                  No users in project yet.
+                </div>
               ) : (
                 usersList.map((cu) => {
                   const user = cu.user
                   if (!user) return null
                   return (
-                    <div key={user.unique_id} className="grid grid-cols-12 p-4 items-center">
+                    <div
+                      key={user.unique_id}
+                      className="grid grid-cols-12 p-4 items-center"
+                    >
                       <div className="col-span-4 flex items-center gap-3">
                         <Avatar>
-                          <AvatarImage src={user.profile_url ?? undefined} alt={user.first_name} />
+                          <AvatarImage
+                            src={user.profile_url ?? undefined}
+                            alt={user.first_name}
+                          />
                           <AvatarFallback>
                             {user.first_name.charAt(0)}
                             {user.last_name?.charAt(0)}
@@ -166,16 +214,21 @@ export default function ProjectTeamList({ projectId, spaceId, projectUsers = [] 
                         </Avatar>
                         <div className="font-medium">{user.first_name}</div>
                       </div>
-                      <div className="col-span-4 text-sm text-muted-foreground">{user.email}</div>
+                      <div className="col-span-4 text-sm text-muted-foreground">
+                        {user.email}
+                      </div>
                       <div className="col-span-3 flex items-center gap-1">
-                        <Badge className="capitalize" variant={cu.role === 'admin' ? "default" : "outline"}>{cu.role}</Badge>
+                        <Badge
+                          className="capitalize"
+                          variant={cu.role === "admin" ? "default" : "outline"}
+                        >
+                          {cu.role}
+                        </Badge>
                       </div>
                       <div className="col-span-1 text-center">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" 
-                            disabled={!canEdit}
-                            >
+                            <Button variant="ghost" size="icon">
                               <MoreHorizontal className="h-4 w-4" />
                               <span className="sr-only">More options</span>
                             </Button>
@@ -184,7 +237,6 @@ export default function ProjectTeamList({ projectId, spaceId, projectUsers = [] 
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              // disabled={!canEdit}
                               onClick={() => {
                                 setSelectedUser(cu)
                                 setNewRole(cu.role ?? "member")
@@ -196,7 +248,6 @@ export default function ProjectTeamList({ projectId, spaceId, projectUsers = [] 
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               className="text-destructive"
-                              disabled={!canEdit}
                               onClick={() => handleRemoveUser(cu.user_id)}
                             >
                               Remove User
