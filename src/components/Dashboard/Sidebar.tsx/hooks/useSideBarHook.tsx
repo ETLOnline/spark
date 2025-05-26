@@ -133,15 +133,16 @@ const useSideBarHook = () => {
   }, [userData])
 
   const updateChannelsList = async (userData: SelectUser) => {
-    if(!userData || !userData.channels) return
+    if (!userData || !userData.channels) return
     const navChannels = await getChannels()
-    const publicChannels=navChannels?.data?.channels || []
+    const publicChannels = navChannels?.data?.channels || []
     const joinedChannels = navChannels?.joinedChannels || []
 
     const joinedPrivateChannels = joinedChannels.filter(
       (joined) =>
-        !publicChannels.some((pub) => pub.channel_slug === joined.channel_slug) && 
-        joined.channel_type !== "public"
+        !publicChannels.some(
+          (pub) => pub.channel_slug === joined.channel_slug
+        ) && joined.channel_type !== "public"
     )
     const combinedChannels = [...publicChannels, ...joinedPrivateChannels]
 

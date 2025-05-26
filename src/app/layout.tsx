@@ -1,33 +1,31 @@
-import type { Metadata } from "next";
-import localFont from "next/font/local";
-import "./globals.css";
-import {
-  ClerkProvider
-} from '@clerk/nextjs'
-import ClerkAuthListener from "../services/auth/ClerkAuthListner";
-import ThemeProvider from "../components/ThemeProvider/ThemeProvider";
-import { Toaster } from "../components/ui/toaster";
+import type { Metadata } from "next"
+import localFont from "next/font/local"
+import "./globals.css"
+import { ClerkProvider } from "@clerk/nextjs"
+import ClerkAuthListener from "../services/auth/ClerkAuthListner"
+import ThemeProvider from "../components/ThemeProvider/ThemeProvider"
+import { Toaster } from "../components/ui/toaster"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
-  weight: "100 900",
-});
+  weight: "100 900"
+})
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
-  weight: "100 900",
-});
+  weight: "100 900"
+})
 
 export const metadata: Metadata = {
   title: "Spark",
-  description: "Community Platform",
-};
+  description: "Community Platform"
+}
 
 export default function RootLayout({
-  children,
+  children
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <ClerkProvider>
@@ -42,11 +40,11 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <Toaster/>
+            <Toaster />
             {children}
           </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>
-  );
+  )
 }

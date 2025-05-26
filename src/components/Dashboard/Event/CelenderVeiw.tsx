@@ -1,24 +1,22 @@
-import React, { useState } from "react";
-import { Calendar } from "../../ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
+import React, { useState } from "react"
+import { Calendar } from "../../ui/calendar"
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
 
 interface Event {
-  id: string;
-  title: string;
-  description: string;
-  date: Date;
-  location: string;
-  attendees: number;
+  id: string
+  title: string
+  description: string
+  date: Date
+  location: string
+  attendees: number
 }
 
 interface Props {
-  events: Event[];
+  events: Event[]
 }
 
 function CelenderVeiw({ events }: Props) {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    new Date()
-  );
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
 
   return (
     <div className="flex flex-col sm:flex-row h-full">
@@ -56,7 +54,7 @@ function CelenderVeiw({ events }: Props) {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default CelenderVeiw;
+export default CelenderVeiw

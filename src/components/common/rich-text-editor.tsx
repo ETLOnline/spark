@@ -2,7 +2,12 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/src/components/ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/src/components/ui/tooltip"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/src/components/ui/tooltip"
 import {
   Bold,
   Italic,
@@ -16,7 +21,7 @@ import {
   Code,
   Underline,
   Heading1,
-  Heading2,
+  Heading2
 } from "lucide-react"
 import { Textarea } from "../ui/textarea"
 
@@ -26,7 +31,11 @@ interface RichTextEditorProps {
   onBlur?: () => void
 }
 
-export default function RichTextEditor({ value, onChange, onBlur }: RichTextEditorProps) {
+export default function RichTextEditor({
+  value,
+  onChange,
+  onBlur
+}: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null)
   const [isFocused, setIsFocused] = useState(false)
   const [isActive, setIsActive] = useState("")
@@ -58,7 +67,7 @@ export default function RichTextEditor({ value, onChange, onBlur }: RichTextEdit
         const selection = window.getSelection()
         if (selection && editorRef.current) {
           // Find the last list item
-          const listItems = editorRef.current.querySelectorAll('li')
+          const listItems = editorRef.current.querySelectorAll("li")
           if (listItems.length > 0) {
             const lastItem = listItems[listItems.length - 1]
             const range = document.createRange()
@@ -81,7 +90,7 @@ export default function RichTextEditor({ value, onChange, onBlur }: RichTextEdit
       setTimeout(() => {
         const selection = window.getSelection()
         if (selection && editorRef.current) {
-          const links = editorRef.current.getElementsByTagName('a')
+          const links = editorRef.current.getElementsByTagName("a")
           if (links.length > 0) {
             const lastLink = links[links.length - 1]
             const range = document.createRange()
@@ -118,22 +127,24 @@ export default function RichTextEditor({ value, onChange, onBlur }: RichTextEdit
     }
   }
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleButtonClick = () => {
-    fileInputRef.current?.click();
-  };
+    fileInputRef.current?.click()
+  }
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const file = event.target.files?.[0]
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      execCommand("insertImage", imageUrl);
+      const imageUrl = URL.createObjectURL(file)
+      execCommand("insertImage", imageUrl)
     }
-  };
+  }
 
   return (
-    <div className={`border rounded-md ${isFocused ? "ring-1 ring-ring " : ""}`}>
+    <div
+      className={`border rounded-md ${isFocused ? "ring-1 ring-ring " : ""}`}
+    >
       <TooltipProvider>
         <div className="flex flex-wrap items-center gap-0.5 p-2 border-b bg-muted/50">
           <Tooltip>
@@ -165,8 +176,7 @@ export default function RichTextEditor({ value, onChange, onBlur }: RichTextEdit
                 onClick={() => {
                   formatText("italic")
                   setIsActive(isActive === "italic" ? "" : "italic")
-                }
-                }
+                }}
               >
                 <Italic className="h-4 w-4" />
                 <span className="sr-only">Italic</span>
@@ -185,8 +195,7 @@ export default function RichTextEditor({ value, onChange, onBlur }: RichTextEdit
                 onClick={() => {
                   formatText("underline")
                   setIsActive(isActive === "underline" ? "" : "underline")
-                }
-                }
+                }}
               >
                 <Underline className="h-4 w-4" />
                 <span className="sr-only">Underline</span>
@@ -207,8 +216,7 @@ export default function RichTextEditor({ value, onChange, onBlur }: RichTextEdit
                 onClick={() => {
                   formatText("formatBlock", "<h1>")
                   setIsActive(isActive === "<h1>" ? "" : "<h1>")
-                }
-                }
+                }}
               >
                 <Heading1 className="h-4 w-4" />
                 <span className="sr-only">Heading 1</span>
@@ -247,7 +255,11 @@ export default function RichTextEditor({ value, onChange, onBlur }: RichTextEdit
                 className={`h-8 w-8 p-0 ${isActive === "insertUnorderedList" ? "bg-accent" : ""}`}
                 onClick={() => {
                   formatText("insertUnorderedList")
-                  setIsActive(isActive === "insertUnorderedList" ? "" : "insertUnorderedList")
+                  setIsActive(
+                    isActive === "insertUnorderedList"
+                      ? ""
+                      : "insertUnorderedList"
+                  )
                 }}
               >
                 <List className="h-4 w-4" />
@@ -266,7 +278,9 @@ export default function RichTextEditor({ value, onChange, onBlur }: RichTextEdit
                 className={`h-8 w-8 p-0 ${isActive === "insertOrderedList" ? "bg-accent" : ""}`}
                 onClick={() => {
                   formatText("insertOrderedList")
-                  setIsActive(isActive === "insertOrderedList" ? "" : "insertOrderedList")
+                  setIsActive(
+                    isActive === "insertOrderedList" ? "" : "insertOrderedList"
+                  )
                 }}
               >
                 <ListOrdered className="h-4 w-4" />
@@ -306,7 +320,9 @@ export default function RichTextEditor({ value, onChange, onBlur }: RichTextEdit
                 className={`h-8 w-8 p-0 ${isActive === "justifyCenter" ? "bg-accent" : ""}`}
                 onClick={() => {
                   formatText("justifyCenter")
-                  setIsActive(isActive === "justifyCenter" ? "" : "justifyCenter")
+                  setIsActive(
+                    isActive === "justifyCenter" ? "" : "justifyCenter"
+                  )
                 }}
               >
                 <AlignCenter className="h-4 w-4" />
@@ -339,7 +355,13 @@ export default function RichTextEditor({ value, onChange, onBlur }: RichTextEdit
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={insertLink}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={insertLink}
+              >
                 <Link className="h-4 w-4" />
                 <span className="sr-only">Insert Link</span>
               </Button>
@@ -390,10 +412,8 @@ export default function RichTextEditor({ value, onChange, onBlur }: RichTextEdit
             </TooltipTrigger>
             <TooltipContent>Code Block</TooltipContent>
           </Tooltip>
-
         </div>
       </TooltipProvider>
-
 
       <div
         ref={editorRef}
@@ -401,10 +421,7 @@ export default function RichTextEditor({ value, onChange, onBlur }: RichTextEdit
         contentEditable
         onInput={handleInput}
         onFocus={() => setIsFocused(true)}
-
-
       />
     </div>
   )
 }
-

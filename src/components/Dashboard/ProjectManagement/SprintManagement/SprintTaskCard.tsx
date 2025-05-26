@@ -1,10 +1,16 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar'
-import { Badge } from '@/src/components/ui/badge'
-import { Button } from '@/src/components/ui/button'
-import { Card } from '@/src/components/ui/card'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/src/components/ui/dropdown-menu'
-import { MoreHorizontal } from 'lucide-react'
-import React from 'react'
+import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
+import { Badge } from "@/src/components/ui/badge"
+import { Button } from "@/src/components/ui/button"
+import { Card } from "@/src/components/ui/card"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/src/components/ui/dropdown-menu"
+import { MoreHorizontal } from "lucide-react"
+import React from "react"
 
 interface Props {
   task: Task
@@ -23,9 +29,7 @@ interface Task {
   storyPoints: number
 }
 
-
 function SprintTaskCard({ task }: Props) {
-
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case "high":
@@ -39,13 +43,14 @@ function SprintTaskCard({ task }: Props) {
     }
   }
 
-
   return (
     <Card key={task.id} className="p-3">
       <div className="flex justify-between items-start">
         <div>
           <h4 className="font-medium text-sm">{task.title}</h4>
-          <p className="text-xs text-muted-foreground mt-1">{task.description}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {task.description}
+          </p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -58,7 +63,9 @@ function SprintTaskCard({ task }: Props) {
             <DropdownMenuItem>Move to In Progress</DropdownMenuItem>
             <DropdownMenuItem>Move to Done</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">Remove from Sprint</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive">
+              Remove from Sprint
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

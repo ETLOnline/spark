@@ -1,10 +1,8 @@
-import { ProjectSettings } from '@/src/components/Dashboard/ProjectManagement/ProjectSettings/ProjectSettings'
-import React from 'react'
+import { ProjectSettings } from "@/src/components/Dashboard/ProjectManagement/ProjectSettings/ProjectSettings"
+import React from "react"
 
 function page() {
-  return (
-    <ProjectSettings />
-  )
+  return <ProjectSettings />
 }
 
 export default page

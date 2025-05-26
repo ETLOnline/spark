@@ -1,49 +1,50 @@
 "use server"
 
+import { InsertProject } from "@/src/db/schema"
+import { CreateServerAction } from ".."
+import {
+  CreateProject,
+  getProjectById,
+  getProjects,
+  createProjectUser,
+  getProjectUsers,
+  removeProjectUser,
+  updateProjectUserRole
+} from "@/src/db/data-access/project-management/query"
 
-import { InsertProject } from "@/src/db/schema";
-import { CreateServerAction } from "..";
-import { CreateProject, getProjectById, getProjects , createProjectUser, getProjectUsers, removeProjectUser, updateProjectUserRole } from "@/src/db/data-access/project-management/query";
-
-export const CreateProjectAction = CreateServerAction(true, async (project_data:InsertProject) => {
-    try{
-        const newProject = await CreateProject(project_data)
-        return {success: true, data: newProject}
+export const CreateProjectAction = CreateServerAction(
+  true,
+  async (project_data: InsertProject) => {
+    try {
+      const newProject = await CreateProject(project_data)
+      return { success: true, data: newProject }
+    } catch (error) {
+      return { error }
     }
-    catch(error){
-        return {error: error}
-    }
-}
-
+  }
 )
 
 export const GetProjectsAction = CreateServerAction(
-    true,
-    async (spaceId: string) => {
-      try {
-        const projects = await getProjects(spaceId)
-        return { success: true, data: projects }
-      } catch (error) {
-        return { error }
-      }
-    }
-  )
-  
-
-export const GetProjectByIdAction = CreateServerAction(true, async (projectId: string) => {
+  true,
+  async (spaceId: string) => {
     try {
-        const project = await getProjectById(projectId)
-        return {success: true, data: project}
+      const projects = await getProjects(spaceId)
+      return { success: true, data: projects }
     } catch (error) {
-        return {error: error}
+      return { error }
     }
-})
+  }
+)
 
 export const AttachProjectUserAction = CreateServerAction(
   true,
-  async (projectId: string, userId: string, role?: string ) => {
+  async (projectId: string, userId: string, role?: string) => {
     try {
-       const newProjectUser = await createProjectUser(projectId, userId, role ?? "viewer")
+      const newProjectUser = await createProjectUser(
+        projectId,
+        userId,
+        role ?? "viewer"
+      )
 
       return { success: true, data: newProjectUser }
     } catch (error) {
@@ -86,12 +87,11 @@ export const UpdateProjectUserRoleAction = CreateServerAction(
   true,
   async (projectId: string, userId: string, role: string) => {
     try {
-      
       const projectUsers = await updateProjectUserRole(projectId, userId, role)
       return { success: true, data: projectUsers }
     } catch (error) {
-      console.error("Failed to update project user role:", error);
-      return { success: false, error };
+      console.error("Failed to update project user role:", error)
+      return { success: false, error }
     }
   }
-);
+)

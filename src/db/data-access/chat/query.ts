@@ -1,37 +1,57 @@
-
-import { and, asc, count, desc, eq, inArray, like, or, SQLWrapper } from "drizzle-orm"
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  inArray,
+  like,
+  or,
+  SQLWrapper
+} from "drizzle-orm"
 import { db } from "../.."
-import { chatsTable, SpaceChatsTable, spacesTable, userChatsTable, userContactsTable, usersTable } from "../../schema"
+import {
+  chatsTable,
+  SpaceChatsTable,
+  spacesTable,
+  userChatsTable,
+  userContactsTable,
+  usersTable
+} from "../../schema"
 import { randomUUID } from "crypto"
 
-
-export const CreatePrivateChat = async (user_id: string, contact_id: string, space_id?: string) => {
+export const CreatePrivateChat = async (
+  user_id: string,
+  contact_id: string,
+  space_id?: string
+) => {
   try {
-    const chat = await db.insert(chatsTable).values({
-      type: space_id ? "space" : "open",
-      name: "",
-      channel_id: `${user_id}:${contact_id}`,
-    }).returning()
+    const chat = await db
+      .insert(chatsTable)
+      .values({
+        type: space_id ? "space" : "open",
+        name: "",
+        channel_id: `${user_id}:${contact_id}`
+      })
+      .returning()
 
-    if(space_id){
+    if (space_id) {
       await db.insert(SpaceChatsTable).values({
         space_id,
         chat_id: chat[0].id
       })
     }
 
-    await db.insert(userChatsTable).values(
-      [
-        {
-          user_id,
-          chat_id: chat[0].id
-        },
-        {
-          user_id: contact_id,
-          chat_id: chat[0].id
-        }
-      ]
-    )
+    await db.insert(userChatsTable).values([
+      {
+        user_id,
+        chat_id: chat[0].id
+      },
+      {
+        user_id: contact_id,
+        chat_id: chat[0].id
+      }
+    ])
 
     return await db.query.chatsTable.findFirst({
       where: eq(chatsTable.id, chat[0].id),
@@ -43,26 +63,30 @@ export const CreatePrivateChat = async (user_id: string, contact_id: string, spa
         }
       }
     })
-
-
   } catch (error: any) {
-    throw new Error(error.message);
+    throw new Error(error.message)
   }
-
 }
 
-export const CreateGroupChat = async (userIds: string[], chatName: string, space_id?: string) => {
+export const CreateGroupChat = async (
+  userIds: string[],
+  chatName: string,
+  space_id?: string
+) => {
   try {
     const realtimeChannelId = randomUUID()
 
-    const chat = await db.insert(chatsTable).values({
-      type: space_id ? "space" : "open",
-      name: chatName,
-      channel_id: realtimeChannelId,
-      is_group: 1,
-    }).returning()
+    const chat = await db
+      .insert(chatsTable)
+      .values({
+        type: space_id ? "space" : "open",
+        name: chatName,
+        channel_id: realtimeChannelId,
+        is_group: 1
+      })
+      .returning()
 
-    if(space_id){
+    if (space_id) {
       await db.insert(SpaceChatsTable).values({
         space_id,
         chat_id: chat[0].id
@@ -86,12 +110,9 @@ export const CreateGroupChat = async (userIds: string[], chatName: string, space
         }
       }
     })
-
-
   } catch (error: any) {
-    throw new Error(error.message);
+    throw new Error(error.message)
   }
-
 }
 
 // export const GetUserChat = async (user_id: string) => {
@@ -109,36 +130,33 @@ export const CreateGroupChat = async (userIds: string[], chatName: string, space
 //     }
 // }
 
-
 export const GetChats = async (user_id: string, space_id?: string) => {
   try {
-
-    let chatIds:number[] = []
+    let chatIds: number[] = []
 
     const user = await db.query.usersTable.findFirst({
       where: eq(usersTable.unique_id, user_id),
       with: {
         chats: true
-        
       }
     })
 
     chatIds = user?.chats.map((chat) => chat.chat_id) || []
 
-    if(space_id){
+    if (space_id) {
       const spaceChats = await db.query.SpaceChatsTable.findMany({
-        where: eq(SpaceChatsTable.space_id, space_id),
+        where: eq(SpaceChatsTable.space_id, space_id)
       })
       const spaceChatIds = spaceChats.map((chat) => chat.chat_id)
-      chatIds = chatIds.filter(cid=> spaceChatIds.includes(cid))
+      chatIds = chatIds.filter((cid) => spaceChatIds.includes(cid))
     }
 
-    
     const chats = await db.query.chatsTable.findMany({
-      where: (chatsTable) => and(
-        inArray(chatsTable.id, chatIds),
-        eq(chatsTable.type, space_id ? "space" : "open"),
-      ),
+      where: (chatsTable) =>
+        and(
+          inArray(chatsTable.id, chatIds),
+          eq(chatsTable.type, space_id ? "space" : "open")
+        ),
       orderBy: (chatsTable) => desc(chatsTable.created_at),
       with: {
         users: {
@@ -150,10 +168,9 @@ export const GetChats = async (user_id: string, space_id?: string) => {
     })
     return chats
   } catch (error: any) {
-    throw new Error(error.message);
+    throw new Error(error.message)
   }
 }
-
 
 export const GetMutualChatb = async (user_id: string, contact_id: string) => {
   try {
@@ -165,44 +182,44 @@ export const GetMutualChatb = async (user_id: string, contact_id: string) => {
       with: {
         chat: true,
         user: true
-      },
-
+      }
     })
     return chats
   } catch (error: any) {
-    throw new Error(error.message);
+    throw new Error(error.message)
   }
 }
 
 export const GetMutualChat = async (user_id: string, contact_id: string) => {
   try {
-    const chatId = await db.select({ chat_id: userChatsTable.chat_id }).from(userChatsTable).where(
-      or(
-        eq(userChatsTable.user_id, user_id),
-        eq(userChatsTable.user_id, contact_id)
+    const chatId = await db
+      .select({ chat_id: userChatsTable.chat_id })
+      .from(userChatsTable)
+      .where(
+        or(
+          eq(userChatsTable.user_id, user_id),
+          eq(userChatsTable.user_id, contact_id)
+        )
       )
-    ).groupBy(
-      userChatsTable.chat_id
-    ).having(
-      eq(count(userChatsTable.chat_id), 2)
-    )
+      .groupBy(userChatsTable.chat_id)
+      .having(eq(count(userChatsTable.chat_id), 2))
     if (chatId.length === 0) return null
     return await db.query.chatsTable.findFirst({
       where: eq(chatsTable.id, chatId[0].chat_id)
     })
   } catch (error: any) {
-    throw new Error(error.message);
+    throw new Error(error.message)
   }
 }
 
 export const GetChatById = async (chat_id: number) => {
   try {
     const chat = await db.query.chatsTable.findFirst({
-      where: eq(chatsTable.id, chat_id),
+      where: eq(chatsTable.id, chat_id)
     })
     return chat
   } catch (error: any) {
-    throw new Error(error.message);
+    throw new Error(error.message)
   }
 }
 
@@ -233,7 +250,7 @@ export const GetChatByIdWithMessages = async (chat_id: number) => {
 
     return chat
   } catch (error: any) {
-    throw new Error(error.message);
+    throw new Error(error.message)
   }
 }
 
@@ -261,20 +278,25 @@ export const GetChatBySlugWithMessages = async (slug: string) => {
 
     return chat
   } catch (error: any) {
-    throw new Error(error.message);
+    throw new Error(error.message)
   }
 }
 
-export const updateLastChatMessage = async (chatId: number, message: string) => {
+export const updateLastChatMessage = async (
+  chatId: number,
+  message: string
+) => {
   try {
-    const updatedChat = await db.update(chatsTable).set({
-      last_message: message
-    }).where(
-      eq(chatsTable.id, chatId)
-    ).returning()
+    const updatedChat = await db
+      .update(chatsTable)
+      .set({
+        last_message: message
+      })
+      .where(eq(chatsTable.id, chatId))
+      .returning()
     return updatedChat[0]
   } catch (error: any) {
-    throw new Error(error.message);
+    throw new Error(error.message)
   }
 }
 
@@ -285,43 +307,49 @@ export interface ChatContactFilters {
   space_slug?: string
   limit?: number
 }
-export const getChatContacts  = async ({user_id, query, space_slug ,space_id, limit}:ChatContactFilters) => {
-
+export const getChatContacts = async ({
+  user_id,
+  query,
+  space_slug,
+  space_id,
+  limit
+}: ChatContactFilters) => {
   try {
-
     let userIds: string[] = []
-    const whereClause:SQLWrapper[] = []
+    const whereClause: SQLWrapper[] = []
 
-    if(user_id){
+    if (user_id) {
       const userRelated = await db.query.userContactsTable.findMany({
         where: and(
           or(
             eq(userContactsTable.user_id, user_id),
-            eq(userContactsTable.contact_id, user_id),
+            eq(userContactsTable.contact_id, user_id)
           ),
           eq(userContactsTable.is_accepted, 1)
         )
       })
-      userIds = userRelated.map((user) => user.user_id === user_id ? user.contact_id : user.user_id)
+      userIds = userRelated.map((user) =>
+        user.user_id === user_id ? user.contact_id : user.user_id
+      )
       whereClause.push(inArray(usersTable.unique_id, userIds))
     }
 
-    if(space_slug && !space_id){
+    if (space_slug && !space_id) {
       const space = await db.query.spacesTable.findFirst({
         where: eq(spacesTable.space_slug, space_slug),
-        columns:{
+        columns: {
           id: true
         }
       })
-      if(space){
+      if (space) {
         space_id = space.id
       }
     }
 
-    if(space_id){
+    if (space_id) {
       const spaceUsers = await db.query.spacesTable.findFirst({
         where: eq(spacesTable.id, space_id),
-        columns:{
+        columns: {
           id: true
         },
         with: {
@@ -344,23 +372,21 @@ export const getChatContacts  = async ({user_id, query, space_slug ,space_id, li
         bio: true,
         role: true
       },
-      where: (usersTable, {  }) =>
+      where: (usersTable, {}) =>
         and(
-          query ? or(
-            like(usersTable.first_name, `%${query}%`),
-            like(usersTable.last_name, `%${query}%`),
-            like(usersTable.email, `%${query}%`),
-          ):undefined,
+          query
+            ? or(
+                like(usersTable.first_name, `%${query}%`),
+                like(usersTable.last_name, `%${query}%`),
+                like(usersTable.email, `%${query}%`)
+              )
+            : undefined,
           ...whereClause
         )
-        
     })
 
     return users
-   
   } catch (error: any) {
     throw new Error(error.message)
   }
-
 }
-

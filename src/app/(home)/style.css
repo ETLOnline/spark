@@ -1,28 +1,27 @@
-.content{
-    @apply w-full 
+.content {
+  @apply w-full;
 }
-.hero{
-    @apply  w-full h-screen bg-hero-gradient
-
+.hero {
+  @apply w-full h-screen bg-hero-gradient;
 }
-.hero-content{
-    @apply w-full text-center md:text-left md:w-1/2 flex flex-col gap-8
+.hero-content {
+  @apply w-full text-center md:text-left md:w-1/2 flex flex-col gap-8;
 }
-.Main-Heading{
-    @apply  text-4xl  md:text-5xl font-bold 
+.Main-Heading {
+  @apply text-4xl  md:text-5xl font-bold;
 }
-.avatars{
-    @apply w-1/2  hidden md:block
-}    
-.section-content-wrapper{
-    @apply flex flex-wrap mt-10
+.avatars {
+  @apply w-1/2  hidden md:block;
 }
-.section-button{
-    @apply  text-center mt-8
+.section-content-wrapper {
+  @apply flex flex-wrap mt-10;
 }
-.carousel-content{
-    @apply lg:gap-8 pl-8
+.section-button {
+  @apply text-center mt-8;
 }
-.section-card{
-    @apply  flex flex-wrap mt-10 justify-around md:justify-between gap-4
+.carousel-content {
+  @apply lg:gap-8 pl-8;
+}
+.section-card {
+  @apply flex flex-wrap mt-10 justify-around md:justify-between gap-4;
 }

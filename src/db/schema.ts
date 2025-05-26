@@ -9,22 +9,19 @@ const timestamps = {
   deleted_at: varchar("deleted_at")
 }
 
-export const usersTable = pgTable(
-  "users",
-  {
-    unique_id: varchar("unique_id", { length: 36 })
-      .primaryKey()
-      .$defaultFn(() => randomUUID()),
-    first_name: varchar().notNull(),
-    last_name: varchar().notNull(),
-    email: varchar().notNull().unique(),
-    external_auth_id: varchar().notNull().unique(),
-    profile_url: varchar(),
-    meta: varchar(),
-    bio: varchar(),
-    role: varchar().notNull().default("user")
-  }
-)
+export const usersTable = pgTable("users", {
+  unique_id: varchar("unique_id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  first_name: varchar().notNull(),
+  last_name: varchar().notNull(),
+  email: varchar().notNull().unique(),
+  external_auth_id: varchar().notNull().unique(),
+  profile_url: varchar(),
+  meta: varchar(),
+  bio: varchar(),
+  role: varchar().notNull().default("user")
+})
 
 export const usersRelations = relations(usersTable, ({ many }) => ({
   chats: many(userChatsTable, {
@@ -61,16 +58,15 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   //   relationName: "spaceToOwner"
   // }),
   spaces: many(SpaceUsersTable, {
-    relationName: "spaceUserToUser",
+    relationName: "spaceUserToUser"
   }),
   channels: many(ChannelUsersTable, {
     relationName: "channelUserToUser"
   })
-
 }))
 
 export type InsertUser = typeof usersTable.$inferInsert
-export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> &{
+export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> & {
   // meta?: string
   chats?: SelectChat[]
   contacts?: SelectUserContact[]
@@ -118,17 +114,14 @@ export type SelectChat = InferSelectModel<typeof chatsTable> & {
 }
 export type SelectChatWithRelation = typeof chatsRelations
 
-export const messagesTable = pgTable(
-  "messages",
-  {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    chat_id: integer().notNull(),
-    type: varchar().notNull(),
-    sender_id: varchar().notNull(),
-    message: varchar().notNull(),
-    ...timestamps
-  }
-)
+export const messagesTable = pgTable("messages", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  chat_id: integer().notNull(),
+  type: varchar().notNull(),
+  sender_id: varchar().notNull(),
+  message: varchar().notNull(),
+  ...timestamps
+})
 
 export const messagesRelations = relations(messagesTable, ({ one }) => ({
   chat: one(chatsTable, {
@@ -149,13 +142,10 @@ export type SelectMessage = typeof messagesTable.$inferSelect & {
   sender?: SelectUser
 }
 
-export const userChatsTable = pgTable(
-  "user_chats",
-  {
-    user_id: varchar().notNull(),
-    chat_id: integer().notNull()
-  }
-)
+export const userChatsTable = pgTable("user_chats", {
+  user_id: varchar().notNull(),
+  chat_id: integer().notNull()
+})
 
 export const userChatsRelations = relations(userChatsTable, ({ one }) => ({
   chat: one(chatsTable, {
@@ -184,19 +174,16 @@ export const userMessagesTable = pgTable("user_messages", {
 export type InsertUserMessage = typeof userMessagesTable.$inferInsert
 export type SelectUserMessage = typeof userMessagesTable.$inferSelect
 
-export const userContactsTable = pgTable(
-  "user_contacts",
-  {
-    user_id: varchar().notNull(),
-    contact_id: varchar().notNull(),
-    is_requested: integer().notNull().default(0),
-    is_accepted: integer().notNull().default(0),
-    is_blocked: integer().notNull().default(0),
-    is_following: integer().notNull().default(0),
-    is_followed_by: integer().notNull().default(0),
-    ...timestamps
-  }
-)
+export const userContactsTable = pgTable("user_contacts", {
+  user_id: varchar().notNull(),
+  contact_id: varchar().notNull(),
+  is_requested: integer().notNull().default(0),
+  is_accepted: integer().notNull().default(0),
+  is_blocked: integer().notNull().default(0),
+  is_following: integer().notNull().default(0),
+  is_followed_by: integer().notNull().default(0),
+  ...timestamps
+})
 
 export const userContactsRelations = relations(
   userContactsTable,
@@ -524,14 +511,11 @@ export const postHashtagsRelations = relations(
 export type InsertPostHashtag = typeof postHashtagsTable.$inferInsert
 export type SelectPostHashtag = typeof postHashtagsTable.$inferSelect
 
-export const likesTable = pgTable(
-  "likes",
-  {
-    user_id: varchar().notNull(),
-    post_id: varchar().notNull(),
-    ...timestamps
-  }
-)
+export const likesTable = pgTable("likes", {
+  user_id: varchar().notNull(),
+  post_id: varchar().notNull(),
+  ...timestamps
+})
 
 export const likesRelations = relations(likesTable, ({ one }) => ({
   interactor: one(usersTable, {
@@ -549,14 +533,11 @@ export const likesRelations = relations(likesTable, ({ one }) => ({
 export type InsertLike = typeof likesTable.$inferInsert
 export type SelectLike = typeof likesTable.$inferSelect
 
-export const pollOptionsTable = pgTable(
-  "poll_options",
-  {
-    post_id: varchar().notNull(),
-    option_text: varchar().notNull(),
-    vote_count: integer().notNull().default(0)
-  }
-)
+export const pollOptionsTable = pgTable("poll_options", {
+  post_id: varchar().notNull(),
+  option_text: varchar().notNull(),
+  vote_count: integer().notNull().default(0)
+})
 
 export const pollOptionsRelations = relations(
   pollOptionsTable,
@@ -577,15 +558,12 @@ export type SelectPollOption = typeof pollOptionsTable.$inferSelect & {
   votes?: SelectPollVote[]
 }
 
-export const pollVotesTable = pgTable(
-  "poll_votes",
-  {
-    user_id: varchar().notNull(),
-    post_id: varchar().notNull(),
-    option_text: varchar().notNull(),
-    ...timestamps
-  }
-)
+export const pollVotesTable = pgTable("poll_votes", {
+  user_id: varchar().notNull(),
+  post_id: varchar().notNull(),
+  option_text: varchar().notNull(),
+  ...timestamps
+})
 
 export const pollVotesRelations = relations(pollVotesTable, ({ one }) => ({
   option: one(pollOptionsTable, {
@@ -665,7 +643,7 @@ export const channelsRelations = relations(channelsTable, ({ many }) => ({
   }),
   users: many(ChannelUsersTable, {
     relationName: "channelToChannelUser"
-  }),
+  })
 }))
 
 export type InsertChannel = typeof channelsTable.$inferInsert
@@ -709,7 +687,7 @@ export const spacesRelations = relations(spacesTable, ({ one, many }) => ({
   }),
   chats: many(SpaceChatsTable, {
     relationName: "spaceToSpaceChat"
-  }),
+  })
 }))
 
 export type InsertSpace = typeof spacesTable.$inferInsert
@@ -801,17 +779,16 @@ export type SelectSpaceFileDirectory =
     file?: SelectFile
   }
 
-
 export const SpaceUsersTable = pgTable("space_users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   space_id: varchar().notNull(),
   user_id: varchar().notNull(),
   role: varchar().default("member"),
-  status: varchar().default("active"),
+  status: varchar().default("active")
 })
 
 export type InsertSpaceUser = typeof SpaceUsersTable.$inferInsert
-export type SelectSpaceUser = typeof SpaceUsersTable.$inferSelect & { 
+export type SelectSpaceUser = typeof SpaceUsersTable.$inferSelect & {
   space?: SelectSpace
   user?: SelectUser
 }
@@ -820,77 +797,77 @@ export const SpaceUsersRelations = relations(SpaceUsersTable, ({ one }) => ({
   space: one(spacesTable, {
     fields: [SpaceUsersTable.space_id],
     references: [spacesTable.id],
-    relationName: "spaceToSpaceUser",
+    relationName: "spaceToSpaceUser"
   }),
   user: one(usersTable, {
     fields: [SpaceUsersTable.user_id],
     references: [usersTable.unique_id],
-    relationName: "spaceUserToUser",
-  }),
+    relationName: "spaceUserToUser"
+  })
 }))
 
 export const ChannelUsersTable = pgTable("channel_users", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),  
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
   channel_id: varchar().notNull(),
   user_id: varchar().notNull(),
   role: varchar().default("member"),
-  status: varchar().default("active"),
-
+  status: varchar().default("active")
 })
 export type InsertChannelUser = typeof ChannelUsersTable.$inferInsert
-export type SelectChannelUser = typeof ChannelUsersTable.$inferSelect & { 
+export type SelectChannelUser = typeof ChannelUsersTable.$inferSelect & {
   channel?: SelectChannel
   user?: SelectUser
 }
 
-export const ChannelUsersRelations = relations(ChannelUsersTable, ({ one }) => ({
-  channel: one(channelsTable, {
-    fields: [ChannelUsersTable.channel_id],
-    references: [channelsTable.id],
-    relationName: "channelToChannelUser",
-  }),
-  user: one(usersTable, {
-    fields: [ChannelUsersTable.user_id],
-    references: [usersTable.unique_id],
-    relationName: "channelUserToUser",
-  }),
-}))
-
+export const ChannelUsersRelations = relations(
+  ChannelUsersTable,
+  ({ one }) => ({
+    channel: one(channelsTable, {
+      fields: [ChannelUsersTable.channel_id],
+      references: [channelsTable.id],
+      relationName: "channelToChannelUser"
+    }),
+    user: one(usersTable, {
+      fields: [ChannelUsersTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "channelUserToUser"
+    })
+  })
+)
 
 export const projectTable = pgTable("project", {
   id: varchar("id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
-    project_name: varchar().notNull(),
-    project_slug: varchar().notNull(),
-    description: varchar(),
-    project_startDate: varchar().notNull(),
-    project_targetDate: varchar().notNull(),
-    channel_id: varchar().notNull(),
-    space_id: varchar().notNull(),
-    created_by: varchar().notNull(),
-    project_type: varchar(),
-    ...timestamps
+  project_name: varchar().notNull(),
+  project_slug: varchar().notNull(),
+  description: varchar(),
+  project_startDate: varchar().notNull(),
+  project_targetDate: varchar().notNull(),
+  channel_id: varchar().notNull(),
+  space_id: varchar().notNull(),
+  created_by: varchar().notNull(),
+  project_type: varchar(),
+  ...timestamps
 })
 
 export type InsertProject = typeof projectTable.$inferInsert
 export type SelectProject = typeof projectTable.$inferSelect
 
-
 export const taskTable = pgTable("task", {
   id: varchar("id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
-    task_num: varchar(),
-    task_title: varchar().notNull(),
-    description: varchar().notNull(),
-    task_type: varchar().notNull(),
-    task_priority: varchar().notNull(),
-    story_points: varchar().notNull(),
-    project_id: varchar().notNull(),
-    created_by: varchar().notNull(),
-    status_id: varchar(),
-    ...timestamps
+  task_num: varchar(),
+  task_title: varchar().notNull(),
+  description: varchar().notNull(),
+  task_type: varchar().notNull(),
+  task_priority: varchar().notNull(),
+  story_points: varchar().notNull(),
+  project_id: varchar().notNull(),
+  created_by: varchar().notNull(),
+  status_id: varchar(),
+  ...timestamps
 })
 
 export type InsertTask = typeof taskTable.$inferInsert
@@ -912,32 +889,33 @@ export const SpaceChatsRelations = relations(SpaceChatsTable, ({ one }) => ({
   space: one(spacesTable, {
     fields: [SpaceChatsTable.space_id],
     references: [spacesTable.id],
-    relationName: "spaceToSpaceChat",
+    relationName: "spaceToSpaceChat"
   }),
   chat: one(chatsTable, {
     fields: [SpaceChatsTable.chat_id],
     references: [chatsTable.id],
-    relationName: "spaceChatToChat",
-  }),
+    relationName: "spaceChatToChat"
+  })
 }))
-
 
 export const TaskStatusTable = pgTable("tasks_status", {
   id: varchar("id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
-    project_id: varchar().notNull(),
-    name: varchar().notNull(),
-    position: integer().notNull(),
-    status_slug: varchar(),
-    ...timestamps
+  project_id: varchar().notNull(),
+  name: varchar().notNull(),
+  position: integer().notNull(),
+  status_slug: varchar(),
+  ...timestamps
 })
 
 export type InsertTaskStatus = typeof TaskStatusTable.$inferInsert
 export type SelectTaskStatus = typeof TaskStatusTable.$inferSelect
 
 export const ProjectUsersTable = pgTable("project_users", {
-  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => randomUUID()),
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
   project_id: varchar().notNull(),
   user_id: varchar().notNull(),
   role: varchar().default("member"),

@@ -1,9 +1,7 @@
-import { FeedbackScreen } from '@/src/components/Dashboard/Feedback'
+import { FeedbackScreen } from "@/src/components/Dashboard/Feedback"
 
 const FeedbackPage = () => {
-  return (
-    <FeedbackScreen />
-  )
+  return <FeedbackScreen />
 }
 
 export default FeedbackPage

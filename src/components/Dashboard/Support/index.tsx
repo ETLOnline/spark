@@ -1,8 +1,6 @@
-"use client";
-import { CardTitle } from "@/src/components/ui/card";
+"use client"
+import { CardTitle } from "@/src/components/ui/card"
 
 export function SupportScreen() {
-  return (
-    <CardTitle>Support</CardTitle>
-  );
+  return <CardTitle>Support</CardTitle>
 }

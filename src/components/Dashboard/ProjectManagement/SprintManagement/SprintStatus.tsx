@@ -1,5 +1,5 @@
-import { Clock } from 'lucide-react'
-import React from 'react'
+import { Clock } from "lucide-react"
+import React from "react"
 
 interface Props {
   sprint: Sprint

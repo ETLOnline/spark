@@ -1,10 +1,8 @@
-import { BacklogManagement } from '@/src/components/Dashboard/ProjectManagement/BacklogManagement/BacklogManagement'
-import React from 'react'
+import { BacklogManagement } from "@/src/components/Dashboard/ProjectManagement/BacklogManagement/BacklogManagement"
+import React from "react"
 
 function ProjectBackolgs() {
-  return (
-    <BacklogManagement />
-  )
+  return <BacklogManagement />
 }
 
 export default ProjectBackolgs

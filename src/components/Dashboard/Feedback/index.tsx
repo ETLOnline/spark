@@ -1,8 +1,6 @@
-"use client";
-import {CardTitle } from "@/src/components/ui/card";
+"use client"
+import { CardTitle } from "@/src/components/ui/card"
 
 export function FeedbackScreen() {
-  return (
-    <CardTitle>Feedback</CardTitle>
-  );
+  return <CardTitle>Feedback</CardTitle>
 }

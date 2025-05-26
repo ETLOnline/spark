@@ -6,14 +6,10 @@ import {
   ChevronsUpDown,
   CreditCard,
   LogOut,
-  Sparkles,
+  Sparkles
 } from "lucide-react"
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/src/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,13 +17,13 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/src/components/ui/dropdown-menu"
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
+  useSidebar
 } from "@/src/components/ui/sidebar"
 import { useRouter } from "next/navigation"
 import { SignOutButton, UserProfile, useUser } from "@clerk/nextjs"
@@ -48,12 +44,18 @@ export default function NavUser() {
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user?.imageUrl} />
-                
-                <AvatarFallback className="rounded-lg">{user?.firstName}</AvatarFallback>
+
+                <AvatarFallback className="rounded-lg">
+                  {user?.firstName}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{user?.firstName}</span>
-                <span className="truncate text-xs">{user?.emailAddresses[0].emailAddress}</span>
+                <span className="truncate font-semibold">
+                  {user?.firstName}
+                </span>
+                <span className="truncate text-xs">
+                  {user?.emailAddresses[0].emailAddress}
+                </span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -67,12 +69,21 @@ export default function NavUser() {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user?.imageUrl} alt={user?.fullName || ''} />
-                  <AvatarFallback className="rounded-lg">{user?.firstName}</AvatarFallback>
+                  <AvatarImage
+                    src={user?.imageUrl}
+                    alt={user?.fullName || ""}
+                  />
+                  <AvatarFallback className="rounded-lg">
+                    {user?.firstName}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{user?.fullName}</span>
-                  <span className="truncate text-xs">{user?.emailAddresses[0].emailAddress}</span>
+                  <span className="truncate font-semibold">
+                    {user?.fullName}
+                  </span>
+                  <span className="truncate text-xs">
+                    {user?.emailAddresses[0].emailAddress}
+                  </span>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -85,7 +96,11 @@ export default function NavUser() {
             </DropdownMenuGroup>
             <DropdownMenuSeparator /> */}
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={()=>{router.push('/profile')}}>
+              <DropdownMenuItem
+                onClick={() => {
+                  router.push("/profile")
+                }}
+              >
                 <BadgeCheck />
                 Account
               </DropdownMenuItem>
@@ -99,9 +114,9 @@ export default function NavUser() {
               </DropdownMenuItem> */}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={()=>{}}>
+            <DropdownMenuItem onClick={() => {}}>
               <LogOut />
-              <SignOutButton/>
+              <SignOutButton />
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

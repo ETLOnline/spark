@@ -1,5 +1,5 @@
-import React from 'react'
-import { Avatar, AvatarFallback, AvatarImage } from '../../../ui/avatar'
+import React from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar"
 
 interface Contributor {
   id: string
@@ -25,7 +25,9 @@ function Contributers({ contributors }: Props) {
             </Avatar>
             <div>
               <p className="text-sm font-medium">{contributor.name}</p>
-              <p className="text-xs text-muted-foreground">{contributor.role}</p>
+              <p className="text-xs text-muted-foreground">
+                {contributor.role}
+              </p>
             </div>
           </div>
         ))}

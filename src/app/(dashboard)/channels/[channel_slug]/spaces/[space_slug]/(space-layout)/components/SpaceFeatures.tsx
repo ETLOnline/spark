@@ -23,7 +23,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
+  TooltipTrigger
 } from "@/src/components/ui/tooltip"
 
 interface Props {
@@ -50,7 +50,7 @@ function SpaceFeatures({ features, space }: Props) {
     if (!feature) return null
 
     if (feature.feature_status === 0) {
-      <NoDataCard
+      ;<NoDataCard
         icon={<EarthLock className="h-16 w-16 text-muted-foreground mb-4" />}
         title="Feature not found"
         description="Feature not available at the moment, or might have been disabled by the admin"
@@ -67,13 +67,16 @@ function SpaceFeatures({ features, space }: Props) {
       case "chat":
         return <SpaceChat />
       default:
-        return <NoDataCard
-          icon={<EarthLock className="h-16 w-16 text-muted-foreground mb-4" />}
-          title="Feature not found"
-          description="Feature not available at the moment, or might have been diabled by the admin"
-        />
+        return (
+          <NoDataCard
+            icon={
+              <EarthLock className="h-16 w-16 text-muted-foreground mb-4" />
+            }
+            title="Feature not found"
+            description="Feature not available at the moment, or might have been diabled by the admin"
+          />
+        )
     }
-
   }
 
   if (pageType) {
@@ -90,95 +93,91 @@ function SpaceFeatures({ features, space }: Props) {
 
   return (
     <div>
-
-
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {features.length > 1
           ? features.map(({ feature }) => {
-
-            if (feature?.feature_status === 1) {
-              return (
-                <Link
-                  key={feature?.id}
-                  href={feature ? getFeatureUrl(feature.feature_slug) : "#"}
-                >
-                  <Card
+              if (feature?.feature_status === 1) {
+                return (
+                  <Link
                     key={feature?.id}
-                    className="h-full flex flex-row items-center py-2 px-4 sm:p-4 gap-4"
+                    href={feature ? getFeatureUrl(feature.feature_slug) : "#"}
                   >
-                    <DynamicIcon
-                      name={feature?.feature_icon as IconName}
-                      className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 "
-                    />
-                    <div className="flex flex-col overflow-hidden mt-2 sm:mt-0">
-                      <CardHeader className="p-0 pb-1">
-                        <CardTitle>{feature?.feature_name}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-0 hidden sm:block">
-                        <p
-                          className="text-sm text-muted-foreground truncate "
-                          title={feature?.feature_description ?? undefined}
-                        >
-                          {feature?.feature_description}
-                        </p>
-                      </CardContent>
-                    </div>
-                  </Card>
-                </Link>
-              )
-            } else if (feature?.feature_status === 0) {
-              return (
-                <Link href={"#"} key={feature?.id}>
-                  <Card
-                    key={feature?.id}
-                    className="h-full flex flex-row items-center py-2 px-4 sm:p-4 gap-4"
-                  >
-                    <DynamicIcon
-                      name={feature?.feature_icon as IconName}
-                      className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 "
-                    />
-                    <div className="flex flex-col overflow-hidden mt-2 sm:mt-0">
-                      <CardHeader className="p-0 pb-1">
-                        <div className="flex items-center justify-between">
+                    <Card
+                      key={feature?.id}
+                      className="h-full flex flex-row items-center py-2 px-4 sm:p-4 gap-4"
+                    >
+                      <DynamicIcon
+                        name={feature?.feature_icon as IconName}
+                        className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 "
+                      />
+                      <div className="flex flex-col overflow-hidden mt-2 sm:mt-0">
+                        <CardHeader className="p-0 pb-1">
                           <CardTitle>{feature?.feature_name}</CardTitle>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <TriangleAlert className="h-4 w-4 text-yellow-400" />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Feature not available at the moment, or might have been diabled by the admin</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="p-0 hidden sm:block">
-                        <p
-                          className="text-sm text-muted-foreground truncate "
-                          title={feature?.feature_description ?? undefined}
-                        >
-                          {feature?.feature_description}
-                        </p>
-                      </CardContent>
-                    </div>
-                  </Card>
-                </Link>
-
-              )
-
-            }
-
-
-          })
+                        </CardHeader>
+                        <CardContent className="p-0 hidden sm:block">
+                          <p
+                            className="text-sm text-muted-foreground truncate "
+                            title={feature?.feature_description ?? undefined}
+                          >
+                            {feature?.feature_description}
+                          </p>
+                        </CardContent>
+                      </div>
+                    </Card>
+                  </Link>
+                )
+              } else if (feature?.feature_status === 0) {
+                return (
+                  <Link href={"#"} key={feature?.id}>
+                    <Card
+                      key={feature?.id}
+                      className="h-full flex flex-row items-center py-2 px-4 sm:p-4 gap-4"
+                    >
+                      <DynamicIcon
+                        name={feature?.feature_icon as IconName}
+                        className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 "
+                      />
+                      <div className="flex flex-col overflow-hidden mt-2 sm:mt-0">
+                        <CardHeader className="p-0 pb-1">
+                          <div className="flex items-center justify-between">
+                            <CardTitle>{feature?.feature_name}</CardTitle>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <TriangleAlert className="h-4 w-4 text-yellow-400" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>
+                                    Feature not available at the moment, or
+                                    might have been diabled by the admin
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="p-0 hidden sm:block">
+                          <p
+                            className="text-sm text-muted-foreground truncate "
+                            title={feature?.feature_description ?? undefined}
+                          >
+                            {feature?.feature_description}
+                          </p>
+                        </CardContent>
+                      </div>
+                    </Card>
+                  </Link>
+                )
+              }
+            })
           : null}
       </div>
       {features.length === 1
         ? features.map((sf) => {
-          const feature = sf.feature
-          if (!feature) return null
-          return <>{renderFeatureModule(feature.feature_slug)}</>
-        })
+            const feature = sf.feature
+            if (!feature) return null
+            return <>{renderFeatureModule(feature.feature_slug)}</>
+          })
         : null}
     </div>
   )

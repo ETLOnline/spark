@@ -13,7 +13,7 @@ interface ProfilePageProps {
 
 const ProfilePage: React.FC<ProfilePageProps> = async (props) => {
   const { tab } = await props.searchParams
-  
+
   let user
 
   let profileData: Profile | undefined

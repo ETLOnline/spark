@@ -1,5 +1,13 @@
 import { usePathname, useSearchParams } from "next/navigation"
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "../../ui/pagination"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious
+} from "../../ui/pagination"
 import { PaginationType } from "../types/pagination.type"
 
 interface props {
@@ -9,13 +17,16 @@ interface props {
 const PaginationComponent = ({ pagination }: props) => {
   const pathname = usePathname()
   const query = useSearchParams()
-  const page = query.get('page') ? Number(query.get('page')) : 1
+  const page = query.get("page") ? Number(query.get("page")) : 1
 
-  const restQueryParams = query.toString().split('&').filter(q => !q.includes('page')).join('&')
+  const restQueryParams = query
+    .toString()
+    .split("&")
+    .filter((q) => !q.includes("page"))
+    .join("&")
   const isRestQuery = restQueryParams.length > 0
 
   const generatePaginationItems = () => {
-
     const items = []
     const maxVisiblePages = 5
     const halfVisible = Math.floor(maxVisiblePages / 2)
@@ -33,7 +44,11 @@ const PaginationComponent = ({ pagination }: props) => {
     if (startPage > 1) {
       items.push(
         <PaginationItem key="1">
-          <PaginationLink href={`${pathname}?page=1${isRestQuery ? `&${restQueryParams}` : ''}`}>1</PaginationLink>
+          <PaginationLink
+            href={`${pathname}?page=1${isRestQuery ? `&${restQueryParams}` : ""}`}
+          >
+            1
+          </PaginationLink>
         </PaginationItem>
       )
       if (startPage > 2) {
@@ -49,7 +64,7 @@ const PaginationComponent = ({ pagination }: props) => {
       items.push(
         <PaginationItem key={i} className="cursor-pointer">
           <PaginationLink
-            href={`${pathname}?page=${i}${isRestQuery ? `&${restQueryParams}` : ''}`}
+            href={`${pathname}?page=${i}${isRestQuery ? `&${restQueryParams}` : ""}`}
             isActive={i === page}
           >
             {i}
@@ -69,7 +84,7 @@ const PaginationComponent = ({ pagination }: props) => {
       items.push(
         <PaginationItem key={pagination.totalPages}>
           <PaginationLink
-            href={`${pathname}?page=${pagination.totalPages}${isRestQuery ? `&${restQueryParams}` : ''}`}
+            href={`${pathname}?page=${pagination.totalPages}${isRestQuery ? `&${restQueryParams}` : ""}`}
             isActive={pagination.totalPages === page}
           >
             {pagination.totalPages}
@@ -86,11 +101,9 @@ const PaginationComponent = ({ pagination }: props) => {
       <PaginationContent>
         <PaginationItem>
           <PaginationPrevious
-            href={`${pathname}?page=${page - 1}${isRestQuery ? `&${restQueryParams}` : ''}`}
+            href={`${pathname}?page=${page - 1}${isRestQuery ? `&${restQueryParams}` : ""}`}
             className={
-              page === 1
-                ? "pointer-events-none opacity-50"
-                : "cursor-pointer"
+              page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"
             }
           />
         </PaginationItem>
@@ -98,7 +111,7 @@ const PaginationComponent = ({ pagination }: props) => {
         {generatePaginationItems()}
         <PaginationItem>
           <PaginationNext
-            href={`${pathname}?page=${page + 1}${isRestQuery ? `&${restQueryParams}` : ''}`}
+            href={`${pathname}?page=${page + 1}${isRestQuery ? `&${restQueryParams}` : ""}`}
             className={
               page === pagination.totalPages
                 ? "pointer-events-none opacity-50"

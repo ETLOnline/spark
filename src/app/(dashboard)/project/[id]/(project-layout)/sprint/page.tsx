@@ -1,10 +1,8 @@
-import { SprintManagement } from '@/src/components/Dashboard/ProjectManagement/SprintManagement/SprintManagement'
-import React from 'react'
+import { SprintManagement } from "@/src/components/Dashboard/ProjectManagement/SprintManagement/SprintManagement"
+import React from "react"
 
 function ProjectSprintspage() {
-  return (
-    <SprintManagement />
-  )
+  return <SprintManagement />
 }
 
 export default ProjectSprintspage

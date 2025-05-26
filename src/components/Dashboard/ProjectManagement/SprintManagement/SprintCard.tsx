@@ -1,12 +1,19 @@
-import { Badge } from '@/src/components/ui/badge'
-import { Button } from '@/src/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/src/components/ui/card'
-import { AlertCircle, ArrowRightCircle, CheckCircle2 } from 'lucide-react'
-import React, { Dispatch, SetStateAction } from 'react'
-import AddSprintTask from './AddSprintTask'
-import SprintProgressBar from './SprintProgressBar'
-import SprintStatus from './SprintStatus'
-import BoardColumn from './BoardColumn'
+import { Badge } from "@/src/components/ui/badge"
+import { Button } from "@/src/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/src/components/ui/card"
+import { AlertCircle, ArrowRightCircle, CheckCircle2 } from "lucide-react"
+import React, { Dispatch, SetStateAction } from "react"
+import AddSprintTask from "./AddSprintTask"
+import SprintProgressBar from "./SprintProgressBar"
+import SprintStatus from "./SprintStatus"
+import BoardColumn from "./BoardColumn"
 
 interface Props {
   sprint: Sprint
@@ -37,7 +44,6 @@ interface Task {
   storyPoints: number
 }
 
-
 function SprintCard({ sprint, setSprints, sprints }: Props) {
   return (
     <Card key={sprint.id} className="mb-6">
@@ -46,28 +52,36 @@ function SprintCard({ sprint, setSprints, sprints }: Props) {
           <div>
             <CardTitle>{sprint.name}</CardTitle>
             <CardDescription>
-              {new Date(sprint.startDate).toLocaleDateString()} - {new Date(sprint.endDate).toLocaleDateString()}
+              {new Date(sprint.startDate).toLocaleDateString()} -{" "}
+              {new Date(sprint.endDate).toLocaleDateString()}
             </CardDescription>
           </div>
           <div className="flex items-center space-x-2 mt-2 sm:mt-0">
             <Badge
               variant={
-                sprint.status === "active" ? "default" : sprint.status === "completed" ? "secondary" : "outline"
-              }>
+                sprint.status === "active"
+                  ? "default"
+                  : sprint.status === "completed"
+                    ? "secondary"
+                    : "outline"
+              }
+            >
               {sprint.status.charAt(0).toUpperCase() + sprint.status.slice(1)}
             </Badge>
 
-            <AddSprintTask sprint={sprint} sprints={sprints} setSprints={setSprints} />
-
+            <AddSprintTask
+              sprint={sprint}
+              sprints={sprints}
+              setSprints={setSprints}
+            />
           </div>
         </div>
 
         <SprintProgressBar sprint={sprint} />
-
       </CardHeader>
       <CardContent>
         <div className="flex overflow-x-auto ">
-          <div className='flex mb-2 gap-2 w-full'>
+          <div className="flex mb-2 gap-2 w-full">
             <BoardColumn sprint={sprint} status="todo" />
             <BoardColumn sprint={sprint} status="in-progress" />
             <BoardColumn sprint={sprint} status="done" />

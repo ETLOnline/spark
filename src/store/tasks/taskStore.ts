@@ -7,6 +7,6 @@ const selectedTask = atom<SelectTask | null>(null)
 
 export const taskStore = {
   tasks,
-    isTaskFormModelOpen,
-    selectedTask,
+  isTaskFormModelOpen,
+  selectedTask
 }

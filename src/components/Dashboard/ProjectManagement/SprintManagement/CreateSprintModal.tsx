@@ -1,17 +1,23 @@
-import { Button } from '@/src/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/src/components/ui/dialog'
-import { Input } from '@/src/components/ui/input'
-import { Label } from '@/src/components/ui/label'
-import { SetStateAction } from 'jotai'
-import { Plus } from 'lucide-react'
-import React, { Dispatch, useState } from 'react'
-
+import { Button } from "@/src/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/src/components/ui/dialog"
+import { Input } from "@/src/components/ui/input"
+import { Label } from "@/src/components/ui/label"
+import { SetStateAction } from "jotai"
+import { Plus } from "lucide-react"
+import React, { Dispatch, useState } from "react"
 
 interface Props {
   sprints: Sprint[]
   setSprints: Dispatch<SetStateAction<Sprint[]>>
 }
-
 
 interface Task {
   id: string
@@ -40,12 +46,9 @@ function CreateSprintModal({ sprints, setSprints }: Props) {
   const [newSprint, setNewSprint] = useState({
     name: "",
     startDate: "",
-    endDate: "",
+    endDate: ""
   })
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false)
-
-
-
 
   const handleCreateSprint = () => {
     if (!newSprint.name || !newSprint.startDate || !newSprint.endDate) return
@@ -57,7 +60,7 @@ function CreateSprintModal({ sprints, setSprints }: Props) {
       endDate: newSprint.endDate,
       status: "planning",
       progress: 0,
-      tasks: [],
+      tasks: []
     }
 
     setSprints([sprint, ...sprints])
@@ -76,7 +79,9 @@ function CreateSprintModal({ sprints, setSprints }: Props) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create New Sprint</DialogTitle>
-          <DialogDescription>Plan a new sprint for your project.</DialogDescription>
+          <DialogDescription>
+            Plan a new sprint for your project.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
@@ -86,7 +91,9 @@ function CreateSprintModal({ sprints, setSprints }: Props) {
             <Input
               id="sprint-name"
               value={newSprint.name}
-              onChange={(e) => setNewSprint({ ...newSprint, name: e.target.value })}
+              onChange={(e) =>
+                setNewSprint({ ...newSprint, name: e.target.value })
+              }
               className="col-span-3"
               placeholder="Sprint 5"
             />
@@ -99,7 +106,9 @@ function CreateSprintModal({ sprints, setSprints }: Props) {
               id="start-date"
               type="date"
               value={newSprint.startDate}
-              onChange={(e) => setNewSprint({ ...newSprint, startDate: e.target.value })}
+              onChange={(e) =>
+                setNewSprint({ ...newSprint, startDate: e.target.value })
+              }
               className="col-span-3"
             />
           </div>
@@ -111,7 +120,9 @@ function CreateSprintModal({ sprints, setSprints }: Props) {
               id="end-date"
               type="date"
               value={newSprint.endDate}
-              onChange={(e) => setNewSprint({ ...newSprint, endDate: e.target.value })}
+              onChange={(e) =>
+                setNewSprint({ ...newSprint, endDate: e.target.value })
+              }
               className="col-span-3"
             />
           </div>
