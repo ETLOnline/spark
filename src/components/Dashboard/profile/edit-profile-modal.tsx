@@ -222,8 +222,8 @@ const EditProfileModal: React.FC = () => {
                     {editedBio?.length
                       ? editedBio?.length
                       : bio?.length
-                      ? bio.length
-                      : 0}
+                        ? bio.length
+                        : 0}
                     /2000 characters
                   </p>
                   {bioError && (

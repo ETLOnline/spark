@@ -1,12 +1,10 @@
-import React, { ReactNode } from 'react'
-import './Container.css'
+import React, { ReactNode } from "react"
+import "./Container.css"
 
 const Container = ({ children }: { children: ReactNode }) => {
   return (
-    <div className='body-container'>
-      <div className='container-item'>
-        {children}
-      </div>
+    <div className="body-container">
+      <div className="container-item">{children}</div>
     </div>
   )
 }

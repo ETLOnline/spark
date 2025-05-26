@@ -1,8 +1,12 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card'
-import React from 'react'
-
-
+import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/src/components/ui/card"
+import React from "react"
 
 const recentActivity = [
   {
@@ -11,7 +15,7 @@ const recentActivity = [
     avatar: "/avatars/01.png",
     action: "completed task",
     item: "Implement user authentication",
-    time: "2 hours ago",
+    time: "2 hours ago"
   },
   {
     id: "2",
@@ -19,7 +23,7 @@ const recentActivity = [
     avatar: "/avatars/02.png",
     action: "commented on",
     item: "API integration issues",
-    time: "4 hours ago",
+    time: "4 hours ago"
   },
   {
     id: "3",
@@ -27,7 +31,7 @@ const recentActivity = [
     avatar: "/avatars/03.png",
     action: "uploaded file",
     item: "UI mockups.fig",
-    time: "Yesterday",
+    time: "Yesterday"
   },
   {
     id: "4",
@@ -35,7 +39,7 @@ const recentActivity = [
     avatar: "/avatars/04.png",
     action: "moved task",
     item: "Database optimization",
-    time: "Yesterday",
+    time: "Yesterday"
   },
   {
     id: "5",
@@ -43,8 +47,8 @@ const recentActivity = [
     avatar: "/avatars/05.png",
     action: "created task",
     item: "Fix navigation bug",
-    time: "2 days ago",
-  },
+    time: "2 days ago"
+  }
 ]
 
 function RecentActivity() {
@@ -65,7 +69,9 @@ function RecentActivity() {
               <div className="space-y-1">
                 <p className="text-sm">
                   <span className="font-medium">{activity.user}</span>{" "}
-                  <span className="text-muted-foreground">{activity.action}</span>{" "}
+                  <span className="text-muted-foreground">
+                    {activity.action}
+                  </span>{" "}
                   <span className="font-medium">{activity.item}</span>
                 </p>
                 <p className="text-xs text-muted-foreground">{activity.time}</p>

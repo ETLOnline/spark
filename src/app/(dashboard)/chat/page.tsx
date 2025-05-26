@@ -1,7 +1,10 @@
-import { ChatScreen } from "@/src/components/Dashboard/Chat";
-import { SelectChat } from "@/src/db/schema";
-import { GetChatBySlugWithMessagesAction, GetChatsAction } from "@/src/server-actions/Chat/Chat";
-import { Suspense } from "react";
+import { ChatScreen } from "@/src/components/Dashboard/Chat"
+import { SelectChat } from "@/src/db/schema"
+import {
+  GetChatBySlugWithMessagesAction,
+  GetChatsAction
+} from "@/src/server-actions/Chat/Chat"
+import { Suspense } from "react"
 
 interface ChatPageProps {
   searchParams: Promise<{
@@ -10,7 +13,7 @@ interface ChatPageProps {
 }
 
 export default async function ChatPage(props: ChatPageProps) {
-  const searchParams = await props.searchParams;
+  const searchParams = await props.searchParams
   let currentChat: SelectChat | undefined = undefined
   let allChats: SelectChat[] = []
   let selectedCurrectChatSlug = null
@@ -21,19 +24,19 @@ export default async function ChatPage(props: ChatPageProps) {
   }
 
   if (allChats.length > 0) {
-
     if (searchParams.active_chat) {
       selectedCurrectChatSlug = searchParams.active_chat
     } else {
       selectedCurrectChatSlug = allChats[0].chat_slug
     }
 
-    const currentChatRes = await GetChatBySlugWithMessagesAction(selectedCurrectChatSlug)
+    const currentChatRes = await GetChatBySlugWithMessagesAction(
+      selectedCurrectChatSlug
+    )
     if (currentChatRes.success) {
       currentChat = currentChatRes.data
     }
   }
-
 
   return (
     <Suspense>
@@ -41,6 +44,3 @@ export default async function ChatPage(props: ChatPageProps) {
     </Suspense>
   )
 }
-
-
-

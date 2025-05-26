@@ -1,11 +1,15 @@
-import React from 'react'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../../ui/card'
-import { Badge } from '../../ui/badge'
-import { LinkAsButton } from '../../LinkAsButton/LinkAsButton'
-import { SelectProject } from '@/src/db/schema'
-import { ProjectType } from '../ProjectManagement/types/project.type'
-
-
+import React from "react"
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "../../ui/card"
+import { Badge } from "../../ui/badge"
+import { LinkAsButton } from "../../LinkAsButton/LinkAsButton"
+import { SelectProject } from "@/src/db/schema"
+import { ProjectType } from "../ProjectManagement/types/project.type"
 
 interface Props {
   project: SelectProject
@@ -14,7 +18,7 @@ interface Props {
 function ProjectCards({ project }: Props) {
   return (
     <Card key={project.id} className="mb-4">
-      <CardHeader >
+      <CardHeader>
         <div className="flex justify-between items-start">
           <CardTitle>{project.project_name}</CardTitle>
           <Badge
@@ -24,16 +28,14 @@ function ProjectCards({ project }: Props) {
                 : project.project_type === ProjectType.Draft
                   ? "secondary"
                   : "outline"
-            }>
+            }
+          >
             {project.project_type}
           </Badge>
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground">
-          {project.description}
-        </p>
-
+        <p className="text-sm text-muted-foreground">{project.description}</p>
       </CardContent>
       <CardFooter className="flex justify-between">
         <div className="flex items-center space-x-2">
@@ -50,16 +52,16 @@ function ProjectCards({ project }: Props) {
             {project.author.name}
           </span> */}
         </div>
-        <div className='flex items-center space-x-2'>
+        <div className="flex items-center space-x-2">
           <LinkAsButton href={`/project/${project.id}/board`}>
             Launch Board
           </LinkAsButton>
-          <LinkAsButton href={`/project/${project.id}`} >
+          <LinkAsButton href={`/project/${project.id}`}>
             View Details
           </LinkAsButton>
         </div>
       </CardFooter>
-    </Card >
+    </Card>
   )
 }
 

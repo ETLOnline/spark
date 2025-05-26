@@ -1,39 +1,36 @@
-"use client";
-import { useEffect, useState } from "react";
-import { CardHeader, CardTitle } from "@/src/components/ui/card";
+"use client"
+import { useEffect, useState } from "react"
+import { CardHeader, CardTitle } from "@/src/components/ui/card"
 import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger,
-} from "@/src/components/ui/tabs";
-import UpComingEvent from "./UpComingEvent";
-import CelenderVeiw from "./CelenderVeiw";
-import { SelectEvent } from "@/src/db/schema";
-import { GetEventsAction } from "@/src/server-actions/events/event";
-import { useServerAction } from "@/src/hooks/useServerAction";
-import moment from "moment-timezone";
-
-
+  TabsTrigger
+} from "@/src/components/ui/tabs"
+import UpComingEvent from "./UpComingEvent"
+import CelenderVeiw from "./CelenderVeiw"
+import { SelectEvent } from "@/src/db/schema"
+import { GetEventsAction } from "@/src/server-actions/events/event"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import moment from "moment-timezone"
 
 export function EventsScreen() {
-  const [events, setEvents] = useState<SelectEvent[]>([]);
-  const [getEventsLoading, getEventsData, getEventsError, GetEvents] = useServerAction(GetEventsAction);
+  const [events, setEvents] = useState<SelectEvent[]>([])
+  const [getEventsLoading, getEventsData, getEventsError, GetEvents] =
+    useServerAction(GetEventsAction)
 
-  const startDate = moment.utc().toISOString();
-  const endDate = moment.utc(startDate).add(3, "month").toISOString();
+  const startDate = moment.utc().toISOString()
+  const endDate = moment.utc(startDate).add(3, "month").toISOString()
 
   useEffect(() => {
-    GetEvents(startDate, endDate);
-  }, []);
+    GetEvents(startDate, endDate)
+  }, [])
 
   useEffect(() => {
     if (getEventsData != null) {
       setEvents(getEventsData.data ? getEventsData.data : [])
-    };
+    }
   }, [getEventsData])
-
-
 
   return (
     <div className="h-auto flex flex-col">
@@ -57,5 +54,5 @@ export function EventsScreen() {
         </TabsContent> */}
       </Tabs>
     </div>
-  );
+  )
 }

@@ -1,7 +1,7 @@
-import NotFound from '@/src/components/Dashboard/NotFound/NotFound'
-import { ProjectScreen } from '@/src/components/Dashboard/Projects'
-import { GetSpaceBySlugAction } from '@/src/server-actions/Space/Space'
-import React from 'react'
+import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
+import { ProjectScreen } from "@/src/components/Dashboard/Projects"
+import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
+import React from "react"
 
 interface Props {
   searchParams: Promise<{
@@ -11,22 +11,15 @@ interface Props {
 }
 
 async function ProjectPage({ searchParams }: Props) {
+  const { channel: channelSlug, space: spaceSlug } = await searchParams
 
-  const { channel:channelSlug, space:spaceSlug } = await searchParams
-
-
-  const currentSpace = await  GetSpaceBySlugAction(spaceSlug, channelSlug)
-
+  const currentSpace = await GetSpaceBySlugAction(spaceSlug, channelSlug)
 
   if (!currentSpace.success || !currentSpace.data) {
-    return (
-      <NotFound/>
-    )
+    return <NotFound />
   }
 
-  return (
-    <ProjectScreen />
-  )
+  return <ProjectScreen />
 }
 
 export default ProjectPage

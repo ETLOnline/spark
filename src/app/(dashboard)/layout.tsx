@@ -1,9 +1,6 @@
 import AppSidebar from "@/src/components/Dashboard/Sidebar.tsx/app-sidebar"
 import Header from "@/src/components/Dashboard/header"
-import {
-  SidebarInset,
-  SidebarProvider,
-} from "@/src/components/ui/sidebar"
+import { SidebarInset, SidebarProvider } from "@/src/components/ui/sidebar"
 import { ReactNode } from "react"
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {

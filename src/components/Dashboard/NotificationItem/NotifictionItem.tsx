@@ -100,7 +100,6 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   }
 
   return (
-    
     <div className="flex items-center justify-between p-4 border-b last:border-b-0 max-[622px]:flex-col max-[622px]:items-start max-[622px]:space-x-0 max-[622px]:space-y-4">
       <div className="flex items-center space-x-4">
         {size === "sm" && !isProfileActivity(activity) && (
@@ -111,9 +110,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
           />
         )}
         <Avatar className="h-12 w-12">
-          <Link
-            href={size === "sm" ? "#" : `/profile/${otherUser.unique_id}`}
-          >
+          <Link href={size === "sm" ? "#" : `/profile/${otherUser.unique_id}`}>
             <AvatarImage
               className="rounded-full"
               src={otherUser.profile_url as string}
@@ -126,11 +123,9 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
           href={size === "sm" ? "/connections" : "#"}
           onClick={markNotificationAsRead}
         >
-
           <div className="flex-1 min-w-0">
-            
             <p className="text-sm font-medium truncate">{name}</p>
-            
+
             <p className="text-xs text-muted-foreground">
               {generateNotificationText(activity)}
             </p>

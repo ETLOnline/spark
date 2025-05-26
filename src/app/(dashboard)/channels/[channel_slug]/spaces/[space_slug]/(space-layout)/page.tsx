@@ -1,8 +1,8 @@
-import NotFound from '@/src/components/Dashboard/NotFound/NotFound'
-import { getFeaturesAction } from '@/src/server-actions/Feature/Feature'
-import { GetSpaceBySlugAction } from '@/src/server-actions/Space/Space'
-import React from 'react'
-import SpaceFeatures from './components/SpaceFeatures'
+import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
+import { getFeaturesAction } from "@/src/server-actions/Feature/Feature"
+import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
+import React from "react"
+import SpaceFeatures from "./components/SpaceFeatures"
 
 interface Props {
   params: Promise<{
@@ -14,27 +14,29 @@ interface Props {
 async function SpacePage({ params }: Props) {
   const { channel_slug, space_slug } = await params
 
-
   const currentSpace = await GetSpaceBySlugAction(space_slug, channel_slug)
 
   if (!currentSpace.success || !currentSpace.data) {
-    return (
-      <NotFound />
-    )
+    return <NotFound />
   }
 
   const featuresList = await getFeaturesAction({
-    feature_type: 'space'
+    feature_type: "space"
   })
 
-  if (!featuresList.success || !featuresList.data || !currentSpace.data.features.length) {
-    return (
-      <>No features found</>
-    )
+  if (
+    !featuresList.success ||
+    !featuresList.data ||
+    !currentSpace.data.features.length
+  ) {
+    return <>No features found</>
   }
 
   return (
-    <SpaceFeatures features={currentSpace?.data?.features || []} space={currentSpace.data} />
+    <SpaceFeatures
+      features={currentSpace?.data?.features || []}
+      space={currentSpace.data}
+    />
   )
 }
 

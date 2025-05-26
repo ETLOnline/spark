@@ -5,7 +5,7 @@ import {
   MoreHorizontal,
   Share,
   Trash2,
-  type LucideIcon,
+  type LucideIcon
 } from "lucide-react"
 
 import {
@@ -13,7 +13,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/src/components/ui/dropdown-menu"
 import {
   SidebarGroup,
@@ -22,12 +22,12 @@ import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
+  useSidebar
 } from "@/src/components/ui/sidebar"
 import Link from "next/link"
 
 export default function NavProjects({
-  projects,
+  projects
 }: {
   projects: {
     name: string

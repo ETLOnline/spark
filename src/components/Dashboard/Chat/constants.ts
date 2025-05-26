@@ -1,3 +1,3 @@
-export const ChatChannelSalt = "Chat-Check";
+export const ChatChannelSalt = "Chat-Check"
 
-export const ChatChannelPrefix = "Chat-";
+export const ChatChannelPrefix = "Chat-"

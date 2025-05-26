@@ -1,6 +1,6 @@
-import React from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card'
-import { Badge } from '../../ui/badge'
+import React from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
+import { Badge } from "../../ui/badge"
 
 interface Props {
   categories: string[]

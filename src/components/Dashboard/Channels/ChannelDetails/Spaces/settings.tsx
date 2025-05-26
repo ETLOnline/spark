@@ -4,7 +4,13 @@ import { useEffect, useState } from "react"
 import { Save } from "lucide-react"
 import Link from "next/link"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/src/components/ui/card"
 import { Label } from "@/src/components/ui/label"
 import { Separator } from "@/src/components/ui/separator"
 import { Button } from "@/src/components/ui/button"
@@ -14,33 +20,49 @@ import { Controller, useForm } from "react-hook-form"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { attachSpaceFeaturesAction } from "@/src/server-actions/Feature/Feature"
 
-export default function SpaceSettings({ space, featuresList }: { space: SelectSpace, featuresList: SelectFeature[] }) {
-
+export default function SpaceSettings({
+  space,
+  featuresList
+}: {
+  space: SelectSpace
+  featuresList: SelectFeature[]
+}) {
   const [currentSpace, setCurrentSpace] = useState<SelectSpace>(space)
 
-  const [attachingSpaceFeatures, attachedState, attachSpaceFeaturesError, attachSpaceFeatures] = useServerAction(attachSpaceFeaturesAction)
+  const [
+    attachingSpaceFeatures,
+    attachedState,
+    attachSpaceFeaturesError,
+    attachSpaceFeatures
+  ] = useServerAction(attachSpaceFeaturesAction)
 
   const defaultValues: any = {}
   featuresList.forEach((feature) => {
-    defaultValues[feature.feature_slug] = currentSpace.features?.find(sf => sf.feature?.feature_slug === feature.feature_slug) ? true : false
+    defaultValues[feature.feature_slug] = currentSpace.features?.find(
+      (sf) => sf.feature?.feature_slug === feature.feature_slug
+    )
+      ? true
+      : false
   })
-
-
 
   const {
     control,
     handleSubmit,
     setValue,
-    formState: { errors },
+    formState: { errors }
   } = useForm({
-    defaultValues: defaultValues,
+    defaultValues: defaultValues
   })
 
   useEffect(() => {
     if (currentSpace) {
       const updatedFormObject: any = {}
       featuresList.forEach((feature) => {
-        updatedFormObject[feature.feature_slug] = currentSpace.features?.find(sf => sf.feature?.feature_slug === feature.feature_slug) ? true : false
+        updatedFormObject[feature.feature_slug] = currentSpace.features?.find(
+          (sf) => sf.feature?.feature_slug === feature.feature_slug
+        )
+          ? true
+          : false
       })
 
       Object.keys(updatedFormObject).forEach((key) => {
@@ -51,17 +73,18 @@ export default function SpaceSettings({ space, featuresList }: { space: SelectSp
 
   // Handle save settings
   const handleSaveSettings = async (data: any) => {
-    const featureIds = Object.keys(data).map((key) => {
-      if (data[key] === true) {
-        return featuresList.find(f => f.feature_slug === key)?.id
-      }
-    }).filter((id) => id !== undefined)
+    const featureIds = Object.keys(data)
+      .map((key) => {
+        if (data[key] === true) {
+          return featuresList.find((f) => f.feature_slug === key)?.id
+        }
+      })
+      .filter((id) => id !== undefined)
 
     const updatedSpace = await attachSpaceFeatures(currentSpace.id, featureIds)
     if (updatedSpace?.success && updatedSpace.data) {
       setCurrentSpace(updatedSpace.data)
     }
-
 
     // toast({
     //   title: "Settings saved",
@@ -77,51 +100,59 @@ export default function SpaceSettings({ space, featuresList }: { space: SelectSp
           <CardHeader className="px-4 sm:px-6">
             <CardTitle>Space Settings ({currentSpace.space_name})</CardTitle>
             <CardDescription>
-              Configure which features are available in this space and manage its status.
+              Configure which features are available in this space and manage
+              its status.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 px-4 sm:px-6">
             <form onSubmit={handleSubmit(handleSaveSettings)}>
-
               <div className="space-y-4">
                 <h3 className="text-base font-medium">Features</h3>
                 <div className="space-y-4">
-                  {
-                    featuresList.map((feature, index) => (
-                      <div key={index} className="flex flex-col gap-4">
-                        <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                          <div className="space-y-0.5">
-                            <Label htmlFor={feature.feature_slug} className="text-base">
-                              {feature.feature_name}
-                            </Label>
-                            <p className="text-sm text-muted-foreground">{feature.feature_description}</p>
-                          </div>
-                          <Controller
-                            name={feature.feature_slug}
-                            control={control}
-                            render={({ field }) => (
-                              <Switch
-                                id={feature.feature_slug}
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            )}
-                          />
+                  {featuresList.map((feature, index) => (
+                    <div key={index} className="flex flex-col gap-4">
+                      <div
+                        key={index}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                      >
+                        <div className="space-y-0.5">
+                          <Label
+                            htmlFor={feature.feature_slug}
+                            className="text-base"
+                          >
+                            {feature.feature_name}
+                          </Label>
+                          <p className="text-sm text-muted-foreground">
+                            {feature.feature_description}
+                          </p>
                         </div>
-                        <Separator />
+                        <Controller
+                          name={feature.feature_slug}
+                          control={control}
+                          render={({ field }) => (
+                            <Switch
+                              id={feature.feature_slug}
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          )}
+                        />
                       </div>
-                    ))
-                  }
-
+                      <Separator />
+                    </div>
+                  ))}
                 </div>
               </div>
               <div className="flex items-center justify-between pt-4">
                 <Link href={`../${currentSpace.space_slug}`}>
-                  <Button>
-                    Go to Space
-                  </Button>
+                  <Button>Go to Space</Button>
                 </Link>
-                <Button loading={attachingSpaceFeatures} disabled={attachingSpaceFeatures} type="submit" className="w-full sm:w-auto">
+                <Button
+                  loading={attachingSpaceFeatures}
+                  disabled={attachingSpaceFeatures}
+                  type="submit"
+                  className="w-full sm:w-auto"
+                >
                   <Save className="h-4 w-4 mr-2" />
                   Save Changes
                 </Button>

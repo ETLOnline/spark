@@ -16,11 +16,22 @@ import {
 } from "@/src/db/data-access/spaces/query"
 import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 import { CreateServerAction } from ".."
-import { InsertSpace, SelectChannel, SelectSpace, SelectSpaceUser } from "@/src/db/schema"
+import {
+  InsertSpace,
+  SelectChannel,
+  SelectSpace,
+  SelectSpaceUser
+} from "@/src/db/schema"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import { AuthUserAction } from "../User/AuthUserAction"
 import { isUserAdmin } from "@/src/utils/helpers"
-import { attachChannelUser, GetChannelById, GetChannelBySlug, GetChannels, getChannelUsers } from "@/src/db/data-access/channels/query"
+import {
+  attachChannelUser,
+  GetChannelById,
+  GetChannelBySlug,
+  GetChannels,
+  getChannelUsers
+} from "@/src/db/data-access/channels/query"
 
 export const CreateSpaceAction = CreateServerAction(
   true,
@@ -48,19 +59,19 @@ export const GetSpacesAction = CreateServerAction(
   true,
   async (filters?: spaceQueryFilters) => {
     try {
-      let spaces: GetSpacesResponseType 
-      let joinedSpaces: SelectSpace[] = [] 
+      let spaces: GetSpacesResponseType
+      let joinedSpaces: SelectSpace[] = []
       let channel: SelectChannel | undefined
 
       const authUser = await AuthUserAction()
 
-      if(filters?.channel_slug){
+      if (filters?.channel_slug) {
         channel = await GetChannelBySlug(filters?.channel_slug || "")
-      }else if(filters?.channel_id){
+      } else if (filters?.channel_id) {
         channel = await GetChannelById(filters?.channel_id || "")
       }
 
-      if(channel){
+      if (channel) {
         filters = {
           ...filters,
           channel_id: channel.id
@@ -68,14 +79,23 @@ export const GetSpacesAction = CreateServerAction(
       }
 
       if (isUserAdmin(authUser)) {
-        spaces = await GetSpaces({...filters})
+        spaces = await GetSpaces({ ...filters })
       } else {
-        spaces = await GetSpaces({...filters, space_type: "public", isPublished: true }) 
-        const spaceIds = (channel?.spaces || []).map((s)=> s.id)
-        joinedSpaces = (authUser?.spaces || []).filter((s)=> spaceIds.includes(s.space_id)).map((s)=> s.space)
+        spaces = await GetSpaces({
+          ...filters,
+          space_type: "public",
+          isPublished: true
+        })
+        const spaceIds = (channel?.spaces || []).map((s) => s.id)
+        joinedSpaces = (authUser?.spaces || [])
+          .filter((s) => spaceIds.includes(s.space_id))
+          .map((s) => s.space)
       }
 
-      return { success: true, data: {channel, paginatedSpaces: spaces, joinedSpaces}}
+      return {
+        success: true,
+        data: { channel, paginatedSpaces: spaces, joinedSpaces }
+      }
     } catch (error) {
       return { error: error }
     }
@@ -140,7 +160,7 @@ export const GetSpaceBySlugAction = CreateServerAction(
 
 export const GetSpaceByIdAction = CreateServerAction(
   true,
-  async (spaceId:string, withSpaceUsers?:boolean) => {
+  async (spaceId: string, withSpaceUsers?: boolean) => {
     try {
       const space = await GetSpaceById(spaceId, withSpaceUsers)
       return { success: true, data: space }
@@ -155,27 +175,21 @@ export const AttachSpaceUserAction = CreateServerAction(
   async (spaceId: string, userId: string) => {
     try {
       const space = await GetSpaceById(spaceId, true)
-      const spaceUserIds = space?.users.map((su)=>(
-        su.user_id
-      )) || []
+      const spaceUserIds = space?.users.map((su) => su.user_id) || []
 
       const isUserSpaceMember = spaceUserIds.includes(userId)
 
-      if(isUserSpaceMember){
-        return {success: true, data: null}
+      if (isUserSpaceMember) {
+        return { success: true, data: null }
       }
 
-
-      if(space?.channel_id){
-        
+      if (space?.channel_id) {
         const channelUsers = await getChannelUsers(space?.channel_id)
-        const channelUserIds = channelUsers.map((cu)=>(
-          cu.user_id
-        ))
+        const channelUserIds = channelUsers.map((cu) => cu.user_id)
 
         const isUserChannelMember = channelUserIds.includes(userId)
 
-        if(!isUserChannelMember){
+        if (!isUserChannelMember) {
           await attachChannelUser(space.channel_id, userId)
         }
       }
@@ -192,7 +206,7 @@ export const DetachSpaceUserAction = CreateServerAction(
   async (spaceId: string, userId: string) => {
     try {
       const spaceUser = await dettachSpaceUser(spaceId, userId)
-      return { success: true}
+      return { success: true }
     } catch (error) {
       return { error: error }
     }
@@ -201,12 +215,15 @@ export const DetachSpaceUserAction = CreateServerAction(
 
 export const UpdateSpaceUserAction = CreateServerAction(
   true,
-  async (spaceId: string, userId: string, updatedData: Partial<SelectSpaceUser>) => {
-    try{
+  async (
+    spaceId: string,
+    userId: string,
+    updatedData: Partial<SelectSpaceUser>
+  ) => {
+    try {
       const spaceUser = await updateSpaceUser(spaceId, userId, updatedData)
       return { success: true, data: spaceUser }
-    }
-    catch (error) {
+    } catch (error) {
       return { error: error }
     }
   }

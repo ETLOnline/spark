@@ -1,25 +1,31 @@
-import React, { SetStateAction, useEffect, useState } from 'react'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '../../ui/dialog'
-import { Button } from '../../ui/button'
-import { Label } from '../../ui/label'
-import { Input } from '../../ui/input'
-import { Textarea } from '../../ui/textarea'
+import React, { SetStateAction, useEffect, useState } from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "../../ui/dialog"
+import { Button } from "../../ui/button"
+import { Label } from "../../ui/label"
+import { Input } from "../../ui/input"
+import { Textarea } from "../../ui/textarea"
 import { Switch } from "../../ui/switch"
-import { z } from 'zod'
-import { Controller, useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { InsertProject, SelectSpace } from '@/src/db/schema'
-import { useAtom, useAtomValue } from 'jotai'
-import { userStore } from '@/src/store/user/userStore'
-import { GetSpaceBySlugAction } from '@/src/server-actions/Space/Space'
-import { useServerAction } from '@/src/hooks/useServerAction'
-import { CreateProjectAction } from '@/src/server-actions/ProjectManagement/projectManagement'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { toast } from '@/src/hooks/use-toast'
-import { projectStore } from '@/src/store/project/projectStore'
-import moment from 'moment'
-
-
+import { z } from "zod"
+import { Controller, useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { InsertProject, SelectSpace } from "@/src/db/schema"
+import { useAtom, useAtomValue } from "jotai"
+import { userStore } from "@/src/store/user/userStore"
+import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { CreateProjectAction } from "@/src/server-actions/ProjectManagement/projectManagement"
+import { useRouter, useSearchParams } from "next/navigation"
+import { toast } from "@/src/hooks/use-toast"
+import { projectStore } from "@/src/store/project/projectStore"
+import moment from "moment"
 
 const channelSchema = z.object({
   project_name: z
@@ -41,15 +47,16 @@ const channelSchema = z.object({
   project_type: z.boolean().optional()
 })
 
-
-
-
 function CreateNewProject() {
-
   const [space, setSpace] = useState<SelectSpace>()
   const [isOpen, setIsOpen] = useState(false)
   const [projects, setProjects] = useAtom(projectStore.projects)
-  const [createProjectLoading, createProjectData, createProjectError, createProject] = useServerAction(CreateProjectAction)
+  const [
+    createProjectLoading,
+    createProjectData,
+    createProjectError,
+    createProject
+  ] = useServerAction(CreateProjectAction)
 
   const [startDate, setStartDate] = React.useState<Date>()
 
@@ -67,11 +74,13 @@ function CreateNewProject() {
   const spaceSlug = searchParams.get("space")
 
   useEffect(() => {
-    GetSpaceBySlugAction(spaceSlug || "", channelSlug || "").then((currentSpace) => {
-      if (currentSpace.success && currentSpace.data) {
-        setSpace(currentSpace.data)
+    GetSpaceBySlugAction(spaceSlug || "", channelSlug || "").then(
+      (currentSpace) => {
+        if (currentSpace.success && currentSpace.data) {
+          setSpace(currentSpace.data)
+        }
       }
-    })
+    )
   }, [])
 
   useEffect(() => {
@@ -81,8 +90,7 @@ function CreateNewProject() {
   async function projectSubmit(data: any) {
     if (data.project_type === true) {
       data.project_type = "active"
-    }
-    else {
+    } else {
       data.project_type = "draft"
     }
     handleCreateProject(data)
@@ -96,8 +104,12 @@ function CreateNewProject() {
         project_slug: data.project_name,
         space_id: space?.id,
         channel_id: space?.channel_id,
-        project_startDate: moment.utc(data.project_startDate).format("DD-MM-YYYY"),
-        project_targetDate: moment.utc(data.project_targetDate).format("DD-MM-YYYY"),
+        project_startDate: moment
+          .utc(data.project_startDate)
+          .format("DD-MM-YYYY"),
+        project_targetDate: moment
+          .utc(data.project_targetDate)
+          .format("DD-MM-YYYY")
       }
       const createdProject = await createProject(payLoad as InsertProject)
 
@@ -106,7 +118,7 @@ function CreateNewProject() {
         setIsOpen(false)
         toast({
           title: "Project Successfully Created",
-          duration: 3000,
+          duration: 3000
         })
         router.push(`project/${createdProject.data.id}/settings?tab=taskStatus`)
       }
@@ -120,9 +132,12 @@ function CreateNewProject() {
     }
   }
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      setIsOpen(open)
-    }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open)
+      }}
+    >
       <DialogTrigger asChild>
         <Button>Create New Project</Button>
       </DialogTrigger>
@@ -130,8 +145,7 @@ function CreateNewProject() {
         <DialogHeader>
           <DialogTitle>Create a New Project</DialogTitle>
           <DialogDescription>
-            Share your innovative idea with the community. Be clear and
-            concise.
+            Share your innovative idea with the community. Be clear and concise.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(projectSubmit)}>
@@ -145,10 +159,13 @@ function CreateNewProject() {
                 defaultValue=""
                 control={form.control}
                 render={({ field }) => (
-                  <Input id="project_name" {...field} className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
+                  <Input
+                    id="project_name"
+                    {...field}
+                    className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
                 )}
               />
-
             </div>
             {/* <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="category" className="text-right">
@@ -174,13 +191,19 @@ function CreateNewProject() {
             </select>
           </div> */}
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="project_type" className="text-right">Active / Draft</Label>
+              <Label htmlFor="project_type" className="text-right">
+                Active / Draft
+              </Label>
 
               <Controller
                 name="project_type"
                 control={form.control}
                 render={({ field }) => (
-                  <Switch id="project_type" checked={field.value} onCheckedChange={field.onChange} />
+                  <Switch
+                    id="project_type"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
                 )}
               />
             </div>
@@ -193,7 +216,12 @@ function CreateNewProject() {
                 defaultValue=""
                 control={form.control}
                 render={({ field }) => (
-                  <Input id="project_startDate" {...field} type="date" className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
+                  <Input
+                    id="project_startDate"
+                    {...field}
+                    type="date"
+                    className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
                 )}
               />
             </div>
@@ -206,7 +234,12 @@ function CreateNewProject() {
                 defaultValue=""
                 control={form.control}
                 render={({ field }) => (
-                  <Input id="project_targetDate" {...field} type="date" className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
+                  <Input
+                    id="project_targetDate"
+                    {...field}
+                    type="date"
+                    className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
                 )}
               />
             </div>
@@ -219,8 +252,12 @@ function CreateNewProject() {
                 defaultValue=""
                 control={form.control}
                 render={({ field }) => (
-                  <Textarea id="description" {...field} className="col-span-3"
-                    rows={5} />
+                  <Textarea
+                    id="description"
+                    {...field}
+                    className="col-span-3"
+                    rows={5}
+                  />
                 )}
               />
               {/* <Textarea
@@ -243,7 +280,6 @@ function CreateNewProject() {
             </Button>
           </DialogFooter>
         </form>
-
       </DialogContent>
     </Dialog>
   )

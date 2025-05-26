@@ -133,20 +133,22 @@ const useSideBarHook = () => {
   }, [userData])
 
   const updateChannelsList = async (userData: SelectUser) => {
-    if(!userData || !userData.channels) return
+    if (!userData || !userData.channels) return
     const navChannels = await getChannels()
-    setChannels([...(navChannels?.joinedChannels || []),...(navChannels?.data?.channels || [])])
+    setChannels([
+      ...(navChannels?.joinedChannels || []),
+      ...(navChannels?.data?.channels || [])
+    ])
     // if (isUserAdmin(userData)) {
     //   const adminChannels = await getChannels()
     //   setChannels(adminChannels?.data?.channels || [])
 
     // } else {
-    //   const publicChannels = await getChannels({channelType: "public", isPublished: true}) 
+    //   const publicChannels = await getChannels({channelType: "public", isPublished: true})
     //   const joinedChannels = userData?.channels.map((uc)=> uc.channel).filter((c) => typeof c !== 'undefined' )
 
     //   setChannels([...(joinedChannels || []), ...(publicChannels?.data?.channels || []) ])
     // }
-
   }
 
   useEffect(() => {

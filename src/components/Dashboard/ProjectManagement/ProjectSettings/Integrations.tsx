@@ -1,21 +1,35 @@
 import { Button } from "@/src/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/src/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/src/components/ui/card"
 import { Switch } from "@/src/components/ui/switch"
-import React from 'react'
+import React from "react"
 
 function Integrations() {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Integrations</CardTitle>
-        <CardDescription>Connect your project with other tools and services</CardDescription>
+        <CardDescription>
+          Connect your project with other tools and services
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
-                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg
+                  className="h-6 w-6"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
                   <path
                     d="M5.5 15V9C5.5 6.5 7.5 4.5 10 4.5H14C16.5 4.5 18.5 6.5 18.5 9V15C18.5 17.5 16.5 19.5 14 19.5H10C7.5 19.5 5.5 17.5 5.5 15Z"
                     stroke="#4F46E5"
@@ -36,7 +50,9 @@ function Integrations() {
               </div>
               <div>
                 <h4 className="font-medium">GitHub</h4>
-                <p className="text-sm text-muted-foreground">Connect your GitHub repositories</p>
+                <p className="text-sm text-muted-foreground">
+                  Connect your GitHub repositories
+                </p>
               </div>
             </div>
             <Switch id="github-integration" />
@@ -44,7 +60,12 @@ function Integrations() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
-                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg
+                  className="h-6 w-6"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
                   <path
                     d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
                     stroke="#0EA5E9"
@@ -69,7 +90,9 @@ function Integrations() {
               </div>
               <div>
                 <h4 className="font-medium">Slack</h4>
-                <p className="text-sm text-muted-foreground">Get notifications in your Slack channels</p>
+                <p className="text-sm text-muted-foreground">
+                  Get notifications in your Slack channels
+                </p>
               </div>
             </div>
             <Switch id="slack-integration" defaultChecked />
@@ -77,7 +100,12 @@ function Integrations() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
-                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg
+                  className="h-6 w-6"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
                   <path
                     d="M21 7V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V7C3 4 4.5 2 8 2H16C19.5 2 21 4 21 7Z"
                     stroke="#F59E0B"
@@ -114,7 +142,9 @@ function Integrations() {
               </div>
               <div>
                 <h4 className="font-medium">Google Drive</h4>
-                <p className="text-sm text-muted-foreground">Access and share files from Google Drive</p>
+                <p className="text-sm text-muted-foreground">
+                  Access and share files from Google Drive
+                </p>
               </div>
             </div>
             <Switch id="google-drive-integration" />
@@ -122,7 +152,12 @@ function Integrations() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
-                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg
+                  className="h-6 w-6"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
                   <path
                     d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
                     stroke="#10B981"
@@ -140,7 +175,9 @@ function Integrations() {
               </div>
               <div>
                 <h4 className="font-medium">Figma</h4>
-                <p className="text-sm text-muted-foreground">Link your Figma designs to tasks</p>
+                <p className="text-sm text-muted-foreground">
+                  Link your Figma designs to tasks
+                </p>
               </div>
             </div>
             <Switch id="figma-integration" defaultChecked />

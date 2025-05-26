@@ -1,5 +1,3 @@
-
-
-import { createStore } from "jotai";
+import { createStore } from "jotai"
 
 export const Store = createStore()

@@ -1,10 +1,9 @@
-import { Progress } from '@/src/components/ui/progress'
-import React from 'react'
+import { Progress } from "@/src/components/ui/progress"
+import React from "react"
 
 interface Props {
   sprint: Sprint
 }
-
 
 interface Sprint {
   id: string

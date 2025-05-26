@@ -21,7 +21,7 @@ const nextConfig = {
     STORAGE_PROVIDER: process.env.STORAGE_PROVIDER,
     AZURE_STORAGE_ACCOUNT_NAME: process.env.AZURE_STORAGE_ACCOUNT_NAME,
     AZURE_STORAGE_ACCOUNT_KEY: process.env.AZURE_STORAGE_ACCOUNT_KEY,
-    AZURE_CONTAINER_NAME: process.env.AZURE_CONTAINER_NAME,
+    AZURE_CONTAINER_NAME: process.env.AZURE_CONTAINER_NAME
   },
   experimental: {
     serverActions: {
