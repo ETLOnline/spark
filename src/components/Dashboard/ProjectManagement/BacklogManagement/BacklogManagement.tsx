@@ -3,14 +3,19 @@
 import { useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/src/components/ui/select"
 import { Plus, Search, Filter, ArrowUpDown } from "lucide-react"
 import BacklogItemsCard from "./BacklogItemsCard"
 import { useSetAtom } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import AddBacklogItem from "./AddBacklogItem"
-
 
 interface BacklogItem {
   id: string
@@ -31,24 +36,26 @@ const sampleBacklogItems: BacklogItem[] = [
   {
     id: "BLG-001",
     title: "Implement product recommendations",
-    description: "Add a recommendation engine that suggests products based on user browsing history",
+    description:
+      "Add a recommendation engine that suggests products based on user browsing history",
     type: "story",
     priority: "high",
     assignee: null,
     storyPoints: 13,
     labels: ["feature", "frontend", "backend"],
-    createdAt: "2023-05-10T10:30:00Z",
+    createdAt: "2023-05-10T10:30:00Z"
   },
   {
     id: "BLG-002",
     title: "Fix checkout page layout on mobile",
-    description: "The checkout page is not displaying correctly on mobile devices",
+    description:
+      "The checkout page is not displaying correctly on mobile devices",
     type: "bug",
     priority: "high",
     assignee: { name: "Sarah Miller", avatar: "/avatars/02.png" },
     storyPoints: 3,
     labels: ["bug", "frontend", "mobile"],
-    createdAt: "2023-05-12T14:45:00Z",
+    createdAt: "2023-05-12T14:45:00Z"
   },
   {
     id: "BLG-003",
@@ -59,7 +66,7 @@ const sampleBacklogItems: BacklogItem[] = [
     assignee: null,
     storyPoints: 8,
     labels: ["feature", "frontend"],
-    createdAt: "2023-05-14T09:15:00Z",
+    createdAt: "2023-05-14T09:15:00Z"
   },
   {
     id: "BLG-004",
@@ -70,7 +77,7 @@ const sampleBacklogItems: BacklogItem[] = [
     assignee: { name: "David Chen", avatar: "/avatars/03.png" },
     storyPoints: 5,
     labels: ["performance", "backend"],
-    createdAt: "2023-05-15T11:20:00Z",
+    createdAt: "2023-05-15T11:20:00Z"
   },
   {
     id: "BLG-005",
@@ -81,27 +88,29 @@ const sampleBacklogItems: BacklogItem[] = [
     assignee: null,
     storyPoints: 8,
     labels: ["feature", "frontend", "backend"],
-    createdAt: "2023-05-16T15:30:00Z",
+    createdAt: "2023-05-16T15:30:00Z"
   },
   {
     id: "BLG-006",
     title: "E-commerce Platform Redesign",
-    description: "Major redesign of the e-commerce platform to improve user experience",
+    description:
+      "Major redesign of the e-commerce platform to improve user experience",
     type: "epic",
     priority: "high",
     assignee: { name: "Alex Johnson", avatar: "/avatars/01.png" },
     storyPoints: 40,
     labels: ["design", "frontend", "ux"],
-    createdAt: "2023-05-08T08:00:00Z",
-  },
+    createdAt: "2023-05-08T08:00:00Z"
+  }
 ]
 
 export function BacklogManagement() {
-  const [backlogItems, setBacklogItems] = useState<BacklogItem[]>(sampleBacklogItems)
+  const [backlogItems, setBacklogItems] =
+    useState<BacklogItem[]>(sampleBacklogItems)
   const setIsTaskFormModelOpen = useSetAtom(taskStore.isTaskFormModelOpen)
   const [searchQuery, setSearchQuery] = useState("")
   const [searchedItem, setSearchedItem] = useState("")
-  const [orderList, setOrderList] = useState('asc')
+  const [orderList, setOrderList] = useState("asc")
   const [limit, setLimit] = useState(10)
 
   function handleSearch() {
@@ -109,7 +118,6 @@ export function BacklogManagement() {
       setSearchedItem(searchQuery)
     }
   }
-
 
   return (
     <>
@@ -132,24 +140,28 @@ export function BacklogManagement() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-8 rounded-r-none"
             />
-            <Button className="rounded-l-none"
-              variant={'secondary'}
-              onClick={handleSearch} >
+            <Button
+              className="rounded-l-none"
+              variant={"secondary"}
+              onClick={handleSearch}
+            >
               <Search />
             </Button>
           </div>
           <div className="flex items-center space-x-2">
-
-            <Button variant="outline" size="sm"
-              onClick={() =>
-                setOrderList(orderList === 'asc' ? 'desc' : 'asc')
-              }>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setOrderList(orderList === "asc" ? "desc" : "asc")}
+            >
               <ArrowUpDown className="mr-2 h-4 w-4" />
               Sort
             </Button>
 
-
-            <Select value={String(limit)} onValueChange={(value) => setLimit(Number(value))} >
+            <Select
+              value={String(limit)}
+              onValueChange={(value) => setLimit(Number(value))}
+            >
               <SelectTrigger className="w-20">
                 <SelectValue placeholder="Limit" />
               </SelectTrigger>
@@ -159,14 +171,16 @@ export function BacklogManagement() {
                 <SelectItem value="30">30</SelectItem>
               </SelectContent>
             </Select>
-
           </div>
         </div>
 
-        <BacklogItemsCard limit={limit} orderList={orderList} searchedItem={searchedItem} backlogItems={backlogItems} />
-
+        <BacklogItemsCard
+          limit={limit}
+          orderList={orderList}
+          searchedItem={searchedItem}
+          backlogItems={backlogItems}
+        />
       </div>
     </>
   )
 }
-

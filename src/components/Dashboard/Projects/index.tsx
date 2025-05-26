@@ -1,4 +1,4 @@
-'use client'
+"use client"
 import { useEffect, useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
 import { ScrollArea } from "../../ui/scroll-area"
@@ -20,7 +20,6 @@ import { useParams, useSearchParams } from "next/navigation"
 import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
 import { space } from "postcss/lib/list"
 
-
 export interface ProjectProposal {
   id: string
   title: string
@@ -40,36 +39,39 @@ const sampleProposals: ProjectProposal[] = [
   {
     id: "1",
     title: "AI-Powered Code Review Assistant",
-    description: "Develop an AI tool that can automatically review code, suggest improvements, and detect potential bugs.",
+    description:
+      "Develop an AI tool that can automatically review code, suggest improvements, and detect potential bugs.",
     author: { name: "Alice Johnson", avatar: "/avatars/01.png" },
     category: "AI & Development",
     status: "active",
     likes: 42,
     comments: 15,
-    contributors: 3,
+    contributors: 3
   },
   {
     id: "2",
     title: "Decentralized Learning Platform",
-    description: "Create a blockchain-based platform for sharing educational content and certifications.",
+    description:
+      "Create a blockchain-based platform for sharing educational content and certifications.",
     author: { name: "Bob Smith", avatar: "/avatars/02.png" },
     category: "Blockchain & Education",
     status: "draft",
     likes: 28,
     comments: 7,
-    contributors: 1,
+    contributors: 1
   },
   {
     id: "3",
     title: "IoT Home Energy Optimization",
-    description: "Build a system that uses IoT devices to monitor and optimize home energy consumption.",
+    description:
+      "Build a system that uses IoT devices to monitor and optimize home energy consumption.",
     author: { name: "Charlie Davis", avatar: "/avatars/03.png" },
     category: "IoT & Sustainability",
     status: "active",
     likes: 35,
     comments: 12,
-    contributors: 5,
-  },
+    contributors: 5
+  }
 ]
 
 const categories = [
@@ -80,11 +82,10 @@ const categories = [
   "Web Platforms",
   "Data Science",
   "Cybersecurity",
-  "AR/VR",
+  "AR/VR"
 ]
 
 export function ProjectScreen() {
-
   const [projects, setProjects] = useAtom(projectStore.projects)
   const [currSpace, setCurrSpace] = useState<SelectSpace>()
 
@@ -94,11 +95,9 @@ export function ProjectScreen() {
   const [getSpaceLoading, getSpaceData, getSpaceError, getSpaceBySlug] =
     useServerAction(GetSpaceBySlugAction)
 
-
   const searchParam = useSearchParams()
   const spaceSlug = searchParam.get("space")
   const channel_slug = searchParam.get("channel")
-
 
   useEffect(() => {
     const getSpace = async () => {
@@ -112,13 +111,11 @@ export function ProjectScreen() {
     getSpace()
   }, [spaceSlug, channel_slug])
 
-
   useEffect(() => {
     if (currSpace) {
       getProjects(currSpace.id)
     }
   }, [currSpace])
-
 
   useEffect(() => {
     if (getProjectData !== null) {
@@ -126,39 +123,33 @@ export function ProjectScreen() {
     }
   }, [getProjectData])
 
-
-
-
   return (
     <div className="flex flex-col space-y-4">
       <WelcomeCard />
-      {
-        getProjectLoading ? (
-          <div className="flex items-center justify-center h-full w-full align-center">
-            <div className="w-full h-full flex justify-center align-center">
-              <Loader size={LoaderSizes.lg} />
-
-            </div>
+      {getProjectLoading ? (
+        <div className="flex items-center justify-center h-full w-full align-center">
+          <div className="w-full h-full flex justify-center align-center">
+            <Loader size={LoaderSizes.lg} />
           </div>
-        ) : (
-
-          <div className="flex-grow flex space-x-4">
-            <div className="w-full lg:w-3/4">
-              <Tabs defaultValue="all">
-                <TabsList className="w-full justify-around lg:w-auto">
-                  <TabsTrigger value="all">All Projects</TabsTrigger>
-                  <TabsTrigger value="active">Active</TabsTrigger>
-                  <TabsTrigger value="draft">Drafts</TabsTrigger>
-                  <TabsTrigger value="completed">Completed</TabsTrigger>
-                </TabsList>
-                <TabsContent value="all">
-                  <ScrollArea>
-                    {projects.map((project) => (
-                      <ProjectCards key={project.id} project={project} />
-                    ))}
-                  </ScrollArea>
-                </TabsContent>
-                {/* <TabsContent value="active">
+        </div>
+      ) : (
+        <div className="flex-grow flex space-x-4">
+          <div className="w-full lg:w-3/4">
+            <Tabs defaultValue="all">
+              <TabsList className="w-full justify-around lg:w-auto">
+                <TabsTrigger value="all">All Projects</TabsTrigger>
+                <TabsTrigger value="active">Active</TabsTrigger>
+                <TabsTrigger value="draft">Drafts</TabsTrigger>
+                <TabsTrigger value="completed">Completed</TabsTrigger>
+              </TabsList>
+              <TabsContent value="all">
+                <ScrollArea>
+                  {projects.map((project) => (
+                    <ProjectCards key={project.id} project={project} />
+                  ))}
+                </ScrollArea>
+              </TabsContent>
+              {/* <TabsContent value="active">
                     <ScrollArea>
                       {proposals
                         .filter((p) => p.status === "active")
@@ -185,22 +176,18 @@ export function ProjectScreen() {
                         ))}
                     </ScrollArea>
                   </TabsContent> */}
-              </Tabs>
-            </div>
-
-            <div className="w-1/4 hidden lg:block space-y-4">
-              {/* <ProjectIncubatorStats proposals={proposals} /> */}
-
-              <ProjectTopCatagories categories={categories} />
-
-              <Contribute />
-            </div>
+            </Tabs>
           </div>
-        )
-      }
 
+          <div className="w-1/4 hidden lg:block space-y-4">
+            {/* <ProjectIncubatorStats proposals={proposals} /> */}
 
+            <ProjectTopCatagories categories={categories} />
+
+            <Contribute />
+          </div>
+        </div>
+      )}
     </div>
-  );
+  )
 }
-

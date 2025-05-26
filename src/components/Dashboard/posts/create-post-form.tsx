@@ -220,7 +220,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           return
         }
 
-        let postData;
+        let postData
 
         if (variant === "spaces") {
           postData = {
@@ -233,8 +233,8 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             category: newPost.category,
             entityType: "space",
             entityId: currentSpace?.id ?? "",
-            folderPath:'spaces',
-          };
+            folderPath: "spaces"
+          }
         } else {
           postData = {
             type: newPost.type,
@@ -245,9 +245,9 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             content: newPost.content,
             category: "",
             entityType: "",
-            entityId: "",  
-            folderPath:'posts',
-          };
+            entityId: "",
+            folderPath: "posts"
+          }
         }
 
         const post = await createFilePost(postData)

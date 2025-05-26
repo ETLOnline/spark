@@ -226,8 +226,8 @@ const ProfileFollowActions = ({ user }: Props) => {
         </>
       ) : null}
       {connectionContact &&
-        connectionContact.is_requested &&
-        !connectionContact.is_accepted ? (
+      connectionContact.is_requested &&
+      !connectionContact.is_accepted ? (
         <>
           {connectionContact.contact_id === authUser?.unique_id ? (
             <Button onClick={handleAcceptConnection}>Accept Connection</Button>
@@ -240,7 +240,7 @@ const ProfileFollowActions = ({ user }: Props) => {
         </>
       ) : null}
       {!connectionContact ||
-        (!connectionContact.is_requested && !connectionContact.is_accepted) ? (
+      (!connectionContact.is_requested && !connectionContact.is_accepted) ? (
         <Button
           onClick={handleConnect}
           disabled={contactLoading || connectLoading}

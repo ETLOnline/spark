@@ -1,4 +1,9 @@
-import { Card, CardTitle, CardHeader, CardContent } from "@/src/components/ui/card"
+import {
+  Card,
+  CardTitle,
+  CardHeader,
+  CardContent
+} from "@/src/components/ui/card"
 import { Stat } from "./types/spaces-types"
 
 type CommunityStatsProps = {

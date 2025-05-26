@@ -1,11 +1,9 @@
 "use client"
-import React from 'react'
-import NotFound from '../components/Dashboard/NotFound/NotFound'
+import React from "react"
+import NotFound from "../components/Dashboard/NotFound/NotFound"
 
 function Error() {
-  return (
-    <NotFound />
-  )
+  return <NotFound />
 }
 
 export default Error

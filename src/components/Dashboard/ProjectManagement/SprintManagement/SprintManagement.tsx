@@ -40,20 +40,22 @@ const sampleSprints: Sprint[] = [
       {
         id: "t1",
         title: "Implement user authentication",
-        description: "Add login, registration, and password reset functionality",
+        description:
+          "Add login, registration, and password reset functionality",
         status: "done",
         priority: "high",
         assignee: { name: "Alex Johnson", avatar: "/avatars/01.png" },
-        storyPoints: 8,
+        storyPoints: 8
       },
       {
         id: "t2",
         title: "Create product listing page",
-        description: "Design and implement the product grid with filtering options",
+        description:
+          "Design and implement the product grid with filtering options",
         status: "in-progress",
         priority: "medium",
         assignee: { name: "Sarah Miller", avatar: "/avatars/02.png" },
-        storyPoints: 5,
+        storyPoints: 5
       },
       {
         id: "t3",
@@ -62,7 +64,7 @@ const sampleSprints: Sprint[] = [
         status: "todo",
         priority: "high",
         assignee: { name: "David Chen", avatar: "/avatars/03.png" },
-        storyPoints: 13,
+        storyPoints: 13
       },
       {
         id: "t4",
@@ -71,7 +73,7 @@ const sampleSprints: Sprint[] = [
         status: "in-progress",
         priority: "medium",
         assignee: { name: "Emma Wilson", avatar: "/avatars/04.png" },
-        storyPoints: 8,
+        storyPoints: 8
       },
       {
         id: "t5",
@@ -80,9 +82,9 @@ const sampleSprints: Sprint[] = [
         status: "todo",
         priority: "low",
         assignee: { name: "James Taylor", avatar: "/avatars/05.png" },
-        storyPoints: 5,
-      },
-    ],
+        storyPoints: 5
+      }
+    ]
   },
   {
     id: "2",
@@ -99,7 +101,7 @@ const sampleSprints: Sprint[] = [
         status: "done",
         priority: "high",
         assignee: { name: "David Chen", avatar: "/avatars/03.png" },
-        storyPoints: 8,
+        storyPoints: 8
       },
       {
         id: "t7",
@@ -108,7 +110,7 @@ const sampleSprints: Sprint[] = [
         status: "done",
         priority: "medium",
         assignee: { name: "Alex Johnson", avatar: "/avatars/01.png" },
-        storyPoints: 5,
+        storyPoints: 5
       },
       {
         id: "t8",
@@ -117,10 +119,10 @@ const sampleSprints: Sprint[] = [
         status: "done",
         priority: "medium",
         assignee: { name: "Sarah Miller", avatar: "/avatars/02.png" },
-        storyPoints: 8,
-      },
-    ],
-  },
+        storyPoints: 8
+      }
+    ]
+  }
 ]
 
 export function SprintManagement() {
@@ -147,9 +149,13 @@ export function SprintManagement() {
       </div>
 
       {sprints.map((sprint) => (
-        <SprintCard sprint={sprint} sprints={sprints} setSprints={setSprints} key={sprint.id} />
+        <SprintCard
+          sprint={sprint}
+          sprints={sprints}
+          setSprints={setSprints}
+          key={sprint.id}
+        />
       ))}
     </div>
   )
 }
-

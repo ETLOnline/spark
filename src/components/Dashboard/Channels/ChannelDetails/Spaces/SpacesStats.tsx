@@ -45,15 +45,13 @@ const SpacesStats = () => {
   const isMobileOrTab = useDetectBreakpoint(945)
   const layoutStatsVisibility = useAtomValue(spaceStore.layoutStatsVisibility)
 
-  return (
-    !isMobileOrTab && layoutStatsVisibility ? (
-      <aside className="space-y-4 space-info pt-[128px] mt-[-128px] sticky top-[16px]">
-        <TrendingTopicsCard topics={trendingTopics} />
-        <UpcomingEventsCard events={upcomingEvents} />
-        <CommunityStatsCard stats={stats} />
-      </aside>
-    ): null
-  )
+  return !isMobileOrTab && layoutStatsVisibility ? (
+    <aside className="space-y-4 space-info pt-[128px] mt-[-128px] sticky top-[16px]">
+      <TrendingTopicsCard topics={trendingTopics} />
+      <UpcomingEventsCard events={upcomingEvents} />
+      <CommunityStatsCard stats={stats} />
+    </aside>
+  ) : null
 }
 
 export default SpacesStats

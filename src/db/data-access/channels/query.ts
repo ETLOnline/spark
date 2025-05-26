@@ -1,4 +1,4 @@
-import { ChannelUsersTable, SelectChannelUser } from './../../schema';
+import { ChannelUsersTable, SelectChannelUser } from "./../../schema"
 import { and, eq, or, sql, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
 import { channelsTable, InsertChannel, SelectChannel } from "../../schema"
@@ -26,28 +26,28 @@ export async function CreateChannel(channelData: InsertChannel) {
 
 export async function GetChannels(filters?: channelQueryFilters) {
   try {
-    const page = filters?.page 
-    const limit = filters?.limit 
-    const offset = page && limit ? (page - 1) * limit :0
+    const page = filters?.page
+    const limit = filters?.limit
+    const offset = page && limit ? (page - 1) * limit : 0
 
-    const whereClauses:(SQLWrapper | undefined)[] = []
+    const whereClauses: (SQLWrapper | undefined)[] = []
 
     if (filters) {
-
       if (filters.channelType) {
         whereClauses.push(eq(channelsTable.channel_type, filters.channelType))
       }
 
       if (filters.isPublished) {
-        whereClauses.push(eq(channelsTable.publish_channel, filters.isPublished ? 1 : 0))
+        whereClauses.push(
+          eq(channelsTable.publish_channel, filters.isPublished ? 1 : 0)
+        )
       }
 
       if (filters.ownerId) {
         whereClauses.push(eq(channelsTable.ownerId, filters.ownerId))
       }
+    }
 
-    } 
-    
     const channels = await db.query.channelsTable.findMany({
       limit: limit,
       offset: offset,
@@ -72,7 +72,8 @@ export async function GetChannels(filters?: channelQueryFilters) {
         total: Number(totalCount),
         page: page || 1,
         limit: limit || 0,
-        totalPages: limit && limit !== 0 ?  Math.ceil(Number(totalCount) / limit) : 1 
+        totalPages:
+          limit && limit !== 0 ? Math.ceil(Number(totalCount) / limit) : 1
       }
     }
   } catch (e: any) {
@@ -150,14 +151,15 @@ export async function GetChannelById(id: string, withChannelUsers?: boolean) {
         spaces: {
           with: {
             features: true
-          },
-        },
-        users: withChannelUsers ? {
-          with: {
-            user: true
           }
-        } : undefined
-
+        },
+        users: withChannelUsers
+          ? {
+              with: {
+                user: true
+              }
+            }
+          : undefined
       }
     })
     return channel
@@ -167,50 +169,60 @@ export async function GetChannelById(id: string, withChannelUsers?: boolean) {
 }
 
 export async function attachChannelUser(channelId: string, userId: string) {
-  try{
-    const spaceUser = await db.insert(ChannelUsersTable).values({
-      channel_id: channelId,
-      user_id: userId
-    }).returning()
+  try {
+    const spaceUser = await db
+      .insert(ChannelUsersTable)
+      .values({
+        channel_id: channelId,
+        user_id: userId
+      })
+      .returning()
     return spaceUser
-  }
-  catch (e: any) {
+  } catch (e: any) {
     throw new Error(e.message)
   }
 }
 
 export async function dettachChannelUser(channelId: string, userId: string) {
-  try{
-    const spaceUser = await db.delete(ChannelUsersTable).where(
-      and(
-        eq(ChannelUsersTable.channel_id, channelId),
-        eq(ChannelUsersTable.user_id, userId)
+  try {
+    const spaceUser = await db
+      .delete(ChannelUsersTable)
+      .where(
+        and(
+          eq(ChannelUsersTable.channel_id, channelId),
+          eq(ChannelUsersTable.user_id, userId)
+        )
       )
-    )
     return spaceUser
-  }
-  catch (e: any) {
+  } catch (e: any) {
     throw new Error(e.message)
   }
 }
 
-export async function updateChannelUser(channelId: string, userId: string, updatedData: Partial<SelectChannelUser>) {
-  try{
-    const channelUser = await db.update(ChannelUsersTable).set(updatedData).where(
-      and(
-        eq(ChannelUsersTable.channel_id, channelId),
-        eq(ChannelUsersTable.user_id, userId)
+export async function updateChannelUser(
+  channelId: string,
+  userId: string,
+  updatedData: Partial<SelectChannelUser>
+) {
+  try {
+    const channelUser = await db
+      .update(ChannelUsersTable)
+      .set(updatedData)
+      .where(
+        and(
+          eq(ChannelUsersTable.channel_id, channelId),
+          eq(ChannelUsersTable.user_id, userId)
+        )
       )
-    ).returning()
+      .returning()
     return channelUser[0]
-  }
-  catch (e: any) {
+  } catch (e: any) {
     throw new Error(e.message)
   }
 }
 
 export async function getChannelUsers(channelId: string) {
-  try{
+  try {
     const channelUsers = await db.query.ChannelUsersTable.findMany({
       where: eq(ChannelUsersTable.channel_id, channelId),
       with: {
@@ -218,8 +230,7 @@ export async function getChannelUsers(channelId: string) {
       }
     })
     return channelUsers
-  }
-  catch (e: any) {
+  } catch (e: any) {
     throw new Error(e.message)
   }
 }

@@ -1,10 +1,8 @@
-import React from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card'
-import { BookOpen, Users, Zap } from 'lucide-react'
-import { Separator } from '../../ui/separator'
-import { ProjectProposal } from '.'
-
-
+import React from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
+import { BookOpen, Users, Zap } from "lucide-react"
+import { Separator } from "../../ui/separator"
+import { ProjectProposal } from "."
 
 interface Props {
   proposals: ProjectProposal[]

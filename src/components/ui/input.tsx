@@ -15,7 +15,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <div className="w-fit max-w-[150px] flex items-center px-2 text-muted-foreground bg-muted overflow-hidden">
             <span className="truncate">{props.prefix}</span>
           </div>
-            <input
+          <input
             type={type}
             className={cn(
               "flex-1 rounded-r-md bg-transparent px-3 py-1 text-base transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm border-0",

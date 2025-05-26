@@ -8,7 +8,7 @@ import { buttonVariants } from "@/src/components/ui/button"
 import Loader from "../common/Loader/Loader"
 
 interface customAlertActionProps {
-  loading?: boolean;
+  loading?: boolean
 }
 
 const AlertDialog = AlertDialogPrimitive.Root
@@ -105,7 +105,8 @@ AlertDialogDescription.displayName =
 
 const AlertDialogAction = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Action>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action> & customAlertActionProps
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action> &
+    customAlertActionProps
 >(({ className, loading, ...props }, ref) => (
   <AlertDialogPrimitive.Action
     ref={ref}
@@ -144,5 +145,5 @@ export {
   AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogAction,
-  AlertDialogCancel,
+  AlertDialogCancel
 }

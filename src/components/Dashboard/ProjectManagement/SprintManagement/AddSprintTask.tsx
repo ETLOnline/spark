@@ -1,12 +1,25 @@
-import React, { Dispatch, SetStateAction, useState } from 'react'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/src/components/ui/dialog'
-import { Button } from '@/src/components/ui/button'
-import { Plus } from 'lucide-react'
-import { Label } from '@/src/components/ui/label'
-import { Input } from '@/src/components/ui/input'
-import { Textarea } from '@/src/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select'
-
+import React, { Dispatch, SetStateAction, useState } from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/src/components/ui/dialog"
+import { Button } from "@/src/components/ui/button"
+import { Plus } from "lucide-react"
+import { Label } from "@/src/components/ui/label"
+import { Input } from "@/src/components/ui/input"
+import { Textarea } from "@/src/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/src/components/ui/select"
 
 interface Props {
   sprint: Sprint
@@ -45,9 +58,8 @@ function AddSprintTask({ sprint, sprints, setSprints }: Props) {
     description: "",
     priority: "medium",
     storyPoints: 0,
-    assignee: "",
+    assignee: ""
   })
-
 
   const handleCreateTask = () => {
     if (!selectedSprint || !newTask.title) return
@@ -59,18 +71,25 @@ function AddSprintTask({ sprint, sprints, setSprints }: Props) {
       status: "todo",
       priority: newTask.priority as "low" | "medium" | "high",
       assignee: { name: "Unassigned", avatar: "/avatars/placeholder.svg" },
-      storyPoints: newTask.storyPoints || 0,
+      storyPoints: newTask.storyPoints || 0
     }
 
     const updatedSprints = sprints.map((sprint) =>
-      sprint.id === selectedSprint.id ? { ...sprint, tasks: [...sprint.tasks, task] } : sprint,
+      sprint.id === selectedSprint.id
+        ? { ...sprint, tasks: [...sprint.tasks, task] }
+        : sprint
     )
 
     setSprints(updatedSprints)
-    setNewTask({ title: "", description: "", priority: "medium", storyPoints: 0, assignee: "" })
+    setNewTask({
+      title: "",
+      description: "",
+      priority: "medium",
+      storyPoints: 0,
+      assignee: ""
+    })
     setIsCreateTaskOpen(false)
   }
-
 
   return (
     <Dialog
@@ -89,7 +108,9 @@ function AddSprintTask({ sprint, sprints, setSprints }: Props) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Task to {sprint.name}</DialogTitle>
-          <DialogDescription>Create a new task for this sprint.</DialogDescription>
+          <DialogDescription>
+            Create a new task for this sprint.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
@@ -99,7 +120,9 @@ function AddSprintTask({ sprint, sprints, setSprints }: Props) {
             <Input
               id="task-title"
               value={newTask.title}
-              onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+              onChange={(e) =>
+                setNewTask({ ...newTask, title: e.target.value })
+              }
               className="col-span-3"
             />
           </div>
@@ -110,7 +133,9 @@ function AddSprintTask({ sprint, sprints, setSprints }: Props) {
             <Textarea
               id="task-description"
               value={newTask.description}
-              onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+              onChange={(e) =>
+                setNewTask({ ...newTask, description: e.target.value })
+              }
               className="col-span-3"
             />
           </div>
@@ -120,7 +145,9 @@ function AddSprintTask({ sprint, sprints, setSprints }: Props) {
             </Label>
             <Select
               value={newTask.priority}
-              onValueChange={(value) => setNewTask({ ...newTask, priority: value })}
+              onValueChange={(value) =>
+                setNewTask({ ...newTask, priority: value })
+              }
             >
               <SelectTrigger id="task-priority" className="col-span-3">
                 <SelectValue placeholder="Select priority" />
@@ -142,7 +169,10 @@ function AddSprintTask({ sprint, sprints, setSprints }: Props) {
               min="0"
               value={newTask.storyPoints}
               onChange={(e) =>
-                setNewTask({ ...newTask, storyPoints: Number.parseInt(e.target.value) || 0 })
+                setNewTask({
+                  ...newTask,
+                  storyPoints: Number.parseInt(e.target.value) || 0
+                })
               }
               className="col-span-3"
             />

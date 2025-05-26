@@ -1,7 +1,7 @@
 // services/storage/fileUtils.ts
-import { randomUUID } from "crypto";
-import { getStorageClient } from "@/src/services/storage/client/storage.client";
-import { AddFile } from "@/src/db/data-access/file/query";
+import { randomUUID } from "crypto"
+import { getStorageClient } from "@/src/services/storage/client/storage.client"
+import { AddFile } from "@/src/db/data-access/file/query"
 
 // Utility function to handle file upload
 export const uploadFileAndSaveMetadata = async (
@@ -11,35 +11,34 @@ export const uploadFileAndSaveMetadata = async (
   folderPath: string
 ) => {
   try {
-    const uniqueFileName = `${randomUUID()}-${fileName}`;
+    const uniqueFileName = `${randomUUID()}-${fileName}`
 
-    const storageClient = getStorageClient();
+    const storageClient = getStorageClient()
 
     const fileUrl = await storageClient.uploadFile({
       fileBuffer,
       fileName: uniqueFileName,
       mimeType: fileType,
-      folderPath,
-    });
-
+      folderPath
+    })
 
     const fileRecord = await AddFile({
       file_name: fileName,
       file_size: fileBuffer.length,
       file_type: fileType,
-      file_path: fileUrl,
-    });
+      file_path: fileUrl
+    })
 
-    return { fileUrl, fileRecord : fileRecord[0] };
-  } catch (error :any) {
-    throw new Error(`Error uploading file: ${error.message}`);
+    return { fileUrl, fileRecord: fileRecord[0] }
+  } catch (error: any) {
+    throw new Error(`Error uploading file: ${error.message}`)
   }
-};
+}
 
 export function base64ToBuffer(base64String: string): Buffer {
   const base64Data = base64String.includes(",")
     ? base64String.split(",")[1]
-    : base64String;
+    : base64String
 
-  return Buffer.from(base64Data, "base64");
+  return Buffer.from(base64Data, "base64")
 }

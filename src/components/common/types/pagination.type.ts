@@ -1,6 +1,6 @@
 export type PaginationType = {
-    total: number
-    page: number
-    limit: number
-    totalPages: number
+  total: number
+  page: number
+  limit: number
+  totalPages: number
 }

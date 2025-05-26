@@ -1,13 +1,11 @@
-'use client'
-import { SelectTask, SelectTaskStatus } from '@/src/db/schema'
-import React, { useEffect } from 'react'
-import TaskFormHeader from './TaskFormHeader'
-import TaskForm from './TaskForm'
-import { useAtom } from 'jotai'
-import { projectStore } from '@/src/store/project/projectStore'
-import { taskStore } from '@/src/store/tasks/taskStore'
-
-
+"use client"
+import { SelectTask, SelectTaskStatus } from "@/src/db/schema"
+import React, { useEffect } from "react"
+import TaskFormHeader from "./TaskFormHeader"
+import TaskForm from "./TaskForm"
+import { useAtom } from "jotai"
+import { projectStore } from "@/src/store/project/projectStore"
+import { taskStore } from "@/src/store/tasks/taskStore"
 
 interface Props {
   statuses: SelectTaskStatus[]

@@ -1,10 +1,8 @@
-import { FileSharing } from '@/src/components/Dashboard/ProjectManagement/FileSharing'
-import React from 'react'
+import { FileSharing } from "@/src/components/Dashboard/ProjectManagement/FileSharing"
+import React from "react"
 
 function ProjectFilesPage() {
-  return (
-    <FileSharing />
-  )
+  return <FileSharing />
 }
 
 export default ProjectFilesPage

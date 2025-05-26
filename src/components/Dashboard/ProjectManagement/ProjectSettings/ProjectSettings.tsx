@@ -1,6 +1,11 @@
 "use client"
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from "@/src/components/ui/tabs"
 import ProjectInformation from "./ProjectInformation"
 import TeamMembers from "./TeamMembers"
 import ProjectNotifications from "./ProjectNotifications"
@@ -9,9 +14,7 @@ import TaskStatus from "./TaskStatus"
 import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
-
 export function ProjectSettings() {
-
   const router = useRouter()
   const searchParams = useSearchParams()
   const UrlTab = searchParams.get("tab")
@@ -23,12 +26,13 @@ export function ProjectSettings() {
     }
   }, [activeTab, UrlTab])
 
-
-
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="general" className="space-y-4"
-        value={activeTab} onValueChange={setActiveTab}
+      <Tabs
+        defaultValue="general"
+        className="space-y-4"
+        value={activeTab}
+        onValueChange={setActiveTab}
       >
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
@@ -61,4 +65,3 @@ export function ProjectSettings() {
     </div>
   )
 }
-

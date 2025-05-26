@@ -1,9 +1,8 @@
-
 // Feature seed
 
-import { sql } from "drizzle-orm";
-import { db } from "..";
-import { featuresTable, InsertFeature } from "../schema";
+import { sql } from "drizzle-orm"
+import { db } from ".."
+import { featuresTable, InsertFeature } from "../schema"
 
 export const FeatureSeedList: InsertFeature[] = [
   {
@@ -44,21 +43,22 @@ export const FeatureSeedList: InsertFeature[] = [
   }
 ]
 
-export const FeatureSeed = async()=>{
-  return await db.transaction(async(tx)=>{
-    try{
-
+export const FeatureSeed = async () => {
+  return await db.transaction(async (tx) => {
+    try {
       await tx.delete(featuresTable)
-      await tx.execute(sql`ALTER SEQUENCE features_id_seq RESTART; UPDATE features SET id = DEFAULT;`);
+      await tx.execute(
+        sql`ALTER SEQUENCE features_id_seq RESTART; UPDATE features SET id = DEFAULT;`
+      )
       const features = await tx.insert(featuresTable).values(FeatureSeedList)
 
-      if(features.count === FeatureSeedList.length){
-        console.log('✅ Features seeded successfully')
+      if (features.count === FeatureSeedList.length) {
+        console.log("✅ Features seeded successfully")
       }
-    }catch(e){
+    } catch (e) {
       console.error(e)
       tx.rollback()
-      console.log('❌ Error seeding features')
+      console.log("❌ Error seeding features")
       process.exit(1)
     }
   })

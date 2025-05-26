@@ -4,8 +4,6 @@ import { DirItem } from "@/src/components/Dashboard/Channels/ChannelDetails/Spac
 import FileDir from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/FileDir"
 
 export default function FileSharing() {
-
-
   const addItemToPath = (
     items: DirItem[],
     path: string,
@@ -30,7 +28,6 @@ export default function FileSharing() {
     })
   }
 
-
   const findItemByPath = (
     items: DirItem[],
     targetPath: string
@@ -50,7 +47,6 @@ export default function FileSharing() {
 
     return undefined
   }
-
 
   return (
     <div className="container mx-auto py-8 px-4">

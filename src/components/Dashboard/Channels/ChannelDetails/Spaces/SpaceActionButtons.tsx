@@ -38,7 +38,8 @@ function SpacesActionButtons({ space }: Props) {
     addDeleteSpaceError,
     deleteSpace
   ] = useServerAction(DeleteSpaceAction)
-  const [spaceFormModelVisibility, setSpaceFormModelVisibility] = useState(false)
+  const [spaceFormModelVisibility, setSpaceFormModelVisibility] =
+    useState(false)
 
   const router = useRouter()
 
@@ -47,14 +48,10 @@ function SpacesActionButtons({ space }: Props) {
     setSelectedSpace(space)
   }
 
-
-
   async function handleDeleteSpace(selectedSpace: SelectSpace) {
     const deletedSpace = await deleteSpace(selectedSpace)
     if (deletedSpace?.success) {
-      setSpaces((prev) =>
-        prev.filter((s) => s.id !== selectedSpace.id)
-      )
+      setSpaces((prev) => prev.filter((s) => s.id !== selectedSpace.id))
       toast({
         title: "Space deleted successfully.",
         duration: 3000
@@ -64,7 +61,10 @@ function SpacesActionButtons({ space }: Props) {
 
   return (
     <>
-      <CreateSpaceModal spaceFormModelVisibility={spaceFormModelVisibility} setSpaceFormModelVisibility={setSpaceFormModelVisibility} />
+      <CreateSpaceModal
+        spaceFormModelVisibility={spaceFormModelVisibility}
+        setSpaceFormModelVisibility={setSpaceFormModelVisibility}
+      />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon">
@@ -83,7 +83,9 @@ function SpacesActionButtons({ space }: Props) {
             <Edit className="mr-2 h-4 w-4" />
             Edit
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push(`./spaces/${space.space_slug}/users`)}>
+          <DropdownMenuItem
+            onClick={() => router.push(`./spaces/${space.space_slug}/users`)}
+          >
             <User className="mr-2 h-4 w-4" />
             Users
           </DropdownMenuItem>

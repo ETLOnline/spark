@@ -1,6 +1,11 @@
-import { Card, CardContent, CardFooter, CardHeader } from '@/src/components/ui/card'
-import { Skeleton } from '@/src/components/ui/skeleton'
-import React from 'react'
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader
+} from "@/src/components/ui/card"
+import { Skeleton } from "@/src/components/ui/skeleton"
+import React from "react"
 
 const loading = () => {
   return (

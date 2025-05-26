@@ -19,7 +19,7 @@ export async function SelectUserByExternalId(id: string) {
       role: true
     },
     where: eq(usersTable.external_auth_id, id),
-    with:{
+    with: {
       channels: {
         with: {
           channel: {
@@ -30,10 +30,10 @@ export async function SelectUserByExternalId(id: string) {
         }
       },
       spaces: {
-        with:{
+        with: {
           space: true
         }
-      }, 
+      }
     }
   })
 

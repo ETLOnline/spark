@@ -79,7 +79,8 @@ export default function ProfileScreen({
           <AvatarFallback>Profile Image</AvatarFallback>
         </Avatar>
         <div>
-          <h1 className="text-2xl font-bold">{user?.first_name} 
+          <h1 className="text-2xl font-bold">
+            {user?.first_name}
             <span>
               <TooltipProvider>
                 <Tooltip>

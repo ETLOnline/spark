@@ -15,7 +15,11 @@ import {
   channelQueryFilters
 } from "@/src/db/data-access/channels/query"
 import { CreateServerAction } from ".."
-import { InsertChannel, SelectChannel, SelectChannelUser } from "@/src/db/schema"
+import {
+  InsertChannel,
+  SelectChannel,
+  SelectChannelUser
+} from "@/src/db/schema"
 import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 import { AuthUserAction } from "../User/AuthUserAction"
 import { isUserAdmin } from "@/src/utils/helpers"
@@ -46,14 +50,20 @@ export const GetChannelsAction = CreateServerAction(
   async (filters?: channelQueryFilters) => {
     try {
       const authUser = await AuthUserAction()
-      let channels: GetChannelsResponseType 
-      let joinedChannels: SelectChannel[] = [] 
+      let channels: GetChannelsResponseType
+      let joinedChannels: SelectChannel[] = []
       if (isUserAdmin(authUser)) {
-        channels = await GetChannels({...filters})
+        channels = await GetChannels({ ...filters })
       } else {
-        channels = await GetChannels({...filters, channelType: "public", isPublished: true}) 
-        joinedChannels = authUser?.channels.map((uc)=> uc.channel).filter((c)=> c.publish_channel === 1).filter((c) => typeof c !== 'undefined' )
-        
+        channels = await GetChannels({
+          ...filters,
+          channelType: "public",
+          isPublished: true
+        })
+        joinedChannels = authUser?.channels
+          .map((uc) => uc.channel)
+          .filter((c) => c.publish_channel === 1)
+          .filter((c) => typeof c !== "undefined")
       }
 
       // const result = await GetChannels(filters)
@@ -147,11 +157,10 @@ export const AttachChannelUserAction = CreateServerAction(
 export const DettachChannelUserAction = CreateServerAction(
   true,
   async (channelId: string, userId: string) => {
-    try{
+    try {
       const channelUser = await dettachChannelUser(channelId, userId)
-      return { success: true}
-    }
-    catch (error) {
+      return { success: true }
+    } catch (error) {
       return { error: error }
     }
   }
@@ -159,9 +168,17 @@ export const DettachChannelUserAction = CreateServerAction(
 
 export const UpdateChannelUserAction = CreateServerAction(
   true,
-  async (channelId: string, userId: string, updatedData: Partial<SelectChannelUser>) => {
+  async (
+    channelId: string,
+    userId: string,
+    updatedData: Partial<SelectChannelUser>
+  ) => {
     try {
-      const updatedChannelUser = await updateChannelUser(channelId, userId, updatedData)
+      const updatedChannelUser = await updateChannelUser(
+        channelId,
+        userId,
+        updatedData
+      )
       return { success: true, data: updatedChannelUser }
     } catch (error) {
       return { error: error }

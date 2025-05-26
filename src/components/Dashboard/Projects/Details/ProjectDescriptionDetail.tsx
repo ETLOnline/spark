@@ -1,24 +1,32 @@
-import React, { SetStateAction } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../ui/tabs';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../../../ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '../../../ui/avatar';
-import { Textarea } from '../../../ui/textarea';
-import { Button } from '../../../ui/button';
-import { ProjectDetails } from './ProjectDetailVeiw';
-import { SelectProject } from '@/src/db/schema';
-
+import React, { SetStateAction } from "react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../ui/tabs"
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "../../../ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar"
+import { Textarea } from "../../../ui/textarea"
+import { Button } from "../../../ui/button"
+import { ProjectDetails } from "./ProjectDetailVeiw"
+import { SelectProject } from "@/src/db/schema"
 
 interface Props {
   selectedProject: SelectProject
 }
 
-function ProjectDescriptionDetail({selectedProject}: Props) {
-
+function ProjectDescriptionDetail({ selectedProject }: Props) {
   return (
     <Tabs defaultValue="description">
-      <TabsList className='w-full justify-around'>
-        <TabsTrigger className='w-1/2' value="description">Description</TabsTrigger>
-        <TabsTrigger className='w-1/2' value="updates">Updates</TabsTrigger>
+      <TabsList className="w-full justify-around">
+        <TabsTrigger className="w-1/2" value="description">
+          Description
+        </TabsTrigger>
+        <TabsTrigger className="w-1/2" value="updates">
+          Updates
+        </TabsTrigger>
       </TabsList>
       <TabsContent value="description">
         <Card>

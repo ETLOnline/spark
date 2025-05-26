@@ -1,6 +1,6 @@
-.img-upload{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+.img-upload {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
