@@ -1,6 +1,5 @@
 import { FeatureSeed } from "./FeatureSeed"
 import { UserSeed } from "./UserSeed"
-
 ;(async () => {
   try {
     console.log("🌱 Seeding Started")
