@@ -36,6 +36,19 @@ export const GetProjectsAction = CreateServerAction(
   }
 )
 
+export const GetProjectByIdAction = CreateServerAction(
+  true,
+  async (projectId: string) => {
+    try {
+      const project = await getProjectById(projectId)
+      return { success: true, data: project }
+    } catch (error) {
+      return { error: error }
+      return { error: error }
+    }
+  }
+)
+
 export const AttachProjectUserAction = CreateServerAction(
   true,
   async (projectId: string, userId: string, role?: string) => {
