@@ -79,6 +79,7 @@ export default function ProjectTeamList({
   const [newRole, setNewRole] = useState<string>("member")
 
   const authUser = useAtomValue(userStore.AuthUser)
+  const isProjectCreator = authUser?.unique_id == projectCreatorId
 
   useEffect(() => {
     async function fetchUsers() {
@@ -226,34 +227,40 @@ export default function ProjectTeamList({
                         </Badge>
                       </div>
                       <div className="col-span-1 text-center">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">More options</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSelectedUser(cu)
-                                setNewRole(cu.role ?? "member")
-                                setRoleDialogOpen(true)
-                              }}
-                            >
-                              Change Role
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={() => handleRemoveUser(cu.user_id)}
-                            >
-                              Remove User
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        {isProjectCreator ? (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">More options</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedUser(cu)
+                                  setNewRole(cu.role ?? "member")
+                                  setRoleDialogOpen(true)
+                                }}
+                              >
+                                Change Role
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => handleRemoveUser(cu.user_id)}
+                              >
+                                Remove User
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">
+                            -
+                          </span>
+                        )}
                       </div>
                     </div>
                   )
