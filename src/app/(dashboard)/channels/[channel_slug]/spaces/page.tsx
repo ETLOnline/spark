@@ -45,8 +45,21 @@ export default function ChannelPage() {
           setSelectedChannel(res?.data.channel)
         }
         if (res.data.paginatedSpaces && res.data.joinedSpaces) {
-          setSpaces(res.data.paginatedSpaces.spaces)
-          setJoinedSpaces(res.data.joinedSpaces)
+          const publicSpaces = res.data.paginatedSpaces.spaces
+          const joinedSpaces = res.data.joinedSpaces
+
+          const sameSpaces =
+            publicSpaces.length === joinedSpaces.length &&
+            publicSpaces.every((space) =>
+              joinedSpaces.some((joined) => joined.id === space.id)
+            )
+
+          if (sameSpaces) {
+            setJoinedSpaces(joinedSpaces)
+          } else {
+            setSpaces(publicSpaces)
+            setJoinedSpaces(joinedSpaces)
+          }
         }
       }
     }

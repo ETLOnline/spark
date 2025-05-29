@@ -15,6 +15,13 @@
       "when": 1748080816470,
       "tag": "0001_brainy_mandarin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1748533232812,
+      "tag": "0002_dashing_shard",
+      "breakpoints": true
     }
   ]
 }

@@ -44,7 +44,6 @@ export const GetProjectByIdAction = CreateServerAction(
       return { success: true, data: project }
     } catch (error) {
       return { error: error }
-      return { error: error }
     }
   }
 )

@@ -72,6 +72,7 @@ export async function getProjectUsers(projectId: string) {
         status: ProjectUsersTable.status,
         updated_at: ProjectUsersTable.updated_at,
         created_at: ProjectUsersTable.created_at,
+        deleted_at: ProjectUsersTable.deleted_at,
         user: {
           unique_id: usersTable.unique_id,
           first_name: usersTable.first_name,
@@ -88,7 +89,6 @@ export async function getProjectUsers(projectId: string) {
       .leftJoin(usersTable, eq(ProjectUsersTable.user_id, usersTable.unique_id))
       .where(eq(ProjectUsersTable.project_id, projectId))
 
-    // Remove users where user is null (just in case)
     return projectUsers
   } catch (error: any) {
     throw new Error(error.message)

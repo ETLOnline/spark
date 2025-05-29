@@ -2,11 +2,25 @@
 
 import React, { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
-import ProjectTeamList, { ProjectUser } from "@/src/components/Dashboard/ProjectManagement/ProjectTeamList/ProjectTeamList"
-import { GetProjectByIdAction, GetProjectUsersAction } from "@/src/server-actions/ProjectManagement/projectManagement"
-import { GetSpaceByIdAction, GetSpaceUsersAction } from "@/src/server-actions/Space/Space"
+import ProjectTeamList, {
+  ProjectUser
+} from "@/src/components/Dashboard/ProjectManagement/ProjectTeamList/ProjectTeamList"
+import {
+  GetProjectByIdAction,
+  GetProjectUsersAction
+} from "@/src/server-actions/ProjectManagement/projectManagement"
+import {
+  GetSpaceByIdAction,
+  GetSpaceUsersAction
+} from "@/src/server-actions/Space/Space"
 import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
-import { SelectProject, SelectSpace, SelectProjectUser, SelectSpaceUser } from "@/src/db/schema"
+import {
+  SelectProject,
+  SelectSpace,
+  SelectProjectUser,
+  SelectSpaceUser
+} from "@/src/db/schema"
+import Loader from "@/src/components/common/Loader/Loader"
 
 const TeamPage: React.FC = () => {
   const params = useParams<{ id: string }>()
@@ -39,7 +53,9 @@ const TeamPage: React.FC = () => {
         }
         setCurrProject(projectResult.data)
 
-        const spaceResult = await GetSpaceByIdAction(projectResult.data.space_id)
+        const spaceResult = await GetSpaceByIdAction(
+          projectResult.data.space_id
+        )
         if (!spaceResult.success || !spaceResult.data) {
           setNotFound(true)
           setIsLoading(false)
@@ -49,7 +65,7 @@ const TeamPage: React.FC = () => {
 
         const [spaceUsersResult, projectUsersResult] = await Promise.all([
           GetSpaceUsersAction(spaceResult.data.id),
-          GetProjectUsersAction(projectId),
+          GetProjectUsersAction(projectId)
         ])
 
         if (!spaceUsersResult.success || !spaceUsersResult.data) {
@@ -61,13 +77,15 @@ const TeamPage: React.FC = () => {
         if (projectUsersResult.success && projectUsersResult.data) {
           const mappedProjectUsers: ProjectUser[] = projectUsersResult.data
             .map((pu: SelectProjectUser) => {
-                const matchedUser = spaceUsersResult.data?.find(su => su.user_id === pu.user_id)
-                if (!matchedUser || !matchedUser.user) return null
+              const matchedUser = spaceUsersResult.data?.find(
+                (su) => su.user_id === pu.user_id
+              )
+              if (!matchedUser || !matchedUser.user) return null
 
-                return {
+              return {
                 ...pu,
-                user: matchedUser.user as ProjectUser["user"],  // explicit cast
-                }
+                user: matchedUser.user as ProjectUser["user"] // explicit cast
+              }
             })
             .filter((pu): pu is ProjectUser => pu !== null)
 
@@ -91,7 +109,7 @@ const TeamPage: React.FC = () => {
   if (isLoading)
     return (
       <div className="p-6 flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <Loader />
       </div>
     )
 
@@ -99,7 +117,12 @@ const TeamPage: React.FC = () => {
 
   return (
     <div className="p-6">
-      <ProjectTeamList projectId={currProject.id} spaceId={currSpace.id} projectUsers={projectUsers}  projectCreatorId={currProject.created_by}/>
+      <ProjectTeamList
+        projectId={currProject.id}
+        spaceId={currSpace.id}
+        projectUsers={projectUsers}
+        projectCreatorId={currProject.created_by}
+      />
     </div>
   )
 }

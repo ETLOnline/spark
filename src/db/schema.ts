@@ -920,8 +920,7 @@ export const ProjectUsersTable = pgTable("project_users", {
   user_id: varchar().notNull(),
   role: varchar().default("member"),
   status: varchar().default("active"),
-  created_at: varchar().default(sql`CURRENT_TIMESTAMP`),
-  updated_at: varchar().$onUpdateFn(() => sql`CURRENT_TIMESTAMP`)
+  ...timestamps
 })
 
 export type InsertProjectUser = typeof ProjectUsersTable.$inferInsert
