@@ -106,6 +106,7 @@ export default function ProjectTeamList({
           status: response.data.status ?? "active",
           updated_at: response.data.updated_at ?? null,
           created_at: response.data.created_at ?? null,
+          deleted_at: response.data.deleted_at ?? null,
           user: matchingUser
         }
         setUsersList((prev) => [...prev, newProjectUser])
