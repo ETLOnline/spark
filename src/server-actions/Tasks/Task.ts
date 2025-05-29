@@ -85,7 +85,7 @@ export const GetTasksByStatusIdAction = CreateServerAction(
 
 export const UpdateTaskAction = CreateServerAction(
   true,
-  async (taskId: string, updatedData: SelectTask) => {
+  async (taskId: string, updatedData: Partial<SelectTask>) => {
     try {
       const UpdatedTask = await UpdateTask(taskId, updatedData)
       return { success: true, data: UpdatedTask }

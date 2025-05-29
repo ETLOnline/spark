@@ -1,8 +1,6 @@
 "use client"
-
 import type React from "react"
-
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import { Card, CardContent } from "@/src/components/ui/card"
 import { Input } from "@/src/components/ui/input"
@@ -14,16 +12,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/src/components/ui/select"
-import {
-  AlertCircle,
-  BarChart2,
-  Bug,
-  CheckCircle2,
-  CircleAlert,
-  Flag,
-  Lightbulb,
-  Rocket
-} from "lucide-react"
+import { AlertCircle, BarChart2, CircleAlert, Flag } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
 import {
   InsertTask,
@@ -52,6 +41,7 @@ import {
   projectTaskTypes
 } from "../constants/projectManagment"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
+import { sprintStore } from "@/src/store/sprint/sprintsStore"
 
 interface Props {
   statuses?: InsertTaskStatus[]
@@ -74,6 +64,7 @@ export default function TaskForm({ statuses }: Props) {
   )
   const [tasks, setTasks] = useAtom(taskStore.tasks)
   const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
+  const [sprintId, setSprintId] = useAtom(sprintStore.sprintId)
 
   const authUser = useAtomValue(userStore.AuthUser)
   const [createTaskLoading, createTaskData, createTaskError, CreateTask] =
@@ -138,7 +129,8 @@ export default function TaskForm({ statuses }: Props) {
         const payload = {
           ...data,
           created_by: authUser?.unique_id,
-          project_id: projectId || ""
+          project_id: projectId || "",
+          sprint_id: sprintId || null
         }
         const task = await CreateTask(payload)
         if (task?.success && task.data) {
@@ -147,6 +139,7 @@ export default function TaskForm({ statuses }: Props) {
           toast({
             title: "task added"
           })
+          setSprintId(null)
         } else {
           toast({
             title: "failed",

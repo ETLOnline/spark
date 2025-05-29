@@ -1,15 +1,7 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/src/components/ui/card"
 import { Checkbox } from "@/src/components/ui/checkbox"
 import React, { useEffect, useState } from "react"
 import BacklogItems from "./BacklogItems"
 import { useAtom } from "jotai"
-import { projectStore } from "@/src/store/project/projectStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetTasksAction } from "@/src/server-actions/Tasks/Task"
 import { useParams, useSearchParams } from "next/navigation"
@@ -125,14 +117,17 @@ function BacklogItemsCard({
           ) : (
             <div className="pb-2">
               {tasks &&
-                tasks.map((task) => (
-                  <BacklogItems
-                    key={task.id}
-                    task={task}
-                    selectedItems={selectedItems}
-                    setSelectedItems={setSelectedItems}
-                  />
-                ))}
+                tasks.map(
+                  (task) =>
+                    task.sprint_id === null && (
+                      <BacklogItems
+                        key={task.id}
+                        task={task}
+                        selectedItems={selectedItems}
+                        setSelectedItems={setSelectedItems}
+                      />
+                    )
+                )}
               {Pagination && <PaginationComponent pagination={Pagination} />}
             </div>
           )}
