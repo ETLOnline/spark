@@ -137,13 +137,16 @@ export default function TaskForm({ statuses }: Props) {
           setTasks([...tasks, task.data])
           setSelectedTask(task.data)
           toast({
-            title: "task added"
+            title: "Task created successfully",
+            description: "Your new task has been added to the project",
+            duration: 2000
           })
           setSprintId(null)
         } else {
           toast({
-            title: "failed",
-            variant: "destructive"
+            title: "Unable to create task.Please try again.",
+            variant: "destructive",
+            duration: 2000
           })
         }
       }
@@ -166,14 +169,18 @@ export default function TaskForm({ statuses }: Props) {
           )
           setSelectedTask(updatedTask?.data)
           toast({
-            title: "Task Updated successfully"
+            title: "Task Updated successfully",
+            description: "Your task has been updated",
+            duration: 2000
           })
         }
       }
     } catch {
       toast({
         title: "Unable to Update Task",
-        variant: "destructive"
+        description: "Please try again.",
+        variant: "destructive",
+        duration: 2000
       })
     }
   }
