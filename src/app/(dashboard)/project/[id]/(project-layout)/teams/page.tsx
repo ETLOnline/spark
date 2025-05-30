@@ -21,6 +21,7 @@ import {
   SelectSpaceUser
 } from "@/src/db/schema"
 import Loader from "@/src/components/common/Loader/Loader"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
 
 const TeamPage: React.FC = () => {
   const params = useParams<{ id: string }>()
@@ -109,7 +110,7 @@ const TeamPage: React.FC = () => {
   if (isLoading)
     return (
       <div className="p-6 flex justify-center items-center h-64">
-        <Loader />
+        <Loader size={LoaderSizes.xl} />
       </div>
     )
 
