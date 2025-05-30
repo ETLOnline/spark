@@ -14,6 +14,7 @@ import {
 import {
   CalendarIcon,
   LinkIcon,
+  PencilIcon,
   StarIcon,
   TrophyIcon,
   UserIcon
@@ -35,6 +36,8 @@ import {
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
 import { generateUrl, getPagePath } from "@/src/utils/helpers"
+import { useRef, useState } from "react"
+import { UpdateUserProfilePictureAction } from "@/src/server-actions/User/User"
 
 type ProfileScreenProps = {
   tab?: string
@@ -48,6 +51,8 @@ export default function ProfileScreen({
   profileData
 }: ProfileScreenProps) {
   const { toast } = useToast()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
 
   const handleCopyUrl = async () => {
     try {
@@ -68,16 +73,78 @@ export default function ProfileScreen({
     }
   }
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      setUploading(true)
+
+      const reader = new FileReader()
+      reader.onloadend = async () => {
+        const base64 = reader.result as string
+        const res = await UpdateUserProfilePictureAction(
+          user.unique_id,
+          file.name,
+          base64,
+          file.type
+        )
+
+        if (res?.success) {
+          toast({
+            title: "Profile picture updated!",
+            description: "Your profile picture has been successfully updated.",
+            duration: 3000
+          })
+          window.location.reload()
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: res?.error || "Failed to update profile picture",
+            duration: 3000
+          })
+        }
+        setUploading(false)
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Something went wrong",
+        duration: 3000
+      })
+      setUploading(false)
+    }
+  }
+
   return (
     <div className="container mx-auto p-6 relative">
       <div className="mb-6 flex items-center space-x-4">
-        <Avatar className="h-20 w-20">
-          <AvatarImage
-            src={user?.profile_url as string}
-            alt="Profile picture"
+        <div className="relative">
+          <Avatar className="h-20 w-20">
+            <AvatarImage
+              src={user?.profile_url as string}
+              alt="Profile picture"
+            />
+            <AvatarFallback>Profile</AvatarFallback>
+          </Avatar>
+          <button
+            className="absolute bottom-0 right-0 bg-background border rounded-full p-1 hover:bg-muted"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            <PencilIcon className="h-4 w-4" />
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
           />
-          <AvatarFallback>Profile Image</AvatarFallback>
-        </Avatar>
+        </div>
         <div>
           <h1 className="text-2xl font-bold">
             {user?.first_name}

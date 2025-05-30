@@ -12,7 +12,8 @@ import {
 } from "../config"
 import { s3Client } from "../client/s3.client"
 
-const tempFolderPath = "/tmp" // Adjust if Windows or else
+import * as os from "os"
+const tempFolderPath = os.tmpdir()
 
 export const S3StorageAdapter: StorageAdapter = {
   async uploadFile({
