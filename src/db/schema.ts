@@ -1,6 +1,12 @@
 import { randomUUID } from "crypto"
 import { InferSelectModel, relations, sql } from "drizzle-orm"
-import { integer, pgTable, primaryKey, varchar } from "drizzle-orm/pg-core"
+import {
+  integer,
+  pgTable,
+  primaryKey,
+  varchar,
+  json
+} from "drizzle-orm/pg-core"
 // import { integer, primaryKey, pgTable, varchar } from "drizzle-orm/sqlite-core"
 
 const timestamps = {
@@ -20,10 +26,21 @@ export const usersTable = pgTable("users", {
   profile_url: varchar(),
   meta: varchar(),
   bio: varchar(),
-  role: varchar().notNull().default("user")
+  role: varchar().notNull().default("user"),
+  persona_id: integer("persona_id"),
+  meta_profile: json("meta_profile").default({
+    bio_written: false,
+    persona_selected: false,
+    profile_picture_uploaded: false
+  })
 })
 
-export const usersRelations = relations(usersTable, ({ many }) => ({
+export const usersRelations = relations(usersTable, ({ many, one }) => ({
+  persona: one(personasTable, {
+    fields: [usersTable.persona_id],
+    references: [personasTable.id],
+    relationName: "userToPersona"
+  }),
   chats: many(userChatsTable, {
     relationName: "UserChats"
   }),
@@ -68,7 +85,7 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
 export type InsertUser = typeof usersTable.$inferInsert
 export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> & {
   // meta?: string
-  chats?: SelectChat[]
+  chats?: SelectUserChat[]
   contacts?: SelectUserContact[]
   users?: SelectUserContact[]
   userActivities?: SelectUserActivity[]
@@ -81,6 +98,7 @@ export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> & {
   // spaces?: SelectSpace[]
   spaces?: SelectSpaceUser[]
   channels?: SelectChannelUser[]
+  persona?: SelectPersona | null
 }
 
 export const chatsTable = pgTable("chats", {
@@ -911,3 +929,22 @@ export const TaskStatusTable = pgTable("tasks_status", {
 
 export type InsertTaskStatus = typeof TaskStatusTable.$inferInsert
 export type SelectTaskStatus = typeof TaskStatusTable.$inferSelect
+
+export const personasTable = pgTable("personas", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  title: varchar("title", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  description: varchar("description", { length: 255 }).notNull().unique(),
+  status: varchar("status", { length: 20 }).default("active").notNull(),
+  ...timestamps
+})
+
+export const personasRelations = relations(personasTable, ({ many }) => ({
+  users: many(usersTable, {
+    relationName: "userToPersona"
+  })
+}))
+
+export type SelectPersona = typeof personasTable.$inferSelect & {
+  users?: SelectUser[]
+}
