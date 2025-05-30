@@ -7,7 +7,10 @@ import { eq, sql } from "drizzle-orm"
 // Get all personas (standardized response)
 export const getAllPersonas = async () => {
   try {
-    const personas = await db.select().from(personasTable)
+    const personas = await db
+      .select()
+      .from(personasTable)
+      .where(eq(personasTable.status, "active"))
     return { success: true, data: personas }
   } catch (error) {
     console.error("Error fetching personas:", error)
