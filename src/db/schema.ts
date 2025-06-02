@@ -911,3 +911,17 @@ export const TaskStatusTable = pgTable("tasks_status", {
 
 export type InsertTaskStatus = typeof TaskStatusTable.$inferInsert
 export type SelectTaskStatus = typeof TaskStatusTable.$inferSelect
+
+export const ProjectUsersTable = pgTable("project_users", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  project_id: varchar().notNull(),
+  user_id: varchar().notNull(),
+  role: varchar().default("member"),
+  status: varchar().default("active"),
+  ...timestamps
+})
+
+export type InsertProjectUser = typeof ProjectUsersTable.$inferInsert
+export type SelectProjectUser = typeof ProjectUsersTable.$inferSelect
