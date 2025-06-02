@@ -26,6 +26,8 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "@/src/hooks/use-toast"
 import { projectStore } from "@/src/store/project/projectStore"
 import moment from "moment"
+import { AttachProjectUserAction } from "@/src/server-actions/ProjectManagement/projectManagement"
+import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 
 const channelSchema = z.object({
   project_name: z
@@ -57,7 +59,9 @@ function CreateNewProject() {
     createProjectError,
     createProject
   ] = useServerAction(CreateProjectAction)
-
+  const [attachUserLoading, , , AttachUser] = useServerAction(
+    AttachProjectUserAction
+  )
   const [startDate, setStartDate] = React.useState<Date>()
 
   const form = useForm({
@@ -97,6 +101,7 @@ function CreateNewProject() {
   }
 
   async function handleCreateProject(data: InsertProject) {
+    const user = await AuthUserAction()
     try {
       const payLoad = {
         ...data,
@@ -114,6 +119,11 @@ function CreateNewProject() {
       const createdProject = await createProject(payLoad as InsertProject)
 
       if (createdProject?.success && createdProject?.data) {
+        const response = await AttachUser(
+          createdProject.data.id,
+          user.unique_id,
+          "admin"
+        )
         setProjects([...projects, createdProject.data])
         setIsOpen(false)
         toast({

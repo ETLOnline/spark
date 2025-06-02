@@ -948,3 +948,16 @@ export const personasRelations = relations(personasTable, ({ many }) => ({
 export type SelectPersona = typeof personasTable.$inferSelect & {
   users?: SelectUser[]
 }
+export const ProjectUsersTable = pgTable("project_users", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  project_id: varchar().notNull(),
+  user_id: varchar().notNull(),
+  role: varchar().default("member"),
+  status: varchar().default("active"),
+  ...timestamps
+})
+
+export type InsertProjectUser = typeof ProjectUsersTable.$inferInsert
+export type SelectProjectUser = typeof ProjectUsersTable.$inferSelect
