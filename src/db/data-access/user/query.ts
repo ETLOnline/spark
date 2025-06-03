@@ -16,10 +16,13 @@ export async function SelectUserByExternalId(id: string) {
       profile_url: true,
       unique_id: true,
       bio: true,
-      role: true
+      role: true,
+      persona_id: true,
+      meta_profile: true
     },
     where: eq(usersTable.external_auth_id, id),
     with: {
+      persona: true,
       channels: {
         with: {
           channel: {
@@ -63,7 +66,9 @@ export async function FindUserWildCard(wildcard: string) {
         profile_url: true,
         unique_id: true,
         bio: true,
-        role: true
+        role: true,
+        persona_id: true,
+        meta_profile: true
       },
       where: (usersTable, { or }) =>
         or(

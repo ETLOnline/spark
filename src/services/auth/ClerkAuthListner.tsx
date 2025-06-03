@@ -12,6 +12,7 @@ const ClerkAuthListener = () => {
   const { user } = useUser()
   const setUser = useSetAtom(userStore.AuthUser)
   const setIam = useSetAtom(userStore.Iam)
+  const setPersona = useSetAtom(userStore.Persona)
 
   const handleSetUser = async (user: UserResource | null | undefined) => {
     if (!user) return
@@ -19,6 +20,7 @@ const ClerkAuthListener = () => {
     if (!userRes) return
     setUser(userRes as SelectUser)
     setIam(userRes as SelectUser)
+    setPersona(userRes.persona || null)
   }
 
   useEffect(() => {
