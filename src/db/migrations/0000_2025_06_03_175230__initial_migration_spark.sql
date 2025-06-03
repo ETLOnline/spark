@@ -6,6 +6,17 @@ CREATE TABLE IF NOT EXISTS "channel_users" (
 	"status" varchar DEFAULT 'active'
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "project_users" (
+	"id" varchar(36) PRIMARY KEY NOT NULL,
+	"project_id" varchar NOT NULL,
+	"user_id" varchar NOT NULL,
+	"role" varchar DEFAULT 'member',
+	"status" varchar DEFAULT 'active',
+	"updated_at" varchar,
+	"created_at" varchar DEFAULT CURRENT_TIMESTAMP,
+	"deleted_at" varchar
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "space_chats" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "space_chats_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"space_id" varchar NOT NULL,
