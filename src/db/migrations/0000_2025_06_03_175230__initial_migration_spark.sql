@@ -169,19 +169,6 @@ CREATE TABLE IF NOT EXISTS "notifications" (
 	"deleted_at" varchar
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "personas" (
-	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "personas_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"title" varchar(255) NOT NULL,
-	"slug" varchar(255) NOT NULL,
-	"description" varchar(255) NOT NULL,
-	"status" varchar(20) DEFAULT 'active' NOT NULL,
-	"updated_at" varchar,
-	"created_at" varchar DEFAULT CURRENT_TIMESTAMP,
-	"deleted_at" varchar,
-	CONSTRAINT "personas_slug_unique" UNIQUE("slug"),
-	CONSTRAINT "personas_description_unique" UNIQUE("description")
-);
---> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "poll_options" (
 	"post_id" varchar NOT NULL,
 	"option_text" varchar NOT NULL,
@@ -374,8 +361,6 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"meta" varchar,
 	"bio" varchar,
 	"role" varchar DEFAULT 'user' NOT NULL,
-	"persona_id" integer,
-	"meta_profile" json DEFAULT '{"profile_picture_uploaded":false,"bio_written":false,"persona_selected":false}'::json,
 	CONSTRAINT "users_email_unique" UNIQUE("email"),
 	CONSTRAINT "users_external_auth_id_unique" UNIQUE("external_auth_id")
 );

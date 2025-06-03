@@ -12,8 +12,8 @@
     {
       "idx": 1,
       "version": "7",
-      "when": 1748965039195,
-      "tag": "0001_2025_06_03_203716__add_personas_table_and_alter_user_table",
+      "when": 1748965734570,
+      "tag": "0001_2025_06_03_204852__add_personas_table_and_alter_user_table",
       "breakpoints": true
     }
   ]
