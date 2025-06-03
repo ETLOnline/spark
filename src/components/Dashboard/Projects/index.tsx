@@ -134,12 +134,6 @@ export function ProjectScreen() {
     }
   }, [getProjectData])
 
-  // Filter projects by status
-  const getFilteredProjects = (status?: string) => {
-    if (!status || status === "all") return projects
-    return projects.filter((project) => project.status === status)
-  }
-
   return (
     <div className="flex flex-col space-y-4">
       <WelcomeCard />
@@ -157,78 +151,44 @@ export function ProjectScreen() {
                 <TabsTrigger value="draft">Drafts</TabsTrigger>
                 <TabsTrigger value="completed">Completed</TabsTrigger>
               </TabsList>
-
               <TabsContent value="all">
-                <ScrollArea className="h-[600px]">
-                  {projects.length > 0 ? (
-                    projects.map((project) => (
-                      <ProjectCards
-                        key={project.id}
-                        project={project}
-                        onEdit={handleEdit}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      No projects found
-                    </div>
-                  )}
+                <ScrollArea>
+                  {projects.map((project) => (
+                    <ProjectCards
+                      key={project.id}
+                      project={project}
+                      onEdit={handleEdit}
+                    />
+                  ))}
                 </ScrollArea>
               </TabsContent>
-
-              <TabsContent value="active">
-                <ScrollArea className="h-[600px]">
-                  {getFilteredProjects("active").length > 0 ? (
-                    getFilteredProjects("active").map((project) => (
-                      <ProjectCards
-                        key={project.id}
-                        project={project}
-                        onEdit={handleEdit}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      No active projects found
-                    </div>
-                  )}
-                </ScrollArea>
-              </TabsContent>
-
-              <TabsContent value="draft">
-                <ScrollArea className="h-[600px]">
-                  {getFilteredProjects("draft").length > 0 ? (
-                    getFilteredProjects("draft").map((project) => (
-                      <ProjectCards
-                        key={project.id}
-                        project={project}
-                        onEdit={handleEdit}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      No draft projects found
-                    </div>
-                  )}
-                </ScrollArea>
-              </TabsContent>
-
-              <TabsContent value="completed">
-                <ScrollArea className="h-[600px]">
-                  {getFilteredProjects("completed").length > 0 ? (
-                    getFilteredProjects("completed").map((project) => (
-                      <ProjectCards
-                        key={project.id}
-                        project={project}
-                        onEdit={handleEdit}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      No completed projects found
-                    </div>
-                  )}
-                </ScrollArea>
-              </TabsContent>
+              {/* <TabsContent value="active">
+                    <ScrollArea>
+                      {proposals
+                        .filter((p) => p.status === "active")
+                        .map((proposal) => (
+                          <ProjectCards key={proposal.id} proposal={proposal} />
+                        ))}
+                    </ScrollArea>
+                  </TabsContent>
+                  <TabsContent value="draft">
+                    <ScrollArea>
+                      {proposals
+                        .filter((p) => p.status === "draft")
+                        .map((proposal) => (
+                          <ProjectCards key={proposal.id} proposal={proposal} />
+                        ))}
+                    </ScrollArea>
+                  </TabsContent>
+                  <TabsContent value="completed">
+                    <ScrollArea>
+                      {proposals
+                        .filter((p) => p.status === "completed")
+                        .map((proposal) => (
+                          <ProjectCards key={proposal.id} proposal={proposal} />
+                        ))}
+                    </ScrollArea>
+                  </TabsContent> */}
             </Tabs>
           </div>
           {isModalOpen && selectedProject && (
