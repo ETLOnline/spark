@@ -34,12 +34,11 @@ import moment from "moment-timezone"
 import Link from "next/link"
 import Loader from "../../common/Loader/Loader"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import data from "@emoji-mart/data"
-import Picker from "@emoji-mart/react"
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
 import { isOnlyEmoji } from "@/src/utils/helpers"
 import CreateNewChat from "./components/CreateNewChat"
 import Avvvatars from "avvvatars-react"
+import { EmojiPicker, EmojiPickerContent, EmojiPickerFooter, EmojiPickerSearch } from "../../ui/emoji-picker"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -424,12 +423,15 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                     <SmileIcon />
                   </PopoverTrigger>
                   <PopoverContent side="top" align="end" className="p-0">
-                    <Picker
-                      data={data}
-                      onEmojiSelect={(emoji: any) =>
-                        setNewMessage(`${newMessage}${emoji.native}`)
-                      }
-                    />
+                    <EmojiPicker
+                      className="h-[342px]"
+                      onEmojiSelect={({emoji}: any) => setNewMessage(`${newMessage}${emoji}`)}
+                    >
+                      <EmojiPickerSearch />
+                      <EmojiPickerContent />
+                      <EmojiPickerFooter />
+                    </EmojiPicker>
+
                   </PopoverContent>
                 </Popover>
                 <Button type="submit" size="icon">
