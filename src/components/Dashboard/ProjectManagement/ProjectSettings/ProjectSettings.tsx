@@ -10,11 +10,15 @@ import ProjectInformation from "./ProjectInformation"
 import TeamMembers from "./TeamMembers"
 import ProjectNotifications from "./ProjectNotifications"
 import Integrations from "./Integrations"
+import { SelectProject } from "@/src/db/schema"
 import TaskStatus from "./TaskStatus"
 import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+interface Props {
+  currProject: SelectProject
+}
 
-export function ProjectSettings() {
+export function ProjectSettings({ currProject }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const UrlTab = searchParams.get("tab")
@@ -25,7 +29,6 @@ export function ProjectSettings() {
       router.push(`./settings?tab=${activeTab}`)
     }
   }, [activeTab, UrlTab])
-
   return (
     <div className="space-y-6">
       <Tabs
@@ -43,7 +46,7 @@ export function ProjectSettings() {
         </TabsList>
 
         <TabsContent value="general">
-          <ProjectInformation />
+          <ProjectInformation currProjectData={currProject} />
         </TabsContent>
 
         <TabsContent value="team">
