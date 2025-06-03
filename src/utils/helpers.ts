@@ -154,3 +154,14 @@ export const getInitials = (string: string) => {
 export function ToUpperCase(string: string) {
   return string.charAt(0).toUpperCase() + string.slice(1)
 }
+
+export const checkUserPersonaCompletion = async (user: SelectUser) => {
+  if (isUserAdmin(user)) {
+    return true
+  }
+  if (!user.persona_id) {
+    return false
+  }
+
+  return true
+}

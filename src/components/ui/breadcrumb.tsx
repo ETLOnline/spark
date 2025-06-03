@@ -63,16 +63,12 @@ const BreadcrumbLink = React.forwardRef<
   }
 
   return (
-    <Link href={href} passHref legacyBehavior className="cursor-pointer">
-      <a
-        ref={ref}
-        className={cn(
-          "transition-colors hover:text-foreground cursor-pointer",
-          className
-        )}
-        {...props}
-      />
-    </Link>
+    <Link href={href} passHref ref={ref}
+      className={cn(
+        "transition-colors hover:text-foreground cursor-pointer",
+        className
+      )}
+    {...props} />
   )
 })
 BreadcrumbLink.displayName = "BreadcrumbLink"

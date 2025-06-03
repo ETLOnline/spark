@@ -1,4 +1,5 @@
 import { FeatureSeed } from "./FeatureSeed"
+import { seedPersonas } from "./personaSeeder"
 import { UserSeed } from "./UserSeed"
 ;(async () => {
   try {
@@ -6,6 +7,7 @@ import { UserSeed } from "./UserSeed"
     // Seed Features
     await UserSeed()
     await FeatureSeed()
+    await seedPersonas()
 
     console.log("✅ Seeding Completed")
     process.exit(0)

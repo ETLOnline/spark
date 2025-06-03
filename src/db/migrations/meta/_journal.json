@@ -5,8 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1747420188904,
-      "tag": "0000_concerned_mauler",
+      "when": 1748955151634,
+      "tag": "0000_2025_06_03_175230__initial_migration_spark",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1748965734570,
+      "tag": "0001_2025_06_03_204852__add_personas_table_and_alter_user_table",
       "breakpoints": true
     },
     {

@@ -1,9 +1,27 @@
+import { ReactNode } from "react"
+import { redirect } from "next/navigation"
 import AppSidebar from "@/src/components/Dashboard/Sidebar.tsx/app-sidebar"
 import Header from "@/src/components/Dashboard/header"
 import { SidebarInset, SidebarProvider } from "@/src/components/ui/sidebar"
-import { ReactNode } from "react"
+import { checkUserPersonaCompletion } from "@/src/utils/helpers"
+import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
+export default async function DashboardLayout({
+  children
+}: {
+  children: ReactNode
+}) {
+  const authUser = await AuthUserAction()
+  if (!authUser) {
+    redirect("/sign-in")
+  }
+
+  const hasPersona = await checkUserPersonaCompletion(authUser)
+
+  if (!hasPersona) {
+    redirect("/personas")
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar collapsible="icon" />
