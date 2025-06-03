@@ -17,10 +17,10 @@
       "breakpoints": true
     },
     {
-      "idx": 1,
+      "idx": 2,
       "version": "7",
-      "when": 1748339947435,
-      "tag": "0001_material_strong_guy",
+      "when": 1748981907563,
+      "tag": "0002_2025_06_04_011826__add_sprints_table",
       "breakpoints": true
     }
   ]
