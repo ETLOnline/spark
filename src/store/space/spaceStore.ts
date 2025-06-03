@@ -22,5 +22,5 @@ export const spaceStore = {
   currDirPath,
   layoutStatsVisibility,
   selectedChannelSpaces,
-  currentSpace,
+  currentSpace
 }

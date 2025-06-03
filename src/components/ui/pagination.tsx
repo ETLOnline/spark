@@ -47,13 +47,13 @@ const PaginationLink = ({
   href,
   ...props
 }: PaginationLinkProps) => (
-  <Link href={href || ''}
-
+  <Link
+    href={href || ""}
     aria-current={isActive ? "page" : undefined}
     className={cn(
       buttonVariants({
         variant: isActive ? "outline" : "ghost",
-        size,
+        size
       }),
       className
     )}
@@ -116,5 +116,5 @@ export {
   PaginationItem,
   PaginationPrevious,
   PaginationNext,
-  PaginationEllipsis,
+  PaginationEllipsis
 }

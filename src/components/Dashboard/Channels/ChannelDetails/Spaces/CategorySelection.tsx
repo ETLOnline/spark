@@ -1,6 +1,11 @@
 "use client"
 import { Button } from "@/src/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
+} from "@/src/components/ui/card"
 import { ScrollArea, ScrollBar } from "@/src/components/ui/scroll-area"
 import { useState } from "react"
 import { useAtom } from "jotai"

@@ -42,33 +42,39 @@ BreadcrumbItem.displayName = "BreadcrumbItem"
 
 const BreadcrumbLink = React.forwardRef<
   HTMLAnchorElement,
-  React.ComponentPropsWithoutRef<'a'> & {
-    asChild?: boolean;
-    href: string;
+  React.ComponentPropsWithoutRef<"a"> & {
+    asChild?: boolean
+    href: string
   }
 >(({ asChild, className, href, ...props }, ref) => {
-  const Comp = asChild ? Slot : 'a';
+  const Comp = asChild ? Slot : "a"
 
   if (asChild) {
     return (
       <Slot
         ref={ref}
-        className={cn('transition-colors hover:text-foreground cursor-pointer', className)}
+        className={cn(
+          "transition-colors hover:text-foreground cursor-pointer",
+          className
+        )}
         {...props}
       />
-    );
+    )
   }
 
   return (
     <Link href={href} passHref legacyBehavior className="cursor-pointer">
       <a
         ref={ref}
-        className={cn('transition-colors hover:text-foreground cursor-pointer', className)}
+        className={cn(
+          "transition-colors hover:text-foreground cursor-pointer",
+          className
+        )}
         {...props}
       />
     </Link>
-  );
-});
+  )
+})
 BreadcrumbLink.displayName = "BreadcrumbLink"
 
 const BreadcrumbPage = React.forwardRef<
@@ -125,5 +131,5 @@ export {
   BreadcrumbLink,
   BreadcrumbPage,
   BreadcrumbSeparator,
-  BreadcrumbEllipsis,
+  BreadcrumbEllipsis
 }

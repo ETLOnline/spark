@@ -1,11 +1,9 @@
-import React from 'react'
-import { Badge } from '../../../ui/badge'
-import { Calendar } from 'lucide-react'
-import { Progress } from '../../../ui/progress'
-import { ProjectDetails } from './ProjectDetailVeiw'
-import { SelectProject } from '@/src/db/schema'
-
-
+import React from "react"
+import { Badge } from "../../../ui/badge"
+import { Calendar } from "lucide-react"
+import { Progress } from "../../../ui/progress"
+import { ProjectDetails } from "./ProjectDetailVeiw"
+import { SelectProject } from "@/src/db/schema"
 
 interface Props {
   project: SelectProject
@@ -17,7 +15,15 @@ function ProjectStatusAndTimeline({ project }: Props) {
       <h3 className="text-lg font-semibold mb-2">Project Details</h3>
       <div className="space-y-2">
         <div className="flex items-center">
-          <Badge variant={project.project_type === "active" ? "default" : project.project_type === "draft" ? "secondary" : "outline"}>
+          <Badge
+            variant={
+              project.project_type === "active"
+                ? "default"
+                : project.project_type === "draft"
+                  ? "secondary"
+                  : "outline"
+            }
+          >
             {project.project_type}
           </Badge>
         </div>

@@ -1,13 +1,18 @@
 import { Badge } from "@/src/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card"
-import { TrendingUp } from 'lucide-react'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
+} from "@/src/components/ui/card"
+import { TrendingUp } from "lucide-react"
 
 const trendingTags = [
   { name: "AI", count: 1234 },
   { name: "MachineLearning", count: 987 },
   { name: "DataScience", count: 856 },
   { name: "WebDev", count: 743 },
-  { name: "JavaScript", count: 621 },
+  { name: "JavaScript", count: 621 }
 ]
 
 export function TrendingTagsCard() {
@@ -32,4 +37,3 @@ export function TrendingTagsCard() {
     </Card>
   )
 }
-

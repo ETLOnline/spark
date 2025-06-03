@@ -14,7 +14,12 @@ import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
 import { ArrowRight, Check, Lock, PencilRuler } from "lucide-react"
 import { canControlSpace } from "@/src/utils/spaceRoleHelper"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/src/components/ui/tooltip"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/src/components/ui/tooltip"
 import { useEffect, useState } from "react"
 
 interface Props {
@@ -44,40 +49,37 @@ function SpacesCard({ space }: Props) {
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl flex items-center gap-1">
             {space.space_name}
-            {
-              space.space_type === "private" && (
-                <Lock className="text-muted-foreground" height={14} />
-              )
-            }
-            {
-              space.publish_space ? (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Check className="text-muted-foreground" height={14} />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Published</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ) : (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <PencilRuler className="text-muted-foreground" height={14} />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Darft</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )
-            }
+            {space.space_type === "private" && (
+              <Lock className="text-muted-foreground" height={14} />
+            )}
+            {space.publish_space ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Check className="text-muted-foreground" height={14} />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Published</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <PencilRuler
+                      className="text-muted-foreground"
+                      height={14}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Darft</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </CardTitle>
-          {spaceControl ? (
-            <SpacesActionButtons space={space} />
-          ) : null}
+          {spaceControl ? <SpacesActionButtons space={space} /> : null}
         </div>
         <CardDescription>{space.description}</CardDescription>
       </CardHeader>
@@ -87,7 +89,9 @@ function SpacesCard({ space }: Props) {
           0 Members
         </Badge>
         <Link href={`./spaces/${space.space_slug}`}>
-          <Button>Launch Space <ArrowRight /></Button>
+          <Button>
+            Launch Space <ArrowRight />
+          </Button>
         </Link>
       </CardFooter>
     </Card>

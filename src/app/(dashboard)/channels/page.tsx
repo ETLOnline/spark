@@ -12,32 +12,29 @@ interface Props {
 }
 
 const ChannelsPage = async ({ searchParams }: Props) => {
-  const {page} = await searchParams
+  const { page } = await searchParams
   const authUser = await AuthUserAction()
 
   const isAdmin = isUserAdmin(authUser)
 
-  const channelsRes = (await GetChannelsAction({ page: page ? page : 1 , limit: 6 }))
-  const channels  = channelsRes.data
+  const channelsRes = await GetChannelsAction({
+    page: page ? page : 1,
+    limit: 6
+  })
+  const channels = channelsRes.data
   const joinedChannels = channelsRes.joinedChannels
 
   return (
     <>
-      {
-        joinedChannels && joinedChannels.length > 0 ? (
-
-          <div className="flex-1 p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-              <h2 className="text-xl font-bold sm:text-2xl">Joined Channels</h2>
-            </div>
-            
-            <ChannelCardList
-              fetchedChannels={joinedChannels}
-            />
-            
+      {joinedChannels && joinedChannels.length > 0 ? (
+        <div className="flex-1 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <h2 className="text-xl font-bold sm:text-2xl">Joined Channels</h2>
           </div>
-        ):null
-      }
+
+          <ChannelCardList fetchedChannels={joinedChannels} />
+        </div>
+      ) : null}
       <div className="flex-1 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <h2 className="text-xl font-bold sm:text-2xl">Channels</h2>

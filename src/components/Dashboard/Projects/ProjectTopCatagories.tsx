@@ -1,6 +1,6 @@
-import React from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card'
-import { Badge } from '../../ui/badge'
+import React from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
+import { Badge } from "../../ui/badge"
 
 interface Props {
   categories: string[]
@@ -17,9 +17,7 @@ function ProjectTopCatagories({ categories }: Props) {
           {categories.slice(0, 5).map((category, index) => (
             <li key={index} className="flex justify-between items-center">
               <span>{category}</span>
-              <Badge variant="secondary">
-                0
-              </Badge>
+              <Badge variant="secondary">0</Badge>
             </li>
           ))}
         </ul>

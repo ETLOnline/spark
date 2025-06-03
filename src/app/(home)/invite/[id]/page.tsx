@@ -1,64 +1,64 @@
-
 import { ArrowRight, Info, Users } from "lucide-react"
 
 import { Button } from "@/src/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/src/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/src/components/ui/card"
 import { Avatar, AvatarFallback } from "@/src/components/ui/avatar"
 import { Badge } from "@/src/components/ui/badge"
 import InviteScreen from "@/src/components/Invite/InviteScreen"
 import { SelectChannel, SelectSpace } from "@/src/db/schema"
 import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
 import { GetChannelByIdAction } from "@/src/server-actions/Channel/Channel"
-import { GetSpaceByIdAction, GetSpacesAction } from "@/src/server-actions/Space/Space"
+import {
+  GetSpaceByIdAction,
+  GetSpacesAction
+} from "@/src/server-actions/Space/Space"
 import { Suspense } from "react"
 
 // Mock data - in a real app, you would fetch this based on the invite code
 
 interface Props {
-  params:Promise<{
+  params: Promise<{
     id: string
-  }>,
-  searchParams:Promise<{
+  }>
+  searchParams: Promise<{
     type: string
   }>
 }
 
 export default async function InvitePage({ params, searchParams }: Props) {
-
   const { id } = await params
   const { type } = await searchParams
 
   let entity: SelectChannel | SelectSpace | null = null
 
-  
-  
-  if(type === 'channel') {
-    const currentChannel = await  GetChannelByIdAction(id)
-    if(currentChannel.success && currentChannel.data){
+  if (type === "channel") {
+    const currentChannel = await GetChannelByIdAction(id)
+    if (currentChannel.success && currentChannel.data) {
       entity = currentChannel.data
     }
-    
   }
-  
-  if(type === 'space') {
-    const currentSpace = await  GetSpaceByIdAction(id)
-    if(currentSpace.success && currentSpace.data){
+
+  if (type === "space") {
+    const currentSpace = await GetSpaceByIdAction(id)
+    if (currentSpace.success && currentSpace.data) {
       entity = currentSpace.data
     }
   }
-  
+
   if (!entity) {
-    return (
-      <NotFound/>
-    )
+    return <NotFound />
   }
-
-
 
   return (
     <Suspense>
-      <InviteScreen entityType={type as 'channel' | 'space'} entity={entity} />
+      <InviteScreen entityType={type as "channel" | "space"} entity={entity} />
     </Suspense>
   )
 }
-

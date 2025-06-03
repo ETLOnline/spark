@@ -1,7 +1,17 @@
 import { useState } from "react"
-import { Popover, PopoverTrigger, PopoverContent } from "@/src/components/ui/popover"
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent
+} from "@/src/components/ui/popover"
 import { Button } from "@/src/components/ui/button"
-import { Command, CommandGroup, CommandInput, CommandItem, CommandEmpty } from "@/src/components/ui/command"
+import {
+  Command,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandEmpty
+} from "@/src/components/ui/command"
 import { Checkbox } from "@/src/components/ui/checkbox"
 import Loader from "../common/Loader/Loader"
 import { Textarea } from "./textarea"
@@ -27,7 +37,7 @@ export default function MultiSelect({
   onQueryChange,
   placeholder = "Select options",
   className,
-  loading = false,
+  loading = false
 }: MultiSelectProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
@@ -48,9 +58,9 @@ export default function MultiSelect({
     }
   }
 
-  const allValues = options.map(o => o.value)
-  const allSelected = allValues.every(val => selectedValues.includes(val))
-  const noneSelected = allValues.every(val => !selectedValues.includes(val))
+  const allValues = options.map((o) => o.value)
+  const allSelected = allValues.every((val) => selectedValues.includes(val))
+  const noneSelected = allValues.every((val) => !selectedValues.includes(val))
 
   const toggleAll = () => {
     if (allSelected) {
@@ -65,24 +75,28 @@ export default function MultiSelect({
 
   return (
     <>
-      {
-        selected.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-2 py-2">
-            {
-              selected.map((o) => (
-                <Badge key={o.value} variant="default">{o.label} <CircleMinus className="cursor-pointer" height={11} onClick={() => toggleOption(o)} /> </Badge>
-              ))
-            }
-          </div>
-        ): null
-      }
+      {selected.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-2 py-2">
+          {selected.map((o) => (
+            <Badge key={o.value} variant="default">
+              {o.label}{" "}
+              <CircleMinus
+                className="cursor-pointer"
+                height={11}
+                onClick={() => toggleOption(o)}
+              />{" "}
+            </Badge>
+          ))}
+        </div>
+      ) : null}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-      
-          <Button variant="outline" className={className ?? "w-full justify-start "}>
+          <Button
+            variant="outline"
+            className={className ?? "w-full justify-start "}
+          >
             {placeholder}
           </Button>
-
         </PopoverTrigger>
         <PopoverContent className="w-[250px] p-0">
           <Command>
@@ -101,8 +115,14 @@ export default function MultiSelect({
             <CommandEmpty>No results found.</CommandEmpty>
 
             <CommandGroup>
-              <CommandItem onSelect={toggleAll} className="text-muted-foreground">
-                <Checkbox checked={allSelected && !noneSelected} className="mr-2" />
+              <CommandItem
+                onSelect={toggleAll}
+                className="text-muted-foreground"
+              >
+                <Checkbox
+                  checked={allSelected && !noneSelected}
+                  className="mr-2"
+                />
                 {allSelected ? "Deselect All" : "Select All"}
               </CommandItem>
               {options.map((option) => (

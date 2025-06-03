@@ -26,14 +26,15 @@ export default function ChannelPage() {
   const [joinedSpaces, setJoinedSpaces] = useState<SelectSpace[]>([])
   const [spaces, setSpaces] = useAtom(spaceStore.spaces)
   const user = useAtomValue(userStore.AuthUser)
-  const [spaceFormModelVisibility, setSpaceFormModelVisibility] = useState(false)
+  const [spaceFormModelVisibility, setSpaceFormModelVisibility] =
+    useState(false)
   const authUser = useAtomValue(userStore.AuthUser)
   const isAdmin = authUser ? isUserAdmin(authUser) : false
 
-
   const channelSlug = useParams().channel_slug
 
-  const [spacesLoading, spacesData, spacesError, getSpaces] = useServerAction(GetSpacesAction)
+  const [spacesLoading, spacesData, spacesError, getSpaces] =
+    useServerAction(GetSpacesAction)
 
   useEffect(() => {
     const fetchChannel = async () => {
@@ -44,8 +45,21 @@ export default function ChannelPage() {
           setSelectedChannel(res?.data.channel)
         }
         if (res.data.paginatedSpaces && res.data.joinedSpaces) {
-          setSpaces(res.data.paginatedSpaces.spaces)
-          setJoinedSpaces(res.data.joinedSpaces)
+          const publicSpaces = res.data.paginatedSpaces.spaces
+          const joinedSpaces = res.data.joinedSpaces
+
+          const sameSpaces =
+            publicSpaces.length === joinedSpaces.length &&
+            publicSpaces.every((space) =>
+              joinedSpaces.some((joined) => joined.id === space.id)
+            )
+
+          if (sameSpaces) {
+            setJoinedSpaces(joinedSpaces)
+          } else {
+            setSpaces(publicSpaces)
+            setJoinedSpaces(joinedSpaces)
+          }
         }
       }
     }
@@ -54,7 +68,6 @@ export default function ChannelPage() {
 
   function handleCreateSpace() {
     setSpaceFormModelVisibility(true)
-
   }
 
   return (
@@ -63,15 +76,20 @@ export default function ChannelPage() {
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <h1 className="text-xl font-bold">
-              Spaces in <span className="text-2xl  font-bold">
+              Spaces in{" "}
+              <span className="text-2xl  font-bold">
                 {selectedChannel?.channel_name}
               </span>
             </h1>
             <div>
-
-              {selectedChannel?.id && user && canControlChannel(selectedChannel.id, user) ? (
+              {selectedChannel?.id &&
+              user &&
+              canControlChannel(selectedChannel.id, user) ? (
                 <>
-                  <CreateSpaceModal spaceFormModelVisibility={spaceFormModelVisibility} setSpaceFormModelVisibility={setSpaceFormModelVisibility} />
+                  <CreateSpaceModal
+                    spaceFormModelVisibility={spaceFormModelVisibility}
+                    setSpaceFormModelVisibility={setSpaceFormModelVisibility}
+                  />
                   <Button onClick={handleCreateSpace}>
                     <CirclePlus className="h-4 w-4" />
                     Create Space
@@ -80,44 +98,41 @@ export default function ChannelPage() {
               ) : null}
             </div>
           </div>
-          {
-            spacesLoading ? (
-              <div className="flex justify-center h-full w-full">
-                <Loader size={LoaderSizes.xl} />
-              </div>
-            ) : (
-              <>
-                {!isAdmin && (
-                  joinedSpaces && joinedSpaces.length > 0 ? (
-                    <>
-                      <h2 className="text-xl font-bold sm:text-2xl">Joined Spaces</h2>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3  2xl:grid-cols-5   gap-6">
-                        {joinedSpaces.map((js) => (
-                          <SpacesCard space={js} key={js.id} />
-                        ))}
-                      </div>
-                    </>
-                  ) : null)
-                }
-                {spaces?.length === 0 ? (
-                  <NoDataCard title="No Spaces Available" />
-                ) : (
+          {spacesLoading ? (
+            <div className="flex justify-center h-full w-full">
+              <Loader size={LoaderSizes.xl} />
+            </div>
+          ) : (
+            <>
+              {!isAdmin &&
+                (joinedSpaces && joinedSpaces.length > 0 ? (
                   <>
-                    {
-                      joinedSpaces.length > 0 ? (
-                        <h2 className="text-xl font-bold sm:text-2xl">Spaces</h2>
-                      ) : null
-                    }
+                    <h2 className="text-xl font-bold sm:text-2xl">
+                      Joined Spaces
+                    </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3  2xl:grid-cols-5   gap-6">
-                      {spaces?.map((space) => (
-                        <SpacesCard space={space} key={space.id} />
+                      {joinedSpaces.map((js) => (
+                        <SpacesCard space={js} key={js.id} />
                       ))}
                     </div>
                   </>
-                )}
-              </>
-            )
-          }
+                ) : null)}
+              {spaces?.length === 0 ? (
+                <NoDataCard title="No Spaces Available" />
+              ) : (
+                <>
+                  {joinedSpaces.length > 0 ? (
+                    <h2 className="text-xl font-bold sm:text-2xl">Spaces</h2>
+                  ) : null}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3  2xl:grid-cols-5   gap-6">
+                    {spaces?.map((space) => (
+                      <SpacesCard space={space} key={space.id} />
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
+          )}
         </div>
       </main>
     </div>

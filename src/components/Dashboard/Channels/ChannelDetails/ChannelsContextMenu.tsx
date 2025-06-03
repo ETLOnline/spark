@@ -79,7 +79,9 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({ channel }) => {
           <Edit className="mr-2 h-4 w-4" />
           Edit
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => router.push(`/channels/${channel.channel_slug}/users`)}>
+        <DropdownMenuItem
+          onClick={() => router.push(`/channels/${channel.channel_slug}/users`)}
+        >
           <User className="mr-2 h-4 w-4" />
           Users
         </DropdownMenuItem>

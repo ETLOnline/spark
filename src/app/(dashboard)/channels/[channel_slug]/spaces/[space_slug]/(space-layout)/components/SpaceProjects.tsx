@@ -1,11 +1,11 @@
-'use client'
-import Loader from '@/src/components/common/Loader/Loader'
-import { LoaderSizes } from '@/src/components/common/types/loader-types'
-import NoDataCard from '@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard'
-import { spaceStore } from '@/src/store/space/spaceStore'
-import { useSetAtom } from 'jotai'
-import { useParams, useRouter } from 'next/navigation'
-import React, { useEffect, useLayoutEffect } from 'react'
+"use client"
+import Loader from "@/src/components/common/Loader/Loader"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
+import { spaceStore } from "@/src/store/space/spaceStore"
+import { useSetAtom } from "jotai"
+import { useParams, useRouter } from "next/navigation"
+import React, { useEffect, useLayoutEffect } from "react"
 
 const SpaceProjects = () => {
   const setLayoutStatsVisibility = useSetAtom(spaceStore.layoutStatsVisibility)
@@ -30,8 +30,8 @@ const SpaceProjects = () => {
   return (
     <NoDataCard
       icon={<Loader size={LoaderSizes.lg} />}
-      title='Launching your projects'
-      description='Redirecting you to the project management page'
+      title="Launching your projects"
+      description="Redirecting you to the project management page"
     />
   )
 }

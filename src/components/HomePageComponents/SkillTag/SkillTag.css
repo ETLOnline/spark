@@ -1,9 +1,9 @@
-.skill-tag{
-    @apply flex flex-row gap-1 border-2 rounded-md py-2 px-5 shadow-sm
+.skill-tag {
+  @apply flex flex-row gap-1 border-2 rounded-md py-2 px-5 shadow-sm;
 }
-.icon{
-    @apply h-6 w-6 rounded-full
+.icon {
+  @apply h-6 w-6 rounded-full;
 }
-.icon-container{
-    @apply h-6 w-6 relative
+.icon-container {
+  @apply h-6 w-6 relative;
 }

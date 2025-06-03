@@ -18,19 +18,17 @@ const FilePost: React.FC<Props> = ({ post }) => {
     <>
       <CardContent>
         <p className="text-lg pb-5">{post.content}</p>
-        {
-          post?.file ? (
-            <Link href={post?.file?.file_path}>
-              <div className="flex items-center space-x-2 bg-muted p-4 rounded-lg w-fit">
-                <FileIcon className="h-8 w-8" />
-                <span className="font-medium">{post?.file?.file_name}</span>
-                <span className="text-xs text-primary">
-                  {formatFileSize(post?.file?.file_size)}
-                </span>
-              </div>
-            </Link>
-          ) : null
-        }
+        {post?.file ? (
+          <Link href={post?.file?.file_path}>
+            <div className="flex items-center space-x-2 bg-muted p-4 rounded-lg w-fit">
+              <FileIcon className="h-8 w-8" />
+              <span className="font-medium">{post?.file?.file_name}</span>
+              <span className="text-xs text-primary">
+                {formatFileSize(post?.file?.file_size)}
+              </span>
+            </div>
+          </Link>
+        ) : null}
         <div className="mt-4 flex flex-wrap gap-2">
           {post.hashtags &&
             post.hashtags.map((tag) => (

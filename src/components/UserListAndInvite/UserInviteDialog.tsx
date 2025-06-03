@@ -10,10 +10,15 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/src/components/ui/dialog"
 import { Input } from "@/src/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from "@/src/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Checkbox } from "@/src/components/ui/checkbox"
 import { Label } from "@/src/components/ui/label"
@@ -25,7 +30,7 @@ import { hostname } from "os"
 import { isEntityChannel } from "@/src/utils/helpers"
 
 // Sample data for platform users
-const platformUsers: SelectUser[] = [] 
+const platformUsers: SelectUser[] = []
 
 type InvitationType = string[]
 
@@ -38,39 +43,50 @@ interface InviteUserDialogProps {
   entity: SelectChannel | SelectSpace
 }
 
-
-export function InviteUserDialog({ open, onOpenChange, type=['link'], entityType, entity  }: InviteUserDialogProps) {
+export function InviteUserDialog({
+  open,
+  onOpenChange,
+  type = ["link"],
+  entityType,
+  entity
+}: InviteUserDialogProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [emailInput, setEmailInput] = useState("")
   const [emailList, setEmailList] = useState<string[]>([])
-  const [inviteMessage, setInviteMessage] = useState(`Join our ${entityType} on our platform!`)
+  const [inviteMessage, setInviteMessage] = useState(
+    `Join our ${entityType} on our platform!`
+  )
   const [copied, setCopied] = useState(false)
   const [selectedType, setSelectedType] = useState(type[0])
-  const [inviteLink, setInviteLink] = useState("");
+  const [inviteLink, setInviteLink] = useState("")
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const host = window.location.host;
-      const protocol = window.location.protocol;
-      const pathname = `${protocol}//${host}`;
+      const host = window.location.host
+      const protocol = window.location.protocol
+      const pathname = `${protocol}//${host}`
       const link = isEntityChannel(entity)
         ? `${pathname}/invite/${entity.id}?type=channel`
-        : `${pathname}/invite/${entity.id}?type=space`;
-      setInviteLink(link);
+        : `${pathname}/invite/${entity.id}?type=space`
+      setInviteLink(link)
     }
-  }, [entity]);
-  
+  }, [entity])
+
   // Filter platform users based on search query
   const filteredUsers = platformUsers.filter(
     (user) =>
       user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()),
+      user.email.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   // Toggle user selection
   const toggleUserSelection = (userId: string) => {
-    setSelectedUsers((prev) => (prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]))
+    setSelectedUsers((prev) =>
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId]
+    )
   }
 
   // Add email to list
@@ -116,34 +132,35 @@ export function InviteUserDialog({ open, onOpenChange, type=['link'], entityType
         <DialogHeader>
           <DialogTitle>Invite Users to {entityType}</DialogTitle>
           {/* <DialogDescription>Invite users to join your space either from the platform or via email.</DialogDescription> */}
-          <DialogDescription>Invite users to join your {entityType === "space" ? "space" : "channel"} via {type.length > 1 ? type.join(", ") : type[0]} .</DialogDescription>
+          <DialogDescription>
+            Invite users to join your{" "}
+            {entityType === "space" ? "space" : "channel"} via{" "}
+            {type.length > 1 ? type.join(", ") : type[0]} .
+          </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue={type[0] ? type[0] : "platform"} className="w-full" onValueChange={(value)=>{setSelectedType(value)}}>
-          {
-            type.length > 1 ? (
-              <TabsList className="grid w-full grid-cols-3">
-                {
-                    type.includes('platform') ? (
-                      <TabsTrigger value="platform">Platform Users</TabsTrigger>
-                    ) : null
-                }
+        <Tabs
+          defaultValue={type[0] ? type[0] : "platform"}
+          className="w-full"
+          onValueChange={(value) => {
+            setSelectedType(value)
+          }}
+        >
+          {type.length > 1 ? (
+            <TabsList className="grid w-full grid-cols-3">
+              {type.includes("platform") ? (
+                <TabsTrigger value="platform">Platform Users</TabsTrigger>
+              ) : null}
 
-                {
-                    type.includes('email')  ? (
-                      <TabsTrigger value="email">Email Invite</TabsTrigger>
-                    ) : null
-                }
+              {type.includes("email") ? (
+                <TabsTrigger value="email">Email Invite</TabsTrigger>
+              ) : null}
 
-                {
-                    type.includes('link') ? (
-                      <TabsTrigger value="link">Invite Link</TabsTrigger>
-                    ) : null
-                }
-                
-              </TabsList>
-            ) : null
-          }
+              {type.includes("link") ? (
+                <TabsTrigger value="link">Invite Link</TabsTrigger>
+              ) : null}
+            </TabsList>
+          ) : null}
 
           <TabsContent value="platform" className="space-y-4 py-4">
             <div className="relative">
@@ -170,7 +187,10 @@ export function InviteUserDialog({ open, onOpenChange, type=['link'], entityType
                     onCheckedChange={() => toggleUserSelection(user.unique_id)}
                   />
                   <Avatar>
-                    <AvatarImage src={user.profile_url || ''} alt={user.first_name} />
+                    <AvatarImage
+                      src={user.profile_url || ""}
+                      alt={user.first_name}
+                    />
                     <AvatarFallback>
                       {user.first_name.charAt(0)}
                       {user.first_name.split(" ")[1]?.charAt(0)}
@@ -178,13 +198,17 @@ export function InviteUserDialog({ open, onOpenChange, type=['link'], entityType
                   </Avatar>
                   <div className="flex-1">
                     <div className="font-medium">{user.first_name}</div>
-                    <div className="text-sm text-muted-foreground">{user.email}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {user.email}
+                    </div>
                   </div>
                 </div>
               ))}
 
               {filteredUsers.length === 0 && (
-                <div className="text-center py-6 text-muted-foreground">No users found matching your search.</div>
+                <div className="text-center py-6 text-muted-foreground">
+                  No users found matching your search.
+                </div>
               )}
             </div>
 
@@ -226,12 +250,19 @@ export function InviteUserDialog({ open, onOpenChange, type=['link'], entityType
             {emailList.length > 0 && (
               <div className="space-y-2 max-h-[200px] overflow-y-auto">
                 {emailList.map((email) => (
-                  <div key={email} className="flex items-center justify-between bg-muted p-2 rounded-md">
+                  <div
+                    key={email}
+                    className="flex items-center justify-between bg-muted p-2 rounded-md"
+                  >
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-muted-foreground" />
                       <span>{email}</span>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => removeEmail(email)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeEmail(email)}
+                    >
                       <span className="sr-only">Remove</span>
                       <svg
                         width="15"
@@ -270,13 +301,19 @@ export function InviteUserDialog({ open, onOpenChange, type=['link'], entityType
                 <Mail className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-lg font-medium">Share Invite Link</h3>
-              <p className="text-sm text-muted-foreground">Anyone with this link can join your {entityType}.</p>
+              <p className="text-sm text-muted-foreground">
+                Anyone with this link can join your {entityType}.
+              </p>
             </div>
 
             <div className="flex gap-2">
               <Input readOnly value={inviteLink} className="flex-1" />
               <Button variant="outline" onClick={copyInviteLink}>
-                {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+                {copied ? (
+                  <Check className="h-4 w-4 mr-2" />
+                ) : (
+                  <Copy className="h-4 w-4 mr-2" />
+                )}
                 {copied ? "Copied" : "Copy"}
               </Button>
             </div>
@@ -303,9 +340,8 @@ export function InviteUserDialog({ open, onOpenChange, type=['link'], entityType
             </Button>
             <Button onClick={sendInvitations}>Send Invitations</Button>
           </DialogFooter>
-        ):null}
+        ) : null}
       </DialogContent>
     </Dialog>
   )
 }
-

@@ -1,13 +1,9 @@
-import { config } from 'dotenv';
-import * as schema from './schema';
-import { drizzle } from 'drizzle-orm/libsql';
-import { createClient } from '@libsql/client';
+import { config } from "dotenv"
+import * as schema from "./schema"
+import { drizzle } from "drizzle-orm/postgres-js"
+import postgres from "postgres"
 
-config({ path: '.env.local' });
+config({ path: ".env.local" })
 
-const client = createClient({
-  url: process.env.TURSO_DATABASE_URL!,
-  authToken: process.env.TURSO_AUTH_TOKEN!,
-});
-
-export const db = drizzle(client , {schema });
+const queryClient = postgres(process.env.DATABASE_URL!, {})
+export const db = drizzle(queryClient, { schema: schema })

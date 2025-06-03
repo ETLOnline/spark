@@ -1,14 +1,33 @@
-'use client'
+"use client"
 
 import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/src/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/src/components/ui/card"
 import { Input } from "@/src/components/ui/input"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
-import { Calendar, CheckSquare, FileText, MessageSquare, Plus, Video } from 'lucide-react'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from "@/src/components/ui/tabs"
+import {
+  Calendar,
+  CheckSquare,
+  FileText,
+  MessageSquare,
+  Plus,
+  Video
+} from "lucide-react"
 
 interface Task {
   id: string
@@ -51,7 +70,7 @@ const sampleTasks: Task[] = [
     description: "Create wireframes and mockups for the upcoming feature.",
     status: "In Progress",
     assignee: { name: "Alice Johnson", avatar: "/avatars/01.png" },
-    dueDate: "2023-05-20",
+    dueDate: "2023-05-20"
   },
   {
     id: "2",
@@ -59,16 +78,17 @@ const sampleTasks: Task[] = [
     description: "Develop and test new API endpoints for the backend.",
     status: "To Do",
     assignee: { name: "Bob Smith", avatar: "/avatars/02.png" },
-    dueDate: "2023-05-25",
+    dueDate: "2023-05-25"
   },
   {
     id: "3",
     title: "Write documentation for v2.0 release",
-    description: "Prepare comprehensive documentation for the upcoming release.",
+    description:
+      "Prepare comprehensive documentation for the upcoming release.",
     status: "Done",
     assignee: { name: "Charlie Davis", avatar: "/avatars/03.png" },
-    dueDate: "2023-05-15",
-  },
+    dueDate: "2023-05-15"
+  }
 ]
 
 const sampleDocuments: Document[] = [
@@ -77,22 +97,22 @@ const sampleDocuments: Document[] = [
     title: "Project Roadmap",
     type: "spreadsheet",
     lastModified: "2023-05-10T14:30:00Z",
-    modifiedBy: { name: "Alice Johnson", avatar: "/avatars/01.png" },
+    modifiedBy: { name: "Alice Johnson", avatar: "/avatars/01.png" }
   },
   {
     id: "2",
     title: "Meeting Notes - May 12",
     type: "doc",
     lastModified: "2023-05-12T11:15:00Z",
-    modifiedBy: { name: "Bob Smith", avatar: "/avatars/02.png" },
+    modifiedBy: { name: "Bob Smith", avatar: "/avatars/02.png" }
   },
   {
     id: "3",
     title: "Q2 Presentation",
     type: "presentation",
     lastModified: "2023-05-14T09:45:00Z",
-    modifiedBy: { name: "Charlie Davis", avatar: "/avatars/03.png" },
-  },
+    modifiedBy: { name: "Charlie Davis", avatar: "/avatars/03.png" }
+  }
 ]
 
 const sampleMeetings: Meeting[] = [
@@ -104,8 +124,8 @@ const sampleMeetings: Meeting[] = [
     attendees: [
       { name: "Alice Johnson", avatar: "/avatars/01.png" },
       { name: "Bob Smith", avatar: "/avatars/02.png" },
-      { name: "Charlie Davis", avatar: "/avatars/03.png" },
-    ],
+      { name: "Charlie Davis", avatar: "/avatars/03.png" }
+    ]
   },
   {
     id: "2",
@@ -114,9 +134,9 @@ const sampleMeetings: Meeting[] = [
     time: "2:00 PM",
     attendees: [
       { name: "Alice Johnson", avatar: "/avatars/01.png" },
-      { name: "Charlie Davis", avatar: "/avatars/03.png" },
-    ],
-  },
+      { name: "Charlie Davis", avatar: "/avatars/03.png" }
+    ]
+  }
 ]
 
 export default function TeamCollaborationScreen() {
@@ -127,7 +147,9 @@ export default function TeamCollaborationScreen() {
       <Card>
         <CardHeader>
           <CardTitle>Team Collaboration</CardTitle>
-          <CardDescription>Manage tasks, documents, and meetings for your team</CardDescription>
+          <CardDescription>
+            Manage tasks, documents, and meetings for your team
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="relative">
@@ -157,7 +179,15 @@ export default function TeamCollaborationScreen() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between mb-2">
-                      <Badge variant={task.status === "To Do" ? "outline" : task.status === "In Progress" ? "default" : "secondary"}>
+                      <Badge
+                        variant={
+                          task.status === "To Do"
+                            ? "outline"
+                            : task.status === "In Progress"
+                              ? "default"
+                              : "secondary"
+                        }
+                      >
                         {task.status}
                       </Badge>
                       <div className="flex items-center space-x-2">
@@ -167,7 +197,10 @@ export default function TeamCollaborationScreen() {
                     </div>
                     <div className="flex items-center space-x-2">
                       <Avatar className="h-6 w-6">
-                        <AvatarImage src={task.assignee.avatar} alt={task.assignee.name} />
+                        <AvatarImage
+                          src={task.assignee.avatar}
+                          alt={task.assignee.name}
+                        />
                         <AvatarFallback>{task.assignee.name[0]}</AvatarFallback>
                       </Avatar>
                       <span className="text-sm">{task.assignee.name}</span>
@@ -192,7 +225,8 @@ export default function TeamCollaborationScreen() {
                   <CardHeader>
                     <CardTitle>{document.title}</CardTitle>
                     <CardDescription>
-                      Last modified on {new Date(document.lastModified).toLocaleString()}
+                      Last modified on{" "}
+                      {new Date(document.lastModified).toLocaleString()}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -204,10 +238,17 @@ export default function TeamCollaborationScreen() {
                       </Badge>
                       <div className="flex items-center space-x-2">
                         <Avatar className="h-6 w-6">
-                          <AvatarImage src={document.modifiedBy.avatar} alt={document.modifiedBy.name} />
-                          <AvatarFallback>{document.modifiedBy.name[0]}</AvatarFallback>
+                          <AvatarImage
+                            src={document.modifiedBy.avatar}
+                            alt={document.modifiedBy.name}
+                          />
+                          <AvatarFallback>
+                            {document.modifiedBy.name[0]}
+                          </AvatarFallback>
                         </Avatar>
-                        <span className="text-sm">{document.modifiedBy.name}</span>
+                        <span className="text-sm">
+                          {document.modifiedBy.name}
+                        </span>
                       </div>
                     </div>
                   </CardContent>
@@ -243,8 +284,14 @@ export default function TeamCollaborationScreen() {
                       <span className="text-sm font-medium">Attendees:</span>
                       <div className="flex -space-x-2">
                         {meeting.attendees.map((attendee, index) => (
-                          <Avatar key={index} className="h-6 w-6 border-2 border-background">
-                            <AvatarImage src={attendee.avatar} alt={attendee.name} />
+                          <Avatar
+                            key={index}
+                            className="h-6 w-6 border-2 border-background"
+                          >
+                            <AvatarImage
+                              src={attendee.avatar}
+                              alt={attendee.name}
+                            />
                             <AvatarFallback>{attendee.name[0]}</AvatarFallback>
                           </Avatar>
                         ))}
@@ -288,4 +335,3 @@ export default function TeamCollaborationScreen() {
     </div>
   )
 }
-

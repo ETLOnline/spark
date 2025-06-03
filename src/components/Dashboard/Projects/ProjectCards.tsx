@@ -1,16 +1,16 @@
-import React from 'react'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../ui/card'
-import { Badge } from '../../ui/badge'
-import { MessageSquare, ThumbsUp, Users } from 'lucide-react'
-import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar'
-import { LinkAsButton } from '../../LinkAsButton/LinkAsButton'
-import { ProjectProposal } from '.'
-import { SelectProject } from '@/src/db/schema'
-import { useSetAtom } from 'jotai'
-import { projectStore } from '@/src/store/project/projectStore'
-import { Button } from '../../ui/button'
-
-
+import React from "react"
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "../../ui/card"
+import { Badge } from "../../ui/badge"
+import { LinkAsButton } from "../../LinkAsButton/LinkAsButton"
+import { SelectProject } from "@/src/db/schema"
+import { ProjectType } from "../ProjectManagement/types/project.type"
+import { Button } from "../../ui/button"
 
 interface Props {
   project: SelectProject
@@ -20,42 +20,24 @@ interface Props {
 function ProjectCards({ project, onEdit }: Props) {
   return (
     <Card key={project.id} className="mb-4">
-      <CardHeader >
+      <CardHeader>
         <div className="flex justify-between items-start">
-          <div>
-            <CardTitle>{project.project_name}</CardTitle>
-            {/* <CardDescription>{project.category}</CardDescription> */}
-          </div>
+          <CardTitle>{project.project_name}</CardTitle>
           <Badge
             variant={
-              project.project_type === "active"
+              project.project_type === ProjectType.Active
                 ? "default"
-                : project.project_type === "draft"
+                : project.project_type === ProjectType.Draft
                   ? "secondary"
                   : "outline"
-            }>
+            }
+          >
             {project.project_type}
           </Badge>
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground">
-          {project.description}
-        </p>
-        {/* <div className="flex items-center space-x-4 text-sm">
-          <div className="flex items-center">
-            <ThumbsUp className="mr-1 h-4 w-4" />
-            {project.likes}
-          </div>
-          <div className="flex items-center">
-            <MessageSquare className="mr-1 h-4 w-4" />
-            {project.comments}
-          </div>
-          <div className="flex items-center">
-            <Users className="mr-1 h-4 w-4" />
-            {project.contributors}
-          </div>
-        </div> */}
+        <p className="text-sm text-muted-foreground">{project.description}</p>
       </CardContent>
       <CardFooter className="flex justify-between">
         <div className="flex items-center space-x-2">
@@ -72,16 +54,14 @@ function ProjectCards({ project, onEdit }: Props) {
             {project.author.name}
           </span> */}
         </div>
-        <div className='flex items-center space-x-2'>
+        <div className="flex items-center space-x-2">
           <LinkAsButton href={`/project/${project.id}/board`}>
             Launch Board
           </LinkAsButton>
-          <LinkAsButton href={`/project/${project.id}`} >
+          <LinkAsButton href={`/project/${project.id}`}>
             View Details
           </LinkAsButton>
-          <Button onClick={() => onEdit(project)}>
-            Edit Project
-          </Button>
+          <Button onClick={() => onEdit(project)}>Edit Project</Button>
         </div>
       </CardFooter>
     </Card>

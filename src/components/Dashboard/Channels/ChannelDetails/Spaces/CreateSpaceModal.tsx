@@ -9,11 +9,17 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/src/components/ui/dialog"
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/src/components/ui/select"
 import { Switch } from "@/src/components/ui/switch"
 import { Textarea } from "@/src/components/ui/textarea"
 import { InsertSpace } from "@/src/db/schema"
@@ -37,26 +43,28 @@ import { Controller, useForm } from "react-hook-form"
 import { useDebouncedCallback } from "use-debounce"
 import { z } from "zod"
 
-
 interface Props {
-  spaceFormModelVisibility: boolean,
-  setSpaceFormModelVisibility: React.Dispatch<React.SetStateAction<boolean>>,
+  spaceFormModelVisibility: boolean
+  setSpaceFormModelVisibility: React.Dispatch<React.SetStateAction<boolean>>
   shouldRedirect?: boolean
 }
 
 const spaceSchema = z.object({
   space_name: z.string().min(1, "Space name required").max(30, "Too long"),
   space_slug: z.string().max(50, "Slug is too long"),
-  description: z.string()
+  description: z
+    .string()
     .min(1, "Description required")
     .max(150, "Description is too long"),
   space_type: z.string().optional(),
   publish_space: z.boolean().optional()
 })
 
-
-
-function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibility, shouldRedirect }: Props) {
+function CreateSpaceModal({
+  spaceFormModelVisibility,
+  setSpaceFormModelVisibility,
+  shouldRedirect
+}: Props) {
   const router = useRouter()
   const authUser = useAtomValue(userStore.AuthUser)
   const selectedChannel = useAtomValue(channelStore.selectedChannel)
@@ -94,7 +102,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
       onNotAvailable?: () => void
     ) => {
       try {
-        const result = await isSlugAvailable(slug, selectedChannel?.id || '');
+        const result = await isSlugAvailable(slug, selectedChannel?.id || "")
 
         if (result && result.data) {
           if (onAvailable) onAvailable()
@@ -102,14 +110,14 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
           if (onNotAvailable) onNotAvailable()
         }
       } catch (error) {
-        console.error(error);
+        console.error(error)
       }
     },
     1000 // Debounce delay in milliseconds
-  );
+  )
 
   useEffect(() => {
-    const value = form.getValues("space_name")?.trim() || ''
+    const value = form.getValues("space_name")?.trim() || ""
     const slug = value.replaceAll(" ", "-").toLowerCase()
 
     if (value && selectedSpace?.space_slug !== slug) {
@@ -117,20 +125,18 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
         slug,
         () => {
           form.clearErrors("space_slug")
-          setslugAvailableMessage(
-            `${slug} is available`
-          )
+          setslugAvailableMessage(`${slug} is available`)
         },
         () => {
           form.setError("space_slug", {
             type: "manual",
             message: `${slug} is already taken`
           })
-          setslugAvailableMessage("");
+          setslugAvailableMessage("")
         }
       )
     } else {
-      setslugAvailableMessage("");
+      setslugAvailableMessage("")
     }
     form.setValue("space_slug", slug)
   }, [form.watch("space_name")])
@@ -191,7 +197,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
     try {
       data.created_by = authUser?.unique_id as string
       data.channel_id = selectedChannel?.id as string
-      data.space_name = (data.space_name || '').trim()
+      data.space_name = (data.space_name || "").trim()
       data.space_slug = data.space_slug?.trim()
       data.space_type = data.space_type || "private"
       data.publish_space = data.publish_space ? 1 : 0
@@ -219,7 +225,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
     try {
       data.created_by = authUser?.unique_id as string
       data.channel_id = selectedChannel?.id
-      data.space_name = (data.space_name || '').trim()
+      data.space_name = (data.space_name || "").trim()
       data.space_slug = data?.space_slug?.trim() || ""
 
       const updatedSpace = await updateSpace(
@@ -231,7 +237,8 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
         setSpaces((prevSpace) =>
           prevSpace.map((space) =>
             space.id === selectedSpace?.id
-              ? { ...space, ...updatedSpace.data } : space
+              ? { ...space, ...updatedSpace.data }
+              : space
           )
         )
         setSpaceFormModelVisibility(false)
@@ -241,8 +248,10 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
           duration: 3000
         })
         if (shouldRedirect) {
-          if ('space_slug' in updatedSpace.data) {
-            router.push(`/channels/${selectedChannel?.channel_slug}/spaces/${updatedSpace.data.space_slug}`)
+          if ("space_slug" in updatedSpace.data) {
+            router.push(
+              `/channels/${selectedChannel?.channel_slug}/spaces/${updatedSpace.data.space_slug}`
+            )
           }
         }
       }
@@ -375,7 +384,6 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
                 </div>
               </div>
 
-
               <div className="flex flex-col">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="space_type">Space type</Label>
@@ -386,7 +394,8 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
                       render={({ field }) => (
                         <Select
                           onValueChange={field.onChange}
-                          value={field.value}>
+                          value={field.value}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
@@ -407,7 +416,6 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
                   )}
                 </div>
               </div>
-
 
               <div className="flex items-center justify-between">
                 <Label htmlFor="publish_space">Publish Space</Label>
@@ -446,7 +454,7 @@ function CreateSpaceModal({ spaceFormModelVisibility, setSpaceFormModelVisibilit
           </form>
         </DialogContent>
       </Dialog>
-    </div >
+    </div>
   )
 }
 

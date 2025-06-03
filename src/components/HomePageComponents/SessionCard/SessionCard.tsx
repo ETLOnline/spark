@@ -1,6 +1,6 @@
-import React, { ReactNode } from 'react'
-import './SessionCard.css'
-import Image from 'next/image'
+import React, { ReactNode } from "react"
+import "./SessionCard.css"
+import Image from "next/image"
 
 interface sessioncardprops {
   imgURL: string
@@ -12,7 +12,13 @@ const SessionCard = ({ imgURL, title, imgALT }: sessioncardprops) => {
   return (
     <div className="session-card">
       <div className="Image-container">
-        <Image layout='fill' objectFit='cover' className="session-card-image" src={imgURL} alt='Sessions-Image' />
+        <Image
+          layout="fill"
+          objectFit="cover"
+          className="session-card-image"
+          src={imgURL}
+          alt="Sessions-Image"
+        />
       </div>
       <div className="session-card-content">
         <div className="flex flex-wrap justify-between">
@@ -22,7 +28,13 @@ const SessionCard = ({ imgURL, title, imgALT }: sessioncardprops) => {
         <h3 className="text-base md:text-lg">{title}</h3>
         <div className="flex flex-wrap gap-2">
           <div className="relative h-8 w-8">
-            <Image layout='fill' objectFit='cover' src="/images/home/mentor-image4.jpg" className='w-8 h-8 rounded-full object-cover ' alt="" />
+            <Image
+              layout="fill"
+              objectFit="cover"
+              src="/images/home/mentor-image4.jpg"
+              className="w-8 h-8 rounded-full object-cover "
+              alt=""
+            />
           </div>
           <p className="mt-1 session-card-text">James Dean</p>
         </div>

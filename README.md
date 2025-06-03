@@ -16,54 +16,54 @@ To empower learners and professionals to engage in impactful collaborations, cre
 
 ## ✨ Key Features
 
-* **Profile & Engagement**
+- **Profile & Engagement**
 
-  * Comprehensive profiles with skill tags, experience, and achievements.
-  * Recognition through badges, rewards, and endorsements.
+  - Comprehensive profiles with skill tags, experience, and achievements.
+  - Recognition through badges, rewards, and endorsements.
 
-* **Internships, Freelance, & Bounty Programs**
+- **Internships, Freelance, & Bounty Programs**
 
-  * Listings for freelance opportunities, bounties, and internships with tracking and rewards.
+  - Listings for freelance opportunities, bounties, and internships with tracking and rewards.
 
-* **Job Portal**
+- **Job Portal**
 
-  * Skill-based job listings with industry collaboration.
+  - Skill-based job listings with industry collaboration.
 
-* **Resources & Courses**
+- **Resources & Courses**
 
-  * Access to free, point-based, or paid learning materials.
+  - Access to free, point-based, or paid learning materials.
 
-* **Session & Event Planning**
+- **Session & Event Planning**
 
-  * Seamless event scheduling, notifications, and rewards for participation.
+  - Seamless event scheduling, notifications, and rewards for participation.
 
-* **Project Idea Bank**
+- **Project Idea Bank**
 
-  * A repository of problem statements and solutions for students, professionals, and communities.
+  - A repository of problem statements and solutions for students, professionals, and communities.
 
-* **Channels & Spaces**
+- **Channels & Spaces**
 
-  * Collaborate in dedicated spaces with real-time chat, file sharing, feeds and posts, and project management tools.
+  - Collaborate in dedicated spaces with real-time chat, file sharing, feeds and posts, and project management tools.
 
-* **Rewards System**
+- **Rewards System**
 
-  * Points and badges for engagement, contributions, and accomplishments.
+  - Points and badges for engagement, contributions, and accomplishments.
 
-* **Automation**
+- **Automation**
 
-  * Notifications and reward management for improved user experience.
+  - Notifications and reward management for improved user experience.
 
 ---
 
 ## 🔧 Tech Stack
 
-* **Framework:** [Next.js](https://nextjs.org/)
-* 🔒 User authentication with [Clerk](https://clerk.dev/)
-* 🧠 Database using [Turso](https://turso.tech/) (SQLite) and [Drizzle ORM](https://orm.drizzle.team/)
-* 💅 Modern styling with [Tailwind CSS](https://tailwindcss.com/) and [shadcn/ui](https://ui.shadcn.com/)
-* 🪳 Object storage using S3-compatible services (e.g., MinIO)
-* 🔄 Real-time interactions using [Ably](https://ably.com/)
-* 🚀 Developer-friendly with seeding, migration, and structured environment management
+- **Framework:** [Next.js](https://nextjs.org/)
+- 🔒 User authentication with [Clerk](https://clerk.dev/)
+- 🧠 Database using [Turso](https://turso.tech/) (SQLite) and [Drizzle ORM](https://orm.drizzle.team/)
+- 💅 Modern styling with [Tailwind CSS](https://tailwindcss.com/) and [shadcn/ui](https://ui.shadcn.com/)
+- 🪳 Object storage using S3-compatible services (e.g., MinIO)
+- 🔄 Real-time interactions using [Ably](https://ably.com/)
+- 🚀 Developer-friendly with seeding, migration, and structured environment management
 
 ---
 
@@ -83,13 +83,13 @@ Click the "Fork" button to create your own copy.
 
 ```bash
 git clone https://github.com/ETLOnline/spark.git
-cd spark  
+cd spark
 ```
 
 ### 4. Install Dependencies
 
 ```bash
-npm install --force  
+npm install --force
 ```
 
 ### 5. Set up Environment Variables
@@ -126,14 +126,14 @@ S3_ENDPOINT=your-s3-endpoint
 ### 7. Run Migrations and Seed
 
 ```bash
-npm run db:migrate  
-npm run db:seed  
+npm run db:migrate
+npm run db:seed
 ```
 
 ### 8. Run the App Locally
 
 ```bash
-npm run dev  
+npm run dev
 ```
 
 > **Note:** Creating a new user will not work on localhost since webhooks are configured for the deployed URL.
@@ -165,8 +165,8 @@ Follow the project structure and coding standards.
 Use a descriptive message including the issue or ticket number:
 
 ```bash
-git commit -m "feat(issue-42): fix navbar responsiveness"  
-git push origin feature/42-fix-navbar  
+git commit -m "feat(issue-42): fix navbar responsiveness"
+git push origin feature/42-fix-navbar
 ```
 
 ### 13. Submit a Pull Request (PR)
@@ -186,8 +186,8 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 
 Join our community to stay updated and collaborate:
 
-* [GitHub Discussions](https://github.com/ETLOnline/spark/discussions)
-* \[Slack/Discord (Coming Soon)]
+- [GitHub Discussions](https://github.com/ETLOnline/spark/discussions)
+- \[Slack/Discord (Coming Soon)]
 
 ---
 

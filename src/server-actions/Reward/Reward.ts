@@ -3,9 +3,7 @@
 import { InsertReward, InsertUserReward } from "@/src/db/schema"
 import { CreateServerAction } from ".."
 import { AddReward } from "@/src/db/data-access/reward/query"
-import {
-  AddRewardForUser
-} from "@/src/db/data-access/reward/query"
+import { AddRewardForUser } from "@/src/db/data-access/reward/query"
 
 export const AddRewardAction = CreateServerAction(
   true,

@@ -1,12 +1,16 @@
-import React, { SetStateAction, useState } from 'react'
-import { ScrollArea } from '../../../ui/scroll-area'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../ui/card'
-import { Avatar, AvatarFallback, AvatarImage } from '../../../ui/avatar'
-import { Textarea } from '../../../ui/textarea'
-import { Button } from '../../../ui/button'
-import { ProjectDetails } from './ProjectDetailVeiw'
-
-
+import React, { SetStateAction, useState } from "react"
+import { ScrollArea } from "../../../ui/scroll-area"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "../../../ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar"
+import { Textarea } from "../../../ui/textarea"
+import { Button } from "../../../ui/button"
+import { ProjectDetails } from "./ProjectDetailVeiw"
 
 interface Comment {
   id: string
@@ -23,10 +27,7 @@ interface Props {
   updateProject: React.Dispatch<SetStateAction<ProjectDetails>>
 }
 
-
-
 function ProjectComments({ project, updateProject }: Props) {
-
   const [newComment, setNewComment] = useState("")
   const handleAddComment = () => {
     if (newComment.trim() === "") return
@@ -34,7 +35,7 @@ function ProjectComments({ project, updateProject }: Props) {
       id: `${project.comments.length + 1}`,
       author: { name: "Current User", avatar: "/avatars/04.png" },
       content: newComment,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString()
     }
     updateProject({ ...project, comments: [...project.comments, comment] })
     setNewComment("")
@@ -50,12 +51,19 @@ function ProjectComments({ project, updateProject }: Props) {
               <CardHeader>
                 <div className="flex items-center space-x-4">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={comment.author.avatar} alt={comment.author.name} />
+                    <AvatarImage
+                      src={comment.author.avatar}
+                      alt={comment.author.name}
+                    />
                     <AvatarFallback>{comment.author.name[0]}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <CardTitle className="text-sm">{comment.author.name}</CardTitle>
-                    <CardDescription className="text-xs">{new Date(comment.createdAt).toLocaleString()}</CardDescription>
+                    <CardTitle className="text-sm">
+                      {comment.author.name}
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      {new Date(comment.createdAt).toLocaleString()}
+                    </CardDescription>
                   </div>
                 </div>
               </CardHeader>

@@ -16,18 +16,16 @@ const ImagePost: React.FC<Props> = ({ post }) => {
     <>
       <CardContent>
         <p className="text-lg pb-5">{post.content}</p>
-        {
-          post?.file?.file_path ? (
-            <Image
-              src={post.file?.file_path}
-              alt="Post image"
-              className="rounded-lg max-h-96 w-full object-cover bg-gradient-to-r from-accent to-secondary"
-              width={1000}
-              height={1000}
-              style={{ objectFit: "contain" }}
-            /> 
-          ): null
-        }
+        {post?.file?.file_path ? (
+          <Image
+            src={post.file?.file_path}
+            alt="Post image"
+            className="rounded-lg max-h-96 w-full object-cover bg-gradient-to-r from-accent to-secondary"
+            width={1000}
+            height={1000}
+            style={{ objectFit: "contain" }}
+          />
+        ) : null}
         <div className="mt-4 flex flex-wrap gap-2">
           {post.hashtags &&
             post.hashtags.map((tag) => (

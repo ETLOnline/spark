@@ -20,9 +20,8 @@ const ChannelCardList: React.FC<ChannelCardListProps> = ({
   pagination,
   withGlobalStore = false
 }) => {
-  
   const [channels, setChannels] = useAtom(channelStore.channels)
-  
+
   useEffect(() => {
     setChannels(fetchedChannels)
   }, [fetchedChannels])
@@ -34,7 +33,7 @@ const ChannelCardList: React.FC<ChannelCardListProps> = ({
           <ChannelCard key={channel.id} channel={channel} />
         ))}
       </div>
-      { pagination && pagination.totalPages > 1 && (
+      {pagination && pagination.totalPages > 1 && (
         <PaginationComponent pagination={pagination} />
       )}
     </div>

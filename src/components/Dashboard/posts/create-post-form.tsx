@@ -219,28 +219,40 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           })
           return
         }
-        const post =
-          variant === "spaces"
-            ? await createFilePost(
-                newPost.type,
-                newPost.fileSize as number,
-                newPost.fileName as string,
-                newPost.fileType as string,
-                newPost.fileBase64,
-                newPost.content,
-                newPost.category,
-                "space",
-                currentSpace?.id
-              )
-            : await createFilePost(
-                newPost.type,
-                newPost.fileSize as number,
-                newPost.fileName as string,
-                newPost.fileType as string,
-                newPost.fileBase64,
-                newPost.content
-              )
-        if (post && post.data && post.data) {
+
+        let postData
+
+        if (variant === "spaces") {
+          postData = {
+            type: newPost.type,
+            fileSize: newPost.fileSize as number,
+            fileName: newPost.fileName as string,
+            fileType: newPost.fileType as string,
+            fileBase64: newPost.fileBase64,
+            content: newPost.content,
+            category: newPost.category,
+            entityType: "space",
+            entityId: currentSpace?.id ?? "",
+            folderPath: "spaces"
+          }
+        } else {
+          postData = {
+            type: newPost.type,
+            fileSize: newPost.fileSize as number,
+            fileName: newPost.fileName as string,
+            fileType: newPost.fileType as string,
+            fileBase64: newPost.fileBase64,
+            content: newPost.content,
+            category: "",
+            entityType: "",
+            entityId: "",
+            folderPath: "posts"
+          }
+        }
+
+        const post = await createFilePost(postData)
+
+        if (post && post.data) {
           let linkedHashtags
           if (hashtags.length) {
             linkedHashtags = await linkHashtagsToPost(

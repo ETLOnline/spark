@@ -49,7 +49,7 @@ const PostMenu = ({ post }: PostMenuProps) => {
     }
   }
 
-  if (user?.role && (isUserAdmin(user) || user.unique_id === post.user_id )){
+  if (user?.role && (isUserAdmin(user) || user.unique_id === post.user_id)) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -67,10 +67,9 @@ const PostMenu = ({ post }: PostMenuProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
     )
-  }else{
+  } else {
     return null
   }
-
 }
 
 export default PostMenu

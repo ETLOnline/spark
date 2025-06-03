@@ -1,54 +1,12 @@
 {
   "version": "7",
-  "dialect": "sqlite",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "6",
-      "when": 1742578753639,
-      "tag": "0000_small_mastermind",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1742674738126,
-      "tag": "0001_naive_gambit",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1742985232237,
-      "tag": "0002_nervous_rhino",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1743284178824,
-      "tag": "0003_slimy_hawkeye",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1743878998337,
-      "tag": "0004_spicy_serpent_society",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1744386796058,
-      "tag": "0005_fast_masque",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "6",
-      "when": 1745920473635,
-      "tag": "0006_youthful_iron_man",
+      "version": "7",
+      "when": 1748955151634,
+      "tag": "0000_2025_06_03_175230__initial_migration_spark",
       "breakpoints": true
     }
   ]

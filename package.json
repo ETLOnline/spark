@@ -7,11 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "format": "pretty-quick",
     "db:seed": "npx tsx src/db/seeds/index.ts",
-    "db:generate-migrations": "npx drizzle-kit generate",
-    "db:migrate": "npx drizzle-kit migrate"
+    "db:create-migration": "node src/db/scripts/create-migration.mjs",
+    "db:migrate": "npx drizzle-kit migrate",
+    "prepare": "husky install"
   },
   "dependencies": {
+    "@azure/storage-blob": "^12.27.0",
     "@clerk/nextjs": "^6.18.0",
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
@@ -59,6 +62,8 @@
     "motion": "^12.4.7",
     "next": "15.2.0",
     "next-themes": "^0.4.4",
+    "pg": "^8.16.0",
+    "postgres": "^3.4.5",
     "react": "19.0.0",
     "react-day-picker": "^8.10.1",
     "react-dom": "19.0.0",
@@ -76,15 +81,20 @@
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/pg": "^8.15.2",
     "@types/react": "19.0.10",
     "@types/react-dom": "19.0.4",
     "@types/three": "^0.174.0",
     "drizzle-kit": "^0.28.1",
     "eslint": "^8",
     "eslint-config-next": "15.2.0",
+    "husky": "^8.0.0",
     "postcss": "^8",
+    "prettier": "^3.5.3",
+    "pretty-quick": "^4.1.1",
+    "simple-git-hooks": "^2.13.0",
     "tailwindcss": "^3.4.1",
-    "tsx": "^4.19.2",
+    "tsx": "^4.19.4",
     "typescript": "^5"
   },
   "overrides": {

@@ -185,15 +185,15 @@ function CreateChannels() {
   }, [form.watch("channel_name")])
 
   async function channelSubmit(data: any) {
+    if (data.publish_channel === true) {
+      data.publish_channel = 1
+    } else {
+      data.publish_channel = 0
+    }
     if (!selectedChannel) {
       handleCreateChannel(data)
     }
     if (selectedChannel) {
-      if (data.publish_channel === true) {
-        data.publish_channel = 1
-      } else {
-        data.publish_channel = 0
-      }
       handleUpdateChannel(data)
     }
   }

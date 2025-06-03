@@ -1,26 +1,47 @@
-import { Button } from '@/src/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/src/components/ui/card'
-import { Input } from '@/src/components/ui/input'
-import { Label } from '@/src/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select'
-import { Switch } from '@/src/components/ui/switch'
-import { Textarea } from '@/src/components/ui/textarea'
-import React, { useState } from 'react'
+import { Button } from "@/src/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/src/components/ui/card"
+import { Input } from "@/src/components/ui/input"
+import { Label } from "@/src/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/src/components/ui/select"
+import { Switch } from "@/src/components/ui/switch"
+import { Textarea } from "@/src/components/ui/textarea"
+import React, { useState } from "react"
 
 function ProjectInformation() {
   const [projectName, setProjectName] = useState("E-Commerce Platform")
-  const [projectDescription, setProjectDescription] = useState("Web application development project")
+  const [projectDescription, setProjectDescription] = useState(
+    "Web application development project"
+  )
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Project Information</CardTitle>
-        <CardDescription>Update your project details and settings</CardDescription>
+        <CardDescription>
+          Update your project details and settings
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="project-name">Project Name</Label>
-          <Input id="project-name" value={projectName} onChange={(e) => setProjectName(e.target.value)} />
+          <Input
+            id="project-name"
+            value={projectName}
+            onChange={(e) => setProjectName(e.target.value)}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="project-description">Description</Label>
@@ -67,7 +88,8 @@ function ProjectInformation() {
             <Switch id="project-visibility" />
           </div>
           <p className="text-sm text-muted-foreground">
-            When enabled, this project will be visible to all members of your organization.
+            When enabled, this project will be visible to all members of your
+            organization.
           </p>
         </div>
       </CardContent>

@@ -1,7 +1,6 @@
-import React from 'react'
-import SprintTaskCard from './SprintTaskCard'
-import { AlertCircle } from 'lucide-react'
-
+import React from "react"
+import SprintTaskCard from "./SprintTaskCard"
+import { AlertCircle } from "lucide-react"
 
 interface Props {
   sprint: Sprint
