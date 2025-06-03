@@ -95,7 +95,7 @@ export function ProjectDashboard({ currProject }: Props) {
         </TabsContent>
 
         <TabsContent value="settings">
-          <ProjectSettings />
+          <ProjectSettings currProject={currProject} />
         </TabsContent>
       </Tabs>
     </div>
