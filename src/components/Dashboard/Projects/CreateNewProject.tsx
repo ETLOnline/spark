@@ -184,9 +184,17 @@ function ProjectFormModal({
       const createdProject = await createProject(payLoad as InsertProject)
 
       if (createdProject?.success && createdProject?.data) {
+        if (!AuthUser?.unique_id) {
+          toast({
+            title: "User ID not found. Please login again.",
+            variant: "destructive",
+            duration: 3000
+          })
+          return
+        }
         const response = await AttachUser(
           createdProject.data.id,
-          AuthUser?.unique_id,
+          AuthUser.unique_id,
           "admin"
         )
         setProjects([...projects, createdProject.data])
