@@ -15,6 +15,13 @@
       "when": 1748965734570,
       "tag": "0001_2025_06_03_204852__add_personas_table_and_alter_user_table",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1748981907563,
+      "tag": "0002_2025_06_04_011826__add_sprints_table",
+      "breakpoints": true
     }
   ]
 }

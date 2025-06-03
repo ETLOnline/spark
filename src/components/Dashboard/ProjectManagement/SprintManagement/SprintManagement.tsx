@@ -1,161 +1,69 @@
 "use client"
 
-import { useState } from "react"
-import { AlertCircle, CheckCircle2, ArrowRightCircle } from "lucide-react"
+import { useParams } from "next/navigation"
 import CreateSprintModal from "./CreateSprintModal"
-import SprintCard from "./SprintCard"
-
-interface Task {
-  id: string
-  title: string
-  description: string
-  status: "todo" | "in-progress" | "done"
-  priority: "low" | "medium" | "high"
-  assignee: {
-    name: string
-    avatar: string
-  }
-  storyPoints: number
-}
-
-interface Sprint {
-  id: string
-  name: string
-  startDate: string
-  endDate: string
-  status: "planning" | "active" | "completed"
-  progress: number
-  tasks: Task[]
-}
-
-const sampleSprints: Sprint[] = [
-  {
-    id: "1",
-    name: "Sprint 4",
-    startDate: "2023-05-15",
-    endDate: "2023-05-28",
-    status: "active",
-    progress: 65,
-    tasks: [
-      {
-        id: "t1",
-        title: "Implement user authentication",
-        description:
-          "Add login, registration, and password reset functionality",
-        status: "done",
-        priority: "high",
-        assignee: { name: "Alex Johnson", avatar: "/avatars/01.png" },
-        storyPoints: 8
-      },
-      {
-        id: "t2",
-        title: "Create product listing page",
-        description:
-          "Design and implement the product grid with filtering options",
-        status: "in-progress",
-        priority: "medium",
-        assignee: { name: "Sarah Miller", avatar: "/avatars/02.png" },
-        storyPoints: 5
-      },
-      {
-        id: "t3",
-        title: "Integrate payment gateway",
-        description: "Connect with Stripe API for payment processing",
-        status: "todo",
-        priority: "high",
-        assignee: { name: "David Chen", avatar: "/avatars/03.png" },
-        storyPoints: 13
-      },
-      {
-        id: "t4",
-        title: "Implement shopping cart",
-        description: "Add ability to add/remove items and adjust quantities",
-        status: "in-progress",
-        priority: "medium",
-        assignee: { name: "Emma Wilson", avatar: "/avatars/04.png" },
-        storyPoints: 8
-      },
-      {
-        id: "t5",
-        title: "Add product search functionality",
-        description: "Implement search with autocomplete suggestions",
-        status: "todo",
-        priority: "low",
-        assignee: { name: "James Taylor", avatar: "/avatars/05.png" },
-        storyPoints: 5
-      }
-    ]
-  },
-  {
-    id: "2",
-    name: "Sprint 3",
-    startDate: "2023-05-01",
-    endDate: "2023-05-14",
-    status: "completed",
-    progress: 100,
-    tasks: [
-      {
-        id: "t6",
-        title: "Database schema design",
-        description: "Create initial database models and relationships",
-        status: "done",
-        priority: "high",
-        assignee: { name: "David Chen", avatar: "/avatars/03.png" },
-        storyPoints: 8
-      },
-      {
-        id: "t7",
-        title: "Setup CI/CD pipeline",
-        description: "Configure automated testing and deployment",
-        status: "done",
-        priority: "medium",
-        assignee: { name: "Alex Johnson", avatar: "/avatars/01.png" },
-        storyPoints: 5
-      },
-      {
-        id: "t8",
-        title: "Create basic UI components",
-        description: "Develop reusable UI components based on design system",
-        status: "done",
-        priority: "medium",
-        assignee: { name: "Sarah Miller", avatar: "/avatars/02.png" },
-        storyPoints: 8
-      }
-    ]
-  }
-]
+import { useEffect, useState } from "react"
+import { useAtom } from "jotai"
+import { sprintStore } from "@/src/store/sprint/sprintsStore"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { GetSprintAction } from "@/src/server-actions/Sprint/sprint"
+import SprintCardPage from "./SprintCard"
+import { Button } from "@/src/components/ui/button"
+import { ChartGantt, Plus } from "lucide-react"
+import NoDataCard from "../../Channels/ChannelDetails/NoDataCard"
+import Loader from "@/src/components/common/Loader/Loader"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
 
 export function SprintManagement() {
-  const [sprints, setSprints] = useState<Sprint[]>(sampleSprints)
+  const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
+  const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false)
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "todo":
-        return <AlertCircle className="h-4 w-4 text-muted-foreground" />
-      case "in-progress":
-        return <ArrowRightCircle className="h-4 w-4 text-blue-500" />
-      case "done":
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />
-      default:
-        return null
+  const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
+
+  const projectId = useParams().id as string
+
+  useEffect(() => {
+    const fetchSprints = async () => {
+      const Sprints = await GetSprints(projectId)
+      if (Sprints?.success && Sprints.data) {
+        setSprintList(Sprints.data)
+      }
     }
-  }
+    fetchSprints()
+  }, [projectId])
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-bold">Sprint Management</h2>
-        <CreateSprintModal sprints={sprints} setSprints={setSprints} />
+        <Button onClick={() => setIsCreateSprintOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Sprint
+        </Button>
       </div>
 
-      {sprints.map((sprint) => (
-        <SprintCard
-          sprint={sprint}
-          sprints={sprints}
-          setSprints={setSprints}
-          key={sprint.id}
-        />
-      ))}
+      <div className="space-y-4 print:space-y-3">
+        {getSprintLoading ? (
+          <div className="flex justify-center items-center">
+            <Loader size={LoaderSizes.lg} />
+          </div>
+        ) : sprintList.length > 0 ? (
+          sprintList.map((sprint) => (
+            <SprintCardPage key={sprint.id} sprint={sprint} />
+          ))
+        ) : (
+          <NoDataCard
+            title="No Sprints Found"
+            description="Create a new sprint to start managing your project tasks."
+            icon={<ChartGantt className="h-10 w-10 text-muted-foreground" />}
+          />
+        )}
+      </div>
+
+      <CreateSprintModal
+        isCreateSprintOpen={isCreateSprintOpen}
+        setIsCreateSprintOpen={setIsCreateSprintOpen}
+      />
     </div>
   )
 }

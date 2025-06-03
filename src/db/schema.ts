@@ -885,6 +885,7 @@ export const taskTable = pgTable("task", {
   project_id: varchar().notNull(),
   created_by: varchar().notNull(),
   status_id: varchar(),
+  sprint_id: varchar(),
   ...timestamps
 })
 
@@ -929,6 +930,20 @@ export const TaskStatusTable = pgTable("tasks_status", {
 
 export type InsertTaskStatus = typeof TaskStatusTable.$inferInsert
 export type SelectTaskStatus = typeof TaskStatusTable.$inferSelect
+
+export const SprintTable = pgTable("sprints", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  title: varchar().notNull(),
+  start_date: varchar().notNull(),
+  end_date: varchar().notNull(),
+  projectId: varchar().notNull(),
+  ...timestamps
+})
+
+export type InsertSprint = typeof SprintTable.$inferInsert
+export type SelectSprint = typeof SprintTable.$inferSelect
 
 export const personasTable = pgTable("personas", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),

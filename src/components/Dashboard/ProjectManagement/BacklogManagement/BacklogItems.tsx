@@ -31,7 +31,7 @@ import {
   projectTaskPriority,
   projectTaskTypes
 } from "../constants/projectManagment"
-import { useRouter } from "next/navigation"
+import TaskMoveDialog from "./task-move-dialog"
 
 interface Props {
   selectedItems: string[]
@@ -48,6 +48,7 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
   const [isAlertOpen, setIsAlertOpen] = useState(false)
   const SetTasks = useSetAtom(taskStore.tasks)
   const [status, setStatus] = useAtom(projectStore.projectStatusList)
+  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useState(false)
 
   const [deleteTaskLoading, deleteTaskData, deleteTaskError, DeleteTask] =
     useServerAction(DeleteTaskAction)
@@ -186,7 +187,14 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem>Assign</DropdownMenuItem>
-              <DropdownMenuItem>Add to Sprint</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setIsTaskMoveDialogOpen(true)
+                  setIsDropDownOpen(false)
+                }}
+              >
+                Add to Sprint
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive"
@@ -222,6 +230,12 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <TaskMoveDialog
+        isTaskMoveDialogOpen={isTaskMoveDialogOpen}
+        setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
+        task_id={task.id}
+      />
     </>
   )
 }

@@ -1,14 +1,4 @@
-import {
-  and,
-  asc,
-  count,
-  eq,
-  isNull,
-  like,
-  or,
-  sql,
-  SQLWrapper
-} from "drizzle-orm"
+import { and, asc, eq, isNull, like, or, sql, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
 import {
   InsertTask,
@@ -132,7 +122,10 @@ export async function GetTasksByStatusId(statusId: string) {
   }
 }
 
-export async function UpdateTask(taskId: string, updatedData: SelectTask) {
+export async function UpdateTask(
+  taskId: string,
+  updatedData: Partial<SelectTask>
+) {
   try {
     const UpdatedTask = await db
       .update(taskTable)

@@ -2,7 +2,7 @@ import { Progress } from "@/src/components/ui/progress"
 import React from "react"
 
 interface Props {
-  sprint: Sprint
+  sprint?: Sprint
 }
 
 interface Sprint {
@@ -32,10 +32,10 @@ function SprintProgressBar({ sprint }: Props) {
   return (
     <div className="mt-2">
       <div className="flex justify-between mb-1 text-xs">
-        <span>{sprint.progress}% Complete</span>
-        <span>{sprint.tasks.length} Tasks</span>
+        <span>{10}% Complete</span>
+        <span>{12} Tasks</span>
       </div>
-      <Progress value={sprint.progress} className="h-2" />
+      <Progress value={50} className="h-2" />
     </div>
   )
 }
