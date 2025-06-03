@@ -9,7 +9,7 @@
     "lint": "next lint",
     "format": "pretty-quick",
     "db:seed": "npx tsx src/db/seeds/index.ts",
-    "db:create-migration": "bash src/db/scripts/create-migration.sh",
+    "db:create-migration": "node src/db/scripts/create-migration.mjs",
     "db:migrate": "npx drizzle-kit migrate",
     "prepare": "husky install"
   },
