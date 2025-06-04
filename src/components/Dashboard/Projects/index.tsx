@@ -19,6 +19,7 @@ import { LoaderSizes } from "../../common/types/loader-types"
 import { useParams, useSearchParams } from "next/navigation"
 import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
 import { space } from "postcss/lib/list"
+import { navStore } from "@/src/store/nav/navStore"
 
 export interface ProjectProposal {
   id: string
@@ -88,7 +89,7 @@ const categories = [
 export function ProjectScreen() {
   const [projects, setProjects] = useAtom(projectStore.projects)
   const [currSpace, setCurrSpace] = useState<SelectSpace>()
-
+  const setCrumbRoutes = useSetAtom(navStore.crumbRoutes)
   const [getProjectLoading, getProjectData, getProjectError, getProjects] =
     useServerAction(GetProjectsAction)
 
@@ -122,6 +123,19 @@ export function ProjectScreen() {
       setProjects(getProjectData.data ?? [])
     }
   }, [getProjectData])
+
+  useEffect(() => {
+    setCrumbRoutes((prev) =>
+      prev.map((r) =>
+        r.id === "project" && typeof r.url === "function"
+          ? {
+              ...r,
+              url: r.url(channel_slug ?? "", spaceSlug ?? "")
+            }
+          : r
+      )
+    )
+  }, [channel_slug, spaceSlug])
 
   return (
     <div className="flex flex-col space-y-4">

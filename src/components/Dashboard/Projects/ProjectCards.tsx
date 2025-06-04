@@ -56,7 +56,7 @@ function ProjectCards({ project }: Props) {
           <LinkAsButton href={`/project/${project.id}/board`}>
             Launch Board
           </LinkAsButton>
-          <LinkAsButton href={`/project/${project.id}`}>
+          <LinkAsButton href={`/project/${project.id}/details`}>
             View Details
           </LinkAsButton>
         </div>

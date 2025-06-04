@@ -1,5 +1,6 @@
 import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
 import { ProjectDetailView } from "@/src/components/Dashboard/Projects/Details/ProjectDetailVeiw"
+import { GetSpaceById } from "@/src/db/data-access/spaces/query"
 import { GetProjectByIdAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import React from "react"
 
@@ -13,11 +14,18 @@ const ProjectDetailPage = async ({ params }: Props) => {
 
   const selectedProject = await GetProjectByIdAction(projectId || "")
 
+  const currspace = await GetSpaceById(selectedProject.data?.space_id || "")
+
   if (!selectedProject.success || !selectedProject.data) {
     return <NotFound />
   }
 
-  return <ProjectDetailView selectedProject={selectedProject.data} />
+  return (
+    <ProjectDetailView
+      selectedProject={selectedProject.data}
+      currSpace={currspace}
+    />
+  )
 }
 
 export default ProjectDetailPage

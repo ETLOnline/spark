@@ -23,6 +23,7 @@ import {
 import ProjectSidebar from "../components/projectSidebar"
 import { GetTaskStatusAction } from "@/src/server-actions/Tasks/Task"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
+import { GetSpaceById } from "@/src/db/data-access/spaces/query"
 
 interface Props {
   children: ReactNode
@@ -40,6 +41,8 @@ async function layout({ children, params }: Props) {
   }
   const currentProject = currProject.data
 
+  const currSpace = await GetSpaceById(currentProject.space_id)
+
   const projectStatusList = await GetTaskStatusAction(projectId)
 
   return (
@@ -48,6 +51,7 @@ async function layout({ children, params }: Props) {
         <ProjectSidebar
           currProject={currentProject}
           statusList={projectStatusList.data ?? []}
+          currSpace={currSpace}
         />
       </div>
 

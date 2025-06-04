@@ -14,9 +14,10 @@ import { useEffect } from "react"
 import {
   getChannelsCrumbsMapped,
   getChannelsNavMapped,
-  getSpacesCrumbsMapped
+  getSpacesCrumbsMapped,
+  getSpacesFeatureCrumbsMapped
 } from "../utils/helpers"
-import { useParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import { userStore } from "@/src/store/user/userStore"
 import { PageMeta } from "@/src/utils/constants"
 
@@ -31,6 +32,9 @@ const useSideBarHook = () => {
 
   const [channelsLoading, channelsData, channelsError, getChannels] =
     useServerAction(GetChannelsAction)
+
+  const searchParams = useSearchParams()
+  const currPageType = searchParams.get("page-type")
 
   const userData = user
 
@@ -181,6 +185,38 @@ const useSideBarHook = () => {
           ...(Array.isArray(mappedCrumbs) ? mappedCrumbs : [mappedCrumbs])
         ])
       }
+
+      if (currPageType) {
+        mappedCrumbs = []
+        channels.forEach((channel) => {
+          if (channel.spaces && channel.spaces.length) {
+            mappedCrumbs = [
+              ...mappedCrumbs,
+              ...getSpacesFeatureCrumbsMapped(
+                channel.spaces as SelectSpace[],
+                channel,
+                currPageType ?? ""
+              )
+            ]
+          }
+        })
+
+        if (mappedCrumbs.length) {
+          setCrumbRoutes((crumbRoutes) => [
+            ...crumbRoutes,
+            ...(Array.isArray(mappedCrumbs) ? mappedCrumbs : [mappedCrumbs])
+          ])
+        }
+      } else {
+        setCrumbRoutes((prevCrumbs) => {
+          const filteredCrumbs = prevCrumbs.filter(
+            (crumb) =>
+              typeof crumb.url !== "string" || !crumb.url.includes("page-type")
+          )
+
+          return [...filteredCrumbs]
+        })
+      }
     }
 
     if (channelSlug) {
@@ -191,7 +227,7 @@ const useSideBarHook = () => {
         setSelectedChannel({ ...selectedChannel })
       }
     }
-  }, [channels, userData])
+  }, [channels, userData, searchParams])
 }
 
 export default useSideBarHook

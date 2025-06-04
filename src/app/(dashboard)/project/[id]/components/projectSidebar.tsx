@@ -22,27 +22,33 @@ import {
 } from "lucide-react"
 import { useParams, usePathname, useRouter } from "next/navigation"
 import Link from "next/link"
-import { InsertTaskStatus, SelectProject } from "@/src/db/schema"
-import { useAtom } from "jotai"
+import { InsertTaskStatus, SelectProject, SelectSpace } from "@/src/db/schema"
+import { useAtom, useSetAtom } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import { ProjectManagementPages } from "@/src/components/Dashboard/ProjectManagement/constants/projectManagment"
+import { navStore } from "@/src/store/nav/navStore"
+import { getProjectCrumbsMapped } from "@/src/components/Dashboard/Sidebar.tsx/utils/helpers"
 
 interface Props {
   statusList: InsertTaskStatus[]
   currProject: SelectProject
+  currSpace?: SelectSpace
 }
 
-function ProjectSidebar({ statusList, currProject }: Props) {
+function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
   const [projectStatusList, setProjectStatusList] = useAtom(
     projectStore.projectStatusList
   )
+  const setCrumbRoutes = useSetAtom(navStore.crumbRoutes)
 
   const { setOpen: setSideBarCollapse } = useSidebar()
 
   const router = useRouter()
 
   const pathName = usePathname()
+  const parts = pathName.split("/")
+  const currPath = parts[parts.length - 1]
 
   useEffect(() => {
     setSideBarCollapse(false)
@@ -53,6 +59,17 @@ function ProjectSidebar({ statusList, currProject }: Props) {
       setProjectStatusList(statusList)
     }
   }, [statusList])
+
+  useEffect(() => {
+    setCrumbRoutes((prev) => {
+      const newCrumb = getProjectCrumbsMapped(
+        [currProject],
+        currPath,
+        currSpace
+      )
+      return [...prev, ...(Array.isArray(newCrumb) ? newCrumb : [newCrumb])]
+    })
+  }, [currProject, currSpace, currPath])
 
   return (
     <SidebarGroup className="p-0">
