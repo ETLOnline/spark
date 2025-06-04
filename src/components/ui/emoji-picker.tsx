@@ -1,15 +1,15 @@
-"use client";
+"use client"
 
 import {
   type EmojiPickerListCategoryHeaderProps,
   type EmojiPickerListEmojiProps,
   type EmojiPickerListRowProps,
-  EmojiPicker as EmojiPickerPrimitive,
-} from "frimousse";
-import { LoaderIcon, SearchIcon } from "lucide-react";
-import type * as React from "react";
+  EmojiPicker as EmojiPickerPrimitive
+} from "frimousse"
+import { LoaderIcon, SearchIcon } from "lucide-react"
+import type * as React from "react"
 
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/src/lib/utils"
 
 function EmojiPicker({
   className,
@@ -24,7 +24,7 @@ function EmojiPicker({
       data-slot="emoji-picker"
       {...props}
     />
-  );
+  )
 }
 
 function EmojiPickerSearch({
@@ -43,7 +43,7 @@ function EmojiPickerSearch({
         {...props}
       />
     </div>
-  );
+  )
 }
 
 function EmojiPickerRow({ children, ...props }: EmojiPickerListRowProps) {
@@ -51,7 +51,7 @@ function EmojiPickerRow({ children, ...props }: EmojiPickerListRowProps) {
     <div {...props} className="scroll-my-1 px-1" data-slot="emoji-picker-row">
       {children}
     </div>
-  );
+  )
 }
 
 function EmojiPickerEmoji({
@@ -70,7 +70,7 @@ function EmojiPickerEmoji({
     >
       {emoji.emoji}
     </button>
-  );
+  )
 }
 
 function EmojiPickerCategoryHeader({
@@ -85,7 +85,7 @@ function EmojiPickerCategoryHeader({
     >
       {category.label}
     </div>
-  );
+  )
 }
 
 function EmojiPickerContent({
@@ -115,12 +115,12 @@ function EmojiPickerContent({
         components={{
           Row: EmojiPickerRow,
           Emoji: EmojiPickerEmoji,
-          CategoryHeader: EmojiPickerCategoryHeader,
+          CategoryHeader: EmojiPickerCategoryHeader
         }}
         data-slot="emoji-picker-list"
       />
     </EmojiPickerPrimitive.Viewport>
-  );
+  )
 }
 
 function EmojiPickerFooter({
@@ -155,12 +155,7 @@ function EmojiPickerFooter({
         }
       </EmojiPickerPrimitive.ActiveEmoji>
     </div>
-  );
+  )
 }
 
-export {
-  EmojiPicker,
-  EmojiPickerSearch,
-  EmojiPickerContent,
-  EmojiPickerFooter,
-};
+export { EmojiPicker, EmojiPickerSearch, EmojiPickerContent, EmojiPickerFooter }
