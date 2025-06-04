@@ -2,7 +2,7 @@ import { Clock } from "lucide-react"
 import React from "react"
 
 interface Props {
-  sprint: Sprint
+  sprint?: Sprint
 }
 
 interface Sprint {
@@ -32,11 +32,7 @@ function SprintStatus({ sprint }: Props) {
   return (
     <div className="text-sm text-muted-foreground">
       <Clock className="inline-block mr-1 h-4 w-4" />
-      {sprint.status === "active"
-        ? `${Math.ceil((new Date(sprint.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days remaining`
-        : sprint.status === "completed"
-          ? "Completed"
-          : "Not started"}
+      {"completed"}
     </div>
   )
 }

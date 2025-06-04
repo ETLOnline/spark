@@ -7,7 +7,7 @@ import {
   CardContent,
   CardHeader
 } from "../../ui/card"
-import { Calendar } from "@/src/components/ui/calendar"
+// import { Calendar } from "@/src/components/ui/calendar"
 
 const ProfileCalendar: React.FC = () => {
   const [date, setDate] = useState<Date | undefined>(new Date())
@@ -19,12 +19,12 @@ const ProfileCalendar: React.FC = () => {
         <CardDescription>Your schedule and upcoming events</CardDescription>
       </CardHeader>
       <CardContent>
-        <Calendar
+        {/* <Calendar
           mode="single"
           selected={date}
           onSelect={setDate}
           className="rounded-md border"
-        />
+        /> */}
       </CardContent>
     </Card>
   )

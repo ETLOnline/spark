@@ -149,3 +149,21 @@ export const ProjectManagementPages = [
     icon: "settings"
   }
 ]
+
+export const SprintStatus = [
+  {
+    key: "upcomming",
+    title: "Upcoming",
+    badgeVariants: "outline"
+  },
+  {
+    key: "active",
+    title: "Active",
+    badgeVariants: "default"
+  },
+  {
+    key: "ended",
+    title: "Ended",
+    badgeVariants: "secondary"
+  }
+]

@@ -1,10 +1,11 @@
 import React from "react"
-import SprintTaskCard from "./SprintTaskCard"
 import { AlertCircle } from "lucide-react"
+import { InsertTaskStatus, SelectSprint } from "@/src/db/schema"
+import SprintTaskCard from "./BoardTaskCard"
 
 interface Props {
-  sprint: Sprint
-  status: "todo" | "in-progress" | "done"
+  sprint?: SelectSprint
+  status?: InsertTaskStatus
 }
 
 interface Sprint {
@@ -35,13 +36,13 @@ function BoardColumn({ sprint, status }: Props) {
     <div className="w-1/4 flex-shrink-0 space-y-2">
       <div className="font-medium text-sm flex items-center">
         <AlertCircle className="mr-2 h-4 w-4" />
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {status?.name}
       </div>
-      {sprint.tasks
+      {/* {sprint?.tasks
         .filter((task) => task.status === status)
         .map((task) => (
           <SprintTaskCard task={task} key={task.id} />
-        ))}
+          ))} */}
     </div>
   )
 }
