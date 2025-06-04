@@ -1,5 +1,4 @@
 import React, { useState } from "react"
-import { Calendar } from "../../ui/calendar"
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
 
 interface Event {
@@ -21,12 +20,12 @@ function CelenderVeiw({ events }: Props) {
   return (
     <div className="flex flex-col sm:flex-row h-full">
       <div className="w-full sm:w-1/2 p-4 justify-items-center rounded-md border ">
-        <Calendar
+        {/* <Calendar
           mode="single"
           selected={selectedDate}
           onSelect={setSelectedDate}
           className=""
-        />
+        /> */}
       </div>
       <div className="w-full sm:w-1/2 p-4">
         <h3 className="text-lg font-semibold mb-4">
