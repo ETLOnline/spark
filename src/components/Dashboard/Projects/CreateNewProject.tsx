@@ -21,7 +21,10 @@ import { useAtom, useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { CreateProjectAction } from "@/src/server-actions/ProjectManagement/projectManagement"
+import {
+  CreateProjectAction,
+  UpdateProjectAction
+} from "@/src/server-actions/ProjectManagement/projectManagement"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "@/src/hooks/use-toast"
 import { projectStore } from "@/src/store/project/projectStore"
@@ -29,7 +32,7 @@ import moment from "moment"
 import { AttachProjectUserAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 
-const channelSchema = z.object({
+const projectSchema = z.object({
   project_name: z
     .string()
     .min(1, "Title required")
@@ -49,10 +52,29 @@ const channelSchema = z.object({
   project_type: z.boolean().optional()
 })
 
-function CreateNewProject() {
+type ProjectFormData = z.infer<typeof projectSchema>
+
+function ProjectFormModal({
+  defaultValues,
+  isEditing = false,
+  isOpen: externalOpen,
+  setIsOpen: setExternalOpen
+}: {
+  defaultValues?: Partial<InsertProject>
+  isEditing?: boolean
+  isOpen?: boolean
+  setIsOpen?: React.Dispatch<SetStateAction<boolean>>
+}) {
   const [space, setSpace] = useState<SelectSpace>()
-  const [isOpen, setIsOpen] = useState(false)
   const [projects, setProjects] = useAtom(projectStore.projects)
+  // const [createProjectLoading, , , createProject] = useServerAction(CreateProjectAction)
+  const [updateLoading, , , updateProject] =
+    useServerAction(UpdateProjectAction)
+
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isOpen = externalOpen !== undefined ? externalOpen : internalOpen
+  const setIsOpen =
+    setExternalOpen !== undefined ? setExternalOpen : setInternalOpen
   const [
     createProjectLoading,
     createProjectData,
@@ -64,20 +86,32 @@ function CreateNewProject() {
   )
   const [startDate, setStartDate] = React.useState<Date>()
 
-  const form = useForm({
-    resolver: zodResolver(channelSchema)
+  const form = useForm<ProjectFormData>({
+    resolver: zodResolver(projectSchema),
+    defaultValues: {
+      project_name: "",
+      description: "",
+      project_startDate: "",
+      project_targetDate: "",
+      project_type: false
+    }
   })
-  const error = form.formState.errors
 
   const AuthUser = useAtomValue(userStore.AuthUser)
 
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  const channelSlug = searchParams.get("channel")
-  const spaceSlug = searchParams.get("space")
+  const [channelSlug, setChannelSlug] = useState<string | null>(null)
+  const [spaceSlug, setSpaceSlug] = useState<string | null>(null)
 
   useEffect(() => {
+    setChannelSlug(searchParams.get("channel"))
+    setSpaceSlug(searchParams.get("space"))
+  }, [searchParams])
+
+  useEffect(() => {
+    if (!spaceSlug || !channelSlug) return
     GetSpaceBySlugAction(spaceSlug || "", channelSlug || "").then(
       (currentSpace) => {
         if (currentSpace.success && currentSpace.data) {
@@ -85,23 +119,54 @@ function CreateNewProject() {
         }
       }
     )
-  }, [])
+  }, [spaceSlug, channelSlug])
 
   useEffect(() => {
-    form.reset()
-  }, [isOpen])
+    if (!defaultValues) return
 
-  async function projectSubmit(data: any) {
-    if (data.project_type === true) {
-      data.project_type = "active"
-    } else {
-      data.project_type = "draft"
+    try {
+      const formattedStartDate = defaultValues.project_startDate
+        ? moment(defaultValues.project_startDate, "DD-MM-YYYY").format(
+            "YYYY-MM-DD"
+          )
+        : ""
+
+      const formattedTargetDate = defaultValues.project_targetDate
+        ? moment(defaultValues.project_targetDate, "DD-MM-YYYY").format(
+            "YYYY-MM-DD"
+          )
+        : ""
+
+      form.reset({
+        project_name: defaultValues.project_name || "",
+        description: defaultValues.description || "",
+        project_type: defaultValues.project_type === "active",
+        project_startDate: formattedStartDate,
+        project_targetDate: formattedTargetDate
+      })
+    } catch (error) {
+      console.error("Error formatting dates:", error)
+      form.reset({
+        project_name: defaultValues.project_name || "",
+        description: defaultValues.description || "",
+        project_type: defaultValues.project_type === "active",
+        project_startDate: "",
+        project_targetDate: ""
+      })
     }
-    handleCreateProject(data)
+  }, [isOpen, defaultValues, form])
+
+  async function projectSubmit(data: ProjectFormData) {
+    const projectType = data.project_type === true ? "active" : "draft"
+
+    if (isEditing) {
+      handleUpdateProject({ ...data, project_type: projectType })
+    } else {
+      handleCreateProject({ ...data, project_type: projectType })
+    }
   }
 
-  async function handleCreateProject(data: InsertProject) {
-    const user = await AuthUserAction()
+  async function handleCreateProject(data: any) {
     try {
       const payLoad = {
         ...data,
@@ -119,9 +184,17 @@ function CreateNewProject() {
       const createdProject = await createProject(payLoad as InsertProject)
 
       if (createdProject?.success && createdProject?.data) {
+        if (!AuthUser?.unique_id) {
+          toast({
+            title: "User ID not found. Please login again.",
+            variant: "destructive",
+            duration: 3000
+          })
+          return
+        }
         const response = await AttachUser(
           createdProject.data.id,
-          user.unique_id,
+          AuthUser.unique_id,
           "admin"
         )
         setProjects([...projects, createdProject.data])
@@ -141,19 +214,56 @@ function CreateNewProject() {
       })
     }
   }
+
+  async function handleUpdateProject(data: any) {
+    try {
+      const payload = {
+        ...data,
+        id: defaultValues?.id,
+        project_slug: data.project_name,
+        space_id: space?.id,
+        channel_id: space?.channel_id,
+        project_startDate: moment(data.project_startDate).format("DD-MM-YYYY"),
+        project_targetDate: moment(data.project_targetDate).format("DD-MM-YYYY")
+      }
+
+      if (!payload.id) throw new Error("Missing project ID for update")
+
+      const updatedProject = await updateProject(payload as InsertProject)
+
+      if (updatedProject?.success && updatedProject?.data) {
+        const updatedList = projects.map((proj) =>
+          proj.id === updatedProject.data.id ? updatedProject.data : proj
+        )
+        setProjects(updatedList)
+        setIsOpen(false)
+        toast({
+          title: "Project Successfully Updated",
+          duration: 3000
+        })
+      }
+    } catch (error) {
+      setIsOpen(false)
+      toast({
+        title: "Failed to update Project",
+        duration: 3000,
+        variant: "destructive"
+      })
+    }
+  }
+
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(open) => {
-        setIsOpen(open)
-      }}
-    >
-      <DialogTrigger asChild>
-        <Button>Create New Project</Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      {!isEditing && (
+        <DialogTrigger asChild>
+          <Button>Create New Project</Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create a New Project</DialogTitle>
+          <DialogTitle>
+            {isEditing ? "Update Project" : "Create a New Project"}
+          </DialogTitle>
           <DialogDescription>
             Share your innovative idea with the community. Be clear and concise.
           </DialogDescription>
@@ -285,8 +395,11 @@ function CreateNewProject() {
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" loading={createProjectLoading}>
-              Submit Project
+            <Button
+              type="submit"
+              loading={createProjectLoading || updateLoading}
+            >
+              Save Project
             </Button>
           </DialogFooter>
         </form>
@@ -295,4 +408,4 @@ function CreateNewProject() {
   )
 }
 
-export default CreateNewProject
+export default ProjectFormModal

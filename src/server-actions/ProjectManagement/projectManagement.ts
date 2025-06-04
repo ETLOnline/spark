@@ -9,7 +9,8 @@ import {
   createProjectUser,
   getProjectUsers,
   removeProjectUser,
-  updateProjectUserRole
+  updateProjectUserRole,
+  updateProject
 } from "@/src/db/data-access/project-management/query"
 
 export const CreateProjectAction = CreateServerAction(
@@ -18,6 +19,18 @@ export const CreateProjectAction = CreateServerAction(
     try {
       const newProject = await CreateProject(project_data)
       return { success: true, data: newProject }
+    } catch (error) {
+      return { error }
+    }
+  }
+)
+
+export const UpdateProjectAction = CreateServerAction(
+  true,
+  async (project_data: Partial<InsertProject>) => {
+    try {
+      const updatedProject = await updateProject(project_data)
+      return { success: true, data: updatedProject }
     } catch (error) {
       return { error }
     }

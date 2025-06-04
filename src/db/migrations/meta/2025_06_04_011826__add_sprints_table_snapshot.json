@@ -1237,16 +1237,12 @@
         "personas_slug_unique": {
           "name": "personas_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         },
         "personas_description_unique": {
           "name": "personas_description_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "description"
-          ]
+          "columns": ["description"]
         }
       },
       "policies": {},
@@ -2467,16 +2463,12 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         },
         "users_external_auth_id_unique": {
           "name": "users_external_auth_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "external_auth_id"
-          ]
+          "columns": ["external_auth_id"]
         }
       },
       "policies": {},

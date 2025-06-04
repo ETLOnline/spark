@@ -111,6 +111,23 @@ export async function removeProjectUser(projectId: string, userId: string) {
     throw new Error(error.message)
   }
 }
+export async function updateProject(project_data: Partial<InsertProject>) {
+  try {
+    if (!project_data.id) {
+      throw new Error("Project ID is required for update.")
+    }
+
+    const updatedProject = await db
+      .update(projectTable)
+      .set(project_data)
+      .where(eq(projectTable.id, project_data.id))
+      .returning()
+
+    return updatedProject[0]
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
 export async function updateProjectUserRole(
   projectId: string,
   userId: string,

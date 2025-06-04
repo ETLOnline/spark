@@ -10,12 +10,14 @@ import { Badge } from "../../ui/badge"
 import { LinkAsButton } from "../../LinkAsButton/LinkAsButton"
 import { SelectProject } from "@/src/db/schema"
 import { ProjectType } from "../ProjectManagement/types/project.type"
+import { Button } from "../../ui/button"
 
 interface Props {
   project: SelectProject
+  onEdit: (project: SelectProject) => void
 }
 
-function ProjectCards({ project }: Props) {
+function ProjectCards({ project, onEdit }: Props) {
   return (
     <Card key={project.id} className="mb-4">
       <CardHeader>
@@ -59,6 +61,7 @@ function ProjectCards({ project }: Props) {
           <LinkAsButton href={`/project/${project.id}`}>
             View Details
           </LinkAsButton>
+          <Button onClick={() => onEdit(project)}>Edit Project</Button>
         </div>
       </CardFooter>
     </Card>
