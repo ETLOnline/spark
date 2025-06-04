@@ -7,7 +7,6 @@ import {
   TabsTrigger
 } from "@/src/components/ui/tabs"
 import ProjectInformation from "./ProjectInformation"
-import TeamMembers from "./TeamMembers"
 import ProjectNotifications from "./ProjectNotifications"
 import Integrations from "./Integrations"
 import { SelectProject } from "@/src/db/schema"
@@ -39,7 +38,6 @@ export function ProjectSettings({ currProject }: Props) {
       >
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="team">Team</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="taskStatus">Task status</TabsTrigger>
@@ -47,10 +45,6 @@ export function ProjectSettings({ currProject }: Props) {
 
         <TabsContent value="general">
           <ProjectInformation currProjectData={currProject} />
-        </TabsContent>
-
-        <TabsContent value="team">
-          <TeamMembers />
         </TabsContent>
 
         <TabsContent value="notifications">
