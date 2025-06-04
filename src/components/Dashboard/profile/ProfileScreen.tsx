@@ -14,6 +14,7 @@ import {
 import {
   CalendarIcon,
   LinkIcon,
+  PencilIcon,
   StarIcon,
   TrophyIcon,
   UserIcon
@@ -35,6 +36,8 @@ import {
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
 import { generateUrl, getPagePath } from "@/src/utils/helpers"
+import { ChangeEvent, useRef, useState } from "react"
+import { useUser } from "@clerk/nextjs"
 
 type ProfileScreenProps = {
   tab?: string
@@ -68,16 +71,88 @@ export default function ProfileScreen({
     }
   }
 
+  const [isUploading, setIsUploading] = useState(false)
+  const { user: authUser, isLoaded } = useUser()
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  async function handleImageUpload(file: File) {
+    setIsUploading(true)
+
+    try {
+      await authUser?.setProfileImage({ file })
+      toast({
+        title: "Profile image updated!",
+        duration: 3000
+      })
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Upload failed",
+        description: "Could not update profile image",
+        duration: 3000
+      })
+    } finally {
+      setIsUploading(false)
+      setPreviewUrl(null)
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+    }
+  }
+
+  async function handleInput(e: ChangeEvent<HTMLInputElement>) {
+    const { files } = e.target
+
+    if (files && files[0]) {
+      const preview = URL.createObjectURL(files[0])
+      setPreviewUrl(preview)
+      handleImageUpload(files[0])
+    }
+  }
+
+  const triggerFileInput = () => {
+    if (fileInputRef.current && !isUploading) {
+      fileInputRef.current.click()
+    }
+  }
+
   return (
     <div className="container mx-auto p-6 relative">
       <div className="mb-6 flex items-center space-x-4">
-        <Avatar className="h-20 w-20">
-          <AvatarImage
-            src={user?.profile_url as string}
-            alt="Profile picture"
-          />
-          <AvatarFallback>Profile Image</AvatarFallback>
-        </Avatar>
+        <div className="relative w-20 h-20">
+          <label htmlFor="image" className="mb-3 cursor-pointer">
+            <Avatar className="h-20 w-20">
+              <AvatarImage
+                src={previewUrl || authUser?.imageUrl || ""}
+                alt="Profile Image"
+              />
+              <input
+                type="file"
+                id="image"
+                name="image"
+                accept="image/*"
+                hidden
+                ref={fileInputRef}
+                onChange={handleInput}
+                disabled={isUploading}
+              />
+              <AvatarFallback>Profile Image</AvatarFallback>
+            </Avatar>
+          </label>
+
+          <button
+            type="button"
+            className="absolute bottom-0 right-0 bg-black rounded-full p-1 border border-white"
+            onClick={triggerFileInput}
+            disabled={isUploading}
+          >
+            <PencilIcon className="h-3 w-3 text-white" />
+          </button>
+        </div>
+
         <div>
           <h1 className="text-2xl font-bold">
             {user?.first_name}
