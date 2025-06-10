@@ -19,12 +19,78 @@ import {
 import { Switch } from "@/src/components/ui/switch"
 import { Textarea } from "@/src/components/ui/textarea"
 import React, { useState } from "react"
+import { useAtom } from "jotai"
+import { SelectProject } from "@/src/db/schema"
+import { z } from "zod"
+import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { toast } from "@/src/hooks/use-toast"
+import { UpdateProjectAction } from "@/src/server-actions/ProjectManagement/projectManagement"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { projectStore } from "@/src/store/project/projectStore"
 
-function ProjectInformation() {
-  const [projectName, setProjectName] = useState("E-Commerce Platform")
-  const [projectDescription, setProjectDescription] = useState(
-    "Web application development project"
-  )
+const projectSchema = z.object({
+  project_name: z
+    .string()
+    .min(1, "Title required")
+    .max(50, "Title is too long"),
+  description: z
+    .string()
+    .min(1, "Description required")
+    .max(150, "Description is too long"),
+  project_type: z.boolean().optional()
+})
+
+type ProjectFormData = z.infer<typeof projectSchema>
+
+interface Props {
+  currProjectData: SelectProject
+}
+
+function ProjectInformation({ currProjectData }: Props) {
+  const [updateLoading, , , updateProject] =
+    useServerAction(UpdateProjectAction)
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isValid }
+  } = useForm<ProjectFormData>({
+    resolver: zodResolver(projectSchema),
+    defaultValues: {
+      project_name: currProjectData.project_name || "",
+      description: currProjectData.description || "",
+      project_type: currProjectData.project_type === "active"
+    }
+  })
+
+  // Handle form submission
+  const onSubmit = async (data: ProjectFormData) => {
+    try {
+      // Convert project_type boolean to string ('active' or 'draft')
+      const projectType = data.project_type ? "active" : "draft"
+
+      const payload = {
+        ...data,
+        id: currProjectData?.id,
+        project_slug: data.project_name,
+        project_type: projectType
+      }
+
+      const updatedProject = await updateProject(payload)
+
+      toast({
+        title: "Project Successfully Updated",
+        duration: 3000
+      })
+    } catch (error) {
+      toast({
+        title: "Failed to update Project",
+        duration: 3000,
+        variant: "destructive"
+      })
+    }
+  }
 
   return (
     <Card>
@@ -34,25 +100,46 @@ function ProjectInformation() {
           Update your project details and settings
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="project-name">Project Name</Label>
-          <Input
-            id="project-name"
-            value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="project-description">Description</Label>
-          <Textarea
-            id="project-description"
-            value={projectDescription}
-            onChange={(e) => setProjectDescription(e.target.value)}
-            rows={4}
-          />
-        </div>
-        <div className="space-y-2">
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="project-name">Project Name</Label>
+            <Controller
+              name="project_name"
+              control={control}
+              render={({ field }) => <Input id="project-name" {...field} />}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="project-description">Description</Label>
+            <Controller
+              name="description"
+              control={control}
+              render={({ field }) => (
+                <Textarea id="project-description" {...field} rows={4} />
+              )}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="project-visibility">Active / Draft</Label>
+            <div className="flex items-center space-x-2">
+              <Controller
+                name="project_type"
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    id="project-visibility"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
+              />
+              <span>
+                {currProjectData.project_type === "active" ? "Active" : "Draft"}
+              </span>
+            </div>
+          </div>
+          {/* <div className="space-y-2">
           <Label htmlFor="project-category">Category</Label>
           <Select defaultValue="web-development">
             <SelectTrigger id="project-category">
@@ -91,11 +178,14 @@ function ProjectInformation() {
             When enabled, this project will be visible to all members of your
             organization.
           </p>
-        </div>
-      </CardContent>
-      <CardFooter>
-        <Button>Save Changes</Button>
-      </CardFooter>
+        </div> */}
+        </CardContent>
+        <CardFooter>
+          <Button type="submit" loading={updateLoading}>
+            Save Changes
+          </Button>
+        </CardFooter>
+      </form>
     </Card>
   )
 }

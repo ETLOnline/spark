@@ -38,7 +38,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
 import { isOnlyEmoji } from "@/src/utils/helpers"
 import CreateNewChat from "./components/CreateNewChat"
 import Avvvatars from "avvvatars-react"
-import { EmojiPicker, EmojiPickerContent, EmojiPickerFooter, EmojiPickerSearch } from "../../ui/emoji-picker"
+import {
+  EmojiPicker,
+  EmojiPickerContent,
+  EmojiPickerFooter,
+  EmojiPickerSearch
+} from "../../ui/emoji-picker"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -425,13 +430,14 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                   <PopoverContent side="top" align="end" className="p-0">
                     <EmojiPicker
                       className="h-[342px]"
-                      onEmojiSelect={({emoji}: any) => setNewMessage(`${newMessage}${emoji}`)}
+                      onEmojiSelect={({ emoji }: any) =>
+                        setNewMessage(`${newMessage}${emoji}`)
+                      }
                     >
                       <EmojiPickerSearch />
                       <EmojiPickerContent />
                       <EmojiPickerFooter />
                     </EmojiPicker>
-
                   </PopoverContent>
                 </Popover>
                 <Button type="submit" size="icon">

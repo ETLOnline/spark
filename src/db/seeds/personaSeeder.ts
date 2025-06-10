@@ -52,5 +52,3 @@ export const seedPersonas = async () => {
     }
   })
 }
-
-seedPersonas().finally(() => process.exit(0))

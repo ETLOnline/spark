@@ -17,9 +17,7 @@ function ProjectTopCatagories({ categories }: Props) {
           {categories.slice(0, 5).map((category, index) => (
             <li key={index} className="flex justify-between items-center">
               <span>{category}</span>
-              <Badge variant="secondary">
-                {Math.floor(Math.random() * 20) + 1}
-              </Badge>
+              <Badge variant="secondary">0</Badge>
             </li>
           ))}
         </ul>
