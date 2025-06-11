@@ -22,7 +22,6 @@ export async function SelectUserByExternalId(id: string) {
     },
     where: eq(usersTable.external_auth_id, id),
     with: {
-      persona: true,
       channels: {
         with: {
           channel: {
@@ -125,5 +124,25 @@ export const GetUserProfileData = async (userId: string) => {
     activities: result?.userActivities.map((ua) => ua.activity) || [],
     rewards: result?.userRewards.map((ur) => ur.reward) || [],
     tags: result?.userTags.map((ut) => ut.tag) || []
+  }
+}
+
+export const UpdateUserProfilePicture = async (
+  userId: string,
+  profileUrl: string
+) => {
+  try {
+    const updatedUser = await db
+      .update(usersTable)
+      .set({
+        profile_url: profileUrl
+      })
+      .where(eq(usersTable.external_auth_id, userId))
+      .returning()
+
+    return updatedUser[0]
+  } catch (error: any) {
+    console.error("Error updating user profile picture:", error)
+    throw new Error(error.message || "Failed to update user profile picture")
   }
 }
