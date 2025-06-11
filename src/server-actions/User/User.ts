@@ -15,6 +15,7 @@ import {
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
 import { clerkClient } from "@clerk/nextjs/server"
+import { AuthUserAction } from "./AuthUserAction"
 
 export const UpdateBioForUserAction = CreateServerAction(
   true,
@@ -133,7 +134,7 @@ export const GetUserProfileAction = CreateServerAction(
 export const UpdateUserProfilePictureAction = CreateServerAction(
   true,
   async (
-    userId: string,
+    _userId: string,
     fileName: string,
     fileB64string: string,
     fileType: string
@@ -148,13 +149,24 @@ export const UpdateUserProfilePictureAction = CreateServerAction(
         "profiles"
       )
 
+      if (!fileUrl || !fileRecord) {
+        throw new Error("Upload failed: missing fileUrl or file metadata.")
+      }
+
+      const { unique_id, external_auth_id } = await AuthUserAction()
+      if (!unique_id || !external_auth_id) {
+        throw new Error("Could not determine authenticated user IDs")
+      }
+      const clerkUserId = external_auth_id
+      const dbUserId = unique_id
+
       const fileBlob = new Blob([fileBuffer], { type: fileType })
       const clerk = await clerkClient()
-      await clerk.users.updateUserProfileImage(userId, {
+      await clerk.users.updateUserProfileImage(clerkUserId, {
         file: fileBlob
       })
 
-      const updatedUser = await UpdateUserProfilePicture(userId, fileUrl)
+      const updatedUser = await UpdateUserProfilePicture(dbUserId, fileUrl)
 
       return {
         success: true,

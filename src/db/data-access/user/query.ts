@@ -137,7 +137,7 @@ export const UpdateUserProfilePicture = async (
       .set({
         profile_url: profileUrl
       })
-      .where(eq(usersTable.external_auth_id, userId))
+      .where(eq(usersTable.unique_id, userId))
       .returning()
 
     return updatedUser[0]
