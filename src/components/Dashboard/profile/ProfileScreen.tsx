@@ -84,7 +84,6 @@ export default function ProfileScreen({
       reader.onloadend = async () => {
         const base64 = reader.result as string
         const res = await UpdateUserProfilePictureAction(
-          user.unique_id,
           file.name,
           base64,
           file.type

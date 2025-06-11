@@ -133,12 +133,7 @@ export const GetUserProfileAction = CreateServerAction(
 
 export const UpdateUserProfilePictureAction = CreateServerAction(
   true,
-  async (
-    _userId: string,
-    fileName: string,
-    fileB64string: string,
-    fileType: string
-  ) => {
+  async (fileName: string, fileB64string: string, fileType: string) => {
     try {
       const fileBuffer = base64ToBuffer(fileB64string)
 
