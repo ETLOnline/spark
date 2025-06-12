@@ -5,6 +5,7 @@ import { ClerkProvider } from "@clerk/nextjs"
 import ClerkAuthListener from "../services/auth/ClerkAuthListner"
 import ThemeProvider from "../components/ThemeProvider/ThemeProvider"
 import { Toaster } from "../components/ui/toaster"
+import { dark } from '@clerk/themes'
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -28,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider appearance={{ baseTheme: dark }}> 
       <ClerkAuthListener />
       <html lang="en" suppressHydrationWarning>
         <body
