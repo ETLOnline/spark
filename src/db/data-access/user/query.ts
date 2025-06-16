@@ -1,6 +1,6 @@
 import { eq, like } from "drizzle-orm"
 import { db } from "../.."
-import { InsertUser, usersTable } from "../../schema"
+import { InsertUser, userContactsTable, usersTable } from "../../schema"
 
 export async function CreateUser(data: InsertUser) {
   await db.insert(usersTable).values(data)
@@ -17,12 +17,15 @@ export async function SelectUserByExternalId(id: string) {
       unique_id: true,
       bio: true,
       role: true,
-      persona_id: true,
       meta_profile: true
     },
     where: eq(usersTable.external_auth_id, id),
     with: {
-      persona: true,
+      roles: {
+        with: {
+          role: true
+        }
+      },
       channels: {
         with: {
           channel: {
@@ -67,7 +70,6 @@ export async function FindUserWildCard(wildcard: string) {
         unique_id: true,
         bio: true,
         role: true,
-        persona_id: true,
         meta_profile: true
       },
       where: (usersTable, { or }) =>
@@ -126,4 +128,25 @@ export const GetUserProfileData = async (userId: string) => {
     rewards: result?.userRewards.map((ur) => ur.reward) || [],
     tags: result?.userTags.map((ut) => ut.tag) || []
   }
+}
+
+export async function getUserContacts(currentUserId: string) {
+  return await db
+    .select({
+      unique_id: usersTable.unique_id,
+      first_name: usersTable.first_name,
+      last_name: usersTable.last_name,
+      email: usersTable.email,
+      external_auth_id: usersTable.external_auth_id,
+      profile_url: usersTable.profile_url,
+      bio: usersTable.bio,
+      role: usersTable.role,
+      meta_profile: usersTable.meta_profile
+    })
+    .from(userContactsTable)
+    .innerJoin(
+      usersTable,
+      eq(usersTable.unique_id, userContactsTable.contact_id)
+    )
+    .where(eq(userContactsTable.user_id, currentUserId))
 }

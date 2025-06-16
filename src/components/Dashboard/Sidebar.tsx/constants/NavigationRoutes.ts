@@ -12,6 +12,7 @@ import {
   Newspaper,
   Send,
   Settings2,
+  Shield,
   User
 } from "lucide-react"
 
@@ -64,6 +65,11 @@ export const siteRoutes: SiteRoutes = {
       title: "Events",
       url: "/events",
       icon: Calendar
+    },
+    {
+      title: "Roles & Permissions",
+      url: "/roles",
+      icon: Shield
     },
     {
       title: "Channels",

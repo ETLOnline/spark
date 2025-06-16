@@ -3,10 +3,13 @@ import { ProfileActivity } from "../components/Dashboard/Connections/types/conne
 import {
   InsertNotification,
   SelectChannel,
+  SelectRole,
   SelectSpace,
-  SelectUser
+  SelectUser,
+  SelectUserRole
 } from "../db/schema"
 import { AblyClient } from "../services/realtime/AblyClient"
+import { RoleWithPermissions } from "../app/(dashboard)/roles/[id]/edit/page"
 
 export const joinRequestChannel = (
   channelId: string,
@@ -159,9 +162,89 @@ export const checkUserPersonaCompletion = async (user: SelectUser) => {
   if (isUserAdmin(user)) {
     return true
   }
-  if (!user.persona_id) {
+  if (!user.roles || user.roles.length === 0) {
     return false
   }
+  const hasGlobalRole = user.roles.find(
+    (userRole: SelectUserRole) => userRole.role?.role_type === "GLOBAL"
+  )
+  return hasGlobalRole
+}
 
-  return true
+export const rolesUserCount = (roles: any) => {
+  const rolesWithUserCount = roles.map((role: any) => ({
+    ...role,
+    user_count: role.users ? role.users.length : 0
+  }))
+
+  return rolesWithUserCount
+}
+
+type RawPermission = {
+  id: number
+  namespace: string
+  action: string
+}
+
+export type GroupedPermission = {
+  id: string
+  name: string
+  permissions: {
+    id: number
+    key: string
+    name: string
+  }[]
+}
+
+export function groupPermissionsByNamespace(
+  permissions: RawPermission[]
+): GroupedPermission[] {
+  const grouped = new Map<string, GroupedPermission>()
+
+  for (const p of permissions) {
+    if (!grouped.has(p.namespace)) {
+      grouped.set(p.namespace, {
+        id: p.namespace,
+        name: capitalize(p.namespace),
+        permissions: []
+      })
+    }
+
+    grouped.get(p.namespace)!.permissions.push({
+      id: p.id,
+      key: `${p.namespace}.${p.action}`,
+      name: formatAction(p.action)
+    })
+  }
+
+  return Array.from(grouped.values())
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+function formatAction(action: string): string {
+  return action.split("_").map(capitalize).join(" ")
+}
+
+export function transformSingleRoleWithPermissions(
+  role: SelectRole
+): RoleWithPermissions {
+  return {
+    id: role.id,
+    name: role.name,
+    userCount: role.users?.length ?? 0,
+    isGlobal: role.role_type === "GLOBAL",
+    permissions: role.permissions?.map((p) => p.permission_id) ?? []
+  }
+}
+
+export function getOptionsFromUserList(users: SelectUser[]) {
+  return users.map((user) => {
+    return {
+      label: `${user.first_name} ${user.last_name}`,
+      value: user.unique_id
+    }
+  })
 }

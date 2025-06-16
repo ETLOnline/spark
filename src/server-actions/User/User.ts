@@ -1,6 +1,7 @@
 "use server"
 
 import {
+  getUserContacts,
   GetUserProfileData,
   UpdateUserBio
 } from "@/src/db/data-access/user/query"
@@ -9,6 +10,7 @@ import { AddTag } from "@/src/db/data-access/tag/query"
 import { AddUserTag, DeleteUserTags } from "@/src/db/data-access/tag/query"
 import { ProfileData } from "@/src/components/Dashboard/profile/types/profile-types"
 import { Tag, TagStatus } from "@/src/components/TagsInput/tags-input-types"
+import { AuthUserAction } from "./AuthUserAction"
 
 export const UpdateBioForUserAction = CreateServerAction(
   true,
@@ -123,3 +125,17 @@ export const GetUserProfileAction = CreateServerAction(
     }
   }
 )
+
+export async function GetUserContactsAction() {
+  try {
+    const auth = await AuthUserAction()
+    if (!auth) {
+      return { success: false, data: [] }
+    }
+    const contacts = await getUserContacts(auth.unique_id)
+    return { success: true, data: contacts }
+  } catch (error) {
+    console.error("Failed to fetch user contacts:", error)
+    return { success: false, error }
+  }
+}

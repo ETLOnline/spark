@@ -371,7 +371,6 @@ export const getChatContacts = async ({
         unique_id: true,
         bio: true,
         role: true,
-        persona_id: true,
         meta_profile: true
       },
       where: (usersTable, {}) =>

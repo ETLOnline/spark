@@ -1,4 +1,4 @@
-import { getPersonasAction } from "@/src/server-actions/Personas/Personas"
+import { getPersonasAction } from "@/src/server-actions/UserRoles/UserRole"
 import SelectPersonaPage from "@/src/components/Parsona/SelectPersonaPage"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { checkUserPersonaCompletion } from "@/src/utils/helpers"
@@ -36,7 +36,5 @@ export default async function PersonasPage() {
     redirect("/dashboard")
   }
 
-  return (
-    <SelectPersonaPage personas={personasResult.data} userAuth={authUser} />
-  )
+  return <SelectPersonaPage roles={personasResult.data} userAuth={authUser} />
 }

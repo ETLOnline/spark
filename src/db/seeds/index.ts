@@ -1,11 +1,13 @@
 import { FeatureSeed } from "./FeatureSeed"
-import { seedPersonas } from "./personaSeeder"
+import { RolesSeed } from "./RolesSeed"
 import { UserSeed } from "./UserSeed"
+import { PermissionsSeed } from "./PermissoinsSeed"
 
 const SEEDERS: Record<string, () => Promise<void>> = {
   user: UserSeed,
   feature: FeatureSeed,
-  persona: seedPersonas
+  roles: RolesSeed,
+  permission: PermissionsSeed
 }
 
 async function runSeeders() {

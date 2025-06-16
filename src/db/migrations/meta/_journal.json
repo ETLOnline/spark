@@ -22,6 +22,13 @@
       "when": 1748981907563,
       "tag": "0002_2025_06_04_011826__add_sprints_table",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1749579712074,
+      "tag": "0003_2025_06_10_232117__add_tables_for_roles_and_permissions_and_remove_personas_table",
+      "breakpoints": true
     }
   ]
 }
