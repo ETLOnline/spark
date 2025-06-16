@@ -248,3 +248,36 @@ export function getOptionsFromUserList(users: SelectUser[]) {
     }
   })
 }
+
+type SerializableUserPerms = {
+  global: string[]
+  scoped: {
+    [entityType: string]: {
+      [entityId: string]: string[]
+    }
+  }
+}
+
+export function serializeUserPerms(userPerms: {
+  global: Set<string>
+  scoped: {
+    [entityType: string]: {
+      [entityId: string]: Set<string>
+    }
+  }
+}): SerializableUserPerms {
+  return {
+    global: Array.from(userPerms.global),
+    scoped: Object.fromEntries(
+      Object.entries(userPerms.scoped).map(([entityType, entityMap]) => [
+        entityType,
+        Object.fromEntries(
+          Object.entries(entityMap).map(([entityId, permSet]) => [
+            entityId,
+            Array.from(permSet)
+          ])
+        )
+      ])
+    )
+  }
+}

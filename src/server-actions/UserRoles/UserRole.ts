@@ -17,6 +17,7 @@ import {
 import { CreateServerAction } from ".."
 import {
   groupPermissionsByNamespace,
+  serializeUserPerms,
   transformSingleRoleWithPermissions
 } from "@/src/utils/helpers"
 import { clerkClient } from "@clerk/nextjs/server"
@@ -25,39 +26,6 @@ import { buildUserPerms } from "@/src/lib/permissions.config"
 export const getPersonasAction = async () => {
   const globalRoles = await getAllGlobalRoles()
   return { success: true, data: globalRoles }
-}
-
-type SerializableUserPerms = {
-  global: string[]
-  scoped: {
-    [entityType: string]: {
-      [entityId: string]: string[]
-    }
-  }
-}
-
-export function serializeUserPerms(userPerms: {
-  global: Set<string>
-  scoped: {
-    [entityType: string]: {
-      [entityId: string]: Set<string>
-    }
-  }
-}): SerializableUserPerms {
-  return {
-    global: Array.from(userPerms.global),
-    scoped: Object.fromEntries(
-      Object.entries(userPerms.scoped).map(([entityType, entityMap]) => [
-        entityType,
-        Object.fromEntries(
-          Object.entries(entityMap).map(([entityId, permSet]) => [
-            entityId,
-            Array.from(permSet)
-          ])
-        )
-      ])
-    )
-  }
 }
 
 export async function attachPermissionsInClaimClerk(
