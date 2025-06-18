@@ -32,18 +32,18 @@ export default function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/">
-                <div className="flex aspect-square items-center justify-center rounded-lg border  text-sidebar-primary-foreground">
+                <div className="flex aspect-square items-center justify-center rounded-lg text-sidebar-primary-foreground">
                   <Image
                     sizes="8"
-                    src="/logo/spark-logo-no-bg.png"
+                    src="/logo/spark-logo-animated.gif"
                     alt="spark-logo"
                     width={40}
                     height={40}
                   />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Spark</span>
-                  <span className="truncate text-xs">ETLOnline</span>
+                  <span className="truncate font-semibold color-accent">Spark</span>
+                  <span className="truncate text-[8px]">ETL Online</span>
                 </div>
               </Link>
             </SidebarMenuButton>
