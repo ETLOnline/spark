@@ -38,6 +38,7 @@ import {
 import { generateUrl, getPagePath } from "@/src/utils/helpers"
 import { useRef, useState } from "react"
 import { UpdateUserProfilePictureAction } from "@/src/server-actions/User/User"
+import { useServerAction } from "@/src/hooks/useServerAction"
 
 type ProfileScreenProps = {
   tab?: string
@@ -53,6 +54,9 @@ export default function ProfileScreen({
   const { toast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  const [loading, userData, error, updateUserProfile] = useServerAction(
+    UpdateUserProfilePictureAction
+  )
 
   const handleCopyUrl = async () => {
     try {
@@ -73,49 +77,71 @@ export default function ProfileScreen({
     }
   }
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    try {
-      setUploading(true)
-
-      const reader = new FileReader()
-      reader.onloadend = async () => {
-        const base64 = reader.result as string
-        const res = await UpdateUserProfilePictureAction(
-          file.name,
-          base64,
-          file.type
-        )
-
-        if (res?.success) {
-          toast({
-            title: "Profile picture updated!",
-            description: "Your profile picture has been successfully updated.",
-            duration: 3000
-          })
-          window.location.reload()
-        } else {
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const base64 = reader.result as string
+      UpdateUserProfilePictureAction(file.name, base64, file.type)
+        .then((res) => {
+          if (res?.success) {
+            toast({
+              title: "Profile picture updated!",
+              description:
+                "Your profile picture has been successfully updated.",
+              duration: 3000
+            })
+            window.location.reload()
+          } else {
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: res?.error || "Failed to update profile picture",
+              duration: 3000
+            })
+          }
+          setUploading(false)
+        })
+        .catch(() => {
           toast({
             variant: "destructive",
             title: "Error",
-            description: res?.error || "Failed to update profile picture",
+            description: "Something went wrong",
             duration: 3000
           })
-        }
-        setUploading(false)
-      }
-      reader.readAsDataURL(file)
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong",
-        duration: 3000
-      })
-      setUploading(false)
+          setUploading(false)
+        })
+      updateUserProfile(file.name, base64, file.type)
+        .then((res) => {
+          if (res?.success) {
+            toast({
+              title: "Profile picture updated!",
+              description:
+                "Your profile picture has been successfully updated.",
+              duration: 3000
+            })
+            window.location.reload()
+          } else {
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: res?.error || "Failed to update profile picture",
+              duration: 3000
+            })
+          }
+        })
+        .catch(() => {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Something went wrong",
+            duration: 3000
+          })
+        })
     }
+    reader.readAsDataURL(file)
   }
 
   return (
@@ -132,7 +158,7 @@ export default function ProfileScreen({
           <button
             className="absolute bottom-0 right-0 bg-background border rounded-full p-1 hover:bg-muted"
             onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
+            disabled={loading}
           >
             <PencilIcon className="h-4 w-4" />
           </button>
