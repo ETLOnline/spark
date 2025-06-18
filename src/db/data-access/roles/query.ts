@@ -7,7 +7,7 @@ import {
   userRolesTable,
   usersTable
 } from "@/src/db/schema"
-import { RawPermissionRow } from "@/src/lib/permissions.config"
+import { RawPermissionRow } from "@/src/utils/clientHelper"
 import { rolesUserCount } from "@/src/utils/helpers"
 import { eq, sql, inArray, asc } from "drizzle-orm"
 

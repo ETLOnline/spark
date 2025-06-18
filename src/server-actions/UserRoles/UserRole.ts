@@ -21,7 +21,7 @@ import {
   transformSingleRoleWithPermissions
 } from "@/src/utils/helpers"
 import { clerkClient } from "@clerk/nextjs/server"
-import { buildUserPerms } from "@/src/lib/permissions.config"
+import { buildUserPerms } from "@/src/utils/clientHelper"
 
 export const getPersonasAction = async () => {
   const globalRoles = await getAllGlobalRoles()
@@ -34,11 +34,10 @@ export async function attachPermissionsInClaimClerk(
 ) {
   const permissionRows = await getUserPermissionRows(userId)
   const userPerms = buildUserPerms(permissionRows)
-  const serializedPerms = serializeUserPerms(userPerms)
   const clerk = await clerkClient()
   const user = clerk.users.updateUserMetadata(externalAuthId, {
     publicMetadata: {
-      permissions: serializedPerms
+      permissions: userPerms
     }
   })
 }
@@ -125,15 +124,6 @@ export async function deleteRoleAction(roleId: number) {
   } catch (error: any) {
     return { success: false, error: error.message }
   }
-}
-
-export async function attachUsersToRoleAction(
-  roleId: number,
-  userIds: string[]
-) {
-  const rolesAttached = await attachUsersToRole(roleId, userIds)
-  // const attachedClaims =  await attachPermissionsInClaimClerk(userId, externalAuthId)
-  return rolesAttached
 }
 
 export async function getUsersByRoleIDAction(id: number) {
