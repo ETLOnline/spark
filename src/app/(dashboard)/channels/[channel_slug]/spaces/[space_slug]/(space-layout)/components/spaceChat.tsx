@@ -9,6 +9,8 @@ import { spaceStore } from "@/src/store/space/spaceStore"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useParams } from "next/navigation"
 import React, { Suspense, useEffect } from "react"
+import { userStore } from "@/src/store/user/userStore"
+import { PermissionChecker } from "@/src/lib/PermissionCheker"
 
 interface Props {
   params: Promise<{
@@ -25,6 +27,13 @@ const SpaceChat = () => {
   const [chatlistLoading, chatlist, chatlistError, getChatList] =
     useServerAction(GetChatsAction)
 
+  const permission = useAtomValue(userStore.Permissions)
+  const permissionChecker = new PermissionChecker(
+    "scoped",
+    permission,
+    "space",
+    currentSpace?.id
+  )
   useEffect(() => {
     if (currentSpace) {
       getChatList(currentSpace.id).then((res) => {
@@ -40,7 +49,11 @@ const SpaceChat = () => {
 
   return (
     <Suspense>
-      <ChatScreen allChatsSSR={myChats} currentChatSSR={undefined} />
+      <ChatScreen
+        allChatsSSR={myChats}
+        currentChatSSR={undefined}
+        permissionChecker={permissionChecker}
+      />
     </Suspense>
   )
 }

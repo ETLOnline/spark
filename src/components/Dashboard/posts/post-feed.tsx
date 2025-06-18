@@ -19,21 +19,25 @@ import {
 } from "@/src/server-actions/Post/Post"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useDebouncedCallback } from "use-debounce"
+import { PermissionChecker } from "@/src/lib/PermissionCheker"
 
 type PostFeedProps = {
   fetchedPosts: (SelectPost | SelectFilePost | SelectPollPost)[]
   spaceId?: string
   category?: string
+  permissionChecker?: PermissionChecker
 }
 
 const PostFeed: React.FC<PostFeedProps> = ({
   fetchedPosts,
   spaceId,
-  category
+  category,
+  permissionChecker
 }) => {
   const [posts, setPosts] = useAtom(postStore.posts)
   const offset = useRef<number>(10)
   const isLoading = useRef<boolean>(false)
+  const canDelete = permissionChecker?.canAccess("posting.delete") ?? false
 
   const [spacePostsLoading, oldSpacePosts, spacePostsError, getSpacePosts] =
     useServerAction(GetSpacePostsAction)
@@ -128,7 +132,7 @@ const PostFeed: React.FC<PostFeedProps> = ({
                       </p>
                     </div>
                   </div>
-                  <PostMenu post={post} />
+                  <PostMenu canDelete={canDelete} post={post} />
                 </div>
               </CardHeader>
               <CardContent>

@@ -18,6 +18,8 @@ import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
+import { PermissionChecker } from "@/src/lib/PermissionCheker"
+import { userStore } from "@/src/store/user/userStore"
 
 const SpacePostComponent: React.FC = () => {
   const params = useParams()
@@ -45,9 +47,18 @@ const SpacePostComponent: React.FC = () => {
     })
   }, [])
 
+  const permission = useAtomValue(userStore.Permissions)
+  const permissionChecker = new PermissionChecker(
+    "scoped",
+    permission,
+    "space",
+    space?.id
+  )
+  const canViewPost = permissionChecker.canAccess("posting.view")
+
   return (
     <div className="container mx-auto  space-y-8 max-w-3xl">
-      <CreatePostForm variant="spaces" />
+      <CreatePostForm variant="spaces" permissionChecker={permissionChecker} />
       <Card className="border-none shadow-none">
         <CardHeader className="p-0 pb-6">
           <CardTitle>Feed</CardTitle>
@@ -59,13 +70,15 @@ const SpacePostComponent: React.FC = () => {
             <Loader size={LoaderSizes.xl} />
           </div>
         ) : (
-          posts?.data && (
+          posts?.data &&
+          canViewPost && (
             <PostFeed
               fetchedPosts={
                 posts?.data as (SelectPost | SelectFilePost | SelectPollPost)[]
               }
               spaceId={space?.id}
               category={activeCategory}
+              permissionChecker={permissionChecker}
             />
           )
         )}

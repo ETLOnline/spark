@@ -1,0 +1,38 @@
+import { UserPerms } from "../utils/clientHelper"
+
+export class PermissionChecker {
+  private scope: "global" | "scoped"
+  private userPermissions: UserPerms | null
+  private entityType?: string
+  private entityId?: string
+
+  constructor(
+    scope: "global" | "scoped",
+    userPermissions?: UserPerms | null,
+    entityType?: string,
+    entityId?: string
+  ) {
+    this.scope = scope
+    this.userPermissions = userPermissions ?? null
+    this.entityType = entityType
+    this.entityId = entityId
+  }
+
+  canAccess(action: string): boolean {
+    if (!this.userPermissions) return false
+
+    if (this.scope === "global") {
+      const currentUserPermissions = this.userPermissions.global
+      console.log(currentUserPermissions)
+      return currentUserPermissions.has(action)
+    }
+
+    if (!this.entityType || !this.entityId) return false
+
+    return (
+      this.userPermissions.scoped?.[this.entityType]?.[this.entityId]?.has(
+        action
+      ) ?? false
+    )
+  }
+}

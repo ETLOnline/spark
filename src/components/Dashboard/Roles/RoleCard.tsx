@@ -29,7 +29,6 @@ import {
   AlertDialogAction
 } from "@/src/components/ui/alert-dialog"
 import { useState } from "react"
-import { AttachUsersToRoleDialog } from "./AssignUsersDialog"
 
 export function RoleCard({
   role,
@@ -69,11 +68,6 @@ export function RoleCard({
                   <Link href={`/roles/${role.id}/edit`}>Edit Role</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>Duplicate Role</DropdownMenuItem>
-                {role.role_type !== "GLOBAL" && (
-                  <DropdownMenuItem onClick={() => setDialogOpen(true)}>
-                    Assign Users
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuSeparator />
                 {role.role_type !== "GLOBAL" && (
                   <AlertDialogTrigger asChild>
@@ -150,13 +144,6 @@ export function RoleCard({
           </div>
         </div>
       </CardContent>
-
-      <AttachUsersToRoleDialog
-        roleId={role.id}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onSuccess={refreshRoles}
-      />
     </Card>
   )
 }

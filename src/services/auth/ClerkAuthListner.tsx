@@ -6,12 +6,14 @@ import { SelectUser } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
 import { UserResource } from "@clerk/types"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
+import { RawUserPerms, transformRawPermsToSet } from "@/src/utils/clientHelper"
 
 const ClerkAuthListener = () => {
   const { isSignedIn, isLoaded } = useAuth()
   const { user } = useUser()
   const setUser = useSetAtom(userStore.AuthUser)
   const setIam = useSetAtom(userStore.Iam)
+  const setPermissions = useSetAtom(userStore.Permissions)
 
   const handleSetUser = async (user: UserResource | null | undefined) => {
     if (!user) return
@@ -19,6 +21,11 @@ const ClerkAuthListener = () => {
     if (!userRes) return
     setUser(userRes as SelectUser)
     setIam(userRes as SelectUser)
+
+    const rawPerms = user?.publicMetadata?.permissions as RawUserPerms | null
+    if (!rawPerms) return
+    const transformed = transformRawPermsToSet(rawPerms)
+    setPermissions(transformed)
   }
 
   useEffect(() => {
@@ -28,6 +35,7 @@ const ClerkAuthListener = () => {
     } else {
       setUser(null)
       setIam(null)
+      setPermissions(null)
     }
   }, [isSignedIn, user, setUser])
 

@@ -44,10 +44,12 @@ import {
   EmojiPickerFooter,
   EmojiPickerSearch
 } from "../../ui/emoji-picker"
+import { PermissionChecker } from "@/src/lib/PermissionCheker"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
   allChatsSSR: SelectChat[]
+  permissionChecker: PermissionChecker
 }
 
 // Function to join a channel (for group or one-to-one chat)
@@ -115,7 +117,13 @@ function joinChannel(
  * - `Loader` for displaying a loading indicator while fetching chat messages.
  * - `Input` and `Button` for handling the input and sending of new messages.
  */
-export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
+export function ChatScreen({
+  currentChatSSR,
+  allChatsSSR,
+  permissionChecker
+}: ChatScreenProps) {
+  const canCreate = permissionChecker?.canAccess("chat.create") ?? false
+
   const [messages, setMessages] = useState<SelectMessage[]>([])
   const [newMessage, setNewMessage] = useState("")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useAtom(
@@ -232,7 +240,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         <CardHeader className="px-3">
           <CardTitle className="flex items-center justify-between">
             Chats
-            <CreateNewChat />
+            {canCreate && <CreateNewChat />}
           </CardTitle>
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />

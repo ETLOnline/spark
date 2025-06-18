@@ -1,46 +1,83 @@
+"use client"
+
 import { ChatScreen } from "@/src/components/Dashboard/Chat"
 import { SelectChat } from "@/src/db/schema"
 import {
   GetChatBySlugWithMessagesAction,
   GetChatsAction
 } from "@/src/server-actions/Chat/Chat"
-import { Suspense } from "react"
+import { Suspense, useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { useAtomValue } from "jotai"
+import { userStore } from "@/src/store/user/userStore"
+import { PermissionChecker } from "@/src/lib/PermissionCheker"
 
-interface ChatPageProps {
-  searchParams: Promise<{
-    active_chat?: string
-  }>
-}
+export default function ChatPage() {
+  const searchParams = useSearchParams()
+  const [currentChat, setCurrentChat] = useState<SelectChat | undefined>(
+    undefined
+  )
+  const [allChats, setAllChats] = useState<SelectChat[]>([])
+  const [loading, setLoading] = useState(true)
 
-export default async function ChatPage(props: ChatPageProps) {
-  const searchParams = await props.searchParams
-  let currentChat: SelectChat | undefined = undefined
-  let allChats: SelectChat[] = []
-  let selectedCurrectChatSlug = null
+  const permission = useAtomValue(userStore.Permissions)
+  const permissionChecker = new PermissionChecker("global", permission)
 
-  const chatsRes = await GetChatsAction()
-  if (chatsRes?.success && chatsRes?.data) {
-    allChats = chatsRes.data
-  }
+  useEffect(() => {
+    const fetchChatsAndCurrentChat = async () => {
+      try {
+        setLoading(true)
+        let selectedCurrentChatSlug = null
 
-  if (allChats.length > 0) {
-    if (searchParams.active_chat) {
-      selectedCurrectChatSlug = searchParams.active_chat
-    } else {
-      selectedCurrectChatSlug = allChats[0].chat_slug
+        // Fetch all chats
+        const chatsRes = await GetChatsAction()
+        let fetchedChats: SelectChat[] = []
+
+        if (chatsRes?.success && chatsRes?.data) {
+          fetchedChats = chatsRes.data
+          setAllChats(fetchedChats)
+        }
+
+        // Determine which chat to select
+        if (fetchedChats.length > 0) {
+          const activeChatParam = searchParams.get("active_chat")
+
+          if (activeChatParam) {
+            selectedCurrentChatSlug = activeChatParam
+          } else {
+            selectedCurrentChatSlug = fetchedChats[0].chat_slug
+          }
+
+          // Fetch the selected chat with messages
+          const currentChatRes = await GetChatBySlugWithMessagesAction(
+            selectedCurrentChatSlug
+          )
+
+          if (currentChatRes.success) {
+            setCurrentChat(currentChatRes.data)
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching chats:", error)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    const currentChatRes = await GetChatBySlugWithMessagesAction(
-      selectedCurrectChatSlug
-    )
-    if (currentChatRes.success) {
-      currentChat = currentChatRes.data
-    }
+    fetchChatsAndCurrentChat()
+  }, [searchParams])
+
+  if (loading) {
+    return <div>Loading chats...</div>
   }
 
   return (
     <Suspense>
-      <ChatScreen allChatsSSR={allChats} currentChatSSR={currentChat} />
+      <ChatScreen
+        allChatsSSR={allChats}
+        currentChatSSR={currentChat}
+        permissionChecker={permissionChecker}
+      />
     </Suspense>
   )
 }

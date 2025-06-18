@@ -62,7 +62,8 @@ export const getAllGlobalAndScopeRoles = async () => {
           }
         },
         users: true
-      }
+      },
+      orderBy: (rolesTable) => asc(rolesTable.name)
     })
 
     const rolesWithUserCount = rolesUserCount(roles)

@@ -17,9 +17,10 @@ import { isUserAdmin } from "@/src/utils/helpers"
 
 interface PostMenuProps {
   post: SelectPost
+  canDelete: boolean
 }
 
-const PostMenu = ({ post }: PostMenuProps) => {
+const PostMenu = ({ post, canDelete }: PostMenuProps) => {
   const [posts, setPosts] = useAtom(postStore.posts)
   const user = useAtomValue(userStore.AuthUser)
 
@@ -51,21 +52,26 @@ const PostMenu = ({ post }: PostMenuProps) => {
 
   if (user?.role && (isUserAdmin(user) || user.unique_id === post.user_id)) {
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm">
-            <MoreVertical className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
-            <Button variant="ghost" size="sm">
-              <Trash className="mr-2 h-4 w-4" />
-              Delete
-            </Button>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <>
+        {canDelete && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                className="text-destructive"
+                onClick={handleDelete}
+              >
+                <Trash className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </>
     )
   } else {
     return null

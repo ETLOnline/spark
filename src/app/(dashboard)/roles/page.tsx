@@ -25,7 +25,6 @@ export default function RolesPage() {
   useEffect(() => {
     const fetchingRoles = async () => {
       const res = await fetchRoles()
-      console.log("Data in useEffect:", res)
     }
     fetchingRoles()
   }, [])

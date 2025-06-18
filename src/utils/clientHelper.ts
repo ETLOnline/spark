@@ -1,16 +1,14 @@
-import { useUser } from "@clerk/nextjs"
-
-// Define raw shape that matches what Clerk stores
-type RawUserPerms = {
+export type RawUserPerms = {
   global?: string[]
   scoped?: {
     [entityType: string]: {
-      [entityId: string]: string[]
+      // channel | chat
+      [entityId: string]: string[] // posting.create chat.create
     }
   }
 }
 
-type UserPerms = {
+export type UserPerms = {
   global: Set<string>
   scoped: {
     [entityType: string]: {
@@ -19,38 +17,61 @@ type UserPerms = {
   }
 }
 
-export function useCanAccess(
-  permission: string,
-  scope: "global" | "scoped",
-  entityType?: string,
-  entityId?: string
-): boolean {
-  const { user } = useUser()
-  const rawPerms = user?.publicMetadata?.permissions as RawUserPerms | undefined
+const defaultPermissions: UserPerms = {
+  global: new Set(),
+  scoped: {}
+}
 
-  if (!rawPerms) return false
+export function transformRawPermsToSet(
+  rawPerms?: RawUserPerms
+): UserPerms | null {
+  if (!rawPerms) return null
 
-  // Convert to Set-based structure
-  const perms: UserPerms = {
-    global: new Set(rawPerms.global || []),
-    scoped: {}
-  }
+  const global = new Set(rawPerms.global || [])
+
+  const scoped: UserPerms["scoped"] = {}
 
   if (rawPerms.scoped) {
-    for (const type in rawPerms.scoped) {
-      perms.scoped[type] = {}
-      for (const id in rawPerms.scoped[type]) {
-        perms.scoped[type][id] = new Set(rawPerms.scoped[type][id])
+    for (const entityType in rawPerms.scoped) {
+      scoped[entityType] = {}
+
+      for (const entityId in rawPerms.scoped[entityType]) {
+        const permissionArray = rawPerms.scoped[entityType][entityId] || []
+        scoped[entityType][entityId] = new Set(permissionArray)
       }
     }
   }
 
-  // Permission logic
-  if (scope === "global") {
-    return perms.global.has(permission)
+  return { global, scoped }
+}
+
+export interface RawPermissionRow {
+  namespace: string
+  action: string
+  entity_type: string | null
+  entity_id: string | null
+}
+
+export function buildUserPerms(rows: RawPermissionRow[]): RawUserPerms {
+  const global: string[] = []
+  const scoped: RawUserPerms["scoped"] = {}
+
+  for (const row of rows) {
+    const key = `${row.namespace}.${row.action}`
+
+    if (!row.entity_type || !row.entity_id) {
+      global.push(key)
+    } else {
+      if (!scoped[row.entity_type]) scoped[row.entity_type] = {}
+      if (!scoped[row.entity_type][row.entity_id])
+        scoped[row.entity_type][row.entity_id] = []
+
+      scoped[row.entity_type][row.entity_id].push(key)
+    }
   }
 
-  if (!entityType || !entityId) return false
-
-  return perms.scoped?.[entityType]?.[entityId]?.has(permission) ?? false
+  return {
+    global: global.length ? global : undefined,
+    scoped: Object.keys(scoped).length ? scoped : undefined
+  }
 }
