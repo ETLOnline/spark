@@ -49,7 +49,6 @@ import { PermissionChecker } from "@/src/lib/PermissionCheker"
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
   allChatsSSR: SelectChat[]
-  permissionChecker: PermissionChecker
 }
 
 // Function to join a channel (for group or one-to-one chat)
@@ -117,11 +116,8 @@ function joinChannel(
  * - `Loader` for displaying a loading indicator while fetching chat messages.
  * - `Input` and `Button` for handling the input and sending of new messages.
  */
-export function ChatScreen({
-  currentChatSSR,
-  allChatsSSR,
-  permissionChecker
-}: ChatScreenProps) {
+export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
+  const permissionChecker = useAtomValue(chatStore.permissionCheckerAtom)
   const canCreate = permissionChecker?.canAccess("chat.create") ?? false
 
   const [messages, setMessages] = useState<SelectMessage[]>([])

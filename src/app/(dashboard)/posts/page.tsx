@@ -10,6 +10,7 @@ import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import { useAtom, useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
+import { postStore } from "@/src/store/post/postStore"
 
 const PostsPage = () => {
   const [posts, setPosts] = useState<
@@ -17,8 +18,17 @@ const PostsPage = () => {
   >([])
   const [loading, setLoading] = useState(true)
   const permission = useAtomValue(userStore.Permissions)
-  const permissionChecker = new PermissionChecker("global", permission)
-  const canViewPost = permissionChecker.canAccess("posting.view")
+  const [permissionChecker, setPermissionChecker] = useAtom(
+    postStore.permissionCheckerAtom
+  ) // Store PermissionChecker
+
+  useEffect(() => {
+    if (permission && !permissionChecker) {
+      const checker = new PermissionChecker("global", permission)
+      setPermissionChecker(checker)
+    }
+  }, [permission, permissionChecker, setPermissionChecker])
+  const canViewPost = permissionChecker?.canAccess("posting.view")
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -41,13 +51,13 @@ const PostsPage = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-8 max-w-3xl">
-      <CreatePostForm permissionChecker={permissionChecker} />
+      <CreatePostForm />
       {loading ? (
         <div className="flex justify-center h-full w-full">
           <Loader size={LoaderSizes.xl} />
         </div>
       ) : canViewPost ? (
-        <PostFeed fetchedPosts={posts} permissionChecker={permissionChecker} />
+        <PostFeed fetchedPosts={posts} />
       ) : null}
     </div>
   )

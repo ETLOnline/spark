@@ -20,6 +20,7 @@ import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import { userStore } from "@/src/store/user/userStore"
+import { postStore } from "@/src/store/post/postStore"
 
 const SpacePostComponent: React.FC = () => {
   const params = useParams()
@@ -48,17 +49,28 @@ const SpacePostComponent: React.FC = () => {
   }, [])
 
   const permission = useAtomValue(userStore.Permissions)
-  const permissionChecker = new PermissionChecker(
-    "scoped",
-    permission,
-    "space",
-    space?.id
-  )
-  const canViewPost = permissionChecker.canAccess("posting.view")
+  const [permissionChecker, setPermissionChecker] = useAtom(
+    postStore.permissionCheckerAtom
+  ) // Store PermissionChecker
+
+  // Initialize PermissionChecker if not already set
+  useEffect(() => {
+    if (permission && !permissionChecker) {
+      const checker = new PermissionChecker(
+        "scoped",
+        permission,
+        "space",
+        space?.id
+      )
+      setPermissionChecker(checker)
+    }
+  }, [permission, permissionChecker, setPermissionChecker])
+  // const permissionChecker = new PermissionChecker("global", permission)
+  const canViewPost = permissionChecker?.canAccess("posting.view")
 
   return (
     <div className="container mx-auto  space-y-8 max-w-3xl">
-      <CreatePostForm variant="spaces" permissionChecker={permissionChecker} />
+      <CreatePostForm variant="spaces" />
       <Card className="border-none shadow-none">
         <CardHeader className="p-0 pb-6">
           <CardTitle>Feed</CardTitle>
@@ -78,7 +90,6 @@ const SpacePostComponent: React.FC = () => {
               }
               spaceId={space?.id}
               category={activeCategory}
-              permissionChecker={permissionChecker}
             />
           )
         )}

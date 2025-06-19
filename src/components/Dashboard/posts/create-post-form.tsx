@@ -50,13 +50,9 @@ import { PermissionChecker } from "@/src/lib/PermissionCheker"
 
 type Props = {
   variant?: "posts" | "spaces"
-  permissionChecker: PermissionChecker
 }
 
-const CreatePostForm: React.FC<Props> = ({
-  variant = "posts",
-  permissionChecker
-}) => {
+const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   const [showCard, setShowCard] = useState(false)
   const [newPost, setNewPost] = useState<NewPost>({
     content: "",
@@ -102,6 +98,7 @@ const CreatePostForm: React.FC<Props> = ({
   ] = useServerAction(LinkHashtagsToPostAction)
 
   // calling the permissoins
+  const permissionChecker = useAtomValue(postStore.permissionCheckerAtom)
   const canCreate = permissionChecker?.canAccess("posting.create")
   const canCreatePoll = permissionChecker?.canAccess("posting.create_poll")
   const canCreateImage = permissionChecker?.canAccess("posting.create_image")

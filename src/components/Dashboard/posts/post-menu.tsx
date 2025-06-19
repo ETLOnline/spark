@@ -17,12 +17,14 @@ import { isUserAdmin } from "@/src/utils/helpers"
 
 interface PostMenuProps {
   post: SelectPost
-  canDelete: boolean
 }
 
-const PostMenu = ({ post, canDelete }: PostMenuProps) => {
+const PostMenu = ({ post }: PostMenuProps) => {
   const [posts, setPosts] = useAtom(postStore.posts)
   const user = useAtomValue(userStore.AuthUser)
+  const permissionChecker = useAtomValue(postStore.permissionCheckerAtom)
+
+  const canDelete = permissionChecker?.canAccess("posting.delete")
 
   const { toast } = useToast()
 

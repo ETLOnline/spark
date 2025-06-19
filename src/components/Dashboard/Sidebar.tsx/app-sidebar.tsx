@@ -18,11 +18,18 @@ import Link from "next/link"
 import { useAtomValue } from "jotai"
 import { navStore } from "@/src/store/nav/navStore"
 import useSideBarHook from "./hooks/useSideBarHook"
+import { adminSiteRoutes } from "./constants/AdminNavigationRouters"
+
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  isSuperAdmin?: boolean
+}
 
 export default function AppSidebar({
+  isSuperAdmin,
   ...props
-}: React.ComponentProps<typeof Sidebar>) {
-  const routes = useAtomValue(navStore.routes)
+}: AppSidebarProps) {
+  const baseRoutes = useAtomValue(navStore.routes)
+  const routes = isSuperAdmin ? adminSiteRoutes : baseRoutes
   const _ = useSideBarHook()
 
   return (
@@ -42,7 +49,9 @@ export default function AppSidebar({
                   />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold color-accent">Spark</span>
+                  <span className="truncate font-semibold color-accent">
+                    Spark
+                  </span>
                   <span className="truncate text-[8px]">ETL Online</span>
                 </div>
               </Link>
@@ -53,8 +62,12 @@ export default function AppSidebar({
       <SidebarContent>
         <NavMain items={routes.navMain} label="Platform" />
         {/* <NavMain items={routes.testNav} label="Test" /> */}
-        <NavMain items={routes.navChannels} label="Channels" />
-        <NavSecondary items={routes.navSecondary} className="mt-auto" />
+        {!isSuperAdmin && (
+          <>
+            <NavMain items={routes.navChannels} label="Channels" />
+            <NavSecondary items={routes.navSecondary} className="mt-auto" />
+          </>
+        )}
       </SidebarContent>
       <SidebarFooter>
         <SignedIn>

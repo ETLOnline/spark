@@ -67,11 +67,6 @@ export const siteRoutes: SiteRoutes = {
       icon: Calendar
     },
     {
-      title: "Roles & Permissions",
-      url: "/roles",
-      icon: Shield
-    },
-    {
       title: "Channels",
       url: "/channels",
       icon: Boxes

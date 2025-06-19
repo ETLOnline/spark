@@ -28,12 +28,23 @@ const SpaceChat = () => {
     useServerAction(GetChatsAction)
 
   const permission = useAtomValue(userStore.Permissions)
-  const permissionChecker = new PermissionChecker(
-    "scoped",
-    permission,
-    "space",
-    currentSpace?.id
+  const [permissionChecker, setPermissionChecker] = useAtom(
+    chatStore.permissionCheckerAtom
   )
+
+  // Initialize PermissionChecker if not already set
+  useEffect(() => {
+    if (permission && !permissionChecker) {
+      const checker = new PermissionChecker(
+        "scoped",
+        permission,
+        "space",
+        currentSpace?.id
+      )
+      setPermissionChecker(checker)
+    }
+  }, [permission, permissionChecker, setPermissionChecker])
+
   useEffect(() => {
     if (currentSpace) {
       getChatList(currentSpace.id).then((res) => {
@@ -49,11 +60,7 @@ const SpaceChat = () => {
 
   return (
     <Suspense>
-      <ChatScreen
-        allChatsSSR={myChats}
-        currentChatSSR={undefined}
-        permissionChecker={permissionChecker}
-      />
+      <ChatScreen allChatsSSR={myChats} currentChatSSR={undefined} />
     </Suspense>
   )
 }
