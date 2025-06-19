@@ -71,7 +71,7 @@ export function buildUserPerms(rows: RawPermissionRow[]): RawUserPerms {
   }
 
   return {
-    global: global.length ? global : undefined,
+    global: global.length ? global : [],
     scoped: Object.keys(scoped).length ? scoped : undefined
   }
 }

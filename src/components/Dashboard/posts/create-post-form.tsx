@@ -46,7 +46,6 @@ import useHashtags from "../profile/hooks/useHashtags"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { categories } from "@/src/utils/constants"
 import { Plus, X } from "lucide-react"
-import { PermissionChecker } from "@/src/lib/PermissionCheker"
 
 type Props = {
   variant?: "posts" | "spaces"

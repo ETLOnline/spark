@@ -44,7 +44,6 @@ import {
   EmojiPickerFooter,
   EmojiPickerSearch
 } from "../../ui/emoji-picker"
-import { PermissionChecker } from "@/src/lib/PermissionCheker"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined

@@ -100,7 +100,17 @@ export async function SaveRoleWithPermissionsAction(
   permissionIds: number[]
 ) {
   try {
-    await updateRoleWithPermissions(roleId, name, permissionIds)
+    await updateRoleWithPermissions(roleId, name, permissionIds).then(
+      async () => {
+        const userByRole = await getUsersByRoleID(roleId)
+        for (const user of userByRole) {
+          await attachPermissionsInClaimClerk(
+            user.unique_id,
+            user.external_auth_id
+          )
+        }
+      }
+    )
     return { success: true }
   } catch (error) {
     console.error("Failed to save role", error)

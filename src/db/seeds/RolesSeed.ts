@@ -4,6 +4,12 @@ import { rolesTable } from "../schema"
 
 const roleSeedList = [
   {
+    name: "Super_Admin",
+    role_type: "SYSTEM",
+    entity_type: null,
+    entity_id: null
+  },
+  {
     name: "Faculty",
     role_type: "GLOBAL",
     entity_type: null,
