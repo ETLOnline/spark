@@ -52,26 +52,26 @@ export interface RawPermissionRow {
   entity_id: string | null
 }
 
-export function buildUserPerms(rows: RawPermissionRow[]): RawUserPerms {
-  const global: string[] = []
-  const scoped: RawUserPerms["scoped"] = {}
+export function buildUserPerms(rows: RawPermissionRow[]): UserPerms {
+  const global: Set<string> = new Set()
+  const scoped: UserPerms["scoped"] = {}
 
   for (const row of rows) {
     const key = `${row.namespace}.${row.action}`
 
     if (!row.entity_type || !row.entity_id) {
-      global.push(key)
+      global.add(key) // Using Set to avoid duplicates
     } else {
       if (!scoped[row.entity_type]) scoped[row.entity_type] = {}
       if (!scoped[row.entity_type][row.entity_id])
-        scoped[row.entity_type][row.entity_id] = []
+        scoped[row.entity_type][row.entity_id] = new Set()
 
-      scoped[row.entity_type][row.entity_id].push(key)
+      scoped[row.entity_type][row.entity_id].add(key)
     }
   }
 
   return {
-    global: global.length ? global : [],
-    scoped: Object.keys(scoped).length ? scoped : undefined
+    global,
+    scoped: Object.keys(scoped).length ? scoped : {}
   }
 }
