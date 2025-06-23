@@ -40,7 +40,7 @@ export default function SelectPersonaPage({
       )
       if (attachPersona && attachPersona.success) {
         toast({ title: "Persona saved successfully" })
-        router.push("/profile")
+        router.push("/profile-complition")
       }
     } catch (error) {
       console.log(error)

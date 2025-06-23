@@ -133,7 +133,7 @@ export default function ProfileScreen({
         </TabsList>
         <TabsContent value="basic">
           <ProfileBio
-            userBio={user?.bio as string}
+            userBio={user?.profile?.bio as string}
             recommendations={
               profileData?.recommendations as unknown as ExtendedRecommendations[]
             }

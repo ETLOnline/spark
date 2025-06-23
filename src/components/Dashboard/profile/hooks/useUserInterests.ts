@@ -3,11 +3,12 @@ import { SearchTagsForSuggestionsAction } from "@/src/server-actions/Tag/Tag"
 import { SetStateAction, useAtomValue, useSetAtom } from "jotai"
 import { profileStore } from "@/src/store/profile/profileStore"
 import { Tag, TagStatus } from "@/src/components/TagsInput/tags-input-types"
+import { SelectTag } from "@/src/db/schema"
 
 type UseUserInterestsReturn = [
-  interests: Tag[], // Current skills
-  setInterests: (value: SetStateAction<Tag[]>) => void, // Interests setter
-  suggestions: Tag[], // Search suggestions
+  interests: SelectTag[], // Current skills
+  setInterests: (value: SetStateAction<SelectTag[]>) => void, // Interests setter
+  suggestions: SelectTag[], // Search suggestions
   searchInterestsForUserInput: (name: string) => void, // Search function
   searchInterestsLoading: boolean // Loading state
 ]
@@ -23,13 +24,7 @@ const useUserInterests = (): UseUserInterestsReturn => {
     searchInterests
   ] = useServerAction(SearchTagsForSuggestionsAction)
 
-  const suggestions: Tag[] = searchedInterests?.data
-    ? searchedInterests.data.map((tag) => ({
-        name: tag.name,
-        id: tag.id,
-        status: TagStatus.selected as const
-      }))
-    : []
+  const suggestions = searchedInterests?.data ?? []
 
   const searchInterestsForUserInput = (name: string) => {
     try {

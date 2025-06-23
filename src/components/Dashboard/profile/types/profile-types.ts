@@ -21,10 +21,11 @@ export type Activity = {
 
 export type ProfileData = {
   userId: string
+  first_name?: string
+  last_name?: string
   bio: string
-  newTags: InsertTag[]
-  existingTags: InsertTag[]
-  deletedTagsIds: number[]
+  skills: number[]
+  interests: number[]
 }
 
 export type Profile = {

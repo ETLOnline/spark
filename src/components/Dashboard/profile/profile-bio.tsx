@@ -27,21 +27,12 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
 
   useEffect(() => {
     if (tags) {
-      const skillTags = tags
-        .filter((tag) => tag.type === "skill")
-        .map((tag) => ({
-          id: tag.id,
-          name: tag.name,
-          status: TagStatus.saved as const
-        }))
-      const interestTags = tags
-        .filter((tag) => tag.type === "interest")
-        .map((tag) => ({
-          id: tag.id,
-          name: tag.name,
-          status: TagStatus.saved as const
-        }))
+      const skillTags = tags.filter((tag) => tag.type === "skill")
+
+      const interestTags = tags.filter((tag) => tag.type === "interest")
+
       setUserInterests(interestTags)
+
       setUserSkills(skillTags)
     }
   }, [tags])
@@ -73,7 +64,7 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
             </header>
             <div className="flex flex-wrap gap-2">
               {skills.length ? (
-                skills.map((skill: Tag) => (
+                skills.map((skill) => (
                   <Badge key={skill.id} variant="secondary">
                     {skill.name}
                   </Badge>
@@ -91,7 +82,7 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
             </div>
             <div className="flex flex-wrap gap-2">
               {interests.length ? (
-                interests.map((interest: Tag) => (
+                interests.map((interest) => (
                   <Badge key={interest.id} variant="outline">
                     {interest.name}
                   </Badge>

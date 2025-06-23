@@ -1,94 +1,39 @@
 "use server"
 
-import {
-  GetUserProfileData,
-  UpdateUserBio
-} from "@/src/db/data-access/user/query"
+import { GetUserProfileData } from "@/src/db/data-access/user/query"
 import { CreateServerAction } from ".."
-import { AddTag } from "@/src/db/data-access/tag/query"
-import { AddUserTag, DeleteUserTags } from "@/src/db/data-access/tag/query"
+import { SearchUserTagsByTagId } from "@/src/db/data-access/tag/query"
+import { AddUserTag } from "@/src/db/data-access/tag/query"
 import { ProfileData } from "@/src/components/Dashboard/profile/types/profile-types"
-import { Tag, TagStatus } from "@/src/components/TagsInput/tags-input-types"
-
-export const UpdateBioForUserAction = CreateServerAction(
-  true,
-  async (userId: string, newBio: string) => {
-    try {
-      await UpdateUserBio(userId, newBio)
-      return {
-        success: true
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: error
-      }
-    }
-  }
-)
+import {
+  createUserProfile,
+  SearchUserProfile,
+  updateUserProfile
+} from "@/src/db/data-access/profile/query"
 
 export const SaveUserProfileAction = CreateServerAction(
   true,
   async (profileData: ProfileData) => {
     try {
-      const updatedSkillTags: Tag[] = []
-      const updatedInterestTags: Tag[] = []
-      await UpdateUserBio(profileData.userId, profileData.bio)
-      // add new tags
-      if (profileData.newTags.length) {
-        const insertedTags = await AddTag(profileData.newTags)
-        await AddUserTag(
-          insertedTags.map((tag) => {
-            return { user_id: profileData.userId, tag_id: tag.id }
-          })
-        )
-        insertedTags.forEach((tag) => {
-          if (tag.type === "skill")
-            updatedSkillTags.push({
-              id: tag.id,
-              name: tag.name,
-              status: TagStatus.saved
-            })
-          else
-            updatedInterestTags.push({
-              id: tag.id,
-              name: tag.name,
-              status: TagStatus.saved
-            })
+      const userProfile = await SearchUserProfile(profileData.userId)
+
+      // Check if user profile already exist the update it otherwise create new profile
+      if (userProfile) {
+        await updateUserProfile(profileData.userId, { bio: profileData.bio })
+      } else {
+        await createUserProfile({
+          user_id: profileData.userId,
+          bio: profileData.bio
         })
-      }
-      // add existing tags
-      if (profileData.existingTags.length) {
-        await AddUserTag(
-          profileData.existingTags.map((tag) => {
-            return { user_id: profileData.userId, tag_id: tag.id as number }
-          })
-        )
-        profileData.existingTags.forEach((tag) => {
-          if (tag.type === "skill")
-            updatedSkillTags.push({
-              id: tag.id,
-              name: tag.name,
-              status: TagStatus.saved
-            })
-          else
-            updatedInterestTags.push({
-              id: tag.id,
-              name: tag.name,
-              status: TagStatus.saved
-            })
-        })
-      }
-      // delete tags
-      if (profileData.deletedTagsIds.length) {
-        await DeleteUserTags(profileData.userId, profileData.deletedTagsIds)
       }
 
-      return {
-        success: true,
-        data: { skills: updatedSkillTags, interests: updatedInterestTags }
-      }
+      const allTags = [...profileData.interests, ...profileData.skills]
+
+      await AddUserTag(profileData.userId, allTags)
+
+      return { success: true }
     } catch (error) {
+      console.log(error)
       console.error(error)
       return {
         success: false,

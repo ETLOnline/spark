@@ -14,14 +14,14 @@ import { Textarea } from "@/src/components/ui/textarea"
 import TagsInput from "@/src/components/TagsInput/TagsInput"
 import { SaveUserProfileAction } from "@/src/server-actions/User/User"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { useAtom, useAtomValue, useSetAtom } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { profileStore } from "@/src/store/profile/profileStore"
-import useUserSkills from "./hooks/useUserSkills"
-import useUserInterests from "./hooks/useUserInterests"
 import { ProfileData } from "./types/profile-types"
 import { useToast } from "@/src/hooks/use-toast"
-import { TagStatus, Tag } from "../../TagsInput/tags-input-types"
+import { MultiSelectOption } from "../../ui/multi-select"
+import useUserProfile from "./hooks/useUserProfile"
+import TagSelect from "../../TagsInput/tags"
 
 const EditProfileModal: React.FC = () => {
   const bio = useAtomValue(profileStore.bio)
@@ -31,8 +31,16 @@ const EditProfileModal: React.FC = () => {
 
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const [editedBio, setEditedBio] = useState<string | undefined>(bio)
-  const [skillsCopy, setSkillsCopy] = useState<Tag[]>([])
-  const [interestsCopy, setInterestsCopy] = useState<Tag[]>([])
+
+  const [selectedSkillTags, setSelectedSkillTags] = useState<
+    MultiSelectOption[]
+  >([])
+  const [selectedInterestTags, setSelectedInterestTags] = useState<
+    MultiSelectOption[]
+  >([])
+
+  const [setUserBio, setUserSkills, setUserInterests, skills, interests] =
+    useUserProfile()
 
   const [
     updateProfileLoading,
@@ -40,22 +48,6 @@ const EditProfileModal: React.FC = () => {
     updateProfileError,
     updateProfile
   ] = useServerAction(SaveUserProfileAction)
-
-  const [
-    skills,
-    setSkills,
-    skillSuggestions,
-    searchSkills,
-    searchSkillsLoading
-  ] = useUserSkills()
-
-  const [
-    interests,
-    setInterests,
-    interestSuggestions,
-    searchInterests,
-    searchInterestsLoading
-  ] = useUserInterests()
 
   useEffect(() => {
     if (updateProfileError) {
@@ -69,109 +61,95 @@ const EditProfileModal: React.FC = () => {
   }, [updateProfileError])
 
   useEffect(() => {
-    setSkillsCopy([...skills])
+    if (bio) {
+      setEditedBio(bio)
+    }
+  }, [bio])
+
+  // set user skills in tagsInput
+  useEffect(() => {
+    setSelectedSkillTags(
+      skills.map((s) => ({
+        label: s.name,
+        value: s.id.toString()
+      }))
+    )
   }, [skills])
 
+  // set user interest in tagsInput
   useEffect(() => {
-    setInterestsCopy([...interests])
+    setSelectedInterestTags(
+      interests.map((i) => ({
+        label: i.name,
+        value: i.id.toString()
+      }))
+    )
   }, [interests])
 
-  const updatedSkillsLength: number = skillsCopy.filter(
-    (tag) => !tag.deleted
-  ).length
-  const updatedInterestsLength: number = interestsCopy.filter(
-    (tag) => !tag.deleted
-  ).length
   const skillsError: string =
-    updatedSkillsLength > 20 ? "You can only add a maximum of 20 skills" : ""
+    selectedSkillTags.length > 20
+      ? "You can only add a maximum of 20 skills"
+      : selectedSkillTags.length === 0
+        ? "Please add at least one skill"
+        : ""
+
   const interestsError: string =
-    updatedInterestsLength > 20
+    selectedInterestTags.length > 20
       ? "You can only add a maximum of 20 interests"
-      : ""
+      : selectedInterestTags.length === 0
+        ? "Please add at least one interest"
+        : ""
+
   const bioError: string =
     editedBio && editedBio?.length > 2000
       ? "Bio cannot exceed 2000 characters"
-      : ""
+      : editedBio?.length === 0
+        ? "Bio required"
+        : ""
 
   const saveProfileChanges = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
-      const deletedSkillsIds: number[] = skillsCopy
-        .filter((skill) => skill.deleted && skill.status === TagStatus.saved)
-        .map((skill) => skill.id as number)
-      const deletedInterestsIds: number[] = interestsCopy
-        .filter(
-          (interest) => interest.deleted && interest.status === TagStatus.saved
-        )
-        .map((interest) => interest.id as number)
-      const updatedProfileData: ProfileData = {
-        userId: user?.unique_id as string,
-        bio: editedBio ? editedBio : bio,
-        newTags: [
-          ...skillsCopy
-            .filter((tag) => tag.status === TagStatus.new && !tag.deleted)
-            .map((tag) => {
-              return { name: tag.name, type: "skill" }
-            }),
-          ...interestsCopy
-            .filter((tag) => tag.status === TagStatus.new && !tag.deleted)
-            .map((tag) => {
-              return { name: tag.name, type: "interest" }
-            })
-        ],
-        existingTags: [
-          ...skillsCopy
-            .filter((tag) => tag.status === TagStatus.selected && !tag.deleted)
-            .map((tag) => {
-              return { name: tag.name, id: tag.id, type: "skill" }
-            }),
-          ...interestsCopy
-            .filter((tag) => tag.status === TagStatus.selected && !tag.deleted)
-            .map((tag) => {
-              return { name: tag.name, id: tag.id, type: "interest" }
-            })
-        ],
-        deletedTagsIds: [...deletedSkillsIds, ...deletedInterestsIds]
+      const payload: ProfileData = {
+        userId: user?.unique_id || "",
+        first_name: user?.first_name,
+        last_name: user?.last_name,
+        bio: editedBio || "",
+        skills: selectedSkillTags.map((s) => Number(s.value)),
+        interests: selectedInterestTags.map((i) => Number(i.value))
       }
-      const res = await updateProfile(updatedProfileData)
+      const res = await updateProfile(payload)
       if (res?.success) {
-        if (res.data?.skills.length || deletedSkillsIds.length) {
-          setSkills((skills) => {
-            const updatedSkillTags = res.data?.skills.length
-              ? [...skills, ...res.data?.skills]
-              : [...skills]
-            return deletedSkillsIds.length
-              ? updatedSkillTags.filter(
-                  (skill) => !deletedSkillsIds.includes(skill.id as number)
-                )
-              : [...updatedSkillTags]
-          })
-        }
-        if (res.data?.interests.length || deletedInterestsIds.length) {
-          setInterests((interests) => {
-            const updatedInterestTags = res.data?.interests.length
-              ? [...interests, ...res.data?.interests]
-              : [...interests]
-            return deletedInterestsIds.length
-              ? updatedInterestTags.filter(
-                  (interest) =>
-                    !deletedInterestsIds.includes(interest.id as number)
-                )
-              : [...updatedInterestTags]
-          })
-        }
-        if (editedBio) {
-          setBio(editedBio)
-        }
-        setIsOpen(false)
-        setEditedBio("")
         toast({
-          title: "Profile updated",
+          title: "Profile Updated",
           description: "Your changes have been saved successfully.",
-          duration: 3000
+          duration: 2000
         })
-      } else {
-        throw res?.error
+        setIsOpen(false)
+        setBio(editedBio ?? "")
+
+        setUserInterests(
+          selectedInterestTags.map((tag) => ({
+            name: tag.label,
+            id: Number(tag.value),
+            updated_at: null,
+            created_at: null,
+            deleted_at: null,
+            type: "interest",
+            count: 1
+          }))
+        )
+        setUserSkills(
+          selectedSkillTags.map((tag) => ({
+            name: tag.label,
+            id: Number(tag.value),
+            updated_at: null,
+            created_at: null,
+            deleted_at: null,
+            type: "skill",
+            count: 1
+          }))
+        )
       }
     } catch (error) {
       toast({
@@ -184,8 +162,10 @@ const EditProfileModal: React.FC = () => {
     }
   }
 
+  console.log(bio)
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen} modal={false}>
       <DialogTrigger asChild>
         <Button variant="edit" size={"sm"} onClick={() => setIsOpen(true)}>
           Edit
@@ -235,23 +215,20 @@ const EditProfileModal: React.FC = () => {
                 <Label htmlFor="skills" className="edit-label">
                   Skills
                 </Label>
-                <TagsInput
-                  tags={skillsCopy}
-                  updateTags={setSkillsCopy}
-                  suggestions={skillSuggestions}
-                  onChange={searchSkills}
-                  loadingSuggestions={searchSkillsLoading}
-                  autocomplete
+                <TagSelect
+                  type="skill"
+                  selected={selectedSkillTags}
+                  setSelected={setSelectedSkillTags}
                 />
                 <div className={"flex justify-between mt-1"}>
                   <p
                     className={`text-sm ${
-                      updatedSkillsLength > 20
+                      selectedSkillTags.length > 20
                         ? "text-red-500"
                         : "text-gray-500"
                     }`}
                   >
-                    {`${updatedSkillsLength}/20 skills`}
+                    {`${selectedSkillTags.length}/20 skills`}
                   </p>
                   {skillsError && (
                     <p className="text-sm text-red-500">{skillsError}</p>
@@ -262,23 +239,20 @@ const EditProfileModal: React.FC = () => {
                 <Label htmlFor="interests" className="edit-label">
                   Interests
                 </Label>
-                <TagsInput
-                  tags={interestsCopy}
-                  updateTags={setInterestsCopy}
-                  suggestions={interestSuggestions}
-                  onChange={searchInterests}
-                  loadingSuggestions={searchInterestsLoading}
-                  autocomplete
+                <TagSelect
+                  type="interest"
+                  selected={selectedInterestTags}
+                  setSelected={setSelectedInterestTags}
                 />
                 <div className={"flex justify-between mt-1"}>
                   <p
                     className={`text-sm ${
-                      updatedInterestsLength > 20
+                      selectedInterestTags.length > 20
                         ? "text-red-500"
                         : "text-gray-500"
                     }`}
                   >
-                    {`${updatedInterestsLength}/20 skills`}
+                    {`${selectedInterestTags.length}/20 skills`}
                   </p>
                   {interestsError && (
                     <p className="text-sm text-red-500">{interestsError}</p>
