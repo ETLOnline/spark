@@ -2,12 +2,12 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { SearchTagsForSuggestionsAction } from "@/src/server-actions/Tag/Tag"
 import { SetStateAction, useAtomValue, useSetAtom } from "jotai"
 import { profileStore } from "@/src/store/profile/profileStore"
-import { Tag, TagStatus } from "@/src/components/TagsInput/tags-input-types"
+import { SelectTag } from "@/src/db/schema"
 
 type UseUserSkillsReturn = [
-  skills: Tag[], // Current skills
-  setSkills: (value: SetStateAction<Tag[]>) => void, // Skills setter
-  suggestions: Tag[], // Search suggestions
+  skills: SelectTag[], // Current skills
+  setSkills: (value: SetStateAction<SelectTag[]>) => void, // Skills setter
+  suggestions: SelectTag[], // Search suggestions
   searchSkillsForUserInput: (name: string) => void, // Search function
   searchSkillsLoading: boolean // Loading state
 ]
@@ -19,13 +19,7 @@ const useUserSkills = (): UseUserSkillsReturn => {
   const [searchSkillsLoading, searchedSkills, searchSkillsError, searchSkills] =
     useServerAction(SearchTagsForSuggestionsAction)
 
-  const suggestions: Tag[] = searchedSkills?.data
-    ? searchedSkills.data.map((tag) => ({
-        name: tag.name,
-        id: tag.id,
-        status: TagStatus.selected as const
-      }))
-    : []
+  const suggestions = searchedSkills?.data ?? []
 
   const searchSkillsForUserInput = (name: string) => {
     try {

@@ -81,7 +81,6 @@ export async function getProjectUsers(projectId: string) {
           external_auth_id: usersTable.external_auth_id,
           profile_url: usersTable.profile_url,
           meta: usersTable.meta,
-          bio: usersTable.bio,
           role: usersTable.role
         }
       })
