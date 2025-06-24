@@ -36,11 +36,12 @@ import {
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
 import { generateUrl, getPagePath } from "@/src/utils/helpers"
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import { UpdateUserProfilePictureAction } from "@/src/server-actions/User/User"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import Loader from "../../common/Loader/Loader"
 import { LoaderSizes } from "../../common/types/loader-types"
+import { useUser } from "@clerk/nextjs"
 
 type ProfileScreenProps = {
   tab?: string
@@ -59,6 +60,12 @@ export default function ProfileScreen({
   const [loading, userData, error, updateUserProfile] = useServerAction(
     UpdateUserProfilePictureAction
   )
+  const { user: clerkUser } = useUser()
+  const [currentImageUrl, setCurrentImageUrl] = useState(user?.profile_url)
+
+  useEffect(() => {
+    setCurrentImageUrl(user?.profile_url)
+  }, [user?.profile_url])
 
   const handleCopyUrl = async () => {
     try {
@@ -84,38 +91,37 @@ export default function ProfileScreen({
     if (!file) return
 
     const reader = new FileReader()
-    reader.onloadend = () => {
+    reader.onloadend = async () => {
       const base64 = reader.result as string
       setUploading(true)
-      updateUserProfile(file.name, base64, file.type)
-        .then((res) => {
-          if (res?.success) {
-            toast({
-              title: "Profile picture updated!",
-              description:
-                "Your profile picture has been successfully updated.",
-              duration: 3000
-            })
-            window.location.reload()
-          } else {
-            toast({
-              variant: "destructive",
-              title: "Error",
-              description: res?.error || "Failed to update profile picture",
-              duration: 3000
-            })
-          }
-          setUploading(false)
-        })
-        .catch(() => {
+      try {
+        const res = await updateUserProfile(file.name, base64, file.type)
+        if (res?.success && res.data) {
+          setCurrentImageUrl(res.data.profile_picture_url)
+          await clerkUser?.reload()
+          toast({
+            title: "Profile picture updated!",
+            description: "Your profile picture has been successfully updated.",
+            duration: 3000
+          })
+        } else {
           toast({
             variant: "destructive",
             title: "Error",
-            description: "Something went wrong",
+            description: res?.error || "Failed to update profile picture",
             duration: 3000
           })
-          setUploading(false)
+        }
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Something went wrong",
+          duration: 3000
         })
+      } finally {
+        setUploading(false)
+      }
     }
     reader.readAsDataURL(file)
   }
@@ -132,7 +138,7 @@ export default function ProfileScreen({
             <div className="relative">
               <Avatar className="h-20 w-20">
                 <AvatarImage
-                  src={user?.profile_url as string}
+                  src={currentImageUrl as string}
                   alt="Profile picture"
                 />
                 <AvatarFallback>Profile</AvatarFallback>
