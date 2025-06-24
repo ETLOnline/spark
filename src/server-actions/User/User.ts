@@ -33,7 +33,6 @@ export const SaveUserProfileAction = CreateServerAction(
 
       return { success: true }
     } catch (error) {
-      console.log(error)
       console.error(error)
       return {
         success: false,

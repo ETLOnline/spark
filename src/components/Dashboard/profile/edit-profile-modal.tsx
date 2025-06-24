@@ -162,8 +162,6 @@ const EditProfileModal: React.FC = () => {
     }
   }
 
-  console.log(bio)
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen} modal={false}>
       <DialogTrigger asChild>
