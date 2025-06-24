@@ -12,7 +12,6 @@ import { LoaderSizes } from "@/src/components/common/types/loader-types"
 function AdminLayout({ children }: { children: ReactNode }) {
   const isSuperAdmin = Boolean(useAtomValue(userStore.SuperAdmin))
   const isUserLoading = Boolean(useAtomValue(userStore.LoadingUser))
-  console.log(isUserLoading)
   if (isUserLoading) {
     return (
       <div className="flex justify-center h-full w-full">

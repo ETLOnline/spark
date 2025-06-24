@@ -49,22 +49,27 @@ const SpacePostComponent: React.FC = () => {
   }, [])
 
   const permission = useAtomValue(userStore.Permissions)
+  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
   const [permissionChecker, setPermissionChecker] = useAtom(
     postStore.permissionCheckerAtom
   ) // Store PermissionChecker
 
   // Initialize PermissionChecker if not already set
   useEffect(() => {
-    if (permission && !permissionChecker) {
+    if (
+      (permission && !permissionChecker) ||
+      (isSuperAdmin && !permissionChecker)
+    ) {
       const checker = new PermissionChecker(
         "scoped",
         permission,
+        isSuperAdmin,
         "space",
         space?.id
       )
       setPermissionChecker(checker)
     }
-  }, [permission, permissionChecker, setPermissionChecker])
+  }, [permission, permissionChecker, setPermissionChecker, isSuperAdmin])
   // const permissionChecker = new PermissionChecker("global", permission)
   const canViewPost = permissionChecker?.canAccess("posting.view")
 

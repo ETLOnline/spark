@@ -28,22 +28,27 @@ const SpaceChat = () => {
     useServerAction(GetChatsAction)
 
   const permission = useAtomValue(userStore.Permissions)
+  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
   const [permissionChecker, setPermissionChecker] = useAtom(
     chatStore.permissionCheckerAtom
   )
 
   // Initialize PermissionChecker if not already set
   useEffect(() => {
-    if (permission && !permissionChecker) {
+    if (
+      (permission && !permissionChecker) ||
+      (isSuperAdmin && !permissionChecker)
+    ) {
       const checker = new PermissionChecker(
         "scoped",
         permission,
+        isSuperAdmin,
         "space",
         currentSpace?.id
       )
       setPermissionChecker(checker)
     }
-  }, [permission, permissionChecker, setPermissionChecker])
+  }, [permission, permissionChecker, setPermissionChecker, isSuperAdmin])
 
   useEffect(() => {
     if (currentSpace) {

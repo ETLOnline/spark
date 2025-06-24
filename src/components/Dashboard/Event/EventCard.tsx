@@ -27,6 +27,9 @@ interface EventcardProps {
 }
 
 const EventCard = ({ event }: EventcardProps) => {
+  const permissionChecker = useAtomValue(eventStore.permissionCheckerAtom)
+  const canUpdate = permissionChecker?.canAccess("event.update")
+
   const setSelectedEvent = useSetAtom(eventStore.selectedEvent)
   const setFormModalVisibility = useSetAtom(eventStore.formModalVisibility)
   const authUser = useAtomValue(userStore.AuthUser)
@@ -75,7 +78,7 @@ const EventCard = ({ event }: EventcardProps) => {
           </CardTitle>
           <CardDescription>{event.description}</CardDescription>
         </div>
-        {event.host_id === authUser?.unique_id && (
+        {event.host_id === authUser?.unique_id && canUpdate && (
           <Button
             variant="edit"
             size={"sm"}

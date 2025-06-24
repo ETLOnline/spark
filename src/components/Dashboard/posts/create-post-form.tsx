@@ -99,9 +99,6 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   // calling the permissoins
   const permissionChecker = useAtomValue(postStore.permissionCheckerAtom)
   const canCreate = permissionChecker?.canAccess("posting.create")
-  const canCreatePoll = permissionChecker?.canAccess("posting.create_poll")
-  const canCreateImage = permissionChecker?.canAccess("posting.create_image")
-  const canCreateFile = permissionChecker?.canAccess("posting.create_file")
 
   const handleCreatePost = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -361,16 +358,10 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             <CardContent>
               <Tabs defaultValue="text" className="w-full">
                 <TabsList className="grid w-full grid-cols-4">
-                  {canCreate && <TabsTrigger value="text">Text</TabsTrigger>}
-                  {canCreateImage && (
-                    <TabsTrigger value="image">Image</TabsTrigger>
-                  )}
-                  {canCreatePoll && (
-                    <TabsTrigger value="poll">Poll</TabsTrigger>
-                  )}
-                  {canCreateFile && (
-                    <TabsTrigger value="file">File</TabsTrigger>
-                  )}
+                  <TabsTrigger value="text">Text</TabsTrigger>
+                  <TabsTrigger value="image">Image</TabsTrigger>
+                  <TabsTrigger value="poll">Poll</TabsTrigger>
+                  <TabsTrigger value="file">File</TabsTrigger>
                 </TabsList>
                 {variant === "spaces" ? (
                   <div className="space-y-4 mt-4">

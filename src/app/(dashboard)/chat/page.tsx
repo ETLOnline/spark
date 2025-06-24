@@ -27,12 +27,16 @@ export default function ChatPage() {
   )
 
   // Initialize PermissionChecker if not already set
+  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
   useEffect(() => {
-    if (permission && !permissionChecker) {
-      const checker = new PermissionChecker("global", permission)
+    if (
+      (permission && !permissionChecker) ||
+      (isSuperAdmin && !permissionChecker)
+    ) {
+      const checker = new PermissionChecker("global", permission, isSuperAdmin)
       setPermissionChecker(checker)
     }
-  }, [permission, permissionChecker, setPermissionChecker])
+  }, [permission, permissionChecker, setPermissionChecker, isSuperAdmin])
 
   useEffect(() => {
     const fetchChatsAndCurrentChat = async () => {

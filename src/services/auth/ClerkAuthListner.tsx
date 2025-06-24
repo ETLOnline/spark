@@ -25,7 +25,8 @@ const ClerkAuthListener = () => {
     setLoadingUser(false)
 
     if (!userRes) return
-    const isSuperadmin = userRes?.roles?.[0]?.role?.name === "Super_Admin"
+    const isSuperadmin =
+      userRes?.roles?.[0]?.role?.name === "Super_Admin" ? true : false
     setUser(userRes as SelectUser)
     setIam(userRes as SelectUser)
     setSuperAdmin(isSuperadmin)

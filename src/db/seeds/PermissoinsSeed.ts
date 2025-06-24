@@ -4,9 +4,6 @@ import { permissionsTable } from "../schema"
 
 const permissionSeedList = [
   // Posting
-  { namespace: "posting", action: "create_file" },
-  { namespace: "posting", action: "create_image" },
-  { namespace: "posting", action: "create_poll" },
   { namespace: "posting", action: "create" },
   { namespace: "posting", action: "view" },
   { namespace: "posting", action: "edit" },

@@ -13,6 +13,7 @@ import { userStore } from "@/src/store/user/userStore"
 import { postStore } from "@/src/store/post/postStore"
 
 const PostsPage = () => {
+  const isSuperAdmin = Boolean(useAtomValue(userStore.SuperAdmin))
   const [posts, setPosts] = useState<
     (SelectPost | SelectFilePost | SelectPollPost)[]
   >([])
@@ -23,11 +24,14 @@ const PostsPage = () => {
   ) // Store PermissionChecker
 
   useEffect(() => {
-    if (permission && !permissionChecker) {
-      const checker = new PermissionChecker("global", permission)
+    if (
+      (permission && !permissionChecker) ||
+      (isSuperAdmin && !permissionChecker)
+    ) {
+      const checker = new PermissionChecker("global", permission, isSuperAdmin)
       setPermissionChecker(checker)
     }
-  }, [permission, permissionChecker, setPermissionChecker])
+  }, [permission, permissionChecker, setPermissionChecker, isSuperAdmin])
   const canViewPost = permissionChecker?.canAccess("posting.view")
 
   useEffect(() => {

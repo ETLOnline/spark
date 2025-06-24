@@ -12,14 +12,7 @@ export const PERMISSIONS = {
     "user.view"
   ],
   project: ["create", "update", "view"],
-  posting: [
-    "create_text",
-    "create_image",
-    "create_poll",
-    "create_file",
-    "delete",
-    "edit"
-  ],
+  posting: ["create_file", "delete", "edit"],
   chat: ["create", "view", "delete", "update"],
   events: ["create", "edit", "delete", "view"],
   channels: [
