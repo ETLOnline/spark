@@ -27,7 +27,7 @@ export function transformRawPermsToSet(
 ): UserPerms | null {
   if (!rawPerms) return null
 
-  const global = new Set(rawPerms.global || [])
+  const global = new Set(Array.isArray(rawPerms.global) ? rawPerms.global : [])
 
   const scoped: UserPerms["scoped"] = {}
 

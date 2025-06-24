@@ -9,7 +9,13 @@ import {
   SelectUserRole
 } from "../db/schema"
 import { AblyClient } from "../services/realtime/AblyClient"
-import { RoleWithPermissions } from "../app/(dashboard)/roles/[id]/edit/page"
+export type RoleWithPermissions = {
+  id: number
+  name: string
+  userCount: number
+  isGlobal: boolean
+  permissions: number[]
+}
 
 export const joinRequestChannel = (
   channelId: string,

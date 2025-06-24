@@ -15,14 +15,7 @@ import {
 } from "@/src/server-actions/UserRoles/UserRole"
 import { useToast } from "@/src/hooks/use-toast"
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
-
-export type RoleWithPermissions = {
-  id: number
-  name: string
-  userCount: number
-  isGlobal: boolean
-  permissions: number[]
-}
+import { RoleWithPermissions } from "@/src/utils/helpers"
 
 export default function EditRolePage({
   params
