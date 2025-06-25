@@ -54,22 +54,26 @@ export const siteRoutes: SiteRoutes = {
     {
       title: "Posts",
       url: "/posts",
-      icon: Newspaper
+      icon: Newspaper,
+      permission: "posting.view"
     },
     {
       title: "Chat",
       url: "/chat",
-      icon: MessageSquare
+      icon: MessageSquare,
+      permission: "chat.view"
     },
     {
       title: "Events",
       url: "/events",
-      icon: Calendar
+      icon: Calendar,
+      permission: "events.view"
     },
     {
       title: "Channels",
       url: "/channels",
-      icon: Boxes
+      icon: Boxes,
+      permission: "channels.view"
     }
   ],
   testNav: [

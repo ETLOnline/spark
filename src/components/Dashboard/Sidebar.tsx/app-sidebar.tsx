@@ -19,6 +19,7 @@ import { useAtomValue } from "jotai"
 import { navStore } from "@/src/store/nav/navStore"
 import useSideBarHook from "./hooks/useSideBarHook"
 import { adminSiteRoutes } from "./constants/AdminNavigationRouters"
+import { Skeleton } from "../../ui/skeleton"
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   isSuperAdmin?: boolean
@@ -29,6 +30,7 @@ export default function AppSidebar({
   ...props
 }: AppSidebarProps) {
   const baseRoutes = useAtomValue(navStore.routes)
+  const isNavLoading = useAtomValue(navStore.isNavLoading)
   const routes = isSuperAdmin ? adminSiteRoutes : baseRoutes
   const _ = useSideBarHook()
 
@@ -60,7 +62,19 @@ export default function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={routes.navMain} label="Platform" />
+        {isNavLoading ? (
+          <div className="flex flex-col gap-2 p-4">
+            <Skeleton className="h-7 w-full bg-muted/50" />
+            <Skeleton className="h-7 w-full bg-muted/50" />
+            <Skeleton className="h-7 w-full bg-muted/50" />
+            <Skeleton className="h-7 w-full bg-muted/50" />
+            <Skeleton className="h-7 w-full bg-muted/50" />
+            <Skeleton className="h-7 w-full bg-muted/50" />
+            <Skeleton className="h-7 w-full bg-muted/50" />
+          </div>
+        ) : (
+          <NavMain items={routes.navMain} label="Platform" />
+        )}
         {/* <NavMain items={routes.testNav} label="Test" /> */}
         {!isSuperAdmin && (
           <>
