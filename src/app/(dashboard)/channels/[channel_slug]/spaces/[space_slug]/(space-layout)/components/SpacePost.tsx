@@ -51,7 +51,7 @@ const SpacePostComponent: React.FC = () => {
     postStore.permissionCheckerAtom
   )
   const { permissionChecker: checker } = usePermissionChecker(
-    "scope",
+    "scoped",
     "SPACE",
     space?.id
   )
