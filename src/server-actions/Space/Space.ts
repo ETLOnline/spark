@@ -32,6 +32,10 @@ import {
   GetChannels,
   getChannelUsers
 } from "@/src/db/data-access/channels/query"
+import {
+  createSpaceRoleAndAssignUser,
+  getDefaultRoleByName
+} from "@/src/db/data-access/roles/query"
 
 export const CreateSpaceAction = CreateServerAction(
   true,
@@ -42,6 +46,17 @@ export const CreateSpaceAction = CreateServerAction(
         "broadcast-channels-spaces-update"
       )
       await channel.publish("space-add", newSpace)
+      const getDefaultRole = await getDefaultRoleByName("space_admin")
+      const createRoleName = ` ${getDefaultRole.name} ${newSpace.space_name}`
+      const createAndAssignRolesPermissions =
+        await createSpaceRoleAndAssignUser(
+          getDefaultRole.id,
+          newSpace.id,
+          newSpace.created_by,
+          createRoleName,
+          getDefaultRole.slug
+        )
+
       return { success: true, data: newSpace }
     } catch (error: any) {
       return {

@@ -47,6 +47,7 @@ interface Props {
   spaceFormModelVisibility: boolean
   setSpaceFormModelVisibility: React.Dispatch<React.SetStateAction<boolean>>
   shouldRedirect?: boolean
+  canSetSpaceSetting?: boolean
 }
 
 const spaceSchema = z.object({
@@ -63,7 +64,8 @@ const spaceSchema = z.object({
 function CreateSpaceModal({
   spaceFormModelVisibility,
   setSpaceFormModelVisibility,
-  shouldRedirect
+  shouldRedirect,
+  canSetSpaceSetting
 }: Props) {
   const router = useRouter()
   const authUser = useAtomValue(userStore.AuthUser)
@@ -205,7 +207,9 @@ function CreateSpaceModal({
       const createdSpace = await CreateNewSpace(data as InsertSpace)
       if (createdSpace?.success && createdSpace.data) {
         setSpaces([...spaces, createdSpace.data])
-        router.push(`./spaces/${createdSpace.data.space_slug}/settings`)
+        if (canSetSpaceSetting) {
+          router.push(`./spaces/${createdSpace.data.space_slug}/settings`)
+        }
         setSpaceFormModelVisibility(false)
         toast({
           title: "Space created",

@@ -968,6 +968,7 @@ export const rolesTable = pgTable("roles", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name").notNull(),
   role_type: varchar("role_type").notNull(),
+  slug: varchar("slug"),
   entity_type: varchar("entity_type"),
   entity_id: varchar("entity_id")
 })

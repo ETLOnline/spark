@@ -33,7 +33,6 @@ export default function RolesPage() {
     rolesData?.success && Array.isArray(rolesData.data) ? rolesData.data : []
 
   const handleDeleteRole = async (roleId: number) => {
-    console.log("Deleting role:", roleId)
     const res = await triggerDeleteRole(roleId)
     if (res?.success) {
       await fetchRoles()

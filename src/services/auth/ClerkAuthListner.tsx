@@ -6,8 +6,13 @@ import { SelectUser } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
 import { UserResource } from "@clerk/types"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import { RawUserPerms, transformRawPermsToSet } from "@/src/utils/clientHelper"
+import {
+  buildUserPerms,
+  RawUserPerms,
+  transformRawPermsToSet
+} from "@/src/utils/clientHelper"
 import { useServerAction } from "@/src/hooks/useServerAction"
+import { getUserPermissionRowsAction } from "@/src/server-actions/UserRoles/UserRole"
 
 const ClerkAuthListener = () => {
   const [loading, userData, error, fetchUser] = useServerAction(AuthUserAction)
@@ -25,15 +30,15 @@ const ClerkAuthListener = () => {
     setLoadingUser(false)
 
     if (!userRes) return
+    const rawPerms = await getUserPermissionRowsAction(userRes.unique_id)
+    if (!rawPerms || !rawPerms.data) return
     const isSuperadmin =
       userRes?.roles?.[0]?.role?.name === "Super_Admin" ? true : false
     setUser(userRes as SelectUser)
     setIam(userRes as SelectUser)
     setSuperAdmin(isSuperadmin)
 
-    const rawPerms = user?.publicMetadata?.permissions as RawUserPerms | null
-    if (!rawPerms) return
-    const transformed = transformRawPermsToSet(rawPerms)
+    const transformed = buildUserPerms(rawPerms.data)
     setPermissions(transformed)
   }
 

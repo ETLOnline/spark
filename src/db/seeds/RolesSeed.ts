@@ -32,6 +32,69 @@ const roleSeedList = [
     role_type: "GLOBAL",
     entity_type: null,
     entity_id: null
+  },
+  {
+    name: "Channel Admin",
+    role_type: "DEFAULT",
+    slug: "channel_admin",
+    entity_type: null,
+    entity_id: null
+  },
+  {
+    name: "Channel Editor",
+    role_type: "DEFAULT",
+    slug: "channel_editor",
+    entity_type: null,
+    entity_id: null
+  },
+  {
+    name: "Channel Viewer",
+    role_type: "DEFAULT",
+    slug: "channel_viewer",
+    entity_type: null,
+    entity_id: null
+  },
+  {
+    name: "Space Admin",
+    role_type: "DEFAULT",
+    slug: "space_admin",
+    entity_type: null,
+    entity_id: null
+  },
+  {
+    name: "Space Editor",
+    role_type: "DEFAULT",
+    slug: "space_editor",
+    entity_type: null,
+    entity_id: null
+  },
+  {
+    name: "Space Viewer",
+    role_type: "DEFAULT",
+    slug: "space_viewer",
+    entity_type: null,
+    entity_id: null
+  },
+  {
+    name: "Project Admin",
+    role_type: "DEFAULT",
+    slug: "project_admin",
+    entity_type: null,
+    entity_id: null
+  },
+  {
+    name: "Project Editor",
+    role_type: "DEFAULT",
+    slug: "project_editor",
+    entity_type: null,
+    entity_id: null
+  },
+  {
+    name: "Project Viewer",
+    role_type: "DEFAULT",
+    slug: "project_viewer",
+    entity_type: null,
+    entity_id: null
   }
 ]
 

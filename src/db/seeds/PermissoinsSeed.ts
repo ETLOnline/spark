@@ -6,7 +6,8 @@ const permissionSeedList = [
   // Posting
   { namespace: "posting", action: "create" },
   { namespace: "posting", action: "view" },
-  { namespace: "posting", action: "edit" },
+  { namespace: "posting", action: "update" },
+  { namespace: "posting", action: "update" },
   { namespace: "posting", action: "delete" },
 
   // Chat
@@ -17,15 +18,16 @@ const permissionSeedList = [
 
   // Events
   { namespace: "events", action: "create" },
-  { namespace: "events", action: "edit" },
+  { namespace: "events", action: "update" },
   { namespace: "events", action: "delete" },
   { namespace: "events", action: "view" },
 
   // Channels
   { namespace: "channels", action: "create" },
-  { namespace: "channels", action: "edit" },
+  { namespace: "channels", action: "update" },
   { namespace: "channels", action: "delete" },
   { namespace: "channels", action: "view" },
+  { namespace: "channels", action: "allow.action" },
 
   // Channel Users
   { namespace: "channels", action: "user.view" },
@@ -38,6 +40,7 @@ const permissionSeedList = [
   { namespace: "space", action: "view" },
   { namespace: "space", action: "update" },
   { namespace: "space", action: "delete" },
+  { namespace: "space", action: "allow.action" },
 
   // Space Settings
   { namespace: "space", action: "setting.update" },
@@ -47,6 +50,13 @@ const permissionSeedList = [
   { namespace: "space", action: "user.view" },
   { namespace: "space", action: "user.update" },
   { namespace: "space", action: "user.remove" },
+
+  // File Sharing
+  { namespace: "file_sharing", action: "create" },
+  { namespace: "file_sharing", action: "view" },
+  { namespace: "file_sharing", action: "update" },
+  { namespace: "file_sharing", action: "delete" },
+  { namespace: "file_sharing", action: "allow.action" },
 
   // Project
   { namespace: "project", action: "create" },

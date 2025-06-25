@@ -24,6 +24,10 @@ import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 import { AuthUserAction } from "../User/AuthUserAction"
 import { isUserAdmin } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
+import {
+  createChannelRoleAndAssignUser,
+  getDefaultRoleByName
+} from "@/src/db/data-access/roles/query"
 
 export const CreateChannelAction = CreateServerAction(
   true,
@@ -34,6 +38,17 @@ export const CreateChannelAction = CreateServerAction(
         "broadcast-channels-spaces-update"
       )
       await channel.publish("channel-add", newChannel)
+
+      const getDefaultRole = await getDefaultRoleByName("channel_admin")
+      const createRoleName = ` ${getDefaultRole.name} ${newChannel.channel_name}`
+      const createAndAssignRolesPermissions =
+        await createChannelRoleAndAssignUser(
+          getDefaultRole.id,
+          newChannel.id,
+          newChannel.created_by,
+          createRoleName,
+          getDefaultRole.slug
+        )
       return { success: true, data: newChannel }
     } catch (error) {
       return { error: error }

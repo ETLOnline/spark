@@ -28,29 +28,24 @@ export const getPersonasAction = async () => {
   return { success: true, data: globalRoles }
 }
 
-export async function attachPermissionsInClaimClerk(
-  userId: string,
-  externalAuthId: string
-) {
-  const permissionRows = await getUserPermissionRows(userId)
-  const userPerms = buildUserPerms(permissionRows)
-  const clerk = await clerkClient()
-  const user = clerk.users.updateUserMetadata(externalAuthId, {
-    publicMetadata: {
-      permissions: userPerms
+export const getUserPermissionRowsAction = CreateServerAction(
+  true,
+  async (userId: string) => {
+    try {
+      const permissionRows = await getUserPermissionRows(userId)
+      return { success: true, data: permissionRows }
+    } catch (error) {
+      console.error("Error :", error)
+      return { success: false, error: "Failed to get permissions" }
     }
-  })
-}
+  }
+)
 
 export const savePersonaAction = CreateServerAction(
   true,
   async (personaID: number, userId: string, externalAuthId) => {
     try {
       const attachPersona = await saveUserGlobalRole(personaID, userId)
-      const attachedClaims = await attachPermissionsInClaimClerk(
-        userId,
-        externalAuthId
-      )
       return { success: true, data: attachPersona }
     } catch (error) {
       console.error("Error saving persona:", error)
@@ -100,17 +95,7 @@ export async function SaveRoleWithPermissionsAction(
   permissionIds: number[]
 ) {
   try {
-    await updateRoleWithPermissions(roleId, name, permissionIds).then(
-      async () => {
-        const userByRole = await getUsersByRoleID(roleId)
-        for (const user of userByRole) {
-          await attachPermissionsInClaimClerk(
-            user.unique_id,
-            user.external_auth_id
-          )
-        }
-      }
-    )
+    await updateRoleWithPermissions(roleId, name, permissionIds)
     return { success: true }
   } catch (error) {
     console.error("Failed to save role", error)

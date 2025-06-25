@@ -21,6 +21,7 @@ import {
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
 import { useEffect, useState } from "react"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   space: SelectSpace
@@ -35,6 +36,14 @@ function SpacesCard({ space }: Props) {
       setSpaceControl(true)
     }
   }, [user, space])
+  const { permissionChecker, canAccess } = usePermissionChecker(
+    "scoped",
+    "SPACE",
+    space?.id
+  )
+  const canSetSpaceSetting = permissionChecker?.canAccess(
+    "space.setting.update"
+  )
 
   return (
     <Card key={space.id} className="overflow-hidden">
@@ -79,7 +88,12 @@ function SpacesCard({ space }: Props) {
               </TooltipProvider>
             )}
           </CardTitle>
-          {spaceControl ? <SpacesActionButtons space={space} /> : null}
+          {spaceControl || canSetSpaceSetting ? (
+            <SpacesActionButtons
+              space={space}
+              permissionChecker={permissionChecker}
+            />
+          ) : null}
         </div>
         <CardDescription>{space.description}</CardDescription>
       </CardHeader>

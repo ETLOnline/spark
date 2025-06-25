@@ -23,12 +23,21 @@ import {
 } from "@/src/components/ui/dropdown-menu"
 import { useState } from "react"
 import CreateSpaceModal from "./CreateSpaceModal"
+import { PermissionChecker } from "@/src/lib/PermissionCheker"
 
 interface Props {
   space: SelectSpace
+  permissionChecker?: PermissionChecker | null
 }
 
-function SpacesActionButtons({ space }: Props) {
+function SpacesActionButtons({ space, permissionChecker }: Props) {
+  const canUpdateSpace = permissionChecker?.canAccess("space.update")
+  const canDeleteSpace = permissionChecker?.canAccess("space.delete")
+  const canViewSpaceUsers = permissionChecker?.canAccess("space.user.view")
+  const canSetSpaceSetting = permissionChecker?.canAccess(
+    "space.setting.update"
+  )
+
   const setSelectedSpace = useSetAtom(spaceStore.selectedSpace)
   const setSpaces = useSetAtom(spaceStore.spaces)
 
@@ -79,30 +88,40 @@ function SpacesActionButtons({ space }: Props) {
             <ExternalLink className="mr-2 h-4 w-4" />
             Open Space
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleEditSpace(space)}>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => router.push(`./spaces/${space.space_slug}/users`)}
-          >
-            <User className="mr-2 h-4 w-4" />
-            Users
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => router.push(`./spaces/${space.space_slug}/settings`)}
-          >
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
-          </DropdownMenuItem>
+          {canUpdateSpace && (
+            <DropdownMenuItem onClick={() => handleEditSpace(space)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+          )}
+          {canViewSpaceUsers && (
+            <DropdownMenuItem
+              onClick={() => router.push(`./spaces/${space.space_slug}/users`)}
+            >
+              <User className="mr-2 h-4 w-4" />
+              Users
+            </DropdownMenuItem>
+          )}
+          {canSetSpaceSetting && (
+            <DropdownMenuItem
+              onClick={() =>
+                router.push(`./spaces/${space.space_slug}/settings`)
+              }
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
-            onClick={() => handleDeleteSpace(space)}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </DropdownMenuItem>
+          {canDeleteSpace && (
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() => handleDeleteSpace(space)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

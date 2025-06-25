@@ -19,6 +19,7 @@ import { SelectFeature, SelectSpace } from "@/src/db/schema"
 import { Controller, useForm } from "react-hook-form"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { attachSpaceFeaturesAction } from "@/src/server-actions/Feature/Feature"
+import { toast } from "@/src/hooks/use-toast"
 
 export default function SpaceSettings({
   space,
@@ -84,13 +85,11 @@ export default function SpaceSettings({
     const updatedSpace = await attachSpaceFeatures(currentSpace.id, featureIds)
     if (updatedSpace?.success && updatedSpace.data) {
       setCurrentSpace(updatedSpace.data)
+      toast({
+        title: "Space Setting Saved",
+        duration: 3000
+      })
     }
-
-    // toast({
-    //   title: "Settings saved",
-    //   description: "Your space settings have been updated successfully.",
-    //   action: <ToastAction altText="Dismiss">Dismiss</ToastAction>,
-    // })
   }
 
   return (

@@ -17,6 +17,11 @@ export async function CreateChannel(channelData: InsertChannel) {
       .insert(channelsTable)
       .values(channelData)
       .returning()
+
+    if (newChannel[0].channel_type == "private") {
+      await attachChannelUser(newChannel[0].id, newChannel[0].created_by)
+    }
+
     return newChannel[0]
   } catch (e: any) {
     console.error(e)

@@ -18,9 +18,8 @@ import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
-import { PermissionChecker } from "@/src/lib/PermissionCheker"
-import { userStore } from "@/src/store/user/userStore"
 import { postStore } from "@/src/store/post/postStore"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 const SpacePostComponent: React.FC = () => {
   const params = useParams()
@@ -48,28 +47,21 @@ const SpacePostComponent: React.FC = () => {
     })
   }, [])
 
-  const permission = useAtomValue(userStore.Permissions)
-  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
   const [permissionChecker, setPermissionChecker] = useAtom(
     postStore.permissionCheckerAtom
-  ) // Store PermissionChecker
+  )
+  const { permissionChecker: checker } = usePermissionChecker(
+    "scope",
+    "SPACE",
+    space?.id
+  )
 
-  // Initialize PermissionChecker if not already set
   useEffect(() => {
-    if (
-      (permission && !permissionChecker) ||
-      (isSuperAdmin && !permissionChecker)
-    ) {
-      const checker = new PermissionChecker(
-        "scoped",
-        permission,
-        isSuperAdmin,
-        "space",
-        space?.id
-      )
+    if (checker) {
       setPermissionChecker(checker)
     }
-  }, [permission, permissionChecker, setPermissionChecker, isSuperAdmin])
+  }, [checker, setPermissionChecker])
+
   const canViewPost = permissionChecker?.canAccess("posting.view")
 
   return (

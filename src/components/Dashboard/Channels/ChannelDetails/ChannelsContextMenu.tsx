@@ -16,12 +16,24 @@ import {
 } from "@/src/components/ui/dropdown-menu"
 import { Edit, Layout, MoreHorizontal, Trash2, User } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface ChannelProps {
   channel: SelectChannel
 }
 
 const ChannelsContextMenu: React.FC<ChannelProps> = ({ channel }) => {
+  const { permissionChecker, canAccess } = usePermissionChecker(
+    "scoped",
+    "CHANNEL",
+    channel.id
+  )
+
+  const canEdit = permissionChecker?.canAccess("channels.edit")
+  const canViewSpace = permissionChecker?.canAccess("space.view")
+  const canViewUser = permissionChecker?.canAccess("channels.user.view")
+  const canDeletChannel = permissionChecker?.canAccess("channels.delete")
+
   const router = useRouter()
 
   const setChannels = useSetAtom(channelStore.channels)
@@ -67,32 +79,42 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({ channel }) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          onClick={() =>
-            router.push(`/channels/${channel.channel_slug}/spaces`)
-          }
-        >
-          <Layout className="mr-2 h-4 w-4" />
-          View Spaces
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => editChannel(channel)}>
-          <Edit className="mr-2 h-4 w-4" />
-          Edit
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => router.push(`/channels/${channel.channel_slug}/users`)}
-        >
-          <User className="mr-2 h-4 w-4" />
-          Users
-        </DropdownMenuItem>
+        {(canViewSpace || channel.channel_type === "public") && (
+          <DropdownMenuItem
+            onClick={() =>
+              router.push(`/channels/${channel.channel_slug}/spaces`)
+            }
+          >
+            <Layout className="mr-2 h-4 w-4" />
+            View Spaces
+          </DropdownMenuItem>
+        )}
+        {canEdit && (
+          <DropdownMenuItem onClick={() => editChannel(channel)}>
+            <Edit className="mr-2 h-4 w-4" />
+            Edit
+          </DropdownMenuItem>
+        )}
+        {canViewUser && (
+          <DropdownMenuItem
+            onClick={() =>
+              router.push(`/channels/${channel.channel_slug}/users`)
+            }
+          >
+            <User className="mr-2 h-4 w-4" />
+            Users
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="text-destructive focus:text-destructive"
-          onClick={() => handleDeleteChannel(channel)}
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete
-        </DropdownMenuItem>
+        {canDeletChannel && (
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onClick={() => handleDeleteChannel(channel)}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )
