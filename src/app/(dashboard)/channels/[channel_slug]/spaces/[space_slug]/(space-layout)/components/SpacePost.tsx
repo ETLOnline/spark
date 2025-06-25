@@ -70,7 +70,6 @@ const SpacePostComponent: React.FC = () => {
       setPermissionChecker(checker)
     }
   }, [permission, permissionChecker, setPermissionChecker, isSuperAdmin])
-  // const permissionChecker = new PermissionChecker("global", permission)
   const canViewPost = permissionChecker?.canAccess("posting.view")
 
   return (

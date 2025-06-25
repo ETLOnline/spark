@@ -1,11 +1,9 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
-
 import { Button } from "@/src/components/ui/button"
 import {
   Dialog,
@@ -32,18 +30,13 @@ export function CreateRoleDialog({
   const [createRoleLoading, createRoleData, createRoleError, runCreateRole] =
     useServerAction(CreateRoleAction)
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: ""
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
     const result = await runCreateRole(formData)
-
-    // Simulate API call to create role
-    setIsLoading(false)
 
     if (result?.success) {
       onOpenChange(false)
@@ -65,7 +58,6 @@ export function CreateRoleDialog({
             configure permissions after creating the role.
           </DialogDescription>
         </DialogHeader>
-
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -81,7 +73,6 @@ export function CreateRoleDialog({
               />
             </div>
           </div>
-
           <DialogFooter>
             <Button
               type="button"
@@ -90,8 +81,8 @@ export function CreateRoleDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? (
+            <Button type="submit" disabled={createRoleLoading}>
+              {createRoleLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Creating...
