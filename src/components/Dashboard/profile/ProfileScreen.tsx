@@ -36,7 +36,7 @@ import {
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
 import { generateUrl, getPagePath } from "@/src/utils/helpers"
-import { useRef, useState, useEffect } from "react"
+import { useRef, useState } from "react"
 import { UpdateUserProfilePictureAction } from "@/src/server-actions/User/User"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import Loader from "../../common/Loader/Loader"
@@ -62,10 +62,6 @@ export default function ProfileScreen({
   )
   const { user: clerkUser } = useUser()
   const [currentImageUrl, setCurrentImageUrl] = useState(user?.profile_url)
-
-  useEffect(() => {
-    setCurrentImageUrl(user?.profile_url)
-  }, [user?.profile_url])
 
   const handleCopyUrl = async () => {
     try {
