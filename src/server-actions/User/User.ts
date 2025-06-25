@@ -2,13 +2,20 @@
 
 import {
   GetUserProfileData,
-  UpdateUserBio
+  UpdateUserBio,
+  UpdateUserProfilePicture
 } from "@/src/db/data-access/user/query"
 import { CreateServerAction } from ".."
 import { AddTag } from "@/src/db/data-access/tag/query"
 import { AddUserTag, DeleteUserTags } from "@/src/db/data-access/tag/query"
 import { ProfileData } from "@/src/components/Dashboard/profile/types/profile-types"
 import { Tag, TagStatus } from "@/src/components/TagsInput/tags-input-types"
+import {
+  base64ToBuffer,
+  uploadFileAndSaveMetadata
+} from "@/src/services/storage/utils/fileUtils"
+import { clerkClient } from "@clerk/nextjs/server"
+import { AuthUserAction } from "./AuthUserAction"
 
 export const UpdateBioForUserAction = CreateServerAction(
   true,
@@ -119,6 +126,52 @@ export const GetUserProfileAction = CreateServerAction(
       return {
         success: false,
         error: error
+      }
+    }
+  }
+)
+
+export const UpdateUserProfilePictureAction = CreateServerAction(
+  true,
+  async (fileName: string, fileB64string: string, fileType: string) => {
+    try {
+      const fileBuffer = base64ToBuffer(fileB64string)
+
+      const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(
+        fileBuffer,
+        fileName,
+        fileType,
+        "profiles"
+      )
+
+      if (!fileUrl || !fileRecord) {
+        throw new Error("Upload failed: missing fileUrl or file metadata.")
+      }
+
+      const { unique_id, external_auth_id } = await AuthUserAction()
+      if (!unique_id || !external_auth_id) {
+        throw new Error("Could not determine authenticated user IDs")
+      }
+      const clerkUserId = external_auth_id
+      const dbUserId = unique_id
+
+      const fileBlob = new Blob([fileBuffer], { type: fileType })
+      const clerk = await clerkClient()
+      await clerk.users.updateUserProfileImage(clerkUserId, {
+        file: fileBlob
+      })
+
+      const updatedUser = await UpdateUserProfilePicture(dbUserId, fileUrl)
+
+      return {
+        success: true,
+        data: { ...updatedUser, profile_picture_url: fileUrl }
+      }
+    } catch (error: any) {
+      console.error("Error updating profile picture:", error)
+      return {
+        success: false,
+        error: error.message || "Failed to update profile picture"
       }
     }
   }

@@ -1,40 +1,20 @@
 "use client"
 
-import ProfileActivities from "@/src/components/Dashboard/profile/profile-activities"
+import React, { useRef, useState } from "react" // Added useRef and useState
 import ProfileBio from "@/src/components/Dashboard/profile/profile-bio"
-// import ProfileCalendar from "@/src/components/Dashboard/profile/profile-calendar"
-import ProfileRewards from "@/src/components/Dashboard/profile/profile-rewards"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from "@/src/components/ui/tabs"
 import {
   CalendarIcon,
   LinkIcon,
   UserIcon,
-  UsersIcon,
-  UserPlusIcon,
-  TrophyIcon,
-  StarIcon,
   MailIcon,
   PhoneIcon,
   MapPinIcon,
   Plus,
   UserPlus,
-  GraduationCap,
-  Locate,
-  User
+  PencilIcon
 } from "lucide-react"
-import Link from "next/link"
-import {
-  SelectActivity,
-  SelectReward,
-  SelectTag,
-  SelectUser
-} from "@/src/db/schema"
+import { SelectTag, SelectUser } from "@/src/db/schema"
 import { ExtendedRecommendations, Profile } from "./types/profile-types"
 import { Button } from "@/src/components/ui/button"
 import { useToast } from "@/src/hooks/use-toast"
@@ -53,6 +33,11 @@ import {
 } from "@/src/components/ui/card"
 import { generateUrl, getPagePath } from "@/src/utils/helpers"
 import EditProfileModal from "./edit-profile-modal"
+import { UpdateUserProfilePictureAction } from "@/src/server-actions/User/User"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import Loader from "../../common/Loader/Loader"
+import { LoaderSizes } from "../../common/types/loader-types"
+import { useUser } from "@clerk/nextjs"
 
 type ProfileScreenProps = {
   tab?: string
@@ -66,6 +51,13 @@ export default function ProfileScreen({
   profileData
 }: ProfileScreenProps) {
   const { toast } = useToast()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const [loading, userData, error, updateUserProfile] = useServerAction(
+    UpdateUserProfilePictureAction
+  )
+  const { user: clerkUser } = useUser()
+  const [currentImageUrl, setCurrentImageUrl] = useState(user?.profile_url) // State to manage current profile image URL
 
   const handleCopyUrl = async () => {
     try {
@@ -76,7 +68,7 @@ export default function ProfileScreen({
         description: "Profile URL copied to clipboard",
         duration: 3000
       })
-    } catch {
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -86,8 +78,54 @@ export default function ProfileScreen({
     }
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onloadend = async () => {
+      const base64 = reader.result as string
+      setUploading(true)
+      try {
+        const res = await updateUserProfile(file.name, base64, file.type)
+        if (res?.success && res.data) {
+          setCurrentImageUrl(res.data.profile_picture_url)
+          await clerkUser?.reload()
+          toast({
+            title: "Profile picture updated!",
+            description: "Your profile picture has been successfully updated.",
+            duration: 3000
+          })
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: res?.error || "Failed to update profile picture",
+            duration: 3000
+          })
+        }
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Something went wrong",
+          duration: 3000
+        })
+      } finally {
+        setUploading(false)
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
   return (
-    <div className="container mx-auto md:p-6 p-2">
+    <div className="container mx-auto md:p-6 p-2 relative">
+      {loading ? (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-50">
+          <Loader size={LoaderSizes.xl} />
+        </div>
+      ) : null}
+
       {/* Banner with Avatar */}
       <div
         className="relative sm:h-44 h-36 rounded-lg bg-cover bg-center shadow-sm shadow-secondary"
@@ -96,13 +134,32 @@ export default function ProfileScreen({
         }}
       >
         <div className="absolute bottom-0 left-16 transform -translate-x-1/2 translate-y-1/2">
-          <Avatar className="h-24 w-24 border-4 border-white">
-            <AvatarImage
-              src={user.profile_url || "/placeholder.png"}
-              alt="Profile"
+          <div className="relative">
+            {" "}
+            {/* Added relative positioning for the button */}
+            <Avatar className="h-24 w-24 border-4 border-white">
+              <AvatarImage
+                src={currentImageUrl || "/placeholder.png"} // Use currentImageUrl state
+                alt="Profile"
+              />
+              <AvatarFallback>IMG</AvatarFallback>
+            </Avatar>
+            {/* Edit Profile Picture Button */}
+            <button
+              className="absolute bottom-0 right-0 bg-background border rounded-full p-1 hover:bg-muted"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading || uploading} // Disable while loading or uploading
+            >
+              <PencilIcon className="h-4 w-4" />
+            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
             />
-            <AvatarFallback>IMG</AvatarFallback>
-          </Avatar>
+          </div>
         </div>
       </div>
 
@@ -218,7 +275,7 @@ export default function ProfileScreen({
             </CardContent>
           </Card>
         </div>
-        {/* Right */}
+        {/* Right Column */}
         <div className="space-y-6">
           {/* Contact Info */}
           <Card>
