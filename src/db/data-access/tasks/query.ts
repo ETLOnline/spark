@@ -14,6 +14,7 @@ export type taskQueryFilters = {
   project_id?: string
   searchedItem?: string
   orderList?: string
+  sprint_id?: string
 }
 
 export async function CreateTask(taskData: InsertTask) {
@@ -50,6 +51,12 @@ export async function GetTasks(filters?: taskQueryFilters) {
     if (filters) {
       if (filters.project_id) {
         whereClauses.push(eq(taskTable.project_id, filters.project_id))
+      }
+
+      if (filters.sprint_id) {
+        whereClauses.push(eq(taskTable.sprint_id, filters.sprint_id))
+      } else {
+        whereClauses.push(isNull(taskTable.sprint_id))
       }
 
       if (filters.searchedItem) {

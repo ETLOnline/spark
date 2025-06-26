@@ -1,11 +1,22 @@
+"use client"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Badge } from "@/src/components/ui/badge"
-import { Calendar, CheckCircle2, Clock, ListTodo, User } from "lucide-react"
-import React from "react"
+import {
+  Calendar,
+  CheckCircle2,
+  Clock,
+  ListTodo,
+  Settings,
+  User
+} from "lucide-react"
+import React, { useEffect, useState } from "react"
 import { Progress } from "@/src/components/ui/progress"
 import RecentActivity from "./RecentActivity"
 import ProjectSprintBurnDown from "./ProjectSprintBurnDown"
 import ProjectStatCards from "./ProjectStatCards"
+import { useAtomValue } from "jotai"
+import { projectStore } from "@/src/store/project/projectStore"
+import StatusRequiredDialog from "../StatusRequiredDialog"
 
 interface ProjectStats {
   totalTasks: number
@@ -30,7 +41,16 @@ const projectStats: ProjectStats = {
 }
 
 function ProjectOverView() {
-  return (
+  const projectStatusList = useAtomValue(projectStore.projectStatusList)
+  const [openDialog, setOpenDialog] = useState(false)
+
+  useEffect(() => {
+    if (projectStatusList.length === 0) {
+      setOpenDialog(true)
+    }
+  }, [projectStatusList])
+
+  return projectStatusList.length > 0 ? (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <ProjectStatCards
@@ -137,6 +157,8 @@ function ProjectOverView() {
         <RecentActivity />
       </div>
     </div>
+  ) : (
+    <StatusRequiredDialog openDialog={openDialog} />
   )
 }
 

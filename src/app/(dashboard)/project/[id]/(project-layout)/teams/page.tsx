@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import ProjectTeamList, {
   ProjectUser
 } from "@/src/components/Dashboard/ProjectManagement/ProjectTeamList/ProjectTeamList"
@@ -22,6 +22,9 @@ import {
 } from "@/src/db/schema"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import { useAtomValue } from "jotai"
+import { projectStore } from "@/src/store/project/projectStore"
+import StatusRequiredDialog from "@/src/components/Dashboard/ProjectManagement/StatusRequiredDialog"
 
 const TeamPage: React.FC = () => {
   const params = useParams<{ id: string }>()
@@ -33,6 +36,14 @@ const TeamPage: React.FC = () => {
   const [projectUsers, setProjectUsers] = useState<ProjectUser[]>([])
   const [notFound, setNotFound] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const projectStatusList = useAtomValue(projectStore.projectStatusList)
+  const [openDialog, setOpenDialog] = useState(false)
+
+  useEffect(() => {
+    if (projectStatusList.length === 0) {
+      setOpenDialog(true)
+    }
+  }, [projectStatusList])
 
   useEffect(() => {
     async function fetchData() {
@@ -116,7 +127,7 @@ const TeamPage: React.FC = () => {
 
   if (!currProject || !currSpace) return <NotFound />
 
-  return (
+  return projectStatusList.length > 0 ? (
     <div className="p-6">
       <ProjectTeamList
         projectId={currProject.id}
@@ -125,6 +136,8 @@ const TeamPage: React.FC = () => {
         projectCreatorId={currProject.created_by}
       />
     </div>
+  ) : (
+    <StatusRequiredDialog openDialog={openDialog} />
   )
 }
 

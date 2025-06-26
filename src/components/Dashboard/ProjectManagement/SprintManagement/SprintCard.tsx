@@ -14,35 +14,36 @@ import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import moment from "moment"
 import { taskStore } from "@/src/store/tasks/taskStore"
-import { GetTasksAction } from "@/src/server-actions/Tasks/Task"
 import Loader from "@/src/components/common/Loader/Loader"
-import { SelectSprint } from "@/src/db/schema"
+import { SelectSprint, SelectTask } from "@/src/db/schema"
 import AddBacklogItem from "../BacklogManagement/AddBacklogItem"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { Button } from "@/src/components/ui/button"
 import SprintTasks from "./SprintTasks"
 import SprintContextMenu from "./SprintContextMenu"
 import { SprintStatus } from "../constants/projectManagment"
+import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 
 interface Props {
   sprint: SelectSprint
 }
 
 export default function SprintCardPage({ sprint }: Props) {
-  const [tasks, setTasks] = useAtom(taskStore.tasks)
+  const [tasks, setTasks] = useState<SelectTask[]>([])
   const [isSprintContextMenuOpen, setIsSprintContextMenuOpen] = useState(false)
   const setIsTaskFormModelOpen = useSetAtom(taskStore.isTaskFormModelOpen)
   const setSprintId = useSetAtom(sprintStore.sprintId)
 
-  const [getTaskLoading, , , GetTasks] = useServerAction(GetTasksAction)
+  const [getTaskLoading, , , GetTasks] = useServerAction(GetSprintTasksAction)
 
   const projectId = useParams().id as string
 
-  const sprintTask = tasks.filter((task) => task.sprint_id === sprint.id)
-
   useEffect(() => {
     const fetchTasks = async () => {
-      const tasks = await GetTasks({ project_id: projectId })
+      const tasks = await GetTasks({
+        project_id: projectId,
+        sprint_id: sprint.id
+      })
       if (tasks?.success && tasks.data) {
         setTasks(tasks.data.tasks)
       }
@@ -122,8 +123,8 @@ export default function SprintCardPage({ sprint }: Props) {
               <div className="flex justify-center h-full w-full my-4">
                 <Loader size={LoaderSizes.lg} />
               </div>
-            ) : sprintTask.length > 0 ? (
-              sprintTask.map((task) => (
+            ) : tasks.length > 0 ? (
+              tasks.map((task) => (
                 <SprintTasks key={task.id} task={task} currSprint={sprint} />
               ))
             ) : (

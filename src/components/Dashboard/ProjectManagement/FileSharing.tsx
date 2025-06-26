@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import {
   Card,
@@ -49,8 +49,13 @@ import {
   Share,
   Trash,
   MessageSquare,
-  Send
+  Send,
+  Settings,
+  AlertCircle
 } from "lucide-react"
+import { useAtomValue } from "jotai"
+import { projectStore } from "@/src/store/project/projectStore"
+import StatusRequiredDialog from "./StatusRequiredDialog"
 
 interface FileComment {
   id: string
@@ -169,6 +174,15 @@ export function FileSharing() {
   const [newComment, setNewComment] = useState("")
   const [activeFolder, setActiveFolder] = useState<string | null>(null)
 
+  const projectStatusList = useAtomValue(projectStore.projectStatusList)
+  const [openDialog, setOpenDialog] = useState(false)
+
+  useEffect(() => {
+    if (projectStatusList.length === 0) {
+      setOpenDialog(true)
+    }
+  }, [projectStatusList])
+
   const handleAddComment = () => {
     if (!selectedFile || !newComment.trim()) return
 
@@ -212,7 +226,7 @@ export function FileSharing() {
         file.uploadedBy.name.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
-  return (
+  return projectStatusList.length > 0 ? (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-bold">Files & Documents</h2>
@@ -555,5 +569,7 @@ export function FileSharing() {
         </DialogContent>
       </Dialog>
     </div>
+  ) : (
+    <StatusRequiredDialog openDialog={openDialog} />
   )
 }
