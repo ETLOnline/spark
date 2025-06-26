@@ -18,10 +18,6 @@ export async function CreateChannel(channelData: InsertChannel) {
       .values(channelData)
       .returning()
 
-    if (newChannel[0].channel_type == "private") {
-      await attachChannelUser(newChannel[0].id, newChannel[0].created_by)
-    }
-
     return newChannel[0]
   } catch (e: any) {
     console.error(e)
@@ -173,13 +169,18 @@ export async function GetChannelById(id: string, withChannelUsers?: boolean) {
   }
 }
 
-export async function attachChannelUser(channelId: string, userId: string) {
+export async function attachChannelUser(
+  channelId: string,
+  userId: string,
+  user_role?: string
+) {
   try {
     const spaceUser = await db
       .insert(ChannelUsersTable)
       .values({
         channel_id: channelId,
-        user_id: userId
+        user_id: userId,
+        role: user_role
       })
       .returning()
     return spaceUser

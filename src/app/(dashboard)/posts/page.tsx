@@ -7,19 +7,27 @@ import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
 import { GetPostsAction } from "@/src/server-actions/Post/Post"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
-import { useAtomValue } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { postStore } from "@/src/store/post/postStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 const PostsPage = () => {
-  const isSuperAdmin = Boolean(useAtomValue(userStore.SuperAdmin))
   const [posts, setPosts] = useState<
     (SelectPost | SelectFilePost | SelectPollPost)[]
   >([])
   const [loading, setLoading] = useState(true)
-  const { permissionChecker, canAccess } = usePermissionChecker("global")
-  const canViewPost = permissionChecker?.canAccess("posting.view")
+  const [permissionChecker, setPermissionChecker] = useAtom(
+    postStore.permissionCheckerAtom
+  )
+  const { permissionChecker: checker, canAccess } =
+    usePermissionChecker("global")
+  const canViewPost = canAccess("posting.view")
+  useEffect(() => {
+    if (checker) {
+      setPermissionChecker(checker)
+    }
+  }, [checker, setPermissionChecker])
 
   useEffect(() => {
     const fetchPosts = async () => {

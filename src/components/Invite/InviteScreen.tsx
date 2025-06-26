@@ -34,6 +34,9 @@ const InviteScreen = ({ entityType, entity }: Props) => {
     ? entity.channel_name
     : entity.space_name
   const entityDescription = entity.description
+  const entityTypeValue = isEntityChannel(entity)
+    ? entity.channel_type
+    : entity.space_type
 
   const title = `Join ${entityName} ${entityType}`
   const description = `You have been invited to Join the ${entityType} to start collaborating.`
@@ -114,7 +117,7 @@ const InviteScreen = ({ entityType, entity }: Props) => {
                   </div>
 
                   <Badge variant="secondary" className="text-xs">
-                    Public
+                    {entityTypeValue}
                   </Badge>
                 </div>
               </div>

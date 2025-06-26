@@ -25,8 +25,8 @@ import { AuthUserAction } from "../User/AuthUserAction"
 import { isUserAdmin } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import {
-  createChannelRoleAndAssignUser,
-  getDefaultRoleByName
+  createScopedChannelRolesAndAssignAdmin,
+  getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
 
 export const CreateChannelAction = CreateServerAction(
@@ -38,17 +38,18 @@ export const CreateChannelAction = CreateServerAction(
         "broadcast-channels-spaces-update"
       )
       await channel.publish("channel-add", newChannel)
-
-      const getDefaultRole = await getDefaultRoleByName("channel_admin")
-      const createRoleName = ` ${getDefaultRole.name} ${newChannel.channel_name}`
-      const createAndAssignRolesPermissions =
-        await createChannelRoleAndAssignUser(
-          getDefaultRole.id,
+      const result = await createScopedChannelRolesAndAssignAdmin(
+        newChannel.id,
+        newChannel.channel_name,
+        newChannel.created_by
+      )
+      if (newChannel.channel_type == "private") {
+        await attachChannelUser(
           newChannel.id,
           newChannel.created_by,
-          createRoleName,
-          getDefaultRole.slug
+          result.adminRole?.name
         )
+      }
       return { success: true, data: newChannel }
     } catch (error) {
       return { error: error }
@@ -162,6 +163,11 @@ export const AttachChannelUserAction = CreateServerAction(
   async (channelId: string, userId: string) => {
     try {
       const channelUser = await attachChannelUser(channelId, userId)
+      const attachUserRole = await getAndAssignViewerRoles(
+        userId,
+        "channel_viewer",
+        channelId
+      )
       return { success: true, data: channelUser }
     } catch (error) {
       return { error: error }

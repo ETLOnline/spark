@@ -33,8 +33,8 @@ import {
   getChannelUsers
 } from "@/src/db/data-access/channels/query"
 import {
-  createSpaceRoleAndAssignUser,
-  getDefaultRoleByName
+  createScopedSpaceRolesAndAssignAdmin,
+  getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
 
 export const CreateSpaceAction = CreateServerAction(
@@ -46,17 +46,18 @@ export const CreateSpaceAction = CreateServerAction(
         "broadcast-channels-spaces-update"
       )
       await channel.publish("space-add", newSpace)
-      const getDefaultRole = await getDefaultRoleByName("space_admin")
-      const createRoleName = ` ${getDefaultRole.name} ${newSpace.space_name}`
-      const createAndAssignRolesPermissions =
-        await createSpaceRoleAndAssignUser(
-          getDefaultRole.id,
+      const result = await createScopedSpaceRolesAndAssignAdmin(
+        newSpace.id,
+        newSpace.space_name,
+        newSpace.created_by
+      )
+      if (newSpace.space_type == "private") {
+        await attachSpaceUser(
           newSpace.id,
           newSpace.created_by,
-          createRoleName,
-          getDefaultRole.slug
+          result.adminRole?.name
         )
-
+      }
       return { success: true, data: newSpace }
     } catch (error: any) {
       return {
@@ -209,6 +210,11 @@ export const AttachSpaceUserAction = CreateServerAction(
         }
       }
       const spaceUser = await attachSpaceUser(spaceId, userId)
+      const attachUserRole = await getAndAssignViewerRoles(
+        userId,
+        "space_viewer",
+        spaceId
+      )
       return { success: true, data: spaceUser }
     } catch (error) {
       return { error: error }

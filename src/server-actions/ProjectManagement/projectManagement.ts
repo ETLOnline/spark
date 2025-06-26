@@ -12,12 +12,18 @@ import {
   updateProjectUserRole,
   updateProject
 } from "@/src/db/data-access/project-management/query"
+import { createScopedProjectRolesAndAssignAdmin } from "@/src/db/data-access/roles/query"
 
 export const CreateProjectAction = CreateServerAction(
   true,
   async (project_data: InsertProject) => {
     try {
       const newProject = await CreateProject(project_data)
+      const result = await createScopedProjectRolesAndAssignAdmin(
+        newProject.id,
+        newProject.project_name,
+        newProject.created_by
+      )
       return { success: true, data: newProject }
     } catch (error) {
       return { error }

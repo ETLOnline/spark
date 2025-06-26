@@ -155,21 +155,48 @@ export async function updateRoleWithPermissions(
   })
 }
 
-export async function createScopedRole({ name }: { name: string }) {
+/**
+ * Creates a scoped role with optional entity type, entity ID, and slug.
+ * This function now manages its own transaction.
+ * @param params Object containing:
+ * @param params.name The name of the role.
+ * @param params.roleSlug The slug of the role (optional, defaults to null).
+ * @param params.entityType The type of the entity (e.g., "CHANNEL", "SPACE", "PROJECT") (optional, defaults to null).
+ * @param params.entityId The ID of the entity (optional, defaults to null).
+ * @returns The newly created role.
+ */
+export async function createScopedRole(params: {
+  name: string
+  roleSlug?: string | null
+  entityType?: string | null
+  entityId?: string | null
+}) {
+  const { name, roleSlug = null, entityType = null, entityId = null } = params
   try {
-    const result = await db
-      .insert(rolesTable)
-      .values({
-        name,
-        role_type: "SCOPED",
-        entity_type: null,
-        entity_id: null
-      })
-      .returning({ id: rolesTable.id })
-
-    return result[0]
+    const result = await db.transaction(async (trx) => {
+      // Internal transaction
+      const insertedRole = await trx
+        .insert(rolesTable)
+        .values({
+          name,
+          role_type: "SCOPED",
+          slug: roleSlug,
+          entity_type: entityType,
+          entity_id: entityId
+        })
+        .returning({
+          id: rolesTable.id,
+          name: rolesTable.name,
+          slug: rolesTable.slug
+        })
+      return insertedRole[0]
+    })
+    return result
   } catch (error: any) {
-    throw new Error("Failed to create scoped role: " + error.message)
+    console.error("Error creating scoped role:", error)
+    throw new Error(
+      `Failed to create scoped role with name '${name}': ${error.message}`
+    )
   }
 }
 
@@ -219,176 +246,200 @@ export async function getUsersByRoleID(roleID: number) {
  * Fetches default roles from the database.
  * Default roles are identified by 'DEFAULT' in the role_type column.
  */
-export async function getDefaultRoleByName(slug: string) {
+export async function getDefaultRolesBySlugs(slugs: string[]) {
   try {
-    const defaultRole = await db
-      .select()
-      .from(rolesTable)
-      .where(
-        and(eq(rolesTable.role_type, "DEFAULT"), eq(rolesTable.slug, slug))
-      )
-      .limit(1)
+    const defaultRoles = await db.query.rolesTable.findMany({
+      where: and(
+        eq(rolesTable.role_type, "DEFAULT"),
+        inArray(rolesTable.slug, slugs)
+      ),
+      with: {
+        permissions: true
+      }
+    })
 
-    return defaultRole[0]
+    if (defaultRoles.length !== slugs.length) {
+      throw new Error("Some default roles were not found.")
+    }
+
+    return defaultRoles
   } catch (error: any) {
-    console.error("Error fetching default role:", error)
+    console.error("Error fetching default roles:", error)
     throw new Error(error.message)
   }
 }
 
 /**
- * Creates a new role for a specific channel by copying a default role's permissions,
- * and then assigns this new role to the channel creator.
- * @param defaultRoleId The ID of the default role to copy (e.g., 'Channel Role').
+ * Creates all default channel-scoped roles (Admin, Editor, Viewer) for a new channel
+ * and assigns the 'Channel Admin' role to the channel creator.
  * @param channelId The ID of the newly created channel.
- * @param userId The ID of the user creating the channel.
- * @param newRoleName The name for the new channel-specific role (e.g., "Channel Admin - [Channel Name]").
- * @returns The newly created role and the user role assignment.
+ * @param channelName The name of the newly created channel (for role naming).
+ * @param creatorUserId The ID of the user who created the channel.
  */
-export async function createChannelRoleAndAssignUser(
-  defaultRoleId: number,
+export async function createScopedChannelRolesAndAssignAdmin(
   channelId: string,
-  userId: string,
-  newRoleName: string,
-  roleSlug: string | null
+  channelName: string,
+  creatorUserId: string
 ) {
-  await db.transaction(async (trx) => {
+  return await db.transaction(async (trx) => {
     try {
-      // 1. Fetch the default role and its permissions
-      const defaultRoleWithPermissions = await trx.query.rolesTable.findFirst({
-        where: eq(rolesTable.id, defaultRoleId),
-        with: {
-          permissions: true
-        }
-      })
-
-      if (!defaultRoleWithPermissions) {
-        throw new Error(`Default role with ID ${defaultRoleId} not found.`)
-      }
-
-      // 2. Create the new channel-specific role
-      const newRole = await trx
-        .insert(rolesTable)
-        .values({
-          name: newRoleName,
-          role_type: "SCOPED",
-          slug: roleSlug,
-          entity_type: "CHANNEL",
-          entity_id: channelId
+      const defaultRoleSlugs = [
+        "channel_admin",
+        "channel_editor",
+        "channel_viewer"
+      ]
+      const defaultRoles = await getDefaultRolesBySlugs(defaultRoleSlugs)
+      const createdScopedRoles: {
+        id: number
+        name: string
+        slug: string | null
+      }[] = []
+      for (const getDefaultRole of defaultRoles) {
+        const createRoleName = `${channelName} ${getDefaultRole.name}`
+        const newScopedRole = await createScopedRole({
+          name: createRoleName,
+          roleSlug: getDefaultRole.slug,
+          entityType: "CHANNEL",
+          entityId: channelId
         })
-        .returning({ id: rolesTable.id, name: rolesTable.name })
 
-      if (!newRole[0]) {
-        throw new Error("Failed to create new channel role.")
+        if (!newScopedRole) {
+          throw new Error(
+            `Failed to create scoped role for ${getDefaultRole.name}.`
+          )
+        }
+
+        const newScopedRoleId = newScopedRole.id
+        createdScopedRoles.push(newScopedRole)
+
+        // Copy permissions from default role to new scoped role
+        if (getDefaultRole.permissions.length > 0) {
+          const rolePermissionsToInsert = getDefaultRole.permissions.map(
+            (rp) => ({
+              role_id: newScopedRoleId,
+              permission_id: rp.permission_id
+            })
+          )
+          await trx.insert(rolePermissionsTable).values(rolePermissionsToInsert)
+        }
       }
 
-      const newRoleId = newRole[0].id
-
-      // 3. Copy permissions from the default role to the new role
-      if (defaultRoleWithPermissions.permissions.length > 0) {
-        const rolePermissionsToInsert =
-          defaultRoleWithPermissions.permissions.map((rp) => ({
-            role_id: newRoleId,
-            permission_id: rp.permission_id
-          }))
-
-        await trx.insert(rolePermissionsTable).values(rolePermissionsToInsert)
-      }
-
-      // 4. Assign the newly created channel role to the user who created the channel
-      await trx.insert(userRolesTable).values({
-        user_id: userId,
-        role_id: newRoleId
-      })
-
-      console.log(
-        `Successfully created channel role '${newRole[0].name}' (${newRoleId}) for channel ${channelId} and assigned to user ${userId}.`
+      // Find the newly created "Channel Admin" scoped role among the created roles
+      const adminRole = createdScopedRoles.find(
+        (role) => role.slug === "channel_admin"
       )
-      return { newRole: newRole[0] }
+
+      if (adminRole) {
+        // Assign only the "Channel Admin" scoped role to the channel creator
+        await trx.insert(userRolesTable).values({
+          user_id: creatorUserId,
+          role_id: adminRole.id
+        })
+        console.log(
+          `Assigned scoped Channel Admin role (${adminRole.name}) to user ${creatorUserId} for channel ${channelId}.`
+        )
+      } else {
+        console.warn(
+          "Scoped Channel Admin role not found after creation. User not assigned as admin."
+        )
+      }
+
+      return {
+        success: true,
+        createdRoles: createdScopedRoles,
+        adminRole: adminRole
+      }
     } catch (error: any) {
-      console.error("Error in createChannelRoleAndAssignUser:", error)
+      console.error("Error in createScopedChannelRolesAndAssignAdmin:", error)
       trx.rollback() // Rollback transaction on error
-      throw new Error(
-        "Failed to create channel role and assign user: " + error.message
-      )
+      throw new Error(`Failed to create scoped channel roles: ${error.message}`)
     }
   })
 }
 
 /**
- * Creates a new role for a specific space by copying a default role's permissions,
- * and then assigns this new role to the space creator.
- * @param defaultRoleId The ID of the default role to copy (e.g., 'Space Role').
+ * Creates all default space-scoped roles (Admin, Editor, Viewer) for a new space
+ * and assigns the 'Space Admin' role to the space creator.
  * @param spaceId The ID of the newly created space.
- * @param userId The ID of the user creating the space.
- * @param newRoleName The name for the new space-specific role (e.g., "Space Admin - [Space Name]").
- * @returns The newly created role and the user role assignment.
+ * @param spaceName The name of the newly created space (for role naming).
+ * @param creatorUserId The ID of the user who created the space.
  */
-export async function createSpaceRoleAndAssignUser(
-  defaultRoleId: number,
+export async function createScopedSpaceRolesAndAssignAdmin(
   spaceId: string,
-  userId: string,
-  newRoleName: string,
-  roleSlug: string | null
+  spaceName: string,
+  creatorUserId: string
 ) {
-  await db.transaction(async (trx) => {
+  return await db.transaction(async (trx) => {
     try {
-      // 1. Fetch the default role and its permissions
-      const defaultRoleWithPermissions = await trx.query.rolesTable.findFirst({
-        where: eq(rolesTable.id, defaultRoleId),
-        with: {
-          permissions: true
-        }
-      })
+      const defaultRoleSlugs = ["space_admin", "space_editor", "space_viewer"] // Define space role slugs
+      const defaultRoles = await getDefaultRolesBySlugs(defaultRoleSlugs) // Fetch default roles
+      const createdScopedRoles: {
+        id: number
+        name: string
+        slug: string | null
+      }[] = []
 
-      if (!defaultRoleWithPermissions) {
-        throw new Error(`Default role with ID ${defaultRoleId} not found.`)
-      }
+      for (const getDefaultRole of defaultRoles) {
+        const roleName = getDefaultRole.name || "Default Space Role"
+        const createRoleName = `${spaceName} ${roleName}` // Naming convention for space roles
 
-      // 2. Create the new space-specific role
-      const newRole = await trx
-        .insert(rolesTable)
-        .values({
-          name: newRoleName,
-          role_type: "SCOPED",
-          entity_type: "SPACE",
-          entity_id: spaceId
+        const newScopedRole = await createScopedRole({
+          name: createRoleName,
+          roleSlug: getDefaultRole.slug,
+          entityType: "SPACE",
+          entityId: spaceId
         })
-        .returning({ id: rolesTable.id, name: rolesTable.name })
 
-      if (!newRole[0]) {
-        throw new Error("Failed to create new space role.")
+        if (!newScopedRole) {
+          throw new Error(
+            `Failed to create scoped role for ${getDefaultRole.name}.`
+          )
+        }
+
+        const newScopedRoleId = newScopedRole.id
+        createdScopedRoles.push(newScopedRole)
+
+        // Copy permissions
+        if (getDefaultRole.permissions.length > 0) {
+          const rolePermissionsToInsert = getDefaultRole.permissions.map(
+            (rp) => ({
+              role_id: newScopedRoleId,
+              permission_id: rp.permission_id
+            })
+          )
+          await trx.insert(rolePermissionsTable).values(rolePermissionsToInsert)
+        }
       }
 
-      const newRoleId = newRole[0].id
-
-      // 3. Copy permissions from the default role to the new role
-      if (defaultRoleWithPermissions.permissions.length > 0) {
-        const rolePermissionsToInsert =
-          defaultRoleWithPermissions.permissions.map((rp) => ({
-            role_id: newRoleId,
-            permission_id: rp.permission_id
-          }))
-
-        await trx.insert(rolePermissionsTable).values(rolePermissionsToInsert)
-      }
-
-      // 4. Assign the newly created space role to the user who created the space
-      await trx.insert(userRolesTable).values({
-        user_id: userId,
-        role_id: newRoleId
-      })
-
-      console.log(
-        `Successfully created space role '${newRole[0].name}' (${newRoleId}) for space ${spaceId} and assigned to user ${userId}.`
+      // Find the newly created "Space Admin" scoped role
+      const adminRole = createdScopedRoles.find(
+        (role) => role.slug === "space_admin"
       )
-      return { newRole: newRole[0] }
+
+      if (adminRole) {
+        // Assign only the "Space Admin" scoped role to the space creator
+        await trx.insert(userRolesTable).values({
+          user_id: creatorUserId,
+          role_id: adminRole.id
+        })
+        console.log(
+          `Assigned scoped Space Admin role (${adminRole.name}) to user ${creatorUserId} for space ${spaceId}.`
+        )
+      } else {
+        console.warn(
+          "Scoped Space Admin role not found after creation. User not assigned as admin."
+        )
+      }
+
+      return {
+        success: true,
+        createdRoles: createdScopedRoles,
+        adminRole: adminRole
+      }
     } catch (error: any) {
-      console.error("Error in createSpaceRoleAndAssignUser:", error)
-      trx.rollback() // Rollback transaction on error
-      throw new Error(
-        "Failed to create space role and assign user: " + error.message
-      )
+      console.error("Error in createScopedSpaceRolesAndAssignAdmin:", error)
+      trx.rollback()
+      throw new Error(`Failed to create scoped space roles: ${error.message}`)
     }
   })
 }
@@ -400,72 +451,213 @@ export async function createSpaceRoleAndAssignUser(
  * @param projectId The ID of the newly created project.
  * @param userId The ID of the user creating the project.
  * @param newRoleName The name for the new project-specific role (e.g., "Project Admin - [Project Name]").
+ * @param roleSlug The slug of the default role. // Added roleSlug parameter
  * @returns The newly created role and the user role assignment.
  */
-export async function createProjectRoleAndAssignUser(
-  defaultRoleId: number,
+/**
+ * Creates all default project-scoped roles (Admin, Editor, Viewer) for a new project
+ * and assigns the 'Project Admin' role to the project creator.
+ * @param projectId The ID of the newly created project.
+ * @param projectName The name of the newly created project (for role naming).
+ * @param creatorUserId The ID of the user who created the project.
+ */
+export async function createScopedProjectRolesAndAssignAdmin( // Renamed and refactored
   projectId: string,
-  userId: string,
-  newRoleName: string
+  projectName: string,
+  creatorUserId: string
 ) {
-  await db.transaction(async (trx) => {
+  return await db.transaction(async (trx) => {
     try {
-      // 1. Fetch the default role and its permissions
-      const defaultRoleWithPermissions = await trx.query.rolesTable.findFirst({
-        where: eq(rolesTable.id, defaultRoleId),
-        with: {
-          permissions: true
-        }
-      })
+      const defaultRoleSlugs = [
+        "project_admin",
+        "project_editor",
+        "project_viewer"
+      ]
+      const defaultRoles = await getDefaultRolesBySlugs(defaultRoleSlugs)
+      const createdScopedRoles: {
+        id: number
+        name: string
+        slug: string | null
+      }[] = []
 
-      if (!defaultRoleWithPermissions) {
-        throw new Error(`Default role with ID ${defaultRoleId} not found.`)
-      }
+      for (const getDefaultRole of defaultRoles) {
+        const roleName = getDefaultRole.name || "Default Project Role"
+        const createRoleName = `${projectName} ${roleName}`
 
-      // 2. Create the new project-specific role
-      const newRole = await trx
-        .insert(rolesTable)
-        .values({
-          name: newRoleName,
-          role_type: "SCOPED", // New project role will be SCOPED
-          entity_type: "PROJECT", // Link to the project entity
-          entity_id: projectId // Store the project ID
+        const newScopedRole = await createScopedRole({
+          name: createRoleName,
+          roleSlug: getDefaultRole.slug,
+          entityType: "PROJECT",
+          entityId: projectId
         })
-        .returning({ id: rolesTable.id, name: rolesTable.name })
 
-      if (!newRole[0]) {
-        throw new Error("Failed to create new project role.")
+        if (!newScopedRole) {
+          throw new Error(
+            `Failed to create scoped role for ${getDefaultRole.name}.`
+          )
+        }
+
+        const newScopedRoleId = newScopedRole.id
+        createdScopedRoles.push(newScopedRole)
+
+        // Copy permissions from default role to new scoped role
+        if (getDefaultRole.permissions.length > 0) {
+          const rolePermissionsToInsert = getDefaultRole.permissions.map(
+            (rp) => ({
+              role_id: newScopedRoleId,
+              permission_id: rp.permission_id
+            })
+          )
+          await trx.insert(rolePermissionsTable).values(rolePermissionsToInsert)
+        }
       }
 
-      const newRoleId = newRole[0].id
-
-      // 3. Copy permissions from the default role to the new role
-      if (defaultRoleWithPermissions.permissions.length > 0) {
-        const rolePermissionsToInsert =
-          defaultRoleWithPermissions.permissions.map((rp) => ({
-            role_id: newRoleId,
-            permission_id: rp.permission_id
-          }))
-
-        await trx.insert(rolePermissionsTable).values(rolePermissionsToInsert)
-      }
-
-      // 4. Assign the newly created project role to the user who created the project
-      await trx.insert(userRolesTable).values({
-        user_id: userId,
-        role_id: newRoleId
-      })
-
-      console.log(
-        `Successfully created project role '${newRole[0].name}' (${newRoleId}) for project ${projectId} and assigned to user ${userId}.`
+      // Find the newly created "Project Admin" scoped role
+      const adminRole = createdScopedRoles.find(
+        (role) => role.slug === "project_admin"
       )
-      return { newRole: newRole[0] }
+
+      if (adminRole) {
+        // Assign only the "Project Admin" scoped role to the project creator
+        await trx.insert(userRolesTable).values({
+          user_id: creatorUserId,
+          role_id: adminRole.id
+        })
+        console.log(
+          `Assigned scoped Project Admin role (${adminRole.name}) to user ${creatorUserId} for project ${projectId}.`
+        )
+      } else {
+        console.warn(
+          "Scoped Project Admin role not found after creation. User not assigned as admin."
+        )
+      }
+
+      return { success: true, createdRoles: createdScopedRoles }
     } catch (error: any) {
-      console.error("Error in createProjectRoleAndAssignUser:", error)
-      trx.rollback() // Rollback transaction on error
-      throw new Error(
-        "Failed to create project role and assign user: " + error.message
-      )
+      console.error("Error in createScopedProjectRolesAndAssignAdmin:", error)
+      trx.rollback()
+      throw new Error(`Failed to create scoped project roles: ${error.message}`)
     }
   })
+}
+
+/**
+ * Fetches the specific viewer role based on roleSlug and entityType.
+ * @param roleSlug The slug of the role ("channel_viewer" or "space_viewer").
+ * @param entityId The ID of the specific channel or space.
+ * @returns The viewer role or null if not found.
+ */
+async function fetchViewerRole(
+  roleSlug: "channel_viewer" | "space_viewer",
+  entityId: string
+) {
+  try {
+    // Determine the actual entity type (CHANNEL or SPACE) based on the roleSlug
+    const entityType = roleSlug.includes("channel") ? "CHANNEL" : "SPACE"
+
+    // Fetch the specific viewer role for the given entity
+    const viewerRole = await db.query.rolesTable.findFirst({
+      where: and(
+        eq(rolesTable.slug, roleSlug), // Use the provided roleSlug directly
+        eq(rolesTable.entity_type, entityType), // Use the derived entityType
+        eq(rolesTable.entity_id, entityId)
+      )
+    })
+
+    if (!viewerRole) {
+      console.warn(
+        `Viewer role '${roleSlug}' not found for ${entityType} ID ${entityId}.`
+      )
+      return null
+    }
+
+    return viewerRole
+  } catch (error: any) {
+    console.error("Error in fetchViewerRole:", error)
+    throw new Error(`Failed to fetch viewer role: ${error.message}`)
+  }
+}
+
+/**
+ * Fetches specific viewer roles (channel_viewer or space_viewer) based on entity type and ID,
+ * and assigns them to a given user.
+ * @param userId The ID of the user to assign the roles to.
+ * @param roleSlug The slug of the role ("channel_viewer" or "space_viewer").
+ * @param entityId The ID of the specific channel or space.
+ * @returns A success status and a list of assigned role IDs.
+ */
+export async function getAndAssignViewerRoles(
+  userId: string,
+  roleSlug: "channel_viewer" | "space_viewer",
+  entityId: string
+) {
+  return await db.transaction(async (trx) => {
+    try {
+      // Fetch the viewer role using the helper function
+      const viewerRole = await fetchViewerRole(roleSlug, entityId)
+
+      if (!viewerRole) {
+        return { success: false, assignedRoleIds: [] }
+      }
+
+      // Check if the user already has this role to prevent duplicates
+      const existingUserRole = await trx.query.userRolesTable.findFirst({
+        where: and(
+          eq(userRolesTable.user_id, userId),
+          eq(userRolesTable.role_id, viewerRole.id)
+        )
+      })
+
+      if (existingUserRole) {
+        console.log(
+          `User ${userId} already has role ${viewerRole.name} (${viewerRole.id}) for entity ID ${entityId}. Skipping assignment.`
+        )
+        return { success: true, assignedRoleIds: [viewerRole.id] }
+      }
+
+      // Assign the viewer role to the user
+      await attachUsersToRole(viewerRole.id, [userId])
+
+      console.log(
+        `Assigned viewer role (${viewerRole.name}) to user ${userId} for entity ID ${entityId}.`
+      )
+      return { success: true, assignedRoleIds: [viewerRole.id] }
+    } catch (error: any) {
+      console.error("Error in getAndAssignViewerRoles:", error)
+      trx.rollback()
+      throw new Error(`Failed to get and assign viewer role: ${error.message}`)
+    }
+  })
+}
+
+/**
+ * Fetches all roles for a given entity type and ID.
+ * @param entityType The type of entity (channel, space, project)
+ * @param entityId The ID of the specific entity
+ * @returns A list of roles matching the entity type and ID, or null if no roles are found.
+ */
+export async function getRoleByEntityTypeAndId(
+  entityType: "CHANNEL" | "SPACE" | "PROJECT",
+  entityId: string
+) {
+  try {
+    const roles = await db.query.rolesTable.findMany({
+      where: and(
+        eq(rolesTable.entity_type, entityType),
+        eq(rolesTable.entity_id, entityId)
+      )
+    })
+
+    if (!roles || roles.length === 0) {
+      console.warn(
+        `No roles found for entity type: ${entityType} and entity ID: ${entityId}.`
+      )
+      return null
+    }
+
+    return roles
+  } catch (error: any) {
+    console.error("Error fetching roles by entity type and ID:", error)
+    throw new Error(error.message)
+  }
 }

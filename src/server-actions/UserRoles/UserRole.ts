@@ -8,6 +8,7 @@ import {
   getAllGlobalAndScopeRoles,
   getAllGlobalRoles,
   getAllPermissoins,
+  getRoleByEntityTypeAndId,
   getRoleWithPermissions,
   getUserPermissionRows,
   getUsersByRoleID,
@@ -128,6 +129,20 @@ export async function getUsersByRoleIDAction(id: number) {
       return { success: false, error: "Role not found" }
     }
     return { success: true, data: userbyRole }
+  } catch (error) {
+    return { error: error }
+  }
+}
+export async function getRoleByEntityTypeAndIdAction(
+  entityType: "CHANNEL" | "SPACE" | "PROJECT",
+  id: string
+) {
+  try {
+    const scopedROles = await getRoleByEntityTypeAndId(entityType, id)
+    if (!scopedROles) {
+      return { success: false, error: "Roles not found" }
+    }
+    return { success: true, data: scopedROles }
   } catch (error) {
     return { error: error }
   }

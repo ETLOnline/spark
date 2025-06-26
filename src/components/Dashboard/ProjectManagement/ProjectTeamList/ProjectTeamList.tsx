@@ -41,6 +41,16 @@ import { Badge } from "@/src/components/ui/badge"
 import { ProjectUserRole } from "@/src/components/common/types/projectuser.role"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
+import { projectStore } from "@/src/store/project/projectStore"
+import { Label } from "@/src/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/src/components/ui/select"
+import { getRoleByEntityTypeAndIdAction } from "@/src/server-actions/UserRoles/UserRole"
 
 export interface ProjectUser extends SelectProjectUser {
   user: SelectUser & Partial<{ role: string; bio: string | null }>
@@ -73,6 +83,14 @@ export default function ProjectTeamList({
   const [updateRoleLoading, , , UpdateProjectUserRole] = useServerAction(
     UpdateProjectUserRoleAction
   )
+  const [spaceRolesLoading, spaceRolesData, spaceRolesError, fetchSpaceRoles] =
+    useServerAction(getRoleByEntityTypeAndIdAction)
+
+  useEffect(() => {
+    if (projectId) {
+      fetchSpaceRoles("SPACE", projectId)
+    }
+  }, [spaceId, projectId])
 
   const [roleDialogOpen, setRoleDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<ProjectUser | null>(null)
@@ -168,13 +186,24 @@ export default function ProjectTeamList({
     value: u.unique_id
   }))
 
+  // PERMISSIONS INITATE
+  const permissionChecker = useAtomValue(
+    projectStore.singleprojectPermissionCheckerAtom
+  )
+  const canView = permissionChecker?.canAccess("project.teams.view")
+  const canCreate = permissionChecker?.canAccess("project.teams.add")
+  const canUpdate = permissionChecker?.canAccess("project.teams.update")
+  const canDelete = permissionChecker?.canAccess("project.teams.delete")
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Project Team</h1>
-        <Button onClick={() => setDialogOpen(true)}>
-          <PlusCircle className="mr-2 h-4 w-4" /> Add Users
-        </Button>
+        {canCreate && (
+          <Button onClick={() => setDialogOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" /> Add Users
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -195,6 +224,7 @@ export default function ProjectTeamList({
                   No users in project yet.
                 </div>
               ) : (
+                canView &&
                 usersList.map((cu) => {
                   const user = cu.user
                   if (!user) return null
@@ -228,7 +258,7 @@ export default function ProjectTeamList({
                         </Badge>
                       </div>
                       <div className="col-span-1 text-center">
-                        {isProjectCreator ? (
+                        {isProjectCreator || canUpdate || canDelete ? (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon">
@@ -239,22 +269,26 @@ export default function ProjectTeamList({
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedUser(cu)
-                                  setNewRole(cu.role ?? "member")
-                                  setRoleDialogOpen(true)
-                                }}
-                              >
-                                Change Role
-                              </DropdownMenuItem>
+                              {canUpdate && (
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedUser(cu)
+                                    setNewRole(cu.role ?? "member")
+                                    setRoleDialogOpen(true)
+                                  }}
+                                >
+                                  Change Role
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() => handleRemoveUser(cu.user_id)}
-                              >
-                                Remove User
-                              </DropdownMenuItem>
+                              {canDelete && (
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={() => handleRemoveUser(cu.user_id)}
+                                >
+                                  Remove User
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         ) : (
@@ -301,20 +335,34 @@ export default function ProjectTeamList({
           <DialogHeader>
             <DialogTitle>Change User Role</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <label htmlFor="role" className="block mb-2 font-medium">
-              Select Role
-            </label>
-            <select
-              id="role"
-              value={newRole}
-              onChange={(e) => setNewRole(e.target.value)}
-              className="w-full border rounded px-3 py-2"
-            >
-              <option value={ProjectUserRole.Admin}>Admin</option>
-              <option value={ProjectUserRole.Editor}>Editor</option>
-              <option value={ProjectUserRole.Viewer}>Viewer</option>
-            </select>
+          <div className="grid gap-4 py-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="channel_type">User Role</Label>
+              <div className="w-[70%]">
+                <Select
+                  // onValueChange={(value) => {
+                  //   setUserRole(value)
+                  // }}
+                  defaultValue={selectedUser?.role || ""}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      className="capitalize"
+                      placeholder="Select Role"
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {spaceRolesData &&
+                      spaceRolesData.data &&
+                      spaceRolesData.data.map((role) => (
+                        <SelectItem key={role.id} value={role.name}>
+                          {role.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button loading={updateRoleLoading} onClick={handleSaveRole}>

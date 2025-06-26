@@ -31,6 +31,7 @@ import { InviteUserDialog } from "./UserInviteDialog"
 import {
   SelectChannel,
   SelectChannelUser,
+  SelectRole,
   SelectSpace,
   SelectSpaceUser
 } from "@/src/db/schema"
@@ -75,17 +76,20 @@ import {
   AlertDialogTrigger
 } from "../ui/alert-dialog"
 import { SpaceUserRole } from "../common/types/spaceuser.role"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   entityType: "channel" | "space"
   entity: SelectChannel | SelectSpace
   userList: SelectChannelUser[] | SelectSpaceUser[]
+  scopedRoles: SelectRole[]
 }
 
 export default function ChannelUserList({
   entity,
   userList,
-  entityType
+  entityType,
+  scopedRoles
 }: Props) {
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -145,6 +149,15 @@ export default function ChannelUserList({
     entityType === "channel"
       ? (entity as SelectChannel).channel_name
       : (entity as SelectSpace).space_name
+
+  const { permissionChecker, canAccess } = usePermissionChecker(
+    "scoped",
+    entityType.toUpperCase() as "SPACE" | "CHANNEL",
+    entity?.id
+  )
+  const canInviteUser = canAccess(`${entityType}.user.invite`)
+  const canUpdateUser = canAccess(`${entityType}.user.update`)
+  const canDeleteUser = canAccess(`${entityType}.user.remove`)
 
   async function handleUpdateuser(userId: string, entityId: string) {
     try {
@@ -245,10 +258,12 @@ export default function ChannelUserList({
           <ArrowBigRightDash />
           <h1 className="text-2xl font-bold">User Management</h1>
         </div>
-        <Button onClick={() => setIsInviteDialogOpen(true)}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Invite User
-        </Button>
+        {canInviteUser && (
+          <Button onClick={() => setIsInviteDialogOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Invite User
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -318,36 +333,42 @@ export default function ChannelUserList({
                       </Badge>
                     </div>
                     <div className="col-span-1 text-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">More options</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSelectedUser(cu)
-                              setChangeRoleModelVisibility(true)
-                            }}
-                          >
-                            Change Role
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => {
-                              setSelectedUser(cu)
-                              setIsAlertOpen(true)
-                            }}
-                          >
-                            Remove User
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {(canUpdateUser || canDeleteUser) && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">More options</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {canUpdateUser && (
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedUser(cu)
+                                  setChangeRoleModelVisibility(true)
+                                }}
+                              >
+                                Change Role
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            {canDeleteUser && (
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => {
+                                  setSelectedUser(cu)
+                                  setIsAlertOpen(true)
+                                }}
+                              >
+                                Remove User
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </div>
                 )
@@ -388,8 +409,11 @@ export default function ChannelUserList({
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={SpaceUserRole.Admin}>Admin</SelectItem>
-                    <SelectItem value={SpaceUserRole.Member}>Member</SelectItem>
+                    {scopedRoles.map((role) => (
+                      <SelectItem key={role.id} value={role.name}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

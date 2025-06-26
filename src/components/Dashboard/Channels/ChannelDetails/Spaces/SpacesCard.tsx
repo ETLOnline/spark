@@ -44,6 +44,7 @@ function SpacesCard({ space }: Props) {
   const canSetSpaceSetting = permissionChecker?.canAccess(
     "space.setting.update"
   )
+  const canSpaceAllowAction = permissionChecker?.canAccess("space.allow.action")
 
   return (
     <Card key={space.id} className="overflow-hidden">
@@ -88,7 +89,7 @@ function SpacesCard({ space }: Props) {
               </TooltipProvider>
             )}
           </CardTitle>
-          {spaceControl || canSetSpaceSetting ? (
+          {spaceControl || canSpaceAllowAction ? (
             <SpacesActionButtons
               space={space}
               permissionChecker={permissionChecker}

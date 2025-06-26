@@ -73,7 +73,7 @@ export const siteRoutes: SiteRoutes = {
       title: "Channels",
       url: "/channels",
       icon: Boxes,
-      permission: "channels.view"
+      permission: "channel.view"
     }
   ],
   testNav: [

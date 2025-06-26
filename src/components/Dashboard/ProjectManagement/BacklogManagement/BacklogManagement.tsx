@@ -12,7 +12,7 @@ import {
 } from "@/src/components/ui/select"
 import { Plus, Search, Filter, ArrowUpDown } from "lucide-react"
 import BacklogItemsCard from "./BacklogItemsCard"
-import { useSetAtom } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import AddBacklogItem from "./AddBacklogItem"
@@ -119,16 +119,26 @@ export function BacklogManagement() {
     }
   }
 
+  // PERMISSIONS INITATE
+  const permissionChecker = useAtomValue(
+    projectStore.singleprojectPermissionCheckerAtom
+  )
+  const canCreateTask = permissionChecker?.canAccess(
+    "project.backlog.task.create"
+  )
+
   return (
     <>
       <AddBacklogItem />
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h2 className="text-xl font-bold">Backlog</h2>
-          <Button onClick={() => setIsTaskFormModelOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Item
-          </Button>
+          {canCreateTask && (
+            <Button onClick={() => setIsTaskFormModelOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Item
+            </Button>
+          )}
         </div>
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">

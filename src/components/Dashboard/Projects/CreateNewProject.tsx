@@ -252,9 +252,12 @@ function ProjectFormModal({
     }
   }
 
+  // PERMISSIONS ARE HERE
+  const permissionChecker = useAtomValue(projectStore.permissionCheckerAtom)
+  const canCreate = permissionChecker?.canAccess("project.create")
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      {!isEditing && (
+      {!isEditing && canCreate && (
         <DialogTrigger asChild>
           <Button>Create New Project</Button>
         </DialogTrigger>

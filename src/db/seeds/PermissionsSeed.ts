@@ -7,7 +7,6 @@ const permissionSeedList = [
   { namespace: "posting", action: "create" },
   { namespace: "posting", action: "view" },
   { namespace: "posting", action: "update" },
-  { namespace: "posting", action: "update" },
   { namespace: "posting", action: "delete" },
 
   // Chat
@@ -22,18 +21,18 @@ const permissionSeedList = [
   { namespace: "events", action: "delete" },
   { namespace: "events", action: "view" },
 
-  // Channels
-  { namespace: "channels", action: "create" },
-  { namespace: "channels", action: "update" },
-  { namespace: "channels", action: "delete" },
-  { namespace: "channels", action: "view" },
-  { namespace: "channels", action: "allow.action" },
+  // channel
+  { namespace: "channel", action: "create" },
+  { namespace: "channel", action: "update" },
+  { namespace: "channel", action: "delete" },
+  { namespace: "channel", action: "view" },
+  { namespace: "channel", action: "allow.action" },
 
   // Channel Users
-  { namespace: "channels", action: "user.view" },
-  { namespace: "channels", action: "user.invite" },
-  { namespace: "channels", action: "user.remove" },
-  { namespace: "channels", action: "user.update" },
+  { namespace: "channel", action: "user.view" },
+  { namespace: "channel", action: "user.invite" },
+  { namespace: "channel", action: "user.remove" },
+  { namespace: "channel", action: "user.update" },
 
   // Space
   { namespace: "space", action: "create" },
@@ -61,7 +60,38 @@ const permissionSeedList = [
   // Project
   { namespace: "project", action: "create" },
   { namespace: "project", action: "view" },
-  { namespace: "project", action: "update" }
+  { namespace: "project", action: "update" },
+
+  { namespace: "project", action: "detail" },
+  { namespace: "project", action: "launch.board" },
+
+  { namespace: "project", action: "overview.view" },
+
+  { namespace: "project", action: "sprint.create" },
+  { namespace: "project", action: "sprint.update" },
+  { namespace: "project", action: "sprint.view" },
+
+  { namespace: "project", action: "task.create" },
+  { namespace: "project", action: "task.view" },
+  { namespace: "project", action: "task.update" },
+  { namespace: "project", action: "task.delete" },
+
+  { namespace: "project", action: "board.view" },
+
+  { namespace: "project", action: "backlog.view" },
+  { namespace: "project", action: "backlog.task.view" },
+  { namespace: "project", action: "backlog.task.create" },
+  { namespace: "project", action: "backlog.task.update" },
+  { namespace: "project", action: "backlog.task.delete" },
+
+  { namespace: "project", action: "files.view" },
+
+  { namespace: "project", action: "teams.view" },
+  { namespace: "project", action: "teams.add" },
+  { namespace: "project", action: "teams.update" },
+  { namespace: "project", action: "teams.delete" },
+
+  { namespace: "project", action: "settings.view" }
 ]
 
 export const PermissionsSeed = async () => {

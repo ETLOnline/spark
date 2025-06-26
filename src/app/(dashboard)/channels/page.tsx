@@ -14,7 +14,7 @@ import { LoaderSizes } from "@/src/components/common/types/loader-types"
 const ChannelsPage = () => {
   const { permissionChecker, canAccess } = usePermissionChecker("global")
 
-  const canCreate = permissionChecker?.canAccess("channels.create") ?? false
+  const canCreate = permissionChecker?.canAccess("channel.create") ?? false
 
   const [channels, setChannels] = useState<any>(null)
   const [joinedChannels, setJoinedChannels] = useState<any>(null)

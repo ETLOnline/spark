@@ -29,10 +29,10 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({ channel }) => {
     channel.id
   )
 
-  const canEdit = permissionChecker?.canAccess("channels.edit")
+  const canEdit = permissionChecker?.canAccess("channel.update")
   const canViewSpace = permissionChecker?.canAccess("space.view")
-  const canViewUser = permissionChecker?.canAccess("channels.user.view")
-  const canDeletChannel = permissionChecker?.canAccess("channels.delete")
+  const canViewUser = permissionChecker?.canAccess("channel.user.view")
+  const canDeletChannel = permissionChecker?.canAccess("channel.delete")
 
   const router = useRouter()
 

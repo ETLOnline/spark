@@ -1,7 +1,7 @@
 import { Checkbox } from "@/src/components/ui/checkbox"
 import React, { useEffect, useState } from "react"
 import BacklogItems from "./BacklogItems"
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetTasksAction } from "@/src/server-actions/Tasks/Task"
 import { useParams, useSearchParams } from "next/navigation"
@@ -10,6 +10,7 @@ import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import PaginationComponent from "@/src/components/common/Pagination"
 import { taskStore } from "@/src/store/tasks/taskStore"
+import { projectStore } from "@/src/store/project/projectStore"
 
 interface Props {
   backlogItems: BacklogItem[]
@@ -75,6 +76,12 @@ function BacklogItemsCard({
     }
   }
 
+  // PERMISSIONS INITATE
+  const permissionChecker = useAtomValue(
+    projectStore.singleprojectPermissionCheckerAtom
+  )
+  const canView = permissionChecker?.canAccess("project.backlog.task.view")
+
   return (
     <>
       <h2 className="font-semibold leading-none tracking-tight">
@@ -117,6 +124,7 @@ function BacklogItemsCard({
           ) : (
             <div className="pb-2">
               {tasks &&
+                canView &&
                 tasks.map(
                   (task) =>
                     task.sprint_id === null && (
@@ -128,7 +136,9 @@ function BacklogItemsCard({
                       />
                     )
                 )}
-              {Pagination && <PaginationComponent pagination={Pagination} />}
+              {Pagination && canView && (
+                <PaginationComponent pagination={Pagination} />
+              )}
             </div>
           )}
         </div>

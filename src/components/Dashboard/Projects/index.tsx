@@ -20,6 +20,7 @@ import { useParams, useSearchParams } from "next/navigation"
 import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
 import { space } from "postcss/lib/list"
 import CreateNewProject from "./CreateNewProject"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 export interface ProjectProposal {
   id: string
@@ -134,6 +135,23 @@ export function ProjectScreen() {
     }
   }, [getProjectData])
 
+  // PERMISSIONS INITATE
+  const [permissionChecker, setPermissionChecker] = useAtom(
+    projectStore.permissionCheckerAtom
+  )
+  const { permissionChecker: checker, canAccess } = usePermissionChecker(
+    "scoped",
+    "SPACE",
+    currSpace?.id
+  )
+
+  useEffect(() => {
+    if (checker) {
+      setPermissionChecker(checker)
+    }
+  }, [checker, setPermissionChecker])
+  const canView = canAccess("project.view")
+
   return (
     <div className="flex flex-col space-y-4">
       <WelcomeCard />
@@ -153,13 +171,14 @@ export function ProjectScreen() {
               </TabsList>
               <TabsContent value="all">
                 <ScrollArea>
-                  {projects.map((project) => (
-                    <ProjectCards
-                      key={project.id}
-                      project={project}
-                      onEdit={handleEdit}
-                    />
-                  ))}
+                  {canView &&
+                    projects.map((project) => (
+                      <ProjectCards
+                        key={project.id}
+                        project={project}
+                        onEdit={handleEdit}
+                      />
+                    ))}
                 </ScrollArea>
               </TabsContent>
               {/* <TabsContent value="active">

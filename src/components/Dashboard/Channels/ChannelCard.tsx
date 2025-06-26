@@ -37,6 +37,9 @@ function ChannelCard({ channel }: ChannelProps) {
   )
 
   const canViewSpace = permissionChecker?.canAccess("space.view")
+  const canViewChannelAction = permissionChecker?.canAccess(
+    "channel.allow.action"
+  )
 
   return (
     <Card key={channel.id} className="overflow-hidden">
@@ -82,7 +85,8 @@ function ChannelCard({ channel }: ChannelProps) {
               </TooltipProvider>
             )}
           </CardTitle>
-          {authUser && canUserIntract(authUser, channel.created_by) ? (
+          {(authUser && canUserIntract(authUser, channel.created_by)) ||
+          canViewChannelAction ? (
             <ChannelsContextMenu channel={channel} />
           ) : null}
         </div>

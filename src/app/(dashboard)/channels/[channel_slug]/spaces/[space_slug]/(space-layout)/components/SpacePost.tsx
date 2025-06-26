@@ -63,10 +63,11 @@ const SpacePostComponent: React.FC = () => {
   }, [checker, setPermissionChecker])
 
   const canViewPost = permissionChecker?.canAccess("posting.view")
+  const canCreate = permissionChecker?.canAccess("posting.create")
 
   return (
     <div className="container mx-auto  space-y-8 max-w-3xl">
-      <CreatePostForm variant="spaces" />
+      {canCreate && <CreatePostForm variant="spaces" />}
       <Card className="border-none shadow-none">
         <CardHeader className="p-0 pb-6">
           <CardTitle>Feed</CardTitle>
