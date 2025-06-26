@@ -56,7 +56,6 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
         <div className="bio-summary">
           <header className="profile-section-header flex justify-between">
             <h3 className="mb-2 font-semibold">About</h3>
-            {/* {editable && <EditProfileModal />} */}
           </header>
           <p className="user-bio">
             {bio ?? (
@@ -109,25 +108,6 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
           </div>
         </div>
       </Card>
-
-      {/* <Card>
-        <div className="recommendations">
-          <h3 className="mb-2 font-semibold">Recommendations</h3>
-          <ul className="space-y-2">
-            {recommendations &&
-              recommendations.map((recommendation, i) => (
-                <li key={recommendation.id} className="rounded-lg border p-3">
-                  <p className="text-sm">
-                    &quot;{recommendation.content}&quot;
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    - {recommendation.recommender_full_name}
-                  </p>
-                </li>
-              ))}
-          </ul>
-        </div>
-      </Card> */}
     </div>
   )
 }
