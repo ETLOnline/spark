@@ -127,3 +127,23 @@ export const GetUserProfileData = async (userId: string) => {
     tags: result?.userTags.map((ut) => ut.tag) || []
   }
 }
+
+export const UpdateUserProfilePicture = async (
+  userId: string,
+  profileUrl: string
+) => {
+  try {
+    const updatedUser = await db
+      .update(usersTable)
+      .set({
+        profile_url: profileUrl
+      })
+      .where(eq(usersTable.unique_id, userId))
+      .returning()
+
+    return updatedUser[0]
+  } catch (error: any) {
+    console.error("Error updating user profile picture:", error)
+    throw new Error(error.message || "Failed to update user profile picture")
+  }
+}

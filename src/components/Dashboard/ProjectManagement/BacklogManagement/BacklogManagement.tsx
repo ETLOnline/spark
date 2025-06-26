@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
 import {
@@ -10,12 +10,20 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/src/components/ui/select"
-import { Plus, Search, Filter, ArrowUpDown } from "lucide-react"
+import {
+  Plus,
+  Search,
+  Filter,
+  ArrowUpDown,
+  AlertCircle,
+  Settings
+} from "lucide-react"
 import BacklogItemsCard from "./BacklogItemsCard"
-import { useSetAtom } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import AddBacklogItem from "./AddBacklogItem"
+import StatusRequiredDialog from "../StatusRequiredDialog"
 
 interface BacklogItem {
   id: string
@@ -112,6 +120,8 @@ export function BacklogManagement() {
   const [searchedItem, setSearchedItem] = useState("")
   const [orderList, setOrderList] = useState("asc")
   const [limit, setLimit] = useState(10)
+  const projectStatusList = useAtomValue(projectStore.projectStatusList)
+  const [openDialog, setOpenDialog] = useState(false)
 
   function handleSearch() {
     if (searchQuery) {
@@ -119,7 +129,13 @@ export function BacklogManagement() {
     }
   }
 
-  return (
+  useEffect(() => {
+    if (projectStatusList.length === 0) {
+      setOpenDialog(true)
+    }
+  }, [projectStatusList])
+
+  return projectStatusList.length > 0 ? (
     <>
       <AddBacklogItem />
       <div className="space-y-6">
@@ -182,5 +198,7 @@ export function BacklogManagement() {
         />
       </div>
     </>
+  ) : (
+    <StatusRequiredDialog openDialog={openDialog} />
   )
 }

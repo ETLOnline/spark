@@ -3,13 +3,13 @@ import React, { useEffect, useState } from "react"
 import BacklogItems from "./BacklogItems"
 import { useAtom } from "jotai"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { GetTasksAction } from "@/src/server-actions/Tasks/Task"
 import { useParams, useSearchParams } from "next/navigation"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import PaginationComponent from "@/src/components/common/Pagination"
 import { taskStore } from "@/src/store/tasks/taskStore"
+import { GetBacklogTasksAction } from "@/src/server-actions/Tasks/Task"
 
 interface Props {
   backlogItems: BacklogItem[]
@@ -42,8 +42,9 @@ function BacklogItemsCard({
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [tasks, setTasks] = useAtom(taskStore.tasks)
   const [Pagination, setPagination] = useState<PaginationType>()
-  const [tasksLoading, tasksData, tasksError, GetTasks] =
-    useServerAction(GetTasksAction)
+  const [tasksLoading, tasksData, tasksError, GetTasks] = useServerAction(
+    GetBacklogTasksAction
+  )
 
   const projectId = useParams().id as string
   const searchParams = useSearchParams()
@@ -117,17 +118,14 @@ function BacklogItemsCard({
           ) : (
             <div className="pb-2">
               {tasks &&
-                tasks.map(
-                  (task) =>
-                    task.sprint_id === null && (
-                      <BacklogItems
-                        key={task.id}
-                        task={task}
-                        selectedItems={selectedItems}
-                        setSelectedItems={setSelectedItems}
-                      />
-                    )
-                )}
+                tasks.map((task) => (
+                  <BacklogItems
+                    key={task.id}
+                    task={task}
+                    selectedItems={selectedItems}
+                    setSelectedItems={setSelectedItems}
+                  />
+                ))}
               {Pagination && <PaginationComponent pagination={Pagination} />}
             </div>
           )}
