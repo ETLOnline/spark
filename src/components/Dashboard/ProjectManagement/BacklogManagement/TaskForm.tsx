@@ -271,7 +271,7 @@ export default function TaskForm({ statuses }: Props) {
             </div>
 
             <div className="space-y-2">
-              <Label className="pl-2">Description:</Label>
+              <Label className="pl-2 text-xl font-semibold">Description:</Label>
 
               <Controller
                 name="description"
@@ -315,7 +315,7 @@ export default function TaskForm({ statuses }: Props) {
                   variant={"outline"}
                   className="w-full"
                 >
-                  {selectedTask ? "Update Task" : "Create task"}
+                  {selectedTask ? "Update Task" : "Create Task"}
                 </Button>
               </div>
               <div className="space-y-6">
@@ -444,6 +444,7 @@ export default function TaskForm({ statuses }: Props) {
                         <Input
                           id="story_points"
                           type="number"
+                          min={0}
                           placeholder="Select Points"
                           {...field}
                           className="col-span-3"
