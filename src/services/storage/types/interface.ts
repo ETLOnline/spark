@@ -18,6 +18,11 @@ export interface UploadFileParams {
   folderPath?: string
 }
 
+export interface DeleteFileParams {
+  filePath: string
+}
+
 export interface StorageAdapter {
   uploadFile(params: UploadFileParams): Promise<string>
+  deleteFile(params: DeleteFileParams): Promise<void>
 }

@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm"
 import { db } from "../.."
-import { spaceFileDirectoryTable } from "../../schema"
+import { spaceFileDirectoryTable, filesTable } from "../../schema"
 
 export async function CreateFolder(id: string | number, folderName: string) {
   return await db
@@ -43,4 +43,30 @@ export async function GetDirectoryContents(id: string | number) {
       file: true
     }
   })
+}
+
+export async function DeleteFile(fileId: number) {
+  // First get the file info to delete from storage
+  const fileEntry = await db.query.spaceFileDirectoryTable.findFirst({
+    where: eq(spaceFileDirectoryTable.id, fileId),
+    with: {
+      file: true
+    }
+  })
+
+  if (!fileEntry || fileEntry.entity_type !== "file") {
+    throw new Error("File not found")
+  }
+
+  // Delete from directory table
+  await db
+    .delete(spaceFileDirectoryTable)
+    .where(eq(spaceFileDirectoryTable.id, fileId))
+
+  // Delete from files table if entity_id exists
+  // if (fileEntry.entity_id) {
+  //   await db.delete(filesTable).where(eq(filesTable.id, fileEntry.entity_id))
+  // }
+
+  return fileEntry
 }

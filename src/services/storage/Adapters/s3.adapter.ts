@@ -2,7 +2,11 @@ import * as Minio from "minio"
 import { promises as fs } from "fs"
 import * as path from "path"
 import { randomUUID } from "crypto"
-import { StorageAdapter, UploadFileParams } from "../types/interface"
+import {
+  StorageAdapter,
+  UploadFileParams,
+  DeleteFileParams
+} from "../types/interface"
 import {
   S3_ENDPOINT,
   S3_ACCESS_KEY,
@@ -53,5 +57,30 @@ export const S3StorageAdapter: StorageAdapter = {
     await fs.unlink(tempFilePath)
 
     return signedUrl
+  },
+
+  async deleteFile({ filePath }: DeleteFileParams) {
+    if (!S3_ENDPOINT) {
+      throw new Error("S3_ENDPOINT not set")
+    }
+
+    const client = s3Client()
+    const bucket = S3_BUCKET_NAME
+
+    try {
+      // Extract the object key from the signed URL or direct path
+      let objectKey = filePath
+
+      // If it's a signed URL, extract the object key
+      if (filePath.includes(S3_ENDPOINT)) {
+        const url = new URL(filePath)
+        objectKey = decodeURIComponent(url.pathname.substring(1)) // Remove leading '/'
+      }
+
+      await client.removeObject(bucket, objectKey)
+    } catch (error) {
+      console.error("Error deleting file from S3:", error)
+      throw new Error("Failed to delete file from storage")
+    }
   }
 }

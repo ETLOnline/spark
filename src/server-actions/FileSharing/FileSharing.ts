@@ -2,13 +2,17 @@
 import {
   CreateFile,
   CreateFolder,
-  GetDirectoryContents
+  GetDirectoryContents,
+  DeleteFile
 } from "@/src/db/data-access/file-sharing/query"
 import {
   base64ToBuffer,
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
 import { CreateServerAction } from ".."
+import { AuthUserAction } from "../User/AuthUserAction"
+import { isUserSpaceAdmin } from "@/src/utils/spaceRoleHelper"
+import { getStorageClient } from "@/src/services/storage/client/storage.client"
 
 export const CreateNewFolderAction = CreateServerAction(
   true,
@@ -74,6 +78,57 @@ export const GetDirectoryContentsAction = CreateServerAction(
       return {
         success: false,
         error: "Failed to fetch directory contents"
+      }
+    }
+  }
+)
+
+export const DeleteFileAction = CreateServerAction(
+  true,
+  async (directoryId: number, spaceId: string) => {
+    try {
+      const user = await AuthUserAction()
+      if (!user) {
+        return {
+          success: false,
+          error: "Unauthorized"
+        }
+      }
+
+      // Check if user is space admin
+      const isSpaceAdmin = isUserSpaceAdmin(spaceId, user)
+      if (!isSpaceAdmin) {
+        return {
+          success: false,
+          error: "You don't have permission to delete files"
+        }
+      }
+
+      // Delete from database
+      const deletedEntry = await DeleteFile(directoryId)
+
+      // Delete from storage if file exists
+      if (deletedEntry.file?.file_path) {
+        try {
+          const storageClient = getStorageClient()
+          await storageClient.deleteFile({
+            filePath: deletedEntry.file.file_path
+          })
+        } catch (storageError) {
+          console.error("Error deleting file from storage:", storageError)
+          // Continue even if storage deletion fails
+        }
+      }
+
+      return {
+        success: true,
+        data: deletedEntry
+      }
+    } catch (error) {
+      console.error("Error deleting file:", error)
+      return {
+        success: false,
+        error: "Failed to delete file"
       }
     }
   }
