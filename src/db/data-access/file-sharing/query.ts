@@ -64,9 +64,9 @@ export async function DeleteFile(fileId: number) {
     .where(eq(spaceFileDirectoryTable.id, fileId))
 
   // Delete from files table if entity_id exists
-  // if (fileEntry.entity_id) {
-  //   await db.delete(filesTable).where(eq(filesTable.id, fileEntry.entity_id))
-  // }
+  if (fileEntry.entity_id) {
+    await db.delete(filesTable).where(eq(filesTable.id, fileEntry.entity_id))
+  }
 
   return fileEntry
 }

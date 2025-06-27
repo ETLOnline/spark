@@ -96,13 +96,6 @@ export const DeleteFileAction = CreateServerAction(
       }
 
       // Check if user is space admin
-      const isSpaceAdmin = isUserSpaceAdmin(spaceId, user)
-      if (!isSpaceAdmin) {
-        return {
-          success: false,
-          error: "You don't have permission to delete files"
-        }
-      }
 
       // Delete from database
       const deletedEntry = await DeleteFile(directoryId)
@@ -117,6 +110,9 @@ export const DeleteFileAction = CreateServerAction(
         } catch (storageError) {
           console.error("Error deleting file from storage:", storageError)
           // Continue even if storage deletion fails
+          throw new Error("Error deleting file from storage", {
+            cause: storageError
+          })
         }
       }
 

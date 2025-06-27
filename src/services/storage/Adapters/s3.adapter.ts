@@ -1,4 +1,3 @@
-import * as Minio from "minio"
 import { promises as fs } from "fs"
 import * as path from "path"
 import { randomUUID } from "crypto"
@@ -7,13 +6,7 @@ import {
   UploadFileParams,
   DeleteFileParams
 } from "../types/interface"
-import {
-  S3_ENDPOINT,
-  S3_ACCESS_KEY,
-  S3_SECRET_KEY,
-  S3_BUCKET_NAME,
-  S3_REGION
-} from "../config"
+import { S3_ENDPOINT, S3_BUCKET_NAME, S3_REGION } from "../config"
 import { s3Client } from "../client/s3.client"
 import * as os from "os"
 
@@ -74,7 +67,11 @@ export const S3StorageAdapter: StorageAdapter = {
       // If it's a signed URL, extract the object key
       if (filePath.includes(S3_ENDPOINT)) {
         const url = new URL(filePath)
-        objectKey = decodeURIComponent(url.pathname.substring(1)) // Remove leading '/'
+        // remove the bucket name from the path
+        objectKey = decodeURIComponent(url.pathname.substring(1)).replace(
+          bucket,
+          ""
+        ) // Remove leading '/'
       }
 
       await client.removeObject(bucket, objectKey)
