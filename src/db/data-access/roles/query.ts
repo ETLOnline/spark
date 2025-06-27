@@ -532,7 +532,11 @@ export async function createScopedProjectRolesAndAssignAdmin( // Renamed and ref
         )
       }
 
-      return { success: true, createdRoles: createdScopedRoles }
+      return {
+        success: true,
+        createdRoles: createdScopedRoles,
+        adminRole: adminRole
+      }
     } catch (error: any) {
       console.error("Error in createScopedProjectRolesAndAssignAdmin:", error)
       trx.rollback()

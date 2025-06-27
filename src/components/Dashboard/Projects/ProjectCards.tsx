@@ -11,8 +11,6 @@ import { LinkAsButton } from "../../LinkAsButton/LinkAsButton"
 import { SelectProject } from "@/src/db/schema"
 import { ProjectType } from "../ProjectManagement/types/project.type"
 import { Button } from "../../ui/button"
-import { useAtom } from "jotai"
-import { projectStore } from "@/src/store/project/projectStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
@@ -22,23 +20,21 @@ interface Props {
 
 function ProjectCards({ project, onEdit }: Props) {
   // PERMISSIONS INITATE
-  const [permissionChecker, setPermissionChecker] = useAtom(
-    projectStore.singleprojectPermissionCheckerAtom
-  )
-  const { permissionChecker: checker, canAccess } = usePermissionChecker(
+  const { permissionChecker } = usePermissionChecker(
     "scoped",
     "PROJECT",
     project?.id
   )
 
-  useEffect(() => {
-    if (checker) {
-      setPermissionChecker(checker)
-    }
-  }, [checker, setPermissionChecker])
-  const canViewLaunchBoard = canAccess("project.launch.board")
-  const canViewDetail = canAccess("project.detail")
-  const canUpdate = canAccess("project.update")
+  const canViewLaunchBoard = permissionChecker
+    ? permissionChecker.canAccess("project.launch.board")
+    : false
+  const canViewDetail = permissionChecker
+    ? permissionChecker.canAccess("project.detail")
+    : false
+  const canUpdate = permissionChecker
+    ? permissionChecker.canAccess("project.update")
+    : false
   return (
     <Card key={project.id} className="mb-4">
       <CardHeader>

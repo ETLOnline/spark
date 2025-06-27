@@ -44,6 +44,8 @@ import {
   EmojiPickerFooter,
   EmojiPickerSearch
 } from "../../ui/emoji-picker"
+import { spaceStore } from "@/src/store/space/spaceStore"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -116,8 +118,15 @@ function joinChannel(
  * - `Input` and `Button` for handling the input and sending of new messages.
  */
 export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
-  const permissionChecker = useAtomValue(chatStore.permissionCheckerAtom)
-  const canCreate = permissionChecker?.canAccess("chat.create") ?? false
+  const currentSpace = useAtomValue(spaceStore.currentSpace)
+  const { permissionChecker } = usePermissionChecker(
+    currentSpace ? "scoped" : "global",
+    "SPACE",
+    currentSpace?.id
+  )
+  const canCreate = permissionChecker
+    ? permissionChecker?.canAccess("chat.create")
+    : false
 
   const [messages, setMessages] = useState<SelectMessage[]>([])
   const [newMessage, setNewMessage] = useState("")

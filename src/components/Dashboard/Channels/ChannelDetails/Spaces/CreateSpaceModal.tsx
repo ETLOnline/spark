@@ -34,7 +34,7 @@ import { channelStore } from "@/src/store/channel/channelStore"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useAtom, useAtomValue } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { CircleCheck, CircleXIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { space } from "postcss/lib/list"
@@ -72,6 +72,7 @@ function CreateSpaceModal({
   const selectedChannel = useAtomValue(channelStore.selectedChannel)
   const [selectedSpace, setSelectedSpace] = useAtom(spaceStore.selectedSpace)
   const [spaces, setSpaces] = useAtom(spaceStore.spaces)
+  const setReloadUser = useSetAtom(userStore.ReloadUser)
 
   const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
 
@@ -206,10 +207,9 @@ function CreateSpaceModal({
 
       const createdSpace = await CreateNewSpace(data as InsertSpace)
       if (createdSpace?.success && createdSpace.data) {
+        setReloadUser(true)
         setSpaces([...spaces, createdSpace.data])
-        if (canSetSpaceSetting) {
-          router.push(`./spaces/${createdSpace.data.space_slug}/settings`)
-        }
+        router.push(`./spaces/${createdSpace.data.space_slug}/settings`)
         setSpaceFormModelVisibility(false)
         toast({
           title: "Space created",

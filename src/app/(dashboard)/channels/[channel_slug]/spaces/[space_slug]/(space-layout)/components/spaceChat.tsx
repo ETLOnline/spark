@@ -9,7 +9,6 @@ import { spaceStore } from "@/src/store/space/spaceStore"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useParams } from "next/navigation"
 import React, { Suspense, useEffect } from "react"
-import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   params: Promise<{
@@ -25,21 +24,6 @@ const SpaceChat = () => {
   const switchChat = useSetAtom(chatStore.switchedChat)
   const [chatlistLoading, chatlist, chatlistError, getChatList] =
     useServerAction(GetChatsAction)
-
-  const [permissionChecker, setPermissionChecker] = useAtom(
-    chatStore.permissionCheckerAtom
-  )
-  const { permissionChecker: checker } = usePermissionChecker(
-    "scoped",
-    "SPACE",
-    currentSpace?.id
-  )
-
-  useEffect(() => {
-    if (checker) {
-      setPermissionChecker(checker)
-    }
-  }, [checker, setPermissionChecker])
 
   useEffect(() => {
     if (currentSpace) {

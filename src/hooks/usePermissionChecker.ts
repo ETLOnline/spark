@@ -1,6 +1,6 @@
 // src/hooks/usePermissionChecker.ts
 
-import { useEffect, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
@@ -14,11 +14,8 @@ export const usePermissionChecker = (
   const [permissionChecker, setPermissionChecker] =
     useState<PermissionChecker | null>(null)
 
-  useEffect(() => {
-    if (
-      (permission && !permissionChecker) ||
-      (isSuperAdmin && !permissionChecker)
-    ) {
+  useMemo(() => {
+    if (permission || isSuperAdmin) {
       if (permissionType === "global") {
         const checker = new PermissionChecker(
           permissionType,
@@ -36,20 +33,28 @@ export const usePermissionChecker = (
         )
         setPermissionChecker(checker)
       }
+    } else {
+      const checker = new PermissionChecker(
+        permissionType, // 'scoped'
+        null,
+        isSuperAdmin,
+        entityType, // Only needed for scoped
+        entityId // Only needed for scoped
+      )
+      setPermissionChecker(null)
     }
-  }, [
-    permission,
-    permissionChecker,
-    setPermissionChecker,
-    isSuperAdmin,
-    permissionType,
-    entityType,
-    entityId
-  ])
+  }, [permission, isSuperAdmin, permissionType, entityType, entityId])
 
-  const canAccess = (permissionSlug: string): boolean => {
-    return permissionChecker?.canAccess(permissionSlug) ?? false
-  }
+  const canAccess = useCallback(
+    (permissionSlug: string): boolean => {
+      if (permissionChecker) {
+        return permissionChecker?.canAccess(permissionSlug) ?? false
+      } else {
+        return false
+      }
+    },
+    [permissionChecker]
+  )
 
   return { permissionChecker, canAccess }
 }

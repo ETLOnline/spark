@@ -32,6 +32,8 @@ import {
   projectTaskTypes
 } from "../constants/projectManagment"
 import TaskMoveDialog from "./task-move-dialog"
+import { useParams } from "next/navigation"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   selectedItems: string[]
@@ -40,6 +42,8 @@ interface Props {
 }
 
 function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
+  const params = useParams()
+  const projectId = params.id as string
   const [isTaskFormModelOpen, setIsTaskFormModelOpen] = useAtom(
     taskStore.isTaskFormModelOpen
   )
@@ -121,11 +125,17 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
   }
 
   // PERMISSIONS INITATE
-  const permissionChecker = useAtomValue(
-    projectStore.singleprojectPermissionCheckerAtom
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    projectId
   )
-  const canUpdate = permissionChecker?.canAccess("project.backlog.task.update")
-  const canDelete = permissionChecker?.canAccess("project.backlog.task.delete")
+  const canUpdate = permissionChecker
+    ? permissionChecker?.canAccess("project.backlog.task.update")
+    : false
+  const canDelete = permissionChecker
+    ? permissionChecker?.canAccess("project.backlog.task.delete")
+    : false
 
   return (
     <>

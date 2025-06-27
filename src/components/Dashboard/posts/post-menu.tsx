@@ -14,6 +14,8 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { userStore } from "@/src/store/user/userStore"
 import { SelectPost } from "@/src/db/schema"
 import { isUserAdmin } from "@/src/utils/helpers"
+import { spaceStore } from "@/src/store/space/spaceStore"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface PostMenuProps {
   post: SelectPost
@@ -22,9 +24,16 @@ interface PostMenuProps {
 const PostMenu = ({ post }: PostMenuProps) => {
   const [posts, setPosts] = useAtom(postStore.posts)
   const user = useAtomValue(userStore.AuthUser)
-  const permissionChecker = useAtomValue(postStore.permissionCheckerAtom)
+  const currSpace = useAtomValue(spaceStore.currentSpace)
+  const { permissionChecker } = usePermissionChecker(
+    currSpace ? "scoped" : "global",
+    "SPACE",
+    currSpace?.id
+  )
 
-  const canDelete = permissionChecker?.canAccess("posting.delete")
+  const canDelete = permissionChecker
+    ? permissionChecker?.canAccess("posting.delete")
+    : false
 
   const { toast } = useToast()
 

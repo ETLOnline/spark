@@ -136,21 +136,14 @@ export function ProjectScreen() {
   }, [getProjectData])
 
   // PERMISSIONS INITATE
-  const [permissionChecker, setPermissionChecker] = useAtom(
-    projectStore.permissionCheckerAtom
-  )
-  const { permissionChecker: checker, canAccess } = usePermissionChecker(
+  const { permissionChecker } = usePermissionChecker(
     "scoped",
     "SPACE",
     currSpace?.id
   )
-
-  useEffect(() => {
-    if (checker) {
-      setPermissionChecker(checker)
-    }
-  }, [checker, setPermissionChecker])
-  const canView = canAccess("project.view")
+  const canView = permissionChecker
+    ? permissionChecker.canAccess("project.view")
+    : false
 
   return (
     <div className="flex flex-col space-y-4">

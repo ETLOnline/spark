@@ -47,27 +47,18 @@ const SpacePostComponent: React.FC = () => {
     })
   }, [])
 
-  const [permissionChecker, setPermissionChecker] = useAtom(
-    postStore.permissionCheckerAtom
-  )
-  const { permissionChecker: checker } = usePermissionChecker(
+  const { permissionChecker } = usePermissionChecker(
     "scoped",
     "SPACE",
     space?.id
   )
-
-  useEffect(() => {
-    if (checker) {
-      setPermissionChecker(checker)
-    }
-  }, [checker, setPermissionChecker])
-
-  const canViewPost = permissionChecker?.canAccess("posting.view")
-  const canCreate = permissionChecker?.canAccess("posting.create")
+  const canViewPost = permissionChecker
+    ? permissionChecker.canAccess("posting.view")
+    : false
 
   return (
     <div className="container mx-auto  space-y-8 max-w-3xl">
-      {canCreate && <CreatePostForm variant="spaces" />}
+      <CreatePostForm variant="spaces" />
       <Card className="border-none shadow-none">
         <CardHeader className="p-0 pb-6">
           <CardTitle>Feed</CardTitle>

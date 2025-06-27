@@ -56,6 +56,7 @@ const channelSchema = z.object({
 })
 
 function CreateChannels() {
+  const setReloadUser = useSetAtom(userStore.ReloadUser)
   const [editChannel, setEditChannel] = useState<boolean>(false)
   const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
 
@@ -209,6 +210,7 @@ function CreateChannels() {
       const createdChannel = await CreateChannel(payLoad as InsertChannel)
 
       if (createdChannel?.success && createdChannel?.data) {
+        setReloadUser(true)
         setChannels([...channels, createdChannel.data])
         setChannelFormModelVisibility(false)
         toast({

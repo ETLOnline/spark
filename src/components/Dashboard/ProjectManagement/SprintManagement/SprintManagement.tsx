@@ -14,6 +14,7 @@ import NoDataCard from "../../Channels/ChannelDetails/NoDataCard"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { projectStore } from "@/src/store/project/projectStore"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 export function SprintManagement() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
@@ -34,10 +35,14 @@ export function SprintManagement() {
   }, [projectId])
 
   // PERMISSIONS INITATE
-  const permissionChecker = useAtomValue(
-    projectStore.singleprojectPermissionCheckerAtom
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    projectId
   )
-  const canCreate = permissionChecker?.canAccess("project.sprint.create")
+  const canCreate = permissionChecker
+    ? permissionChecker?.canAccess("project.sprint.create")
+    : false
 
   return (
     <div className="space-y-6">

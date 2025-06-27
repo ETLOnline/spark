@@ -16,6 +16,8 @@ import { useAtomValue, useSetAtom } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import AddBacklogItem from "./AddBacklogItem"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { useParams } from "next/navigation"
 
 interface BacklogItem {
   id: string
@@ -105,6 +107,8 @@ const sampleBacklogItems: BacklogItem[] = [
 ]
 
 export function BacklogManagement() {
+  const params = useParams()
+  const projectId = params.id as string
   const [backlogItems, setBacklogItems] =
     useState<BacklogItem[]>(sampleBacklogItems)
   const setIsTaskFormModelOpen = useSetAtom(taskStore.isTaskFormModelOpen)
@@ -120,12 +124,14 @@ export function BacklogManagement() {
   }
 
   // PERMISSIONS INITATE
-  const permissionChecker = useAtomValue(
-    projectStore.singleprojectPermissionCheckerAtom
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    projectId
   )
-  const canCreateTask = permissionChecker?.canAccess(
-    "project.backlog.task.create"
-  )
+  const canCreateTask = permissionChecker
+    ? permissionChecker?.canAccess("project.backlog.task.create")
+    : false
 
   return (
     <>

@@ -24,19 +24,31 @@ import {
 import { useState } from "react"
 import CreateSpaceModal from "./CreateSpaceModal"
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   space: SelectSpace
-  permissionChecker?: PermissionChecker | null
 }
 
-function SpacesActionButtons({ space, permissionChecker }: Props) {
-  const canUpdateSpace = permissionChecker?.canAccess("space.update")
-  const canDeleteSpace = permissionChecker?.canAccess("space.delete")
-  const canViewSpaceUsers = permissionChecker?.canAccess("space.user.view")
-  const canSetSpaceSetting = permissionChecker?.canAccess(
-    "space.setting.update"
+function SpacesActionButtons({ space }: Props) {
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "SPACE",
+    space?.id
   )
+
+  const canUpdateSpace = permissionChecker
+    ? permissionChecker?.canAccess("space.update")
+    : false
+  const canDeleteSpace = permissionChecker
+    ? permissionChecker?.canAccess("space.delete")
+    : false
+  const canViewSpaceUsers = permissionChecker
+    ? permissionChecker?.canAccess("space.user.view")
+    : false
+  const canSetSpaceSetting = permissionChecker
+    ? permissionChecker?.canAccess("space.setting.update")
+    : false
 
   const setSelectedSpace = useSetAtom(spaceStore.selectedSpace)
   const setSpaces = useSetAtom(spaceStore.spaces)

@@ -7,11 +7,13 @@ const AuthUser = atom<SelectUser | null>(null)
 const Permissions = atom<UserPerms | null>(null)
 const SuperAdmin = atom<boolean | false>(false)
 const LoadingUser = atom<boolean | null>(true)
+const ReloadUser = atom<boolean | null>(false)
 
 export const userStore = {
   Iam,
   AuthUser,
   Permissions,
   SuperAdmin,
-  LoadingUser
+  LoadingUser,
+  ReloadUser
 }

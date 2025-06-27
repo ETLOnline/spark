@@ -17,17 +17,11 @@ const PostsPage = () => {
     (SelectPost | SelectFilePost | SelectPollPost)[]
   >([])
   const [loading, setLoading] = useState(true)
-  const [permissionChecker, setPermissionChecker] = useAtom(
-    postStore.permissionCheckerAtom
-  )
-  const { permissionChecker: checker, canAccess } =
-    usePermissionChecker("global")
-  const canViewPost = canAccess("posting.view")
-  useEffect(() => {
-    if (checker) {
-      setPermissionChecker(checker)
-    }
-  }, [checker, setPermissionChecker])
+
+  const { permissionChecker } = usePermissionChecker("global")
+  const canViewPost = permissionChecker
+    ? permissionChecker.canAccess("posting.view")
+    : false
 
   useEffect(() => {
     const fetchPosts = async () => {

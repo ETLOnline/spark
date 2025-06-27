@@ -150,14 +150,21 @@ export default function ChannelUserList({
       ? (entity as SelectChannel).channel_name
       : (entity as SelectSpace).space_name
 
-  const { permissionChecker, canAccess } = usePermissionChecker(
+  const { permissionChecker } = usePermissionChecker(
     "scoped",
-    entityType.toUpperCase() as "SPACE" | "CHANNEL",
-    entity?.id
+    entityType === "channel" ? "CHANNEL" : "SPACE",
+    entity.id
   )
-  const canInviteUser = canAccess(`${entityType}.user.invite`)
-  const canUpdateUser = canAccess(`${entityType}.user.update`)
-  const canDeleteUser = canAccess(`${entityType}.user.remove`)
+
+  const canInviteUser = permissionChecker
+    ? permissionChecker?.canAccess(`${entityType}.user.invite`)
+    : false
+  const canUpdateUser = permissionChecker
+    ? permissionChecker?.canAccess(`${entityType}.user.update`)
+    : false
+  const canDeleteUser = permissionChecker
+    ? permissionChecker?.canAccess(`${entityType}.user.remove`)
+    : false
 
   async function handleUpdateuser(userId: string, entityId: string) {
     try {

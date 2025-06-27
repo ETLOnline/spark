@@ -24,6 +24,7 @@ import SprintTasks from "./SprintTasks"
 import SprintContextMenu from "./SprintContextMenu"
 import { SprintStatus } from "../constants/projectManagment"
 import { projectStore } from "@/src/store/project/projectStore"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   sprint: SelectSprint
@@ -79,11 +80,17 @@ export default function SprintCardPage({ sprint }: Props) {
   }
 
   // PERMISSIONS INITATE
-  const permissionChecker = useAtomValue(
-    projectStore.singleprojectPermissionCheckerAtom
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    projectId
   )
-  const canCreateTask = permissionChecker?.canAccess("project.task.create")
-  const canViewTask = permissionChecker?.canAccess("project.task.view")
+  const canCreateTask = permissionChecker
+    ? permissionChecker?.canAccess("project.task.create")
+    : false
+  const canViewTask = permissionChecker
+    ? permissionChecker?.canAccess("project.task.view")
+    : false
 
   return (
     <>

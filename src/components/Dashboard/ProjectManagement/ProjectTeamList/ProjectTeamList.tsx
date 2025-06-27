@@ -51,6 +51,7 @@ import {
   SelectValue
 } from "@/src/components/ui/select"
 import { getRoleByEntityTypeAndIdAction } from "@/src/server-actions/UserRoles/UserRole"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 export interface ProjectUser extends SelectProjectUser {
   user: SelectUser & Partial<{ role: string; bio: string | null }>
@@ -187,13 +188,23 @@ export default function ProjectTeamList({
   }))
 
   // PERMISSIONS INITATE
-  const permissionChecker = useAtomValue(
-    projectStore.singleprojectPermissionCheckerAtom
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    projectId
   )
-  const canView = permissionChecker?.canAccess("project.teams.view")
-  const canCreate = permissionChecker?.canAccess("project.teams.add")
-  const canUpdate = permissionChecker?.canAccess("project.teams.update")
-  const canDelete = permissionChecker?.canAccess("project.teams.delete")
+  const canView = permissionChecker
+    ? permissionChecker?.canAccess("project.teams.view")
+    : false
+  const canCreate = permissionChecker
+    ? permissionChecker?.canAccess("project.teams.add")
+    : false
+  const canUpdate = permissionChecker
+    ? permissionChecker?.canAccess("project.teams.update")
+    : false
+  const canDelete = permissionChecker
+    ? permissionChecker?.canAccess("project.teams.delete")
+    : false
 
   return (
     <div className="p-6">

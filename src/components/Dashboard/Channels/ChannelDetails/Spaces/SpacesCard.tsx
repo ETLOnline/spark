@@ -36,15 +36,14 @@ function SpacesCard({ space }: Props) {
       setSpaceControl(true)
     }
   }, [user, space])
-  const { permissionChecker, canAccess } = usePermissionChecker(
+  const { permissionChecker } = usePermissionChecker(
     "scoped",
     "SPACE",
     space?.id
   )
-  const canSetSpaceSetting = permissionChecker?.canAccess(
-    "space.setting.update"
-  )
-  const canSpaceAllowAction = permissionChecker?.canAccess("space.allow.action")
+  const canSpaceAllowAction = permissionChecker
+    ? permissionChecker?.canAccess("space.allow.action")
+    : false
 
   return (
     <Card key={space.id} className="overflow-hidden">
@@ -90,10 +89,7 @@ function SpacesCard({ space }: Props) {
             )}
           </CardTitle>
           {spaceControl || canSpaceAllowAction ? (
-            <SpacesActionButtons
-              space={space}
-              permissionChecker={permissionChecker}
-            />
+            <SpacesActionButtons space={space} />
           ) : null}
         </div>
         <CardDescription>{space.description}</CardDescription>

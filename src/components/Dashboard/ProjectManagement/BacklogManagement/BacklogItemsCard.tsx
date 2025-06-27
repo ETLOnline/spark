@@ -10,7 +10,7 @@ import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import PaginationComponent from "@/src/components/common/Pagination"
 import { taskStore } from "@/src/store/tasks/taskStore"
-import { projectStore } from "@/src/store/project/projectStore"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   backlogItems: BacklogItem[]
@@ -77,10 +77,14 @@ function BacklogItemsCard({
   }
 
   // PERMISSIONS INITATE
-  const permissionChecker = useAtomValue(
-    projectStore.singleprojectPermissionCheckerAtom
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    projectId
   )
-  const canView = permissionChecker?.canAccess("project.backlog.task.view")
+  const canView = permissionChecker
+    ? permissionChecker?.canAccess("project.backlog.task.view")
+    : false
 
   return (
     <>

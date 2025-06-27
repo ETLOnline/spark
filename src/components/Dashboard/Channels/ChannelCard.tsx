@@ -30,16 +30,18 @@ function ChannelCard({ channel }: ChannelProps) {
   const authUser = useAtomValue(userStore.AuthUser)
 
   const spacesCount = channel?.spaces ? channel.spaces.length : 0
-  const { permissionChecker, canAccess } = usePermissionChecker(
+  const { permissionChecker } = usePermissionChecker(
     "scoped",
     "CHANNEL",
-    channel.id
+    channel?.id
   )
 
-  const canViewSpace = permissionChecker?.canAccess("space.view")
-  const canViewChannelAction = permissionChecker?.canAccess(
-    "channel.allow.action"
-  )
+  const canViewSpace = permissionChecker
+    ? permissionChecker?.canAccess("space.view")
+    : false
+  const canViewChannelAction = permissionChecker
+    ? permissionChecker?.canAccess("channel.allow.action")
+    : false
 
   return (
     <Card key={channel.id} className="overflow-hidden">

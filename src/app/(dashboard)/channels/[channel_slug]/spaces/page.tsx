@@ -67,12 +67,14 @@ export default function ChannelPage() {
     fetchChannel()
   }, [])
 
-  const { permissionChecker, canAccess } = usePermissionChecker(
+  const { permissionChecker } = usePermissionChecker(
     "scoped",
     "CHANNEL",
     selectedChannel?.id
   )
-  const canCreateSpace = permissionChecker?.canAccess("space.create")
+  const canCreateSpace = permissionChecker
+    ? permissionChecker?.canAccess("space.create")
+    : false
   function handleCreateSpace() {
     setSpaceFormModelVisibility(true)
   }

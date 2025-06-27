@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect } from "react"
-import { useSetAtom } from "jotai"
+import { useAtom, useSetAtom } from "jotai"
 import { useAuth, useUser } from "@clerk/nextjs"
 import { SelectUser } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
@@ -23,6 +23,7 @@ const ClerkAuthListener = () => {
   const setPermissions = useSetAtom(userStore.Permissions)
   const setSuperAdmin = useSetAtom(userStore.SuperAdmin)
   const setLoadingUser = useSetAtom(userStore.LoadingUser)
+  const [ReloadUser, setReloadUser] = useAtom(userStore.ReloadUser)
 
   const handleSetUser = async (user: UserResource | null | undefined) => {
     if (!user) return
@@ -41,6 +42,13 @@ const ClerkAuthListener = () => {
     const transformed = buildUserPerms(rawPerms.data)
     setPermissions(transformed)
   }
+
+  useEffect(() => {
+    if (ReloadUser && user) {
+      handleSetUser(user)
+      setReloadUser(false)
+    }
+  }, [ReloadUser, user])
 
   useEffect(() => {
     if (!isLoaded) return

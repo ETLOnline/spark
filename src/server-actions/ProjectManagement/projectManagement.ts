@@ -24,6 +24,11 @@ export const CreateProjectAction = CreateServerAction(
         newProject.project_name,
         newProject.created_by
       )
+      const attachUser = await createProjectUser(
+        newProject.id,
+        newProject.created_by,
+        result?.adminRole?.name
+      )
       return { success: true, data: newProject }
     } catch (error) {
       return { error }

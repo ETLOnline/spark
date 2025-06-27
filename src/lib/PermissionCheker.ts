@@ -27,7 +27,6 @@ export class PermissionChecker {
 
     if (this.scope === "global") {
       const currentUserPermissions = this.userPermissions.global
-      console.log(currentUserPermissions)
       return currentUserPermissions.has(action)
     }
 

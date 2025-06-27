@@ -8,9 +8,6 @@ import {
 } from "@/src/server-actions/Chat/Chat"
 import { Suspense, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { useAtom } from "jotai"
-import { chatStore } from "@/src/store/chat/chatStore"
-import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 export default function ChatPage() {
   const searchParams = useSearchParams()
@@ -19,17 +16,6 @@ export default function ChatPage() {
   )
   const [allChats, setAllChats] = useState<SelectChat[]>([])
   const [loading, setLoading] = useState(true)
-
-  const [permissionChecker, setPermissionChecker] = useAtom(
-    chatStore.permissionCheckerAtom
-  )
-  const { permissionChecker: checker } = usePermissionChecker("global")
-
-  useEffect(() => {
-    if (checker) {
-      setPermissionChecker(checker)
-    }
-  }, [checker, setPermissionChecker])
 
   useEffect(() => {
     const fetchChatsAndCurrentChat = async () => {

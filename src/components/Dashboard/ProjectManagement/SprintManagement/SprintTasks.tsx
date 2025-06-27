@@ -31,6 +31,7 @@ import { toast } from "@/src/hooks/use-toast"
 import { UpdateTaskAction } from "@/src/server-actions/Tasks/Task"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import TaskMoveDialog from "../BacklogManagement/task-move-dialog"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   task: SelectTask
@@ -121,11 +122,17 @@ function SprintTasks({ task, currSprint }: Props) {
   }
 
   // PERMISSIONS INITATE
-  const permissionChecker = useAtomValue(
-    projectStore.singleprojectPermissionCheckerAtom
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    currSprint?.projectId
   )
-  const canUpdateTask = permissionChecker?.canAccess("project.task.update")
-  const canDeleteTask = permissionChecker?.canAccess("project.task.delete")
+  const canUpdateTask = permissionChecker
+    ? permissionChecker?.canAccess("project.task.update")
+    : false
+  const canDeleteTask = permissionChecker
+    ? permissionChecker?.canAccess("project.task.delete")
+    : false
 
   return (
     <>

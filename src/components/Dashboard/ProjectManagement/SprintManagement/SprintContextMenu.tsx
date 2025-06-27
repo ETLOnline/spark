@@ -27,6 +27,8 @@ import {
 } from "@/src/components/ui/alert-dialog"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import { projectStore } from "@/src/store/project/projectStore"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { useParams } from "next/navigation"
 
 interface Props {
   isSprintContextMenuOpen: boolean
@@ -39,6 +41,9 @@ function SprintContextMenu({
   isSprintContextMenuOpen,
   setIsSprintContextMenuOpen
 }: Props) {
+  const params = useParams()
+  const projectId = params.id as string
+
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false)
   const [selectedSprint, setSelectedSprint] = useState<SelectSprint | null>(
     null
@@ -90,11 +95,17 @@ function SprintContextMenu({
   }
 
   // PERMISSIONS INITATE
-  const permissionChecker = useAtomValue(
-    projectStore.singleprojectPermissionCheckerAtom
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    projectId
   )
-  const canUpdate = permissionChecker?.canAccess("project.sprint.update")
-  const canDelete = permissionChecker?.canAccess("project.sprint.delete")
+  const canUpdate = permissionChecker
+    ? permissionChecker?.canAccess("project.sprint.update")
+    : false
+  const canDelete = permissionChecker
+    ? permissionChecker?.canAccess("project.sprint.delete")
+    : false
 
   return (
     <>
