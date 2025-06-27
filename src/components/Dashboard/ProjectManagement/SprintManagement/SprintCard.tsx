@@ -7,8 +7,6 @@ import {
   CardTitle
 } from "@/src/components/ui/card"
 import { Badge } from "@/src/components/ui/badge"
-import { useAtom, useSetAtom } from "jotai"
-import { sprintStore } from "@/src/store/sprint/sprintsStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -22,7 +20,7 @@ import SprintTasks from "./SprintTasks"
 import SprintContextMenu from "./SprintContextMenu"
 import { SprintStatus } from "../constants/projectManagment"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
-import TaskModal from "../components/TaskModal"
+import { TaskModal } from "../Task/components/TaskModal"
 
 interface Props {
   sprint: SelectSprint
@@ -31,9 +29,8 @@ interface Props {
 export default function SprintCardPage({ sprint }: Props) {
   const [tasks, setTasks] = useState<SelectTask[]>([])
   const [isSprintContextMenuOpen, setIsSprintContextMenuOpen] = useState(false)
-  const setSprintId = useSetAtom(sprintStore.sprintId)
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
-
+  const [selectedTask, setSelectedTask] = useState<SelectTask | null>(null)
   const [getTaskLoading, , , GetTasks] = useServerAction(GetSprintTasksAction)
 
   const projectId = useParams().id as string
@@ -50,6 +47,12 @@ export default function SprintCardPage({ sprint }: Props) {
     }
     fetchTasks()
   }, [projectId])
+
+  useEffect(()=>{
+    if(!isTaskModalOpen){
+      setSelectedTask(null)
+    }
+  },[isTaskModalOpen])
 
   function handleSprintStatus(sprint: SelectSprint) {
     let status
@@ -99,17 +102,35 @@ export default function SprintCardPage({ sprint }: Props) {
                 variant={"outline"}
                 onClick={() => {
                   setIsTaskModalOpen(true)
-                  setSprintId(sprint.id)
                 }}
               >
                 Add Task
               </Button>
+
               <TaskModal
                 isTaskModelOpen={isTaskModalOpen}
                 setIsTaskModelOpen={setIsTaskModalOpen}
+                sprintId={sprint.id ?? undefined}
+                selectedTask={selectedTask ?? undefined}
+                onCreateComplete={(task) => {
+                  setSelectedTask(task)
+                  setTasks((prevTasks) => [...prevTasks, task])
+                }}
+                onUpdateComplete={(task) => {
+                  setSelectedTask(task)
+                  setTasks((prevTasks) =>
+                    prevTasks.map((t) => {
+                      if (t.id === task.id) {
+                        return task
+                      }
+                      return t
+                    })
+                  )
+                }}
               />
 
               <SprintContextMenu
+                sprintTasks={tasks}
                 sprint={sprint}
                 isSprintContextMenuOpen={isSprintContextMenuOpen}
                 setIsSprintContextMenuOpen={setIsSprintContextMenuOpen}
@@ -133,6 +154,8 @@ export default function SprintCardPage({ sprint }: Props) {
                   task={task}
                   currSprint={sprint}
                   setIsTaskModelOpen={setIsTaskModalOpen}
+                  setTasks={setTasks}
+                  setSelectedTask={setSelectedTask}
                 />
               ))
             ) : (

@@ -30,18 +30,19 @@ import {
 import { toast } from "@/src/hooks/use-toast"
 import { UpdateTaskAction } from "@/src/server-actions/Tasks/Task"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import TaskMoveDialog from "../BacklogManagement/task-move-dialog"
+import TaskMoveDialog from "../Task/components/task-move-dialog"
 
 interface Props {
   task: SelectTask
   currSprint: SelectSprint
   setIsTaskModelOpen: Dispatch<SetStateAction<boolean>>
+  setTasks: Dispatch<SetStateAction<SelectTask[]>>
+  setSelectedTask: Dispatch<SetStateAction<SelectTask | null>>
 }
 
-function SprintTasks({ task, currSprint, setIsTaskModelOpen }: Props) {
+function SprintTasks({ task, currSprint, setIsTaskModelOpen, setTasks, setSelectedTask }: Props) {
   const [status, setStatus] = useAtom(projectStore.projectStatusList)
-  const setSelectedTask = useSetAtom(taskStore.selectedTask)
-  const setTask = useSetAtom(taskStore.tasks)
+  // const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
   const [isTaskDropDownOpen, setIsTaskDropDownOpen] = useState(false)
   const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useState(false)
@@ -57,9 +58,9 @@ function SprintTasks({ task, currSprint, setIsTaskModelOpen }: Props) {
     try {
       const updatedTask = await RemoveTask(task.id, { sprint_id: null })
       if (updatedTask?.success && updatedTask.data) {
-        setTask((prevTasks) =>
-          prevTasks.map((t) =>
-            t.id === task.id ? { ...t, ...updatedTask.data } : t
+        setTasks((prevTasks) =>
+          prevTasks.filter((t) =>
+            t.id !== task.id 
           )
         )
 

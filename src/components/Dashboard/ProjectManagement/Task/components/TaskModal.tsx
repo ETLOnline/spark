@@ -8,19 +8,29 @@ import {
 } from "@/src/components/ui/dialog"
 import { projectStore } from "@/src/store/project/projectStore"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { useParams } from "next/navigation"
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
 import { taskStore } from "@/src/store/tasks/taskStore"
-import TaskFormHeader from "../BacklogManagement/TaskFormHeader"
-import TaskForm from "../BacklogManagement/TaskForm"
+import TaskFormHeader from "./TaskFormHeader"
+import TaskForm from "./TaskForm"
+import { InsertTask, SelectTask } from "@/src/db/schema"
+import { userStore } from "@/src/store/user/userStore"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { CreateTaskAction, UpdateTaskAction } from "@/src/server-actions/Tasks/Task"
+import { toast } from "@/src/hooks/use-toast"
+import useTaskHook from "../hooks/useTaskHook"
 
-interface Props {
+interface TaskModalProps {
   isTaskModelOpen: boolean
   setIsTaskModelOpen: Dispatch<SetStateAction<boolean>>
+  selectedTask?: SelectTask
+  sprintId?: string
+  onCreateComplete?: (task: SelectTask) => void
+  onUpdateComplete?: (task: SelectTask) => void
 }
 
 const taskSchema = z.object({
@@ -35,48 +45,16 @@ const taskSchema = z.object({
   status_id: z.string().optional()
 })
 
-function TaskModal({ isTaskModelOpen, setIsTaskModelOpen }: Props) {
-  const [editTask, setEditTask] = useState(false)
-  const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
+export const TaskModal = ({ 
+  isTaskModelOpen, 
+  setIsTaskModelOpen, 
+  selectedTask, 
+  onCreateComplete, 
+  onUpdateComplete, 
+  sprintId 
+}: TaskModalProps)=> {
   const [statuses, setStatuses] = useAtom(projectStore.projectStatusList)
-
-  const form = useForm({
-    resolver: zodResolver(taskSchema)
-  })
-
-  const projectId = useParams().id as string
-  const backlogStatus = statuses.find((s) => s.name === "Backlog")
-
-  useEffect(() => {
-    if (!isTaskModelOpen) {
-      form.reset({
-        task_title: "",
-        description: "",
-        task_type: "",
-        task_priority: "",
-        story_points: "",
-        status_id: backlogStatus?.id
-      })
-      form.clearErrors()
-      setSelectedTask(null)
-      setEditTask(false)
-    }
-  }, [isTaskModelOpen])
-
-  useEffect(() => {
-    if (selectedTask) {
-      const status = statuses.find((s) => s.id === selectedTask.status_id)
-      setEditTask(true)
-      form.setValue("task_title", selectedTask.task_title)
-      form.setValue("description", selectedTask.description)
-      form.setValue("task_type", selectedTask.task_type)
-      form.setValue("task_priority", selectedTask.task_priority)
-      form.setValue("story_points", selectedTask.story_points)
-      form.setValue("status_id", status?.name)
-    } else {
-      setEditTask(false)
-    }
-  }, [selectedTask])
+  const { createTaskLoading, updateTaskLoading, handleSubmit } = useTaskHook({ selectedTask, sprintId, onCreateComplete, onUpdateComplete })
 
   return (
     <Dialog open={isTaskModelOpen} onOpenChange={setIsTaskModelOpen}>
@@ -86,11 +64,9 @@ function TaskModal({ isTaskModelOpen, setIsTaskModelOpen }: Props) {
           <DialogTitle className="h-0 absolute"></DialogTitle>
         </DialogHeader>
         <ScrollArea className=" max-h-[80vh] ">
-          <TaskForm statuses={statuses} />
+          <TaskForm statuses={statuses} onSubmit={handleSubmit} selectedTask={selectedTask} loading={createTaskLoading || updateTaskLoading} />
         </ScrollArea>
       </DialogContent>
     </Dialog>
   )
 }
-
-export default TaskModal
