@@ -10,7 +10,7 @@ import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 
 interface Props {
-  selectedTask: SelectTask | null
+  selectedTask?: SelectTask
 }
 
 function TaskFormHeader({ selectedTask }: Props) {

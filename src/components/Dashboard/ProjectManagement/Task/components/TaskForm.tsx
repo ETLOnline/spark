@@ -1,6 +1,6 @@
 "use client"
 import type React from "react"
-import { Dispatch, SetStateAction, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import { Card, CardContent } from "@/src/components/ui/card"
 import { Input } from "@/src/components/ui/input"
@@ -15,38 +15,26 @@ import {
 import { AlertCircle, BarChart2, CircleAlert, Flag } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
 import {
-  InsertTask,
   InsertTaskStatus,
   SelectTask,
-  SelectTaskStatus
 } from "@/src/db/schema"
-import { toast } from "@/src/hooks/use-toast"
-import { useServerAction } from "@/src/hooks/useServerAction"
-import {
-  CreateTaskAction,
-  UpdateTaskAction
-} from "@/src/server-actions/Tasks/Task"
-import { projectStore } from "@/src/store/project/projectStore"
-import { userStore } from "@/src/store/user/userStore"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useAtom, useAtomValue } from "jotai"
-import { useParams } from "next/navigation"
 import { z } from "zod"
 import { ToUpperCase } from "@/src/utils/helpers"
-import { taskStore } from "@/src/store/tasks/taskStore"
 import RichTextEditor from "@/src/components/common/rich-text-editor"
 import {
   projectDefaultStatuses,
   projectTaskPriority,
   projectTaskTypes
-} from "../constants/projectManagment"
+} from "../../constants/projectManagment"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
-import { sprintStore } from "@/src/store/sprint/sprintsStore"
 
 interface Props {
+  onSubmit: (task :any) => void
   statuses?: InsertTaskStatus[]
   isTaskModelOpen?: boolean
-  setIsTaskModelOpen?: Dispatch<SetStateAction<boolean>>
+  selectedTask?: SelectTask
+  loading?: boolean
 }
 
 const projectSchema = z.object({
@@ -61,25 +49,16 @@ const projectSchema = z.object({
 export default function TaskForm({
   statuses,
   isTaskModelOpen,
-  setIsTaskModelOpen
+  selectedTask,
+  onSubmit,
+  loading = false
 }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null)
-
-  const [tasks, setTasks] = useAtom(taskStore.tasks)
-  const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
-  const [sprintId, setSprintId] = useAtom(sprintStore.sprintId)
-
-  const authUser = useAtomValue(userStore.AuthUser)
-  const [createTaskLoading, createTaskData, createTaskError, CreateTask] =
-    useServerAction(CreateTaskAction)
-  const [updateTaskLoading, updateTaskData, updateTaskError, UpdateTask] =
-    useServerAction(UpdateTaskAction)
 
   const form = useForm({
     resolver: zodResolver(projectSchema)
   })
-
-  const projectId = useParams().id as string
+  const errors = form.formState.errors
   const backlogStatus = statuses?.find((s) => s.name === "Backlog")
 
   useEffect(() => {
@@ -93,7 +72,6 @@ export default function TaskForm({
         status_id: backlogStatus?.id
       })
       form.clearErrors()
-      setSelectedTask(null)
     }
   }, [isTaskModelOpen])
 
@@ -109,84 +87,6 @@ export default function TaskForm({
       form.setValue("status_id", backlogStatus?.id)
     }
   }, [selectedTask])
-
-  const error = form.formState.errors
-
-  function taskSubmit(data: any) {
-    if (!selectedTask) {
-      if (!data.status_id) {
-        data.status_id = backlogStatus?.id
-      }
-      handleCreateTask(data)
-    } else {
-      if (!statuses?.find((s) => s.id === data.status_id)) {
-        data.status_id = selectedTask.status_id
-      }
-      handleUpdateTask(data)
-    }
-  }
-
-  async function handleCreateTask(data: InsertTask) {
-    try {
-      if (authUser) {
-        const payload = {
-          ...data,
-          created_by: authUser?.unique_id,
-          project_id: projectId || "",
-          sprint_id: sprintId || null
-        }
-        const task = await CreateTask(payload)
-        if (task?.success && task.data) {
-          setTasks([...tasks, task.data])
-          setSelectedTask(task.data)
-          toast({
-            title: "Task created successfully",
-            description: "Your new task has been added to the project",
-            duration: 2000
-          })
-          setSprintId(null)
-        } else {
-          toast({
-            title: "Unable to create task.Please try again.",
-            variant: "destructive",
-            duration: 2000
-          })
-        }
-      }
-    } catch {
-      console.log("Error in creating task")
-    }
-  }
-
-  async function handleUpdateTask(data: SelectTask) {
-    try {
-      if (selectedTask?.id) {
-        const updatedTask = await UpdateTask(selectedTask?.id, data)
-        if (updatedTask?.success && updatedTask.data) {
-          setTasks((prevTask) =>
-            prevTask.map((task) =>
-              task.id === selectedTask.id
-                ? { ...task, ...updatedTask.data }
-                : task
-            )
-          )
-          setSelectedTask(updatedTask?.data)
-          toast({
-            title: "Task Updated successfully",
-            description: "Your task has been updated",
-            duration: 2000
-          })
-        }
-      }
-    } catch {
-      toast({
-        title: "Unable to Update Task",
-        description: "Please try again.",
-        variant: "destructive",
-        duration: 2000
-      })
-    }
-  }
 
   function IssueTypeIcon({ type }: { type: string }) {
     const typeMap = projectTaskTypes.find((t) => t.key === type)
@@ -227,7 +127,7 @@ export default function TaskForm({
   }
 
   return (
-    <form onSubmit={form.handleSubmit(taskSubmit)}>
+    <form onSubmit={form.handleSubmit(onSubmit)}>
       <div className="flex flex-col md:flex-row gap-2 ">
         {/* Main content area (left side) */}
         <div className="flex-1 px-2">
@@ -255,10 +155,10 @@ export default function TaskForm({
                         onClick={() => setActiveField("title")}
                       >
                         <div>
-                          {error.task_title && (
+                          {errors.task_title && (
                             <span className="text-red-500 text-sm flex items-center gap-2 mb-1">
                               <CircleAlert size={16} />
-                              {String(error.task_title.message)}
+                              {String(errors.task_title.message)}
                             </span>
                           )}
                         </div>
@@ -314,7 +214,7 @@ export default function TaskForm({
             <CardContent className="pt-6">
               <div className="flex items-center justify-end gap-4 mb-2">
                 <Button
-                  loading={createTaskLoading || updateTaskLoading}
+                  loading={loading}
                   variant={"outline"}
                   className="w-full"
                 >
@@ -363,10 +263,10 @@ export default function TaskForm({
                           }}
                         >
                           <div>
-                            {error.status_id && (
+                            {errors.status_id && (
                               <span className="text-red-500 text-sm flex items-center gap-2">
                                 <CircleAlert size={16} />
-                                {String(error.status_id.message)}
+                                {String(errors.status_id.message)}
                               </span>
                             )}
                           </div>
@@ -406,10 +306,10 @@ export default function TaskForm({
                       ) : (
                         <>
                           <div>
-                            {error.task_type && (
+                            {errors.task_type && (
                               <span className="text-red-500 text-sm flex items-center gap-2">
                                 <CircleAlert size={16} />
-                                {String(error.task_type.message)}
+                                {String(errors.task_type.message)}
                               </span>
                             )}
                           </div>
@@ -463,10 +363,10 @@ export default function TaskForm({
                           }}
                         >
                           <div>
-                            {error.story_points && (
+                            {errors.story_points && (
                               <span className="text-red-500 text-sm flex items-center gap-2">
                                 <CircleAlert size={16} />
-                                {String(error.story_points.message)}
+                                {String(errors.story_points.message)}
                               </span>
                             )}
                           </div>
@@ -508,10 +408,10 @@ export default function TaskForm({
                       ) : (
                         <>
                           <div>
-                            {error.task_priority && (
+                            {errors.task_priority && (
                               <span className="text-red-500 text-sm flex items-center gap-2">
                                 <CircleAlert size={16} />
-                                {String(error.task_priority.message)}
+                                {String(errors.task_priority.message)}
                               </span>
                             )}
                           </div>
