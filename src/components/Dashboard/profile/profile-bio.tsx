@@ -51,78 +51,64 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
   }, [userBio])
 
   return (
-    <Card>
-      <CardContent className="space-y-4 pt-6">
-        <>
-          <div className="bio-summary">
-            <header className="profile-section-header flex justify-between">
-              <h3 className="mb-2 font-semibold">Bio</h3>
-              {editable && <EditProfileModal />}
-            </header>
-            <p className="user-bio">
-              {bio ?? (
-                <span style={{ fontStyle: "italic" }}>
-                  Time to shine ✨ Tell the world about yourself
-                </span>
-              )}
-            </p>
+    <div className="flex flex-col gap-8">
+      <Card className="p-3 sm:p-5">
+        <div className="bio-summary">
+          <header className="profile-section-header flex justify-between">
+            <h3 className="mb-2 font-semibold">About</h3>
+          </header>
+          <p className="user-bio">
+            {bio ?? (
+              <span style={{ fontStyle: "italic" }}>
+                Time to shine ✨ Tell the world about yourself
+              </span>
+            )}
+          </p>
+        </div>
+      </Card>
+
+      <Card className="p-3 sm:p-5">
+        <div className="skill-tags">
+          <header className="profile-section-header flex justify-between">
+            <h3 className="mb-2 font-semibold">Skills</h3>
+          </header>
+          <div className="flex flex-wrap gap-2">
+            {skills.length ? (
+              skills.map((skill: Tag) => (
+                <Badge key={skill.id} variant="secondary">
+                  {skill.name}
+                </Badge>
+              ))
+            ) : (
+              <span style={{ fontStyle: "italic" }}>
+                HTML ninja? 🥷 Python wizard? 🪄 Show off your superpowers!
+              </span>
+            )}
           </div>
-          <div className="skill-tags">
-            <header className="profile-section-header flex justify-between">
-              <h3 className="mb-2 font-semibold">Skills</h3>
-            </header>
-            <div className="flex flex-wrap gap-2">
-              {skills.length ? (
-                skills.map((skill: Tag) => (
-                  <Badge key={skill.id} variant="secondary">
-                    {skill.name}
-                  </Badge>
-                ))
-              ) : (
-                <span style={{ fontStyle: "italic" }}>
-                  HTML ninja? 🥷 Python wizard? 🪄 Show off your superpowers!
-                </span>
-              )}
-            </div>
+        </div>
+      </Card>
+
+      <Card className="p-3 sm:p-5">
+        <div className="interest-tags">
+          <div className="profile-section-header flex justify-between">
+            <h3 className="mb-2 font-semibold">Interests</h3>
           </div>
-          <div className="interest-tags">
-            <div className="profile-section-header flex justify-between">
-              <h3 className="mb-2 font-semibold">Interests</h3>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {interests.length ? (
-                interests.map((interest: Tag) => (
-                  <Badge key={interest.id} variant="outline">
-                    {interest.name}
-                  </Badge>
-                ))
-              ) : (
-                <span style={{ fontStyle: "italic" }}>
-                  💿 Share your passions, hobbies, and guilty coding pleasures
-                  💾
-                </span>
-              )}
-            </div>
+          <div className="flex flex-wrap gap-2">
+            {interests.length ? (
+              interests.map((interest: Tag) => (
+                <Badge key={interest.id} variant="secondary">
+                  {interest.name}
+                </Badge>
+              ))
+            ) : (
+              <span style={{ fontStyle: "italic" }}>
+                💿 Share your passions, hobbies, and guilty coding pleasures 💾
+              </span>
+            )}
           </div>
-          <div className="recommendations">
-            <h3 className="mb-2 font-semibold">Recommendations</h3>
-            <ul className="space-y-2">
-              {recommendations &&
-                recommendations.map((recommendation, i) => (
-                  <li key={recommendation.id} className="rounded-lg border p-3">
-                    <p className="text-sm">
-                      &quot;{recommendation.content}&quot;
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      - {recommendation.recommender_full_name}
-                    </p>
-                  </li>
-                ))}
-            </ul>
-          </div>
-        </>
-      </CardContent>
-    </Card>
+        </div>
+      </Card>
+    </div>
   )
 }
 

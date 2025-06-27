@@ -175,7 +175,7 @@ function SprintTasks({ task, currSprint }: Props) {
                 Remove from Sprint
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => moveTask(task.id)}>
-                move to other Sprint
+                Move to other Sprint
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

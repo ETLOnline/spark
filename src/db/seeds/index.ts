@@ -1,18 +1,36 @@
 import { FeatureSeed } from "./FeatureSeed"
 import { seedPersonas } from "./personaSeeder"
 import { UserSeed } from "./UserSeed"
-;(async () => {
-  try {
-    console.log("🌱 Seeding Started")
-    // Seed Features
-    await UserSeed()
-    await FeatureSeed()
-    await seedPersonas()
 
-    console.log("✅ Seeding Completed")
+const SEEDERS: Record<string, () => Promise<void>> = {
+  user: UserSeed,
+  feature: FeatureSeed,
+  persona: seedPersonas
+}
+
+async function runSeeders() {
+  try {
+    const args = process.argv.slice(2)
+    const seederNames = args.length > 0 ? args : Object.keys(SEEDERS)
+
+    console.log(`🌱 Starting seeders: ${seederNames.join(", ") || "ALL"}`)
+
+    for (const name of seederNames) {
+      if (SEEDERS[name]) {
+        console.log(`├── Starting ${name} seeder...`)
+        await SEEDERS[name]()
+        console.log(`├── ✅ ${name} seeder completed`)
+      } else {
+        console.warn(`├── ⚠️  Unknown seeder: ${name}`)
+      }
+    }
+
+    console.log("✅ All requested seeders completed")
     process.exit(0)
   } catch (e) {
-    console.log("❌ Error seeding")
+    console.error("❌ Seeding failed:", e)
     process.exit(1)
   }
-})()
+}
+
+runSeeders()
