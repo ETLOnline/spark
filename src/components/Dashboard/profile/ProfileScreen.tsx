@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef, useState } from "react" // Added useRef and useState
+import React, { useEffect, useRef, useState } from "react" // Added useRef and useState
 import ProfileBio from "@/src/components/Dashboard/profile/profile-bio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
@@ -12,7 +12,8 @@ import {
   MapPinIcon,
   Plus,
   UserPlus,
-  PencilIcon
+  PencilIcon,
+  GraduationCap
 } from "lucide-react"
 import { SelectTag, SelectUser } from "@/src/db/schema"
 import { ExtendedRecommendations, Profile } from "./types/profile-types"
@@ -38,6 +39,10 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import Loader from "../../common/Loader/Loader"
 import { LoaderSizes } from "../../common/types/loader-types"
 import { useUser } from "@clerk/nextjs"
+import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
+import { auth } from "@clerk/nextjs/server"
+import ProfileFollowActions from "./user/ProfileFollowActions"
+import Image from "next/image"
 
 type ProfileScreenProps = {
   tab?: string
@@ -58,6 +63,17 @@ export default function ProfileScreen({
   )
   const { user: clerkUser } = useUser()
   const [currentImageUrl, setCurrentImageUrl] = useState(user?.profile_url) // State to manage current profile image URL
+  const [authUser, setAuthUser] = useState<SelectUser | null>(null)
+
+  useEffect(() => {
+    const GetAuthUser = async () => {
+      const authUser = await AuthUserAction()
+      if (authUser) {
+        setAuthUser(authUser as SelectUser)
+      }
+    }
+    GetAuthUser()
+  }, [user])
 
   const handleCopyUrl = async () => {
     try {
@@ -127,17 +143,16 @@ export default function ProfileScreen({
       ) : null}
 
       {/* Banner with Avatar */}
-      <div
-        className="relative sm:h-44 h-36 rounded-lg bg-cover bg-center shadow-sm shadow-secondary"
-        style={{
-          backgroundImage: `url("https://placehold.co/400")`
-        }}
-      >
+      <div className="relative sm:h-44 h-36 shadow-sm shadow-secondary">
+        <img
+          src="/images/profile/background.svg"
+          alt="Profile Banner"
+          className=" w-full sm:h-48 h-36 rounded-lg shadow-sm shadow-secondary object-cover"
+        />
         <div className="absolute bottom-0 left-16 transform -translate-x-1/2 translate-y-1/2">
           <div className="relative">
-            {" "}
             {/* Added relative positioning for the button */}
-            <Avatar className="h-24 w-24 border-4 border-white">
+            <Avatar className="h-28 w-28 border-4 border-black">
               <AvatarImage
                 src={currentImageUrl || "/placeholder.png"} // Use currentImageUrl state
                 alt="Profile"
@@ -145,20 +160,24 @@ export default function ProfileScreen({
               <AvatarFallback>IMG</AvatarFallback>
             </Avatar>
             {/* Edit Profile Picture Button */}
-            <button
-              className="absolute bottom-0 right-0 bg-background border rounded-full p-1 hover:bg-muted"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={loading || uploading} // Disable while loading or uploading
-            >
-              <PencilIcon className="h-4 w-4" />
-            </button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileChange}
-            />
+            {authUser?.unique_id === user?.unique_id ? (
+              <>
+                <button
+                  className="absolute bottom-0 right-0 bg-background border rounded-full p-1 hover:bg-muted"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={loading || uploading} // Disable while loading or uploading
+                >
+                  <PencilIcon className="h-4 w-4" />
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </>
+            ) : null}
           </div>
         </div>
       </div>
@@ -206,16 +225,9 @@ export default function ProfileScreen({
           </div>
         </div>
 
-        <div className="mt-4 lg:mt-0 flex space-x-2">
-          <Button>
-            {" "}
-            <UserPlus className="h-4 w-4" /> Connect
-          </Button>
-          <Button disabled variant="outline">
-            {" "}
-            <Plus className="h-4 w-4" /> Follow
-          </Button>
-        </div>
+        {authUser?.unique_id === user?.unique_id ? null : (
+          <ProfileFollowActions user={user} />
+        )}
       </div>
 
       {/* Main Section */}
@@ -229,7 +241,9 @@ export default function ProfileScreen({
                 <UserIcon className="h-4 w-4" />
                 <span>Bio / Basic</span>
               </CardTitle>
-              <EditProfileModal />
+              {authUser?.unique_id === user?.unique_id ? (
+                <EditProfileModal />
+              ) : null}
             </CardHeader>
             <CardContent>
               <ProfileBio
@@ -304,16 +318,17 @@ export default function ProfileScreen({
             </CardHeader>
             <CardContent>
               <div className="flex items-start gap-3">
-                <CalendarIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <GraduationCap className="h-6 w-6 text-muted-foreground mt-0.5" />
                 <div>
-                  <h4 className="font-medium">PUCIT</h4>
+                  <h4 className="font-medium">{user.profile?.institute}</h4>
                   <p className="text-sm text-muted-foreground">
-                    Bachelor of Science in Computer Science
+                    {user.profile?.degree}
                   </p>
                   <div className="flex items-center gap-1 mt-1">
                     <CalendarIcon className="h-3 w-3 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">
-                      Graduated 2025
+                      {user.profile?.education_start_date} -{" "}
+                      {user.profile?.education_end_date}
                     </span>
                   </div>
                 </div>
