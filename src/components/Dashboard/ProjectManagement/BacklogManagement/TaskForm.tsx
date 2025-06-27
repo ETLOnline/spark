@@ -1,6 +1,6 @@
 "use client"
 import type React from "react"
-import { useEffect, useState } from "react"
+import { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import { Card, CardContent } from "@/src/components/ui/card"
 import { Input } from "@/src/components/ui/input"
@@ -45,6 +45,8 @@ import { sprintStore } from "@/src/store/sprint/sprintsStore"
 
 interface Props {
   statuses?: InsertTaskStatus[]
+  isTaskModelOpen?: boolean
+  setIsTaskModelOpen?: Dispatch<SetStateAction<boolean>>
 }
 
 const projectSchema = z.object({
@@ -56,12 +58,13 @@ const projectSchema = z.object({
   status_id: z.string().optional()
 })
 
-export default function TaskForm({ statuses }: Props) {
+export default function TaskForm({
+  statuses,
+  isTaskModelOpen,
+  setIsTaskModelOpen
+}: Props) {
   const [activeField, setActiveField] = useState<string | null>(null)
 
-  const [isTaskFormModelOpen, setIsTaskFormModelOpen] = useAtom(
-    taskStore.isTaskFormModelOpen
-  )
   const [tasks, setTasks] = useAtom(taskStore.tasks)
   const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
   const [sprintId, setSprintId] = useAtom(sprintStore.sprintId)
@@ -80,7 +83,7 @@ export default function TaskForm({ statuses }: Props) {
   const backlogStatus = statuses?.find((s) => s.name === "Backlog")
 
   useEffect(() => {
-    if (!isTaskFormModelOpen) {
+    if (!isTaskModelOpen) {
       form.reset({
         task_title: "",
         description: "",
@@ -92,7 +95,7 @@ export default function TaskForm({ statuses }: Props) {
       form.clearErrors()
       setSelectedTask(null)
     }
-  }, [isTaskFormModelOpen])
+  }, [isTaskModelOpen])
 
   useEffect(() => {
     if (selectedTask) {

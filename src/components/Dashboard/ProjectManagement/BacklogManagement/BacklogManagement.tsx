@@ -22,8 +22,8 @@ import BacklogItemsCard from "./BacklogItemsCard"
 import { useAtomValue, useSetAtom } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
-import AddBacklogItem from "./AddBacklogItem"
 import StatusRequiredDialog from "../StatusRequiredDialog"
+import TaskModal from "../components/TaskModal"
 
 interface BacklogItem {
   id: string
@@ -115,13 +115,13 @@ const sampleBacklogItems: BacklogItem[] = [
 export function BacklogManagement() {
   const [backlogItems, setBacklogItems] =
     useState<BacklogItem[]>(sampleBacklogItems)
-  const setIsTaskFormModelOpen = useSetAtom(taskStore.isTaskFormModelOpen)
   const [searchQuery, setSearchQuery] = useState("")
   const [searchedItem, setSearchedItem] = useState("")
   const [orderList, setOrderList] = useState("asc")
   const [limit, setLimit] = useState(10)
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
   const [openDialog, setOpenDialog] = useState(false)
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
 
   function handleSearch() {
     if (searchQuery) {
@@ -137,11 +137,14 @@ export function BacklogManagement() {
 
   return projectStatusList.length > 0 ? (
     <>
-      <AddBacklogItem />
+      <TaskModal
+        isTaskModelOpen={isTaskModalOpen}
+        setIsTaskModelOpen={setIsTaskModalOpen}
+      />
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h2 className="text-xl font-bold">Backlog</h2>
-          <Button onClick={() => setIsTaskFormModelOpen(true)}>
+          <Button onClick={() => setIsTaskModalOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add Item
           </Button>

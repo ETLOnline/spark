@@ -10,13 +10,18 @@ import { projectStore } from "@/src/store/project/projectStore"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAtom } from "jotai"
 import { useParams } from "next/navigation"
-import React, { useEffect, useState } from "react"
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
-import TaskForm from "./TaskForm"
-import TaskFormHeader from "./TaskFormHeader"
 import { taskStore } from "@/src/store/tasks/taskStore"
+import TaskFormHeader from "../BacklogManagement/TaskFormHeader"
+import TaskForm from "../BacklogManagement/TaskForm"
+
+interface Props {
+  isTaskModelOpen: boolean
+  setIsTaskModelOpen: Dispatch<SetStateAction<boolean>>
+}
 
 const taskSchema = z.object({
   task_title: z.string().min(1, "Title required").max(50, "Title is too long"),
@@ -30,10 +35,7 @@ const taskSchema = z.object({
   status_id: z.string().optional()
 })
 
-function AddBacklogItem() {
-  const [isTaskFormModelOpen, setIsTaskFormModelOpen] = useAtom(
-    taskStore.isTaskFormModelOpen
-  )
+function TaskModal({ isTaskModelOpen, setIsTaskModelOpen }: Props) {
   const [editTask, setEditTask] = useState(false)
   const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
   const [statuses, setStatuses] = useAtom(projectStore.projectStatusList)
@@ -46,7 +48,7 @@ function AddBacklogItem() {
   const backlogStatus = statuses.find((s) => s.name === "Backlog")
 
   useEffect(() => {
-    if (!isTaskFormModelOpen) {
+    if (!isTaskModelOpen) {
       form.reset({
         task_title: "",
         description: "",
@@ -59,7 +61,7 @@ function AddBacklogItem() {
       setSelectedTask(null)
       setEditTask(false)
     }
-  }, [isTaskFormModelOpen])
+  }, [isTaskModelOpen])
 
   useEffect(() => {
     if (selectedTask) {
@@ -77,7 +79,7 @@ function AddBacklogItem() {
   }, [selectedTask])
 
   return (
-    <Dialog open={isTaskFormModelOpen} onOpenChange={setIsTaskFormModelOpen}>
+    <Dialog open={isTaskModelOpen} onOpenChange={setIsTaskModelOpen}>
       <DialogContent className="sm:max-w-5xl [&>button]:w-6 [&>button]:h-6 [&>button>svg]:w-6 [&>button>svg]:h-6">
         <DialogHeader>
           <TaskFormHeader selectedTask={selectedTask} />
@@ -91,4 +93,4 @@ function AddBacklogItem() {
   )
 }
 
-export default AddBacklogItem
+export default TaskModal
