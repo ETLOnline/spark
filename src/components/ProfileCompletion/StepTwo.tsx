@@ -6,7 +6,7 @@ import { Label } from "@/src/components/ui/label"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Dispatch, SetStateAction } from "react"
+import { Dispatch, SetStateAction, useEffect } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { SelectProfile, SelectUser } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
@@ -41,6 +41,19 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
     setStep((prev) => prev - 1)
     window.scrollTo(0, 0)
   }
+
+  useEffect(() => {
+    if (user.profile) {
+      const profile = user.profile as SelectProfile
+      form.reset({
+        degree: profile.degree || "",
+        institute: profile.institute || "",
+        duration_from: profile.education_start_date || "",
+        duration_to: profile.education_end_date || ""
+      })
+    }
+    console.log("pr", user.profile)
+  }, [user])
 
   async function handleSubmit(data: any) {
     try {

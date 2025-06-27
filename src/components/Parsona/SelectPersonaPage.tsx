@@ -51,7 +51,7 @@ export default function SelectPersonaPage({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 dark:from-background dark:via-background dark:to-muted/10">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 dark:from-background dark:via-background dark:to-muted/10 mt-14">
       <Container>
         <div className="flex items-center justify-center min-h-screen py-8 px-4">
           <div className="w-full max-w-4xl mx-auto text-center space-y-8">
@@ -63,35 +63,37 @@ export default function SelectPersonaPage({
               tailored experience
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-12">
-              {personas?.map((persona) => (
-                <Card
-                  key={persona.id}
-                  className={cn(
-                    "relative cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg",
-                    "border-2 bg-card/50 backdrop-blur-sm",
-                    selectedPersona === persona.id
-                      ? "border-primary shadow-lg shadow-primary/20 bg-primary/5"
-                      : "border-border hover:border-primary/50",
-                    "dark:bg-card/30 dark:backdrop-blur-sm"
-                  )}
-                  onClick={() => handleSelectPersona(persona.id)}
-                >
-                  <CardContent className="flex flex-col items-center justify-center p-6 h-full min-h-[200px] relative">
-                    {selectedPersona === persona.id && (
-                      <div className="absolute top-3 right-3 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                        <Check className="w-4 h-4 text-primary-foreground" />
-                      </div>
+            <div className="grid grid-cols-1 sm:[grid-template-columns:repeat(auto-fit,minmax(0,1fr))]  gap-4 sm:gap-6 mt-12">
+              {personas?.map((persona) =>
+                persona.slug === "admin" ? null : (
+                  <Card
+                    key={persona.id}
+                    className={cn(
+                      "relative cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg",
+                      "border-2 bg-card/50 backdrop-blur-sm",
+                      selectedPersona === persona.id
+                        ? "border-primary shadow-lg shadow-primary/20 bg-primary/5"
+                        : "border-border hover:border-primary/50",
+                      "dark:bg-card/30 dark:backdrop-blur-sm"
                     )}
-                    <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
-                      {persona.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground text-center leading-relaxed">
-                      {persona.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
+                    onClick={() => handleSelectPersona(persona.id)}
+                  >
+                    <CardContent className="flex flex-col items-center justify-center p-6 h-full min-h-[200px] relative">
+                      {selectedPersona === persona.id && (
+                        <div className="absolute top-3 right-3 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                          <Check className="w-4 h-4 text-primary-foreground" />
+                        </div>
+                      )}
+                      <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
+                        {persona.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground text-center leading-relaxed">
+                        {persona.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )
+              )}
             </div>
 
             <div className="pt-8">

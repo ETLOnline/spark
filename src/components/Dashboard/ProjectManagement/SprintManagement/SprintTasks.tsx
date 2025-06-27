@@ -3,7 +3,7 @@ import { SelectSprint, SelectTask } from "@/src/db/schema"
 import { projectStore } from "@/src/store/project/projectStore"
 import { useAtom, useSetAtom } from "jotai"
 import { CircleHelp, MoreHorizontal } from "lucide-react"
-import React, { useState } from "react"
+import React, { Dispatch, SetStateAction, useState } from "react"
 import {
   projectTaskPriority,
   projectTaskTypes
@@ -35,14 +35,12 @@ import TaskMoveDialog from "../BacklogManagement/task-move-dialog"
 interface Props {
   task: SelectTask
   currSprint: SelectSprint
+  setIsTaskModelOpen: Dispatch<SetStateAction<boolean>>
 }
 
-function SprintTasks({ task, currSprint }: Props) {
+function SprintTasks({ task, currSprint, setIsTaskModelOpen }: Props) {
   const [status, setStatus] = useAtom(projectStore.projectStatusList)
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
-  const [isTaskFormModelOpen, setIsTaskFormModelOpen] = useAtom(
-    taskStore.isTaskFormModelOpen
-  )
   const setTask = useSetAtom(taskStore.tasks)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
   const [isTaskDropDownOpen, setIsTaskDropDownOpen] = useState(false)
@@ -52,7 +50,7 @@ function SprintTasks({ task, currSprint }: Props) {
 
   function EditTask(task: SelectTask) {
     setSelectedTask(task)
-    setIsTaskFormModelOpen(true)
+    setIsTaskModelOpen(true)
   }
 
   async function handleRemoveTask(task: SelectTask) {

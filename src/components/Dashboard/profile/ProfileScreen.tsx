@@ -235,26 +235,22 @@ export default function ProfileScreen({
         {/* Left */}
         <div className="lg:col-span-2 space-y-6">
           {/* Bio Section */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center space-x-2">
-                <UserIcon className="h-4 w-4" />
-                <span>Bio / Basic</span>
-              </CardTitle>
-              {authUser?.unique_id === user?.unique_id ? (
-                <EditProfileModal />
-              ) : null}
-            </CardHeader>
-            <CardContent>
-              <ProfileBio
-                userBio={user?.profile?.bio as string}
-                recommendations={
-                  profileData?.recommendations as unknown as ExtendedRecommendations[]
-                }
-                tags={profileData?.tags as SelectTag[]}
-              />
-            </CardContent>
-          </Card>
+          <div className="flex items-center justify-between ">
+            <div className="flex items-center gap-2">
+              <UserIcon className="h-4 w-4" />
+              <span>Bio / Basic</span>
+            </div>
+            {authUser?.unique_id === user?.unique_id ? (
+              <EditProfileModal />
+            ) : null}
+          </div>
+          <ProfileBio
+            userBio={user?.profile?.bio as string}
+            recommendations={
+              profileData?.recommendations as unknown as ExtendedRecommendations[]
+            }
+            tags={profileData?.tags as SelectTag[]}
+          />
           {/* Recommendations */}
           <Card>
             <CardHeader>

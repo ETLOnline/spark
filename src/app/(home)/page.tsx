@@ -32,7 +32,7 @@ import {
   Cloud,
   Monitor,
   Server,
-  Shield,
+  Shield
 } from "lucide-react"
 import { useTheme } from "next-themes"
 
@@ -47,15 +47,15 @@ import ModeToggle from "@/src/components/ThemeProvider/ThemeToggle"
 const fadeInUp = {
   initial: { opacity: 0, y: 60 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6 },
+  transition: { duration: 0.6 }
 }
 
 const staggerContainer = {
   animate: {
     transition: {
-      staggerChildren: 0.1,
-    },
-  },
+      staggerChildren: 0.1
+    }
+  }
 }
 
 const floatingAnimation = {
@@ -64,16 +64,36 @@ const floatingAnimation = {
     transition: {
       duration: 3,
       repeat: Number.POSITIVE_INFINITY,
-      ease: "easeInOut",
-    },
-  },
+      ease: "easeInOut"
+    }
+  }
 }
 
 const stats = [
-  { number: "15,000+", label: "Active Students", icon: Users, color: "from-blue-500 to-cyan-500" },
-  { number: "800+", label: "Industry Mentors", icon: Briefcase, color: "from-purple-500 to-pink-500" },
-  { number: "75+", label: "Universities", icon: GraduationCap, color: "from-green-500 to-emerald-500" },
-  { number: "2,500+", label: "Projects Launched", icon: Target, color: "from-orange-500 to-red-500" },
+  {
+    number: "15,000+",
+    label: "Active Students",
+    icon: Users,
+    color: "from-blue-500 to-cyan-500"
+  },
+  {
+    number: "800+",
+    label: "Industry Mentors",
+    icon: Briefcase,
+    color: "from-purple-500 to-pink-500"
+  },
+  {
+    number: "75+",
+    label: "Universities",
+    icon: GraduationCap,
+    color: "from-green-500 to-emerald-500"
+  },
+  {
+    number: "2,500+",
+    label: "Projects Launched",
+    icon: Target,
+    color: "from-orange-500 to-red-500"
+  }
 ]
 
 // Community Statistics
@@ -86,10 +106,10 @@ const communityStats = [
       { label: "Software Engineering", count: "3,821", percentage: 25 },
       { label: "Data Science", count: "2,134", percentage: 14 },
       { label: "Cybersecurity", count: "1,402", percentage: 9 },
-      { label: "Other Tech Fields", count: "1,000", percentage: 7 },
+      { label: "Other Tech Fields", count: "1,000", percentage: 7 }
     ],
     icon: GraduationCap,
-    color: "from-blue-500 to-cyan-500",
+    color: "from-blue-500 to-cyan-500"
   },
   {
     category: "Mentors",
@@ -99,10 +119,10 @@ const communityStats = [
       { label: "Tech Leads", count: "186", percentage: 22 },
       { label: "Product Managers", count: "127", percentage: 15 },
       { label: "Entrepreneurs", count: "98", percentage: 12 },
-      { label: "Researchers", count: "124", percentage: 14 },
+      { label: "Researchers", count: "124", percentage: 14 }
     ],
     icon: Briefcase,
-    color: "from-purple-500 to-pink-500",
+    color: "from-purple-500 to-pink-500"
   },
   {
     category: "Universities",
@@ -110,10 +130,10 @@ const communityStats = [
     breakdown: [
       { label: "Public Universities", count: "45", percentage: 58 },
       { label: "Private Universities", count: "28", percentage: 36 },
-      { label: "International", count: "5", percentage: 6 },
+      { label: "International", count: "5", percentage: 6 }
     ],
     icon: Building,
-    color: "from-green-500 to-emerald-500",
+    color: "from-green-500 to-emerald-500"
   },
   {
     category: "Companies",
@@ -122,11 +142,11 @@ const communityStats = [
       { label: "Tech Startups", count: "180", percentage: 40 },
       { label: "Multinational Corps", count: "135", percentage: 30 },
       { label: "Local Companies", count: "90", percentage: 20 },
-      { label: "Consulting Firms", count: "45", percentage: 10 },
+      { label: "Consulting Firms", count: "45", percentage: 10 }
     ],
     icon: Globe,
-    color: "from-orange-500 to-red-500",
-  },
+    color: "from-orange-500 to-red-500"
+  }
 ]
 
 // Three-Tier Architecture
@@ -134,84 +154,104 @@ const architectureTiers = [
   {
     tier: "Frontend Layer",
     title: "User Experience",
-    description: "Modern, responsive interfaces built with React, Next.js, and cutting-edge design systems",
-    technologies: ["React", "Next.js", "TypeScript", "Tailwind CSS", "Framer Motion"],
+    description:
+      "Modern, responsive interfaces built with React, Next.js, and cutting-edge design systems",
+    technologies: [
+      "React",
+      "Next.js",
+      "TypeScript",
+      "Tailwind CSS",
+      "Framer Motion"
+    ],
     features: [
       "Responsive Design",
       "Real-time Updates",
       "Progressive Web App",
       "Accessibility First",
-      "Dark/Light Themes",
+      "Dark/Light Themes"
     ],
     icon: Monitor,
-    color: "from-blue-500 to-cyan-500",
+    color: "from-blue-500 to-cyan-500"
   },
   {
     tier: "Backend Layer",
     title: "Business Logic",
-    description: "Scalable APIs and microservices handling complex business logic and data processing",
+    description:
+      "Scalable APIs and microservices handling complex business logic and data processing",
     technologies: ["Node.js", "Python", "PostgreSQL", "Redis", "GraphQL"],
     features: [
       "RESTful APIs",
       "GraphQL Endpoints",
       "Real-time WebSockets",
       "Microservices Architecture",
-      "Event-Driven Design",
+      "Event-Driven Design"
     ],
     icon: Server,
-    color: "from-purple-500 to-pink-500",
+    color: "from-purple-500 to-pink-500"
   },
   {
     tier: "Infrastructure Layer",
     title: "Cloud & DevOps",
-    description: "Robust cloud infrastructure ensuring scalability, security, and high availability",
+    description:
+      "Robust cloud infrastructure ensuring scalability, security, and high availability",
     technologies: ["AWS", "Docker", "Kubernetes", "CI/CD", "Monitoring"],
-    features: ["Auto-scaling", "Load Balancing", "Disaster Recovery", "Security Monitoring", "Performance Analytics"],
+    features: [
+      "Auto-scaling",
+      "Load Balancing",
+      "Disaster Recovery",
+      "Security Monitoring",
+      "Performance Analytics"
+    ],
     icon: Cloud,
-    color: "from-green-500 to-emerald-500",
-  },
+    color: "from-green-500 to-emerald-500"
+  }
 ]
 
 const communityValues = [
   {
     icon: Network,
     title: "Build Your Professional Network",
-    description: "Connect with 15,000+ students, 800+ mentors, and faculty from top universities across Pakistan",
+    description:
+      "Connect with 15,000+ students, 800+ mentors, and faculty from top universities across Pakistan",
     benefit: "Expand your circle",
     color: "from-blue-500 to-cyan-500",
-    stats: "15,000+ connections made",
+    stats: "15,000+ connections made"
   },
   {
     icon: Brain,
     title: "Learn from Industry Experts",
-    description: "Get mentored by professionals from Google, Microsoft, Meta, and leading Pakistani tech companies",
+    description:
+      "Get mentored by professionals from Google, Microsoft, Meta, and leading Pakistani tech companies",
     benefit: "Accelerate growth",
     color: "from-purple-500 to-pink-500",
-    stats: "800+ expert mentors",
+    stats: "800+ expert mentors"
   },
   {
     icon: Code,
     title: "Work on Real Projects",
-    description: "Collaborate on industry-sponsored projects and build a portfolio that gets you hired",
+    description:
+      "Collaborate on industry-sponsored projects and build a portfolio that gets you hired",
     benefit: "Gain experience",
     color: "from-green-500 to-emerald-500",
-    stats: "2,500+ projects completed",
+    stats: "2,500+ projects completed"
   },
   {
     icon: Trophy,
     title: "Earn Recognition",
-    description: "Get certified skills, badges, and recommendations that boost your career prospects",
+    description:
+      "Get certified skills, badges, and recommendations that boost your career prospects",
     benefit: "Stand out",
     color: "from-orange-500 to-red-500",
-    stats: "5,000+ skills validated",
-  },
+    stats: "5,000+ skills validated"
+  }
 ]
 
 const features = [
   {
     icon: MessageCircle,
     title: "Smart Communities",
-    description: "Join university-specific or topic-based communities with AI-powered content recommendations",
+    description:
+      "Join university-specific or topic-based communities with AI-powered content recommendations",
     stats: "50+ Active Communities",
     color: "from-blue-500 to-cyan-500",
     details: [
@@ -219,29 +259,44 @@ const features = [
       "Topic-based discussions",
       "AI content curation",
       "Expert moderation",
-      "Real-time notifications",
-    ],
+      "Real-time notifications"
+    ]
   },
   {
     icon: Calendar,
     title: "Mentorship Sessions",
-    description: "Book 1-on-1 or group sessions with industry experts. Open sessions and private mentoring available",
+    description:
+      "Book 1-on-1 or group sessions with industry experts. Open sessions and private mentoring available",
     stats: "1000+ Sessions Monthly",
     color: "from-purple-500 to-pink-500",
-    details: ["1-on-1 mentoring", "Group sessions", "Career guidance", "Technical reviews", "Industry insights"],
+    details: [
+      "1-on-1 mentoring",
+      "Group sessions",
+      "Career guidance",
+      "Technical reviews",
+      "Industry insights"
+    ]
   },
   {
     icon: BookOpen,
     title: "Project Spaces",
-    description: "Collaborative workspaces with task management, file sharing, and real-time collaboration tools",
+    description:
+      "Collaborative workspaces with task management, file sharing, and real-time collaboration tools",
     stats: "500+ Active Projects",
     color: "from-green-500 to-emerald-500",
-    details: ["Team collaboration", "Version control", "Task management", "File sharing", "Progress tracking"],
+    details: [
+      "Team collaboration",
+      "Version control",
+      "Task management",
+      "File sharing",
+      "Progress tracking"
+    ]
   },
   {
     icon: Brain,
     title: "AI Learning Paths",
-    description: "Personalized skill development recommendations based on your goals and industry trends",
+    description:
+      "Personalized skill development recommendations based on your goals and industry trends",
     stats: "10,000+ Paths Created",
     color: "from-orange-500 to-red-500",
     details: [
@@ -249,13 +304,14 @@ const features = [
       "Skill assessments",
       "Learning analytics",
       "Progress tracking",
-      "Industry alignment",
-    ],
+      "Industry alignment"
+    ]
   },
   {
     icon: Award,
     title: "Skill Validation",
-    description: "Peer endorsements, project reviews, and industry-recognized certifications",
+    description:
+      "Peer endorsements, project reviews, and industry-recognized certifications",
     stats: "5,000+ Skills Validated",
     color: "from-pink-500 to-rose-500",
     details: [
@@ -263,13 +319,14 @@ const features = [
       "Project portfolios",
       "Skill certifications",
       "Industry recognition",
-      "Career advancement",
-    ],
+      "Career advancement"
+    ]
   },
   {
     icon: Briefcase,
     title: "Career Hub",
-    description: "Job board, internship opportunities, and direct connections with hiring companies",
+    description:
+      "Job board, internship opportunities, and direct connections with hiring companies",
     stats: "200+ Job Placements",
     color: "from-indigo-500 to-purple-500",
     details: [
@@ -277,9 +334,9 @@ const features = [
       "Internship programs",
       "Company connections",
       "Interview preparation",
-      "Career counseling",
-    ],
-  },
+      "Career counseling"
+    ]
+  }
 ]
 
 const roadmapPhases = [
@@ -292,8 +349,8 @@ const roadmapPhases = [
       "Basic Mentorship Matching",
       "Project Collaboration Spaces",
       "User Profiles & Authentication",
-      "File Sharing & Discussions",
-    ],
+      "File Sharing & Discussions"
+    ]
   },
   {
     phase: "Phase 2",
@@ -304,8 +361,8 @@ const roadmapPhases = [
       "Advanced Event Management",
       "Skill Validation System",
       "Career Enablement Tools",
-      "Mobile App Launch",
-    ],
+      "Mobile App Launch"
+    ]
   },
   {
     phase: "Phase 3",
@@ -316,9 +373,9 @@ const roadmapPhases = [
       "Advanced Analytics Dashboard",
       "Global University Expansion",
       "Marketplace for Services",
-      "Enterprise Solutions",
-    ],
-  },
+      "Enterprise Solutions"
+    ]
+  }
 ]
 
 const testimonials = [
@@ -329,7 +386,7 @@ const testimonials = [
       "SPARK connected me with my mentor who guided my final year project. The community support was incredible - I got my dream job within 2 months of graduation!",
     avatar: "/placeholder.svg?height=60&width=60",
     company: "Systems Ltd",
-    achievement: "Landed dream job",
+    achievement: "Landed dream job"
   },
   {
     name: "Dr. Muhammad Ali",
@@ -338,7 +395,7 @@ const testimonials = [
       "The platform has transformed how we connect students with industry. Our placement rate increased by 40% since joining SPARK.",
     avatar: "/placeholder.svg?height=60&width=60",
     company: "COMSATS University",
-    achievement: "40% better placements",
+    achievement: "40% better placements"
   },
   {
     name: "Fatima Khan",
@@ -347,8 +404,8 @@ const testimonials = [
       "Mentoring on SPARK is incredibly rewarding. I've guided 15+ students who are now working at top tech companies. The platform makes mentorship seamless.",
     avatar: "/placeholder.svg?height=60&width=60",
     company: "Careem",
-    achievement: "15+ successful mentees",
-  },
+    achievement: "15+ successful mentees"
+  }
 ]
 
 export default function HomePage() {
@@ -391,14 +448,14 @@ export default function HomePage() {
           className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-blue-400/20 to-purple-400/20 dark:from-blue-400/10 dark:to-purple-400/10 rounded-full blur-3xl"
           animate={{
             x: mousePosition.x * 0.02,
-            y: mousePosition.y * 0.02,
+            y: mousePosition.y * 0.02
           }}
         />
         <motion.div
           className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-purple-400/20 to-pink-400/20 dark:from-purple-400/10 dark:to-pink-400/10 rounded-full blur-3xl"
           animate={{
             x: mousePosition.x * -0.02,
-            y: mousePosition.y * -0.02,
+            y: mousePosition.y * -0.02
           }}
         />
       </div>
@@ -406,7 +463,11 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6 relative">
         <div className="container mx-auto text-center relative z-10">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
             <Badge className="mb-6 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 border-blue-200 dark:border-blue-700">
               <Rocket className="w-4 h-4 mr-2" />
               🇵🇰 Empowering Pakistan's Tech Revolution
@@ -421,9 +482,13 @@ export default function HomePage() {
           >
             Where Tech Dreams
             <br />
-            
             <span className="inline-block text-blue-600 dark:text-blue-400">
-              <Image src='/logo/spark-logo-animated.gif' width={100} height={100} alt='Spark logo' />
+              <Image
+                src="/logo/spark-logo-animated.gif"
+                width={100}
+                height={100}
+                alt="Spark logo"
+              />
             </span>
           </motion.h1>
 
@@ -434,9 +499,20 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.4 }}
           >
             Join Pakistan's largest tech community where
-            <span className="text-blue-600 dark:text-blue-400 font-bold"> 15,000+ students</span>,
-            <span className="text-green-600 dark:text-green-400 font-bold"> 800+ mentors</span>, and
-            <span className="text-purple-600 dark:text-purple-400 font-bold"> 75+ universities</span>
+            <span className="text-blue-600 dark:text-blue-400 font-bold">
+              {" "}
+              15,000+ students
+            </span>
+            ,
+            <span className="text-green-600 dark:text-green-400 font-bold">
+              {" "}
+              800+ mentors
+            </span>
+            , and
+            <span className="text-purple-600 dark:text-purple-400 font-bold">
+              {" "}
+              75+ universities
+            </span>
             <br />
             collaborate to build the future
           </motion.p>
@@ -473,7 +549,11 @@ export default function HomePage() {
             animate="animate"
           >
             {stats.map((stat, index) => (
-              <motion.div key={index} variants={fadeInUp} className="text-center group">
+              <motion.div
+                key={index}
+                variants={fadeInUp}
+                className="text-center group"
+              >
                 <motion.div
                   className={`w-20 h-20 bg-gradient-to-r ${stat.color} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl group-hover:shadow-2xl transition-all duration-300`}
                   whileHover={{ scale: 1.1, rotate: 5 }}
@@ -488,14 +568,20 @@ export default function HomePage() {
                 >
                   {stat.number}
                 </motion.div>
-                <div className="text-gray-600 dark:text-gray-400 font-medium">{stat.label}</div>
+                <div className="text-gray-600 dark:text-gray-400 font-medium">
+                  {stat.label}
+                </div>
               </motion.div>
             ))}
           </motion.div>
         </div>
 
         {/* Floating Elements */}
-        <motion.div className="absolute top-40 left-20 hidden lg:block" variants={floatingAnimation} animate="animate">
+        <motion.div
+          className="absolute top-40 left-20 hidden lg:block"
+          variants={floatingAnimation}
+          animate="animate"
+        >
           <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-20" />
         </motion.div>
         <motion.div
@@ -509,7 +595,10 @@ export default function HomePage() {
       </section>
 
       {/* Community Statistics Section */}
-      <section id="community" className="py-24 px-6 bg-white dark:bg-slate-900 relative overflow-hidden">
+      <section
+        id="community"
+        className="py-24 px-6 bg-white dark:bg-slate-900 relative overflow-hidden"
+      >
         <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-950/20 dark:to-purple-950/20" />
         <div className="container mx-auto relative z-10">
           <motion.div
@@ -531,7 +620,8 @@ export default function HomePage() {
               </span>
             </h2>
             <p className="text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
-              Detailed breakdown of our diverse and thriving tech ecosystem across Pakistan
+              Detailed breakdown of our diverse and thriving tech ecosystem
+              across Pakistan
             </p>
           </motion.div>
 
@@ -551,14 +641,25 @@ export default function HomePage() {
                     >
                       <stat.icon className="w-8 h-8 text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">{stat.category}</h3>
-                    <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-6">{stat.total}</div>
+                    <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
+                      {stat.category}
+                    </h3>
+                    <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-6">
+                      {stat.total}
+                    </div>
                     <div className="space-y-3">
                       {stat.breakdown.map((item, itemIndex) => (
-                        <div key={itemIndex} className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">{item.label}</span>
+                        <div
+                          key={itemIndex}
+                          className="flex justify-between items-center"
+                        >
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {item.label}
+                          </span>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-gray-900 dark:text-white">{item.count}</span>
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                              {item.count}
+                            </span>
                             <div className="w-12 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                               <div
                                 className={`h-full bg-gradient-to-r ${stat.color} transition-all duration-500`}
@@ -603,7 +704,8 @@ export default function HomePage() {
               </span>
             </h2>
             <p className="text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
-              Create custom communities with enterprise-grade tools and on-demand feature enablement
+              Create custom communities with enterprise-grade tools and
+              on-demand feature enablement
             </p>
           </motion.div>
 
@@ -623,8 +725,12 @@ export default function HomePage() {
                       <GraduationCap className="w-8 h-8 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-3xl font-bold text-gray-900 dark:text-white">Universities</h3>
-                      <p className="text-gray-600 dark:text-gray-400">Academic Excellence Platform</p>
+                      <h3 className="text-3xl font-bold text-gray-900 dark:text-white">
+                        Universities
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400">
+                        Academic Excellence Platform
+                      </p>
                     </div>
                   </div>
 
@@ -648,25 +754,39 @@ export default function HomePage() {
                         </li>
                         <li className="flex items-start gap-3">
                           <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">Research project management tools</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Research project management tools
+                          </span>
                         </li>
                         <li className="flex items-start gap-3">
                           <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">Industry partnership integration</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Industry partnership integration
+                          </span>
                         </li>
                       </ul>
                     </div>
 
                     <div className="bg-blue-50 dark:bg-blue-950/20 p-6 rounded-xl">
-                      <h5 className="font-semibold text-blue-900 dark:text-blue-300 mb-3">Success Metrics</h5>
+                      <h5 className="font-semibold text-blue-900 dark:text-blue-300 mb-3">
+                        Success Metrics
+                      </h5>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">40%</div>
-                          <div className="text-sm text-blue-700 dark:text-blue-300">Better Placements</div>
+                          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                            40%
+                          </div>
+                          <div className="text-sm text-blue-700 dark:text-blue-300">
+                            Better Placements
+                          </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">75+</div>
-                          <div className="text-sm text-blue-700 dark:text-blue-300">Partner Universities</div>
+                          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                            75+
+                          </div>
+                          <div className="text-sm text-blue-700 dark:text-blue-300">
+                            Partner Universities
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -689,8 +809,12 @@ export default function HomePage() {
                       <Briefcase className="w-8 h-8 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-3xl font-bold text-gray-900 dark:text-white">Industry Experts</h3>
-                      <p className="text-gray-600 dark:text-gray-400">Professional Networks</p>
+                      <h3 className="text-3xl font-bold text-gray-900 dark:text-white">
+                        Industry Experts
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400">
+                        Professional Networks
+                      </p>
                     </div>
                   </div>
 
@@ -702,33 +826,51 @@ export default function HomePage() {
                       <ul className="space-y-3">
                         <li className="flex items-start gap-3">
                           <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">Company-branded mentorship spaces</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Company-branded mentorship spaces
+                          </span>
                         </li>
                         <li className="flex items-start gap-3">
                           <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">Talent pipeline development</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Talent pipeline development
+                          </span>
                         </li>
                         <li className="flex items-start gap-3">
                           <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">Technical interview preparation</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Technical interview preparation
+                          </span>
                         </li>
                         <li className="flex items-start gap-3">
                           <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">Industry project collaboration</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Industry project collaboration
+                          </span>
                         </li>
                       </ul>
                     </div>
 
                     <div className="bg-purple-50 dark:bg-purple-950/20 p-6 rounded-xl">
-                      <h5 className="font-semibold text-purple-900 dark:text-purple-300 mb-3">Impact Numbers</h5>
+                      <h5 className="font-semibold text-purple-900 dark:text-purple-300 mb-3">
+                        Impact Numbers
+                      </h5>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">800+</div>
-                          <div className="text-sm text-purple-700 dark:text-purple-300">Expert Mentors</div>
+                          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                            800+
+                          </div>
+                          <div className="text-sm text-purple-700 dark:text-purple-300">
+                            Expert Mentors
+                          </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">450+</div>
-                          <div className="text-sm text-purple-700 dark:text-purple-300">Partner Companies</div>
+                          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                            450+
+                          </div>
+                          <div className="text-sm text-purple-700 dark:text-purple-300">
+                            Partner Companies
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -755,8 +897,8 @@ export default function HomePage() {
                     On-Demand Feature Enablement
                   </h3>
                   <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                    Customize your community with enterprise-grade tools. Enable features as needed for your specific
-                    use case.
+                    Customize your community with enterprise-grade tools. Enable
+                    features as needed for your specific use case.
                   </p>
                 </div>
 
@@ -765,31 +907,55 @@ export default function HomePage() {
                     {
                       icon: MessageCircle,
                       title: "Smart Chat",
-                      description: "Real-time messaging with AI moderation, thread management, and file sharing",
-                      features: ["Real-time messaging", "AI moderation", "Thread management", "Rich media support"],
-                      color: "from-blue-500 to-cyan-500",
+                      description:
+                        "Real-time messaging with AI moderation, thread management, and file sharing",
+                      features: [
+                        "Real-time messaging",
+                        "AI moderation",
+                        "Thread management",
+                        "Rich media support"
+                      ],
+                      color: "from-blue-500 to-cyan-500"
                     },
                     {
                       icon: BookOpen,
                       title: "File Sharing",
-                      description: "Secure document management with version control and collaborative editing",
-                      features: ["Version control", "Collaborative editing", "Access permissions", "Cloud storage"],
-                      color: "from-green-500 to-emerald-500",
+                      description:
+                        "Secure document management with version control and collaborative editing",
+                      features: [
+                        "Version control",
+                        "Collaborative editing",
+                        "Access permissions",
+                        "Cloud storage"
+                      ],
+                      color: "from-green-500 to-emerald-500"
                     },
                     {
                       icon: Network,
                       title: "Social Posting",
-                      description: "LinkedIn-style professional networking with achievements and endorsements",
-                      features: ["Professional posts", "Achievement sharing", "Peer endorsements", "Content curation"],
-                      color: "from-purple-500 to-pink-500",
+                      description:
+                        "LinkedIn-style professional networking with achievements and endorsements",
+                      features: [
+                        "Professional posts",
+                        "Achievement sharing",
+                        "Peer endorsements",
+                        "Content curation"
+                      ],
+                      color: "from-purple-500 to-pink-500"
                     },
                     {
                       icon: Target,
                       title: "Project Management",
-                      description: "Jira-integrated project tracking with agile workflows and sprint planning",
-                      features: ["Jira integration", "Sprint planning", "Task tracking", "Team analytics"],
-                      color: "from-orange-500 to-red-500",
-                    },
+                      description:
+                        "Jira-integrated project tracking with agile workflows and sprint planning",
+                      features: [
+                        "Jira integration",
+                        "Sprint planning",
+                        "Task tracking",
+                        "Team analytics"
+                      ],
+                      color: "from-orange-500 to-red-500"
+                    }
                   ].map((feature, index) => (
                     <motion.div
                       key={index}
@@ -805,13 +971,24 @@ export default function HomePage() {
                         >
                           <feature.icon className="w-7 h-7 text-white" />
                         </div>
-                        <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{feature.title}</h4>
-                        <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">{feature.description}</p>
+                        <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                          {feature.title}
+                        </h4>
+                        <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                          {feature.description}
+                        </p>
                         <ul className="space-y-2">
                           {feature.features.map((item, itemIndex) => (
-                            <li key={itemIndex} className="flex items-center gap-2">
-                              <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${feature.color}`} />
-                              <span className="text-sm text-gray-600 dark:text-gray-400">{item}</span>
+                            <li
+                              key={itemIndex}
+                              className="flex items-center gap-2"
+                            >
+                              <div
+                                className={`w-2 h-2 rounded-full bg-gradient-to-r ${feature.color}`}
+                              />
+                              <span className="text-sm text-gray-600 dark:text-gray-400">
+                                {item}
+                              </span>
                             </li>
                           ))}
                         </ul>
@@ -830,27 +1007,36 @@ export default function HomePage() {
                         <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                           <Shield className="w-6 h-6 text-white" />
                         </div>
-                        <h5 className="font-semibold text-gray-900 dark:text-white mb-2">Enterprise Security</h5>
+                        <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
+                          Enterprise Security
+                        </h5>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          SOC 2 compliance, SSO integration, and advanced access controls
+                          SOC 2 compliance, SSO integration, and advanced access
+                          controls
                         </p>
                       </div>
                       <div className="text-center">
                         <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                           <TrendingUp className="w-6 h-6 text-white" />
                         </div>
-                        <h5 className="font-semibold text-gray-900 dark:text-white mb-2">Scalable Infrastructure</h5>
+                        <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
+                          Scalable Infrastructure
+                        </h5>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Auto-scaling, load balancing, and 99.9% uptime guarantee
+                          Auto-scaling, load balancing, and 99.9% uptime
+                          guarantee
                         </p>
                       </div>
                       <div className="text-center">
                         <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                           <Brain className="w-6 h-6 text-white" />
                         </div>
-                        <h5 className="font-semibold text-gray-900 dark:text-white mb-2">AI-Powered Insights</h5>
+                        <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
+                          AI-Powered Insights
+                        </h5>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Advanced analytics, predictive modeling, and intelligent recommendations
+                          Advanced analytics, predictive modeling, and
+                          intelligent recommendations
                         </p>
                       </div>
                     </div>
@@ -905,7 +1091,8 @@ export default function HomePage() {
               </span>
             </h2>
             <p className="text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
-              Modern three-tier architecture ensuring scalability, security, and exceptional performance
+              Modern three-tier architecture ensuring scalability, security, and
+              exceptional performance
             </p>
           </motion.div>
 
@@ -935,7 +1122,9 @@ export default function HomePage() {
                           <Badge className="mb-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
                             {tier.tier}
                           </Badge>
-                          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{tier.title}</h3>
+                          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                            {tier.title}
+                          </h3>
                         </div>
                       </div>
                       <p className="text-gray-600 dark:text-gray-300 mb-8 text-lg leading-relaxed">
@@ -944,7 +1133,9 @@ export default function HomePage() {
 
                       <div className="grid md:grid-cols-2 gap-6">
                         <div>
-                          <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Technologies</h4>
+                          <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+                            Technologies
+                          </h4>
                           <div className="flex flex-wrap gap-2">
                             {tier.technologies.map((tech, techIndex) => (
                               <Badge
@@ -957,7 +1148,9 @@ export default function HomePage() {
                           </div>
                         </div>
                         <div>
-                          <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Key Features</h4>
+                          <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+                            Key Features
+                          </h4>
                           <ul className="space-y-2">
                             {tier.features.map((feature, featureIndex) => (
                               <li
@@ -1010,7 +1203,8 @@ export default function HomePage() {
               </span>
             </h2>
             <p className="text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
-              Join a thriving ecosystem where every connection opens new possibilities
+              Join a thriving ecosystem where every connection opens new
+              possibilities
             </p>
           </motion.div>
 
@@ -1034,9 +1228,15 @@ export default function HomePage() {
                     <Badge className="mb-4 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700">
                       {value.benefit}
                     </Badge>
-                    <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">{value.title}</h3>
-                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-lg mb-6">{value.description}</p>
-                    <div className="text-sm font-medium text-blue-600 dark:text-blue-400">{value.stats}</div>
+                    <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+                      {value.title}
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-lg mb-6">
+                      {value.description}
+                    </p>
+                    <div className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                      {value.stats}
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -1070,7 +1270,8 @@ export default function HomePage() {
               </span>
             </h2>
             <p className="text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
-              Everything you need to learn, grow, and succeed in your tech career
+              Everything you need to learn, grow, and succeed in your tech
+              career
             </p>
           </motion.div>
 
@@ -1094,13 +1295,22 @@ export default function HomePage() {
                     <Badge className="mb-4 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700 text-xs">
                       {feature.stats}
                     </Badge>
-                    <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">{feature.title}</h3>
-                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-6">{feature.description}</p>
+                    <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+                      {feature.title}
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-6">
+                      {feature.description}
+                    </p>
                     <div className="space-y-2">
                       {feature.details.map((detail, detailIndex) => (
-                        <div key={detailIndex} className="flex items-center gap-2">
+                        <div
+                          key={detailIndex}
+                          className="flex items-center gap-2"
+                        >
                           <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                          <span className="text-sm text-gray-600 dark:text-gray-400">{detail}</span>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {detail}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -1134,7 +1344,8 @@ export default function HomePage() {
               </span>
             </h2>
             <p className="text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
-              Building the future of tech education and collaboration in Pakistan
+              Building the future of tech education and collaboration in
+              Pakistan
             </p>
           </motion.div>
 
@@ -1148,7 +1359,9 @@ export default function HomePage() {
                 transition={{ duration: 0.6, delay: index * 0.2 }}
                 viewport={{ once: true }}
               >
-                <div className={`flex items-center ${index % 2 === 0 ? "flex-row" : "flex-row-reverse"} gap-8`}>
+                <div
+                  className={`flex items-center ${index % 2 === 0 ? "flex-row" : "flex-row-reverse"} gap-8`}
+                >
                   {/* Timeline Node */}
                   <div className="flex-shrink-0 relative">
                     <div
@@ -1204,10 +1417,15 @@ export default function HomePage() {
                               : "Upcoming"}
                         </Badge>
                       </div>
-                      <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">{phase.title}</h3>
+                      <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+                        {phase.title}
+                      </h3>
                       <ul className="space-y-3">
                         {phase.items.map((item, itemIndex) => (
-                          <li key={itemIndex} className="flex items-center gap-3">
+                          <li
+                            key={itemIndex}
+                            className="flex items-center gap-3"
+                          >
                             <div
                               className={`w-2 h-2 rounded-full ${
                                 phase.status === "completed"
@@ -1217,7 +1435,9 @@ export default function HomePage() {
                                     : "bg-gray-400"
                               }`}
                             />
-                            <span className="text-gray-700 dark:text-gray-300">{item}</span>
+                            <span className="text-gray-700 dark:text-gray-300">
+                              {item}
+                            </span>
                           </li>
                         ))}
                       </ul>
@@ -1255,7 +1475,8 @@ export default function HomePage() {
               </span>
             </h2>
             <p className="text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
-              Hear from the community members whose careers were transformed through SPARK
+              Hear from the community members whose careers were transformed
+              through SPARK
             </p>
           </motion.div>
 
@@ -1270,7 +1491,10 @@ export default function HomePage() {
               <CardContent className="text-center">
                 <div className="flex justify-center mb-8">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-8 h-8 text-yellow-400 fill-current" />
+                    <Star
+                      key={i}
+                      className="w-8 h-8 text-yellow-400 fill-current"
+                    />
                   ))}
                 </div>
                 <AnimatePresence mode="wait">
@@ -1286,7 +1510,10 @@ export default function HomePage() {
                     </p>
                     <div className="flex items-center justify-center space-x-6">
                       <img
-                        src={testimonials[currentTestimonial].avatar || "/placeholder.svg"}
+                        src={
+                          testimonials[currentTestimonial].avatar ||
+                          "/placeholder.svg"
+                        }
                         alt={testimonials[currentTestimonial].name}
                         className="w-16 h-16 rounded-full shadow-lg"
                       />
@@ -1334,9 +1561,12 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-white">Ready to Spark Your Future?</h2>
+            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-white">
+              Ready to Spark Your Future?
+            </h2>
             <p className="text-2xl text-blue-100 mb-12 max-w-4xl mx-auto leading-relaxed">
-              Join 15,000+ students, 800+ mentors, and 75+ universities building Pakistan's tech future together
+              Join 15,000+ students, 800+ mentors, and 75+ universities building
+              Pakistan's tech future together
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Button
@@ -1358,7 +1588,6 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
-      
     </div>
   )
 }
