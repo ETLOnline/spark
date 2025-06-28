@@ -38,7 +38,7 @@ export default function TaskMoveDialog({
   currSprintId
 }: Props) {
   const [selectedSprint, setSelectedSprint] = useState("")
-  const setTasks = useSetAtom(taskStore.tasks)
+  const setTasks = useSetAtom(taskStore.BackLogTasks)
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
   const [updateTaskloading, , , UpdateTask] = useServerAction(UpdateTaskAction)
@@ -64,11 +64,7 @@ export default function TaskMoveDialog({
       })
       if (updatedTask?.success && updatedTask.data) {
         setTasks((prevTask) =>
-          prevTask.map((task) =>
-            task.id === updatedTask.data.id
-              ? { ...task, ...updatedTask.data }
-              : task
-          )
+          prevTask.filter((task) => task.id !== updatedTask.data.id)
         )
 
         toast({

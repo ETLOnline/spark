@@ -1,13 +1,14 @@
 import { Tag } from "@/src/components/TagsInput/tags-input-types"
+import { SelectTag } from "@/src/db/schema"
 import { profileStore } from "@/src/store/profile/profileStore"
 import { useAtomValue, useSetAtom } from "jotai"
 
 type UseUserProfileReturn = [
   setUserBio: React.Dispatch<React.SetStateAction<string>>,
-  setUserSkills: React.Dispatch<React.SetStateAction<Tag[]>>,
-  setUserInterests: React.Dispatch<React.SetStateAction<Tag[]>>,
-  skills: Tag[],
-  interests: Tag[],
+  setUserSkills: React.Dispatch<React.SetStateAction<SelectTag[]>>,
+  setUserInterests: React.Dispatch<React.SetStateAction<SelectTag[]>>,
+  skills: SelectTag[],
+  interests: SelectTag[],
   bio: string
 ]
 

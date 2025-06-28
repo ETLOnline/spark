@@ -7,8 +7,6 @@ import {
   CardTitle
 } from "@/src/components/ui/card"
 import { Badge } from "@/src/components/ui/badge"
-import { useAtom, useSetAtom } from "jotai"
-import { sprintStore } from "@/src/store/sprint/sprintsStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -16,13 +14,13 @@ import moment from "moment"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import Loader from "@/src/components/common/Loader/Loader"
 import { SelectSprint, SelectTask } from "@/src/db/schema"
-import AddBacklogItem from "../BacklogManagement/AddBacklogItem"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { Button } from "@/src/components/ui/button"
 import SprintTasks from "./SprintTasks"
 import SprintContextMenu from "./SprintContextMenu"
 import { SprintStatus } from "../constants/projectManagment"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
+import { TaskModal } from "../Task/components/TaskModal"
 
 interface Props {
   sprint: SelectSprint
@@ -31,9 +29,8 @@ interface Props {
 export default function SprintCardPage({ sprint }: Props) {
   const [tasks, setTasks] = useState<SelectTask[]>([])
   const [isSprintContextMenuOpen, setIsSprintContextMenuOpen] = useState(false)
-  const setIsTaskFormModelOpen = useSetAtom(taskStore.isTaskFormModelOpen)
-  const setSprintId = useSetAtom(sprintStore.sprintId)
-
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<SelectTask | null>(null)
   const [getTaskLoading, , , GetTasks] = useServerAction(GetSprintTasksAction)
 
   const projectId = useParams().id as string
@@ -50,6 +47,12 @@ export default function SprintCardPage({ sprint }: Props) {
     }
     fetchTasks()
   }, [projectId])
+
+  useEffect(() => {
+    if (!isTaskModalOpen) {
+      setSelectedTask(null)
+    }
+  }, [isTaskModalOpen])
 
   function handleSprintStatus(sprint: SelectSprint) {
     let status
@@ -98,15 +101,36 @@ export default function SprintCardPage({ sprint }: Props) {
               <Button
                 variant={"outline"}
                 onClick={() => {
-                  setIsTaskFormModelOpen(true)
-                  setSprintId(sprint.id)
+                  setIsTaskModalOpen(true)
                 }}
               >
                 Add Task
               </Button>
-              <AddBacklogItem />
+
+              <TaskModal
+                isTaskModelOpen={isTaskModalOpen}
+                setIsTaskModelOpen={setIsTaskModalOpen}
+                sprintId={sprint.id ?? undefined}
+                selectedTask={selectedTask ?? undefined}
+                onCreateComplete={(task) => {
+                  setSelectedTask(task)
+                  setTasks((prevTasks) => [...prevTasks, task])
+                }}
+                onUpdateComplete={(task) => {
+                  setSelectedTask(task)
+                  setTasks((prevTasks) =>
+                    prevTasks.map((t) => {
+                      if (t.id === task.id) {
+                        return task
+                      }
+                      return t
+                    })
+                  )
+                }}
+              />
 
               <SprintContextMenu
+                sprintTasks={tasks}
                 sprint={sprint}
                 isSprintContextMenuOpen={isSprintContextMenuOpen}
                 setIsSprintContextMenuOpen={setIsSprintContextMenuOpen}
@@ -125,7 +149,14 @@ export default function SprintCardPage({ sprint }: Props) {
               </div>
             ) : tasks.length > 0 ? (
               tasks.map((task) => (
-                <SprintTasks key={task.id} task={task} currSprint={sprint} />
+                <SprintTasks
+                  key={task.id}
+                  task={task}
+                  currSprint={sprint}
+                  setIsTaskModelOpen={setIsTaskModalOpen}
+                  setTasks={setTasks}
+                  setSelectedTask={setSelectedTask}
+                />
               ))
             ) : (
               <div className="flex justify-center h-full w-full my-4">
@@ -152,8 +183,6 @@ export default function SprintCardPage({ sprint }: Props) {
                 </div> */}
         </CardContent>
       </Card>
-
-      <AddBacklogItem />
     </>
   )
 }

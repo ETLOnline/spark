@@ -12,35 +12,14 @@ import { taskStore } from "@/src/store/tasks/taskStore"
 import { GetBacklogTasksAction } from "@/src/server-actions/Tasks/Task"
 
 interface Props {
-  backlogItems: BacklogItem[]
   searchedItem: string
   orderList: string
   limit: number
 }
 
-interface BacklogItem {
-  id: string
-  title: string
-  description: string
-  type: "story" | "bug" | "task" | "epic"
-  priority: "low" | "medium" | "high"
-  assignee: {
-    name: string
-    avatar: string
-  } | null
-  storyPoints: number
-  labels: string[]
-  createdAt: string
-}
-
-function BacklogItemsCard({
-  backlogItems,
-  searchedItem,
-  orderList,
-  limit
-}: Props) {
+function BacklogItemsCard({ searchedItem, orderList, limit }: Props) {
   const [selectedItems, setSelectedItems] = useState<string[]>([])
-  const [tasks, setTasks] = useAtom(taskStore.tasks)
+  const [tasks, setTasks] = useAtom(taskStore.BackLogTasks)
   const [Pagination, setPagination] = useState<PaginationType>()
   const [tasksLoading, tasksData, tasksError, GetTasks] = useServerAction(
     GetBacklogTasksAction
@@ -68,14 +47,6 @@ function BacklogItemsCard({
     fatchTasks()
   }, [projectId, searchParams, searchedItem, orderList, limit])
 
-  const handleSelectAll = () => {
-    if (selectedItems.length === backlogItems.length) {
-      setSelectedItems([])
-    } else {
-      setSelectedItems(backlogItems.map((item) => item.id))
-    }
-  }
-
   return (
     <>
       <h2 className="font-semibold leading-none tracking-tight">
@@ -89,11 +60,7 @@ function BacklogItemsCard({
           <div className="grid grid-cols-12 gap-2 p-4 bg-muted/50 text-sm font-medium">
             <div className="col-span-1">
               <Checkbox
-                checked={
-                  selectedItems.length === backlogItems.length &&
-                  backlogItems.length > 0
-                }
-                onCheckedChange={handleSelectAll}
+              // checked={false}
               />
             </div>
             <div className="col-span-1">ID</div>

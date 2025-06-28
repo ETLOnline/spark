@@ -3,7 +3,7 @@ import { SelectSprint, SelectTask } from "@/src/db/schema"
 import { projectStore } from "@/src/store/project/projectStore"
 import { useAtom, useSetAtom } from "jotai"
 import { CircleHelp, MoreHorizontal } from "lucide-react"
-import React, { useState } from "react"
+import React, { Dispatch, SetStateAction, useState } from "react"
 import {
   projectTaskPriority,
   projectTaskTypes
@@ -30,20 +30,25 @@ import {
 import { toast } from "@/src/hooks/use-toast"
 import { UpdateTaskAction } from "@/src/server-actions/Tasks/Task"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import TaskMoveDialog from "../BacklogManagement/task-move-dialog"
+import TaskMoveDialog from "../Task/components/task-move-dialog"
 
 interface Props {
   task: SelectTask
   currSprint: SelectSprint
+  setIsTaskModelOpen: Dispatch<SetStateAction<boolean>>
+  setTasks: Dispatch<SetStateAction<SelectTask[]>>
+  setSelectedTask: Dispatch<SetStateAction<SelectTask | null>>
 }
 
-function SprintTasks({ task, currSprint }: Props) {
+function SprintTasks({
+  task,
+  currSprint,
+  setIsTaskModelOpen,
+  setTasks,
+  setSelectedTask
+}: Props) {
   const [status, setStatus] = useAtom(projectStore.projectStatusList)
-  const setSelectedTask = useSetAtom(taskStore.selectedTask)
-  const [isTaskFormModelOpen, setIsTaskFormModelOpen] = useAtom(
-    taskStore.isTaskFormModelOpen
-  )
-  const setTask = useSetAtom(taskStore.tasks)
+  // const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
   const [isTaskDropDownOpen, setIsTaskDropDownOpen] = useState(false)
   const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useState(false)
@@ -52,18 +57,14 @@ function SprintTasks({ task, currSprint }: Props) {
 
   function EditTask(task: SelectTask) {
     setSelectedTask(task)
-    setIsTaskFormModelOpen(true)
+    setIsTaskModelOpen(true)
   }
 
   async function handleRemoveTask(task: SelectTask) {
     try {
       const updatedTask = await RemoveTask(task.id, { sprint_id: null })
       if (updatedTask?.success && updatedTask.data) {
-        setTask((prevTasks) =>
-          prevTasks.map((t) =>
-            t.id === task.id ? { ...t, ...updatedTask.data } : t
-          )
-        )
+        setTasks((prevTasks) => prevTasks.filter((t) => t.id !== task.id))
 
         toast({
           title: "Task removed from sprint successfully",

@@ -1,6 +1,6 @@
 import { eq, like } from "drizzle-orm"
 import { db } from "../.."
-import { InsertUser, usersTable } from "../../schema"
+import { InsertUser, SelectUser, usersTable } from "../../schema"
 
 export async function CreateUser(data: InsertUser) {
   await db.insert(usersTable).values(data)
@@ -15,13 +15,14 @@ export async function SelectUserByExternalId(id: string) {
       external_auth_id: true,
       profile_url: true,
       unique_id: true,
-      bio: true,
       role: true,
       persona_id: true,
       meta_profile: true
     },
     where: eq(usersTable.external_auth_id, id),
     with: {
+      userTags: true,
+      profile: true,
       persona: true,
       channels: {
         with: {
@@ -51,7 +52,10 @@ export async function SelectUserByEmail(email: string) {
 
 export async function SelectUserByUniqueId(unique_id: string) {
   return await db.query.usersTable.findFirst({
-    where: eq(usersTable.unique_id, unique_id)
+    where: eq(usersTable.unique_id, unique_id),
+    with: {
+      profile: true
+    }
   })
 }
 
@@ -65,7 +69,6 @@ export async function FindUserWildCard(wildcard: string) {
         external_auth_id: true,
         profile_url: true,
         unique_id: true,
-        bio: true,
         role: true,
         persona_id: true,
         meta_profile: true
@@ -80,13 +83,6 @@ export async function FindUserWildCard(wildcard: string) {
   } catch (error: any) {
     throw new Error(error.message as string)
   }
-}
-
-export async function UpdateUserBio(userId: string, bio: string) {
-  await db
-    .update(usersTable)
-    .set({ bio })
-    .where(eq(usersTable.unique_id, userId))
 }
 
 export const GetUserProfileData = async (userId: string) => {
