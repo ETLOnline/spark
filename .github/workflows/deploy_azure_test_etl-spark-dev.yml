@@ -20,6 +20,9 @@ jobs:
         with:
           node-version: '22.x' # Ensure this matches your local and Azure App Service Node.js version
 
+      - name: Get the Latest npm to avoid any caching issues
+        run: npm install -g npm@latest
+        
       - name: Install dependencies
         run: npm ci --include=optional # Use 'npm ci' for CI/CD for consistent installs
 
