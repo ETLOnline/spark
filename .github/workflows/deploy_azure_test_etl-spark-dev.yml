@@ -35,7 +35,27 @@ jobs:
 
       - name: Build Next.js app
         run: npm run build
+      - name: Copy Static Assets to Standalone Output
+        run: |
+          # Copy 'public' directory contents
+          # The 'public' directory should be at your repo root relative to the workflow file.
+          # We copy its contents directly into the 'standalone/public'
+          mkdir -p ./.next/standalone/public
+          cp -r public/* ./.next/standalone/public/ || true
 
+          # Copy generated Next.js static assets from ./.next/static
+          # The standalone server expects these to be in ./.next/static *within* the standalone directory
+          mkdir -p ./.next/standalone/.next/static
+          cp -r ./.next/static/* ./.next/standalone/.next/static/ || true
+
+          # Add an ls -la to debug if files are present
+          echo "Contents of ./.next/standalone:"
+          ls -la ./.next/standalone/
+          echo "Contents of ./.next/standalone/public:"
+          ls -la ./.next/standalone/public
+          echo "Contents of ./.next/standalone/.next/static:"
+          ls -la ./.next/standalone/.next/static
+      
       - name: Zip artifact for deployment
         # The 'standalone' output creates a ./.next/standalone directory
         # which contains everything needed to run the app, including node_modules
