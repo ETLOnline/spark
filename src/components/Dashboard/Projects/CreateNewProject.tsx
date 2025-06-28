@@ -17,7 +17,7 @@ import { z } from "zod"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { InsertProject, SelectSpace } from "@/src/db/schema"
-import { useAtom, useAtomValue } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
 import { useServerAction } from "@/src/hooks/useServerAction"
@@ -30,7 +30,7 @@ import { toast } from "@/src/hooks/use-toast"
 import { projectStore } from "@/src/store/project/projectStore"
 import moment from "moment"
 import { AttachProjectUserAction } from "@/src/server-actions/ProjectManagement/projectManagement"
-import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 const projectSchema = z.object({
   project_name: z
@@ -66,8 +66,8 @@ function ProjectFormModal({
   setIsOpen?: React.Dispatch<SetStateAction<boolean>>
 }) {
   const [space, setSpace] = useState<SelectSpace>()
+  const setReloadUser = useSetAtom(userStore.ReloadUser)
   const [projects, setProjects] = useAtom(projectStore.projects)
-  // const [createProjectLoading, , , createProject] = useServerAction(CreateProjectAction)
   const [updateLoading, , , updateProject] =
     useServerAction(UpdateProjectAction)
 
@@ -184,6 +184,7 @@ function ProjectFormModal({
       const createdProject = await createProject(payLoad as InsertProject)
 
       if (createdProject?.success && createdProject?.data) {
+        setReloadUser(true)
         if (!AuthUser?.unique_id) {
           toast({
             title: "User ID not found. Please login again.",
@@ -192,11 +193,6 @@ function ProjectFormModal({
           })
           return
         }
-        const response = await AttachUser(
-          createdProject.data.id,
-          AuthUser.unique_id,
-          "admin"
-        )
         setProjects([...projects, createdProject.data])
         setIsOpen(false)
         toast({
@@ -253,8 +249,14 @@ function ProjectFormModal({
   }
 
   // PERMISSIONS ARE HERE
-  const permissionChecker = useAtomValue(projectStore.permissionCheckerAtom)
-  const canCreate = permissionChecker?.canAccess("project.create")
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "SPACE",
+    space?.id
+  )
+  const canCreate = permissionChecker
+    ? permissionChecker?.canAccess("project.create")
+    : false
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       {!isEditing && canCreate && (
