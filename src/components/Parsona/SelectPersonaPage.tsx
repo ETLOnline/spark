@@ -11,6 +11,8 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { SelectRole, SelectUser } from "@/src/db/schema"
 import { useRouter } from "next/navigation"
 import { toast } from "@/src/hooks/use-toast"
+import { useSetAtom } from "jotai"
+import { userStore } from "@/src/store/user/userStore"
 
 interface SelectPersonaPageProps {
   roles: SelectRole[]
@@ -24,6 +26,7 @@ export default function SelectPersonaPage({
   const [selectedPersona, setSelectedPersona] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const setReloadUser = useSetAtom(userStore.ReloadUser)
 
   const [savingPersona, saveResult, saveError, executeSavePersona] =
     useServerAction(savePersonaAction)
@@ -40,6 +43,7 @@ export default function SelectPersonaPage({
         userAuth.external_auth_id
       )
       if (attachPersona && attachPersona.success) {
+        setReloadUser(true)
         toast({ title: "Persona saved successfully" })
         router.push("/profile")
       }

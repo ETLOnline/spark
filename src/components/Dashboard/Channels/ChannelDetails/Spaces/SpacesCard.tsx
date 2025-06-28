@@ -44,6 +44,9 @@ function SpacesCard({ space }: Props) {
   const canSpaceAllowAction = permissionChecker
     ? permissionChecker?.canAccess("space.allow.action")
     : false
+  const canViewSpace = permissionChecker
+    ? permissionChecker?.canAccess("space.view")
+    : false
 
   return (
     <Card key={space.id} className="overflow-hidden">
@@ -99,11 +102,13 @@ function SpacesCard({ space }: Props) {
           {/* {space.membersCount} {space.membersCount === 1 ? 'Member' : 'Members'} */}
           0 Members
         </Badge>
-        <Link href={`./spaces/${space.space_slug}`}>
-          <Button>
-            Launch Space <ArrowRight />
-          </Button>
-        </Link>
+        {canViewSpace && (
+          <Link href={`./spaces/${space.space_slug}`}>
+            <Button>
+              Launch Space <ArrowRight />
+            </Button>
+          </Link>
+        )}
       </CardFooter>
     </Card>
   )

@@ -51,13 +51,11 @@ export const CreateSpaceAction = CreateServerAction(
         newSpace.space_name,
         newSpace.created_by
       )
-      if (newSpace.space_type == "private") {
-        await attachSpaceUser(
-          newSpace.id,
-          newSpace.created_by,
-          result.adminRole?.name
-        )
-      }
+      await attachSpaceUser(
+        newSpace.id,
+        newSpace.created_by,
+        result.adminRole?.name
+      )
       return { success: true, data: newSpace }
     } catch (error: any) {
       return {
@@ -97,7 +95,7 @@ export const GetSpacesAction = CreateServerAction(
       if (isUserAdmin(authUser)) {
         spaces = await GetSpaces({ ...filters })
       } else {
-        spaces = await GetSpaces({
+        const spacesResponse = await GetSpaces({
           ...filters,
           space_type: "public",
           isPublished: true
@@ -106,6 +104,17 @@ export const GetSpacesAction = CreateServerAction(
         joinedSpaces = (authUser?.spaces || [])
           .filter((s) => spaceIds.includes(s.space_id))
           .map((s) => s.space)
+
+        // Get the IDs of joined spaces for exclusion
+        const joinedSpaceIds = joinedSpaces.map((s) => s.id)
+
+        // Filter out joined spaces from the spaces array
+        spaces = {
+          ...spacesResponse,
+          spaces: spacesResponse.spaces.filter(
+            (space) => !joinedSpaceIds.includes(space.id)
+          )
+        }
       }
 
       return {
@@ -206,14 +215,27 @@ export const AttachSpaceUserAction = CreateServerAction(
         const isUserChannelMember = channelUserIds.includes(userId)
 
         if (!isUserChannelMember) {
-          await attachChannelUser(space.channel_id, userId)
+          const attachChannelUserRole = await getAndAssignViewerRoles(
+            userId,
+            "channel_viewer",
+            space.channel_id
+          )
+          await attachChannelUser(
+            space.channel_id,
+            userId,
+            attachChannelUserRole?.viewerRole?.name
+          )
         }
       }
-      const spaceUser = await attachSpaceUser(spaceId, userId)
-      const attachUserRole = await getAndAssignViewerRoles(
+      const attachSpaceUserRole = await getAndAssignViewerRoles(
         userId,
         "space_viewer",
         spaceId
+      )
+      const spaceUser = await attachSpaceUser(
+        spaceId,
+        userId,
+        attachSpaceUserRole?.viewerRole?.name
       )
       return { success: true, data: spaceUser }
     } catch (error) {

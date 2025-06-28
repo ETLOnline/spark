@@ -17,8 +17,8 @@ import { SelectChannel, SelectSpace } from "@/src/db/schema"
 import { isEntityChannel, isEntitySpace } from "@/src/utils/helpers"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { AttachChannelUserAction } from "@/src/server-actions/Channel/Channel"
-import { useActionState } from "react"
-import { useAtomValue } from "jotai"
+import { useActionState, useEffect, useState } from "react"
+import { useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { useToast } from "@/src/hooks/use-toast"
 import { AttachSpaceUserAction } from "@/src/server-actions/Space/Space"
@@ -30,6 +30,7 @@ interface Props {
 }
 
 const InviteScreen = ({ entityType, entity }: Props) => {
+  const setReloadUser = useSetAtom(userStore.ReloadUser)
   const entityName = isEntityChannel(entity)
     ? entity.channel_name
     : entity.space_name
@@ -49,6 +50,22 @@ const InviteScreen = ({ entityType, entity }: Props) => {
   const [loadingSpaceAttach, __, errorAttachingSpace, attachSpaceUser] =
     useServerAction(AttachSpaceUserAction)
 
+  const [navigate, setNavigate] = useState(false)
+
+  useEffect(() => {
+    if (navigate) {
+      if (isEntityChannel(entity)) {
+        router.push(
+          `/channels/${isEntityChannel(entity) ? entity.channel_slug : ""}/spaces`
+        )
+      } else {
+        router.push(
+          `/channels/${entity.channel?.channel_slug}/spaces/${isEntitySpace(entity) ? entity.space_slug : ""}`
+        )
+      }
+    }
+  }, [navigate])
+
   const handleJoin = async () => {
     if (authUser?.unique_id && entity.id) {
       try {
@@ -59,22 +76,14 @@ const InviteScreen = ({ entityType, entity }: Props) => {
         if (isEntitySpace(entity)) {
           await attachSpaceUser(entity.id, authUser.unique_id)
         }
+        setReloadUser(true)
+        setNavigate(true)
 
         toast({
           title: `Successfully joined ${entityType}`,
           description: `You have successfully joined the ${entityType}.`,
           variant: "default"
         })
-
-        if (isEntityChannel(entity)) {
-          router.push(
-            `/channels/${isEntityChannel(entity) ? entity.channel_slug : ""}/spaces`
-          )
-        } else {
-          router.push(
-            `/channels/${entity.channel?.channel_slug}/spaces/${isEntitySpace(entity) ? entity.space_slug : ""}`
-          )
-        }
       } catch (err) {
         console.error(`Error joining ${entityType}:`, err)
         toast({

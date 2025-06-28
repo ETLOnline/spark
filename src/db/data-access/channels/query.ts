@@ -175,7 +175,23 @@ export async function attachChannelUser(
   user_role?: string
 ) {
   try {
-    const spaceUser = await db
+    const existingChannelUser = await db
+      .select()
+      .from(ChannelUsersTable)
+      .where(
+        and(
+          eq(ChannelUsersTable.channel_id, channelId),
+          eq(ChannelUsersTable.user_id, userId)
+        )
+      )
+      .limit(1)
+    if (existingChannelUser.length > 0) {
+      console.log(
+        `User ${userId} already exists in channel ${channelId}. Returning existing record.`
+      )
+      return existingChannelUser[0]
+    }
+    const newChannelUser = await db
       .insert(ChannelUsersTable)
       .values({
         channel_id: channelId,
@@ -183,7 +199,13 @@ export async function attachChannelUser(
         role: user_role
       })
       .returning()
-    return spaceUser
+    if (newChannelUser.length > 0) {
+      return newChannelUser[0]
+    } else {
+      throw new Error(
+        "Failed to attach channel user: No record returned after insertion."
+      )
+    }
   } catch (e: any) {
     throw new Error(e.message)
   }

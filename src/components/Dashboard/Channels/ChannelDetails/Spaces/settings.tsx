@@ -20,6 +20,8 @@ import { Controller, useForm } from "react-hook-form"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { attachSpaceFeaturesAction } from "@/src/server-actions/Feature/Feature"
 import { toast } from "@/src/hooks/use-toast"
+import { useSetAtom } from "jotai"
+import { userStore } from "@/src/store/user/userStore"
 
 export default function SpaceSettings({
   space,
@@ -29,6 +31,7 @@ export default function SpaceSettings({
   featuresList: SelectFeature[]
 }) {
   const [currentSpace, setCurrentSpace] = useState<SelectSpace>(space)
+  const setReloadUser = useSetAtom(userStore.ReloadUser)
 
   const [
     attachingSpaceFeatures,
@@ -84,6 +87,7 @@ export default function SpaceSettings({
 
     const updatedSpace = await attachSpaceFeatures(currentSpace.id, featureIds)
     if (updatedSpace?.success && updatedSpace.data) {
+      setReloadUser(true)
       setCurrentSpace(updatedSpace.data)
       toast({
         title: "Space Setting Saved",

@@ -43,13 +43,11 @@ export const CreateChannelAction = CreateServerAction(
         newChannel.channel_name,
         newChannel.created_by
       )
-      if (newChannel.channel_type == "private") {
-        await attachChannelUser(
-          newChannel.id,
-          newChannel.created_by,
-          result.adminRole?.name
-        )
-      }
+      await attachChannelUser(
+        newChannel.id,
+        newChannel.created_by,
+        result.adminRole?.name
+      )
       return { success: true, data: newChannel }
     } catch (error) {
       return { error: error }
@@ -71,7 +69,7 @@ export const GetChannelsAction = CreateServerAction(
       if (isUserAdmin(authUser)) {
         channels = await GetChannels({ ...filters })
       } else {
-        channels = await GetChannels({
+        const channelsResponse = await GetChannels({
           ...filters,
           channelType: "public",
           isPublished: true
@@ -80,6 +78,17 @@ export const GetChannelsAction = CreateServerAction(
           .map((uc) => uc.channel)
           .filter((c) => c.publish_channel === 1)
           .filter((c) => typeof c !== "undefined")
+
+        // Get the IDs of joined spaces for exclusion
+        const joinedSpaceIds = joinedChannels.map((s) => s.id)
+
+        // Filter out joined spaces from the spaces array
+        channels = {
+          ...channelsResponse,
+          channels: channelsResponse.channels.filter(
+            (channel) => !joinedSpaceIds.includes(channel.id)
+          )
+        }
       }
 
       // const result = await GetChannels(filters)
@@ -162,11 +171,15 @@ export const AttachChannelUserAction = CreateServerAction(
   true,
   async (channelId: string, userId: string) => {
     try {
-      const channelUser = await attachChannelUser(channelId, userId)
       const attachUserRole = await getAndAssignViewerRoles(
         userId,
         "channel_viewer",
         channelId
+      )
+      const channelUser = await attachChannelUser(
+        channelId,
+        userId,
+        attachUserRole?.viewerRole?.name
       )
       return { success: true, data: channelUser }
     } catch (error) {

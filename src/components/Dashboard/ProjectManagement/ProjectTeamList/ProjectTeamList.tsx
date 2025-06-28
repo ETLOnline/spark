@@ -50,7 +50,10 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/src/components/ui/select"
-import { getRoleByEntityTypeAndIdAction } from "@/src/server-actions/UserRoles/UserRole"
+import {
+  getRoleByEntityTypeAndIdAction,
+  updateUserRoleForEntityAction
+} from "@/src/server-actions/UserRoles/UserRole"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 export interface ProjectUser extends SelectProjectUser {
@@ -81,21 +84,20 @@ export default function ProjectTeamList({
   const [removeUserLoading, , , RemoveUser] = useServerAction(
     RemoveProjectUserAction
   )
-  const [updateRoleLoading, , , UpdateProjectUserRole] = useServerAction(
-    UpdateProjectUserRoleAction
-  )
+  const [updateProjectUserRoleLoading, , , callUpdateUserRoleForEntity] =
+    useServerAction(updateUserRoleForEntityAction)
   const [spaceRolesLoading, spaceRolesData, spaceRolesError, fetchSpaceRoles] =
     useServerAction(getRoleByEntityTypeAndIdAction)
 
   useEffect(() => {
     if (projectId) {
-      fetchSpaceRoles("SPACE", projectId)
+      fetchSpaceRoles("PROJECT", projectId)
     }
-  }, [spaceId, projectId])
+  }, [projectId])
 
   const [roleDialogOpen, setRoleDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<ProjectUser | null>(null)
-  const [newRole, setNewRole] = useState<string>("member")
+  const [newRoleName, setNewRoleName] = useState<string>("member") // Renamed to newRoleName to clarify it's the name
 
   const authUser = useAtomValue(userStore.AuthUser)
   const isProjectCreator = authUser?.unique_id == projectCreatorId
@@ -159,17 +161,39 @@ export default function ProjectTeamList({
   }
 
   const handleSaveRole = async () => {
-    if (!selectedUser) return
+    if (!selectedUser) {
+      toast({ title: "No user selected", variant: "destructive" })
+      return
+    }
+    const newRoleObj = spaceRolesData?.data?.find(
+      (role) => role.name === newRoleName
+    )
+
+    if (!newRoleObj) {
+      toast({ title: "Selected role not found", variant: "destructive" })
+      return
+    }
+
+    const oldRoleObj = spaceRolesData?.data?.find(
+      (role) => role.name === selectedUser.role
+    )
+    const oldRoleId = oldRoleObj ? oldRoleObj.id : null
+
     try {
-      const response = await UpdateProjectUserRole(
-        projectId,
+      const response = await callUpdateUserRoleForEntity(
+        // <-- Using the new server action
         selectedUser.user_id,
-        newRole
+        projectId,
+        "PROJECT",
+        newRoleObj.id,
+        oldRoleId ?? 0,
+        newRoleName
       )
+
       if (response?.success) {
         setUsersList((prev) =>
           prev.map((u) =>
-            u.user_id === selectedUser.user_id ? { ...u, role: newRole } : u
+            u.user_id === selectedUser.user_id ? { ...u, role: newRoleName } : u
           )
         )
         toast({ title: "Role updated successfully" })
@@ -177,8 +201,13 @@ export default function ProjectTeamList({
       } else {
         toast({ title: "Failed to update role", variant: "destructive" })
       }
-    } catch {
-      toast({ title: "Failed to update role", variant: "destructive" })
+    } catch (error) {
+      console.error("Error updating project user role:", error)
+      toast({
+        title: "Failed to update role",
+        description: "An unexpected error occurred.",
+        variant: "destructive"
+      })
     }
   }
 
@@ -284,7 +313,7 @@ export default function ProjectTeamList({
                                 <DropdownMenuItem
                                   onClick={() => {
                                     setSelectedUser(cu)
-                                    setNewRole(cu.role ?? "member")
+                                    setNewRoleName(cu.role ?? "member") // Set initial value for new role select
                                     setRoleDialogOpen(true)
                                   }}
                                 >
@@ -351,10 +380,11 @@ export default function ProjectTeamList({
               <Label htmlFor="channel_type">User Role</Label>
               <div className="w-[70%]">
                 <Select
-                  // onValueChange={(value) => {
-                  //   setUserRole(value)
-                  // }}
+                  onValueChange={(value) => {
+                    setNewRoleName(value)
+                  }}
                   defaultValue={selectedUser?.role || ""}
+                  value={newRoleName}
                 >
                   <SelectTrigger>
                     <SelectValue
@@ -376,7 +406,12 @@ export default function ProjectTeamList({
             </div>
           </div>
           <DialogFooter>
-            <Button loading={updateRoleLoading} onClick={handleSaveRole}>
+            <Button
+              loading={updateProjectUserRoleLoading}
+              onClick={handleSaveRole}
+            >
+              {" "}
+              {/* <-- Changed loading prop */}
               Save
             </Button>
           </DialogFooter>

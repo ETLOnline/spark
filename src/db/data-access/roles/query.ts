@@ -552,12 +552,22 @@ export async function createScopedProjectRolesAndAssignAdmin( // Renamed and ref
  * @returns The viewer role or null if not found.
  */
 async function fetchViewerRole(
-  roleSlug: "channel_viewer" | "space_viewer",
+  roleSlug: "channel_viewer" | "space_viewer" | "project_viewer",
   entityId: string
 ) {
   try {
-    // Determine the actual entity type (CHANNEL or SPACE) based on the roleSlug
-    const entityType = roleSlug.includes("channel") ? "CHANNEL" : "SPACE"
+    // Determine the actual entity type (CHANNEL or SPACE) based on the ro    let entityType: "CHANNEL" | "SPACE" | "PROJECT";
+    let entityType: "CHANNEL" | "SPACE" | "PROJECT"
+
+    if (roleSlug.includes("channel")) {
+      entityType = "CHANNEL"
+    } else if (roleSlug.includes("space")) {
+      entityType = "SPACE"
+    } else if (roleSlug.includes("project")) {
+      entityType = "PROJECT"
+    } else {
+      throw new Error("Invalid roleSlug provided")
+    }
 
     // Fetch the specific viewer role for the given entity
     const viewerRole = await db.query.rolesTable.findFirst({
@@ -592,7 +602,7 @@ async function fetchViewerRole(
  */
 export async function getAndAssignViewerRoles(
   userId: string,
-  roleSlug: "channel_viewer" | "space_viewer",
+  roleSlug: "channel_viewer" | "space_viewer" | "project_viewer",
   entityId: string
 ) {
   return await db.transaction(async (trx) => {
@@ -601,7 +611,7 @@ export async function getAndAssignViewerRoles(
       const viewerRole = await fetchViewerRole(roleSlug, entityId)
 
       if (!viewerRole) {
-        return { success: false, assignedRoleIds: [] }
+        return { success: false, viewerRole: { name: "" } }
       }
 
       // Check if the user already has this role to prevent duplicates
@@ -616,7 +626,7 @@ export async function getAndAssignViewerRoles(
         console.log(
           `User ${userId} already has role ${viewerRole.name} (${viewerRole.id}) for entity ID ${entityId}. Skipping assignment.`
         )
-        return { success: true, assignedRoleIds: [viewerRole.id] }
+        return { success: true, viewerRole: viewerRole }
       }
 
       // Assign the viewer role to the user
@@ -625,7 +635,7 @@ export async function getAndAssignViewerRoles(
       console.log(
         `Assigned viewer role (${viewerRole.name}) to user ${userId} for entity ID ${entityId}.`
       )
-      return { success: true, assignedRoleIds: [viewerRole.id] }
+      return { success: true, viewerRole: viewerRole }
     } catch (error: any) {
       console.error("Error in getAndAssignViewerRoles:", error)
       trx.rollback()
@@ -664,4 +674,78 @@ export async function getRoleByEntityTypeAndId(
     console.error("Error fetching roles by entity type and ID:", error)
     throw new Error(error.message)
   }
+}
+
+export async function updateUserRoleForEntity(
+  userId: string,
+  entityId: string,
+  entityType: "CHANNEL" | "SPACE" | "PROJECT",
+  newRoleId: number,
+  oldRoleId: number
+) {
+  return await db.transaction(async (trx) => {
+    try {
+      // Fetch existing user roles for the given entity type and ID
+      const existingUserRolesForEntity = await trx
+        .select({
+          userRoleId: userRolesTable.user_id,
+          roleId: rolesTable.id
+        })
+        .from(userRolesTable)
+        .innerJoin(rolesTable, eq(userRolesTable.role_id, rolesTable.id))
+        .where(
+          and(
+            eq(userRolesTable.user_id, userId),
+            eq(rolesTable.entity_type, entityType),
+            eq(rolesTable.entity_id, entityId)
+          )
+        )
+
+      const existingUserRoleIdsToDelete = existingUserRolesForEntity
+        .filter((entry) => entry.roleId === oldRoleId) // Filter to delete the specific old role
+        .map((entry) => entry.userRoleId)
+
+      if (existingUserRoleIdsToDelete.length > 0) {
+        // Delete the old role for the user
+        await trx
+          .delete(userRolesTable)
+          .where(
+            and(
+              eq(userRolesTable.role_id, oldRoleId),
+              eq(userRolesTable.user_id, userId)
+            )
+          )
+
+        console.log(
+          `Deleted ${existingUserRoleIdsToDelete.length} old roles for user ${userId} in ${entityType} ${entityId}.`
+        )
+      } else {
+        console.log(
+          `No old role with ID ${oldRoleId} found for user ${userId} in ${entityType} ${entityId}.`
+        )
+      }
+
+      // Assign the new role
+      const assignedRole = await trx
+        .insert(userRolesTable)
+        .values({
+          user_id: userId,
+          role_id: newRoleId
+        })
+        .returning()
+
+      console.log(
+        `Assigned new role ID ${newRoleId} to user ${userId} for ${entityType} ${entityId}.`
+      )
+
+      return { success: true, assignedRole: assignedRole[0] }
+    } catch (error: any) {
+      console.error(
+        `Error updating user role for ${entityType} ${entityId} and user ${userId}:`,
+        error
+      )
+      trx.rollback() // Rollback the transaction in case of error
+      throw new Error(`Failed to update user role: ${error.message}`)
+    }
+  })
 }

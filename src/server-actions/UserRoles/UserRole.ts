@@ -13,7 +13,8 @@ import {
   getUserPermissionRows,
   getUsersByRoleID,
   saveUserGlobalRole,
-  updateRoleWithPermissions
+  updateRoleWithPermissions,
+  updateUserRoleForEntity
 } from "@/src/db/data-access/roles/query"
 import { CreateServerAction } from ".."
 import {
@@ -23,6 +24,9 @@ import {
 } from "@/src/utils/helpers"
 import { clerkClient } from "@clerk/nextjs/server"
 import { buildUserPerms } from "@/src/utils/clientHelper"
+import { updateChannelUser } from "@/src/db/data-access/channels/query"
+import { updateSpaceUser } from "@/src/db/data-access/spaces/query"
+import { updateProjectUserRole } from "@/src/db/data-access/project-management/query"
 
 export const getPersonasAction = async () => {
   const globalRoles = await getAllGlobalRoles()
@@ -147,3 +151,40 @@ export async function getRoleByEntityTypeAndIdAction(
     return { error: error }
   }
 }
+
+export const updateUserRoleForEntityAction = CreateServerAction(
+  true,
+  async (
+    userId: string,
+    entityId: string,
+    entityType: "CHANNEL" | "SPACE" | "PROJECT",
+    newRoleId: number,
+    oldRoleId: number,
+    newRoleName: string
+  ) => {
+    try {
+      const result = await updateUserRoleForEntity(
+        userId,
+        entityId,
+        entityType,
+        newRoleId,
+        oldRoleId
+      )
+      // here we will also change the eneity attach user like channel_user, space_user, project_user
+      if (entityType === "CHANNEL") {
+        await updateChannelUser(entityId, userId, { role: newRoleName })
+      } else if (entityType === "SPACE") {
+        await updateSpaceUser(entityId, userId, { role: newRoleName })
+      } else {
+        await updateProjectUserRole(entityId, userId, newRoleName)
+      }
+      return { success: true, data: result }
+    } catch (error: any) {
+      console.error("Error updating user role for entity:", error)
+      return {
+        success: false,
+        error: error.message || "Failed to update user role for entity"
+      }
+    }
+  }
+)
