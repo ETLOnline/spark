@@ -15,7 +15,6 @@ import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { projectStore } from "@/src/store/project/projectStore"
 import StatusRequiredDialog from "../StatusRequiredDialog"
-import AddBacklogItem from "../BacklogManagement/AddBacklogItem"
 
 export function SprintManagement() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)

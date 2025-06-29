@@ -31,7 +31,8 @@ import {
   projectTaskPriority,
   projectTaskTypes
 } from "../constants/projectManagment"
-import TaskMoveDialog from "./task-move-dialog"
+import TaskMoveDialog from "../Task/components/task-move-dialog"
+import { TaskModal } from "../Task/components/TaskModal"
 
 interface Props {
   selectedItems: string[]
@@ -40,15 +41,15 @@ interface Props {
 }
 
 function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
-  const [isTaskFormModelOpen, setIsTaskFormModelOpen] = useAtom(
-    taskStore.isTaskFormModelOpen
-  )
   const [isDropdownOpen, setIsDropDownOpen] = useState(false)
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
+  // const [selectedTask, setSelectedTask] = useState<SelectTask | null>(null)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
-  const SetTasks = useSetAtom(taskStore.tasks)
+  const SetTasks = useSetAtom(taskStore.BackLogTasks)
+  // const
   const [status, setStatus] = useAtom(projectStore.projectStatusList)
   const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useState(false)
+  // const [isTaskModelOpen, setIsTaskModelOpen] = useState(false)
 
   const [deleteTaskLoading, deleteTaskData, deleteTaskError, DeleteTask] =
     useServerAction(DeleteTaskAction)
@@ -63,7 +64,7 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
 
   function EditTask(task: SelectTask) {
     setSelectedTask(task)
-    setIsTaskFormModelOpen(true)
+    // setIsTaskModelOpen(true)
     setIsDropDownOpen(false)
   }
 
@@ -118,6 +119,19 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
     ) : (
       <Badge variant="outline">Unknown</Badge>
     )
+  }
+
+  const onTaskCreated = (task: SelectTask )=>{
+    console.log("new task => ",task)
+    SetTasks((prev) => [...prev, task])
+    setSelectedTask(task)
+  }
+
+  const onTaskUpdated = (task: SelectTask )=>{
+    SetTasks((prev) =>
+      prev.map((t) => (t.id === task.id ? { ...t, ...task } : t))
+    )
+    setSelectedTask(task)
   }
 
   return (
@@ -236,6 +250,7 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
         setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
         task_id={task.id}
       />
+
     </>
   )
 }
