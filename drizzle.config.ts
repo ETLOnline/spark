@@ -1,5 +1,6 @@
 import { config } from "dotenv"
 import { defineConfig } from "drizzle-kit"
+import { readFileSync } from "fs"
 
 config({ path: ".env.local" })
 
@@ -9,6 +10,9 @@ export default defineConfig({
   dialect: "postgresql",
   dbCredentials: {
     url: process.env.DATABASE_URL!,
-    ssl: { rejectUnauthorized: false }
+    ssl: { 
+      rejectUnauthorized: true,
+      ca: readFileSync("./src/cert/certificate.pem").toString()
+    }
   }
 })
