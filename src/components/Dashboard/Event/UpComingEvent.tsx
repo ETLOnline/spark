@@ -4,6 +4,7 @@ import EventCard from "./EventCard"
 import { SelectEvent } from "@/src/db/schema"
 import { useAtomValue } from "jotai"
 import { eventStore } from "@/src/store/event/eventStore"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   events: SelectEvent[]
@@ -11,9 +12,13 @@ interface Props {
 }
 
 function UpComingEvent({ events, setEvents }: Props) {
-  const permissionChecker = useAtomValue(eventStore.permissionCheckerAtom)
-  const canCreate = permissionChecker?.canAccess("event.create")
-  const canView = permissionChecker?.canAccess("event.view")
+  const { permissionChecker } = usePermissionChecker("global")
+  const canCreate = permissionChecker
+    ? permissionChecker?.canAccess("event.create")
+    : false
+  const canView = permissionChecker
+    ? permissionChecker?.canAccess("event.view")
+    : false
   return (
     <div className="grid justify-items-center mt-2">
       {canCreate && <CreateEvent events={events} setEvents={setEvents} />}

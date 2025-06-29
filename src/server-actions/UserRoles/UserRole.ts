@@ -8,11 +8,13 @@ import {
   getAllGlobalAndScopeRoles,
   getAllGlobalRoles,
   getAllPermissoins,
+  getRoleByEntityTypeAndId,
   getRoleWithPermissions,
   getUserPermissionRows,
   getUsersByRoleID,
   saveUserGlobalRole,
-  updateRoleWithPermissions
+  updateRoleWithPermissions,
+  updateUserRoleForEntity
 } from "@/src/db/data-access/roles/query"
 import { CreateServerAction } from ".."
 import {
@@ -22,35 +24,33 @@ import {
 } from "@/src/utils/helpers"
 import { clerkClient } from "@clerk/nextjs/server"
 import { buildUserPerms } from "@/src/utils/clientHelper"
+import { updateChannelUser } from "@/src/db/data-access/channels/query"
+import { updateSpaceUser } from "@/src/db/data-access/spaces/query"
+import { updateProjectUserRole } from "@/src/db/data-access/project-management/query"
 
 export const getPersonasAction = async () => {
   const globalRoles = await getAllGlobalRoles()
   return { success: true, data: globalRoles }
 }
 
-export async function attachPermissionsInClaimClerk(
-  userId: string,
-  externalAuthId: string
-) {
-  const permissionRows = await getUserPermissionRows(userId)
-  const userPerms = buildUserPerms(permissionRows)
-  const clerk = await clerkClient()
-  const user = clerk.users.updateUserMetadata(externalAuthId, {
-    publicMetadata: {
-      permissions: userPerms
+export const getUserPermissionRowsAction = CreateServerAction(
+  true,
+  async (userId: string) => {
+    try {
+      const permissionRows = await getUserPermissionRows(userId)
+      return { success: true, data: permissionRows }
+    } catch (error) {
+      console.error("Error :", error)
+      return { success: false, error: "Failed to get permissions" }
     }
-  })
-}
+  }
+)
 
 export const savePersonaAction = CreateServerAction(
   true,
   async (personaID: number, userId: string, externalAuthId) => {
     try {
       const attachPersona = await saveUserGlobalRole(personaID, userId)
-      const attachedClaims = await attachPermissionsInClaimClerk(
-        userId,
-        externalAuthId
-      )
       return { success: true, data: attachPersona }
     } catch (error) {
       console.error("Error saving persona:", error)
@@ -100,17 +100,7 @@ export async function SaveRoleWithPermissionsAction(
   permissionIds: number[]
 ) {
   try {
-    await updateRoleWithPermissions(roleId, name, permissionIds).then(
-      async () => {
-        const userByRole = await getUsersByRoleID(roleId)
-        for (const user of userByRole) {
-          await attachPermissionsInClaimClerk(
-            user.unique_id,
-            user.external_auth_id
-          )
-        }
-      }
-    )
+    await updateRoleWithPermissions(roleId, name, permissionIds)
     return { success: true }
   } catch (error) {
     console.error("Failed to save role", error)
@@ -147,3 +137,54 @@ export async function getUsersByRoleIDAction(id: number) {
     return { error: error }
   }
 }
+export async function getRoleByEntityTypeAndIdAction(
+  entityType: "CHANNEL" | "SPACE" | "PROJECT",
+  id: string
+) {
+  try {
+    const scopedROles = await getRoleByEntityTypeAndId(entityType, id)
+    if (!scopedROles) {
+      return { success: false, error: "Roles not found" }
+    }
+    return { success: true, data: scopedROles }
+  } catch (error) {
+    return { error: error }
+  }
+}
+
+export const updateUserRoleForEntityAction = CreateServerAction(
+  true,
+  async (
+    userId: string,
+    entityId: string,
+    entityType: "CHANNEL" | "SPACE" | "PROJECT",
+    newRoleId: number,
+    oldRoleId: number,
+    newRoleName: string
+  ) => {
+    try {
+      const result = await updateUserRoleForEntity(
+        userId,
+        entityId,
+        entityType,
+        newRoleId,
+        oldRoleId
+      )
+      // here we will also change the eneity attach user like channel_user, space_user, project_user
+      if (entityType === "CHANNEL") {
+        await updateChannelUser(entityId, userId, { role: newRoleName })
+      } else if (entityType === "SPACE") {
+        await updateSpaceUser(entityId, userId, { role: newRoleName })
+      } else {
+        await updateProjectUserRole(entityId, userId, newRoleName)
+      }
+      return { success: true, data: result }
+    } catch (error: any) {
+      console.error("Error updating user role for entity:", error)
+      return {
+        success: false,
+        error: error.message || "Failed to update user role for entity"
+      }
+    }
+  }
+)

@@ -46,6 +46,7 @@ import useHashtags from "../profile/hooks/useHashtags"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { categories } from "@/src/utils/constants"
 import { Plus, X } from "lucide-react"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 type Props = {
   variant?: "posts" | "spaces"
@@ -97,8 +98,14 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   ] = useServerAction(LinkHashtagsToPostAction)
 
   // calling the permissoins
-  const permissionChecker = useAtomValue(postStore.permissionCheckerAtom)
-  const canCreate = permissionChecker?.canAccess("posting.create")
+  const { permissionChecker } = usePermissionChecker(
+    variant == "spaces" ? "scoped" : "global",
+    "SPACE",
+    currentSpace?.id
+  )
+  const canCreate = permissionChecker
+    ? permissionChecker?.canAccess("posting.create")
+    : false
 
   const handleCreatePost = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()

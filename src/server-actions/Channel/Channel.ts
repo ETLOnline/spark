@@ -24,6 +24,10 @@ import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 import { AuthUserAction } from "../User/AuthUserAction"
 import { isUserAdmin } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
+import {
+  createScopedChannelRolesAndAssignAdmin,
+  getAndAssignViewerRoles
+} from "@/src/db/data-access/roles/query"
 
 export const CreateChannelAction = CreateServerAction(
   true,
@@ -34,6 +38,16 @@ export const CreateChannelAction = CreateServerAction(
         "broadcast-channels-spaces-update"
       )
       await channel.publish("channel-add", newChannel)
+      const result = await createScopedChannelRolesAndAssignAdmin(
+        newChannel.id,
+        newChannel.channel_name,
+        newChannel.created_by
+      )
+      await attachChannelUser(
+        newChannel.id,
+        newChannel.created_by,
+        result.adminRole?.name
+      )
       return { success: true, data: newChannel }
     } catch (error) {
       return { error: error }
@@ -55,7 +69,7 @@ export const GetChannelsAction = CreateServerAction(
       if (isUserAdmin(authUser)) {
         channels = await GetChannels({ ...filters })
       } else {
-        channels = await GetChannels({
+        const channelsResponse = await GetChannels({
           ...filters,
           channelType: "public",
           isPublished: true
@@ -64,6 +78,17 @@ export const GetChannelsAction = CreateServerAction(
           .map((uc) => uc.channel)
           .filter((c) => c.publish_channel === 1)
           .filter((c) => typeof c !== "undefined")
+
+        // Get the IDs of joined spaces for exclusion
+        const joinedSpaceIds = joinedChannels.map((s) => s.id)
+
+        // Filter out joined spaces from the spaces array
+        channels = {
+          ...channelsResponse,
+          channels: channelsResponse.channels.filter(
+            (channel) => !joinedSpaceIds.includes(channel.id)
+          )
+        }
       }
 
       // const result = await GetChannels(filters)
@@ -146,7 +171,16 @@ export const AttachChannelUserAction = CreateServerAction(
   true,
   async (channelId: string, userId: string) => {
     try {
-      const channelUser = await attachChannelUser(channelId, userId)
+      const attachUserRole = await getAndAssignViewerRoles(
+        userId,
+        "channel_viewer",
+        channelId
+      )
+      const channelUser = await attachChannelUser(
+        channelId,
+        userId,
+        attachUserRole?.viewerRole?.name
+      )
       return { success: true, data: channelUser }
     } catch (error) {
       return { error: error }

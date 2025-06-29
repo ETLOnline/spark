@@ -249,13 +249,18 @@ export async function attachSpaceFeatures(
   }
 }
 
-export async function attachSpaceUser(spaceId: string, userId: string) {
+export async function attachSpaceUser(
+  spaceId: string,
+  userId: string,
+  spaceRole?: string
+) {
   try {
     const spaceUser = await db
       .insert(SpaceUsersTable)
       .values({
         space_id: spaceId,
-        user_id: userId
+        user_id: userId,
+        role: spaceRole
       })
       .returning()
     return spaceUser

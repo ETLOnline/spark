@@ -8,10 +8,6 @@ import {
 } from "@/src/server-actions/Chat/Chat"
 import { Suspense, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { useAtom, useAtomValue } from "jotai"
-import { userStore } from "@/src/store/user/userStore"
-import { PermissionChecker } from "@/src/lib/PermissionCheker"
-import { chatStore } from "@/src/store/chat/chatStore"
 
 export default function ChatPage() {
   const searchParams = useSearchParams()
@@ -20,23 +16,6 @@ export default function ChatPage() {
   )
   const [allChats, setAllChats] = useState<SelectChat[]>([])
   const [loading, setLoading] = useState(true)
-
-  const permission = useAtomValue(userStore.Permissions)
-  const [permissionChecker, setPermissionChecker] = useAtom(
-    chatStore.permissionCheckerAtom
-  )
-
-  // Initialize PermissionChecker if not already set
-  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
-  useEffect(() => {
-    if (
-      (permission && !permissionChecker) ||
-      (isSuperAdmin && !permissionChecker)
-    ) {
-      const checker = new PermissionChecker("global", permission, isSuperAdmin)
-      setPermissionChecker(checker)
-    }
-  }, [permission, permissionChecker, setPermissionChecker, isSuperAdmin])
 
   useEffect(() => {
     const fetchChatsAndCurrentChat = async () => {

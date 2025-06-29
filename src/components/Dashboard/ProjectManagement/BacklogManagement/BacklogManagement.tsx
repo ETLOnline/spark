@@ -12,10 +12,12 @@ import {
 } from "@/src/components/ui/select"
 import { Plus, Search, Filter, ArrowUpDown } from "lucide-react"
 import BacklogItemsCard from "./BacklogItemsCard"
-import { useSetAtom } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import AddBacklogItem from "./AddBacklogItem"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { useParams } from "next/navigation"
 
 interface BacklogItem {
   id: string
@@ -105,6 +107,8 @@ const sampleBacklogItems: BacklogItem[] = [
 ]
 
 export function BacklogManagement() {
+  const params = useParams()
+  const projectId = params.id as string
   const [backlogItems, setBacklogItems] =
     useState<BacklogItem[]>(sampleBacklogItems)
   const setIsTaskFormModelOpen = useSetAtom(taskStore.isTaskFormModelOpen)
@@ -119,16 +123,28 @@ export function BacklogManagement() {
     }
   }
 
+  // PERMISSIONS INITATE
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    projectId
+  )
+  const canCreateTask = permissionChecker
+    ? permissionChecker?.canAccess("project.backlog.task.create")
+    : false
+
   return (
     <>
       <AddBacklogItem />
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h2 className="text-xl font-bold">Backlog</h2>
-          <Button onClick={() => setIsTaskFormModelOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Item
-          </Button>
+          {canCreateTask && (
+            <Button onClick={() => setIsTaskFormModelOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Item
+            </Button>
+          )}
         </div>
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">

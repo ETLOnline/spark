@@ -9,8 +9,6 @@ import { spaceStore } from "@/src/store/space/spaceStore"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useParams } from "next/navigation"
 import React, { Suspense, useEffect } from "react"
-import { userStore } from "@/src/store/user/userStore"
-import { PermissionChecker } from "@/src/lib/PermissionCheker"
 
 interface Props {
   params: Promise<{
@@ -26,29 +24,6 @@ const SpaceChat = () => {
   const switchChat = useSetAtom(chatStore.switchedChat)
   const [chatlistLoading, chatlist, chatlistError, getChatList] =
     useServerAction(GetChatsAction)
-
-  const permission = useAtomValue(userStore.Permissions)
-  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
-  const [permissionChecker, setPermissionChecker] = useAtom(
-    chatStore.permissionCheckerAtom
-  )
-
-  // Initialize PermissionChecker if not already set
-  useEffect(() => {
-    if (
-      (permission && !permissionChecker) ||
-      (isSuperAdmin && !permissionChecker)
-    ) {
-      const checker = new PermissionChecker(
-        "scoped",
-        permission,
-        isSuperAdmin,
-        "space",
-        currentSpace?.id
-      )
-      setPermissionChecker(checker)
-    }
-  }, [permission, permissionChecker, setPermissionChecker, isSuperAdmin])
 
   useEffect(() => {
     if (currentSpace) {

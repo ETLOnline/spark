@@ -64,13 +64,11 @@ export default function AppSidebar({
       <SidebarContent>
         {isNavLoading ? (
           <div className="flex flex-col gap-2 p-4">
-            <Skeleton className="h-7 w-full bg-muted/50" />
-            <Skeleton className="h-7 w-full bg-muted/50" />
-            <Skeleton className="h-7 w-full bg-muted/50" />
-            <Skeleton className="h-7 w-full bg-muted/50" />
-            <Skeleton className="h-7 w-full bg-muted/50" />
-            <Skeleton className="h-7 w-full bg-muted/50" />
-            <Skeleton className="h-7 w-full bg-muted/50" />
+            {Array(7)
+              .fill(null)
+              .map((_, index) => (
+                <Skeleton key={index} className="h-7 w-full bg-muted/50" />
+              ))}
           </div>
         ) : (
           <NavMain items={routes.navMain} label="Platform" />

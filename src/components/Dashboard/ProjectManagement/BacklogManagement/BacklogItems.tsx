@@ -24,7 +24,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { DeleteTaskAction } from "@/src/server-actions/Tasks/Task"
 import { projectStore } from "@/src/store/project/projectStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
-import { useAtom, useSetAtom } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { CircleHelp, MoreHorizontal } from "lucide-react"
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import {
@@ -32,6 +32,8 @@ import {
   projectTaskTypes
 } from "../constants/projectManagment"
 import TaskMoveDialog from "./task-move-dialog"
+import { useParams } from "next/navigation"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   selectedItems: string[]
@@ -40,6 +42,8 @@ interface Props {
 }
 
 function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
+  const params = useParams()
+  const projectId = params.id as string
   const [isTaskFormModelOpen, setIsTaskFormModelOpen] = useAtom(
     taskStore.isTaskFormModelOpen
   )
@@ -120,6 +124,19 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
     )
   }
 
+  // PERMISSIONS INITATE
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    projectId
+  )
+  const canUpdate = permissionChecker
+    ? permissionChecker?.canAccess("project.backlog.task.update")
+    : false
+  const canDelete = permissionChecker
+    ? permissionChecker?.canAccess("project.backlog.task.delete")
+    : false
+
   return (
     <>
       <div
@@ -173,40 +190,48 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
           <CircleHelp />
         </div>
         <div className="col-span-1 text-right">
-          <DropdownMenu
-            open={isDropdownOpen}
-            onOpenChange={(open) => setIsDropDownOpen(open)}
-          >
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => EditTask(task)}>
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem>Assign</DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  setIsTaskMoveDialogOpen(true)
-                  setIsDropDownOpen(false)
-                }}
-              >
-                Add to Sprint
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={() => {
-                  setIsAlertOpen(true)
-                  setIsDropDownOpen(false)
-                }}
-              >
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {(canUpdate || canDelete) && (
+            <DropdownMenu
+              open={isDropdownOpen}
+              onOpenChange={(open) => setIsDropDownOpen(open)}
+            >
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {canUpdate && (
+                  <>
+                    <DropdownMenuItem onClick={() => EditTask(task)}>
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>Assign</DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setIsTaskMoveDialogOpen(true)
+                        setIsDropDownOpen(false)
+                      }}
+                    >
+                      Add to Sprint
+                    </DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuSeparator />
+                {canDelete && (
+                  <DropdownMenuItem
+                    className="text-destructive"
+                    onClick={() => {
+                      setIsAlertOpen(true)
+                      setIsDropDownOpen(false)
+                    }}
+                  >
+                    Delete
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>

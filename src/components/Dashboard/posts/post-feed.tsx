@@ -19,7 +19,6 @@ import {
 } from "@/src/server-actions/Post/Post"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useDebouncedCallback } from "use-debounce"
-import { PermissionChecker } from "@/src/lib/PermissionCheker"
 
 type PostFeedProps = {
   fetchedPosts: (SelectPost | SelectFilePost | SelectPollPost)[]

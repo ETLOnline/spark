@@ -7,7 +7,7 @@ import {
   CardTitle
 } from "@/src/components/ui/card"
 import { Badge } from "@/src/components/ui/badge"
-import { useAtom, useSetAtom } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { sprintStore } from "@/src/store/sprint/sprintsStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useParams } from "next/navigation"
@@ -23,6 +23,8 @@ import { Button } from "@/src/components/ui/button"
 import SprintTasks from "./SprintTasks"
 import SprintContextMenu from "./SprintContextMenu"
 import { SprintStatus } from "../constants/projectManagment"
+import { projectStore } from "@/src/store/project/projectStore"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   sprint: SelectSprint
@@ -77,6 +79,19 @@ export default function SprintCardPage({ sprint }: Props) {
     ) : null
   }
 
+  // PERMISSIONS INITATE
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    projectId
+  )
+  const canCreateTask = permissionChecker
+    ? permissionChecker?.canAccess("project.task.create")
+    : false
+  const canViewTask = permissionChecker
+    ? permissionChecker?.canAccess("project.task.view")
+    : false
+
   return (
     <>
       <Card className="w-full overflow-hidden">
@@ -94,15 +109,17 @@ export default function SprintCardPage({ sprint }: Props) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant={"outline"}
-                onClick={() => {
-                  setIsTaskFormModelOpen(true)
-                  setSprintId(sprint.id)
-                }}
-              >
-                Add Task
-              </Button>
+              {canCreateTask && (
+                <Button
+                  variant={"outline"}
+                  onClick={() => {
+                    setIsTaskFormModelOpen(true)
+                    setSprintId(sprint.id)
+                  }}
+                >
+                  Add Task
+                </Button>
+              )}
               <AddBacklogItem />
 
               <SprintContextMenu
@@ -123,6 +140,7 @@ export default function SprintCardPage({ sprint }: Props) {
                 <Loader size={LoaderSizes.lg} />
               </div>
             ) : sprintTask.length > 0 ? (
+              canViewTask &&
               sprintTask.map((task) => (
                 <SprintTasks key={task.id} task={task} currSprint={sprint} />
               ))
