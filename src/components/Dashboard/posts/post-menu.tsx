@@ -64,7 +64,7 @@ const PostMenu = ({ post }: PostMenuProps) => {
   if (user?.role && (isUserAdmin(user) || user.unique_id === post.user_id)) {
     return (
       <>
-        {canDelete && (
+        {(canDelete || user.unique_id === post.user_id) && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm">
