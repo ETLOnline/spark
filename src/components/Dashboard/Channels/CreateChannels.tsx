@@ -55,8 +55,11 @@ const channelSchema = z.object({
   channel_slug: z.string().max(50, "Slug is too long"),
   publish_channel: z.boolean().optional()
 })
+type CreateChannelsProps = {
+  onChannelCreated?: (newChannel: any) => void
+}
 
-function CreateChannels() {
+function CreateChannels({ onChannelCreated }: CreateChannelsProps) {
   const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
   const [editChannel, setEditChannel] = useState<boolean>(false)
   const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
@@ -212,6 +215,7 @@ function CreateChannels() {
 
       if (createdChannel?.success && createdChannel?.data) {
         await refreshAuthUser()
+        onChannelCreated?.(createdChannel.data)
         setChannels([...channels, createdChannel.data])
         setChannelFormModelVisibility(false)
         toast({
@@ -220,7 +224,11 @@ function CreateChannels() {
           duration: 3000
         })
       }
-    } catch {
+    } catch (error) {
+      console.log(
+        error,
+        "new channelnew channelnew channelnew channelnew channel"
+      )
       toast({
         title: "Unable to created channel",
         variant: "destructive",

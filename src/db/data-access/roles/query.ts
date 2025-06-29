@@ -1,4 +1,3 @@
-// src/db/data-access/persona/query.ts
 import { db } from "@/src/db"
 import {
   permissionsTable,

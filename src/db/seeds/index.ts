@@ -2,12 +2,14 @@ import { FeatureSeed } from "./FeatureSeed"
 import { RolesSeed } from "./RolesSeed"
 import { UserSeed } from "./UserSeed"
 import { PermissionsSeed } from "./PermissionsSeed"
+import { RolePermissionsSeed } from "./rolePermissionsSeed"
 
 const SEEDERS: Record<string, () => Promise<void>> = {
   user: UserSeed,
   feature: FeatureSeed,
   roles: RolesSeed,
-  permission: PermissionsSeed
+  permission: PermissionsSeed,
+  rolepermissoins: RolePermissionsSeed
 }
 
 async function runSeeders() {

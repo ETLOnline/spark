@@ -66,7 +66,16 @@ const ChannelsPage = () => {
       <div className="flex-1 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <h2 className="text-xl font-bold sm:text-2xl">Channels</h2>
-          {isAdmin || canCreate ? <CreateChannels /> : null}
+          {isAdmin || canCreate ? (
+            <CreateChannels
+              onChannelCreated={(newChannel) =>
+                setJoinedChannels((prev: any[]) => [
+                  ...(prev || []),
+                  newChannel
+                ])
+              }
+            />
+          ) : null}
         </div>
         {!channels?.channels || channels.channels.length === 0 ? (
           <NoDataCard title="No channels available" />
