@@ -7,9 +7,10 @@ import { readFileSync } from "fs"
 config({ path: ".env.local" })
 
 const queryClient = postgres(process.env.DATABASE_URL!, {
-  ssl: {
-    rejectUnauthorized: true,
-    ca: readFileSync("./src/cert/certificate.pem").toString()
+  ssl: process.env.DATABASE_SSL === "true" && {
+    rejectUnauthorized: false,
+    ca: process.env.DATABASE_CA
+
   }
 })
 export const db = drizzle(queryClient, { schema: schema })
