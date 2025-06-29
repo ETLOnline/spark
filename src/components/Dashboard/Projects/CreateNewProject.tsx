@@ -31,6 +31,7 @@ import { projectStore } from "@/src/store/project/projectStore"
 import moment from "moment"
 import { AttachProjectUserAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { useAuthUser } from "@/src/hooks/useAuthUser"
 
 const projectSchema = z.object({
   project_name: z
@@ -66,7 +67,7 @@ function ProjectFormModal({
   setIsOpen?: React.Dispatch<SetStateAction<boolean>>
 }) {
   const [space, setSpace] = useState<SelectSpace>()
-  const setReloadUser = useSetAtom(userStore.ReloadUser)
+  const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
   const [projects, setProjects] = useAtom(projectStore.projects)
   const [updateLoading, , , updateProject] =
     useServerAction(UpdateProjectAction)
@@ -184,7 +185,7 @@ function ProjectFormModal({
       const createdProject = await createProject(payLoad as InsertProject)
 
       if (createdProject?.success && createdProject?.data) {
-        setReloadUser(true)
+        await refreshAuthUser()
         if (!AuthUser?.unique_id) {
           toast({
             title: "User ID not found. Please login again.",

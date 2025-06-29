@@ -24,6 +24,7 @@ import { Switch } from "@/src/components/ui/switch"
 import { Textarea } from "@/src/components/ui/textarea"
 import { InsertSpace } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
+import { useAuthUser } from "@/src/hooks/useAuthUser"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateSpaceAction,
@@ -72,7 +73,7 @@ function CreateSpaceModal({
   const selectedChannel = useAtomValue(channelStore.selectedChannel)
   const [selectedSpace, setSelectedSpace] = useAtom(spaceStore.selectedSpace)
   const [spaces, setSpaces] = useAtom(spaceStore.spaces)
-  const setReloadUser = useSetAtom(userStore.ReloadUser)
+  const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
 
   const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
 
@@ -207,7 +208,7 @@ function CreateSpaceModal({
 
       const createdSpace = await CreateNewSpace(data as InsertSpace)
       if (createdSpace?.success && createdSpace.data) {
-        setReloadUser(true)
+        await refreshAuthUser()
         setSpaces([...spaces, createdSpace.data])
         router.push(`./spaces/${createdSpace.data.space_slug}/settings`)
         setSpaceFormModelVisibility(false)

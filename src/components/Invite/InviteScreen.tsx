@@ -23,6 +23,7 @@ import { userStore } from "@/src/store/user/userStore"
 import { useToast } from "@/src/hooks/use-toast"
 import { AttachSpaceUserAction } from "@/src/server-actions/Space/Space"
 import { useRouter } from "next/navigation"
+import { useAuthUser } from "@/src/hooks/useAuthUser"
 
 interface Props {
   entityType: "channel" | "space"
@@ -30,7 +31,7 @@ interface Props {
 }
 
 const InviteScreen = ({ entityType, entity }: Props) => {
-  const setReloadUser = useSetAtom(userStore.ReloadUser)
+  const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
   const entityName = isEntityChannel(entity)
     ? entity.channel_name
     : entity.space_name
@@ -76,7 +77,7 @@ const InviteScreen = ({ entityType, entity }: Props) => {
         if (isEntitySpace(entity)) {
           await attachSpaceUser(entity.id, authUser.unique_id)
         }
-        setReloadUser(true)
+        await refreshAuthUser()
         setNavigate(true)
 
         toast({

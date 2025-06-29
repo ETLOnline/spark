@@ -8,6 +8,7 @@ const Permissions = atom<UserPerms | null>(null)
 const SuperAdmin = atom<boolean | false>(false)
 const LoadingUser = atom<boolean | null>(true)
 const ReloadUser = atom<boolean | null>(false)
+const IsReloadingPermissions = atom<boolean>(false)
 
 export const userStore = {
   Iam,
@@ -15,5 +16,6 @@ export const userStore = {
   Permissions,
   SuperAdmin,
   LoadingUser,
-  ReloadUser
+  ReloadUser,
+  IsReloadingPermissions
 }

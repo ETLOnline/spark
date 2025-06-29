@@ -31,7 +31,6 @@ export default function SpaceSettings({
   featuresList: SelectFeature[]
 }) {
   const [currentSpace, setCurrentSpace] = useState<SelectSpace>(space)
-  const setReloadUser = useSetAtom(userStore.ReloadUser)
 
   const [
     attachingSpaceFeatures,
@@ -87,7 +86,6 @@ export default function SpaceSettings({
 
     const updatedSpace = await attachSpaceFeatures(currentSpace.id, featureIds)
     if (updatedSpace?.success && updatedSpace.data) {
-      setReloadUser(true)
       setCurrentSpace(updatedSpace.data)
       toast({
         title: "Space Setting Saved",
