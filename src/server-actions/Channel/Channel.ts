@@ -26,6 +26,7 @@ import { isUserAdmin } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import {
   createScopedChannelRolesAndAssignAdmin,
+  deleteUserRole,
   getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
 
@@ -190,9 +191,10 @@ export const AttachChannelUserAction = CreateServerAction(
 
 export const DettachChannelUserAction = CreateServerAction(
   true,
-  async (channelId: string, userId: string) => {
+  async (channelId: string, userId: string, roleId: number) => {
     try {
       const channelUser = await dettachChannelUser(channelId, userId)
+      const deleteRole = await deleteUserRole(userId, roleId)
       return { success: true }
     } catch (error) {
       return { error: error }

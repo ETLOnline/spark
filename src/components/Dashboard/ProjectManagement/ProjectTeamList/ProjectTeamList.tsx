@@ -140,7 +140,32 @@ export default function ProjectTeamList({
 
   const handleRemoveUser = async (userId: string) => {
     try {
-      const response = await RemoveUser(projectId, userId)
+      if (!selectedUser) {
+        toast({
+          title: "Error",
+          description: "No user selected for removal.",
+          variant: "destructive"
+        })
+        return
+      }
+
+      // Find the role object based on the selected user's current role name
+      const roleToRemove = spaceRolesData?.data?.find(
+        (role) => role.name === selectedUser.role
+      )
+
+      if (!roleToRemove) {
+        toast({
+          title: "Error",
+          description: "Could not find the role for the selected user.",
+          variant: "destructive"
+        })
+        return
+      }
+
+      // Pass the projectId, userId, and the roleToRemove.id to the RemoveUser action
+      const response = await RemoveUser(projectId, userId, roleToRemove.id)
+
       if (response?.success) {
         setUsersList((prev) => prev.filter((user) => user.user_id !== userId))
         toast({ title: "User removed from project" })
@@ -313,7 +338,7 @@ export default function ProjectTeamList({
                                 <DropdownMenuItem
                                   onClick={() => {
                                     setSelectedUser(cu)
-                                    setNewRoleName(cu.role ?? "member") // Set initial value for new role select
+                                    setNewRoleName(cu.role ?? "member")
                                     setRoleDialogOpen(true)
                                   }}
                                 >
@@ -324,7 +349,11 @@ export default function ProjectTeamList({
                               {canDelete && (
                                 <DropdownMenuItem
                                   className="text-destructive"
-                                  onClick={() => handleRemoveUser(cu.user_id)}
+                                  onClick={() => {
+                                    // Set the selected user before calling handleRemoveUser
+                                    setSelectedUser(cu)
+                                    handleRemoveUser(cu.user_id)
+                                  }}
                                 >
                                   Remove User
                                 </DropdownMenuItem>
@@ -411,7 +440,6 @@ export default function ProjectTeamList({
               onClick={handleSaveRole}
             >
               {" "}
-              {/* <-- Changed loading prop */}
               Save
             </Button>
           </DialogFooter>

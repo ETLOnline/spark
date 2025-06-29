@@ -579,15 +579,11 @@ async function fetchViewerRole(
     })
 
     if (!viewerRole) {
-      console.warn(
-        `Viewer role '${roleSlug}' not found for ${entityType} ID ${entityId}.`
-      )
       return null
     }
 
     return viewerRole
   } catch (error: any) {
-    console.error("Error in fetchViewerRole:", error)
     throw new Error(`Failed to fetch viewer role: ${error.message}`)
   }
 }
@@ -623,9 +619,6 @@ export async function getAndAssignViewerRoles(
       })
 
       if (existingUserRole) {
-        console.log(
-          `User ${userId} already has role ${viewerRole.name} (${viewerRole.id}) for entity ID ${entityId}. Skipping assignment.`
-        )
         return { success: true, viewerRole: viewerRole }
       }
 
@@ -707,14 +700,7 @@ export async function updateUserRoleForEntity(
 
       if (existingUserRoleIdsToDelete.length > 0) {
         // Delete the old role for the user
-        await trx
-          .delete(userRolesTable)
-          .where(
-            and(
-              eq(userRolesTable.role_id, oldRoleId),
-              eq(userRolesTable.user_id, userId)
-            )
-          )
+        await deleteUserRole(userId, oldRoleId)
 
         console.log(
           `Deleted ${existingUserRoleIdsToDelete.length} old roles for user ${userId} in ${entityType} ${entityId}.`
@@ -748,4 +734,36 @@ export async function updateUserRoleForEntity(
       throw new Error(`Failed to update user role: ${error.message}`)
     }
   })
+}
+
+/**
+ * Deletes a specific role assigned to a user.
+ * @param userId The unique ID of the user.
+ * @param roleId The ID of the role to delete from the user.
+ * @returns An object indicating success or failure.
+ */
+export async function deleteUserRole(userId: string, roleId: number) {
+  try {
+    const result = await db
+      .delete(userRolesTable)
+      .where(
+        and(
+          eq(userRolesTable.user_id, userId),
+          eq(userRolesTable.role_id, roleId)
+        )
+      )
+      .returning({ deletedId: userRolesTable.user_id })
+
+    if (result.length === 0) {
+      return { success: false, message: "No matching user role found." }
+    }
+
+    return {
+      success: true,
+      deletedCount: result.length,
+      deletedRecord: result[0]
+    }
+  } catch (error: any) {
+    throw new Error(`Failed to delete user role: ${error.message}`)
+  }
 }

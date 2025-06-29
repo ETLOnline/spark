@@ -14,6 +14,7 @@ import {
 } from "@/src/db/data-access/project-management/query"
 import {
   createScopedProjectRolesAndAssignAdmin,
+  deleteUserRole,
   getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
 
@@ -113,9 +114,11 @@ export const GetProjectUsersAction = CreateServerAction(
 
 export const RemoveProjectUserAction = CreateServerAction(
   true,
-  async (projectId: string, userId: string) => {
+  async (projectId: string, userId: string, roleId: number) => {
     try {
       const success = await removeProjectUser(projectId, userId)
+      const deleteRole = await deleteUserRole(userId, roleId)
+
       if (success) {
         return { success: true }
       }

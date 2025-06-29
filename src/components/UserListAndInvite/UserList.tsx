@@ -159,7 +159,7 @@ export default function ChannelUserList({
 
   const { permissionChecker } = usePermissionChecker(
     "scoped",
-    entityType === "channel" ? "CHANNEL" : "SPACE", // Still "CHANNEL" or "SPACE" for now
+    entityType === "channel" ? "CHANNEL" : "SPACE",
     entity.id
   )
 
@@ -279,11 +279,35 @@ export default function ChannelUserList({
         return null
       }
 
+      if (!selectedUser) {
+        toast({
+          title: "Error",
+          description: "No user selected for removal.",
+          variant: "destructive"
+        })
+        return null
+      }
+
+      // Find the role object based on the selected user's role name
+      const roleToRemove = scopedRoles.find(
+        (role) => role.name === selectedUser.role
+      )
+
+      if (!roleToRemove) {
+        toast({
+          title: "Error",
+          description:
+            "Could not find the role to remove for the selected user.",
+          variant: "destructive"
+        })
+        return null
+      }
+
       let delUser
       if (entityType === "channel") {
-        delUser = await DettachChannelUser(entityId, userId)
+        delUser = await DettachChannelUser(entityId, userId, roleToRemove.id)
       } else {
-        delUser = await DettachSpaceUser(entityId, userId)
+        delUser = await DettachSpaceUser(entityId, userId, roleToRemove.id)
       }
       if (delUser?.success) {
         setUsersList((prevUsersList) => {
