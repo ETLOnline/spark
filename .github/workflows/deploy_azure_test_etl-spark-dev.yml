@@ -10,8 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env: # <-- Define environment variables for the build job here
-      TURSO_DATABASE_URL : ${{ secrets.TURSO_DATABASE_URL }}
-      TURSO_AUTH_TOKEN : ${{ secrets.TURSO_AUTH_TOKEN }}
+      DATABASE_URL : ${{ secrets.TURSO_DATABASE_URL }}
       WEBHOOK_SECRET : ${{ secrets.WEBHOOK_SECRET }}
       ABLY_API_KEY : ${{ secrets.ABLY_API_KEY }}
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY : ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
