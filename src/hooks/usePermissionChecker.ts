@@ -1,5 +1,3 @@
-// src/hooks/usePermissionChecker.ts
-
 import { useCallback, useMemo, useState } from "react"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"

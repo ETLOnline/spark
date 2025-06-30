@@ -34,6 +34,7 @@ import {
 } from "@/src/db/data-access/channels/query"
 import {
   createScopedSpaceRolesAndAssignAdmin,
+  deleteUserRole,
   getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
 
@@ -246,9 +247,11 @@ export const AttachSpaceUserAction = CreateServerAction(
 
 export const DetachSpaceUserAction = CreateServerAction(
   true,
-  async (spaceId: string, userId: string) => {
+  async (spaceId: string, userId: string, roleId: number) => {
     try {
       const spaceUser = await dettachSpaceUser(spaceId, userId)
+      const deleteRole = await deleteUserRole(userId, roleId)
+
       return { success: true }
     } catch (error) {
       return { error: error }

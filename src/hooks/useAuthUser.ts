@@ -1,4 +1,3 @@
-// src/hooks/useAuthUser.ts
 "use client"
 import { useEffect, useCallback } from "react"
 import { useAtom, useSetAtom } from "jotai"
