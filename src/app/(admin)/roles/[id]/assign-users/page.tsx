@@ -67,7 +67,6 @@ export default function UsersPage() {
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold">User</h1>
-          {/* <p className="text-muted-foreground">Manage role details and permissions</p> */}
         </div>
       </div>
 
