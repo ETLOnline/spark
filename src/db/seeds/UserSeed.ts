@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm"
 import { db } from ".."
-import { usersTable } from "../schema"
+import { userRolesTable, usersTable } from "../schema"
 import UserSeedList from "../seeds/UserSeedList.json"
 
 export const UserSeed = async () => {
@@ -13,6 +13,11 @@ export const UserSeed = async () => {
       if (res.count === UserSeedList.length) {
         console.log("✅ Users seeded successfully")
       }
+      // add role for super admin
+      await tx.insert(userRolesTable).values({
+        user_id: "5b887879-9d4a-403a-acdb-4bf45178b528",
+        role_id: 1
+      })
     } catch (e) {
       console.error(e)
       tx.rollback()
