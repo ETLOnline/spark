@@ -350,7 +350,6 @@ export default function ProjectTeamList({
                                 <DropdownMenuItem
                                   className="text-destructive"
                                   onClick={() => {
-                                    // Set the selected user before calling handleRemoveUser
                                     setSelectedUser(cu)
                                     handleRemoveUser(cu.user_id)
                                   }}

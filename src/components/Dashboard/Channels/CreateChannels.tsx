@@ -225,10 +225,6 @@ function CreateChannels({ onChannelCreated }: CreateChannelsProps) {
         })
       }
     } catch (error) {
-      console.log(
-        error,
-        "new channelnew channelnew channelnew channelnew channel"
-      )
       toast({
         title: "Unable to created channel",
         variant: "destructive",
