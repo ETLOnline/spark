@@ -29,6 +29,13 @@
       "when": 1750246671433,
       "tag": "0003_2025_06_18_163748__create_profile_table",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1751283439764,
+      "tag": "0004_2025_06_30_163709__add_created_by_to_space_file_directory",
+      "breakpoints": true
     }
   ]
 }

@@ -11,8 +11,10 @@ import {
 } from "@/src/services/storage/utils/fileUtils"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
-import { isUserSpaceAdmin } from "@/src/utils/spaceRoleHelper"
 import { getStorageClient } from "@/src/services/storage/client/storage.client"
+import { db } from "@/src/db"
+import { spaceFileDirectoryTable } from "@/src/db/schema"
+import { eq } from "drizzle-orm"
 
 export const CreateNewFolderAction = CreateServerAction(
   true,
@@ -41,6 +43,13 @@ export const CreateNewFileAction = CreateServerAction(
     folderPath: string
   ) => {
     try {
+      const user = await AuthUserAction()
+      if (!user) {
+        return {
+          success: false,
+          error: "Unauthorized"
+        }
+      }
       const fileBuffer = base64ToBuffer(fileB64string)
       const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(
         fileBuffer,
@@ -49,7 +58,13 @@ export const CreateNewFileAction = CreateServerAction(
         folderPath
       )
 
-      const result = await CreateFile(id, fileName, fileSize, fileRecord.id)
+      const result = await CreateFile(
+        id,
+        fileName,
+        fileSize,
+        fileRecord.id,
+        user.unique_id
+      )
       return {
         success: true,
         data: { ...result[0], url: fileUrl }
@@ -95,7 +110,25 @@ export const DeleteFileAction = CreateServerAction(
         }
       }
 
-      // Check if user is space admin
+      // Check if user owns the file
+      const fileEntry = await db.query.spaceFileDirectoryTable.findFirst({
+        where: eq(spaceFileDirectoryTable.id, directoryId),
+        with: {
+          file: true
+        }
+      })
+      if (!fileEntry || fileEntry.entity_type !== "file") {
+        return {
+          success: false,
+          error: "File not found"
+        }
+      }
+      if (fileEntry.created_by !== user.unique_id) {
+        return {
+          success: false,
+          error: "You can only delete files that you uploaded"
+        }
+      }
 
       // Delete from database
       const deletedEntry = await DeleteFile(directoryId)
@@ -109,10 +142,6 @@ export const DeleteFileAction = CreateServerAction(
           })
         } catch (storageError) {
           console.error("Error deleting file from storage:", storageError)
-          // Continue even if storage deletion fails
-          throw new Error("Error deleting file from storage", {
-            cause: storageError
-          })
         }
       }
 

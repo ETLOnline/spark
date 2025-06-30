@@ -18,7 +18,8 @@ export async function CreateFile(
   id: string | number,
   fileName: string,
   fileSize: number,
-  fileId: number
+  fileId: number,
+  createdBy: string
 ) {
   return await db
     .insert(spaceFileDirectoryTable)
@@ -28,7 +29,8 @@ export async function CreateFile(
       entity_name: fileName,
       entity_type: "file",
       entity_size: fileSize,
-      entity_id: fileId
+      entity_id: fileId,
+      created_by: createdBy
     })
     .returning()
 }
