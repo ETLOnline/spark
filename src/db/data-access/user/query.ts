@@ -15,7 +15,6 @@ export async function SelectUserByExternalId(id: string) {
       external_auth_id: true,
       profile_url: true,
       unique_id: true,
-      bio: true,
       role: true,
       meta_profile: true
     },
@@ -54,7 +53,10 @@ export async function SelectUserByEmail(email: string) {
 
 export async function SelectUserByUniqueId(unique_id: string) {
   return await db.query.usersTable.findFirst({
-    where: eq(usersTable.unique_id, unique_id)
+    where: eq(usersTable.unique_id, unique_id),
+    with: {
+      profile: true
+    }
   })
 }
 
@@ -68,7 +70,6 @@ export async function FindUserWildCard(wildcard: string) {
         external_auth_id: true,
         profile_url: true,
         unique_id: true,
-        bio: true,
         role: true,
         meta_profile: true
       },
@@ -82,13 +83,6 @@ export async function FindUserWildCard(wildcard: string) {
   } catch (error: any) {
     throw new Error(error.message as string)
   }
-}
-
-export async function UpdateUserBio(userId: string, bio: string) {
-  await db
-    .update(usersTable)
-    .set({ bio })
-    .where(eq(usersTable.unique_id, userId))
 }
 
 export const GetUserProfileData = async (userId: string) => {
@@ -130,6 +124,26 @@ export const GetUserProfileData = async (userId: string) => {
   }
 }
 
+export const UpdateUserProfilePicture = async (
+  userId: string,
+  profileUrl: string
+) => {
+  try {
+    const updatedUser = await db
+      .update(usersTable)
+      .set({
+        profile_url: profileUrl
+      })
+      .where(eq(usersTable.unique_id, userId))
+      .returning()
+
+    return updatedUser[0]
+  } catch (error: any) {
+    console.error("Error updating user profile picture:", error)
+    throw new Error(error.message || "Failed to update user profile picture")
+  }
+}
+
 export async function getUserContacts(currentUserId: string) {
   return await db
     .select({
@@ -139,7 +153,6 @@ export async function getUserContacts(currentUserId: string) {
       email: usersTable.email,
       external_auth_id: usersTable.external_auth_id,
       profile_url: usersTable.profile_url,
-      bio: usersTable.bio,
       role: usersTable.role,
       meta_profile: usersTable.meta_profile
     })

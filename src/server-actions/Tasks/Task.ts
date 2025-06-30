@@ -44,7 +44,20 @@ export interface GetTaskResponseType {
   pagination: PaginationType
 }
 
-export const GetTasksAction = CreateServerAction(
+export const GetBacklogTasksAction = CreateServerAction(
+  true,
+  async (filters?: taskQueryFilters) => {
+    try {
+      const tasks: GetTaskResponseType = await GetTasks({ ...filters })
+
+      return { success: true, data: tasks }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetSprintTasksAction = CreateServerAction(
   true,
   async (filters?: taskQueryFilters) => {
     try {

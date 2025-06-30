@@ -46,7 +46,7 @@ export default function SelectPersonaPage({
       if (attachPersona && attachPersona.success) {
         await refreshAuthUser()
         toast({ title: "Persona saved successfully" })
-        router.push("/profile")
+        router.push("/profile-complition")
       }
     } catch (error) {
       console.log(error)
@@ -57,7 +57,7 @@ export default function SelectPersonaPage({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 dark:from-background dark:via-background dark:to-muted/10">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 dark:from-background dark:via-background dark:to-muted/10 mt-14">
       <Container>
         <div className="flex items-center justify-center min-h-screen py-8 px-4">
           <div className="w-full max-w-4xl mx-auto text-center space-y-8">
@@ -69,7 +69,7 @@ export default function SelectPersonaPage({
               tailored experience
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-12">
+            <div className="grid grid-cols-1 sm:[grid-template-columns:repeat(auto-fit,minmax(0,1fr))]  gap-4 sm:gap-6 mt-12">
               {roles?.map((role) => (
                 <Card
                   key={role.id}

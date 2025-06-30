@@ -9,7 +9,7 @@ import {
 import { Button } from "@/src/components/ui/button"
 import { MoreHorizontal } from "lucide-react"
 import CreateSprintModal from "./CreateSprintModal"
-import { SelectSprint } from "@/src/db/schema"
+import { SelectSprint, SelectTask } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { DeleteSprintAction } from "@/src/server-actions/Sprint/sprint"
 import { toast } from "@/src/hooks/use-toast"
@@ -34,10 +34,12 @@ interface Props {
   isSprintContextMenuOpen: boolean
   setIsSprintContextMenuOpen: Dispatch<SetStateAction<boolean>>
   sprint: SelectSprint
+  sprintTasks: SelectTask[]
 }
 
 function SprintContextMenu({
   sprint,
+  sprintTasks,
   isSprintContextMenuOpen,
   setIsSprintContextMenuOpen
 }: Props) {
@@ -50,7 +52,7 @@ function SprintContextMenu({
   )
   const setSprintList = useSetAtom(sprintStore.sprints)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
-  const tasks = useAtomValue(taskStore.tasks)
+  // const tasks = useAtomValue(taskStore.tasks)
 
   const [deleteSprintLoading, , , DeleteSprint] =
     useServerAction(DeleteSprintAction)
@@ -63,7 +65,7 @@ function SprintContextMenu({
 
   async function handleDeleteSprint(sprintId: string) {
     try {
-      const SprintTasks = tasks.filter((t) => t.sprint_id === sprintId)
+      const SprintTasks = sprintTasks.filter((t) => t.sprint_id === sprintId)
       if (SprintTasks.length > 0) {
         toast({
           title: "Unable to delete sprint",

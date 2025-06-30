@@ -1,4 +1,4 @@
-import TaskScreenPage from "@/src/components/Dashboard/ProjectManagement/BacklogManagement/TaskScreen"
+import TaskScreenPage from "@/src/components/Dashboard/ProjectManagement/Task/components/TaskScreen"
 import {
   GetTaskByIdAction,
   GetTaskStatusAction

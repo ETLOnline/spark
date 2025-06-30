@@ -25,7 +25,6 @@ export const usersTable = pgTable("users", {
   external_auth_id: varchar().notNull().unique(),
   profile_url: varchar(),
   meta: varchar(),
-  bio: varchar(),
   role: varchar().notNull().default("user"),
   meta_profile: json("meta_profile").default({
     bio_written: false,
@@ -35,6 +34,11 @@ export const usersTable = pgTable("users", {
 })
 
 export const usersRelations = relations(usersTable, ({ many, one }) => ({
+  profile: one(profileTable, {
+    fields: [usersTable.unique_id],
+    references: [profileTable.user_id],
+    relationName: "userToProfile"
+  }),
   chats: many(userChatsTable, {
     relationName: "UserChats"
   }),
@@ -96,6 +100,38 @@ export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> & {
   spaces?: SelectSpaceUser[]
   channels?: SelectChannelUser[]
   roles?: SelectUserRole[] | null
+  profile?: SelectProfile | null
+}
+
+export const profileTable = pgTable("profile", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  user_id: varchar("user_id")
+    .notNull()
+    .references(() => usersTable.unique_id),
+  bio: varchar(),
+  degree: varchar(),
+  institute: varchar(),
+  education_start_date: varchar(),
+  education_end_date: varchar(),
+  linkedin_url: varchar(),
+  github_url: varchar(),
+  instagram_url: varchar(),
+  twitter_url: varchar(),
+  personal_website_url: varchar(),
+  ...timestamps
+})
+
+export const profileRelations = relations(profileTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [profileTable.user_id],
+    references: [usersTable.unique_id],
+    relationName: "userToProfile"
+  })
+}))
+
+export type InsertProfile = typeof profileTable.$inferInsert
+export type SelectProfile = typeof profileTable.$inferSelect & {
+  user?: SelectUser
 }
 
 export const chatsTable = pgTable("chats", {
