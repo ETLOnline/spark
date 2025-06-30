@@ -96,6 +96,7 @@ function BacklogItemsCard({ searchedItem, orderList, limit }: Props) {
           ) : (
             <div className="pb-2">
               {tasks &&
+                canView &&
                 tasks.map(
                   (task) =>
                     task.sprint_id === null && (
@@ -107,7 +108,9 @@ function BacklogItemsCard({ searchedItem, orderList, limit }: Props) {
                       />
                     )
                 )}
-              {Pagination && <PaginationComponent pagination={Pagination} />}
+              {Pagination && canView && (
+                <PaginationComponent pagination={Pagination} />
+              )}
             </div>
           )}
         </div>
