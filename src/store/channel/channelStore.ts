@@ -5,10 +5,12 @@ const selectedChannel = atom<SelectChannel | null>(null)
 const channelformModalVisibility = atom<boolean>(false)
 const channels = atom<SelectChannel[]>([])
 const sideBarChannels = atom<SelectChannel[]>([])
+const refreshChannelsTriggerAtom = atom<boolean>(false)
 
 export const channelStore = {
   channels,
   selectedChannel,
   channelformModalVisibility,
-  sideBarChannels
+  sideBarChannels,
+  refreshChannelsTriggerAtom
 }

@@ -10,6 +10,8 @@ import { useSearchParams } from "next/navigation"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import { channelStore } from "@/src/store/channel/channelStore"
+import { useAtom } from "jotai"
 
 const ChannelsPage = () => {
   const { canAccess } = usePermissionChecker("global")
@@ -20,6 +22,7 @@ const ChannelsPage = () => {
   const [joinedChannels, setJoinedChannels] = useState<any>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [refreshTrigger] = useAtom(channelStore.refreshChannelsTriggerAtom)
 
   const searchParams = useSearchParams()
   const page = Number(searchParams.get("page")) || 1
@@ -42,7 +45,7 @@ const ChannelsPage = () => {
     }
 
     fetchData()
-  }, [page])
+  }, [page, refreshTrigger])
 
   if (loading) {
     return (

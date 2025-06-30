@@ -108,6 +108,10 @@ export async function DeleteChannel(
     await db
       .delete(channelsTable)
       .where(eq(channelsTable.id, deletedChannelData.id))
+
+    await db
+      .delete(ChannelUsersTable)
+      .where(eq(ChannelUsersTable.channel_id, deletedChannelData.id))
   } catch (e: any) {
     throw new Error(e.message)
   }

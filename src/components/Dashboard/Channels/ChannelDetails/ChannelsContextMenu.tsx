@@ -49,6 +49,7 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({ channel }) => {
   const setChannelFormModelVisibility = useSetAtom(
     channelStore.channelformModalVisibility
   )
+  const setRefreshTrigger = useSetAtom(channelStore.refreshChannelsTriggerAtom)
 
   const { toast } = useToast()
 
@@ -70,6 +71,7 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({ channel }) => {
       setChannels((preChannels) =>
         preChannels.filter((c) => c.id !== channel.id)
       )
+      setRefreshTrigger((prev) => !prev)
       setChannelFormModelVisibility(false)
       toast({
         title: "Channel deleted successfully",
