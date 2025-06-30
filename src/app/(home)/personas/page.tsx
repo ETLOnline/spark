@@ -1,7 +1,7 @@
 import { getPersonasAction } from "@/src/server-actions/UserRoles/UserRole"
 import SelectPersonaPage from "@/src/components/Parsona/SelectPersonaPage"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import { checkUserPersonaCompletion } from "@/src/utils/helpers"
+import { checkUserPersonaCompletion, isSuperAdmin } from "@/src/utils/helpers"
 import { redirect } from "next/navigation"
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
 import { UserCircle } from "lucide-react"
@@ -31,9 +31,10 @@ export default async function PersonasPage() {
   }
 
   const hasPersona = await checkUserPersonaCompletion(authUser)
+  const superAdmin = await isSuperAdmin(authUser)
 
-  if (hasPersona) {
-    redirect("/dashboard")
+  if (hasPersona || superAdmin) {
+    redirect("/profile")
   }
 
   return <SelectPersonaPage roles={personasResult.data} userAuth={authUser} />

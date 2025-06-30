@@ -287,3 +287,20 @@ export function serializeUserPerms(userPerms: {
     )
   }
 }
+
+export async function isSuperAdmin(user: SelectUser): Promise<boolean> {
+  try {
+    if (!user.roles || user.roles.length === 0) {
+      return false
+    }
+    const isSuperAdmin = user.roles.some(
+      (userRole: SelectUserRole) =>
+        userRole.role?.role_type === "SYSTEM" &&
+        userRole.role?.name === "Super_Admin"
+    )
+    return isSuperAdmin
+  } catch (error) {
+    console.error("Error checking if user is super admin:", error)
+    return false
+  }
+}

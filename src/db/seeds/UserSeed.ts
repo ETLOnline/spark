@@ -14,6 +14,7 @@ export const UserSeed = async () => {
         console.log("✅ Users seeded successfully")
       }
       // add role for super admin
+      await tx.execute(sql`Truncate user_roles;`)
       await tx.insert(userRolesTable).values({
         user_id: "5b887879-9d4a-403a-acdb-4bf45178b528",
         role_id: 1
