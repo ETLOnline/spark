@@ -78,7 +78,7 @@ export const GetUserProfileAction = CreateServerAction(
   }
 )
 
-export async function GetUserContactsAction() {
+export const GetUserContactsAction = CreateServerAction(true, async () => {
   try {
     const auth = await AuthUserAction()
     if (!auth) {
@@ -90,7 +90,7 @@ export async function GetUserContactsAction() {
     console.error("Failed to fetch user contacts:", error)
     return { success: false, error }
   }
-}
+})
 export const UpdateUserProfilePictureAction = CreateServerAction(
   true,
   async (fileName: string, fileB64string: string, fileType: string) => {
