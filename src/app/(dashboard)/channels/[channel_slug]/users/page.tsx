@@ -7,7 +7,7 @@ import React, { Suspense } from "react"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { getChannelRole } from "@/src/utils/channelRoleHelper"
 import UnauthorizedAccessScreen from "@/src/components/common/UnauthorizedAccessScreen"
-import { getUserRoles, isUserAdmin } from "@/src/utils/helpers"
+import { isSuperAdmin } from "@/src/utils/helpers"
 import ChannelUserList from "@/src/components/UserListAndInvite/UserList"
 import { getRoleByEntityTypeAndIdAction } from "@/src/server-actions/UserRoles/UserRole"
 
@@ -36,8 +36,9 @@ const ChannelUsersPage = async ({ params }: Props) => {
     const hasRole = scopedRoles
       ? scopedRoles.some((role) => role.name === channelRole)
       : false
+    const superAdmin = await isSuperAdmin(authUser)
 
-    if (!hasRole) {
+    if (!hasRole && !superAdmin) {
       return <UnauthorizedAccessScreen />
     }
   }

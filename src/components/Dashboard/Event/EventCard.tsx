@@ -30,7 +30,7 @@ interface EventcardProps {
 const EventCard = ({ event }: EventcardProps) => {
   const { permissionChecker } = usePermissionChecker("global")
   const canUpdate = permissionChecker
-    ? permissionChecker?.canAccess("event.update")
+    ? permissionChecker?.canAccess("events.update")
     : false
 
   const setSelectedEvent = useSetAtom(eventStore.selectedEvent)

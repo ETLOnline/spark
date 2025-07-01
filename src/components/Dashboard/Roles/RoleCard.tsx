@@ -65,7 +65,7 @@ export function RoleCard({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href={`/roles/${role.id}/edit`}>Edit Role</Link>
+                  <Link href={`/admin/roles/${role.id}/edit`}>Edit Role</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>Duplicate Role</DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -102,7 +102,10 @@ export function RoleCard({
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Users className="h-4 w-4" />
-            <Link href={`/roles/${role.id}/assign-users`} className="flex-1">
+            <Link
+              href={`/admin/roles/${role.id}/assign-users`}
+              className="flex-1"
+            >
               <span>{role.user_count} users assigned</span>
             </Link>
           </div>
@@ -131,7 +134,7 @@ export function RoleCard({
           </div>
 
           <div className="flex gap-2 mt-3">
-            <Link href={`/roles/${role.id}/edit`} className="flex-1">
+            <Link href={`/admin/roles/${role.id}/edit`} className="flex-1">
               <Button
                 variant="outline"
                 size="sm"

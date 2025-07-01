@@ -6,7 +6,7 @@ export const adminSiteRoutes: SiteRoutes = {
   navMain: [
     {
       title: "Roles & Permissions",
-      url: "/roles",
+      url: "/admin/roles",
       icon: Shield
     }
   ]

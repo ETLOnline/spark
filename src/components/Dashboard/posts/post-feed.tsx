@@ -128,7 +128,7 @@ const PostFeed: React.FC<PostFeedProps> = ({
                       </p>
                     </div>
                   </div>
-                  <PostMenu post={post} />
+                  <PostMenu post={post} spaceId={spaceId} />
                 </div>
               </CardHeader>
               <CardContent>
