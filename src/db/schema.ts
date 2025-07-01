@@ -1016,16 +1016,10 @@ export const rolePermissionsTable = pgTable("role_permissions", {
 })
 
 // User Scoped Roles (can be used for Global as well)
-export const userRolesTable = pgTable(
-  "user_roles",
-  {
-    user_id: varchar("user_id").notNull(),
-    role_id: integer("role_id").notNull()
-  },
-  (table) => ({
-    pk: primaryKey(table.user_id, table.role_id)
-  })
-)
+export const userRolesTable = pgTable("user_roles", {
+  user_id: varchar("user_id").notNull(),
+  role_id: integer("role_id").notNull()
+})
 
 export const rolesRelations = relations(rolesTable, ({ many }) => ({
   permissions: many(rolePermissionsTable),
@@ -1044,7 +1038,8 @@ export const userRolesRelations = relations(userRolesTable, ({ one }) => ({
   }),
   role: one(rolesTable, {
     fields: [userRolesTable.role_id],
-    references: [rolesTable.id]
+    references: [rolesTable.id],
+    relationName: "userRolesToRole"
   })
 }))
 

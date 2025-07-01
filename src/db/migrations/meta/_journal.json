@@ -33,15 +33,8 @@
     {
       "idx": 4,
       "version": "7",
-      "when": 1749579712074,
-      "tag": "0003_2025_06_10_232117__add_tables_for_roles_and_permissions_and_remove_personas_table",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1750856756207,
-      "tag": "0004_2025_06_25_180553__add_column_slug_roles_table",
+      "when": 1751380839763,
+      "tag": "0004_2025_07_01_194005__create_table_role_and_permissions_and_user_roles_adn_drop_the_personas",
       "breakpoints": true
     }
   ]

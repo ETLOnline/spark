@@ -1,6 +1,6 @@
 {
-  "id": "9fa96848-d7ae-429b-bc21-7f0e9a532b24",
-  "prevId": "75714f59-1c97-4781-90ae-d35a8bf3f0a8",
+  "id": "c673614f-4275-47bd-8cd5-bd6028370f74",
+  "prevId": "1b81d609-5517-4339-b773-27643f191604",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1460,6 +1460,131 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.profile": {
+      "name": "profile",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "profile_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bio": {
+          "name": "bio",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "degree": {
+          "name": "degree",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "institute": {
+          "name": "institute",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "education_start_date": {
+          "name": "education_start_date",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "education_end_date": {
+          "name": "education_end_date",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "linkedin_url": {
+          "name": "linkedin_url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "github_url": {
+          "name": "github_url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "instagram_url": {
+          "name": "instagram_url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "twitter_url": {
+          "name": "twitter_url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "personal_website_url": {
+          "name": "personal_website_url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "profile_user_id_users_unique_id_fk": {
+          "name": "profile_user_id_users_unique_id_fk",
+          "tableFrom": "profile",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["unique_id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.project": {
       "name": "project",
       "schema": "",
@@ -2402,12 +2527,7 @@
       },
       "indexes": {},
       "foreignKeys": {},
-      "compositePrimaryKeys": {
-        "user_roles_user_id_role_id_pk": {
-          "name": "user_roles_user_id_role_id_pk",
-          "columns": ["user_id", "role_id"]
-        }
-      },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -2497,12 +2617,6 @@
         },
         "meta": {
           "name": "meta",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "bio": {
-          "name": "bio",
           "type": "varchar",
           "primaryKey": false,
           "notNull": false
