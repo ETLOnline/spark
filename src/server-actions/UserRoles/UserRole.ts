@@ -27,10 +27,10 @@ import { updateChannelUser } from "@/src/db/data-access/channels/query"
 import { updateSpaceUser } from "@/src/db/data-access/spaces/query"
 import { updateProjectUserRole } from "@/src/db/data-access/project-management/query"
 
-export const getPersonasAction = async () => {
+export const getPersonasAction = CreateServerAction(true, async () => {
   const globalRoles = await getAllGlobalRoles()
   return { success: true, data: globalRoles }
-}
+})
 
 export const getUserPermissionRowsAction = CreateServerAction(
   true,
@@ -71,85 +71,99 @@ export const getAllGlobalAndScopeRolesAction = CreateServerAction(
   }
 )
 
-export async function GetPermissionCategoriesAction() {
-  try {
-    const all = await getAllPermissoins()
-    const grouped = groupPermissionsByNamespace(all)
-    return { success: true, data: grouped }
-  } catch (error) {
-    return { error: error }
-  }
-}
-export async function GetRoleWithPermissionsAction(id: number) {
-  try {
-    const role = await getRoleWithPermissions(id)
-    if (!role) {
-      return { success: false, error: "Role not found" }
+export const GetPermissionCategoriesAction = CreateServerAction(
+  true,
+  async () => {
+    try {
+      const all = await getAllPermissoins()
+      const grouped = groupPermissionsByNamespace(all)
+      return { success: true, data: grouped }
+    } catch (error) {
+      return { error: error }
     }
-    const rolesTrasfrom = transformSingleRoleWithPermissions(role)
-    return { success: true, data: rolesTrasfrom }
-  } catch (error) {
-    return { error: error }
   }
-}
-
-export async function SaveRoleWithPermissionsAction(
-  roleId: number,
-  name: string,
-  permissionIds: number[]
-) {
-  try {
-    await updateRoleWithPermissions(roleId, name, permissionIds)
-    return { success: true }
-  } catch (error) {
-    console.error("Failed to save role", error)
-    return { success: false, error: "Failed to update role" }
-  }
-}
-
-export async function CreateRoleAction(formData: { name: string }) {
-  try {
-    const newRole = await createScopedRole(formData)
-    return { success: true, data: newRole }
-  } catch (error) {
-    return { error: error }
-  }
-}
-
-export async function deleteRoleAction(roleId: number) {
-  try {
-    await deleteRoleById(roleId)
-    return { success: true }
-  } catch (error: any) {
-    return { success: false, error: error.message }
-  }
-}
-
-export async function getUsersByRoleIDAction(id: number) {
-  try {
-    const userbyRole = await getUsersByRoleID(id)
-    if (!userbyRole) {
-      return { success: false, error: "Role not found" }
+)
+export const GetRoleWithPermissionsAction = CreateServerAction(
+  true,
+  async (id: number) => {
+    try {
+      const role = await getRoleWithPermissions(id)
+      if (!role) {
+        return { success: false, error: "Role not found" }
+      }
+      const rolesTrasfrom = transformSingleRoleWithPermissions(role)
+      return { success: true, data: rolesTrasfrom }
+    } catch (error) {
+      return { error: error }
     }
-    return { success: true, data: userbyRole }
-  } catch (error) {
-    return { error: error }
   }
-}
-export async function getRoleByEntityTypeAndIdAction(
-  entityType: "CHANNEL" | "SPACE" | "PROJECT",
-  id: string
-) {
-  try {
-    const scopedROles = await getRoleByEntityTypeAndId(entityType, id)
-    if (!scopedROles) {
-      return { success: false, error: "Roles not found" }
+)
+
+export const SaveRoleWithPermissionsAction = CreateServerAction(
+  true,
+  async (roleId: number, name: string, permissionIds: number[]) => {
+    try {
+      await updateRoleWithPermissions(roleId, name, permissionIds)
+      return { success: true }
+    } catch (error) {
+      console.error("Failed to save role", error)
+      return { success: false, error: "Failed to update role" }
     }
-    return { success: true, data: scopedROles }
-  } catch (error) {
-    return { error: error }
   }
-}
+)
+
+export const CreateRoleAction = CreateServerAction(
+  true,
+  async (formData: { name: string }) => {
+    try {
+      const newRole = await createScopedRole(formData)
+      return { success: true, data: newRole }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const deleteRoleAction = CreateServerAction(
+  true,
+  async (roleId: number) => {
+    try {
+      await deleteRoleById(roleId)
+      return { success: true }
+    } catch (error: any) {
+      return { success: false, error: error.message }
+    }
+  }
+)
+
+export const getUsersByRoleIDAction = CreateServerAction(
+  true,
+  async (id: number) => {
+    try {
+      const userbyRole = await getUsersByRoleID(id)
+      if (!userbyRole) {
+        return { success: false, error: "Role not found" }
+      }
+      return { success: true, data: userbyRole }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+export const getRoleByEntityTypeAndIdAction = CreateServerAction(
+  true,
+  async (entityType: "CHANNEL" | "SPACE" | "PROJECT", id: string) => {
+    try {
+      const scopedROles = await getRoleByEntityTypeAndId(entityType, id)
+      if (!scopedROles) {
+        return { success: false, error: "Roles not found" }
+      }
+      return { success: true, data: scopedROles }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
 
 export const updateUserRoleForEntityAction = CreateServerAction(
   true,
