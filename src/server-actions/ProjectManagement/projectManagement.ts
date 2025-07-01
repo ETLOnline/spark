@@ -12,12 +12,27 @@ import {
   updateProjectUserRole,
   updateProject
 } from "@/src/db/data-access/project-management/query"
+import {
+  createScopedProjectRolesAndAssignAdmin,
+  deleteUserRole,
+  getAndAssignViewerRoles
+} from "@/src/db/data-access/roles/query"
 
 export const CreateProjectAction = CreateServerAction(
   true,
   async (project_data: InsertProject) => {
     try {
       const newProject = await CreateProject(project_data)
+      const result = await createScopedProjectRolesAndAssignAdmin(
+        newProject.id,
+        newProject.project_name,
+        newProject.created_by
+      )
+      const attachUser = await createProjectUser(
+        newProject.id,
+        newProject.created_by,
+        result?.adminRole?.name
+      )
       return { success: true, data: newProject }
     } catch (error) {
       return { error }
@@ -65,10 +80,15 @@ export const AttachProjectUserAction = CreateServerAction(
   true,
   async (projectId: string, userId: string, role?: string) => {
     try {
+      const attachUserRole = await getAndAssignViewerRoles(
+        userId,
+        "project_viewer",
+        projectId
+      )
       const newProjectUser = await createProjectUser(
         projectId,
         userId,
-        role ?? "viewer"
+        attachUserRole?.viewerRole?.name
       )
 
       return { success: true, data: newProjectUser }
@@ -94,9 +114,11 @@ export const GetProjectUsersAction = CreateServerAction(
 
 export const RemoveProjectUserAction = CreateServerAction(
   true,
-  async (projectId: string, userId: string) => {
+  async (projectId: string, userId: string, roleId: number) => {
     try {
       const success = await removeProjectUser(projectId, userId)
+      const deleteRole = await deleteUserRole(userId, roleId)
+
       if (success) {
         return { success: true }
       }

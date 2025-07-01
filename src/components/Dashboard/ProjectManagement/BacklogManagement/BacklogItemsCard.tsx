@@ -1,7 +1,7 @@
 import { Checkbox } from "@/src/components/ui/checkbox"
 import React, { useEffect, useState } from "react"
 import BacklogItems from "./BacklogItems"
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useParams, useSearchParams } from "next/navigation"
 import Loader from "@/src/components/common/Loader/Loader"
@@ -9,6 +9,7 @@ import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import PaginationComponent from "@/src/components/common/Pagination"
 import { taskStore } from "@/src/store/tasks/taskStore"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { GetBacklogTasksAction } from "@/src/server-actions/Tasks/Task"
 
 interface Props {
@@ -17,12 +18,7 @@ interface Props {
   limit: number
 }
 
-
-function BacklogItemsCard({
-  searchedItem,
-  orderList,
-  limit
-}: Props) {
+function BacklogItemsCard({ searchedItem, orderList, limit }: Props) {
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [tasks, setTasks] = useAtom(taskStore.BackLogTasks)
   const [Pagination, setPagination] = useState<PaginationType>()
@@ -52,7 +48,15 @@ function BacklogItemsCard({
     fatchTasks()
   }, [projectId, searchParams, searchedItem, orderList, limit])
 
- 
+  // PERMISSIONS INITATE
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    projectId
+  )
+  const canView = permissionChecker
+    ? permissionChecker?.canAccess("project.backlog.task.view")
+    : false
 
   return (
     <>
@@ -67,7 +71,7 @@ function BacklogItemsCard({
           <div className="grid grid-cols-12 gap-2 p-4 bg-muted/50 text-sm font-medium">
             <div className="col-span-1">
               <Checkbox
-                // checked={false}
+              // checked={false}
               />
             </div>
             <div className="col-span-1">ID</div>
@@ -92,15 +96,21 @@ function BacklogItemsCard({
           ) : (
             <div className="pb-2">
               {tasks &&
-                tasks.map((task) => (
-                  <BacklogItems
-                    key={task.id}
-                    task={task}
-                    selectedItems={selectedItems}
-                    setSelectedItems={setSelectedItems}
-                  />
-                ))}
-              {Pagination && <PaginationComponent pagination={Pagination} />}
+                canView &&
+                tasks.map(
+                  (task) =>
+                    task.sprint_id === null && (
+                      <BacklogItems
+                        key={task.id}
+                        task={task}
+                        selectedItems={selectedItems}
+                        setSelectedItems={setSelectedItems}
+                      />
+                    )
+                )}
+              {Pagination && canView && (
+                <PaginationComponent pagination={Pagination} />
+              )}
             </div>
           )}
         </div>

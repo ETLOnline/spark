@@ -21,12 +21,18 @@ import { userStore } from "@/src/store/user/userStore"
 import moment from "moment"
 import { eventStore } from "@/src/store/event/eventStore"
 import { EventType } from "../../common/types/event.types"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface EventcardProps {
   event: SelectEvent
 }
 
 const EventCard = ({ event }: EventcardProps) => {
+  const { permissionChecker } = usePermissionChecker("global")
+  const canUpdate = permissionChecker
+    ? permissionChecker?.canAccess("event.update")
+    : false
+
   const setSelectedEvent = useSetAtom(eventStore.selectedEvent)
   const setFormModalVisibility = useSetAtom(eventStore.formModalVisibility)
   const authUser = useAtomValue(userStore.AuthUser)
@@ -75,7 +81,7 @@ const EventCard = ({ event }: EventcardProps) => {
           </CardTitle>
           <CardDescription>{event.description}</CardDescription>
         </div>
-        {event.host_id === authUser?.unique_id && (
+        {event.host_id === authUser?.unique_id && canUpdate && (
           <Button
             variant="edit"
             size={"sm"}

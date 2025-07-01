@@ -29,6 +29,20 @@
       "when": 1750246671433,
       "tag": "0003_2025_06_18_163748__create_profile_table",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1749579712074,
+      "tag": "0003_2025_06_10_232117__add_tables_for_roles_and_permissions_and_remove_personas_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1750856756207,
+      "tag": "0004_2025_06_25_180553__add_column_slug_roles_table",
+      "breakpoints": true
     }
   ]
 }

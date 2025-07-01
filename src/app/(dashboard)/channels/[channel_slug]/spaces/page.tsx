@@ -18,6 +18,7 @@ import { GetSpacesAction } from "@/src/server-actions/Space/Space"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { SelectSpace } from "@/src/db/schema"
 import { isUserAdmin } from "@/src/utils/helpers"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 export default function ChannelPage() {
   const [selectedChannel, setSelectedChannel] = useAtom(
@@ -66,6 +67,14 @@ export default function ChannelPage() {
     fetchChannel()
   }, [])
 
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "CHANNEL",
+    selectedChannel?.id
+  )
+  const canCreateSpace = permissionChecker
+    ? permissionChecker?.canAccess("space.create")
+    : false
   function handleCreateSpace() {
     setSpaceFormModelVisibility(true)
   }
@@ -82,9 +91,10 @@ export default function ChannelPage() {
               </span>
             </h1>
             <div>
-              {selectedChannel?.id &&
-              user &&
-              canControlChannel(selectedChannel.id, user) ? (
+              {(selectedChannel?.id &&
+                user &&
+                canControlChannel(selectedChannel.id, user)) ||
+              canCreateSpace ? (
                 <>
                   <CreateSpaceModal
                     spaceFormModelVisibility={spaceFormModelVisibility}

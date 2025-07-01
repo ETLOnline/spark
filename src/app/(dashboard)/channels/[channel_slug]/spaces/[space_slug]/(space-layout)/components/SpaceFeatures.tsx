@@ -25,6 +25,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   features: SelectSpaceFeature[]
@@ -32,9 +33,27 @@ interface Props {
 }
 
 function SpaceFeatures({ features, space }: Props) {
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "SPACE",
+    space?.id
+  )
+
+  const canViewChat = permissionChecker
+    ? permissionChecker.canAccess("chat.view")
+    : false
+  const canViewPost = permissionChecker
+    ? permissionChecker.canAccess("posting.view")
+    : false
+  const canViewFileSharing = permissionChecker
+    ? permissionChecker.canAccess("file_sharing.create")
+    : false
+  const canViewProject = permissionChecker
+    ? permissionChecker.canAccess("project.view")
+    : false
+
   const params = useSearchParams()
   const pageType = params.get("page-type") || null
-  const featureList = features.map((sf) => sf.feature?.feature_slug)
   const setLayoutStatsVisibility = useSetAtom(spaceStore.layoutStatsVisibility)
 
   useLayoutEffect(() => {
@@ -43,18 +62,54 @@ function SpaceFeatures({ features, space }: Props) {
     }
   }, [])
 
+  // Function to check if user has permission for a specific feature
+  const hasFeaturePermission = (featureSlug: string): boolean => {
+    switch (featureSlug) {
+      case "posts":
+        return canViewPost
+      case "file-sharing":
+        return canViewFileSharing
+      case "project-management":
+        return canViewProject
+      case "chat":
+        return canViewChat
+      default:
+        return false // Default to no access for unknown features
+    }
+  }
+
+  // Filter features based on permissions
+  const accessibleFeatures = features.filter(({ feature }) => {
+    if (!feature) return false
+    return hasFeaturePermission(feature.feature_slug)
+  })
+
   const renderFeatureModule = (featureSlug: string) => {
     const feature = features.find(
       (sf) => sf.feature?.feature_slug === featureSlug
     )?.feature
+
     if (!feature) return null
 
+    // Check permission before rendering
+    if (!hasFeaturePermission(featureSlug)) {
+      return (
+        <NoDataCard
+          icon={<EarthLock className="h-16 w-16 text-muted-foreground mb-4" />}
+          title="Access Denied"
+          description="You don't have permission to access this feature"
+        />
+      )
+    }
+
     if (feature.feature_status === 0) {
-      ;<NoDataCard
-        icon={<EarthLock className="h-16 w-16 text-muted-foreground mb-4" />}
-        title="Feature not found"
-        description="Feature not available at the moment, or might have been disabled by the admin"
-      />
+      return (
+        <NoDataCard
+          icon={<EarthLock className="h-16 w-16 text-muted-foreground mb-4" />}
+          title="Feature not found"
+          description="Feature not available at the moment, or might have been disabled by the admin"
+        />
+      )
     }
 
     switch (featureSlug) {
@@ -73,7 +128,7 @@ function SpaceFeatures({ features, space }: Props) {
               <EarthLock className="h-16 w-16 text-muted-foreground mb-4" />
             }
             title="Feature not found"
-            description="Feature not available at the moment, or might have been diabled by the admin"
+            description="Feature not available at the moment, or might have been disabled by the admin"
           />
         )
     }
@@ -91,11 +146,22 @@ function SpaceFeatures({ features, space }: Props) {
     }
   }
 
+  // Show message if no accessible features
+  if (accessibleFeatures.length === 0) {
+    return (
+      <NoDataCard
+        icon={<EarthLock className="h-16 w-16 text-muted-foreground mb-4" />}
+        title="No Features Available"
+        description="You don't have permission to access any features in this space, or no features are enabled."
+      />
+    )
+  }
+
   return (
     <div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {features.length > 1
-          ? features.map(({ feature }) => {
+        {accessibleFeatures.length > 1
+          ? accessibleFeatures.map(({ feature }) => {
               if (feature?.feature_status === 1) {
                 return (
                   <Link
@@ -104,7 +170,7 @@ function SpaceFeatures({ features, space }: Props) {
                   >
                     <Card
                       key={feature?.id}
-                      className="h-full flex flex-row items-center py-2 px-4 sm:p-4 gap-4"
+                      className="h-full flex flex-row items-center py-2 px-4 sm:p-4 gap-4 hover:shadow-md transition-shadow"
                     >
                       <DynamicIcon
                         name={feature?.feature_icon as IconName}
@@ -128,11 +194,8 @@ function SpaceFeatures({ features, space }: Props) {
                 )
               } else if (feature?.feature_status === 0) {
                 return (
-                  <Link href={"#"} key={feature?.id}>
-                    <Card
-                      key={feature?.id}
-                      className="h-full flex flex-row items-center py-2 px-4 sm:p-4 gap-4"
-                    >
+                  <div key={feature?.id} className="cursor-not-allowed">
+                    <Card className="h-full flex flex-row items-center py-2 px-4 sm:p-4 gap-4 opacity-60">
                       <DynamicIcon
                         name={feature?.feature_icon as IconName}
                         className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 "
@@ -149,7 +212,7 @@ function SpaceFeatures({ features, space }: Props) {
                                 <TooltipContent>
                                   <p>
                                     Feature not available at the moment, or
-                                    might have been diabled by the admin
+                                    might have been disabled by the admin
                                   </p>
                                 </TooltipContent>
                               </Tooltip>
@@ -166,17 +229,21 @@ function SpaceFeatures({ features, space }: Props) {
                         </CardContent>
                       </div>
                     </Card>
-                  </Link>
+                  </div>
                 )
               }
             })
           : null}
       </div>
-      {features.length === 1
-        ? features.map((sf) => {
+      {accessibleFeatures.length === 1
+        ? accessibleFeatures.map((sf) => {
             const feature = sf.feature
             if (!feature) return null
-            return <>{renderFeatureModule(feature.feature_slug)}</>
+            return (
+              <div key={feature.id}>
+                {renderFeatureModule(feature.feature_slug)}
+              </div>
+            )
           })
         : null}
     </div>

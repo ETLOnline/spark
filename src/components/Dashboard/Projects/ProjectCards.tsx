@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 import {
   Card,
   CardContent,
@@ -11,6 +11,7 @@ import { LinkAsButton } from "../../LinkAsButton/LinkAsButton"
 import { SelectProject } from "@/src/db/schema"
 import { ProjectType } from "../ProjectManagement/types/project.type"
 import { Button } from "../../ui/button"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   project: SelectProject
@@ -18,6 +19,22 @@ interface Props {
 }
 
 function ProjectCards({ project, onEdit }: Props) {
+  // PERMISSIONS INITATE
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    project?.id
+  )
+
+  const canViewLaunchBoard = permissionChecker
+    ? permissionChecker.canAccess("project.launch.board")
+    : false
+  const canViewDetail = permissionChecker
+    ? permissionChecker.canAccess("project.detail")
+    : false
+  const canUpdate = permissionChecker
+    ? permissionChecker.canAccess("project.update")
+    : false
   return (
     <Card key={project.id} className="mb-4">
       <CardHeader>
@@ -55,13 +72,19 @@ function ProjectCards({ project, onEdit }: Props) {
           </span> */}
         </div>
         <div className="flex items-center space-x-2">
-          <LinkAsButton href={`/project/${project.id}/board`}>
-            Launch Board
-          </LinkAsButton>
-          <LinkAsButton href={`/project/${project.id}`}>
-            View Details
-          </LinkAsButton>
-          <Button onClick={() => onEdit(project)}>Edit Project</Button>
+          {canViewLaunchBoard && (
+            <LinkAsButton href={`/project/${project.id}/board`}>
+              Launch Board
+            </LinkAsButton>
+          )}
+          {canViewDetail && (
+            <LinkAsButton href={`/project/${project.id}`}>
+              View Details
+            </LinkAsButton>
+          )}
+          {canUpdate && (
+            <Button onClick={() => onEdit(project)}>Edit Project</Button>
+          )}
         </div>
       </CardFooter>
     </Card>

@@ -14,7 +14,7 @@ import { Button } from "../../ui/button"
 import { Label } from "../../ui/label"
 import { Input } from "../../ui/input"
 import { Textarea } from "../../ui/textarea"
-import { useAtom, useAtomValue, useSetAtom } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { InsertChannel, SelectChannel } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
@@ -40,6 +40,7 @@ import Loader from "../../common/Loader/Loader"
 import { LoaderSizes } from "../../common/types/loader-types"
 import { Switch } from "../../ui/switch"
 import { useDebouncedCallback } from "use-debounce"
+import { useAuthUser } from "@/src/hooks/useAuthUser"
 
 const channelSchema = z.object({
   channel_name: z
@@ -54,8 +55,12 @@ const channelSchema = z.object({
   channel_slug: z.string().max(50, "Slug is too long"),
   publish_channel: z.boolean().optional()
 })
+type CreateChannelsProps = {
+  onChannelCreated?: (newChannel: any) => void
+}
 
-function CreateChannels() {
+function CreateChannels({ onChannelCreated }: CreateChannelsProps) {
+  const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
   const [editChannel, setEditChannel] = useState<boolean>(false)
   const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
 
@@ -191,10 +196,10 @@ function CreateChannels() {
       data.publish_channel = 0
     }
     if (!selectedChannel) {
-      handleCreateChannel(data)
+      await handleCreateChannel(data)
     }
     if (selectedChannel) {
-      handleUpdateChannel(data)
+      await handleUpdateChannel(data)
     }
   }
 
@@ -209,6 +214,8 @@ function CreateChannels() {
       const createdChannel = await CreateChannel(payLoad as InsertChannel)
 
       if (createdChannel?.success && createdChannel?.data) {
+        await refreshAuthUser()
+        onChannelCreated?.(createdChannel.data)
         setChannels([...channels, createdChannel.data])
         setChannelFormModelVisibility(false)
         toast({
@@ -217,7 +224,7 @@ function CreateChannels() {
           duration: 3000
         })
       }
-    } catch {
+    } catch (error) {
       toast({
         title: "Unable to created channel",
         variant: "destructive",

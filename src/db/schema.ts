@@ -26,7 +26,6 @@ export const usersTable = pgTable("users", {
   profile_url: varchar(),
   meta: varchar(),
   role: varchar().notNull().default("user"),
-  persona_id: integer("persona_id"),
   meta_profile: json("meta_profile").default({
     bio_written: false,
     persona_selected: false,
@@ -39,11 +38,6 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
     fields: [usersTable.unique_id],
     references: [profileTable.user_id],
     relationName: "userToProfile"
-  }),
-  persona: one(personasTable, {
-    fields: [usersTable.persona_id],
-    references: [personasTable.id],
-    relationName: "userToPersona"
   }),
   chats: many(userChatsTable, {
     relationName: "UserChats"
@@ -83,6 +77,9 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
   channels: many(ChannelUsersTable, {
     relationName: "channelUserToUser"
+  }),
+  roles: many(userRolesTable, {
+    relationName: "userRolesToUser"
   })
 }))
 
@@ -102,7 +99,7 @@ export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> & {
   // spaces?: SelectSpace[]
   spaces?: SelectSpaceUser[]
   channels?: SelectChannelUser[]
-  persona?: SelectPersona | null
+  roles?: SelectUserRole[] | null
   profile?: SelectProfile | null
 }
 
@@ -981,24 +978,6 @@ export const SprintTable = pgTable("sprints", {
 export type InsertSprint = typeof SprintTable.$inferInsert
 export type SelectSprint = typeof SprintTable.$inferSelect
 
-export const personasTable = pgTable("personas", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  title: varchar("title", { length: 255 }).notNull(),
-  slug: varchar("slug", { length: 255 }).notNull().unique(),
-  description: varchar("description", { length: 255 }).notNull().unique(),
-  status: varchar("status", { length: 20 }).default("active").notNull(),
-  ...timestamps
-})
-
-export const personasRelations = relations(personasTable, ({ many }) => ({
-  users: many(usersTable, {
-    relationName: "userToPersona"
-  })
-}))
-
-export type SelectPersona = typeof personasTable.$inferSelect & {
-  users?: SelectUser[]
-}
 export const ProjectUsersTable = pgTable("project_users", {
   id: varchar("id", { length: 36 })
     .primaryKey()
@@ -1012,3 +991,89 @@ export const ProjectUsersTable = pgTable("project_users", {
 
 export type InsertProjectUser = typeof ProjectUsersTable.$inferInsert
 export type SelectProjectUser = typeof ProjectUsersTable.$inferSelect
+
+// Permissions
+export const permissionsTable = pgTable("permissions", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  namespace: varchar("namespace").notNull(),
+  action: varchar("action").notNull()
+})
+
+// Roles (Global or Scoped)
+export const rolesTable = pgTable("roles", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  name: varchar("name").notNull(),
+  role_type: varchar("role_type").notNull(),
+  slug: varchar("slug"),
+  entity_type: varchar("entity_type"),
+  entity_id: varchar("entity_id")
+})
+
+// Role-Permissions (Many-to-Many)
+export const rolePermissionsTable = pgTable("role_permissions", {
+  role_id: integer("role_id").notNull(),
+  permission_id: integer("permission_id").notNull()
+})
+
+// User Scoped Roles (can be used for Global as well)
+export const userRolesTable = pgTable(
+  "user_roles",
+  {
+    user_id: varchar("user_id").notNull(),
+    role_id: integer("role_id").notNull()
+  },
+  (table) => ({
+    pk: primaryKey(table.user_id, table.role_id)
+  })
+)
+
+export const rolesRelations = relations(rolesTable, ({ many }) => ({
+  permissions: many(rolePermissionsTable),
+  users: many(userRolesTable)
+}))
+
+export const permissionsRelations = relations(permissionsTable, ({ many }) => ({
+  roles: many(rolePermissionsTable)
+}))
+
+export const userRolesRelations = relations(userRolesTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [userRolesTable.user_id],
+    references: [usersTable.unique_id],
+    relationName: "userRolesToUser"
+  }),
+  role: one(rolesTable, {
+    fields: [userRolesTable.role_id],
+    references: [rolesTable.id]
+  })
+}))
+
+export const rolePermissionsRelations = relations(
+  rolePermissionsTable,
+  ({ one }) => ({
+    permission: one(permissionsTable, {
+      fields: [rolePermissionsTable.permission_id],
+      references: [permissionsTable.id]
+    }),
+    role: one(rolesTable, {
+      fields: [rolePermissionsTable.role_id],
+      references: [rolesTable.id]
+    })
+  })
+)
+
+export type SelectPermission = typeof permissionsTable.$inferSelect & {
+  roles?: SelectRolePermission[]
+}
+
+export type SelectRolePermission = typeof rolePermissionsTable.$inferSelect & {
+  permission?: SelectPermission
+}
+
+export type SelectRole = typeof rolesTable.$inferSelect & {
+  permissions?: SelectRolePermission[]
+  users?: SelectUserRole[]
+}
+export type SelectUserRole = typeof userRolesTable.$inferSelect & {
+  role?: SelectRole
+}

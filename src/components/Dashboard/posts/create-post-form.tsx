@@ -46,6 +46,7 @@ import useHashtags from "../profile/hooks/useHashtags"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { categories } from "@/src/utils/constants"
 import { Plus, X } from "lucide-react"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 type Props = {
   variant?: "posts" | "spaces"
@@ -95,6 +96,16 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     linkHashtagsToPostError,
     linkHashtagsToPost
   ] = useServerAction(LinkHashtagsToPostAction)
+
+  // calling the permissoins
+  const { permissionChecker } = usePermissionChecker(
+    variant == "spaces" ? "scoped" : "global",
+    "SPACE",
+    currentSpace?.id
+  )
+  const canCreate = permissionChecker
+    ? permissionChecker?.canAccess("posting.create")
+    : false
 
   const handleCreatePost = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -325,17 +336,19 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   return (
     <div>
       {!showCard ? (
-        <Button
-          className="rounded-lg relative w-36 h-10 cursor-pointer flex items-center border group overflow-hidden"
-          onClick={() => setShowCard(true)}
-        >
-          <span className=" font-semibold transform mr-3 group-hover:translate-x-20 transition-all duration-300">
-            Add Post
-          </span>
-          <span className="absolute right-0 h-full w-10 rounded-lg bg-primary flex items-center justify-center transform group-hover:translate-x-0 group-hover:w-full transition-all duration-300">
-            <Plus className="w-8 " />
-          </span>
-        </Button>
+        canCreate ? (
+          <Button
+            className="rounded-lg relative w-36 h-10 cursor-pointer flex items-center border group overflow-hidden"
+            onClick={() => setShowCard(true)}
+          >
+            <span className="font-semibold transform mr-3 group-hover:translate-x-20 transition-all duration-300">
+              Add Post
+            </span>
+            <span className="absolute right-0 h-full w-10 rounded-lg bg-primary flex items-center justify-center transform group-hover:translate-x-0 group-hover:w-full transition-all duration-300">
+              <Plus className="w-8" />
+            </span>
+          </Button>
+        ) : null
       ) : (
         <Card className="bg-background shadow-lg">
           <CardHeader className="flex flex-row justify-between items-center">

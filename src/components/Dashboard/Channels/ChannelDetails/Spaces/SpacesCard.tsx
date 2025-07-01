@@ -21,6 +21,7 @@ import {
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
 import { useEffect, useState } from "react"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   space: SelectSpace
@@ -35,6 +36,17 @@ function SpacesCard({ space }: Props) {
       setSpaceControl(true)
     }
   }, [user, space])
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "SPACE",
+    space?.id
+  )
+  const canSpaceAllowAction = permissionChecker
+    ? permissionChecker?.canAccess("space.allow.action")
+    : false
+  const canViewSpace = permissionChecker
+    ? permissionChecker?.canAccess("space.view")
+    : false
 
   return (
     <Card key={space.id} className="overflow-hidden">
@@ -79,7 +91,9 @@ function SpacesCard({ space }: Props) {
               </TooltipProvider>
             )}
           </CardTitle>
-          {spaceControl ? <SpacesActionButtons space={space} /> : null}
+          {spaceControl || canSpaceAllowAction ? (
+            <SpacesActionButtons space={space} />
+          ) : null}
         </div>
         <CardDescription>{space.description}</CardDescription>
       </CardHeader>
@@ -88,11 +102,13 @@ function SpacesCard({ space }: Props) {
           {/* {space.membersCount} {space.membersCount === 1 ? 'Member' : 'Members'} */}
           0 Members
         </Badge>
-        <Link href={`./spaces/${space.space_slug}`}>
-          <Button>
-            Launch Space <ArrowRight />
-          </Button>
-        </Link>
+        {canViewSpace && (
+          <Link href={`./spaces/${space.space_slug}`}>
+            <Button>
+              Launch Space <ArrowRight />
+            </Button>
+          </Link>
+        )}
       </CardFooter>
     </Card>
   )

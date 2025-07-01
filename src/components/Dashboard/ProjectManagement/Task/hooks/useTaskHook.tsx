@@ -1,7 +1,10 @@
 import { InsertTask, SelectTask } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { CreateTaskAction, UpdateTaskAction } from "@/src/server-actions/Tasks/Task"
+import {
+  CreateTaskAction,
+  UpdateTaskAction
+} from "@/src/server-actions/Tasks/Task"
 import { projectStore } from "@/src/store/project/projectStore"
 import { userStore } from "@/src/store/user/userStore"
 import { useAtom, useAtomValue } from "jotai"
@@ -14,8 +17,12 @@ interface TaskHookProps {
   onUpdateComplete?: (task: SelectTask) => void
 }
 
-const useTaskHook = ({ selectedTask, sprintId, onCreateComplete, onUpdateComplete}: TaskHookProps) => {
-
+const useTaskHook = ({
+  selectedTask,
+  sprintId,
+  onCreateComplete,
+  onUpdateComplete
+}: TaskHookProps) => {
   const [statuses, setStatuses] = useAtom(projectStore.projectStatusList)
 
   const authUser = useAtomValue(userStore.AuthUser)
@@ -23,7 +30,6 @@ const useTaskHook = ({ selectedTask, sprintId, onCreateComplete, onUpdateComplet
     useServerAction(CreateTaskAction)
   const [updateTaskLoading, updateTaskData, updateTaskError, UpdateTask] =
     useServerAction(UpdateTaskAction)
-
 
   const projectId = useParams().id as string
   const backlogStatus = statuses.find((s) => s.name === "Backlog")
@@ -41,7 +47,7 @@ const useTaskHook = ({ selectedTask, sprintId, onCreateComplete, onUpdateComplet
       handleUpdateTask(data)
     }
   }
-  
+
   async function handleCreateTask(data: InsertTask) {
     try {
       if (authUser) {
@@ -53,7 +59,7 @@ const useTaskHook = ({ selectedTask, sprintId, onCreateComplete, onUpdateComplet
         }
         const task = await CreateTask(payload)
         if (task?.success && task.data) {
-          if(onCreateComplete){
+          if (onCreateComplete) {
             onCreateComplete(task.data)
           }
           toast({
@@ -79,7 +85,7 @@ const useTaskHook = ({ selectedTask, sprintId, onCreateComplete, onUpdateComplet
       if (selectedTask?.id) {
         const updatedTask = await UpdateTask(selectedTask?.id, data)
         if (updatedTask?.success && updatedTask.data) {
-          if(onUpdateComplete){
+          if (onUpdateComplete) {
             onUpdateComplete(updatedTask?.data)
           }
           toast({
@@ -102,7 +108,7 @@ const useTaskHook = ({ selectedTask, sprintId, onCreateComplete, onUpdateComplet
   return {
     handleSubmit,
     createTaskLoading,
-    updateTaskLoading,
+    updateTaskLoading
   }
 }
 

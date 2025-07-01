@@ -14,10 +14,7 @@ import {
 } from "@/src/components/ui/select"
 import { AlertCircle, BarChart2, CircleAlert, Flag } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
-import {
-  InsertTaskStatus,
-  SelectTask,
-} from "@/src/db/schema"
+import { InsertTaskStatus, SelectTask } from "@/src/db/schema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { ToUpperCase } from "@/src/utils/helpers"
@@ -30,7 +27,7 @@ import {
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 
 interface Props {
-  onSubmit: (task :any) => void
+  onSubmit: (task: any) => void
   statuses?: InsertTaskStatus[]
   isTaskModelOpen?: boolean
   selectedTask?: SelectTask
