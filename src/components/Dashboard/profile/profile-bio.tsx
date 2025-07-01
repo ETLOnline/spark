@@ -1,13 +1,11 @@
 "use client"
 
-import { Card, CardContent } from "../../ui/card"
+import { Card } from "../../ui/card"
 import { useEffect } from "react"
 import { ExtendedRecommendations } from "./types/profile-types"
-import EditProfileModal from "./edit-profile-modal"
 import { Badge } from "../../ui/badge"
 import { SelectTag } from "@/src/db/schema"
 import useUserProfile from "./hooks/useUserProfile"
-import { Tag, TagStatus } from "@/src/components/TagsInput/tags-input-types"
 
 type ProfileBioProps = {
   userBio: string
@@ -22,14 +20,13 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
   recommendations,
   tags
 }) => {
-  const [setUserBio, setUserSkills, setUserInterests, skills, interests, bio] =
-    useUserProfile()
+  const [setUserBio, setUserSkills, setUserInterests, skills, interests, bio] = useUserProfile()
 
   useEffect(() => {
-    if (tags) {
-      const skillTags = tags.filter((tag) => tag.type === "skill")
+    if (tags.length) {
+      const skillTags = tags.filter((tag) => (tag.type || '') === "skill")
 
-      const interestTags = tags.filter((tag) => tag.type === "interest")
+      const interestTags = tags.filter((tag) => (tag.type || '') === "interest")
 
       setUserInterests(interestTags)
 
