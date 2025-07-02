@@ -113,29 +113,79 @@ export default function ProjectTeamList({
   }, [spaceId])
 
   const handleAddUsers = async () => {
-    for (const user of selectedUsers) {
-      const response = await AttachUser(projectId, user.value)
-      if (response?.success && response.data) {
-        const matchingUser = spaceUsers.find((u) => u.unique_id === user.value)
-        if (!matchingUser) continue
-
-        const newProjectUser: ProjectUser = {
-          id: response.data.id,
-          project_id: response.data.project_id,
-          user_id: response.data.user_id,
-          role: response.data.role ?? "member",
-          status: response.data.status ?? "active",
-          updated_at: response.data.updated_at ?? null,
-          created_at: response.data.created_at ?? null,
-          deleted_at: response.data.deleted_at ?? null,
-          user: matchingUser
-        }
-        setUsersList((prev) => [...prev, newProjectUser])
-      }
+    const userIdsToAttach = selectedUsers.map((user) => user.value)
+    if (userIdsToAttach.length === 0) {
+      toast({ title: "No users selected to add." })
+      setSelectedUsers([])
+      setDialogOpen(false)
+      return
     }
-    toast({ title: "Users added to project" })
-    setSelectedUsers([])
-    setDialogOpen(false)
+
+    try {
+      const response = await AttachUser(projectId, userIdsToAttach)
+
+      if (response?.success && response.data) {
+        const newlyAttachedProjectUsers: ProjectUser[] = []
+
+        for (const attachedUser of response.data) {
+          const matchingUser = spaceUsers.find(
+            (u) => u.unique_id === attachedUser.user_id
+          )
+          if (!matchingUser) {
+            console.warn(
+              `User with ID ${attachedUser.user_id} not found in spaceUsers after attachment.`
+            )
+            continue
+          }
+
+          const newProjectUser: ProjectUser = {
+            id: attachedUser.id,
+            project_id: attachedUser.project_id,
+            user_id: attachedUser.user_id,
+            role: attachedUser.role ?? "member",
+            status: attachedUser.status ?? "active",
+            updated_at: attachedUser.updated_at ?? null,
+            created_at: attachedUser.created_at ?? null,
+            deleted_at: attachedUser.deleted_at ?? null,
+            user: matchingUser
+          }
+          newlyAttachedProjectUsers.push(newProjectUser)
+        }
+        setUsersList((prev) => [...prev, ...newlyAttachedProjectUsers])
+
+        if (
+          response.failedRoleAssignments &&
+          response.failedRoleAssignments.length > 0
+        ) {
+          toast({
+            title: `Successfully added some users, but roles could not be assigned for: ${response.failedRoleAssignments.join(", ")}.`,
+            variant: "destructive",
+            duration: 3000
+          })
+        } else {
+          toast({ title: "All selected users added to project successfully!" })
+        }
+      } else {
+        console.error(
+          `Failed to attach users to project ${projectId}. Response:`,
+          response
+        )
+        toast({
+          title: response?.error
+            ? `Failed to add users: ${response.error}`
+            : "Failed to add users. Please try again.",
+          variant: "destructive"
+        })
+      }
+    } catch (error: any) {
+      toast({
+        title: `An unexpected error occurred: ${error.message || "Please try again."}`,
+        variant: "destructive"
+      })
+    } finally {
+      setSelectedUsers([])
+      setDialogOpen(false)
+    }
   }
 
   const handleRemoveUser = async (userId: string) => {
