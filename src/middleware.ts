@@ -13,6 +13,7 @@ const isProtectedRoute = createRouteMatcher([
   "/posts",
   "/spaces(.*)",
   "/channels(.*)",
+  "/community(.*)",
   "/personas(.*)",
   "/roles(.*)"
 ])
@@ -40,6 +41,7 @@ export const config = {
     "/project(.*)",
     "/invite",
     "/invite(.*)",
+    "/community(.*)",
     "/personas(.*)",
     "/roles(.*)"
     // Always run for API routes
