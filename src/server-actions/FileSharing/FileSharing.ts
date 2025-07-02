@@ -2,13 +2,19 @@
 import {
   CreateFile,
   CreateFolder,
-  GetDirectoryContents
+  GetDirectoryContents,
+  DeleteFile
 } from "@/src/db/data-access/file-sharing/query"
 import {
   base64ToBuffer,
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
 import { CreateServerAction } from ".."
+import { AuthUserAction } from "../User/AuthUserAction"
+import { getStorageClient } from "@/src/services/storage/client/storage.client"
+import { db } from "@/src/db"
+import { spaceFileDirectoryTable } from "@/src/db/schema"
+import { eq } from "drizzle-orm"
 
 export const CreateNewFolderAction = CreateServerAction(
   true,
@@ -37,6 +43,13 @@ export const CreateNewFileAction = CreateServerAction(
     folderPath: string
   ) => {
     try {
+      const user = await AuthUserAction()
+      if (!user) {
+        return {
+          success: false,
+          error: "Unauthorized"
+        }
+      }
       const fileBuffer = base64ToBuffer(fileB64string)
       const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(
         fileBuffer,
@@ -45,7 +58,13 @@ export const CreateNewFileAction = CreateServerAction(
         folderPath
       )
 
-      const result = await CreateFile(id, fileName, fileSize, fileRecord.id)
+      const result = await CreateFile(
+        id,
+        fileName,
+        fileSize,
+        fileRecord.id,
+        user.unique_id
+      )
       return {
         success: true,
         data: { ...result[0], url: fileUrl }
@@ -74,6 +93,67 @@ export const GetDirectoryContentsAction = CreateServerAction(
       return {
         success: false,
         error: "Failed to fetch directory contents"
+      }
+    }
+  }
+)
+
+export const DeleteFileAction = CreateServerAction(
+  true,
+  async (directoryId: number, spaceId: string) => {
+    try {
+      const user = await AuthUserAction()
+      if (!user) {
+        return {
+          success: false,
+          error: "Unauthorized"
+        }
+      }
+
+      // Check if user owns the file
+      const fileEntry = await db.query.spaceFileDirectoryTable.findFirst({
+        where: eq(spaceFileDirectoryTable.id, directoryId),
+        with: {
+          file: true
+        }
+      })
+      if (!fileEntry || fileEntry.entity_type !== "file") {
+        return {
+          success: false,
+          error: "File not found"
+        }
+      }
+      if (fileEntry.created_by !== user.unique_id) {
+        return {
+          success: false,
+          error: "You can only delete files that you uploaded"
+        }
+      }
+
+      // Delete from database
+      const deletedEntry = await DeleteFile(directoryId)
+
+      // Delete from storage if file exists
+      if (deletedEntry.file?.file_path) {
+        try {
+          const storageClient = getStorageClient()
+          await storageClient.deleteFile({
+            filePath: deletedEntry.file.file_path
+          })
+        } catch (storageError) {
+          console.error("Error deleting file from storage:", storageError)
+        }
+      }
+
+      return {
+        success: true,
+        data: deletedEntry
+      }
+    } catch (error) {
+      console.error("Error deleting file:", error)
+      return {
+        success: false,
+        error: "Failed to delete file"
       }
     }
   }

@@ -1,0 +1,1 @@
+ALTER TABLE "space_file_directory" ADD COLUMN "created_by" varchar;

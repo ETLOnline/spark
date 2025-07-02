@@ -11,13 +11,16 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   PermissionsSeed,
   RolesSeed,
   RolePermissionsSeed,
-  UserSeed,
+  UserSeed
 }
 
 async function runSeeders() {
   try {
     const args = process.argv.slice(2)
-    const seederNames = args.length > 0 ? args : Object.keys(SEEDERS).filter(s=> s !== 'UserSeed')
+    const seederNames =
+      args.length > 0
+        ? args
+        : Object.keys(SEEDERS).filter((s) => s !== "UserSeed")
 
     console.log(`🌱 Starting seeders: ${seederNames.join(", ") || "ALL"}`)
 
