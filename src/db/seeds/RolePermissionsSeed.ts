@@ -140,6 +140,8 @@ const rolePermissionsSeedData = [
   { role_id: 14, permission_id: 47 },
   { role_id: 14, permission_id: 57 },
   { role_id: 14, permission_id: 38 },
+  { role_id: 14, permission_id: 41 },
+  { role_id: 14, permission_id: 40 },
   { role_id: 4, permission_id: 5 },
   { role_id: 4, permission_id: 6 },
   { role_id: 4, permission_id: 9 },
