@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     // Get the value of the 'text' query parameter
     const text = searchParams.get("message") // returns string | null
 
-    let blob = await AzureStorageAdapter.uploadFile({
+    const blob = await AzureStorageAdapter.uploadFile({
       fileBuffer: Buffer.from(text!),
       fileName: text + ".txt",
       mimeType: "text/plain",
