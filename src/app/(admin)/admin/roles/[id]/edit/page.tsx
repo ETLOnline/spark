@@ -85,7 +85,7 @@ export default function EditRolePage({
         title: "Roles and Permission updated successfully",
         duration: 3000
       })
-      router.push("/roles")
+      router.push("/admin/roles")
     } else {
       console.error("❌ Failed to update role", res?.error)
     }
@@ -105,7 +105,7 @@ export default function EditRolePage({
     <div className="p-6">
       <div className="flex items-center gap-4 mb-6">
         <Button variant="ghost" size="icon">
-          <Link href="/roles">←</Link>
+          <Link href="/admin/roles">←</Link>
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold">Edit Role</h1>
@@ -114,7 +114,7 @@ export default function EditRolePage({
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => router.push("/roles")}>
+          <Button variant="outline" onClick={() => router.push("/admin/roles")}>
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={!hasChanges}>
