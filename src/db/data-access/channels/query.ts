@@ -17,6 +17,7 @@ export async function CreateChannel(channelData: InsertChannel) {
       .insert(channelsTable)
       .values(channelData)
       .returning()
+
     return newChannel[0]
   } catch (e: any) {
     console.error(e)
@@ -107,6 +108,10 @@ export async function DeleteChannel(
     await db
       .delete(channelsTable)
       .where(eq(channelsTable.id, deletedChannelData.id))
+
+    await db
+      .delete(ChannelUsersTable)
+      .where(eq(ChannelUsersTable.channel_id, deletedChannelData.id))
   } catch (e: any) {
     throw new Error(e.message)
   }
@@ -168,16 +173,43 @@ export async function GetChannelById(id: string, withChannelUsers?: boolean) {
   }
 }
 
-export async function attachChannelUser(channelId: string, userId: string) {
+export async function attachChannelUser(
+  channelId: string,
+  userId: string,
+  user_role?: string
+) {
   try {
-    const spaceUser = await db
+    const existingChannelUser = await db
+      .select()
+      .from(ChannelUsersTable)
+      .where(
+        and(
+          eq(ChannelUsersTable.channel_id, channelId),
+          eq(ChannelUsersTable.user_id, userId)
+        )
+      )
+      .limit(1)
+    if (existingChannelUser.length > 0) {
+      console.log(
+        `User ${userId} already exists in channel ${channelId}. Returning existing record.`
+      )
+      return existingChannelUser[0]
+    }
+    const newChannelUser = await db
       .insert(ChannelUsersTable)
       .values({
         channel_id: channelId,
-        user_id: userId
+        user_id: userId,
+        role: user_role
       })
       .returning()
-    return spaceUser
+    if (newChannelUser.length > 0) {
+      return newChannelUser[0]
+    } else {
+      throw new Error(
+        "Failed to attach channel user: No record returned after insertion."
+      )
+    }
   } catch (e: any) {
     throw new Error(e.message)
   }

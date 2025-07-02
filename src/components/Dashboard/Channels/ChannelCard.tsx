@@ -20,6 +20,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "../../ui/tooltip"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface ChannelProps {
   channel: SelectChannel
@@ -29,6 +30,18 @@ function ChannelCard({ channel }: ChannelProps) {
   const authUser = useAtomValue(userStore.AuthUser)
 
   const spacesCount = channel?.spaces ? channel.spaces.length : 0
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "CHANNEL",
+    channel?.id
+  )
+
+  const canViewSpace = permissionChecker
+    ? permissionChecker?.canAccess("space.view")
+    : false
+  const canViewChannelAction = permissionChecker
+    ? permissionChecker?.canAccess("channel.allow.action")
+    : false
 
   return (
     <Card key={channel.id} className="overflow-hidden">
@@ -74,7 +87,8 @@ function ChannelCard({ channel }: ChannelProps) {
               </TooltipProvider>
             )}
           </CardTitle>
-          {authUser && canUserIntract(authUser, channel.ownerId) ? (
+          {(authUser && canUserIntract(authUser, channel.created_by)) ||
+          canViewChannelAction ? (
             <ChannelsContextMenu channel={channel} />
           ) : null}
         </div>
@@ -85,9 +99,11 @@ function ChannelCard({ channel }: ChannelProps) {
           <Layout className="mr-1 h-3 w-3" />
           {spacesCount} {spacesCount === 1 ? "Space" : "Spaces"}
         </Badge>
-        <Link href={`/channels/${channel.channel_slug}/spaces`}>
-          <Button variant="outline">View Spaces</Button>
-        </Link>
+        {channel.channel_type === "public" || canViewSpace ? (
+          <Link href={`/channels/${channel.channel_slug}/spaces`}>
+            <Button variant="outline">View Spaces</Button>
+          </Link>
+        ) : null}
       </CardFooter>
     </Card>
   )

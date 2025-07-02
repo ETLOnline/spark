@@ -1,6 +1,6 @@
 import { eq, like } from "drizzle-orm"
 import { db } from "../.."
-import { InsertUser, SelectUser, usersTable } from "../../schema"
+import { InsertUser, userContactsTable, usersTable } from "../../schema"
 
 export async function CreateUser(data: InsertUser) {
   await db.insert(usersTable).values(data)
@@ -16,14 +16,15 @@ export async function SelectUserByExternalId(id: string) {
       profile_url: true,
       unique_id: true,
       role: true,
-      persona_id: true,
       meta_profile: true
     },
     where: eq(usersTable.external_auth_id, id),
     with: {
-      userTags: true,
-      profile: true,
-      persona: true,
+      roles: {
+        with: {
+          role: true
+        }
+      },
       channels: {
         with: {
           channel: {
@@ -70,7 +71,6 @@ export async function FindUserWildCard(wildcard: string) {
         profile_url: true,
         unique_id: true,
         role: true,
-        persona_id: true,
         meta_profile: true
       },
       where: (usersTable, { or }) =>
@@ -142,4 +142,24 @@ export const UpdateUserProfilePicture = async (
     console.error("Error updating user profile picture:", error)
     throw new Error(error.message || "Failed to update user profile picture")
   }
+}
+
+export async function getUserContacts(currentUserId: string) {
+  return await db
+    .select({
+      unique_id: usersTable.unique_id,
+      first_name: usersTable.first_name,
+      last_name: usersTable.last_name,
+      email: usersTable.email,
+      external_auth_id: usersTable.external_auth_id,
+      profile_url: usersTable.profile_url,
+      role: usersTable.role,
+      meta_profile: usersTable.meta_profile
+    })
+    .from(userContactsTable)
+    .innerJoin(
+      usersTable,
+      eq(usersTable.unique_id, userContactsTable.contact_id)
+    )
+    .where(eq(userContactsTable.user_id, currentUserId))
 }

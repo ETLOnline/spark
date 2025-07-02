@@ -6,21 +6,25 @@ import Container from "@/src/components/container/Container"
 import { Card, CardContent } from "@/src/components/ui/card"
 import { Check } from "lucide-react"
 import { cn } from "@/src/lib/utils"
-import { savePersonaAction } from "@/src/server-actions/Personas/Personas"
+import { savePersonaAction } from "@/src/server-actions/UserRoles/UserRole"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { SelectPersona, SelectUser } from "@/src/db/schema"
+import { SelectRole, SelectUser } from "@/src/db/schema"
 import { useRouter } from "next/navigation"
 import { toast } from "@/src/hooks/use-toast"
+import { useSetAtom } from "jotai"
+import { userStore } from "@/src/store/user/userStore"
+import { useAuthUser } from "@/src/hooks/useAuthUser"
 
 interface SelectPersonaPageProps {
-  personas: SelectPersona[]
+  roles: SelectRole[]
   userAuth: SelectUser
 }
 
 export default function SelectPersonaPage({
-  personas,
+  roles,
   userAuth
 }: SelectPersonaPageProps) {
+  const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
   const [selectedPersona, setSelectedPersona] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -36,9 +40,11 @@ export default function SelectPersonaPage({
     try {
       const attachPersona = await executeSavePersona(
         selectedPersona,
+        userAuth.unique_id,
         userAuth.external_auth_id
       )
       if (attachPersona && attachPersona.success) {
+        await refreshAuthUser()
         toast({ title: "Persona saved successfully" })
         router.push("/profile-complition")
       }
@@ -64,36 +70,31 @@ export default function SelectPersonaPage({
             </p>
 
             <div className="grid grid-cols-1 sm:[grid-template-columns:repeat(auto-fit,minmax(0,1fr))]  gap-4 sm:gap-6 mt-12">
-              {personas?.map((persona) =>
-                persona.slug === "admin" ? null : (
-                  <Card
-                    key={persona.id}
-                    className={cn(
-                      "relative cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg",
-                      "border-2 bg-card/50 backdrop-blur-sm",
-                      selectedPersona === persona.id
-                        ? "border-primary shadow-lg shadow-primary/20 bg-primary/5"
-                        : "border-border hover:border-primary/50",
-                      "dark:bg-card/30 dark:backdrop-blur-sm"
+              {roles?.map((role) => (
+                <Card
+                  key={role.id}
+                  className={cn(
+                    "relative cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg",
+                    "border-2 bg-card/50 backdrop-blur-sm",
+                    selectedPersona === role.id
+                      ? "border-primary shadow-lg shadow-primary/20 bg-primary/5"
+                      : "border-border hover:border-primary/50",
+                    "dark:bg-card/30 dark:backdrop-blur-sm"
+                  )}
+                  onClick={() => handleSelectPersona(role.id)}
+                >
+                  <CardContent className="flex flex-col items-center justify-center p-6 h-full min-h-[200px] relative">
+                    {selectedPersona === role.id && (
+                      <div className="absolute top-3 right-3 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                        <Check className="w-4 h-4 text-primary-foreground" />
+                      </div>
                     )}
-                    onClick={() => handleSelectPersona(persona.id)}
-                  >
-                    <CardContent className="flex flex-col items-center justify-center p-6 h-full min-h-[200px] relative">
-                      {selectedPersona === persona.id && (
-                        <div className="absolute top-3 right-3 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                          <Check className="w-4 h-4 text-primary-foreground" />
-                        </div>
-                      )}
-                      <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
-                        {persona.title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground text-center leading-relaxed">
-                        {persona.description}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )
-              )}
+                    <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
+                      {role.name}
+                    </h3>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
 
             <div className="pt-8">

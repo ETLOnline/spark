@@ -18,6 +18,6 @@ export const AuthUserAction = CreateServerAction(true, async () => {
 
     return user
   } catch (error) {
-    throw new Error("Unauthorized", { cause: 401 })
+    throw new Error("Unauthorized", { cause: error })
   }
 })

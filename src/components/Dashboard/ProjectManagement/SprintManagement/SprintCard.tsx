@@ -7,6 +7,8 @@ import {
   CardTitle
 } from "@/src/components/ui/card"
 import { Badge } from "@/src/components/ui/badge"
+import { useAtom, useSetAtom } from "jotai"
+import { sprintStore } from "@/src/store/sprint/sprintsStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -19,8 +21,9 @@ import { Button } from "@/src/components/ui/button"
 import SprintTasks from "./SprintTasks"
 import SprintContextMenu from "./SprintContextMenu"
 import { SprintStatus } from "../constants/projectManagment"
-import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import { TaskModal } from "../Task/components/TaskModal"
+import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   sprint: SelectSprint
@@ -81,6 +84,19 @@ export default function SprintCardPage({ sprint }: Props) {
     ) : null
   }
 
+  // PERMISSIONS INITATE
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    projectId
+  )
+  const canCreateTask = permissionChecker
+    ? permissionChecker?.canAccess("project.task.create")
+    : false
+  const canViewTask = permissionChecker
+    ? permissionChecker?.canAccess("project.task.view")
+    : false
+
   return (
     <>
       <Card className="w-full overflow-hidden">
@@ -98,14 +114,16 @@ export default function SprintCardPage({ sprint }: Props) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant={"outline"}
-                onClick={() => {
-                  setIsTaskModalOpen(true)
-                }}
-              >
-                Add Task
-              </Button>
+              {canCreateTask && (
+                <Button
+                  variant={"outline"}
+                  onClick={() => {
+                    setIsTaskModalOpen(true)
+                  }}
+                >
+                  Add Task
+                </Button>
+              )}
 
               <TaskModal
                 isTaskModelOpen={isTaskModalOpen}
@@ -148,6 +166,7 @@ export default function SprintCardPage({ sprint }: Props) {
                 <Loader size={LoaderSizes.lg} />
               </div>
             ) : tasks.length > 0 ? (
+              canViewTask &&
               tasks.map((task) => (
                 <SprintTasks
                   key={task.id}

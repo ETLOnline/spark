@@ -1,5 +1,5 @@
 {
-  "id": "c59c5070-f7df-4838-87e8-51cf365a5d4c",
+  "id": "c673614f-4275-47bd-8cd5-bd6028370f74",
   "prevId": "1b81d609-5517-4339-b773-27643f191604",
   "version": "7",
   "dialect": "postgresql",
@@ -1164,8 +1164,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.personas": {
-      "name": "personas",
+    "public.permissions": {
+      "name": "permissions",
       "schema": "",
       "columns": {
         "id": {
@@ -1175,7 +1175,7 @@
           "notNull": true,
           "identity": {
             "type": "always",
-            "name": "personas_id_seq",
+            "name": "permissions_id_seq",
             "schema": "public",
             "increment": "1",
             "startWith": "1",
@@ -1185,66 +1185,23 @@
             "cycle": false
           }
         },
-        "title": {
-          "name": "title",
-          "type": "varchar(255)",
+        "namespace": {
+          "name": "namespace",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
-        "slug": {
-          "name": "slug",
-          "type": "varchar(255)",
+        "action": {
+          "name": "action",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'active'"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "personas_slug_unique": {
-          "name": "personas_slug_unique",
-          "nullsNotDistinct": false,
-          "columns": ["slug"]
-        },
-        "personas_description_unique": {
-          "name": "personas_description_unique",
-          "nullsNotDistinct": false,
-          "columns": ["description"]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1854,6 +1811,91 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.role_permissions": {
+      "name": "role_permissions",
+      "schema": "",
+      "columns": {
+        "role_id": {
+          "name": "role_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permission_id": {
+          "name": "permission_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.roles": {
+      "name": "roles",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "roles_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role_type": {
+          "name": "role_type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "entity_type": {
+          "name": "entity_type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "entity_id": {
+          "name": "entity_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.space_features": {
       "name": "space_features",
       "schema": "",
@@ -1969,12 +2011,6 @@
         "parent_id": {
           "name": "parent_id",
           "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_by": {
-          "name": "created_by",
-          "type": "varchar",
           "primaryKey": false,
           "notNull": false
         },
@@ -2472,6 +2508,31 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.user_roles": {
+      "name": "user_roles",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role_id": {
+          "name": "role_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.user_tags": {
       "name": "user_tags",
       "schema": "",
@@ -2566,12 +2627,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'user'"
-        },
-        "persona_id": {
-          "name": "persona_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
         },
         "meta_profile": {
           "name": "meta_profile",

@@ -14,14 +14,29 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { userStore } from "@/src/store/user/userStore"
 import { SelectPost } from "@/src/db/schema"
 import { isUserAdmin } from "@/src/utils/helpers"
+import { spaceStore } from "@/src/store/space/spaceStore"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface PostMenuProps {
   post: SelectPost
+  spaceId?: string
 }
 
-const PostMenu = ({ post }: PostMenuProps) => {
+const PostMenu = ({ post, spaceId }: PostMenuProps) => {
   const [posts, setPosts] = useAtom(postStore.posts)
   const user = useAtomValue(userStore.AuthUser)
+  const { permissionChecker } = usePermissionChecker(
+    spaceId ? "scoped" : "global",
+    "SPACE",
+    spaceId
+  )
+
+  const canDelete = permissionChecker
+    ? permissionChecker?.canAccess("posting.delete")
+    : false
+
+  const isPostOwner = user?.unique_id === post.user_id
+  const shouldShowDeleteButton = canDelete || isPostOwner
 
   const { toast } = useToast()
 
@@ -32,7 +47,7 @@ const PostMenu = ({ post }: PostMenuProps) => {
     try {
       const res = await deletePost(post.id)
       if (res?.success) {
-        setPosts(posts.filter((post) => post.id !== post.id))
+        setPosts((prevPosts) => prevPosts.filter((p) => p.id !== post.id))
         toast({
           title: "Post deleted!",
           duration: 3000
@@ -49,7 +64,7 @@ const PostMenu = ({ post }: PostMenuProps) => {
     }
   }
 
-  if (user?.role && (isUserAdmin(user) || user.unique_id === post.user_id)) {
+  if (shouldShowDeleteButton) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -59,15 +74,14 @@ const PostMenu = ({ post }: PostMenuProps) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
-            <Button variant="ghost" size="sm">
-              <Trash className="mr-2 h-4 w-4" />
-              Delete
-            </Button>
+            <Trash className="mr-2 h-4 w-4" />
+            Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     )
   } else {
+    // If no permission, return null (don't render anything)
     return null
   }
 }

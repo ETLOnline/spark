@@ -19,13 +19,21 @@ import {
 import { useParams } from "next/navigation"
 import { userStore } from "@/src/store/user/userStore"
 import { PageMeta } from "@/src/utils/constants"
+import { PermissionChecker } from "@/src/lib/PermissionCheker"
 
 const useSideBarHook = () => {
-  const setRoutes = useSetAtom(navStore.routes)
+  const [routes, setRoutes] = useAtom(navStore.routes)
   const setCrumbRoutes = useSetAtom(navStore.crumbRoutes)
   const setSelectedChannel = useSetAtom(channelStore.selectedChannel)
   const [channels, setChannels] = useAtom(channelStore.sideBarChannels)
   const user = useAtomValue(userStore.AuthUser)
+
+  const permission = useAtomValue(userStore.Permissions)
+  const [permissionChecker, setPermissionChecker] = useAtom(
+    navStore.permissionCheckerAtom
+  )
+  const isSuperAdmin = Boolean(useAtomValue(userStore.SuperAdmin))
+  const [isNavLoading, setIsNavLoading] = useAtom(navStore.isNavLoading)
 
   const channelSlug = useParams().channel_slug
 
@@ -150,15 +158,34 @@ const useSideBarHook = () => {
   }
 
   useEffect(() => {
+    if (
+      (permission && !permissionChecker) ||
+      (isSuperAdmin && !permissionChecker)
+    ) {
+      const checker = new PermissionChecker("global", permission, isSuperAdmin)
+      setPermissionChecker(checker)
+    }
+  }, [permission, permissionChecker, isSuperAdmin])
+
+  useEffect(() => {
+    if (!permissionChecker) return
+
+    const filterdRoutes = routes.navMain.filter((route) => {
+      if (!route.permission) return true
+      return permissionChecker?.canAccess(route.permission)
+    })
+
     if (userData) {
       let mappedCrumbs: PageMeta[] = []
 
       setRoutes((routes) => {
         return {
           ...routes,
+          navMain: filterdRoutes,
           navChannels: getChannelsNavMapped(channels)
         }
       })
+      setIsNavLoading(false)
       setCrumbRoutes((crumbRoutes) => {
         mappedCrumbs = getChannelsCrumbsMapped(channels)
         return [
@@ -191,7 +218,7 @@ const useSideBarHook = () => {
         setSelectedChannel({ ...selectedChannel })
       }
     }
-  }, [channels, userData])
+  }, [channels, userData, permission, permissionChecker, isSuperAdmin])
 }
 
 export default useSideBarHook

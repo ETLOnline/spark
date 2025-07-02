@@ -41,6 +41,20 @@ import { Badge } from "@/src/components/ui/badge"
 import { ProjectUserRole } from "@/src/components/common/types/projectuser.role"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
+import { projectStore } from "@/src/store/project/projectStore"
+import { Label } from "@/src/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/src/components/ui/select"
+import {
+  getRoleByEntityTypeAndIdAction,
+  updateUserRoleForEntityAction
+} from "@/src/server-actions/UserRoles/UserRole"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 export interface ProjectUser extends SelectProjectUser {
   user: SelectUser & Partial<{ role: string; bio: string | null }>
@@ -70,13 +84,20 @@ export default function ProjectTeamList({
   const [removeUserLoading, , , RemoveUser] = useServerAction(
     RemoveProjectUserAction
   )
-  const [updateRoleLoading, , , UpdateProjectUserRole] = useServerAction(
-    UpdateProjectUserRoleAction
-  )
+  const [updateProjectUserRoleLoading, , , callUpdateUserRoleForEntity] =
+    useServerAction(updateUserRoleForEntityAction)
+  const [spaceRolesLoading, spaceRolesData, spaceRolesError, fetchSpaceRoles] =
+    useServerAction(getRoleByEntityTypeAndIdAction)
+
+  useEffect(() => {
+    if (projectId) {
+      fetchSpaceRoles("PROJECT", projectId)
+    }
+  }, [projectId])
 
   const [roleDialogOpen, setRoleDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<ProjectUser | null>(null)
-  const [newRole, setNewRole] = useState<string>("member")
+  const [newRoleName, setNewRoleName] = useState<string>("member") // Renamed to newRoleName to clarify it's the name
 
   const authUser = useAtomValue(userStore.AuthUser)
   const isProjectCreator = authUser?.unique_id == projectCreatorId
@@ -92,34 +113,109 @@ export default function ProjectTeamList({
   }, [spaceId])
 
   const handleAddUsers = async () => {
-    for (const user of selectedUsers) {
-      const response = await AttachUser(projectId, user.value)
-      if (response?.success && response.data) {
-        const matchingUser = spaceUsers.find((u) => u.unique_id === user.value)
-        if (!matchingUser) continue
-
-        const newProjectUser: ProjectUser = {
-          id: response.data.id,
-          project_id: response.data.project_id,
-          user_id: response.data.user_id,
-          role: response.data.role ?? "member",
-          status: response.data.status ?? "active",
-          updated_at: response.data.updated_at ?? null,
-          created_at: response.data.created_at ?? null,
-          deleted_at: response.data.deleted_at ?? null,
-          user: matchingUser
-        }
-        setUsersList((prev) => [...prev, newProjectUser])
-      }
+    const userIdsToAttach = selectedUsers.map((user) => user.value)
+    if (userIdsToAttach.length === 0) {
+      toast({ title: "No users selected to add." })
+      setSelectedUsers([])
+      setDialogOpen(false)
+      return
     }
-    toast({ title: "Users added to project" })
-    setSelectedUsers([])
-    setDialogOpen(false)
+
+    try {
+      const response = await AttachUser(projectId, userIdsToAttach)
+
+      if (response?.success && response.data) {
+        const newlyAttachedProjectUsers: ProjectUser[] = []
+
+        for (const attachedUser of response.data) {
+          const matchingUser = spaceUsers.find(
+            (u) => u.unique_id === attachedUser.user_id
+          )
+          if (!matchingUser) {
+            console.warn(
+              `User with ID ${attachedUser.user_id} not found in spaceUsers after attachment.`
+            )
+            continue
+          }
+
+          const newProjectUser: ProjectUser = {
+            id: attachedUser.id,
+            project_id: attachedUser.project_id,
+            user_id: attachedUser.user_id,
+            role: attachedUser.role ?? "member",
+            status: attachedUser.status ?? "active",
+            updated_at: attachedUser.updated_at ?? null,
+            created_at: attachedUser.created_at ?? null,
+            deleted_at: attachedUser.deleted_at ?? null,
+            user: matchingUser
+          }
+          newlyAttachedProjectUsers.push(newProjectUser)
+        }
+        setUsersList((prev) => [...prev, ...newlyAttachedProjectUsers])
+
+        if (
+          response.failedRoleAssignments &&
+          response.failedRoleAssignments.length > 0
+        ) {
+          toast({
+            title: `Successfully added some users, but roles could not be assigned for: ${response.failedRoleAssignments.join(", ")}.`,
+            variant: "destructive",
+            duration: 3000
+          })
+        } else {
+          toast({ title: "All selected users added to project successfully!" })
+        }
+      } else {
+        console.error(
+          `Failed to attach users to project ${projectId}. Response:`,
+          response
+        )
+        toast({
+          title: response?.error
+            ? `Failed to add users: ${response.error}`
+            : "Failed to add users. Please try again.",
+          variant: "destructive"
+        })
+      }
+    } catch (error: any) {
+      toast({
+        title: `An unexpected error occurred: ${error.message || "Please try again."}`,
+        variant: "destructive"
+      })
+    } finally {
+      setSelectedUsers([])
+      setDialogOpen(false)
+    }
   }
 
   const handleRemoveUser = async (userId: string) => {
     try {
-      const response = await RemoveUser(projectId, userId)
+      if (!selectedUser) {
+        toast({
+          title: "Error",
+          description: "No user selected for removal.",
+          variant: "destructive"
+        })
+        return
+      }
+
+      // Find the role object based on the selected user's current role name
+      const roleToRemove = spaceRolesData?.data?.find(
+        (role) => role.name === selectedUser.role
+      )
+
+      if (!roleToRemove) {
+        toast({
+          title: "Error",
+          description: "Could not find the role for the selected user.",
+          variant: "destructive"
+        })
+        return
+      }
+
+      // Pass the projectId, userId, and the roleToRemove.id to the RemoveUser action
+      const response = await RemoveUser(projectId, userId, roleToRemove.id)
+
       if (response?.success) {
         setUsersList((prev) => prev.filter((user) => user.user_id !== userId))
         toast({ title: "User removed from project" })
@@ -140,17 +236,39 @@ export default function ProjectTeamList({
   }
 
   const handleSaveRole = async () => {
-    if (!selectedUser) return
+    if (!selectedUser) {
+      toast({ title: "No user selected", variant: "destructive" })
+      return
+    }
+    const newRoleObj = spaceRolesData?.data?.find(
+      (role) => role.name === newRoleName
+    )
+
+    if (!newRoleObj) {
+      toast({ title: "Selected role not found", variant: "destructive" })
+      return
+    }
+
+    const oldRoleObj = spaceRolesData?.data?.find(
+      (role) => role.name === selectedUser.role
+    )
+    const oldRoleId = oldRoleObj ? oldRoleObj.id : null
+
     try {
-      const response = await UpdateProjectUserRole(
-        projectId,
+      const response = await callUpdateUserRoleForEntity(
+        // <-- Using the new server action
         selectedUser.user_id,
-        newRole
+        projectId,
+        "PROJECT",
+        newRoleObj.id,
+        oldRoleId ?? 0,
+        newRoleName
       )
+
       if (response?.success) {
         setUsersList((prev) =>
           prev.map((u) =>
-            u.user_id === selectedUser.user_id ? { ...u, role: newRole } : u
+            u.user_id === selectedUser.user_id ? { ...u, role: newRoleName } : u
           )
         )
         toast({ title: "Role updated successfully" })
@@ -158,8 +276,13 @@ export default function ProjectTeamList({
       } else {
         toast({ title: "Failed to update role", variant: "destructive" })
       }
-    } catch {
-      toast({ title: "Failed to update role", variant: "destructive" })
+    } catch (error) {
+      console.error("Error updating project user role:", error)
+      toast({
+        title: "Failed to update role",
+        description: "An unexpected error occurred.",
+        variant: "destructive"
+      })
     }
   }
 
@@ -168,13 +291,34 @@ export default function ProjectTeamList({
     value: u.unique_id
   }))
 
+  // PERMISSIONS INITATE
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    projectId
+  )
+  const canView = permissionChecker
+    ? permissionChecker?.canAccess("project.teams.view")
+    : false
+  const canCreate = permissionChecker
+    ? permissionChecker?.canAccess("project.teams.add")
+    : false
+  const canUpdate = permissionChecker
+    ? permissionChecker?.canAccess("project.teams.update")
+    : false
+  const canDelete = permissionChecker
+    ? permissionChecker?.canAccess("project.teams.delete")
+    : false
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Project Team</h1>
-        <Button onClick={() => setDialogOpen(true)}>
-          <PlusCircle className="mr-2 h-4 w-4" /> Add Users
-        </Button>
+        {canCreate && (
+          <Button onClick={() => setDialogOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" /> Add Users
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -195,6 +339,7 @@ export default function ProjectTeamList({
                   No users in project yet.
                 </div>
               ) : (
+                canView &&
                 usersList.map((cu) => {
                   const user = cu.user
                   if (!user) return null
@@ -228,7 +373,7 @@ export default function ProjectTeamList({
                         </Badge>
                       </div>
                       <div className="col-span-1 text-center">
-                        {isProjectCreator ? (
+                        {isProjectCreator || canUpdate || canDelete ? (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon">
@@ -239,22 +384,29 @@ export default function ProjectTeamList({
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedUser(cu)
-                                  setNewRole(cu.role ?? "member")
-                                  setRoleDialogOpen(true)
-                                }}
-                              >
-                                Change Role
-                              </DropdownMenuItem>
+                              {canUpdate && (
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedUser(cu)
+                                    setNewRoleName(cu.role ?? "member")
+                                    setRoleDialogOpen(true)
+                                  }}
+                                >
+                                  Change Role
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() => handleRemoveUser(cu.user_id)}
-                              >
-                                Remove User
-                              </DropdownMenuItem>
+                              {canDelete && (
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={() => {
+                                    setSelectedUser(cu)
+                                    handleRemoveUser(cu.user_id)
+                                  }}
+                                >
+                                  Remove User
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         ) : (
@@ -301,23 +453,42 @@ export default function ProjectTeamList({
           <DialogHeader>
             <DialogTitle>Change User Role</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <label htmlFor="role" className="block mb-2 font-medium">
-              Select Role
-            </label>
-            <select
-              id="role"
-              value={newRole}
-              onChange={(e) => setNewRole(e.target.value)}
-              className="w-full border rounded px-3 py-2"
-            >
-              <option value={ProjectUserRole.Admin}>Admin</option>
-              <option value={ProjectUserRole.Editor}>Editor</option>
-              <option value={ProjectUserRole.Viewer}>Viewer</option>
-            </select>
+          <div className="grid gap-4 py-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="channel_type">User Role</Label>
+              <div className="w-[70%]">
+                <Select
+                  onValueChange={(value) => {
+                    setNewRoleName(value)
+                  }}
+                  defaultValue={selectedUser?.role || ""}
+                  value={newRoleName}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      className="capitalize"
+                      placeholder="Select Role"
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {spaceRolesData &&
+                      spaceRolesData.data &&
+                      spaceRolesData.data.map((role) => (
+                        <SelectItem key={role.id} value={role.name}>
+                          {role.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
           <DialogFooter>
-            <Button loading={updateRoleLoading} onClick={handleSaveRole}>
+            <Button
+              loading={updateProjectUserRoleLoading}
+              onClick={handleSaveRole}
+            >
+              {" "}
               Save
             </Button>
           </DialogFooter>

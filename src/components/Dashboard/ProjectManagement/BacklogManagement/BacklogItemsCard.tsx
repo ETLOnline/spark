@@ -1,7 +1,7 @@
 import { Checkbox } from "@/src/components/ui/checkbox"
 import React, { useEffect, useState } from "react"
 import BacklogItems from "./BacklogItems"
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useParams, useSearchParams } from "next/navigation"
 import Loader from "@/src/components/common/Loader/Loader"
@@ -9,6 +9,7 @@ import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import PaginationComponent from "@/src/components/common/Pagination"
 import { taskStore } from "@/src/store/tasks/taskStore"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { GetBacklogTasksAction } from "@/src/server-actions/Tasks/Task"
 
 interface Props {
@@ -46,6 +47,16 @@ function BacklogItemsCard({ searchedItem, orderList, limit }: Props) {
     }
     fatchTasks()
   }, [projectId, searchParams, searchedItem, orderList, limit])
+
+  // PERMISSIONS INITATE
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    projectId
+  )
+  const canView = permissionChecker
+    ? permissionChecker?.canAccess("project.backlog.task.view")
+    : false
 
   return (
     <>
@@ -85,15 +96,21 @@ function BacklogItemsCard({ searchedItem, orderList, limit }: Props) {
           ) : (
             <div className="pb-2">
               {tasks &&
-                tasks.map((task) => (
-                  <BacklogItems
-                    key={task.id}
-                    task={task}
-                    selectedItems={selectedItems}
-                    setSelectedItems={setSelectedItems}
-                  />
-                ))}
-              {Pagination && <PaginationComponent pagination={Pagination} />}
+                canView &&
+                tasks.map(
+                  (task) =>
+                    task.sprint_id === null && (
+                      <BacklogItems
+                        key={task.id}
+                        task={task}
+                        selectedItems={selectedItems}
+                        setSelectedItems={setSelectedItems}
+                      />
+                    )
+                )}
+              {Pagination && canView && (
+                <PaginationComponent pagination={Pagination} />
+              )}
             </div>
           )}
         </div>

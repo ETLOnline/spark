@@ -13,8 +13,9 @@ import { AlertCircle, ChartGantt, Plus, Settings } from "lucide-react"
 import NoDataCard from "../../Channels/ChannelDetails/NoDataCard"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
-import { projectStore } from "@/src/store/project/projectStore"
 import StatusRequiredDialog from "../StatusRequiredDialog"
+import { projectStore } from "@/src/store/project/projectStore"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 export function SprintManagement() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
@@ -42,14 +43,26 @@ export function SprintManagement() {
     fetchSprints()
   }, [projectId])
 
+  // PERMISSIONS INITATE
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    projectId
+  )
+  const canCreate = permissionChecker
+    ? permissionChecker?.canAccess("project.sprint.create")
+    : false
+
   return projectStatusList.length > 0 ? (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-bold">Sprint Management</h2>
-        <Button onClick={() => setIsCreateSprintOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Sprint
-        </Button>
+        {canCreate && (
+          <Button onClick={() => setIsCreateSprintOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Sprint
+          </Button>
+        )}
       </div>
 
       <div className="space-y-4 print:space-y-3">

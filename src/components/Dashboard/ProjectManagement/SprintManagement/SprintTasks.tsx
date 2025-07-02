@@ -1,7 +1,7 @@
 import { Badge } from "@/src/components/ui/badge"
 import { SelectSprint, SelectTask } from "@/src/db/schema"
 import { projectStore } from "@/src/store/project/projectStore"
-import { useAtom, useSetAtom } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { CircleHelp, MoreHorizontal } from "lucide-react"
 import React, { Dispatch, SetStateAction, useState } from "react"
 import {
@@ -30,6 +30,7 @@ import {
 import { toast } from "@/src/hooks/use-toast"
 import { UpdateTaskAction } from "@/src/server-actions/Tasks/Task"
 import { useServerAction } from "@/src/hooks/useServerAction"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import TaskMoveDialog from "../Task/components/task-move-dialog"
 
 interface Props {
@@ -121,6 +122,19 @@ function SprintTasks({
     )
   }
 
+  // PERMISSIONS INITATE
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    currSprint?.projectId
+  )
+  const canUpdateTask = permissionChecker
+    ? permissionChecker?.canAccess("project.task.update")
+    : false
+  const canDeleteTask = permissionChecker
+    ? permissionChecker?.canAccess("project.task.delete")
+    : false
+
   return (
     <>
       <div
@@ -155,31 +169,33 @@ function SprintTasks({
           <CircleHelp className="w-full" />
         </div>
         <div className="col-span-1 text-center">
-          <DropdownMenu
-            open={isTaskDropDownOpen}
-            onOpenChange={(open) => setIsTaskDropDownOpen(open)}
-          >
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>Assign</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  setIsTaskDropDownOpen(false)
-                  setIsAlertOpen(true)
-                }}
-              >
-                Remove from Sprint
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => moveTask(task.id)}>
-                Move to other Sprint
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {canUpdateTask && (
+            <DropdownMenu
+              open={isTaskDropDownOpen}
+              onOpenChange={(open) => setIsTaskDropDownOpen(open)}
+            >
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>Assign</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => {
+                    setIsTaskDropDownOpen(false)
+                    setIsAlertOpen(true)
+                  }}
+                >
+                  Remove from Sprint
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => moveTask(task.id)}>
+                  Move to other Sprint
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 

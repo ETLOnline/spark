@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import AppSidebar from "@/src/components/Dashboard/Sidebar.tsx/app-sidebar"
 import Header from "@/src/components/Dashboard/header"
 import { SidebarInset, SidebarProvider } from "@/src/components/ui/sidebar"
-import { checkUserPersonaCompletion } from "@/src/utils/helpers"
+import { checkUserPersonaCompletion, isSuperAdmin } from "@/src/utils/helpers"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 
 export default async function DashboardLayout({
@@ -15,11 +15,13 @@ export default async function DashboardLayout({
   if (!authUser) {
     redirect("/sign-in")
   }
-
+  const superAdmin = await isSuperAdmin(authUser)
   const hasPersona = await checkUserPersonaCompletion(authUser)
 
-  if (!hasPersona) {
-    redirect("/personas")
+  if (!superAdmin) {
+    if (!hasPersona) {
+      redirect("/personas")
+    }
   }
 
   return (
