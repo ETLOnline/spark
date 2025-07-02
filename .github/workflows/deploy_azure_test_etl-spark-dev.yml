@@ -1,0 +1,106 @@
+name: Azure Deployment - App Service etl-spark-dev
+
+on:
+  push:
+    branches:
+      - deployment_azure_test
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env: # <-- Define environment variables for the build job here
+      NODE_ENV: ${{ secrets.NODE_ENV }}
+      WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PWD: ${{ secrets.DB_PWD }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      ABLY_API_KEY: ${{ secrets.ABLY_API_KEY }}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+    permissions:
+      contents: read # This is required for actions/checkout
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js version
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22.x" # Ensure this matches your local and Azure App Service Node.js version
+
+      - name: Get the Latest npm to avoid any caching issues
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: npm ci --include=optional # Use 'npm ci' for CI/CD for consistent installs
+
+      - name: Build Next.js app
+        run: npm run build
+      - name: Copy Static Assets to Standalone Output
+        run: |
+          # Copy 'public' directory contents
+          # The 'public' directory should be at your repo root relative to the workflow file.
+          # We copy its contents directly into the 'standalone/public'
+          mkdir -p ./.next/standalone/public
+          cp -r public/* ./.next/standalone/public/ || true
+          # Copy generated Next.js static assets from ./.next/static
+          # The standalone server expects these to be in ./.next/static *within* the standalone directory
+          mkdir -p ./.next/standalone/.next/static
+          cp -r ./.next/static/* ./.next/standalone/.next/static/ || true
+          # Add an ls -la to debug if files are present
+          echo "Contents of ./.next/standalone:"
+          ls -la ./.next/standalone/
+          echo "Contents of ./.next/standalone/public:"
+          ls -la ./.next/standalone/public
+          echo "Contents of ./.next/standalone/.next/static:"
+          ls -la ./.next/standalone/.next/static
+
+      - name: Zip artifact for deployment
+        # The 'standalone' output creates a ./.next/standalone directory
+        # which contains everything needed to run the app, including node_modules
+        run: |
+          cd ./.next/standalone
+          zip -r ../../release.zip .
+          # The above command zips the contents of the standalone folder
+          # into release.zip located at the repository root.
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-app
+          path: release.zip # Path to the zipped standalone build
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      id-token: write # This is required for requesting the JWT
+      contents: read # This is required for actions/checkout
+
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: node-app
+
+      - name: Unzip artifact for deployment
+        run: unzip release.zip
+        # This will unzip 'release.zip' into the current directory,
+        # so the contents of the standalone folder will be at the root of the deployment.
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_FE8AE7E389324908BB26EB05EF12A610 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B504ADCBAECC489C880B107DC7D4C6F1 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_48EAAAD533374BCD87BCBE58AD57951A }}
+
+      - name: "Deploy to Azure Web App"
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: "etl-spark-dev"
+          slot-name: "Production"
+          package: . # Deploy the current directory, which now contains the unzipped standalone build
