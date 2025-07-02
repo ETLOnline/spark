@@ -37,12 +37,14 @@ import {
   deleteUserRole,
   getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
+import { defaultSpaceOverviewTemplate } from "@/src/app/(dashboard)/channels/[channel_slug]/spaces/[space_slug]/(space-layout)/components/constants"
 
 export const CreateSpaceAction = CreateServerAction(
   true,
   async (SpaceData: InsertSpace) => {
     try {
-      const newSpace = await CreateSpace(SpaceData)
+      const overview = defaultSpaceOverviewTemplate(SpaceData.space_name)
+      const newSpace = await CreateSpace({ ...SpaceData, overview: overview })
       const channel = AblyClientRest.channels.get(
         "broadcast-channels-spaces-update"
       )
@@ -174,9 +176,9 @@ export const DeleteSpaceAction = CreateServerAction(
 
 export const GetSpaceBySlugAction = CreateServerAction(
   true,
-  async (spaceSlug: string, channelSlug: string) => {
+  async (spaceSlug: string, channelSlug: string, withSpaceUsers?: boolean) => {
     try {
-      const space = await GetSpaceBySlug(spaceSlug, channelSlug)
+      const space = await GetSpaceBySlug(spaceSlug, channelSlug, withSpaceUsers)
       return { success: true, data: space }
     } catch (error) {
       return { error: error }

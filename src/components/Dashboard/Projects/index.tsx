@@ -22,59 +22,9 @@ import { space } from "postcss/lib/list"
 import CreateNewProject from "./CreateNewProject"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
-export interface ProjectProposal {
-  id: string
-  title: string
-  description: string
-  author: {
-    name: string
-    avatar: string
-  }
-  category: string
-  status: "draft" | "active" | "completed"
-  likes: number
-  comments: number
-  contributors: number
+interface Props {
+  space: SelectSpace
 }
-
-const sampleProposals: ProjectProposal[] = [
-  {
-    id: "1",
-    title: "AI-Powered Code Review Assistant",
-    description:
-      "Develop an AI tool that can automatically review code, suggest improvements, and detect potential bugs.",
-    author: { name: "Alice Johnson", avatar: "/avatars/01.png" },
-    category: "AI & Development",
-    status: "active",
-    likes: 42,
-    comments: 15,
-    contributors: 3
-  },
-  {
-    id: "2",
-    title: "Decentralized Learning Platform",
-    description:
-      "Create a blockchain-based platform for sharing educational content and certifications.",
-    author: { name: "Bob Smith", avatar: "/avatars/02.png" },
-    category: "Blockchain & Education",
-    status: "draft",
-    likes: 28,
-    comments: 7,
-    contributors: 1
-  },
-  {
-    id: "3",
-    title: "IoT Home Energy Optimization",
-    description:
-      "Build a system that uses IoT devices to monitor and optimize home energy consumption.",
-    author: { name: "Charlie Davis", avatar: "/avatars/03.png" },
-    category: "IoT & Sustainability",
-    status: "active",
-    likes: 35,
-    comments: 12,
-    contributors: 5
-  }
-]
 
 const categories = [
   "AI & Development",
@@ -87,7 +37,7 @@ const categories = [
   "AR/VR"
 ]
 
-export function ProjectScreen() {
+export function ProjectScreen({ space }: Props) {
   const [projects, setProjects] = useAtom(projectStore.projects)
   const [currSpace, setCurrSpace] = useState<SelectSpace>()
 
@@ -112,16 +62,8 @@ export function ProjectScreen() {
   const channel_slug = searchParam.get("channel")
 
   useEffect(() => {
-    const getSpace = async () => {
-      if (spaceSlug && channel_slug) {
-        const space = await getSpaceBySlug(spaceSlug, channel_slug)
-        if (space?.success && space.data) {
-          setCurrSpace(space.data)
-        }
-      }
-    }
-    getSpace()
-  }, [spaceSlug, channel_slug])
+    setCurrSpace(space)
+  }, [space])
 
   useEffect(() => {
     if (currSpace) {
@@ -203,8 +145,9 @@ export function ProjectScreen() {
                   </TabsContent> */}
             </Tabs>
           </div>
-          {isModalOpen && selectedProject && (
+          {isModalOpen && selectedProject && currSpace && (
             <CreateNewProject
+              currSpace={currSpace}
               defaultValues={selectedProject}
               isEditing={true}
               isOpen={isModalOpen}

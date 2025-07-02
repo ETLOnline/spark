@@ -56,11 +56,13 @@ const projectSchema = z.object({
 type ProjectFormData = z.infer<typeof projectSchema>
 
 function ProjectFormModal({
+  currSpace,
   defaultValues,
   isEditing = false,
   isOpen: externalOpen,
   setIsOpen: setExternalOpen
 }: {
+  currSpace?: SelectSpace
   defaultValues?: Partial<InsertProject>
   isEditing?: boolean
   isOpen?: boolean
@@ -100,27 +102,11 @@ function ProjectFormModal({
 
   const AuthUser = useAtomValue(userStore.AuthUser)
 
-  const searchParams = useSearchParams()
   const router = useRouter()
 
-  const [channelSlug, setChannelSlug] = useState<string | null>(null)
-  const [spaceSlug, setSpaceSlug] = useState<string | null>(null)
-
   useEffect(() => {
-    setChannelSlug(searchParams.get("channel"))
-    setSpaceSlug(searchParams.get("space"))
-  }, [searchParams])
-
-  useEffect(() => {
-    if (!spaceSlug || !channelSlug) return
-    GetSpaceBySlugAction(spaceSlug || "", channelSlug || "").then(
-      (currentSpace) => {
-        if (currentSpace.success && currentSpace.data) {
-          setSpace(currentSpace.data)
-        }
-      }
-    )
-  }, [spaceSlug, channelSlug])
+    setSpace(currSpace)
+  }, [currSpace])
 
   useEffect(() => {
     if (!defaultValues) return
@@ -169,6 +155,7 @@ function ProjectFormModal({
 
   async function handleCreateProject(data: any) {
     try {
+      console.log("space", space)
       const payLoad = {
         ...data,
         created_by: AuthUser?.unique_id,
@@ -183,7 +170,7 @@ function ProjectFormModal({
           .format("DD-MM-YYYY")
       }
       const createdProject = await createProject(payLoad as InsertProject)
-
+      console.log("error", createdProject?.error)
       if (createdProject?.success && createdProject?.data) {
         await refreshAuthUser()
         if (!AuthUser?.unique_id) {
@@ -200,7 +187,9 @@ function ProjectFormModal({
           title: "Project Successfully Created",
           duration: 3000
         })
-        router.push(`project/${createdProject.data.id}/settings?tab=taskStatus`)
+        router.push(
+          `/project/${createdProject.data.id}/settings?tab=taskStatus`
+        )
       }
     } catch (error) {
       setIsOpen(false)

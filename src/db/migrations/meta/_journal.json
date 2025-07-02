@@ -36,6 +36,13 @@
       "when": 1751380839763,
       "tag": "0004_2025_07_01_194005__create_table_role_and_permissions_and_user_roles_adn_drop_the_personas",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1751444010897,
+      "tag": "0005_2025_07_02_131328__update_space_table",
+      "breakpoints": true
     }
   ]
 }
