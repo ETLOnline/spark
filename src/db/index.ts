@@ -2,6 +2,7 @@ import { config } from "dotenv"
 import * as schema from "./schema"
 import { drizzle } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
+import { readFileSync } from "fs"
 
 const environmentType = process.env.NODE_ENV || "development" //development | test | production
 
