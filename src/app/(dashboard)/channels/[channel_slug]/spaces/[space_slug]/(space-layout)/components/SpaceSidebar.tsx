@@ -116,10 +116,18 @@ function SpaceSidebar({ space }: Props) {
           </SidebarMenuButton>
 
           {/* space overview */}
-          <Link href={`./${space.space_slug}`}>
+          <Link
+            href={`/channels/${space.channel?.channel_slug}/spaces/${space.space_slug}`}
+          >
             <SidebarMenuItem
               className={`flex flex-row items-center gap-2 p-2 rounded
-              ${!pageType.get("page-type") && !pathname ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent"}`}
+              ${
+                !pageType.get("page-type") &&
+                pathname ===
+                  `/channels/${space.channel?.channel_slug}/spaces/${space.space_slug}`
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "hover:bg-sidebar-accent"
+              }`}
             >
               <DynamicIcon name="layout-dashboard" className="h-4 w-4" />
               Overview
@@ -140,7 +148,7 @@ function SpaceSidebar({ space }: Props) {
               >
                 <SidebarMenuItem
                   className={`flex flex-row items-center gap-2 p-2 rounded
-                ${pageType.get("page-type") === feature.feature?.feature_slug ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent"}`}
+              ${pageType.get("page-type") === feature.feature?.feature_slug ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent"}`}
                 >
                   <DynamicIcon
                     name={feature.feature?.feature_icon as IconName}
@@ -166,7 +174,12 @@ function SpaceSidebar({ space }: Props) {
             >
               <SidebarMenuItem
                 className={`flex flex-row items-center gap-2 p-2 rounded
-            ${pathname.includes(feature.slug) ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent"}`}
+            ${
+              pathname.includes(`${feature.slug}`) ||
+              pageType.get("page-type") === feature.slug
+                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                : "hover:bg-sidebar-accent"
+            }`}
               >
                 <DynamicIcon
                   name={feature.icon as IconName}
