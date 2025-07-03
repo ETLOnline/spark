@@ -19,6 +19,7 @@ import { spaceStaticFeatures } from "./constants"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { useAtom } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
+import Avvvatars from "avvvatars-react"
 
 interface Props {
   space: SelectSpace
@@ -93,14 +94,15 @@ function SpaceSidebar({ space }: Props) {
           <SidebarMenuButton size={"lg"} asChild>
             <Link href={`./${space.space_slug}`} className="mb-2">
               <div className="flex aspect-square items-center justify-center rounded-lg text-sidebar-primary-foreground">
-                <Image
+                {/* <Image
                   sizes="8"
                   src="/images/placeholder/placeholderImage.png"
                   alt="spark-logo"
                   width={40}
                   height={40}
                   className="rounded-full h-10 w-10"
-                />
+                /> */}
+                <Avvvatars value={space.space_name} size={40} style="shape" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate  font-semibold color-accent">
@@ -108,7 +110,7 @@ function SpaceSidebar({ space }: Props) {
                 </span>
                 <div></div>
                 <span className="truncate flex items-center gap-1 text-xs text-muted-foreground">
-                  <Users className="h-4 w-4" />
+                  <Users className="h-3 w-3" />
                   {space.users?.length || 0} members
                 </span>
               </div>

@@ -96,7 +96,7 @@ export function ProjectScreen({ space }: Props) {
         </div>
       ) : (
         <div className="flex-grow flex space-x-4">
-          <div className="w-full lg:w-3/4">
+          <div className="w-full ">
             <Tabs defaultValue="all">
               <TabsList className="w-full justify-around lg:w-auto">
                 <TabsTrigger value="all">All Projects</TabsTrigger>
@@ -154,11 +154,11 @@ export function ProjectScreen({ space }: Props) {
               setIsOpen={setIsModalOpen}
             />
           )}
-          <div className="w-1/4 hidden lg:block space-y-4">
-            {/* <ProjectIncubatorStats proposals={proposals} /> */}
+          {/* <div className="w-1/4 hidden lg:block space-y-4">
+            <ProjectIncubatorStats proposals={proposals} />
             <ProjectTopCatagories categories={categories} />
             <Contribute />
-          </div>
+          </div> */}
         </div>
       )}
     </div>
