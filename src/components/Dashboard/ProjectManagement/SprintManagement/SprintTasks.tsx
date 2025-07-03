@@ -188,7 +188,7 @@ function SprintTasks({
                     setIsAlertOpen(true)
                   }}
                 >
-                  Remove from Sprint
+                  Move to Backlog
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => moveTask(task.id)}>
                   Move to other Sprint
