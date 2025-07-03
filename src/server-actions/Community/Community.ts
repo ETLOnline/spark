@@ -11,22 +11,17 @@ import {
 } from "@/src/db/data-access/communities/query"
 import { isUserAdmin } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
-import {
-  InsertCommunity,
-  SelectCommunity,
-  SelectCommunityUser
-} from "@/src/db/schema"
+import { InsertCommunity, SelectCommunity } from "@/src/db/schema"
 import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 
 export const CreateCommunityAction = CreateServerAction(
-  true, // Requires authentication
+  true,
   async (communityData: InsertCommunity) => {
     try {
       const newCommunity = await CreateCommunity(communityData)
 
-      // Example: Realtime broadcast (adjust topic as needed)
       const channel = AblyClientRest.channels.get(
         "broadcast-communities-update"
       )
@@ -42,15 +37,15 @@ export const CreateCommunityAction = CreateServerAction(
     }
   }
 )
+export interface GetCommunitiesActionResponse {
+  communities: SelectCommunity[]
+  allCommunitiesPagination: PaginationType
+  joinedCommunities: SelectCommunity[]
+  joinedCommunitiesPagination: PaginationType
+}
 
 export interface GetCommunitiesResponseType {
   communities: SelectCommunity[]
-  pagination: PaginationType
-}
-
-export interface GetCommunitiesActionResponse {
-  communities: SelectCommunity[]
-  joinedCommunities: SelectCommunity[]
   pagination: PaginationType
 }
 
@@ -59,52 +54,34 @@ export const GetCommunitiesAction = CreateServerAction(
   async (
     filters?: CommunityQueryFilters,
     page: number = 1,
-    limit: number = 6
+    limit: number = 6,
+    activeTab: "all" | "my" = "all"
   ): Promise<
     | { success: true; data: GetCommunitiesActionResponse }
     | { success: false; error: any }
   > => {
     try {
       const authUser = await AuthUserAction()
-      let allCommunitiesResponse: GetCommunitiesResponseType
-      let joinedCommunities: SelectCommunity[] = []
-      const combinedFilters: CommunityQueryFilters = {
-        ...filters,
-        page,
-        limit
+
+      if (!authUser?.unique_id) {
+        throw new Error("Authentication required to fetch communities.")
       }
+       const allCommunitiesResult = await GetCommunities({ ...filters }, page, limit)
 
-      if (false) {
-        allCommunitiesResponse = await GetCommunities(combinedFilters)
-      } else {
-        allCommunitiesResponse = await GetCommunities({
-          ...combinedFilters
-        })
-        console.log(allCommunitiesResponse, "combinedFilters")
-        if (authUser?.unique_id) {
-          const joinedCommunitiesResponse = await GetJoinedCommunities(
-            authUser.unique_id,
-            {
-              ...combinedFilters
-            }
-          )
-          joinedCommunities = joinedCommunitiesResponse.communities
-        }
-
-        const joinedCommunityIds = joinedCommunities.map((c) => c.id)
-
-        // Filter out joined communities from the 'allCommunitiesResponse'
-        // allCommunitiesResponse.communities = allCommunitiesResponse.communities.filter(
-        //     (community) => !joinedCommunityIds.includes(community.id)
-        // )
-      }
+            const joinedCommunitiesResult = await GetJoinedCommunities(
+                authUser.unique_id,
+                { ...filters },
+                page,
+                limit
+            )
 
       return {
         success: true,
         data: {
-          communities: allCommunitiesResponse.communities,
-          joinedCommunities: joinedCommunities,
-          pagination: allCommunitiesResponse.pagination
+          communities: allCommunitiesResult.communities,
+          allCommunitiesPagination: allCommunitiesResult.pagination,
+          joinedCommunities: joinedCommunitiesResult.communities,
+          joinedCommunitiesPagination: joinedCommunitiesResult.pagination
         }
       }
     } catch (error: any) {
@@ -126,10 +103,7 @@ export const GetJoinedCommunitiesAction = CreateServerAction(
   true,
 
   async (
-    filters?: Omit<
-      CommunityQueryFilters,
-      "searchTerm" | "communityType" | "userId"
-    >,
+    filters?: Omit<CommunityQueryFilters, "createdByUserId">,
     page: number = 1,
     limit: number = 10
   ): Promise<
@@ -163,8 +137,6 @@ export const GetJoinedCommunitiesAction = CreateServerAction(
     }
   }
 )
-
-// --- Placeholder for other CRUD/management actions (following your channels/action.ts pattern) ---
 
 export const UpdateCommunityAction = CreateServerAction(
   true,

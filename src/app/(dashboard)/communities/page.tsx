@@ -7,7 +7,7 @@ import {
   DeleteCommunityAction,
   GetCommunitiesAction,
   GetCommunitiesActionResponse
-} from "@/src/server-actions/Community/Community" // <-- Import GetCommunitiesActionResponse
+} from "@/src/server-actions/Community/Community"
 import {
   CommunityQueryFilters,
   CommunityType,
@@ -33,6 +33,7 @@ interface EnhancedCommunityQueryFilters extends CommunityQueryFilters {
   refreshTriggerValue?: boolean
   page?: number
   limit?: number
+  activeTab?: "all" | "my"
 }
 
 export default function CommunitiesPage() {
@@ -54,6 +55,7 @@ export default function CommunitiesPage() {
 
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(6)
+  const [activeTab, setActiveTab] = useState<"all" | "my">("all")
   const [loading, communitiesResult, error, fetchCommunities] =
     useServerAction(GetCommunitiesAction)
   const [deleteLoading, , deleteError, deleteCommunity] = useServerAction(
@@ -63,12 +65,18 @@ export default function CommunitiesPage() {
   const previousFiltersRef = useRef<EnhancedCommunityQueryFilters | null>(null)
   const initialLoadRef = useRef(true)
   const loadCommunities = useCallback(
-    async (filters: CommunityQueryFilters, page: number, limit: number) => {
+    async (
+      filters: CommunityQueryFilters,
+      page: number,
+      limit: number,
+      currentActiveTab: "all" | "my"
+    ) => {
       const currentEnhancedFilters: EnhancedCommunityQueryFilters = {
         ...filters,
         refreshTriggerValue: refreshTrigger,
         page,
-        limit
+        limit,
+        activeTab: currentActiveTab
       }
       if (
         !initialLoadRef.current &&
@@ -76,7 +84,7 @@ export default function CommunitiesPage() {
           JSON.stringify(previousFiltersRef.current)
       ) {
         console.log(
-          "Filters (including refresh trigger, page, limit) are identical, skipping fetch."
+          "Filters (including refresh trigger, page, limit, active tab) are identical, skipping fetch."
         )
         return
       }
@@ -87,9 +95,12 @@ export default function CommunitiesPage() {
         "Page:",
         page,
         "Limit:",
-        limit
+        limit,
+        "Active Tab:",
+        currentActiveTab
       )
-      const res = await fetchCommunities(filters, page, limit)
+      // NEW: Pass activeTab to fetchCommunities server action
+      const res = await fetchCommunities(filters, page, limit, currentActiveTab)
 
       if (res?.success && res.data) {
         setCommunitiesList(res.data)
@@ -115,12 +126,12 @@ export default function CommunitiesPage() {
 
     if (initialLoadRef.current) {
       initialLoadRef.current = false
-      loadCommunities(currentFilters, currentPage, itemsPerPage)
+      loadCommunities(currentFilters, currentPage, itemsPerPage, activeTab)
       return
     }
 
     debounceTimeoutRef.current = setTimeout(() => {
-      loadCommunities(currentFilters, currentPage, itemsPerPage)
+      loadCommunities(currentFilters, currentPage, itemsPerPage, activeTab)
     }, 300)
 
     return () => {
@@ -134,8 +145,9 @@ export default function CommunitiesPage() {
     sortBy,
     currentPage,
     itemsPerPage,
-    loadCommunities
-  ])
+    loadCommunities,
+    activeTab
+  ]) // NEW: Add activeTab to dependencies
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value)
@@ -147,6 +159,15 @@ export default function CommunitiesPage() {
   }
   const handleSortByChange = (value: SortByOptions) => {
     setSortBy(value)
+    setCurrentPage(1)
+  }
+
+  const handleTabChange = (tabValue: string) => {
+    if (tabValue === "all" || tabValue === "my") {
+      setActiveTab(tabValue)
+    } else {
+      console.warn("Unexpected tab value received:", tabValue)
+    }
     setCurrentPage(1)
   }
 
@@ -208,7 +229,10 @@ export default function CommunitiesPage() {
     "Science"
   ]
 
-  const paginationData = communitiesList?.pagination
+  const paginationData =
+    activeTab === "all"
+      ? communitiesList?.allCommunitiesPagination
+      : communitiesList?.joinedCommunitiesPagination
   const totalPages = paginationData?.totalPages || 1
   const currentPageFromData = paginationData?.page || 1
 
@@ -254,6 +278,8 @@ export default function CommunitiesPage() {
         communitiesList={communitiesList} // communitiesList now includes pagination data
         onEditCommunity={handleEditCommunity}
         onDeleteCommunity={handleDeleteCommunity}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
       />
 
       {/* Pagination UI */}

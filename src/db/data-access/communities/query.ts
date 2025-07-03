@@ -1,5 +1,3 @@
-// src/db/data-access/communities/query.ts
-
 import { db } from "../.."
 import {
   communitiesTable,
@@ -7,8 +5,8 @@ import {
   SelectCommunity,
   communityUsersTable,
   channelsTable,
-  SelectCommunityUser, // Make sure to import this
-  SelectChannel // Make sure to import this
+  SelectCommunityUser,
+  SelectChannel
 } from "../../schema"
 import {
   eq,
@@ -22,10 +20,7 @@ import {
   ne
 } from "drizzle-orm"
 
-// 1. Define CommunityType
 export type CommunityType = "public" | "private" | "restricted"
-
-// 2. Define SortByOptions
 export type SortByOptions =
   | "newest"
   | "oldest"
@@ -35,28 +30,27 @@ export type SortByOptions =
   | "titleAsc"
   | "titleDesc"
 
-// 3. Update CommunityQueryFilters to use these types
 export interface CommunityQueryFilters {
   searchTerm?: string
   communityCategory?: string
   sortBy?: SortByOptions
-  page?: number
-  limit?: number
   createdByUserId?: string
 }
 
-// *** NEW: Define a type for a community object that includes its relations ***
-// This type is specifically for what GetCommunities returns when relations are loaded.
 export type CommunityWithRelations = SelectCommunity & {
-  communityMembers: SelectCommunityUser[] // Drizzle will load these as an array if 'with' is used
-  channels: SelectChannel[] // Drizzle will load these as an array if 'with' is used
+  communityMembers: SelectCommunityUser[]
+  channels: SelectChannel[]
 }
 
 /**
  * Retrieves a list of communities based on various filters, with pagination.
  * Includes related data like member count and channel count.
  */
-export async function GetCommunities(filters?: CommunityQueryFilters): Promise<{
+export async function GetCommunities(
+  filters?: CommunityQueryFilters,
+  page: number = 1,
+  limit: number = 6
+): Promise<{
   communities: CommunityWithRelations[]
   pagination: { total: number; page: number; limit: number; totalPages: number }
 }> {
@@ -64,8 +58,6 @@ export async function GetCommunities(filters?: CommunityQueryFilters): Promise<{
     searchTerm,
     communityCategory,
     sortBy = "newest",
-    page = 1,
-    limit = 6,
     createdByUserId
   } = filters || {}
   const offset = (page - 1) * limit
@@ -87,6 +79,12 @@ export async function GetCommunities(filters?: CommunityQueryFilters): Promise<{
     case "titleDesc":
       orderByClause = sql`${communitiesTable.title} desc`
       break
+    case "oldest":
+      orderByClause = sql`${communitiesTable.created_at} asc`
+      break
+    case "membersCount":
+    case "channelsCount":
+    case "activeToday":
     default:
       orderByClause = sql`${communitiesTable.created_at} desc`
   }
@@ -132,30 +130,33 @@ export async function GetCommunities(filters?: CommunityQueryFilters): Promise<{
 }
 
 /**
- * Retrieves communities that a specific user has joined.
- * NOTE: This function does not currently load 'communityMembers' or 'channels' relations
- * from the 'communitiesTable' as it's doing a select on 'communityUsersTable' and then
- * joining. If those relations are needed, the query would need to be structured differently
- * (e.g., query communitiesTable with a where clause that checks for user membership).
- * For now, the mapping in CommunitiesPage.tsx will use 0 for these counts for joined communities.
+ * Retrieves communities that a specific user has joined, with optional filters and pagination.
  */
 export async function GetJoinedCommunities(
   userId: string,
-  filters?: Omit<
-    CommunityQueryFilters,
-    "searchTerm" | "communityCategory" | "createdByUserId"
-  >
+  filters?: CommunityQueryFilters,
+  page: number = 1,
+  limit: number = 6
 ): Promise<{
   communities: SelectCommunity[]
   pagination: { total: number; page: number; limit: number; totalPages: number }
 }> {
-  const { page = 1, limit = 6, sortBy = "newest" } = filters || {}
-
+  const { sortBy = "newest", searchTerm, communityCategory } = filters || {}
   const offset = (page - 1) * limit
 
   const whereClause: (SQLWrapper | SQL)[] = [
     eq(communityUsersTable.user_id, userId)
   ]
+
+  if (searchTerm) {
+    whereClause.push(
+      sql`(${ilike(communitiesTable.title, `%${searchTerm}%`)} OR ${ilike(communitiesTable.description, `%${searchTerm}%`)})`
+    )
+  }
+
+  if (communityCategory && communityCategory !== "all") {
+    whereClause.push(ilike(communitiesTable.category, communityCategory))
+  }
 
   let orderByClause: SQL<unknown> | undefined
   switch (sortBy) {
@@ -177,16 +178,18 @@ export async function GetJoinedCommunities(
 
   try {
     const joinedCommunitiesPromise = db
-      .select({ community: communitiesTable })
+      .select({
+        community: communitiesTable
+      })
       .from(communityUsersTable)
-      .where(and(...whereClause))
-      .limit(limit)
-      .offset(offset)
-      .orderBy(orderByClause)
       .leftJoin(
         communitiesTable,
         eq(communityUsersTable.community_id, communitiesTable.id)
       )
+      .where(and(...whereClause))
+      .limit(limit)
+      .offset(offset)
+      .orderBy(orderByClause)
       .then((rows) => {
         return rows
           .map((row) => row.community)
@@ -194,8 +197,12 @@ export async function GetJoinedCommunities(
       }) as Promise<SelectCommunity[]>
 
     const totalCountPromise = db
-      .select({ count: count() })
+      .select({ count: sql`count(distinct ${communitiesTable.id})` })
       .from(communityUsersTable)
+      .leftJoin(
+        communitiesTable,
+        eq(communityUsersTable.community_id, communitiesTable.id)
+      )
       .where(and(...whereClause))
 
     const [communities, totalResult] = await Promise.all([
@@ -203,7 +210,7 @@ export async function GetJoinedCommunities(
       totalCountPromise
     ])
 
-    const total = totalResult[0].count
+    const total = totalResult[0].count as number
     const totalPages = Math.ceil(total / limit)
 
     return {

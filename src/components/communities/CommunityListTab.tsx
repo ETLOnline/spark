@@ -11,13 +11,16 @@ import CommunityCard from "./CommunityCard"
 import { Skeleton } from "../ui/skeleton"
 import CommunitySkeletonCards from "./CommunitySkeleton"
 import { SelectCommunity } from "@/src/db/schema"
+import { GetCommunitiesActionResponse } from "@/src/server-actions/Community/Community"
 
 interface CommunityListTabsProps {
   loading: boolean
   error: Error | null
-  communitiesList: { communities: any[]; joinedCommunities: any[] } | null
+  communitiesList: GetCommunitiesActionResponse | null
   onEditCommunity: (community: SelectCommunity) => void
   onDeleteCommunity: (community: SelectCommunity) => void
+  activeTab: "all" | "my"
+  onTabChange: (tabValue: string) => void
 }
 
 export default function CommunityListTabs({
@@ -25,17 +28,22 @@ export default function CommunityListTabs({
   error,
   communitiesList,
   onEditCommunity,
-  onDeleteCommunity
+  onDeleteCommunity,
+  activeTab,
+  onTabChange
 }: CommunityListTabsProps) {
-  console.log(communitiesList, "communitiesListcommunitiesListcommunitiesList")
+  const allCommunities = communitiesList?.communities || []
+  const joinedCommunities = communitiesList?.joinedCommunities || []
+  const totalMyCommunities =
+    communitiesList?.joinedCommunitiesPagination?.total || 0
   return (
-    <Tabs defaultValue="all" className="w-full">
+    <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
       <TabsList>
         <TabsTrigger value="all">All Communities</TabsTrigger>
         <TabsTrigger value="my">
           My Communities
           <Badge variant="secondary" className="ml-2">
-            {communitiesList?.joinedCommunities?.length || 0}
+            {totalMyCommunities || 0}
           </Badge>
         </TabsTrigger>
       </TabsList>
@@ -53,11 +61,8 @@ export default function CommunityListTabs({
       {/* All Communities Tab Content */}
       <TabsContent value="all" className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {!loading &&
-          !error &&
-          communitiesList &&
-          communitiesList.communities.length > 0
-            ? communitiesList.communities.map((community: any) => (
+          {!loading && !error && allCommunities.length > 0
+            ? allCommunities.map((community: any) => (
                 <CommunityCard
                   key={community.id}
                   community={community}
@@ -68,8 +73,7 @@ export default function CommunityListTabs({
               ))
             : !loading &&
               !error &&
-              communitiesList &&
-              communitiesList.communities.length === 0 && (
+              allCommunities.length === 0 && (
                 <NoDataCard
                   icon={
                     <Shield className="h-16 w-16 text-muted-foreground mb-4" />
@@ -84,11 +88,8 @@ export default function CommunityListTabs({
       {/* My Communities Tab Content */}
       <TabsContent value="my" className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {!loading &&
-          !error &&
-          communitiesList &&
-          communitiesList.joinedCommunities.length > 0
-            ? communitiesList.joinedCommunities.map((community: any) => (
+          {!loading && !error && joinedCommunities.length > 0
+            ? joinedCommunities.map((community: any) => (
                 <CommunityCard
                   key={community.id}
                   community={community}
@@ -99,8 +100,7 @@ export default function CommunityListTabs({
               ))
             : !loading &&
               !error &&
-              communitiesList &&
-              communitiesList.joinedCommunities.length === 0 && (
+              joinedCommunities.length === 0 && (
                 <NoDataCard
                   icon={
                     <Shield className="h-16 w-16 text-muted-foreground mb-4" />
