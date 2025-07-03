@@ -364,7 +364,7 @@ export default function CreateCommunityModal({
         setCommunityFormModalVisibility(open)
       }}
     >
-      <DialogContent className="max-w-[95vw] sm:max-w-[425px]">
+      <DialogContent className="max-w-[95vw] sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
             {editMode === true ? "Edit Community" : "Create Community"}
