@@ -809,6 +809,7 @@ export const spaceFileDirectoryTable = pgTable("space_file_directory", {
   entity_id: integer(),
   entity_size: integer(),
   parent_id: integer(),
+  created_by: varchar(),
   ...timestamps
 })
 

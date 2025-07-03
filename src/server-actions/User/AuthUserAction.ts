@@ -3,6 +3,7 @@
 import { SelectUserByExternalId } from "@/src/db/data-access/user/query"
 import { CreateServerAction } from ".."
 import { auth } from "@clerk/nextjs/server"
+import { readFileSync } from "fs"
 
 export const AuthUserAction = CreateServerAction(true, async () => {
   try {

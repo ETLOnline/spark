@@ -14,10 +14,10 @@ interface Props {
 function UpComingEvent({ events, setEvents }: Props) {
   const { permissionChecker } = usePermissionChecker("global")
   const canCreate = permissionChecker
-    ? permissionChecker?.canAccess("event.create")
+    ? permissionChecker?.canAccess("events.create")
     : false
   const canView = permissionChecker
-    ? permissionChecker?.canAccess("event.view")
+    ? permissionChecker?.canAccess("events.view")
     : false
   return (
     <div className="grid justify-items-center mt-2">

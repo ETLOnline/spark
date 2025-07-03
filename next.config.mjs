@@ -27,7 +27,18 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: "500mb"
     }
-  }
+  },
+  // --- UPDATED: 'experimental.serverComponentsExternalPackages' moved to 'serverExternalPackages' ---
+  serverExternalPackages: [
+    "@libsql/client", // Ensure @libsql/client is externalized
+    "libsql" // Also include the raw 'libsql' package if used directly
+    // Add any other packages that load native C++ binaries
+  ],
+  // --- ADD THIS LINE ---
+  // Specifies to build the application as a standalone Node.js server.
+  // This creates a ./.next/standalone folder with all necessary files,
+  // including a pruned node_modules, ready for deployment.
+  output: "standalone"
 }
 
 export default nextConfig

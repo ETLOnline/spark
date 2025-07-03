@@ -6,11 +6,13 @@ import {
   CreateProject,
   getProjectById,
   getProjects,
-  createProjectUser,
+  createProjectUsers,
   getProjectUsers,
   removeProjectUser,
   updateProjectUserRole,
-  updateProject
+  updateProject,
+  getExistingProjectUsers,
+  createProjectUser
 } from "@/src/db/data-access/project-management/query"
 import {
   createScopedProjectRolesAndAssignAdmin,
@@ -78,23 +80,69 @@ export const GetProjectByIdAction = CreateServerAction(
 
 export const AttachProjectUserAction = CreateServerAction(
   true,
-  async (projectId: string, userId: string, role?: string) => {
+  async (projectId: string, userIds: string[]) => {
+    // Now accepts an array of user IDs
     try {
-      const attachUserRole = await getAndAssignViewerRoles(
-        userId,
-        "project_viewer",
-        projectId
-      )
-      const newProjectUser = await createProjectUser(
-        projectId,
-        userId,
-        attachUserRole?.viewerRole?.name
+      const existingUserIds = await getExistingProjectUsers(projectId, userIds)
+
+      const newUsersToAttach = userIds.filter(
+        (userId) => !existingUserIds.includes(userId)
       )
 
-      return { success: true, data: newProjectUser }
-    } catch (error) {
-      console.error("Error adding user to project:", error)
-      return { error }
+      if (newUsersToAttach.length === 0) {
+        console.log(
+          `No new users to attach to project ${projectId}. All provided users already exist.`
+        )
+        return {
+          success: true,
+          message: "All provided users are already attached to the project.",
+          data: []
+        }
+      }
+
+      const usersToCreateWithRoles: { userId: string; role: string }[] = []
+      const failedRoleAssignments: string[] = []
+
+      for (const userId of newUsersToAttach) {
+        try {
+          const attachUserRole = await getAndAssignViewerRoles(
+            userId,
+            "project_viewer",
+            projectId
+          )
+
+          const determinedRole = attachUserRole?.viewerRole?.name || "member"
+          usersToCreateWithRoles.push({ userId, role: determinedRole })
+        } catch (roleError: any) {
+          console.error(
+            `Failed to get and assign viewer roles for user ${userId}: ${roleError.message}`
+          )
+          failedRoleAssignments.push(userId)
+        }
+      }
+
+      if (
+        usersToCreateWithRoles.length === 0 &&
+        failedRoleAssignments.length > 0
+      ) {
+        return {
+          success: false,
+          error: `Failed to determine roles for any new users. Users: ${failedRoleAssignments.join(", ")}`
+        }
+      }
+
+      const newProjectUsers = await createProjectUsers(
+        projectId,
+        usersToCreateWithRoles
+      )
+
+      return { success: true, data: newProjectUsers, failedRoleAssignments }
+    } catch (error: any) {
+      return {
+        success: false,
+        error:
+          error.message || "An unknown error occurred while attaching users."
+      }
     }
   }
 )

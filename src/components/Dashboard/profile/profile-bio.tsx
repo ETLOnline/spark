@@ -20,13 +20,14 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
   recommendations,
   tags
 }) => {
-  const [setUserBio, setUserSkills, setUserInterests, skills, interests, bio] = useUserProfile()
+  const [setUserBio, setUserSkills, setUserInterests, skills, interests, bio] =
+    useUserProfile()
 
   useEffect(() => {
     if (tags.length) {
-      const skillTags = tags.filter((tag) => (tag.type || '') === "skill")
+      const skillTags = tags.filter((tag) => (tag.type || "") === "skill")
 
-      const interestTags = tags.filter((tag) => (tag.type || '') === "interest")
+      const interestTags = tags.filter((tag) => (tag.type || "") === "interest")
 
       setUserInterests(interestTags)
 
