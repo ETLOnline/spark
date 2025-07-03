@@ -7,7 +7,7 @@ import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
 import ChannelUserList from "@/src/components/UserListAndInvite/UserList"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { getSpaceRole } from "@/src/utils/spaceRoleHelper"
-import { isUserAdmin } from "@/src/utils/helpers"
+import { isSuperAdmin, isUserAdmin } from "@/src/utils/helpers"
 import UnauthorizedAccessScreen from "@/src/components/common/UnauthorizedAccessScreen"
 import { getRoleByEntityTypeAndIdAction } from "@/src/server-actions/UserRoles/UserRole"
 
@@ -37,7 +37,8 @@ async function SpaceUsersPage({ params }: Props) {
     const hasRole = scopedRoles
       ? scopedRoles.some((role) => role.name === channelRole)
       : false
-    if (!hasRole) {
+    const superAdmin = isSuperAdmin(authUser)
+    if (!hasRole && !superAdmin) {
       return <UnauthorizedAccessScreen />
     }
   }

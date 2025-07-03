@@ -63,7 +63,7 @@ export default function UsersPage() {
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center gap-4 mb-6">
         <Button variant="ghost" size="icon">
-          <Link href="/roles">←</Link>
+          <Link href="/admin/roles">←</Link>
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold">User</h1>

@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm"
+import { and, eq, inArray } from "drizzle-orm"
 import { db } from "../.."
 import {
   InsertProject,
@@ -59,6 +59,62 @@ export async function createProjectUser(
     return newProjectUser[0]
   } catch (e: any) {
     throw new Error(e.message)
+  }
+}
+
+export async function getExistingProjectUsers(
+  projectId: string,
+  userIdsToCheck: string[]
+): Promise<string[]> {
+  try {
+    if (userIdsToCheck.length === 0) {
+      console.warn("No user IDs provided to check for existing project users.")
+      return []
+    }
+
+    const existingUsers = await db
+      .select({ userId: ProjectUsersTable.user_id })
+      .from(ProjectUsersTable)
+      .where(
+        and(
+          eq(ProjectUsersTable.project_id, projectId),
+          inArray(ProjectUsersTable.user_id, userIdsToCheck)
+        )
+      )
+
+    const existingUserIds = existingUsers.map((user) => user.userId)
+
+    return existingUserIds
+  } catch (e: any) {
+    throw new Error(`Failed to retrieve existing project users: ${e.message}`)
+  }
+}
+
+export async function createProjectUsers(
+  projectId: string,
+  usersWithRoles: { userId: string; role: string }[]
+) {
+  try {
+    if (usersWithRoles.length === 0) {
+      console.log("No new users provided for project creation.")
+      return []
+    }
+
+    const projectUsersToInsert = usersWithRoles.map((user) => ({
+      project_id: projectId,
+      user_id: user.userId,
+      role: user.role
+    }))
+
+    const newProjectUsers = await db
+      .insert(ProjectUsersTable)
+      .values(projectUsersToInsert)
+      .returning()
+
+    return newProjectUsers
+  } catch (e: any) {
+    console.error(`Error creating project users: ${e.message}`)
+    throw new Error(`Failed to create project users: ${e.message}`)
   }
 }
 export async function getProjectUsers(projectId: string) {

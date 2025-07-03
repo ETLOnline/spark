@@ -47,6 +47,7 @@ export async function POST(req: Request) {
       "svix-timestamp": svix_timestamp,
       "svix-signature": svix_signature
     }) as WebhookEvent
+    console.log("svix hook verified")
   } catch (err) {
     console.error("Error verifying webhook:", err)
     return new Response("Error occured", {
@@ -61,28 +62,34 @@ export async function POST(req: Request) {
 
   // console.log(`Webhook with and ID of ${id} and type of ${eventType}`)
   // console.log('Webhook body:', body)
+  try {
+    if (evt.type === "user.created") {
+      const userObj = evt.data
 
-  if (evt.type === "user.created") {
-    const userObj = evt.data
+      const userById = await SelectUserByExternalId(userObj.id)
+      const userByEmail = await SelectUserByEmail(
+        userObj.email_addresses[0].email_address
+      )
 
-    const userById = await SelectUserByExternalId(userObj.id)
-    const userByEmail = await SelectUserByEmail(
-      userObj.email_addresses[0].email_address
-    )
+      if (userById || userByEmail) {
+        return new Response("", { status: 200 })
+      }
 
-    if (userById || userByEmail) {
-      return new Response("", { status: 200 })
+      const newUser: InsertUser = {
+        first_name: userObj.first_name || "",
+        last_name: userObj.last_name || "",
+        email: userObj.email_addresses[0].email_address || "",
+        external_auth_id: userObj.id,
+        profile_url: userObj.image_url || "",
+        meta: JSON.stringify(userObj)
+      }
+      await CreateUser(newUser)
     }
-
-    const newUser: InsertUser = {
-      first_name: userObj.first_name || "",
-      last_name: userObj.last_name || "",
-      email: userObj.email_addresses[0].email_address || "",
-      external_auth_id: userObj.id,
-      profile_url: userObj.image_url || "",
-      meta: JSON.stringify(userObj)
-    }
-    await CreateUser(newUser)
+  } catch (error: any) {
+    console.error("Error creating user:", error)
+    return new Response("Error occured", {
+      status: 400
+    })
   }
 
   return new Response("", { status: 200 })

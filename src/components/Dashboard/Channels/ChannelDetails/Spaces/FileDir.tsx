@@ -1,4 +1,4 @@
-import { FolderPlus, Upload, UploadCloud } from "lucide-react"
+import { FolderPlus, Upload } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -8,11 +8,7 @@ import {
 } from "@/src/components/ui/dialog"
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
   DrawerTitle,
   DrawerTrigger
 } from "@/src/components/ui/drawer"
@@ -112,7 +108,8 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
                   ? formatFileSize(item.file?.file_size)
                   : "",
                 url: item.file?.file_path,
-                children: []
+                children: [],
+                created_by: item.created_by || undefined
               }))
               setDir(formattedData)
             }
@@ -198,7 +195,8 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
               ? formatFileSize(item.file?.file_size)
               : "",
             url: item.file?.file_path,
-            children: []
+            children: [],
+            created_by: item.created_by || undefined
           }))
 
           // Update the dir state by adding children to the correct folder
@@ -278,7 +276,8 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
           ? formatFileSize(createdFile?.entity_size)
           : "",
         url: createdFile?.url,
-        children: []
+        children: [],
+        created_by: createdFile?.created_by || undefined
       }
 
       if (currentPath === "/") {
