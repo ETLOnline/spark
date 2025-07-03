@@ -44,6 +44,7 @@
     "@tabler/icons-react": "^3.30.0",
     "ably": "^2.6.0",
     "avvvatars-react": "^0.4.2",
+    "ci": "^2.3.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
