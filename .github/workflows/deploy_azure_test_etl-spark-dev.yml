@@ -3,14 +3,19 @@ name: Build and deploy Node.js app to Azure Web App - etl-spark-dev
 on:
   push:
     branches:
-      - deploy_azure_test
+      - deploy_azure_spark_dev
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     env: # <-- Define environment variables for the build job here
-      DATABASE_URL : ${{ secrets.TURSO_DATABASE_URL }}
+      DB_HOST : ${{ secrets.DB_HOST }}
+      DB_PORT : ${{ secrets.DB_PORT }}
+      DB_USER : ${{ secrets.DB_USER }}
+      DB_PWD : ${{ secrets.DB_PWD }}
+      DB_NAME : ${{ secrets.DB_NAME }}
+      DB_SSL : ${{ secrets.DB_SSL }}
       WEBHOOK_SECRET : ${{ secrets.WEBHOOK_SECRET }}
       ABLY_API_KEY : ${{ secrets.ABLY_API_KEY }}
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY : ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
