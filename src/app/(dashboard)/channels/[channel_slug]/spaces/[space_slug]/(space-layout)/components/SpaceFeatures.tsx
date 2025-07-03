@@ -12,12 +12,16 @@ import SpaceChat from "./spaceChat"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import SpaceOverview from "./SpaceOverview"
 import { ProjectScreen } from "@/src/components/Dashboard/Projects"
+import Loader from "@/src/components/common/Loader/Loader"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
 interface Props {
   features: SelectSpaceFeature[]
   space: SelectSpace
 }
 
 function SpaceFeatures({ features, space }: Props) {
+  const [isRedirecting, setIsRedirecting] = useState(false)
+
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "SPACE",
@@ -70,10 +74,18 @@ function SpaceFeatures({ features, space }: Props) {
   })
 
   const renderFeatureModule = (featureSlug: string) => {
-    if (featureSlug === "settings") {
-      redirect(`./${space.space_slug}/settings`)
-    } else if (featureSlug === "users") {
-      redirect(`./${space.space_slug}/users`)
+    if (featureSlug === "settings" || featureSlug === "users") {
+      if (!isRedirecting) {
+        setIsRedirecting(true)
+        setTimeout(() => {
+          redirect(`./${space.space_slug}/${featureSlug}`)
+        }, 300)
+      }
+      return (
+        <div className="flex items-center justify-center h-full">
+          <Loader size={LoaderSizes.lg} />
+        </div>
+      )
     }
 
     const feature = features.find(
