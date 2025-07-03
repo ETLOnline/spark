@@ -1,6 +1,6 @@
 {
-  "id": "74199f34-75ca-4b5f-a2a3-ed02955d2c00",
-  "prevId": "c673614f-4275-47bd-8cd5-bd6028370f74",
+  "id": "6df29fa7-2dcd-4c39-8830-ad4ae5af6642",
+  "prevId": "5d20b6af-0567-4df1-86f9-988ca06b5c16",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2011,6 +2011,12 @@
         "parent_id": {
           "name": "parent_id",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": false
         },

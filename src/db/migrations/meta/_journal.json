@@ -43,6 +43,13 @@
       "when": 1751471115086,
       "tag": "0005_2025_07_02_204513__add_created_by_to_space_file_directory",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1751553138184,
+      "tag": "0006_2025_07_03_193216__update_space_table",
+      "breakpoints": true
     }
   ]
 }
