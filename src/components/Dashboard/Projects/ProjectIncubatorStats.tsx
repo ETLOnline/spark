@@ -2,13 +2,8 @@ import React from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
 import { BookOpen, Users, Zap } from "lucide-react"
 import { Separator } from "../../ui/separator"
-import { ProjectProposal } from "."
 
-interface Props {
-  proposals: ProjectProposal[]
-}
-
-function ProjectIncubatorStats({ proposals }: Props) {
+function ProjectIncubatorStats() {
   return (
     <Card>
       <CardHeader>
@@ -22,7 +17,7 @@ function ProjectIncubatorStats({ proposals }: Props) {
               Active Projects
             </span>
             <span className="font-bold">
-              {proposals.filter((p) => p.status === "active").length}
+              {/* {proposals.filter((p) => p.status === "active").length} */}
             </span>
           </div>
           <Separator />
@@ -32,7 +27,7 @@ function ProjectIncubatorStats({ proposals }: Props) {
               Total Contributors
             </span>
             <span className="font-bold">
-              {proposals.reduce((acc, p) => acc + p.contributors, 0)}
+              {/* {proposals.reduce((acc, p) => acc + p.contributors, 0)} */}
             </span>
           </div>
           <Separator />
@@ -42,7 +37,7 @@ function ProjectIncubatorStats({ proposals }: Props) {
               Completed Projects
             </span>
             <span className="font-bold">
-              {proposals.filter((p) => p.status === "completed").length}
+              {/* {proposals.filter((p) => p.status === "completed").length} */}
             </span>
           </div>
         </div>
