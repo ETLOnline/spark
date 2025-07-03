@@ -30,7 +30,7 @@ const demoCommunity = {
   totalMembers: 2847,
   onlineMembers: 89,
   totalMessages: 45672,
-  createdYear: 2023,
+  createdYear: 2025,
   category: "Technology",
   owner: "Sarah Johnson"
 }
@@ -92,81 +92,125 @@ export default function CommunityPage({ params }: CommunityPageProps) {
     <div className="min-h-screen bg-background">
       <div className="flex flex-col min-h-screen">
         {/* Community Header Banner */}
-        <div className="relative bg-gradient-to-r from-gray-500 to-gray-600 px-4 py-6 md:px-6 md:py-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex flex-col sm:flex-row items-start gap-4">
-              {/* Community Avatar */}
-              <div className="relative">
-                <Avatar className="h-16 w-16 md:h-20 md:w-20 border-4 border-white">
-                  <AvatarImage
-                    src="/placeholder.png"
-                    alt={demoCommunity.name}
-                  />
-                  <AvatarFallback className="text-xl md:text-2xl font-bold">
-                    TI
-                  </AvatarFallback>
-                </Avatar>
-              </div>
+        <div className="relative sm:h-44 h-36 shadow-sm shadow-secondary rounded-lg overflow-hidden">
+          <img
+            src="/images/profile/background.svg"
+            alt="Community Banner"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/50"></div>
+          <div className="absolute inset-0 px-4 py-6 md:px-6 md:py-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-start gap-4">
+                {/* Community Avatar */}
+                <div className="relative">
+                  <Avatar className="h-16 w-16 md:h-20 md:w-20 border-4 border-white">
+                    <AvatarImage
+                      src="/placeholder.png"
+                      alt={demoCommunity.name}
+                    />
+                    <AvatarFallback className="text-xl md:text-2xl font-bold">
+                      TI
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
 
-              {/* Community Info */}
-              <div className="text-white flex-1">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                  <h1 className="text-xl md:text-2xl font-bold">
-                    {demoCommunity.name}
-                  </h1>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <Badge variant="secondary" className="text-xs">
-                      {demoCommunity.type === "public" ? "Public" : "Private"}
+                {/* Community Info */}
+                <div className="text-white flex-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2 w-full">
+                    <div className="flex items-center w-full">
+                      <h1 className="text-xl md:text-2xl font-bold">
+                        {demoCommunity.name}
+                      </h1>
+                      {/* On mobile, show status dot and badge on right; on md+ keep as before */}
+                      <div className="flex items-center gap-2 ml-2">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <Badge variant="secondary" className="text-xs">
+                          {demoCommunity.type === "public"
+                            ? "Public"
+                            : "Private"}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Description & stats hidden on mobile */}
+                  <p className="hidden md:block text-gray-200 mb-3 text-sm md:text-base max-w-2xl">
+                    {demoCommunity.description}
+                  </p>
+                  <div className="hidden md:flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm">
+                    <div className="flex items-center gap-1">
+                      <Users className="h-4 w-4" />
+                      <span>
+                        {demoCommunity.totalMembers.toLocaleString()} members
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span>•</span>
+                      <span>{demoCommunity.onlineMembers} online</span>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className="bg-white/10 border-white/20 text-white text-xs"
+                    >
+                      {demoCommunity.category}
                     </Badge>
                   </div>
                 </div>
-                <p className="text-gray-200 mb-3 text-sm md:text-base max-w-2xl">
-                  {demoCommunity.description}
-                </p>
-                <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm">
-                  <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    <span>
-                      {demoCommunity.totalMembers.toLocaleString()} members
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span>•</span>
-                    <span>{demoCommunity.onlineMembers} online</span>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className="bg-white/10 border-white/20 text-white text-xs"
-                  >
-                    {demoCommunity.category}
-                  </Badge>
-                </div>
               </div>
-            </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-2 self-start md:self-auto">
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-              >
-                <UserPlus className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Invite</span>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-              >
-                <Settings className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Options</span>
-              </Button>
+              {/* Action Buttons */}
+              <div className="hidden md:flex gap-2 self-start md:self-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                >
+                  <UserPlus className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">Invite</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                >
+                  <Settings className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">Options</span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
 
+        {/* Mobile-only extra info section */}
+        <div className="md:hidden px-4 py-4 space-y-4 border-b bg-background">
+          <p className="text-sm text-muted-foreground">
+            {demoCommunity.description}
+          </p>
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Users className="h-4 w-4" />
+              <span className="font-medium">
+                {demoCommunity.totalMembers.toLocaleString()}
+              </span>
+              <span>members</span>
+            </div>
+            <span>•</span>
+            <span>{demoCommunity.onlineMembers} online</span>
+          </div>
+          <Badge variant="outline" className="text-xs">
+            {demoCommunity.category}
+          </Badge>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="flex-1">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Invite
+            </Button>
+            <Button variant="outline" size="sm" className="flex-1">
+              <Settings className="h-4 w-4 mr-2" />
+              Options
+            </Button>
+          </div>
+        </div>
         {/* Main Content */}
         <div className="flex border-t">
           {/* Left Sidebar */}
@@ -190,9 +234,9 @@ export default function CommunityPage({ params }: CommunityPageProps) {
               </div>
 
               {/* Text Channels */}
-              <div className="bg-background rounded-lg border p-6">
+              <div className="bg-background rounded-lg border sm:p-6 p-2">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <h3 className="text-lg font-semibold flex items-center gap-1 sm:gap-2">
                     <Hash className="h-5 w-5" />
                     Text Channels
                   </h3>
@@ -211,15 +255,15 @@ export default function CommunityPage({ params }: CommunityPageProps) {
                   {demoChannels.map((channel) => (
                     <div
                       key={channel.name}
-                      className="flex items-center justify-between p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
+                      className="flex items-center justify-between px-1 py-3 sm:py-3 sm:px-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center sm:gap-3 gap-1">
                         {channel.isLocked ? (
                           <Lock className="h-5 w-5 text-muted-foreground" />
                         ) : (
                           <Hash className="h-5 w-5 text-muted-foreground" />
                         )}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center sm:gap-2 gap-1">
                           <span className="font-medium">{channel.name}</span>
                           {channel.unread > 0 && (
                             <Badge
@@ -241,8 +285,8 @@ export default function CommunityPage({ params }: CommunityPageProps) {
               </div>
 
               {/* Community Rules */}
-              <div className="bg-background rounded-lg border p-6">
-                <div className="flex items-center gap-3 mb-4">
+              <div className="bg-background rounded-lg border sm:p-6 p-2">
+                <div className="flex items-center sm:gap-3 gap-1 mb-4">
                   <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                     <span className="text-sm font-bold text-primary-foreground">
                       📋
@@ -252,7 +296,7 @@ export default function CommunityPage({ params }: CommunityPageProps) {
                 </div>
                 <div className="space-y-3">
                   {demoRules.map((rule, index) => (
-                    <div key={index} className="flex gap-4">
+                    <div key={index} className="flex sm:gap-4 gap-2">
                       <span className="text-muted-foreground font-medium min-w-[24px] shrink-0">
                         {index + 1}.
                       </span>
@@ -263,6 +307,98 @@ export default function CommunityPage({ params }: CommunityPageProps) {
                   ))}
                 </div>
               </div>
+            </div>
+            {/* Mobile - Community Stats and About */}
+            <div className="block lg:hidden space-y-6 mt-6">
+              {/* Community Stats */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base lg:text-lg">
+                    Community Stats
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs lg:text-sm">Total Members</span>
+                    </div>
+                    <span className="font-bold text-sm lg:text-base">
+                      {demoCommunity.totalMembers.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                      <span className="text-xs lg:text-sm">Online Now</span>
+                    </div>
+                    <span className="font-bold text-sm lg:text-base">
+                      {demoCommunity.onlineMembers}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs lg:text-sm">Total Messages</span>
+                    </div>
+                    <span className="font-bold text-sm lg:text-base">
+                      {demoCommunity.totalMessages.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs lg:text-sm">Created</span>
+                    </div>
+                    <span className="font-bold text-sm lg:text-base">
+                      {demoCommunity.createdYear}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+              {/* About */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base lg:text-lg">About</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-0">
+                  <div>
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Owner
+                    </span>
+                    <p className="text-sm">{demoCommunity.owner}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Category
+                    </span>
+                    <p className="text-sm">{demoCommunity.category}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Privacy
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {demoCommunity.type === "public" ? (
+                        <Globe className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Lock className="h-4 w-4 text-yellow-500" />
+                      )}
+                      <span className="text-sm capitalize">
+                        {demoCommunity.type}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Community ID
+                    </span>
+                    <p className="text-xs font-mono text-muted-foreground">
+                      uuid-tech-innovators
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
 
