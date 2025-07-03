@@ -10,7 +10,16 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
-import { Users, Hash, Star, MoreVertical, Edit, Trash2 } from "lucide-react"
+import {
+  Users,
+  Hash,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Eye,
+  Lock,
+  Globe
+} from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +28,7 @@ import {
 } from "@/src/components/ui/dropdown-menu"
 
 import { SelectCommunity } from "@/src/db/schema"
+import Link from "next/link"
 interface CommunityCardProps {
   community: SelectCommunity
   showStar?: boolean
@@ -38,14 +48,14 @@ export default function CommunityCard({
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
         <div className="flex items-start gap-4">
-          <Avatar className="h-16 w-16 flex-shrink-0">
+          <Avatar className="h-16 w-16 flex-shrink-0 border-2 border-gray-200 dark:border-gray-700">
             <AvatarImage src={"/images/default-avatar.png"} />
-            <AvatarFallback className="text-lg">
-              {/* Ensure community.title is not null/undefined */}
+            <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-blue-500 to-purple-600 text-white dark:from-blue-600 dark:to-purple-700">
               {(community.title || "")
                 .split(" ")
                 .map((word: string) => word[0])
-                .join("")}
+                .join("")
+                .toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 space-y-3">
@@ -68,13 +78,16 @@ export default function CommunityCard({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    {/* {onEdit && ( */}
                     <DropdownMenuItem onClick={() => onEdit(community)}>
-                      <Edit className="mr-2 h-4 w-4" /> {/* Added Edit icon */}
+                      <Edit className="mr-2 h-4 w-4" />
                       Edit
                     </DropdownMenuItem>
-                    {/* )} */}
-                    {/* {onDelete && ( */}
+                    <DropdownMenuItem asChild>
+                      <Link href={`/communities/${community.slug}`}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        Detail
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => onDelete(community)}
                       className="text-red-600 focus:text-red-600"
@@ -83,13 +96,17 @@ export default function CommunityCard({
                       {/* Added Trash2 icon */}
                       Delete
                     </DropdownMenuItem>
-                    {/* )} */}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="outline">{community.category}</Badge>
+              {community.type === "public" ? (
+                <Globe className="h-4 w-4 text-green-500" />
+              ) : community.type === "private" ? (
+                <Lock className="h-4 w-4 text-yellow-500" />
+              ) : null}
             </div>
           </div>
         </div>

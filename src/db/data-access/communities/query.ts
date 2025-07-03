@@ -6,7 +6,8 @@ import {
   communityUsersTable,
   channelsTable,
   SelectCommunityUser,
-  SelectChannel
+  SelectChannel,
+  ChannelUsersTable
 } from "../../schema"
 import {
   eq,
@@ -336,5 +337,124 @@ export async function DeleteCommunity(
   } catch (e: any) {
     console.error(`Error deleting community with ID ${communityId}:`, e)
     throw new Error(`Failed to delete community: ${e.message}`)
+  }
+}
+
+// Define a type for the enriched community data, matching what the query will return
+export type CommunityDetailData = {
+  id: string
+  title: string
+  description: string
+  category: string
+  slug: string
+  type: "public" | "private"
+  created_at: Date | null
+  totalMembers: number
+  onlineNow: number
+  totalMessages: number
+  owner: {
+    id: string
+    firstName: string
+    lastName: string
+    fullName: string
+  }
+  channels: {
+    id: string
+    name: string
+    createdAt: Date | null
+    membersCount: number
+  }[]
+}
+
+export async function GetCommunityById(
+  communitySlug: string
+): Promise<CommunityDetailData | null> {
+  try {
+    const communityDetails = await db.query.communitiesTable.findFirst({
+      where: eq(communitiesTable.slug, communitySlug),
+      with: {
+        creator: {
+          columns: {
+            unique_id: true,
+            first_name: true,
+            last_name: true
+          }
+        },
+        channels: {
+          columns: {
+            id: true,
+            channel_name: true,
+            created_at: true
+          }
+        }
+      }
+    })
+
+    if (!communityDetails) {
+      return null
+    }
+
+    const membersResult = await db
+      .select({
+        count: count(communityUsersTable.user_id)
+      })
+      .from(communityUsersTable)
+      .where(eq(communityUsersTable.community_id, communityDetails.id))
+    const totalCommunityMembers = membersResult[0]?.count || 0
+
+    const totalMessages = 0
+    const enrichedChannels = await Promise.all(
+      communityDetails.channels.map(async (channel) => {
+        const channelMembersCountResult = await db
+          .select({
+            count: count(ChannelUsersTable.user_id)
+          })
+          .from(ChannelUsersTable)
+          .where(eq(ChannelUsersTable.channel_id, channel.id))
+
+        const channelMembersCount = channelMembersCountResult[0]?.count || 0
+
+        return {
+          id: channel.id,
+          name: channel.channel_name,
+          createdAt: channel.created_at ? new Date(channel.created_at) : null,
+          membersCount: channelMembersCount
+        }
+      })
+    )
+
+    const createdAtDate = communityDetails.created_at
+      ? new Date(communityDetails.created_at)
+      : null
+
+    const finalCommunityData: CommunityDetailData = {
+      id: communityDetails.id,
+      title: communityDetails.title,
+      description: communityDetails.description || "",
+      category: communityDetails.category,
+      slug: communityDetails.slug,
+      type:
+        communityDetails.type === "public" ||
+        communityDetails.type === "private"
+          ? communityDetails.type
+          : "public",
+      created_at: createdAtDate,
+      totalMembers: totalCommunityMembers,
+      onlineNow: 0, // Still hardcoded
+      totalMessages: totalMessages,
+      owner: {
+        id: communityDetails.creator?.unique_id || "",
+        firstName: communityDetails.creator?.first_name || "Unknown",
+        lastName: communityDetails.creator?.last_name || "",
+        fullName:
+          `${communityDetails.creator?.first_name || "Unknown"} ${communityDetails.creator?.last_name || ""}`.trim()
+      },
+      channels: enrichedChannels
+    }
+
+    return finalCommunityData
+  } catch (e: any) {
+    console.error("Error in GetCommunityById:", e)
+    throw new Error(`Failed to retrieve community: ${e.message}`)
   }
 }

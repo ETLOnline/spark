@@ -7,7 +7,9 @@ import {
   CommunityQueryFilters,
   GetJoinedCommunities,
   UpdateCommunity,
-  DeleteCommunity
+  DeleteCommunity,
+  CommunityDetailData,
+  GetCommunityById
 } from "@/src/db/data-access/communities/query"
 import { isUserAdmin } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
@@ -192,6 +194,19 @@ export const IsCommunitySlugAvailableAction = CreateServerAction(
         success: false,
         error: error.message || "Failed to check slug availability."
       }
+    }
+  }
+)
+
+export const GetCommunityDetailsAction = CreateServerAction(
+  true,
+  async (communitySlug: string): Promise<CommunityDetailData | null> => {
+    try {
+      const community = await GetCommunityById(communitySlug)
+      return community
+    } catch (error) {
+      console.error("Error in getCommunityDetailsAction:", error)
+      return null
     }
   }
 )

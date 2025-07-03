@@ -1100,19 +1100,28 @@ export const communitiesTable = pgTable("communities", {
   ...timestamps
 })
 
-export const communitiesRelations = relations(communitiesTable, ({ many }) => ({
-  communityMembers: many(communityUsersTable, {
-    relationName: "communityToUser"
-  }),
-  channels: many(channelsTable, {
-    relationName: "channelToCommunity"
+export const communitiesRelations = relations(
+  communitiesTable,
+  ({ many, one }) => ({
+    creator: one(usersTable, {
+      fields: [communitiesTable.created_by],
+      references: [usersTable.unique_id],
+      relationName: "communityToCreator"
+    }),
+    communityMembers: many(communityUsersTable, {
+      relationName: "communityToUser"
+    }),
+    channels: many(channelsTable, {
+      relationName: "channelToCommunity"
+    })
   })
-}))
+)
 
 export type InsertCommunity = typeof communitiesTable.$inferInsert
 export type SelectCommunity = typeof communitiesTable.$inferSelect & {
   communityMembers?: SelectCommunityUser[]
   channels?: SelectChannel[]
+  creator?: SelectUser
 }
 
 export const communityUsersTable = pgTable("community_users", {
