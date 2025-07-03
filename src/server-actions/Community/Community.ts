@@ -66,14 +66,18 @@ export const GetCommunitiesAction = CreateServerAction(
       if (!authUser?.unique_id) {
         throw new Error("Authentication required to fetch communities.")
       }
-       const allCommunitiesResult = await GetCommunities({ ...filters }, page, limit)
+      const allCommunitiesResult = await GetCommunities(
+        { ...filters },
+        page,
+        limit
+      )
 
-            const joinedCommunitiesResult = await GetJoinedCommunities(
-                authUser.unique_id,
-                { ...filters },
-                page,
-                limit
-            )
+      const joinedCommunitiesResult = await GetJoinedCommunities(
+        authUser.unique_id,
+        { ...filters },
+        page,
+        limit
+      )
 
       return {
         success: true,
