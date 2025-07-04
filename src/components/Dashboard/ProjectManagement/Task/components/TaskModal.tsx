@@ -20,7 +20,10 @@ import TaskForm from "./TaskForm"
 import { InsertTask, SelectTask } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { CreateTaskAction, UpdateTaskAction } from "@/src/server-actions/Tasks/Task"
+import {
+  CreateTaskAction,
+  UpdateTaskAction
+} from "@/src/server-actions/Tasks/Task"
 import { toast } from "@/src/hooks/use-toast"
 import useTaskHook from "../hooks/useTaskHook"
 
@@ -45,16 +48,21 @@ const taskSchema = z.object({
   status_id: z.string().optional()
 })
 
-export const TaskModal = ({ 
-  isTaskModelOpen, 
-  setIsTaskModelOpen, 
-  selectedTask, 
-  onCreateComplete, 
-  onUpdateComplete, 
-  sprintId 
-}: TaskModalProps)=> {
+export const TaskModal = ({
+  isTaskModelOpen,
+  setIsTaskModelOpen,
+  selectedTask,
+  onCreateComplete,
+  onUpdateComplete,
+  sprintId
+}: TaskModalProps) => {
   const [statuses, setStatuses] = useAtom(projectStore.projectStatusList)
-  const { createTaskLoading, updateTaskLoading, handleSubmit } = useTaskHook({ selectedTask, sprintId, onCreateComplete, onUpdateComplete })
+  const { createTaskLoading, updateTaskLoading, handleSubmit } = useTaskHook({
+    selectedTask,
+    sprintId,
+    onCreateComplete,
+    onUpdateComplete
+  })
 
   return (
     <Dialog open={isTaskModelOpen} onOpenChange={setIsTaskModelOpen}>
@@ -64,7 +72,12 @@ export const TaskModal = ({
           <DialogTitle className="h-0 absolute"></DialogTitle>
         </DialogHeader>
         <ScrollArea className=" max-h-[80vh] ">
-          <TaskForm statuses={statuses} onSubmit={handleSubmit} selectedTask={selectedTask} loading={createTaskLoading || updateTaskLoading} />
+          <TaskForm
+            statuses={statuses}
+            onSubmit={handleSubmit}
+            selectedTask={selectedTask}
+            loading={createTaskLoading || updateTaskLoading}
+          />
         </ScrollArea>
       </DialogContent>
     </Dialog>

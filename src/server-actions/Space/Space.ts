@@ -32,16 +32,33 @@ import {
   GetChannels,
   getChannelUsers
 } from "@/src/db/data-access/channels/query"
+import {
+  createScopedSpaceRolesAndAssignAdmin,
+  deleteUserRole,
+  getAndAssignViewerRoles
+} from "@/src/db/data-access/roles/query"
+import { defaultSpaceOverviewTemplate } from "@/src/app/(dashboard)/channels/[channel_slug]/spaces/[space_slug]/(space-layout)/components/constants"
 
 export const CreateSpaceAction = CreateServerAction(
   true,
   async (SpaceData: InsertSpace) => {
     try {
-      const newSpace = await CreateSpace(SpaceData)
+      const overview = defaultSpaceOverviewTemplate(SpaceData.space_name)
+      const newSpace = await CreateSpace({ ...SpaceData, overview: overview })
       const channel = AblyClientRest.channels.get(
         "broadcast-channels-spaces-update"
       )
       await channel.publish("space-add", newSpace)
+      const result = await createScopedSpaceRolesAndAssignAdmin(
+        newSpace.id,
+        newSpace.space_name,
+        newSpace.created_by
+      )
+      await attachSpaceUser(
+        newSpace.id,
+        newSpace.created_by,
+        result.adminRole?.name
+      )
       return { success: true, data: newSpace }
     } catch (error: any) {
       return {
@@ -81,7 +98,7 @@ export const GetSpacesAction = CreateServerAction(
       if (isUserAdmin(authUser)) {
         spaces = await GetSpaces({ ...filters })
       } else {
-        spaces = await GetSpaces({
+        const spacesResponse = await GetSpaces({
           ...filters,
           space_type: "public",
           isPublished: true
@@ -90,6 +107,17 @@ export const GetSpacesAction = CreateServerAction(
         joinedSpaces = (authUser?.spaces || [])
           .filter((s) => spaceIds.includes(s.space_id))
           .map((s) => s.space)
+
+        // Get the IDs of joined spaces for exclusion
+        const joinedSpaceIds = joinedSpaces.map((s) => s.id)
+
+        // Filter out joined spaces from the spaces array
+        spaces = {
+          ...spacesResponse,
+          spaces: spacesResponse.spaces.filter(
+            (space) => !joinedSpaceIds.includes(space.id)
+          )
+        }
       }
 
       return {
@@ -148,9 +176,9 @@ export const DeleteSpaceAction = CreateServerAction(
 
 export const GetSpaceBySlugAction = CreateServerAction(
   true,
-  async (spaceSlug: string, channelSlug: string) => {
+  async (spaceSlug: string, channelSlug: string, withSpaceUsers?: boolean) => {
     try {
-      const space = await GetSpaceBySlug(spaceSlug, channelSlug)
+      const space = await GetSpaceBySlug(spaceSlug, channelSlug, withSpaceUsers)
       return { success: true, data: space }
     } catch (error) {
       return { error: error }
@@ -190,10 +218,28 @@ export const AttachSpaceUserAction = CreateServerAction(
         const isUserChannelMember = channelUserIds.includes(userId)
 
         if (!isUserChannelMember) {
-          await attachChannelUser(space.channel_id, userId)
+          const attachChannelUserRole = await getAndAssignViewerRoles(
+            userId,
+            "channel_viewer",
+            space.channel_id
+          )
+          await attachChannelUser(
+            space.channel_id,
+            userId,
+            attachChannelUserRole?.viewerRole?.name
+          )
         }
       }
-      const spaceUser = await attachSpaceUser(spaceId, userId)
+      const attachSpaceUserRole = await getAndAssignViewerRoles(
+        userId,
+        "space_viewer",
+        spaceId
+      )
+      const spaceUser = await attachSpaceUser(
+        spaceId,
+        userId,
+        attachSpaceUserRole?.viewerRole?.name
+      )
       return { success: true, data: spaceUser }
     } catch (error) {
       return { error: error }
@@ -203,9 +249,11 @@ export const AttachSpaceUserAction = CreateServerAction(
 
 export const DetachSpaceUserAction = CreateServerAction(
   true,
-  async (spaceId: string, userId: string) => {
+  async (spaceId: string, userId: string, roleId: number) => {
     try {
       const spaceUser = await dettachSpaceUser(spaceId, userId)
+      const deleteRole = await deleteUserRole(userId, roleId)
+
       return { success: true }
     } catch (error) {
       return { error: error }

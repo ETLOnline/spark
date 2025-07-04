@@ -17,7 +17,7 @@ import { z } from "zod"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { InsertProject, SelectSpace } from "@/src/db/schema"
-import { useAtom, useAtomValue } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
 import { useServerAction } from "@/src/hooks/useServerAction"
@@ -30,7 +30,8 @@ import { toast } from "@/src/hooks/use-toast"
 import { projectStore } from "@/src/store/project/projectStore"
 import moment from "moment"
 import { AttachProjectUserAction } from "@/src/server-actions/ProjectManagement/projectManagement"
-import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { useAuthUser } from "@/src/hooks/useAuthUser"
 
 const projectSchema = z.object({
   project_name: z
@@ -55,19 +56,21 @@ const projectSchema = z.object({
 type ProjectFormData = z.infer<typeof projectSchema>
 
 function ProjectFormModal({
+  currSpace,
   defaultValues,
   isEditing = false,
   isOpen: externalOpen,
   setIsOpen: setExternalOpen
 }: {
+  currSpace?: SelectSpace
   defaultValues?: Partial<InsertProject>
   isEditing?: boolean
   isOpen?: boolean
   setIsOpen?: React.Dispatch<SetStateAction<boolean>>
 }) {
   const [space, setSpace] = useState<SelectSpace>()
+  const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
   const [projects, setProjects] = useAtom(projectStore.projects)
-  // const [createProjectLoading, , , createProject] = useServerAction(CreateProjectAction)
   const [updateLoading, , , updateProject] =
     useServerAction(UpdateProjectAction)
 
@@ -99,27 +102,11 @@ function ProjectFormModal({
 
   const AuthUser = useAtomValue(userStore.AuthUser)
 
-  const searchParams = useSearchParams()
   const router = useRouter()
 
-  const [channelSlug, setChannelSlug] = useState<string | null>(null)
-  const [spaceSlug, setSpaceSlug] = useState<string | null>(null)
-
   useEffect(() => {
-    setChannelSlug(searchParams.get("channel"))
-    setSpaceSlug(searchParams.get("space"))
-  }, [searchParams])
-
-  useEffect(() => {
-    if (!spaceSlug || !channelSlug) return
-    GetSpaceBySlugAction(spaceSlug || "", channelSlug || "").then(
-      (currentSpace) => {
-        if (currentSpace.success && currentSpace.data) {
-          setSpace(currentSpace.data)
-        }
-      }
-    )
-  }, [spaceSlug, channelSlug])
+    setSpace(currSpace)
+  }, [currSpace])
 
   useEffect(() => {
     if (!defaultValues) return
@@ -168,6 +155,7 @@ function ProjectFormModal({
 
   async function handleCreateProject(data: any) {
     try {
+      console.log("space", space)
       const payLoad = {
         ...data,
         created_by: AuthUser?.unique_id,
@@ -182,8 +170,9 @@ function ProjectFormModal({
           .format("DD-MM-YYYY")
       }
       const createdProject = await createProject(payLoad as InsertProject)
-
+      console.log("error", createdProject?.error)
       if (createdProject?.success && createdProject?.data) {
+        await refreshAuthUser()
         if (!AuthUser?.unique_id) {
           toast({
             title: "User ID not found. Please login again.",
@@ -192,18 +181,15 @@ function ProjectFormModal({
           })
           return
         }
-        const response = await AttachUser(
-          createdProject.data.id,
-          AuthUser.unique_id,
-          "admin"
-        )
         setProjects([...projects, createdProject.data])
         setIsOpen(false)
         toast({
           title: "Project Successfully Created",
           duration: 3000
         })
-        router.push(`project/${createdProject.data.id}/settings?tab=taskStatus`)
+        router.push(
+          `/project/${createdProject.data.id}/settings?tab=taskStatus`
+        )
       }
     } catch (error) {
       setIsOpen(false)
@@ -252,9 +238,18 @@ function ProjectFormModal({
     }
   }
 
+  // PERMISSIONS ARE HERE
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "SPACE",
+    space?.id
+  )
+  const canCreate = permissionChecker
+    ? permissionChecker?.canAccess("project.create")
+    : false
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      {!isEditing && (
+      {!isEditing && canCreate && (
         <DialogTrigger asChild>
           <Button>Create New Project</Button>
         </DialogTrigger>

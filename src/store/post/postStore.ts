@@ -3,4 +3,6 @@ import { atom } from "jotai"
 
 const posts = atom<(SelectPost | SelectFilePost | SelectPollPost)[]>([])
 
-export const postStore = { posts }
+export const postStore = {
+  posts
+}

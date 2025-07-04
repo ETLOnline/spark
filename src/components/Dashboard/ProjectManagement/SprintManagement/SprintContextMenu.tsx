@@ -26,6 +26,9 @@ import {
   AlertDialogTitle
 } from "@/src/components/ui/alert-dialog"
 import { taskStore } from "@/src/store/tasks/taskStore"
+import { projectStore } from "@/src/store/project/projectStore"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { useParams } from "next/navigation"
 
 interface Props {
   isSprintContextMenuOpen: boolean
@@ -40,6 +43,9 @@ function SprintContextMenu({
   isSprintContextMenuOpen,
   setIsSprintContextMenuOpen
 }: Props) {
+  const params = useParams()
+  const projectId = params.id as string
+
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false)
   const [selectedSprint, setSelectedSprint] = useState<SelectSprint | null>(
     null
@@ -90,34 +96,52 @@ function SprintContextMenu({
     }
   }
 
+  // PERMISSIONS INITATE
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    projectId
+  )
+  const canUpdate = permissionChecker
+    ? permissionChecker?.canAccess("project.sprint.update")
+    : false
+  const canDelete = permissionChecker
+    ? permissionChecker?.canAccess("project.sprint.delete")
+    : false
+
   return (
     <>
-      <DropdownMenu
-        open={isSprintContextMenuOpen}
-        onOpenChange={(open) => setIsSprintContextMenuOpen(open)}
-      >
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => EditSprint(sprint)}>
-            Edit Sprint
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="text-red-500 "
-            onClick={() => {
-              setIsSprintContextMenuOpen(false)
-              setIsAlertOpen(true)
-            }}
-          >
-            Delete Sprint
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
+      {(canDelete || canUpdate) && (
+        <DropdownMenu
+          open={isSprintContextMenuOpen}
+          onOpenChange={(open) => setIsSprintContextMenuOpen(open)}
+        >
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {canUpdate && (
+              <DropdownMenuItem onClick={() => EditSprint(sprint)}>
+                Edit Sprint
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            {canDelete && (
+              <DropdownMenuItem
+                className="text-red-500 "
+                onClick={() => {
+                  setIsSprintContextMenuOpen(false)
+                  setIsAlertOpen(true)
+                }}
+              >
+                Delete Sprint
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

@@ -9,7 +9,7 @@ const tagSeedList = [
   ...interestSeedList.map((name) => ({ name, type: "interest", count: 1 }))
 ]
 
-export const seedTags = async () => {
+export const TagSeed = async () => {
   return await db.transaction(async (tx) => {
     try {
       await tx.delete(tagsTable).where(sql`type IN ('skill', 'interest')`)

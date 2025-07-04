@@ -31,6 +31,7 @@ import { InviteUserDialog } from "./UserInviteDialog"
 import {
   SelectChannel,
   SelectChannelUser,
+  SelectRole,
   SelectSpace,
   SelectSpaceUser
 } from "@/src/db/schema"
@@ -75,21 +76,27 @@ import {
   AlertDialogTrigger
 } from "../ui/alert-dialog"
 import { SpaceUserRole } from "../common/types/spaceuser.role"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { updateUserRoleForEntityAction } from "@/src/server-actions/UserRoles/UserRole"
 
 interface Props {
   entityType: "channel" | "space"
   entity: SelectChannel | SelectSpace
   userList: SelectChannelUser[] | SelectSpaceUser[]
+  scopedRoles: SelectRole[]
 }
 
 export default function ChannelUserList({
   entity,
   userList,
-  entityType
+  entityType,
+  scopedRoles
 }: Props) {
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [usersList, setUsersList] = useState(userList)
+  const [usersList, setUsersList] = useState<
+    SelectChannelUser[] | SelectSpaceUser[]
+  >(userList)
   const [filteredUsers, setFilteredUsers] = useState<
     SelectChannelUser[] | SelectSpaceUser[]
   >(userList)
@@ -99,7 +106,7 @@ export default function ChannelUserList({
   const [selectedUser, setSelectedUser] = useState<
     SelectChannelUser | SelectSpaceUser | null
   >(null)
-  const [userRole, setUserRole] = useState("")
+  const [selectedRoleName, setSelectedRoleName] = useState("")
   const authUser = useAtomValue(userStore.AuthUser)
   const [
     dettachChannelUserLoading,
@@ -114,118 +121,228 @@ export default function ChannelUserList({
     DettachSpaceUser
   ] = useServerAction(DetachSpaceUserAction)
   const [
-    updateChannelUserLoading,
-    updateChannelUserData,
-    updateChannelUserError,
-    UpdateChannelUser
-  ] = useServerAction(UpdateChannelUserAction)
-  const [
-    updateSpaceUserLoading,
-    updateSpaceUserData,
-    updateSpaceUserError,
-    UpdateSpaceUser
-  ] = useServerAction(UpdateSpaceUserAction)
+    updateEntityUserRoleLoading,
+    updateEntityUserRoleData,
+    updateEntityUserRoleError,
+    updateUserRoleForEntity
+  ] = useServerAction(updateUserRoleForEntityAction)
 
   useEffect(() => {
-    const filtered = usersList.filter(
-      (cu) =>
-        cu?.user?.first_name
-          ?.toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        cu?.user?.email?.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    setFilteredUsers(
-      entityType === "channel"
-        ? (filtered as SelectChannelUser[])
-        : (filtered as SelectSpaceUser[])
-    )
-  }, [searchQuery, usersList])
+    // Explicitly handle filtering based on entityType to maintain type integrity
+    if (entityType === "channel") {
+      const channelUsers = usersList as SelectChannelUser[]
+      const filtered = channelUsers.filter(
+        (cu) =>
+          cu?.user?.first_name
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          cu?.user?.email?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      setFilteredUsers(filtered)
+    } else {
+      const spaceUsers = usersList as SelectSpaceUser[]
+      const filtered = spaceUsers.filter(
+        (cu) =>
+          cu?.user?.first_name
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          cu?.user?.email?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      setFilteredUsers(filtered)
+    }
+  }, [searchQuery, usersList, entityType]) // Added entityType to dependencies
 
   const entityName =
     entityType === "channel"
       ? (entity as SelectChannel).channel_name
       : (entity as SelectSpace).space_name
 
-  async function handleUpdateuser(userId: string, entityId: string) {
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    entityType === "channel" ? "CHANNEL" : "SPACE",
+    entity.id
+  )
+
+  const canInviteUser = permissionChecker
+    ? permissionChecker?.canAccess(`${entityType}.user.invite`)
+    : false
+  const canUpdateUser = permissionChecker
+    ? permissionChecker?.canAccess(`${entityType}.user.update`)
+    : false
+  const canDeleteUser = permissionChecker
+    ? permissionChecker?.canAccess(`${entityType}.user.remove`)
+    : false
+
+  async function handleUpdateUserRole(userId: string, entityId: string) {
+    if (!selectedUser) {
+      toast({
+        title: "Error",
+        description: "No user selected for role update.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    const oldRoleName = selectedUser.role
+
+    const oldRole = scopedRoles.find((role) => role.name === oldRoleName)
+    const oldRoleId = oldRole ? oldRole.id : null
+
+    if (!selectedRoleName) {
+      toast({
+        title: "Please select a role",
+        variant: "destructive"
+      })
+      return
+    }
+
+    const newRole = scopedRoles.find((role) => role.name === selectedRoleName)
+
+    if (!newRole) {
+      toast({
+        title: "Selected role not found",
+        description: "Please try selecting a different role.",
+        variant: "destructive"
+      })
+      return
+    }
+
     try {
-      if (userRole) {
-        if (entityType === "channel") {
-          const updatedChannelUser = await UpdateChannelUser(entityId, userId, {
-            role: userRole
-          })
-          if (updatedChannelUser?.success && updatedChannelUser.data) {
-            setUsersList((prev) => {
-              return (prev as SelectChannelUser[]).map((user) => {
-                return user.user_id === userId
-                  ? { ...user, ...updatedChannelUser.data }
-                  : user
-              })
-            })
+      const updatedUserRoleResponse = await updateUserRoleForEntity(
+        userId,
+        entityId,
+        entityType.toUpperCase() as "CHANNEL" | "SPACE" | "PROJECT",
+        newRole.id,
+        oldRoleId ?? 0,
+        selectedRoleName
+      )
+
+      if (updatedUserRoleResponse?.success) {
+        setUsersList((prevUsersList) => {
+          if (entityType === "channel") {
+            return (prevUsersList as SelectChannelUser[]).map((user) => {
+              if (user.user_id === userId) {
+                return {
+                  ...user,
+                  role: newRole.name
+                }
+              }
+              return user
+            }) as SelectChannelUser[]
+          } else {
+            return (prevUsersList as SelectSpaceUser[]).map((user) => {
+              if (user.user_id === userId) {
+                return {
+                  ...user,
+                  role: newRole.name
+                }
+              }
+              return user
+            }) as SelectSpaceUser[]
           }
-        } else {
-          const updatedSpaceUser = await UpdateSpaceUser(entityId, userId, {
-            role: userRole
-          })
-          if (updatedSpaceUser?.success && updatedSpaceUser.data) {
-            setUsersList((prev) => {
-              return (prev as SelectSpaceUser[]).map((user) => {
-                return user.user_id === userId
-                  ? { ...user, ...updatedSpaceUser?.data }
-                  : user
-              })
-            })
-          }
-        }
+        })
+
         toast({
-          title: "User updated",
+          title: "User role updated successfully!",
+          description: `Role changed from ${oldRoleName || "unknown"} to ${newRole.name}.`,
           duration: 3000
         })
+      } else {
+        toast({
+          title: "Failed to update user role",
+          description: "Please try again later.",
+          variant: "destructive"
+        })
       }
-    } catch {
-      console.error("Error updating user")
+    } catch (error) {
+      console.error("Error updating user role:", error)
       toast({
-        title: "Failed to update user",
-        description: "Please try again later.",
+        title: "Failed to update user role",
+        description: "An unexpected error occurred. Please try again later.",
         variant: "destructive"
       })
     } finally {
       setChangeRoleModelVisibility(false)
+      setSelectedUser(null)
+      setSelectedRoleName("")
     }
   }
 
   const handleRemoveUser = async (userId: string, entityId: string) => {
     try {
-      if (authUser?.role.includes("admin")) {
-        let delUser
-        if (entityType === "channel") {
-          delUser = await DettachChannelUser(entityId, userId)
-        } else {
-          delUser = await DettachSpaceUser(entityId, userId)
-        }
-        if (delUser?.success) {
-          setUsersList((prev) => {
-            if (entityType === "channel") {
-              return (prev as SelectChannelUser[]).filter(
-                (cu) => cu.user?.unique_id !== userId
-              )
-            } else {
-              return (prev as SelectSpaceUser[]).filter(
-                (cu) => cu.user?.unique_id !== userId
-              )
-            }
-          })
-          toast({
-            title: "User removed",
-            description: `User has been removed from ${entityName}`,
-            variant: "default"
-          })
-        }
+      if (!canDeleteUser) {
+        toast({
+          title: "Permission Denied",
+          description: "You do not have permission to remove users.",
+          variant: "destructive"
+        })
         return null
       }
-    } catch {
-      console.error("Error removing user")
+
+      if (!selectedUser) {
+        toast({
+          title: "Error",
+          description: "No user selected for removal.",
+          variant: "destructive"
+        })
+        return null
+      }
+
+      // Find the role object based on the selected user's role name
+      const roleToRemove = scopedRoles.find(
+        (role) => role.name === selectedUser.role
+      )
+
+      if (!roleToRemove) {
+        toast({
+          title: "Error",
+          description:
+            "Could not find the role to remove for the selected user.",
+          variant: "destructive"
+        })
+        return null
+      }
+
+      let delUser
+      if (entityType === "channel") {
+        delUser = await DettachChannelUser(entityId, userId, roleToRemove.id)
+      } else {
+        delUser = await DettachSpaceUser(entityId, userId, roleToRemove.id)
+      }
+      if (delUser?.success) {
+        setUsersList((prevUsersList) => {
+          if (entityType === "channel") {
+            return (prevUsersList as SelectChannelUser[]).filter(
+              (cu) => cu.user?.unique_id !== userId
+            )
+          } else {
+            return (prevUsersList as SelectSpaceUser[]).filter(
+              (cu) => cu.user?.unique_id !== userId
+            )
+          }
+        })
+        toast({
+          title: "User removed",
+          description: `User has been removed from ${entityName}`,
+          variant: "default"
+        })
+      } else {
+        toast({
+          title: "Failed to remove user",
+          description: "Please try again later.",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      console.error("Error removing user:", error)
+      toast({
+        title: "Failed to remove user",
+        description: "An unexpected error occurred. Please try again later.",
+        variant: "destructive"
+      })
     } finally {
       setIsAlertOpen(false)
+      setSelectedUser(null)
     }
   }
 
@@ -245,10 +362,12 @@ export default function ChannelUserList({
           <ArrowBigRightDash />
           <h1 className="text-2xl font-bold">User Management</h1>
         </div>
-        <Button onClick={() => setIsInviteDialogOpen(true)}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Invite User
-        </Button>
+        {canInviteUser && (
+          <Button onClick={() => setIsInviteDialogOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Invite User
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -318,36 +437,43 @@ export default function ChannelUserList({
                       </Badge>
                     </div>
                     <div className="col-span-1 text-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">More options</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSelectedUser(cu)
-                              setChangeRoleModelVisibility(true)
-                            }}
-                          >
-                            Change Role
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => {
-                              setSelectedUser(cu)
-                              setIsAlertOpen(true)
-                            }}
-                          >
-                            Remove User
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {(canUpdateUser || canDeleteUser) && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">More options</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {canUpdateUser && (
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedUser(cu)
+                                  setSelectedRoleName(cu.role || "")
+                                  setChangeRoleModelVisibility(true)
+                                }}
+                              >
+                                Change Role
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            {canDeleteUser && (
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => {
+                                  setSelectedUser(cu)
+                                  setIsAlertOpen(true)
+                                }}
+                              >
+                                Remove User
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </div>
                 )
@@ -377,7 +503,7 @@ export default function ChannelUserList({
               <div className="w-[70%]">
                 <Select
                   onValueChange={(value) => {
-                    setUserRole(value)
+                    setSelectedRoleName(value)
                   }}
                   defaultValue={selectedUser?.role || ""}
                 >
@@ -388,8 +514,11 @@ export default function ChannelUserList({
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={SpaceUserRole.Admin}>Admin</SelectItem>
-                    <SelectItem value={SpaceUserRole.Member}>Member</SelectItem>
+                    {scopedRoles.map((role) => (
+                      <SelectItem key={role.id} value={role.name}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -397,9 +526,11 @@ export default function ChannelUserList({
           </div>
           <DialogFooter>
             <Button
-              loading={updateChannelUserLoading || updateSpaceUserLoading}
+              loading={updateEntityUserRoleLoading}
               onClick={() => {
-                handleUpdateuser(selectedUser?.user_id || "", entity.id)
+                if (selectedUser?.user_id) {
+                  handleUpdateUserRole(selectedUser.user_id, entity.id)
+                }
               }}
             >
               Save

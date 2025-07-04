@@ -10,6 +10,7 @@ export type NavItem = {
   title: string
   url: string
   icon: React.ComponentType
+  permission?: string
   isActive?: boolean
   items?: NavSubItem[]
   isPrivate?: boolean

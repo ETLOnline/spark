@@ -18,11 +18,20 @@ import Link from "next/link"
 import { useAtomValue } from "jotai"
 import { navStore } from "@/src/store/nav/navStore"
 import useSideBarHook from "./hooks/useSideBarHook"
+import { adminSiteRoutes } from "./constants/AdminNavigationRouters"
+import { Skeleton } from "../../ui/skeleton"
+
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  isSuperAdmin?: boolean
+}
 
 export default function AppSidebar({
+  isSuperAdmin,
   ...props
-}: React.ComponentProps<typeof Sidebar>) {
-  const routes = useAtomValue(navStore.routes)
+}: AppSidebarProps) {
+  const baseRoutes = useAtomValue(navStore.routes)
+  const isNavLoading = useAtomValue(navStore.isNavLoading)
+  const routes = isSuperAdmin ? adminSiteRoutes : baseRoutes
   const _ = useSideBarHook()
 
   return (
@@ -42,7 +51,9 @@ export default function AppSidebar({
                   />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold color-accent">Spark</span>
+                  <span className="truncate font-semibold color-accent">
+                    Spark
+                  </span>
                   <span className="truncate text-[8px]">ETL Online</span>
                 </div>
               </Link>
@@ -51,10 +62,24 @@ export default function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={routes.navMain} label="Platform" />
+        {isNavLoading ? (
+          <div className="flex flex-col gap-2 p-4">
+            {Array(7)
+              .fill(null)
+              .map((_, index) => (
+                <Skeleton key={index} className="h-7 w-full bg-muted/50" />
+              ))}
+          </div>
+        ) : (
+          <NavMain items={routes.navMain} label="Platform" />
+        )}
         {/* <NavMain items={routes.testNav} label="Test" /> */}
-        <NavMain items={routes.navChannels} label="Channels" />
-        <NavSecondary items={routes.navSecondary} className="mt-auto" />
+        {!isSuperAdmin && (
+          <>
+            <NavMain items={routes.navChannels} label="Channels" />
+            <NavSecondary items={routes.navSecondary} className="mt-auto" />
+          </>
+        )}
       </SidebarContent>
       <SidebarFooter>
         <SignedIn>

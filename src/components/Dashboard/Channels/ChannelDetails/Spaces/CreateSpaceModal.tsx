@@ -24,6 +24,7 @@ import { Switch } from "@/src/components/ui/switch"
 import { Textarea } from "@/src/components/ui/textarea"
 import { InsertSpace } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
+import { useAuthUser } from "@/src/hooks/useAuthUser"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateSpaceAction,
@@ -34,7 +35,7 @@ import { channelStore } from "@/src/store/channel/channelStore"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useAtom, useAtomValue } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { CircleCheck, CircleXIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { space } from "postcss/lib/list"
@@ -47,6 +48,7 @@ interface Props {
   spaceFormModelVisibility: boolean
   setSpaceFormModelVisibility: React.Dispatch<React.SetStateAction<boolean>>
   shouldRedirect?: boolean
+  canSetSpaceSetting?: boolean
 }
 
 const spaceSchema = z.object({
@@ -63,13 +65,15 @@ const spaceSchema = z.object({
 function CreateSpaceModal({
   spaceFormModelVisibility,
   setSpaceFormModelVisibility,
-  shouldRedirect
+  shouldRedirect,
+  canSetSpaceSetting
 }: Props) {
   const router = useRouter()
   const authUser = useAtomValue(userStore.AuthUser)
   const selectedChannel = useAtomValue(channelStore.selectedChannel)
   const [selectedSpace, setSelectedSpace] = useAtom(spaceStore.selectedSpace)
   const [spaces, setSpaces] = useAtom(spaceStore.spaces)
+  const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
 
   const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
 
@@ -204,8 +208,11 @@ function CreateSpaceModal({
 
       const createdSpace = await CreateNewSpace(data as InsertSpace)
       if (createdSpace?.success && createdSpace.data) {
+        await refreshAuthUser()
         setSpaces([...spaces, createdSpace.data])
-        router.push(`./spaces/${createdSpace.data.space_slug}/settings`)
+        router.push(
+          `./spaces/${createdSpace.data.space_slug}?page-type=settings`
+        )
         setSpaceFormModelVisibility(false)
         toast({
           title: "Space created",

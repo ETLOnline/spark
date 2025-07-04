@@ -1,23 +1,25 @@
 "use server"
 
 import {
+  getUserContacts,
   GetUserProfileData,
   UpdateUserProfilePicture
 } from "@/src/db/data-access/user/query"
 import { CreateServerAction } from ".."
 import { AddUserTag } from "@/src/db/data-access/tag/query"
 import { ProfileData } from "@/src/components/Dashboard/profile/types/profile-types"
-import {
-  base64ToBuffer,
-  uploadFileAndSaveMetadata
-} from "@/src/services/storage/utils/fileUtils"
-import { clerkClient } from "@clerk/nextjs/server"
+import { Tag, TagStatus } from "@/src/components/TagsInput/tags-input-types"
 import { AuthUserAction } from "./AuthUserAction"
 import {
   createUserProfile,
   SearchUserProfile,
   updateUserProfile
 } from "@/src/db/data-access/profile/query"
+import {
+  base64ToBuffer,
+  uploadFileAndSaveMetadata
+} from "@/src/services/storage/utils/fileUtils"
+import { clerkClient } from "@clerk/nextjs/server"
 
 export const SaveUserProfileAction = CreateServerAction(
   true,
@@ -76,6 +78,19 @@ export const GetUserProfileAction = CreateServerAction(
   }
 )
 
+export const GetUserContactsAction = CreateServerAction(true, async () => {
+  try {
+    const auth = await AuthUserAction()
+    if (!auth) {
+      return { success: false, data: [] }
+    }
+    const contacts = await getUserContacts(auth.unique_id)
+    return { success: true, data: contacts }
+  } catch (error) {
+    console.error("Failed to fetch user contacts:", error)
+    return { success: false, error }
+  }
+})
 export const UpdateUserProfilePictureAction = CreateServerAction(
   true,
   async (fileName: string, fileB64string: string, fileType: string) => {

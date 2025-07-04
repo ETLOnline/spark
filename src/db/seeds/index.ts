@@ -1,19 +1,26 @@
 import { FeatureSeed } from "./FeatureSeed"
-import { seedPersonas } from "./personaSeeder"
-import { seedTags } from "./TagsSeeder"
+import { RolesSeed } from "./RolesSeed"
 import { UserSeed } from "./UserSeed"
+import { PermissionsSeed } from "./PermissionsSeed"
+import { RolePermissionsSeed } from "./RolePermissionsSeed"
+import { TagSeed } from "./TagsSeeder"
 
 const SEEDERS: Record<string, () => Promise<void>> = {
-  user: UserSeed,
-  feature: FeatureSeed,
-  persona: seedPersonas,
-  tags: seedTags
+  FeatureSeed,
+  TagSeed,
+  PermissionsSeed,
+  RolesSeed,
+  RolePermissionsSeed,
+  UserSeed
 }
 
 async function runSeeders() {
   try {
     const args = process.argv.slice(2)
-    const seederNames = args.length > 0 ? args : Object.keys(SEEDERS)
+    const seederNames =
+      args.length > 0
+        ? args
+        : Object.keys(SEEDERS).filter((s) => s !== "UserSeed")
 
     console.log(`🌱 Starting seeders: ${seederNames.join(", ") || "ALL"}`)
 

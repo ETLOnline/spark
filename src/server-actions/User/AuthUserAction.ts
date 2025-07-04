@@ -3,6 +3,7 @@
 import { SelectUserByExternalId } from "@/src/db/data-access/user/query"
 import { CreateServerAction } from ".."
 import { auth } from "@clerk/nextjs/server"
+import { readFileSync } from "fs"
 
 export const AuthUserAction = CreateServerAction(true, async () => {
   try {
@@ -18,6 +19,6 @@ export const AuthUserAction = CreateServerAction(true, async () => {
 
     return user
   } catch (error) {
-    throw new Error("Unauthorized", { cause: 401 })
+    throw new Error("Unauthorized", { cause: error })
   }
 })

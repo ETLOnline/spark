@@ -44,6 +44,8 @@ import {
   EmojiPickerFooter,
   EmojiPickerSearch
 } from "../../ui/emoji-picker"
+import { spaceStore } from "@/src/store/space/spaceStore"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -116,6 +118,19 @@ function joinChannel(
  * - `Input` and `Button` for handling the input and sending of new messages.
  */
 export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
+  const currentSpace = useAtomValue(spaceStore.currentSpace)
+  const { permissionChecker } = usePermissionChecker(
+    currentSpace ? "scoped" : "global",
+    "SPACE",
+    currentSpace?.id
+  )
+  const canCreate = permissionChecker
+    ? permissionChecker?.canAccess("chat.create")
+    : false
+  const canView = permissionChecker
+    ? permissionChecker?.canAccess("chat.view")
+    : false
+
   const [messages, setMessages] = useState<SelectMessage[]>([])
   const [newMessage, setNewMessage] = useState("")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useAtom(
@@ -232,7 +247,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         <CardHeader className="px-3">
           <CardTitle className="flex items-center justify-between">
             Chats
-            <CreateNewChat />
+            {canCreate && <CreateNewChat />}
           </CardTitle>
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -240,99 +255,103 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           </div>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden p-0">
-          <ChatsList />
+          {canView && <ChatsList />}
         </CardContent>
       </Card>
 
       {/* Main chat area */}
+      {canView && (
+        <Card className="flex-1 flex flex-col">
+          <CardHeader className="flex flex-row items-center justify-between py-4">
+            <div className="flex items-center">
+              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="md:hidden mr-2"
+                  >
+                    <Menu />
+                    <span className="sr-only">Toggle contacts</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[80%] sm:w-[385px] p-0">
+                  <CardHeader>
+                    <CardTitle>
+                      Chats <CreateNewChat />
+                    </CardTitle>
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input placeholder="Search chats..." className="pl-8" />
+                    </div>
+                  </CardHeader>
+                  <ChatsList />
+                </SheetContent>
+              </Sheet>
+              {currentChat ? (
+                <Link
+                  href={
+                    currentChat.is_group
+                      ? "#"
+                      : `/profile/${chatContact?.unique_id}`
+                  }
+                >
+                  <div className="flex ">
+                    {currentChat.is_group ? (
+                      <Avvvatars value={currentChat.name || ""} style="shape" />
+                    ) : (
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage
+                          src={
+                            currentChat && !currentChat.is_group
+                              ? chatContact?.profile_url || undefined
+                              : undefined
+                          }
+                          alt={currentChat.name || ""}
+                        />
+                        <AvatarFallback>
+                          {currentChat && !currentChat.is_group
+                            ? chatContact?.first_name[0]
+                            : currentChat.name}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div className="ml-4 space-y-1">
+                      {!currentChat?.is_group && chatContact ? (
+                        <>
+                          <p className="text-sm font-medium leading-none">{`${chatContact?.first_name} ${chatContact?.last_name}`}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {chatContact?.email}
+                          </p>
+                        </>
+                      ) : null}
 
-      <Card className="flex-1 flex flex-col">
-        <CardHeader className="flex flex-row items-center justify-between py-4">
-          <div className="flex items-center">
-            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden mr-2">
-                  <Menu />
-                  <span className="sr-only">Toggle contacts</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-[80%] sm:w-[385px] p-0">
-                <CardHeader>
-                  <CardTitle>
-                    Chats <CreateNewChat />
-                  </CardTitle>
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search chats..." className="pl-8" />
-                  </div>
-                </CardHeader>
-                <ChatsList />
-              </SheetContent>
-            </Sheet>
-            {currentChat ? (
-              <Link
-                href={
-                  currentChat.is_group
-                    ? "#"
-                    : `/profile/${chatContact?.unique_id}`
-                }
-              >
-                <div className="flex ">
-                  {currentChat.is_group ? (
-                    <Avvvatars value={currentChat.name || ""} style="shape" />
-                  ) : (
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage
-                        src={
-                          currentChat && !currentChat.is_group
-                            ? chatContact?.profile_url || undefined
-                            : undefined
-                        }
-                        alt={currentChat.name || ""}
-                      />
-                      <AvatarFallback>
-                        {currentChat && !currentChat.is_group
-                          ? chatContact?.first_name[0]
-                          : currentChat.name}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div className="ml-4 space-y-1">
-                    {!currentChat?.is_group && chatContact ? (
-                      <>
-                        <p className="text-sm font-medium leading-none">{`${chatContact?.first_name} ${chatContact?.last_name}`}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {chatContact?.email}
-                        </p>
-                      </>
-                    ) : null}
-
-                    {currentChat?.is_group ? (
-                      <>
-                        <p className="text-sm font-medium leading-none">
-                          {currentChat.name}
-                        </p>
-                        <p className="text-sm text-muted-foreground truncate">
-                          Group Chat (
-                          {currentChat.users
-                            ?.map(
-                              (user) =>
-                                `${user.user?.first_name} ${user.user?.last_name}`
+                      {currentChat?.is_group ? (
+                        <>
+                          <p className="text-sm font-medium leading-none">
+                            {currentChat.name}
+                          </p>
+                          <p className="text-sm text-muted-foreground truncate">
+                            Group Chat (
+                            {currentChat.users
+                              ?.map(
+                                (user) =>
+                                  `${user.user?.first_name} ${user.user?.last_name}`
+                              )
+                              .join(", ")}
                             )
-                            .join(", ")}
-                          )
-                        </p>
-                      </>
-                    ) : null}
+                          </p>
+                        </>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ) : null}
-          </div>
+                </Link>
+              ) : null}
+            </div>
 
-          {/* calling options for future */}
+            {/* calling options for future */}
 
-          {/* <div className="flex items-center space-x-2">
+            {/* <div className="flex items-center space-x-2">
               <Button variant="ghost" size="icon">
                 <Phone className="h-4 w-4" />
                 <span className="sr-only">Start voice call</span>
@@ -346,112 +365,113 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                 <span className="sr-only">More options</span>
               </Button>
             </div> */}
-        </CardHeader>
-        {currentChat ? (
-          <>
-            <CardContent className="flex-1 overflow-hidden p-4">
-              {authUser && currentChat && !fetchingChatMessages ? (
-                <ScrollArea className="h-[calc(100svh-17rem)] pr-4">
-                  {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={` group mb-4 flex items-center ${
-                        message.sender_id === authUser?.unique_id
-                          ? "justify-end"
-                          : "justify-start"
-                      }
+          </CardHeader>
+          {currentChat ? (
+            <>
+              <CardContent className="flex-1 overflow-hidden p-4">
+                {authUser && currentChat && !fetchingChatMessages ? (
+                  <ScrollArea className="h-[calc(100svh-17rem)] pr-4">
+                    {messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={` group mb-4 flex items-center ${
+                          message.sender_id === authUser?.unique_id
+                            ? "justify-end"
+                            : "justify-start"
+                        }
                             `}
-                    >
-                      {isOnlyEmoji(message.message) ? (
-                        <div className="">
-                          {message.sender_id !== authUser?.unique_id &&
-                          currentChat.is_group ? (
-                            <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">
-                              ~ {message.sender?.first_name}
-                            </p>
-                          ) : null}
-                          <p className="text-4xl">{message.message}</p>
-                        </div>
-                      ) : (
-                        <div
-                          className={`rounded-lg p-3 max-w-[70%] ${
-                            message.sender_id === authUser?.unique_id
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted"
-                          }`}
-                        >
-                          {message.sender_id !== authUser?.unique_id &&
-                          currentChat.is_group ? (
-                            <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">
-                              ~ {message.sender?.first_name}
-                            </p>
-                          ) : null}
-                          <p className="text-sm">{message.message}</p>
-                        </div>
-                      )}
-                      <p className="text-xs ml-2 text-right hidden group-hover:block">
-                        {moment
-                          .utc(message.created_at)
-                          .local()
-                          .format("hh:mm A")}
-                      </p>
-                    </div>
-                  ))}
-                  <div ref={messagesEndRef} />
-                </ScrollArea>
-              ) : (
-                <div className="flex h-full items-center justify-center">
-                  <Loader />
-                </div>
-              )}
-            </CardContent>
-            <CardFooter className="p-4">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  handleSendMessage()
-                }}
-                onChange={(e) => {
-                  e.preventDefault()
-                }}
-                className="flex w-full space-x-2"
-              >
-                <Input
-                  placeholder="Type a message..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  className="flex-1"
-                  // type="text"
-                />
-                <Popover>
-                  <PopoverTrigger>
-                    <SmileIcon />
-                  </PopoverTrigger>
-                  <PopoverContent side="top" align="end" className="p-0">
-                    <EmojiPicker
-                      className="h-[342px]"
-                      onEmojiSelect={({ emoji }: any) =>
-                        setNewMessage(`${newMessage}${emoji}`)
-                      }
-                    >
-                      <EmojiPickerSearch />
-                      <EmojiPickerContent />
-                      <EmojiPickerFooter />
-                    </EmojiPicker>
-                  </PopoverContent>
-                </Popover>
-                <Button type="submit" size="icon">
-                  {newMessageLoading ? (
+                      >
+                        {isOnlyEmoji(message.message) ? (
+                          <div className="">
+                            {message.sender_id !== authUser?.unique_id &&
+                            currentChat.is_group ? (
+                              <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">
+                                ~ {message.sender?.first_name}
+                              </p>
+                            ) : null}
+                            <p className="text-4xl">{message.message}</p>
+                          </div>
+                        ) : (
+                          <div
+                            className={`rounded-lg p-3 max-w-[70%] ${
+                              message.sender_id === authUser?.unique_id
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted"
+                            }`}
+                          >
+                            {message.sender_id !== authUser?.unique_id &&
+                            currentChat.is_group ? (
+                              <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">
+                                ~ {message.sender?.first_name}
+                              </p>
+                            ) : null}
+                            <p className="text-sm">{message.message}</p>
+                          </div>
+                        )}
+                        <p className="text-xs ml-2 text-right hidden group-hover:block">
+                          {moment
+                            .utc(message.created_at)
+                            .local()
+                            .format("hh:mm A")}
+                        </p>
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </ScrollArea>
+                ) : (
+                  <div className="flex h-full items-center justify-center">
                     <Loader />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                </Button>
-              </form>
-            </CardFooter>
-          </>
-        ) : null}
-      </Card>
+                  </div>
+                )}
+              </CardContent>
+              <CardFooter className="p-4">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    handleSendMessage()
+                  }}
+                  onChange={(e) => {
+                    e.preventDefault()
+                  }}
+                  className="flex w-full space-x-2"
+                >
+                  <Input
+                    placeholder="Type a message..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    className="flex-1"
+                    // type="text"
+                  />
+                  <Popover>
+                    <PopoverTrigger>
+                      <SmileIcon />
+                    </PopoverTrigger>
+                    <PopoverContent side="top" align="end" className="p-0">
+                      <EmojiPicker
+                        className="h-[342px]"
+                        onEmojiSelect={({ emoji }: any) =>
+                          setNewMessage(`${newMessage}${emoji}`)
+                        }
+                      >
+                        <EmojiPickerSearch />
+                        <EmojiPickerContent />
+                        <EmojiPickerFooter />
+                      </EmojiPicker>
+                    </PopoverContent>
+                  </Popover>
+                  <Button type="submit" size="icon">
+                    {newMessageLoading ? (
+                      <Loader />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
+                </form>
+              </CardFooter>
+            </>
+          ) : null}
+        </Card>
+      )}
     </div>
   )
 }

@@ -29,6 +29,27 @@
       "when": 1750246671433,
       "tag": "0003_2025_06_18_163748__create_profile_table",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1751380839763,
+      "tag": "0004_2025_07_01_194005__create_table_role_and_permissions_and_user_roles_adn_drop_the_personas",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1751471115086,
+      "tag": "0005_2025_07_02_204513__add_created_by_to_space_file_directory",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1751556047435,
+      "tag": "0006_2025_07_03_202044__update_space_table",
+      "breakpoints": true
     }
   ]
 }

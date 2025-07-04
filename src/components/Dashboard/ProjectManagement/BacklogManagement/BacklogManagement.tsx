@@ -19,6 +19,8 @@ import {
   Settings
 } from "lucide-react"
 import BacklogItemsCard from "./BacklogItemsCard"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { useParams } from "next/navigation"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
@@ -26,11 +28,7 @@ import StatusRequiredDialog from "../StatusRequiredDialog"
 import { TaskModal } from "../Task/components/TaskModal"
 import { SelectTask } from "@/src/db/schema"
 
-
-
-
 export function BacklogManagement() {
-
   const [searchQuery, setSearchQuery] = useState("")
   const [searchedItem, setSearchedItem] = useState("")
   const [orderList, setOrderList] = useState("asc")
@@ -40,7 +38,8 @@ export function BacklogManagement() {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
   const [tasks, setTasks] = useAtom(taskStore.BackLogTasks)
-  
+  const params = useParams()
+  const projectId = params.id as string
 
   function handleSearch() {
     if (searchQuery) {
@@ -48,23 +47,33 @@ export function BacklogManagement() {
     }
   }
 
+  // PERMISSIONS INITATE
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    projectId
+  )
+  const canCreateTask = permissionChecker
+    ? permissionChecker?.canAccess("project.backlog.task.create")
+    : false
+
   useEffect(() => {
     if (projectStatusList.length === 0) {
       setOpenDialog(true)
     }
   }, [projectStatusList])
 
-  useEffect(()=>{
-    if(!isTaskModalOpen){
+  useEffect(() => {
+    if (!isTaskModalOpen) {
       setSelectedTask(null)
     }
-  },[isTaskModalOpen])
+  }, [isTaskModalOpen])
 
-  useEffect(()=>{
-    if(selectedTask){
+  useEffect(() => {
+    if (selectedTask) {
       setIsTaskModalOpen(true)
     }
-  },[selectedTask])
+  }, [selectedTask])
 
   return projectStatusList.length > 0 ? (
     <>
@@ -84,10 +93,12 @@ export function BacklogManagement() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h2 className="text-xl font-bold">Backlog</h2>
-          <Button onClick={() => setIsTaskModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Item
-          </Button>
+          {canCreateTask && (
+            <Button onClick={() => setIsTaskModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Item
+            </Button>
+          )}
         </div>
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">

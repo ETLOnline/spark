@@ -1,7 +1,7 @@
 import { Badge } from "@/src/components/ui/badge"
 import { SelectSprint, SelectTask } from "@/src/db/schema"
 import { projectStore } from "@/src/store/project/projectStore"
-import { useAtom, useSetAtom } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { CircleHelp, MoreHorizontal } from "lucide-react"
 import React, { Dispatch, SetStateAction, useState } from "react"
 import {
@@ -30,6 +30,7 @@ import {
 import { toast } from "@/src/hooks/use-toast"
 import { UpdateTaskAction } from "@/src/server-actions/Tasks/Task"
 import { useServerAction } from "@/src/hooks/useServerAction"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import TaskMoveDialog from "../Task/components/task-move-dialog"
 
 interface Props {
@@ -40,7 +41,13 @@ interface Props {
   setSelectedTask: Dispatch<SetStateAction<SelectTask | null>>
 }
 
-function SprintTasks({ task, currSprint, setIsTaskModelOpen, setTasks, setSelectedTask }: Props) {
+function SprintTasks({
+  task,
+  currSprint,
+  setIsTaskModelOpen,
+  setTasks,
+  setSelectedTask
+}: Props) {
   const [status, setStatus] = useAtom(projectStore.projectStatusList)
   // const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
@@ -58,11 +65,7 @@ function SprintTasks({ task, currSprint, setIsTaskModelOpen, setTasks, setSelect
     try {
       const updatedTask = await RemoveTask(task.id, { sprint_id: null })
       if (updatedTask?.success && updatedTask.data) {
-        setTasks((prevTasks) =>
-          prevTasks.filter((t) =>
-            t.id !== task.id 
-          )
-        )
+        setTasks((prevTasks) => prevTasks.filter((t) => t.id !== task.id))
 
         toast({
           title: "Task removed from sprint successfully",
@@ -119,6 +122,19 @@ function SprintTasks({ task, currSprint, setIsTaskModelOpen, setTasks, setSelect
     )
   }
 
+  // PERMISSIONS INITATE
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    currSprint?.projectId
+  )
+  const canUpdateTask = permissionChecker
+    ? permissionChecker?.canAccess("project.task.update")
+    : false
+  const canDeleteTask = permissionChecker
+    ? permissionChecker?.canAccess("project.task.delete")
+    : false
+
   return (
     <>
       <div
@@ -153,31 +169,33 @@ function SprintTasks({ task, currSprint, setIsTaskModelOpen, setTasks, setSelect
           <CircleHelp className="w-full" />
         </div>
         <div className="col-span-1 text-center">
-          <DropdownMenu
-            open={isTaskDropDownOpen}
-            onOpenChange={(open) => setIsTaskDropDownOpen(open)}
-          >
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>Assign</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  setIsTaskDropDownOpen(false)
-                  setIsAlertOpen(true)
-                }}
-              >
-                Remove from Sprint
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => moveTask(task.id)}>
-                Move to other Sprint
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {canUpdateTask && (
+            <DropdownMenu
+              open={isTaskDropDownOpen}
+              onOpenChange={(open) => setIsTaskDropDownOpen(open)}
+            >
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>Assign</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => {
+                    setIsTaskDropDownOpen(false)
+                    setIsAlertOpen(true)
+                  }}
+                >
+                  Move to Backlog
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => moveTask(task.id)}>
+                  Move to other Sprint
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 
@@ -186,7 +204,7 @@ function SprintTasks({ task, currSprint, setIsTaskModelOpen, setTasks, setSelect
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action will remove Task from the current sprint.
+              This action will move Task from the current sprint to backlog.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -197,7 +215,7 @@ function SprintTasks({ task, currSprint, setIsTaskModelOpen, setTasks, setSelect
               }}
               loading={removeTaskLoading}
             >
-              Remove
+              Move
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

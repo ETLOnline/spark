@@ -205,8 +205,8 @@ export default function ProfileScreen({
               </Tooltip>
             </TooltipProvider>
           </div>
-          <p className="text-base text-muted-foreground">Postion</p>
-          <p className="text-sm text-muted-foreground">Company Name</p>
+          {/* <p className="text-base text-muted-foreground">Postion</p>
+          <p className="text-sm text-muted-foreground">Company Name</p> */}
 
           <div className="mt-2 flex gap-6 text-sm">
             <div className="flex items-center gap-1">
