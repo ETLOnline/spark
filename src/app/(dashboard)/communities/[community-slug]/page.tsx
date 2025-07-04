@@ -7,14 +7,15 @@ import Link from "next/link"
 import CommunityDetailsClient from "@/src/components/communities/CommunityDetailsClient"
 
 interface CommunityPageProps {
-  params: {
+  params: Promise<{
     "community-slug": string
-  }
+  }>
 }
 
 export default async function CommunityPage({ params }: CommunityPageProps) {
-  const communitySlug = params["community-slug"]
-  const community = await GetCommunityDetailsAction(communitySlug)
+  const communitySlug = await params
+  const communitySlugValue = communitySlug["community-slug"]
+  const community = await GetCommunityDetailsAction(communitySlugValue)
 
   if (!community) {
     return (
