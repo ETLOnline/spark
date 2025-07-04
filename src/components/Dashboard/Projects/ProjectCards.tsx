@@ -36,7 +36,7 @@ function ProjectCards({ project, onEdit }: Props) {
     ? permissionChecker.canAccess("project.update")
     : false
   return (
-    <Card key={project.id} className="mb-4">
+    <Card key={project.id} className="mb-4 w-full">
       <CardHeader>
         <div className="flex justify-between items-start">
           <CardTitle>{project.project_name}</CardTitle>
