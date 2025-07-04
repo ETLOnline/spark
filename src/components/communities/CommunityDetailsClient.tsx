@@ -48,104 +48,128 @@ export default function CommunityDetailsClient({
     <div className="min-h-screen bg-background">
       <div className="flex flex-col min-h-screen">
         {/* Community Header Banner */}
-        <div className="relative bg-gradient-to-r from-gray-500 to-gray-600 px-4 py-6 md:px-6 md:py-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex flex-col sm:flex-row items-start gap-4">
-              {/* Community Avatar */}
-              <div className="relative">
-                <Avatar className="h-16 w-16 md:h-20 md:w-20 border-4 border-white">
-                  <AvatarImage src="/placeholder.png" alt={community.title} />
-                  <AvatarFallback className="text-xl md:text-2xl font-bold">
-                    {communityInitial}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
+        <div className="relative sm:h-44 h-36 shadow-sm shadow-secondary rounded-lg overflow-hidden">
+          <img
+            src="/images/profile/background.svg"
+            alt="Community Banner"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/50"></div>
+          <div className="absolute inset-0 px-4 py-4 sm:py-6 sm:px-6 flex flex-col gap-4 justify-center h-full">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 h-full">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full">
+                {/* Community Avatar */}
+                <div className="relative">
+                  <Avatar className="h-16 w-16 md:h-20 md:w-20 border-4 border-white">
+                    <AvatarImage src="/placeholder.png" alt={community.title} />
+                    <AvatarFallback className="text-xl md:text-2xl font-bold">
+                      {communityInitial}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
 
-              {/* Community Info */}
-              <div className="text-white flex-1">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                  <h1 className="text-xl md:text-2xl font-bold">
-                    {community.title}
-                  </h1>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <Badge variant="secondary" className="text-xs">
-                      {community.type === "public" ? "Public" : "Private"}
+                {/* Community Info */}
+                <div className="text-white flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2 w-full">
+                    <div className="flex items-center w-full min-w-0">
+                      <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate">
+                        {community.title}
+                      </h1>
+                      <div className="flex items-center gap-2 ml-2">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <Badge variant="secondary" className="text-xs">
+                          {community.type === "public" ? "Public" : "Private"}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Description & stats - hidden on mobile */}
+                  <p className="hidden md:block text-gray-200 mb-3 text-sm md:text-base max-w-2xl truncate">
+                    {community.description}
+                  </p>
+                  <div className="hidden md:flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm">
+                    <div className="flex items-center gap-1">
+                      <Users className="h-4 w-4" />
+                      <span>
+                        {community.totalMembers.toLocaleString()} members
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span>•</span>
+                      <span>{community.onlineNow} online</span>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className="bg-white/10 border-white/20 text-white text-xs"
+                    >
+                      {community.category}
                     </Badge>
                   </div>
                 </div>
-                <p className="text-gray-200 mb-3 text-sm md:text-base max-w-2xl">
-                  {community.description}
-                </p>
-                <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm">
-                  <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    <span>
-                      {community.totalMembers.toLocaleString()} members
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span>•</span>
-                    <span>{community.onlineNow} online</span>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className="bg-white/10 border-white/20 text-white text-xs"
-                  >
-                    {community.category}
-                  </Badge>
-                </div>
               </div>
-            </div>
 
-            {/* Action Buttons (These are client-side interactions) */}
-            <div className="flex gap-2 self-start md:self-auto">
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-              >
-                <UserPlus className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Invite</span>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-              >
-                <Settings className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Options</span>
-              </Button>
+              {/* Action Buttons */}
+              <div className="hidden md:flex md:flex-col gap-2 self-start md:self-auto flex-shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                >
+                  <UserPlus className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">Invite</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                >
+                  <Settings className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">Options</span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
 
+        {/* Mobile - extra info section */}
+        <div className="md:hidden px-4 py-4 space-y-4 border-b bg-background">
+          <p className="text-sm text-muted-foreground">
+            {community.description}
+          </p>
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Users className="h-4 w-4" />
+              <span className="font-medium">
+                {community.totalMembers.toLocaleString()}
+              </span>
+              <span>members</span>
+            </div>
+            <span>•</span>
+            <span>{community.onlineNow} online</span>
+          </div>
+          <Badge variant="outline" className="text-xs">
+            {community.category}
+          </Badge>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="flex-1">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Invite
+            </Button>
+            <Button variant="outline" size="sm" className="flex-1">
+              <Settings className="h-4 w-4 mr-2" />
+              Options
+            </Button>
+          </div>
+        </div>
         {/* Main Content */}
         <div className="flex border-t">
           {/* Left Sidebar */}
           <div className="flex-1 overflow-auto p-4 md:p-6">
             <div className="max-w-4xl mx-auto space-y-6">
-              <div className="lg:hidden">
-                <div className="grid grid-cols-2 gap-4 text-center mb-6">
-                  <div className="bg-muted/30 rounded-lg p-4">
-                    <div className="text-xl font-bold">
-                      {community.totalMembers.toLocaleString()}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Members</div>
-                  </div>
-                  <div className="bg-muted/30 rounded-lg p-4">
-                    <div className="text-xl font-bold">
-                      {community.onlineNow}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Online</div>
-                  </div>
-                </div>
-              </div>
-
               {/* Text Channels */}
-              <div className="bg-background rounded-lg border p-6">
+              <div className="bg-background rounded-lg border sm:p-6 p-3">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <h3 className="sm:text-lg text-base font-semibold flex items-center gap-2">
                     <Hash className="h-5 w-5" />
                     Text Channels
                   </h3>
@@ -181,8 +205,100 @@ export default function CommunityDetailsClient({
                 </div>
               </div>
 
+              {/* Mobile - Stats and About */}
+              <div className="block lg:hidden space-y-6 mt-6">
+                {/* Community Stats */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base lg:text-lg">
+                      Community Stats
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 pt-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-xs lg:text-sm">
+                          Total Members
+                        </span>
+                      </div>
+                      <span className="font-bold text-sm lg:text-base">
+                        {community.totalMembers.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                        <span className="text-xs lg:text-sm">Online Now</span>
+                      </div>
+                      <span className="font-bold text-sm lg:text-base">
+                        {community.onlineNow}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-xs lg:text-sm">
+                          Total Messages
+                        </span>
+                      </div>
+                      <span className="font-bold text-sm lg:text-base">
+                        {community.totalMessages?.toLocaleString?.() ?? 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-xs lg:text-sm">Created</span>
+                      </div>
+                      <span className="font-bold text-sm lg:text-base">
+                        {community.created_at
+                          ? community.created_at.getFullYear()
+                          : "N/A"}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+                {/* About */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base lg:text-lg">
+                      About
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 pt-0">
+                    <div>
+                      <span className="text-sm font-medium text-muted-foreground">
+                        Owner
+                      </span>
+                      <p className="text-sm">{community.owner?.fullName}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-muted-foreground">
+                        Category
+                      </span>
+                      <p className="text-sm">{community.category}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-muted-foreground">
+                        Privacy
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {community.type === "public" ? (
+                          <Globe className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Lock className="h-4 w-4 text-yellow-500" />
+                        )}
+                        <span className="text-sm capitalize">
+                          {community.type}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
               {/* Community Rules */}
-              <div className="bg-background rounded-lg border p-6">
+              <div className="bg-background rounded-lg border sm:p-6 p-3">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                     <span className="text-sm font-bold text-primary-foreground">
