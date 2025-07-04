@@ -152,10 +152,11 @@ export default function ProfileScreen({
         <div className="absolute bottom-0 left-16 transform -translate-x-1/2 translate-y-1/2">
           <div className="relative">
             {/* Added relative positioning for the button */}
-            <Avatar className="h-28 w-28 border-4 border-black">
+            <Avatar className="h-28 w-28 border-4 bg-secondary border-secondary">
               <AvatarImage
                 src={currentImageUrl || "/placeholder.png"} // Use currentImageUrl state
                 alt="Profile"
+                className="object-contain"
               />
               <AvatarFallback>IMG</AvatarFallback>
             </Avatar>
@@ -205,10 +206,10 @@ export default function ProfileScreen({
               </Tooltip>
             </TooltipProvider>
           </div>
-          {/* <p className="text-base text-muted-foreground">Postion</p>
-          <p className="text-sm text-muted-foreground">Company Name</p> */}
+          <p className="text-base text-muted-foreground">Postion</p>
+          <p className="text-sm text-muted-foreground">Company Name</p>
 
-          <div className="mt-2 flex gap-6 text-sm">
+          <div className="mt-2 flex flex-wrap sm:gap-6 gap-3 text-sm">
             <div className="flex items-center gap-1">
               <UserIcon className="h-4 w-4" />
               <span className="font-medium">000</span>
