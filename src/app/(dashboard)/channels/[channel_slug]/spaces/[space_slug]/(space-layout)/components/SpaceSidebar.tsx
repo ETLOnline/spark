@@ -94,14 +94,6 @@ function SpaceSidebar({ space }: Props) {
           <SidebarMenuButton size={"lg"} asChild>
             <Link href={`./${space.space_slug}`} className="mb-2">
               <div className="flex aspect-square items-center justify-center rounded-lg text-sidebar-primary-foreground">
-                {/* <Image
-                  sizes="8"
-                  src="/images/placeholder/placeholderImage.png"
-                  alt="spark-logo"
-                  width={40}
-                  height={40}
-                  className="rounded-full h-10 w-10"
-                /> */}
                 <Avvvatars value={space.space_name} size={40} style="shape" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">

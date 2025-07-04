@@ -59,16 +59,6 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
           <LayoutDashboard className="w-5 h-5" />
           <h1 className="text-xl font-semibold">Overview</h1>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-            <Share className="w-4 h-4" />
-            Share
-          </Button>
-          <Button size="sm" className="gap-2">
-            <UserPlus className="w-4 h-4" />
-            Invite Members
-          </Button>
-        </div>
       </div>
 
       {/* Content */}
@@ -105,7 +95,7 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Clock className="w-4 h-4 text-blue-500 " />
-                    <span className="font-medium text-foreground">9</span>
+                    <span className="font-medium text-foreground">{0}</span>
                     <span className="text-sm">active today</span>
                   </div>
                 </div>
