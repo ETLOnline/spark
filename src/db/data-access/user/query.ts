@@ -25,6 +25,7 @@ export async function SelectUserByExternalId(id: string) {
           role: true
         }
       },
+      profile: true,
       channels: {
         with: {
           channel: {

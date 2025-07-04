@@ -188,7 +188,7 @@ function SprintTasks({
                     setIsAlertOpen(true)
                   }}
                 >
-                  Remove from Sprint
+                  Move to Backlog
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => moveTask(task.id)}>
                   Move to other Sprint
@@ -204,7 +204,7 @@ function SprintTasks({
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action will remove Task from the current sprint.
+              This action will move Task from the current sprint to backlog.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -215,7 +215,7 @@ function SprintTasks({
               }}
               loading={removeTaskLoading}
             >
-              Remove
+              Move
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

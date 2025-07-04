@@ -20,8 +20,8 @@ import { Controller, useForm } from "react-hook-form"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { attachSpaceFeaturesAction } from "@/src/server-actions/Feature/Feature"
 import { toast } from "@/src/hooks/use-toast"
-import { useSetAtom } from "jotai"
-import { userStore } from "@/src/store/user/userStore"
+import { useAtom } from "jotai"
+import { spaceStore } from "@/src/store/space/spaceStore"
 
 export default function SpaceSettings({
   space,
@@ -30,7 +30,8 @@ export default function SpaceSettings({
   space: SelectSpace
   featuresList: SelectFeature[]
 }) {
-  const [currentSpace, setCurrentSpace] = useState<SelectSpace>(space)
+  const [ssrSpace, setSsrSpace] = useState<SelectSpace>(space)
+  const [currentSpace, setCurrentSpace] = useAtom(spaceStore.currentSpace)
 
   const [
     attachingSpaceFeatures,
@@ -41,7 +42,7 @@ export default function SpaceSettings({
 
   const defaultValues: any = {}
   featuresList.forEach((feature) => {
-    defaultValues[feature.feature_slug] = currentSpace.features?.find(
+    defaultValues[feature.feature_slug] = ssrSpace.features?.find(
       (sf) => sf.feature?.feature_slug === feature.feature_slug
     )
       ? true
@@ -58,10 +59,10 @@ export default function SpaceSettings({
   })
 
   useEffect(() => {
-    if (currentSpace) {
+    if (ssrSpace) {
       const updatedFormObject: any = {}
       featuresList.forEach((feature) => {
-        updatedFormObject[feature.feature_slug] = currentSpace.features?.find(
+        updatedFormObject[feature.feature_slug] = ssrSpace.features?.find(
           (sf) => sf.feature?.feature_slug === feature.feature_slug
         )
           ? true
@@ -72,7 +73,7 @@ export default function SpaceSettings({
         setValue(key, updatedFormObject[key])
       })
     }
-  }, [currentSpace])
+  }, [ssrSpace.features])
 
   // Handle save settings
   const handleSaveSettings = async (data: any) => {
@@ -84,8 +85,9 @@ export default function SpaceSettings({
       })
       .filter((id) => id !== undefined)
 
-    const updatedSpace = await attachSpaceFeatures(currentSpace.id, featureIds)
+    const updatedSpace = await attachSpaceFeatures(ssrSpace.id, featureIds)
     if (updatedSpace?.success && updatedSpace.data) {
+      setSsrSpace(updatedSpace.data)
       setCurrentSpace(updatedSpace.data)
       toast({
         title: "Space Setting Saved",
@@ -99,7 +101,7 @@ export default function SpaceSettings({
       <div className="mx-auto max-w-2xl">
         <Card className="overflow-hidden">
           <CardHeader className="px-4 sm:px-6">
-            <CardTitle>Space Settings ({currentSpace.space_name})</CardTitle>
+            <CardTitle>Space Settings ({ssrSpace.space_name})</CardTitle>
             <CardDescription>
               Configure which features are available in this space and manage
               its status.
@@ -145,7 +147,7 @@ export default function SpaceSettings({
                 </div>
               </div>
               <div className="flex items-center justify-between pt-4">
-                <Link href={`../${currentSpace.space_slug}`}>
+                <Link href={`./${ssrSpace.space_slug}`}>
                   <Button>Go to Space</Button>
                 </Link>
                 <Button

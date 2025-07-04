@@ -7,8 +7,11 @@ import {
   CardTitle
 } from "../../ui/card"
 import CreateNewProject from "./CreateNewProject"
+import { useAtomValue } from "jotai"
+import { spaceStore } from "@/src/store/space/spaceStore"
 
 function WelcomeCard() {
+  const currSpace = useAtomValue(spaceStore.currentSpace)
   return (
     <Card className=" p-0 pt-4">
       <CardContent>
@@ -22,7 +25,7 @@ function WelcomeCard() {
               innovative project ideas or contribute to existing ones.
             </p>
           </div>
-          <CreateNewProject />
+          <CreateNewProject currSpace={currSpace || undefined} />
         </div>
       </CardContent>
     </Card>

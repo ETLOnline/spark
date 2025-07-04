@@ -14,7 +14,11 @@ interface Props {
 async function SpacePage({ params }: Props) {
   const { channel_slug, space_slug } = await params
 
-  const currentSpace = await GetSpaceBySlugAction(space_slug, channel_slug)
+  const currentSpace = await GetSpaceBySlugAction(
+    space_slug,
+    channel_slug,
+    true
+  )
 
   if (!currentSpace.success || !currentSpace.data) {
     return <NotFound />
@@ -23,14 +27,6 @@ async function SpacePage({ params }: Props) {
   const featuresList = await getFeaturesAction({
     feature_type: "space"
   })
-
-  if (
-    !featuresList.success ||
-    !featuresList.data ||
-    !currentSpace.data.features.length
-  ) {
-    return <>No features found</>
-  }
 
   return (
     <SpaceFeatures

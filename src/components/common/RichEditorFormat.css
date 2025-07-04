@@ -1,0 +1,38 @@
+/* Headings */
+.rich-editor h1 {
+  font-size: 34px;
+  font-weight: bold;
+  margin: 0.67em 0;
+}
+
+.rich-editor h2 {
+  font-size: 30px;
+  font-weight: bold;
+  margin: 0.75em 0;
+}
+
+.rich-editor h3 {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0.83em 0;
+}
+
+.rich-editor ul {
+  list-style-type: disc;
+  padding-left: 40px;
+  margin: 1em 0;
+}
+
+.rich-editor ul li {
+  margin: 0.5em 0;
+}
+
+.rich-editor ol {
+  list-style-type: decimal;
+  padding-left: 40px;
+  margin: 1em 0;
+}
+
+.rich-editor ol li {
+  margin: 0.5em 0;
+}
