@@ -74,7 +74,7 @@ export const pageMeta = [
   {
     id: "project",
     url: (channel_slug: string, spaceSlug: string) =>
-      `/project?channel=${channel_slug}&space=${spaceSlug}`,
+      `/channels/${channel_slug}/spaces/${spaceSlug}?page-type=project-management`,
     title: "Projects",
     description: "projects"
   },

@@ -62,7 +62,7 @@ export const getProjectCrumbsMapped = (
   return projects.flatMap((p) => [
     {
       title: "Projects",
-      url: `/project?channel=${currSpace?.channel?.channel_slug}&space=${currSpace?.space_slug}`,
+      url: `/channels/${currSpace?.channel?.channel_slug}/spaces/${currSpace?.space_slug}?page-type=project-management`,
       description: "Projects",
       id: "project"
     },

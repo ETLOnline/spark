@@ -36,3 +36,9 @@
 .rich-editor ol li {
   margin: 0.5em 0;
 }
+
+.rich-editor a:hover {
+  color: blueviolet;
+  text-decoration: underline;
+  cursor: pointer;
+}

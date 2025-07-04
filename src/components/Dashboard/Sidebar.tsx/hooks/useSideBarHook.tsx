@@ -222,17 +222,22 @@ const useSideBarHook = () => {
               ...getSpacesFeatureCrumbsMapped(
                 channel.spaces as SelectSpace[],
                 channel,
-                currPageType ?? ""
+                currPageType
               )
             ]
           }
         })
 
         if (mappedCrumbs.length) {
-          setCrumbRoutes((crumbRoutes) => [
-            ...crumbRoutes,
-            ...(Array.isArray(mappedCrumbs) ? mappedCrumbs : [mappedCrumbs])
-          ])
+          setCrumbRoutes((prevCrumbs) => {
+            const filteredCrumbs = prevCrumbs.filter(
+              (crumb) =>
+                typeof crumb.url !== "string" ||
+                !crumb.url.includes("page-type")
+            )
+
+            return [...filteredCrumbs, ...mappedCrumbs]
+          })
         }
       } else {
         setCrumbRoutes((prevCrumbs) => {
@@ -240,8 +245,7 @@ const useSideBarHook = () => {
             (crumb) =>
               typeof crumb.url !== "string" || !crumb.url.includes("page-type")
           )
-
-          return [...filteredCrumbs]
+          return filteredCrumbs
         })
       }
     }
@@ -254,7 +258,14 @@ const useSideBarHook = () => {
         setSelectedChannel({ ...selectedChannel })
       }
     }
-  }, [channels, userData, permission, permissionChecker, isSuperAdmin])
+  }, [
+    channels,
+    userData,
+    permission,
+    permissionChecker,
+    isSuperAdmin,
+    currPageType
+  ])
 }
 
 export default useSideBarHook

@@ -63,8 +63,6 @@ const PostFeed: React.FC<PostFeedProps> = ({
   }, [fetchedPosts])
 
   useEffect(() => {
-    console.log(oldPosts)
-
     if (oldPosts && oldPosts.success) {
       setPosts((prevPosts) => [
         ...prevPosts,

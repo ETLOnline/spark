@@ -79,18 +79,6 @@ export function ProjectScreen({ space }: Props) {
     }
   }, [getProjectData])
 
-  useEffect(() => {
-    setCrumbRoutes((prev) =>
-      prev.map((r) =>
-        r.id === "project" && typeof r.url === "function"
-          ? {
-              ...r,
-              url: r.url(channel_slug ?? "", spaceSlug ?? "")
-            }
-          : r
-      )
-    )
-  }, [channel_slug, spaceSlug])
   // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(
     "scoped",
