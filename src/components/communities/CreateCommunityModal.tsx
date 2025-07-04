@@ -40,6 +40,7 @@ import {
   UpdateCommunityAction
 } from "@/src/server-actions/Community/Community"
 import { communityStore } from "@/src/store/community/communityStore"
+import { CommunityCategory } from "@/src/db/data-access/communities/query"
 
 const communitySchema = z.object({
   title: z.string().min(1, "Title required").max(50, "Title is too long"),
@@ -58,7 +59,7 @@ type CommunityFormData = z.infer<typeof communitySchema>
 
 type CreateCommunityModalProps = {
   onCommunityCreated?: (newCommunity: SelectCommunity) => void
-  availableCategories: string[]
+  availableCategories: CommunityCategory[]
 }
 
 export default function CreateCommunityModal({
@@ -167,7 +168,7 @@ export default function CreateCommunityModal({
     if (selectedCommunity) {
       form.setValue("title", selectedCommunity.title || "")
       form.setValue("description", selectedCommunity.description || "")
-      form.setValue("category", selectedCommunity.category || "")
+      form.setValue("category", selectedCommunity.category_id || "")
       form.setValue("slug", selectedCommunity.slug || "")
       form.setValue(
         "type",
@@ -238,7 +239,7 @@ export default function CreateCommunityModal({
       const payLoad: InsertCommunity = {
         title: data.title.trim(),
         description: data.description,
-        category: data.category,
+        category_id: data.category,
         slug: data.slug,
         type: data.type,
         created_by: authUser?.unique_id as string
@@ -301,7 +302,7 @@ export default function CreateCommunityModal({
       const payLoad: Partial<InsertCommunity> = {
         title: updatedData.title?.trim(),
         description: updatedData.description,
-        category: updatedData.category,
+        category_id: updatedData.category,
         slug: updatedData.slug,
         type: updatedData.type
       }
@@ -483,8 +484,8 @@ export default function CreateCommunityModal({
                         </SelectTrigger>
                         <SelectContent>
                           {availableCategories.map((cat) => (
-                            <SelectItem key={cat} value={cat}>
-                              {cat}
+                            <SelectItem key={cat.id} value={cat.id}>
+                              {cat.name}
                             </SelectItem>
                           ))}
                         </SelectContent>

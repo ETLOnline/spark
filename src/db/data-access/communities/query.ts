@@ -7,7 +7,9 @@ import {
   channelsTable,
   SelectCommunityUser,
   SelectChannel,
-  ChannelUsersTable
+  ChannelUsersTable,
+  communityCategoriesTable,
+  SelectCommunityCategory
 } from "../../schema"
 import {
   eq,
@@ -41,6 +43,7 @@ export interface CommunityQueryFilters {
 export type CommunityWithRelations = SelectCommunity & {
   communityMembers: SelectCommunityUser[]
   channels: SelectChannel[]
+  category: SelectCommunityCategory
 }
 
 /**
@@ -57,7 +60,7 @@ export async function GetCommunities(
 }> {
   const {
     searchTerm,
-    communityCategory,
+    communityCategory, // this will be the category id
     sortBy = "newest",
     createdByUserId
   } = filters || {}
@@ -67,7 +70,7 @@ export async function GetCommunities(
     whereClause.push(sql`(${ilike(communitiesTable.title, `%${searchTerm}%`)})`)
   }
   if (communityCategory && communityCategory !== "all") {
-    whereClause.push(ilike(communitiesTable.category, communityCategory))
+    whereClause.push(eq(communitiesTable.category_id, communityCategory))
   }
   if (createdByUserId) {
     whereClause.push(eq(communitiesTable.created_by, createdByUserId))
@@ -98,7 +101,8 @@ export async function GetCommunities(
       orderBy: orderByClause,
       with: {
         communityMembers: true,
-        channels: true
+        channels: true,
+        category: true
       }
     }) as Promise<CommunityWithRelations[]>
 
@@ -150,13 +154,11 @@ export async function GetJoinedCommunities(
   ]
 
   if (searchTerm) {
-    whereClause.push(
-      sql`(${ilike(communitiesTable.title, `%${searchTerm}%`)} OR ${ilike(communitiesTable.description, `%${searchTerm}%`)})`
-    )
+    whereClause.push(sql`(${ilike(communitiesTable.title, `%${searchTerm}%`)})`)
   }
 
   if (communityCategory && communityCategory !== "all") {
-    whereClause.push(ilike(communitiesTable.category, communityCategory))
+    whereClause.push(eq(communitiesTable.category_id, communityCategory))
   }
 
   let orderByClause: SQL<unknown> | undefined
@@ -180,12 +182,17 @@ export async function GetJoinedCommunities(
   try {
     const joinedCommunitiesPromise = db
       .select({
-        community: communitiesTable
+        community: communitiesTable,
+        category: communityCategoriesTable
       })
       .from(communityUsersTable)
       .leftJoin(
         communitiesTable,
         eq(communityUsersTable.community_id, communitiesTable.id)
+      )
+      .leftJoin(
+        communityCategoriesTable,
+        eq(communitiesTable.category_id, communityCategoriesTable.id)
       )
       .where(and(...whereClause))
       .limit(limit)
@@ -193,7 +200,14 @@ export async function GetJoinedCommunities(
       .orderBy(orderByClause)
       .then((rows) => {
         return rows
-          .map((row) => row.community)
+          .map((row) => {
+            if (!row.community) return null
+            const communityData: SelectCommunity = {
+              ...row.community,
+              category: row.category || undefined
+            }
+            return communityData
+          })
           .filter((comm): comm is SelectCommunity => comm !== null)
       }) as Promise<SelectCommunity[]>
 
@@ -203,6 +217,10 @@ export async function GetJoinedCommunities(
       .leftJoin(
         communitiesTable,
         eq(communityUsersTable.community_id, communitiesTable.id)
+      )
+      .leftJoin(
+        communityCategoriesTable,
+        eq(communitiesTable.category_id, communityCategoriesTable.id)
       )
       .where(and(...whereClause))
 
@@ -322,6 +340,13 @@ export async function DeleteCommunity(
   communityId: string
 ): Promise<SelectCommunity> {
   try {
+    await db
+      .delete(communityUsersTable)
+      .where(eq(communityUsersTable.community_id, communityId))
+    await db
+      .delete(channelsTable)
+      .where(eq(channelsTable.community_id, communityId))
+
     const deletedCommunity = await db
       .delete(communitiesTable)
       .where(eq(communitiesTable.id, communityId))
@@ -386,6 +411,11 @@ export async function GetCommunityById(
             channel_name: true,
             created_at: true
           }
+        },
+        category: {
+          columns: {
+            name: true
+          }
         }
       }
     })
@@ -393,7 +423,7 @@ export async function GetCommunityById(
     if (!communityDetails) {
       return null
     }
-
+    const categoryName = communityDetails.category?.name || ""
     const membersResult = await db
       .select({
         count: count(communityUsersTable.user_id)
@@ -431,7 +461,7 @@ export async function GetCommunityById(
       id: communityDetails.id,
       title: communityDetails.title,
       description: communityDetails.description || "",
-      category: communityDetails.category,
+      category: categoryName,
       slug: communityDetails.slug,
       type:
         communityDetails.type === "public" ||
@@ -456,5 +486,26 @@ export async function GetCommunityById(
   } catch (e: any) {
     console.error("Error in GetCommunityById:", e)
     throw new Error(`Failed to retrieve community: ${e.message}`)
+  }
+}
+
+export interface CommunityCategory {
+  id: string
+  name: string
+}
+
+export async function getCategories(): Promise<CommunityCategory[]> {
+  try {
+    const categories = await db
+      .select({
+        id: communityCategoriesTable.id,
+        name: communityCategoriesTable.name
+      })
+      .from(communityCategoriesTable)
+
+    return categories ?? []
+  } catch (error) {
+    console.error("Error fetching categories:", error)
+    throw new Error("Failed to fetch categories")
   }
 }

@@ -6,9 +6,11 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   DeleteCommunityAction,
   GetCommunitiesAction,
-  GetCommunitiesActionResponse
+  GetCommunitiesActionResponse,
+  GetCommunityCategoriesAction
 } from "@/src/server-actions/Community/Community"
 import {
+  CommunityCategory,
   CommunityQueryFilters,
   CommunityType,
   SortByOptions
@@ -28,6 +30,8 @@ import {
   PaginationNext,
   PaginationPrevious
 } from "@/src/components/ui/pagination"
+import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
+import { Users } from "lucide-react"
 
 interface EnhancedCommunityQueryFilters extends CommunityQueryFilters {
   refreshTriggerValue?: boolean
@@ -63,6 +67,9 @@ export default function CommunitiesPage() {
   )
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const previousFiltersRef = useRef<EnhancedCommunityQueryFilters | null>(null)
+  const [communityCategories, setCommunityCategories] = useState<
+    CommunityCategory[]
+  >([])
   const initialLoadRef = useRef(true)
   const loadCommunities = useCallback(
     async (
@@ -83,22 +90,8 @@ export default function CommunitiesPage() {
         JSON.stringify(currentEnhancedFilters) ===
           JSON.stringify(previousFiltersRef.current)
       ) {
-        console.log(
-          "Filters (including refresh trigger, page, limit, active tab) are identical, skipping fetch."
-        )
         return
       }
-
-      console.log(
-        "Fetching communities with filters (frontend):",
-        filters,
-        "Page:",
-        page,
-        "Limit:",
-        limit,
-        "Active Tab:",
-        currentActiveTab
-      )
       // NEW: Pass activeTab to fetchCommunities server action
       const res = await fetchCommunities(filters, page, limit, currentActiveTab)
 
@@ -147,7 +140,20 @@ export default function CommunitiesPage() {
     itemsPerPage,
     loadCommunities,
     activeTab
-  ]) // NEW: Add activeTab to dependencies
+  ])
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const categories = await GetCommunityCategoriesAction()
+        setCommunityCategories(categories)
+      } catch (err) {
+        console.error("Error fetching categories:", err)
+      }
+    }
+
+    fetchCategories()
+  }, [])
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value)
@@ -216,19 +222,6 @@ export default function CommunitiesPage() {
     setCurrentPage(page)
   }
 
-  const availableCategories = [
-    "Technology",
-    "Art & Design",
-    "Health & Wellness",
-    "Environment",
-    "Gaming",
-    "Education",
-    "Travel",
-    "Food",
-    "Sports",
-    "Science"
-  ]
-
   const paginationData =
     activeTab === "all"
       ? communitiesList?.allCommunitiesPagination
@@ -268,19 +261,30 @@ export default function CommunitiesPage() {
         onSearchChange={handleSearchChange}
         onCategoryChange={handleCategoryChange}
         onSortByChange={handleSortByChange}
-        availableCategories={availableCategories}
+        availableCategories={communityCategories}
       />
 
       {/* Community List Tabs: Displays communities based on fetched data */}
-      <CommunityListTabs
-        loading={loading}
-        error={error}
-        communitiesList={communitiesList} // communitiesList now includes pagination data
-        onEditCommunity={handleEditCommunity}
-        onDeleteCommunity={handleDeleteCommunity}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-      />
+      {!loading &&
+      !error &&
+      communitiesList &&
+      communitiesList.communities.length > 0 ? (
+        <CommunityListTabs
+          loading={loading}
+          error={error}
+          communitiesList={communitiesList}
+          onEditCommunity={handleEditCommunity}
+          onDeleteCommunity={handleDeleteCommunity}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
+      ) : (
+        <NoDataCard
+          icon={<Users className="h-16 w-16 text-muted-foreground mb-4" />}
+          title="No communities found"
+          description="Adjust your filters or try a different search term."
+        />
+      )}
 
       {/* Pagination UI */}
       {!loading &&
@@ -328,7 +332,7 @@ export default function CommunitiesPage() {
         )}
 
       {/* Create/Edit Community Modal: Hidden by default, shown when triggered */}
-      <CreateCommunityModal availableCategories={availableCategories} />
+      <CreateCommunityModal availableCategories={communityCategories} />
     </div>
   )
 }

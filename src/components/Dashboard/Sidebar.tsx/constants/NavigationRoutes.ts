@@ -12,7 +12,7 @@ import {
   Newspaper,
   Send,
   Settings2,
-  Shield,
+  Users,
   User
 } from "lucide-react"
 
@@ -78,7 +78,7 @@ export const siteRoutes: SiteRoutes = {
     {
       title: "Communities",
       url: "/communities",
-      icon: Boxes,
+      icon: Users,
       permission: "communities.view"
     }
   ],

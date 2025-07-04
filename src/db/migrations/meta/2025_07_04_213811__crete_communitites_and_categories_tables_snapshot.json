@@ -1,5 +1,5 @@
 {
-  "id": "da396ffa-2dcc-44ff-8d31-175063c32d79",
+  "id": "f06765bb-5c0b-43a6-9b46-24d902d258fe",
   "prevId": "d234e1db-960f-4497-9458-ef1f5a24e872",
   "version": "7",
   "dialect": "postgresql",
@@ -723,8 +723,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "category": {
-          "name": "category",
+        "category_id": {
+          "name": "category_id",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
@@ -774,6 +774,62 @@
       "uniqueConstraints": {
         "communities_slug_unique": {
           "name": "communities_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": ["slug"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.community_categories": {
+      "name": "community_categories",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(36)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "community_categories_slug_unique": {
+          "name": "community_categories_slug_unique",
           "nullsNotDistinct": false,
           "columns": ["slug"]
         }

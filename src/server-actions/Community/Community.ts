@@ -9,7 +9,8 @@ import {
   UpdateCommunity,
   DeleteCommunity,
   CommunityDetailData,
-  GetCommunityById
+  GetCommunityById,
+  getCategories
 } from "@/src/db/data-access/communities/query"
 import { isUserAdmin } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
@@ -207,6 +208,19 @@ export const GetCommunityDetailsAction = CreateServerAction(
     } catch (error) {
       console.error("Error in getCommunityDetailsAction:", error)
       return null
+    }
+  }
+)
+
+export const GetCommunityCategoriesAction = CreateServerAction(
+  true,
+  async () => {
+    try {
+      const community = await getCategories()
+      return community
+    } catch (error) {
+      console.error("Error in getCommunityDetailsAction:", error)
+      return []
     }
   }
 )

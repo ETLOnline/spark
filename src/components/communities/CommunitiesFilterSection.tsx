@@ -7,7 +7,10 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/src/components/ui/select"
-import { SortByOptions } from "@/src/db/data-access/communities/query"
+import {
+  CommunityCategory,
+  SortByOptions
+} from "@/src/db/data-access/communities/query"
 
 interface CommunitiesFilterBarProps {
   searchTerm: string
@@ -16,7 +19,7 @@ interface CommunitiesFilterBarProps {
   onSearchChange: (value: string) => void
   onCategoryChange: (value: string) => void
   onSortByChange: (value: SortByOptions) => void
-  availableCategories: string[]
+  availableCategories: CommunityCategory[]
 }
 
 export default function CommunitiesFilterBar({
@@ -47,8 +50,8 @@ export default function CommunitiesFilterBar({
           <SelectItem value="all">All Categories</SelectItem>
           {availableCategories &&
             availableCategories.map((category) => (
-              <SelectItem key={category} value={category}>
-                {category}
+              <SelectItem key={category.id} value={category.id}>
+                {category.name}
               </SelectItem>
             ))}
         </SelectContent>

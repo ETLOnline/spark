@@ -1094,7 +1094,7 @@ export const communitiesTable = pgTable("communities", {
     .$defaultFn(() => randomUUID()),
   title: varchar().notNull(),
   description: varchar(),
-  category: varchar().notNull(),
+  category_id: varchar().notNull(),
   slug: varchar().notNull().unique(),
   type: varchar().notNull().default("public"),
   created_by: varchar().notNull(),
@@ -1114,6 +1114,11 @@ export const communitiesRelations = relations(
     }),
     channels: many(channelsTable, {
       relationName: "channelToCommunity"
+    }),
+    category: one(communityCategoriesTable, {
+      fields: [communitiesTable.category_id],
+      references: [communityCategoriesTable.id],
+      relationName: "communityToCategory"
     })
   })
 )
@@ -1123,6 +1128,7 @@ export type SelectCommunity = typeof communitiesTable.$inferSelect & {
   communityMembers?: SelectCommunityUser[]
   channels?: SelectChannel[]
   creator?: SelectUser
+  category?: SelectCommunityCategory
 }
 
 export const communityUsersTable = pgTable("community_users", {
@@ -1158,3 +1164,26 @@ export type SelectCommunityUser = typeof communityUsersTable.$inferSelect & {
   community?: SelectCommunity
   user?: SelectUser
 }
+
+export const communityCategoriesTable = pgTable("community_categories", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  name: varchar("name").notNull(),
+  slug: varchar("slug").notNull().unique(),
+  ...timestamps
+})
+
+export const communityCategoriesRelations = relations(
+  communityCategoriesTable,
+  ({ many }) => ({
+    communities: many(communitiesTable, {
+      relationName: "categoryToCommunity"
+    })
+  })
+)
+
+export type SelectCommunityCategory =
+  typeof communityCategoriesTable.$inferSelect & {
+    communities?: SelectCommunity[]
+  }

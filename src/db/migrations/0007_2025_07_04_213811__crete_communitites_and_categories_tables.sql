@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS "communities" (
 	"id" varchar(36) PRIMARY KEY NOT NULL,
 	"title" varchar NOT NULL,
 	"description" varchar,
-	"category" varchar NOT NULL,
+	"category_id" varchar NOT NULL,
 	"slug" varchar NOT NULL,
 	"type" varchar DEFAULT 'public' NOT NULL,
 	"created_by" varchar NOT NULL,
@@ -10,6 +10,16 @@ CREATE TABLE IF NOT EXISTS "communities" (
 	"created_at" varchar DEFAULT CURRENT_TIMESTAMP,
 	"deleted_at" varchar,
 	CONSTRAINT "communities_slug_unique" UNIQUE("slug")
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "community_categories" (
+	"id" varchar(36) PRIMARY KEY NOT NULL,
+	"name" varchar NOT NULL,
+	"slug" varchar NOT NULL,
+	"updated_at" varchar,
+	"created_at" varchar DEFAULT CURRENT_TIMESTAMP,
+	"deleted_at" varchar,
+	CONSTRAINT "community_categories_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "community_users" (

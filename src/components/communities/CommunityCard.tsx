@@ -101,7 +101,7 @@ export default function CommunityCard({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="outline">{community.category}</Badge>
+              <Badge variant="outline">{community?.category?.name}</Badge>
               {community.type === "public" ? (
                 <Globe className="h-4 w-4 text-green-500" />
               ) : community.type === "private" ? (
