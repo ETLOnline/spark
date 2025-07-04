@@ -210,7 +210,9 @@ function CreateSpaceModal({
       if (createdSpace?.success && createdSpace.data) {
         await refreshAuthUser()
         setSpaces([...spaces, createdSpace.data])
-        router.push(`./spaces/${createdSpace.data.space_slug}/settings`)
+        router.push(
+          `./spaces/${createdSpace.data.space_slug}?page-type=settings`
+        )
         setSpaceFormModelVisibility(false)
         toast({
           title: "Space created",

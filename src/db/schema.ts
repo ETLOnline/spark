@@ -728,6 +728,7 @@ export const spacesTable = pgTable("spaces", {
   ownerId: varchar(),
   space_type: varchar(),
   publish_space: integer().notNull().default(0),
+  overview: varchar(),
   ...timestamps
 })
 

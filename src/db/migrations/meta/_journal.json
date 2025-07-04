@@ -47,8 +47,15 @@
     {
       "idx": 6,
       "version": "7",
-      "when": 1751367849271,
-      "tag": "0006_2025_07_01_160406__create_table_communities",
+      "when": 1751556047435,
+      "tag": "0006_2025_07_03_202044__update_space_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1751626482868,
+      "tag": "0007_2025_07_04_155440__create_communities_table",
       "breakpoints": true
     }
   ]
