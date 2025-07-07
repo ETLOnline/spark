@@ -47,7 +47,7 @@ export async function POST(req: Request) {
       "svix-timestamp": svix_timestamp,
       "svix-signature": svix_signature
     }) as WebhookEvent
-    console.log('svix hook verified')
+    console.log("svix hook verified")
   } catch (err) {
     console.error("Error verifying webhook:", err)
     return new Response("Error occured", {
@@ -62,20 +62,19 @@ export async function POST(req: Request) {
 
   // console.log(`Webhook with and ID of ${id} and type of ${eventType}`)
   // console.log('Webhook body:', body)
-  try{
-
+  try {
     if (evt.type === "user.created") {
       const userObj = evt.data
-  
+
       const userById = await SelectUserByExternalId(userObj.id)
       const userByEmail = await SelectUserByEmail(
         userObj.email_addresses[0].email_address
       )
-  
+
       if (userById || userByEmail) {
         return new Response("", { status: 200 })
       }
-  
+
       const newUser: InsertUser = {
         first_name: userObj.first_name || "",
         last_name: userObj.last_name || "",
@@ -86,7 +85,7 @@ export async function POST(req: Request) {
       }
       await CreateUser(newUser)
     }
-  }catch (error: any) {
+  } catch (error: any) {
     console.error("Error creating user:", error)
     return new Response("Error occured", {
       status: 400
