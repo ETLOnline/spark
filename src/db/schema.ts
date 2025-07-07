@@ -689,9 +689,9 @@ export const channelsTable = pgTable("channels", {
   created_by: varchar().notNull(),
   publish_channel: integer().notNull().default(0),
   ownerId: varchar(),
-  community_id: varchar("community_id", { length: 36 })
-    .notNull()
-    .references(() => communitiesTable.id),
+  community_id: varchar("community_id", { length: 36 }).references(
+    () => communitiesTable.id
+  ),
   ...timestamps
 })
 
