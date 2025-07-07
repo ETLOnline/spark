@@ -57,6 +57,13 @@
       "when": 1751647094342,
       "tag": "0007_2025_07_04_213811__crete_communitites_and_categories_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1751893155700,
+      "tag": "0008_2025_07_07_175913__community_id_is_nullable_in_channels",
+      "breakpoints": true
     }
   ]
 }
