@@ -152,7 +152,7 @@ export default function ProfileScreen({
         <div className="absolute bottom-0 left-16 transform -translate-x-1/2 translate-y-1/2">
           <div className="relative">
             {/* Added relative positioning for the button */}
-            <Avatar className="h-28 w-28 border-4 bg-secondary border-secondary">
+            <Avatar className="h-28 w-28 border-4 bg-secondary border-black">
               <AvatarImage
                 src={currentImageUrl || "/placeholder.png"} // Use currentImageUrl state
                 alt="Profile"
