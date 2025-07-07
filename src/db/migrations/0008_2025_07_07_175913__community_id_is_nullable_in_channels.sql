@@ -1,1 +1,0 @@
-ALTER TABLE "channels" ALTER COLUMN "community_id" DROP NOT NULL;
