@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS "community_users" (
 	"user_id" varchar NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "channels" ADD COLUMN "community_id" varchar(36) NOT NULL;--> statement-breakpoint
+ALTER TABLE "channels" ADD COLUMN "community_id" varchar(36);--> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "community_users" ADD CONSTRAINT "community_users_community_id_communities_id_fk" FOREIGN KEY ("community_id") REFERENCES "public"."communities"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION

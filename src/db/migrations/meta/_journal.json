@@ -54,15 +54,8 @@
     {
       "idx": 7,
       "version": "7",
-      "when": 1751647094342,
-      "tag": "0007_2025_07_04_213811__crete_communitites_and_categories_tables",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1751893155700,
-      "tag": "0008_2025_07_07_175913__community_id_is_nullable_in_channels",
+      "when": 1751894194077,
+      "tag": "0007_2025_07_07_181631__create_table_communities_and_communty_user_and_communty_category",
       "breakpoints": true
     }
   ]
