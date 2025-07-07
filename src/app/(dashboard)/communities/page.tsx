@@ -31,7 +31,7 @@ import {
   PaginationPrevious
 } from "@/src/components/ui/pagination"
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
-import { Users } from "lucide-react"
+import { Group } from "lucide-react"
 
 interface EnhancedCommunityQueryFilters extends CommunityQueryFilters {
   refreshTriggerValue?: boolean
@@ -280,7 +280,7 @@ export default function CommunitiesPage() {
         />
       ) : (
         <NoDataCard
-          icon={<Users className="h-16 w-16 text-muted-foreground mb-4" />}
+          icon={<Group className="h-16 w-16 text-muted-foreground mb-4" />}
           title="No communities found"
           description="Adjust your filters or try a different search term."
         />

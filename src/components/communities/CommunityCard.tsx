@@ -29,6 +29,7 @@ import {
 
 import { SelectCommunity } from "@/src/db/schema"
 import Link from "next/link"
+import { getInitials } from "@/src/utils/helpers"
 interface CommunityCardProps {
   community: SelectCommunity
   showStar?: boolean
@@ -51,11 +52,7 @@ export default function CommunityCard({
           <Avatar className="h-16 w-16 flex-shrink-0 border-2 border-gray-200 dark:border-gray-700">
             <AvatarImage src={"/images/default-avatar.png"} />
             <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-blue-500 to-purple-600 text-white dark:from-blue-600 dark:to-purple-700">
-              {(community.title || "")
-                .split(" ")
-                .map((word: string) => word[0])
-                .join("")
-                .toUpperCase()}
+              {getInitials(community.title)}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 space-y-3">
