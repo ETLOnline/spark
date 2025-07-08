@@ -50,6 +50,13 @@
       "when": 1751556047435,
       "tag": "0006_2025_07_03_202044__update_space_table",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1751894194077,
+      "tag": "0007_2025_07_07_181631__create_table_communities_and_communty_user_and_communty_category",
+      "breakpoints": true
     }
   ]
 }
