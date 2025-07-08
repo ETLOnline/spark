@@ -91,22 +91,20 @@ function SpaceSidebar({ space }: Props) {
       <SidebarGroupContent>
         <SidebarMenu>
           {/* Space Name */}
-          <SidebarMenuButton size={"lg"} asChild>
-            <Link href={`./${space.space_slug}`} className="mb-2">
-              <div className="flex aspect-square items-center justify-center rounded-lg text-sidebar-primary-foreground">
-                <Avvvatars value={space.space_name} size={40} style="shape" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate  font-semibold color-accent">
-                  {space.space_name}
-                </span>
-                <div></div>
-                <span className="truncate flex items-center gap-1 text-xs text-muted-foreground">
-                  <Users className="h-3 w-3" />
-                  {space.users?.length || 0} members
-                </span>
-              </div>
-            </Link>
+          <SidebarMenuButton size={"lg"}>
+            <div className="flex aspect-square items-center justify-center rounded-lg text-sidebar-primary-foreground">
+              <Avvvatars value={space.space_name} size={40} style="shape" />
+            </div>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate  font-semibold color-accent">
+                {space.space_name}
+              </span>
+              <div></div>
+              <span className="truncate flex items-center gap-1 text-xs text-muted-foreground">
+                <Users className="h-3 w-3" />
+                {space.users?.length || 0} members
+              </span>
+            </div>
           </SidebarMenuButton>
 
           {/* space overview */}
