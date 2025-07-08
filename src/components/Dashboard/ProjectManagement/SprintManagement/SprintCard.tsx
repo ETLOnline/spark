@@ -7,23 +7,20 @@ import {
   CardTitle
 } from "@/src/components/ui/card"
 import { Badge } from "@/src/components/ui/badge"
-import { useAtom, useSetAtom } from "jotai"
-import { sprintStore } from "@/src/store/sprint/sprintsStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import moment from "moment"
-import { taskStore } from "@/src/store/tasks/taskStore"
 import Loader from "@/src/components/common/Loader/Loader"
 import { SelectSprint, SelectTask } from "@/src/db/schema"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { Button } from "@/src/components/ui/button"
 import SprintTasks from "./SprintTasks"
 import SprintContextMenu from "./SprintContextMenu"
-import { SprintStatus } from "../constants/projectManagment"
 import { TaskModal } from "../Task/components/TaskModal"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { ToUpperCase } from "@/src/utils/helpers"
 
 interface Props {
   sprint: SelectSprint
@@ -57,33 +54,6 @@ export default function SprintCardPage({ sprint }: Props) {
     }
   }, [isTaskModalOpen])
 
-  function handleSprintStatus(sprint: SelectSprint) {
-    let status
-    if (moment().isBefore(moment(sprint.start_date))) {
-      status = "Upcoming"
-    } else if (moment().isAfter(moment(sprint.end_date))) {
-      status = "Ended"
-    } else {
-      status = "Active"
-    }
-    const SprintStatuses = SprintStatus.find((s) => s.title === status)
-    return SprintStatuses ? (
-      <Badge
-        variant={
-          SprintStatuses.badgeVariants as
-            | "outline"
-            | "default"
-            | "secondary"
-            | "destructive"
-            | null
-            | undefined
-        }
-      >
-        {SprintStatuses.title}
-      </Badge>
-    ) : null
-  }
-
   // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(
     "scoped",
@@ -107,9 +77,9 @@ export default function SprintCardPage({ sprint }: Props) {
                 <CardTitle className="text-lg font-bold">
                   {sprint.title}
                 </CardTitle>
-                {handleSprintStatus(sprint)}
+                <Badge>{ToUpperCase(sprint.sprint_status || "")}</Badge>
                 <CardDescription>
-                  <span>{`${moment(sprint.start_date).format("L")} - ${moment(sprint.end_date).format("L")}`}</span>
+                  {`${moment(sprint.start_date).format("L")} - ${moment(sprint.end_date).format("L")}`}
                 </CardDescription>
               </div>
             </div>

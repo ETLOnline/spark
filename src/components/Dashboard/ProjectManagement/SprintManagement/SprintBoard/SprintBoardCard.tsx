@@ -1,5 +1,4 @@
 import { Badge } from "@/src/components/ui/badge"
-import { Button } from "@/src/components/ui/button"
 import {
   Card,
   CardContent,
@@ -11,79 +10,105 @@ import {
 import SprintProgressBar from "./SprintProgressBar"
 import SprintStatus from "./SprintStatus"
 import BoardColumn from "./BoardColumn"
-import { SelectSprint } from "@/src/db/schema"
+import { SelectSprint, SelectTask } from "@/src/db/schema"
 import { useAtomValue } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
+import { useEffect, useState } from "react"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
+import { TaskModal } from "../../Task/components/TaskModal"
 
 interface Props {
   sprint: SelectSprint
 }
 
-interface Sprint {
-  id: string
-  name: string
-  startDate: string
-  endDate: string
-  status: "planning" | "active" | "completed"
-  progress: number
-  tasks: Task[]
-}
-
-interface Task {
-  id: string
-  title: string
-  description: string
-  status: "todo" | "in-progress" | "done"
-  priority: "low" | "medium" | "high"
-  assignee: {
-    name: string
-    avatar: string
-  }
-  storyPoints: number
-}
-
 function SprintBoardCard({ sprint }: Props) {
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
+  const [tasks, setTasks] = useState<SelectTask[]>([])
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<SelectTask | null>()
+
+  const [getTaskLoading, , , GetSPrintTask] =
+    useServerAction(GetSprintTasksAction)
+
+  useEffect(() => {
+    const getTask = async () => {
+      if (sprint) {
+        const tasks = await GetSPrintTask({ sprint_id: sprint.id })
+        if (tasks?.success && tasks.data) {
+          setTasks(tasks.data.tasks)
+        }
+      }
+    }
+    getTask()
+  }, [sprint])
+
+  function handleOnTaskClick(task: SelectTask) {
+    setSelectedTask(task)
+  }
+
+  useEffect(() => {
+    if (!isTaskModalOpen) {
+      setSelectedTask(null)
+    }
+  }, [isTaskModalOpen])
+
+  useEffect(() => {
+    if (selectedTask) {
+      setIsTaskModalOpen(true)
+    }
+  }, [selectedTask])
 
   return (
-    <Card key={sprint.id} className="mb-6 ">
-      <CardHeader className="pb-2">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-          <div>
-            <CardTitle>{sprint.title}</CardTitle>
-            <CardDescription>
-              {new Date(sprint.start_date).toLocaleDateString()} -{" "}
-              {new Date(sprint.end_date).toLocaleDateString()}
-            </CardDescription>
+    <>
+      <Card key={sprint.id} className="mb-6 ">
+        <CardHeader className="pb-2">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+            <div>
+              <CardTitle>{sprint.title}</CardTitle>
+              <CardDescription>
+                {new Date(sprint.start_date).toLocaleDateString()} -{" "}
+                {new Date(sprint.end_date).toLocaleDateString()}
+              </CardDescription>
+            </div>
+            <div className="flex items-center space-x-2 mt-2 sm:mt-0">
+              <Badge>Active</Badge>
+            </div>
           </div>
-          <div className="flex items-center space-x-2 mt-2 sm:mt-0">
-            <Badge>Active</Badge>
-          </div>
-        </div>
 
-        <SprintProgressBar />
-      </CardHeader>
-      <CardContent>
-        <div className="flex overflow-x-auto ">
-          <div className="flex mb-2  w-full">
-            {/* <BoardColumn sprint={sprint} status="todo" />
-            <BoardColumn sprint={sprint} status="in-progress" />
-            <BoardColumn sprint={sprint} status="done" />
-            <BoardColumn sprint={sprint} status="in-progress" />
-            <BoardColumn sprint={sprint} status="done" /> */}
-            {projectStatusList.map((status) => (
-              <BoardColumn key={status.id} sprint={sprint} status={status} />
-            ))}
+          <SprintProgressBar tasks={tasks} statuses={projectStatusList} />
+        </CardHeader>
+        <CardContent>
+          <div className="flex overflow-x-auto  ">
+            <div className="flex justify-between gap-2 w-full">
+              {projectStatusList.map((status) => (
+                <BoardColumn
+                  key={status.id}
+                  sprint={sprint}
+                  status={status}
+                  tasks={tasks}
+                  onTaskClick={handleOnTaskClick}
+                  setTasks={setTasks}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <SprintStatus />
-        <Button variant="outline" size="sm">
-          Sprint Details
-        </Button>
-      </CardFooter>
-    </Card>
+        </CardContent>
+        <CardFooter>
+          <SprintStatus />
+        </CardFooter>
+      </Card>
+
+      <TaskModal
+        isTaskModelOpen={isTaskModalOpen}
+        setIsTaskModelOpen={setIsTaskModalOpen}
+        selectedTask={selectedTask || undefined}
+        onUpdateComplete={(task: SelectTask) => {
+          setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
+          setSelectedTask(task)
+        }}
+      />
+    </>
   )
 }
 

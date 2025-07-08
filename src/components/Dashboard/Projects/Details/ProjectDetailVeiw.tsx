@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
 import { Separator } from "@/src/components/ui/separator"
 import ProjectDescriptionDetail from "./ProjectDescriptionDetail"
@@ -8,7 +8,11 @@ import ProjectContributers from "./ProjectContributers"
 import ProjectResources from "./ProjectResources"
 import ProjectComments from "./ProjectComments"
 import moment from "moment"
-import { SelectProject } from "@/src/db/schema"
+import { SelectProject, SelectSpace } from "@/src/db/schema"
+import { useSetAtom } from "jotai"
+import { navStore } from "@/src/store/nav/navStore"
+import { usePathname } from "next/navigation"
+import { getProjectCrumbsMapped } from "../../Sidebar.tsx/utils/helpers"
 
 export interface ProjectDetails {
   id: string
@@ -66,6 +70,7 @@ interface Update {
 
 interface Props {
   selectedProject: SelectProject
+  currSpace?: SelectSpace
 }
 
 const sampleProject: ProjectDetails = {
@@ -138,9 +143,14 @@ const sampleProject: ProjectDetails = {
   ]
 }
 
-export function ProjectDetailView({ selectedProject }: Props) {
+export function ProjectDetailView({ selectedProject, currSpace }: Props) {
   const [project, setProject] = useState<ProjectDetails>(sampleProject)
   const [newUpdate, setNewUpdate] = useState("")
+  const setCrumbRoutes = useSetAtom(navStore.crumbRoutes)
+
+  const pathName = usePathname()
+  const parts = pathName.split("/")
+  const currPath = parts[parts.length - 1]
 
   const handleAddUpdate = () => {
     if (newUpdate.trim() === "") return
@@ -153,6 +163,17 @@ export function ProjectDetailView({ selectedProject }: Props) {
     setProject({ ...project, updates: [...project.updates, update] })
     setNewUpdate("")
   }
+
+  useEffect(() => {
+    setCrumbRoutes((prev) => {
+      const newCrumbs = getProjectCrumbsMapped(
+        [selectedProject],
+        currPath,
+        currSpace
+      )
+      return [...prev, ...(Array.isArray(newCrumbs) ? newCrumbs : [newCrumbs])]
+    })
+  }, [])
 
   return (
     <div className=" flex flex-wrap  w-full">

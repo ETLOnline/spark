@@ -19,6 +19,7 @@ import { LoaderSizes } from "../../common/types/loader-types"
 import { useParams, useSearchParams } from "next/navigation"
 import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
 import { space } from "postcss/lib/list"
+import { navStore } from "@/src/store/nav/navStore"
 import CreateNewProject from "./CreateNewProject"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
@@ -40,6 +41,7 @@ const categories = [
 export function ProjectScreen({ space }: Props) {
   const [projects, setProjects] = useAtom(projectStore.projects)
   const [currSpace, setCurrSpace] = useState<SelectSpace>()
+  const setCrumbRoutes = useSetAtom(navStore.crumbRoutes)
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedProject, setSelectedProject] = useState<SelectProject | null>(

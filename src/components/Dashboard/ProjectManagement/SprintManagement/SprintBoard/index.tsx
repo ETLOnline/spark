@@ -10,6 +10,9 @@ import { useEffect, useState } from "react"
 import SprintBoardCard from "./SprintBoardCard"
 import { projectStore } from "@/src/store/project/projectStore"
 import StatusRequiredDialog from "../../StatusRequiredDialog"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import NoDataCard from "../../../Channels/ChannelDetails/NoDataCard"
+import { Kanban } from "lucide-react"
 
 function SprintBoard() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
@@ -39,11 +42,20 @@ function SprintBoard() {
   return projectStatusList.length > 0 ? (
     <>
       {getSprintLoading ? (
-        <Loader />
+        <div className="flex items-center justify-center">
+          <Loader size={LoaderSizes.lg} />
+        </div>
+      ) : sprintList.filter((s) => s.sprint_status === "active").length ===
+        0 ? (
+        <NoDataCard
+          title="No Active Sprint"
+          description="There are no active sprints for this project. Create and active a new sprint to get started."
+          icon={<Kanban />}
+        />
       ) : (
-        sprintList.map((sprint) => (
-          <SprintBoardCard sprint={sprint} key={sprint.id} />
-        ))
+        sprintList
+          .filter((s) => s.sprint_status === "active")
+          .map((sprint) => <SprintBoardCard sprint={sprint} key={sprint.id} />)
       )}
     </>
   ) : (
