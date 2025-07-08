@@ -20,9 +20,13 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface ChannelProps {
   channel: SelectChannel
+  onActionComplete?: () => void
 }
 
-const ChannelsContextMenu: React.FC<ChannelProps> = ({ channel }) => {
+const ChannelsContextMenu: React.FC<ChannelProps> = ({
+  channel,
+  onActionComplete
+}) => {
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "CHANNEL",
@@ -72,6 +76,7 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({ channel }) => {
         preChannels.filter((c) => c.id !== channel.id)
       )
       setRefreshTrigger((prev) => !prev)
+      onActionComplete?.()
       setChannelFormModelVisibility(false)
       toast({
         title: "Channel deleted successfully",

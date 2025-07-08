@@ -1,4 +1,5 @@
 import { Button } from "@/src/components/ui/button"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { CirclePlus } from "lucide-react"
 
 type CommunitiesHeaderProps = {
@@ -8,6 +9,11 @@ type CommunitiesHeaderProps = {
 export default function CommunitiesHeader({
   onCreateCommunityClick
 }: CommunitiesHeaderProps) {
+  const { permissionChecker } = usePermissionChecker("global")
+  const canCreateCommunity = permissionChecker
+    ? permissionChecker?.canAccess("community.create")
+    : false
+
   return (
     <div className="flex items-center justify-between">
       <div>
@@ -17,10 +23,12 @@ export default function CommunitiesHeader({
         </p>
       </div>
       {/* Attach the onCreateCommunityClick prop to the Button's onClick event */}
-      <Button onClick={onCreateCommunityClick}>
-        <CirclePlus className="h-4 w-4 mr-2" />
-        Create Community
-      </Button>
+      {canCreateCommunity && (
+        <Button onClick={onCreateCommunityClick}>
+          <CirclePlus className="h-4 w-4 mr-2" />
+          Create Community
+        </Button>
+      )}
     </div>
   )
 }

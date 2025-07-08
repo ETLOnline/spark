@@ -69,12 +69,6 @@ export const siteRoutes: SiteRoutes = {
       permission: "events.view"
     },
     {
-      title: "Channels",
-      url: "/channels",
-      icon: Boxes,
-      permission: "channel.view"
-    },
-    {
       title: "Communities",
       url: "/communities",
       icon: Group,
