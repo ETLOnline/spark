@@ -23,6 +23,7 @@ import { useMemo } from "react"
 type Crumb = {
   href: string
   path: string
+  id: string | number
 }
 const Header = () => {
   const crumbPaths = useAtomValue(navStore.crumbRoutes)
@@ -37,11 +38,26 @@ const Header = () => {
   const crumbs: Crumb[] = useMemo(() => {
     const tempCrumbs: Crumb[] = []
     hrefs.forEach((href) => {
-      const crumb = crumbPaths.find((crumb: PageMeta) => crumb.url === href)
-      if (crumb) {
-        tempCrumbs.push({ href, path: crumb.title })
-      }
+      const matchedCrumbs = crumbPaths.filter((crumb: PageMeta) => {
+        const crumbPath =
+          typeof crumb.url === "string" ? crumb.url.split("?")[0] : ""
+        return crumbPath === href
+      })
+
+      matchedCrumbs.forEach((crumb) => {
+        const exists = tempCrumbs.some(
+          (c) => c.href === crumb.url && c.path === crumb.title
+        )
+        if (!exists) {
+          tempCrumbs.push({
+            href: typeof crumb.url === "string" ? crumb.url : href,
+            path: crumb.title,
+            id: crumb.id
+          })
+        }
+      })
     })
+
     return [...tempCrumbs]
   }, [crumbPaths, path])
 
@@ -60,7 +76,7 @@ const Header = () => {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               {crumbs.map((crumb, i) => (
-                <BreadcrumbItem key={crumb.href}>
+                <BreadcrumbItem key={crumb.id}>
                   <BreadcrumbLink href={crumb.href}>
                     <BreadcrumbPage>{crumb.path}</BreadcrumbPage>
                   </BreadcrumbLink>
