@@ -1,20 +1,24 @@
 /* Headings */
 .rich-editor h1 {
-  font-size: 34px;
+  font-size: 32px; /* 36px */
   font-weight: bold;
-  margin: 0.67em 0;
+  margin: 0.5em 0 0.5em 0; /* Top and bottom spacing */
 }
 
 .rich-editor h2 {
-  font-size: 30px;
+  font-size: 24px; /* 30px */
   font-weight: bold;
-  margin: 0.75em 0;
+  margin: 0.4em 0 0.5em 0;
 }
 
 .rich-editor h3 {
-  font-size: 24px;
+  font-size: 20px; /* 24px */
   font-weight: bold;
-  margin: 0.83em 0;
+  margin: 0.35em 0 0.5em 0;
+}
+
+.rich-editor p {
+  font-size: 16px;
 }
 
 .rich-editor ul {

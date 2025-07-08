@@ -32,12 +32,12 @@ const useTaskHook = ({
     useServerAction(UpdateTaskAction)
 
   const projectId = useParams().id as string
-  const backlogStatus = statuses.find((s) => s.name === "Backlog")
+  const toDoStatus = statuses.find((s) => s.name === "To Do")
 
   function handleSubmit(data: any) {
     if (!selectedTask) {
       if (!data.status_id) {
-        data.status_id = backlogStatus?.id
+        data.status_id = toDoStatus?.id
       }
       handleCreateTask(data)
     } else {
