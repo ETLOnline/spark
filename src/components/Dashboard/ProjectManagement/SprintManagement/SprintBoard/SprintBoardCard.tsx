@@ -80,7 +80,7 @@ function SprintBoardCard({ sprint }: Props) {
         </CardHeader>
         <CardContent>
           <div className="flex overflow-x-auto  ">
-            <div className="flex justify-between w-full">
+            <div className="flex justify-between gap-2 w-full">
               {projectStatusList.map((status) => (
                 <BoardColumn
                   key={status.id}

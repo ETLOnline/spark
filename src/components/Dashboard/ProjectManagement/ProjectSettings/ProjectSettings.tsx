@@ -38,8 +38,9 @@ export function ProjectSettings({ currProject }: Props) {
       >
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="integrations">Integrations</TabsTrigger>
+          {/* for future use */}
+          {/* <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="integrations">Integrations</TabsTrigger> */}
           <TabsTrigger value="taskStatus">Task status</TabsTrigger>
         </TabsList>
 
@@ -47,13 +48,14 @@ export function ProjectSettings({ currProject }: Props) {
           <ProjectInformation currProjectData={currProject} />
         </TabsContent>
 
-        <TabsContent value="notifications">
+        {/* for future use */}
+        {/* <TabsContent value="notifications">
           <ProjectNotifications />
         </TabsContent>
 
         <TabsContent value="integrations">
           <Integrations />
-        </TabsContent>
+        </TabsContent> */}
 
         <TabsContent value="taskStatus">
           <TaskStatus />

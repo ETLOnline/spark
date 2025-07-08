@@ -18,13 +18,14 @@ import { InsertTaskStatus, SelectTask } from "@/src/db/schema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { ToUpperCase } from "@/src/utils/helpers"
-import RichTextEditor from "@/src/components/common/rich-text-editor"
 import {
   projectDefaultStatuses,
   projectTaskPriority,
   projectTaskTypes
 } from "../../constants/projectManagment"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
+import "@/src/components/common/RichEditorFormat.css"
+import Tiptap from "@/src/components/common/TiptapRichEditor"
 
 interface Props {
   onSubmit: (task: any) => void
@@ -56,7 +57,7 @@ export default function TaskForm({
     resolver: zodResolver(projectSchema)
   })
   const errors = form.formState.errors
-  const backlogStatus = statuses?.find((s) => s.name === "Backlog")
+  const toDoStatus = statuses?.find((s) => s.name === "To Do")
 
   useEffect(() => {
     if (!isTaskModelOpen) {
@@ -66,7 +67,7 @@ export default function TaskForm({
         task_type: "",
         task_priority: "",
         story_points: "",
-        status_id: backlogStatus?.id
+        status_id: toDoStatus?.id
       })
       form.clearErrors()
     }
@@ -81,7 +82,7 @@ export default function TaskForm({
       form.setValue("story_points", selectedTask.story_points)
       form.setValue("status_id", selectedTask?.status_id ?? undefined)
     } else {
-      form.setValue("status_id", backlogStatus?.id)
+      form.setValue("status_id", toDoStatus?.id)
     }
   }, [selectedTask])
 
@@ -179,13 +180,10 @@ export default function TaskForm({
                 control={form.control}
                 render={({ field }) =>
                   activeField === "description" ? (
-                    <RichTextEditor
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                    />
+                    <Tiptap value={field.value} onChange={field.onChange} />
                   ) : (
                     <div
-                      className="border-b border-dashed border-gray-300 py-2  cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2"
+                      className="rich-editor border-b border-dashed border-gray-300 py-2  cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2"
                       onClick={() => setActiveField("description")}
                     >
                       {field.value ? (

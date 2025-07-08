@@ -154,13 +154,15 @@ function SprintContextMenu({
                 Edit Sprint
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem
-              onClick={() => {
-                HandleStartSprint(sprint)
-              }}
-            >
-              Start Sprint
-            </DropdownMenuItem>
+            {sprint.sprint_status !== "active" ? (
+              <DropdownMenuItem
+                onClick={() => {
+                  HandleStartSprint(sprint)
+                }}
+              >
+                Start Sprint
+              </DropdownMenuItem>
+            ) : null}
             <DropdownMenuItem onClick={() => HandleEndSprint(sprint)}>
               End Sprint
             </DropdownMenuItem>
