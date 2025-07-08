@@ -10,14 +10,14 @@ config({ path: `.env.${environmentType}` }) //local is always development
 config({ path: ".env.local" })
 config({ path: ".env" }) // fallback
 
-
 // Retrieve individual environment variables
 const DB_HOST = process.env.DB_HOST
 const DB_PORT = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432
 const DB_USER = process.env.DB_USER
 const DB_PWD = process.env.DB_PWD
 const DB_NAME = process.env.DB_NAME
-const DB_SSL = process.env.DB_SSL && process.env.DB_SSL === 'true' ? true : false
+const DB_SSL =
+  process.env.DB_SSL && process.env.DB_SSL === "true" ? true : false
 
 // Basic validation for critical parameters
 if (!DB_HOST || !DB_USER || !DB_PWD || !DB_NAME) {
@@ -33,10 +33,12 @@ const queryClient = postgres({
   max: 10, // Max concurrent connections in the pool
   idle_timeout: 30, // How long an idle connection stays open (seconds)
   connect_timeout: 40, // How long to wait for a connection to establish (seconds)
-  ssl: DB_SSL ? {
-    require: true,
-    rejectUnauthorized: false
-  }: false,
+  ssl: DB_SSL
+    ? {
+        require: true,
+        rejectUnauthorized: false
+      }
+    : false,
   ...(environmentType === "production" && {
     connection: {
       application_name: "spark-app"

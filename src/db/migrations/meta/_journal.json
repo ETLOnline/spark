@@ -54,8 +54,15 @@
     {
       "idx": 7,
       "version": "7",
-      "when": 1751875237694,
-      "tag": "0007_2025_07_07_130035__update_sprint_table",
+      "when": 1751894194077,
+      "tag": "0007_2025_07_07_181631__create_table_communities_and_communty_user_and_communty_category",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1751961838709,
+      "tag": "0008_2025_07_08_130354__update_sprint_table",
       "breakpoints": true
     }
   ]
