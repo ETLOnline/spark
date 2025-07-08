@@ -146,10 +146,7 @@ export default function SpaceSettings({
                   ))}
                 </div>
               </div>
-              <div className="flex items-center justify-between pt-4">
-                <Link href={`./${ssrSpace.space_slug}`}>
-                  <Button>Go to Space</Button>
-                </Link>
+              <div className="text-end pt-4">
                 <Button
                   loading={attachingSpaceFeatures}
                   disabled={attachingSpaceFeatures}

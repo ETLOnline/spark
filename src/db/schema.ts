@@ -987,6 +987,7 @@ export const SprintTable = pgTable("sprints", {
   start_date: varchar().notNull(),
   end_date: varchar().notNull(),
   projectId: varchar().notNull(),
+  sprint_status: varchar(),
   ...timestamps
 })
 

@@ -9,7 +9,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetSprintAction } from "@/src/server-actions/Sprint/sprint"
 import SprintCardPage from "./SprintCard"
 import { Button } from "@/src/components/ui/button"
-import { AlertCircle, ChartGantt, Plus, Settings } from "lucide-react"
+import { ChartGantt, Plus } from "lucide-react"
 import NoDataCard from "../../Channels/ChannelDetails/NoDataCard"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
@@ -71,9 +71,9 @@ export function SprintManagement() {
             <Loader size={LoaderSizes.lg} />
           </div>
         ) : sprintList.length > 0 ? (
-          sprintList.map((sprint) => (
-            <SprintCardPage key={sprint.id} sprint={sprint} />
-          ))
+          sprintList
+            .filter((s) => s.sprint_status !== "closed")
+            .map((sprint) => <SprintCardPage key={sprint.id} sprint={sprint} />)
         ) : (
           <NoDataCard
             title="No Sprints Found"
