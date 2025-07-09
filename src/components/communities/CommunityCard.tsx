@@ -30,6 +30,7 @@ import {
 import { SelectCommunity } from "@/src/db/schema"
 import Link from "next/link"
 import { getInitials } from "@/src/utils/helpers"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 interface CommunityCardProps {
   community: SelectCommunity
   showStar?: boolean
@@ -45,6 +46,24 @@ export default function CommunityCard({
   onEdit,
   onDelete
 }: CommunityCardProps) {
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "COMMUNITY",
+    community.id
+  )
+  const allowAction = permissionChecker
+    ? permissionChecker?.canAccess("community.allow.action")
+    : false
+  const canEdit = permissionChecker
+    ? permissionChecker?.canAccess("community.update")
+    : false
+  const canDelete = permissionChecker
+    ? permissionChecker?.canAccess("community.update")
+    : false
+  const canView = permissionChecker
+    ? permissionChecker?.canAccess("community.view")
+    : false
+
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
@@ -63,39 +82,47 @@ export default function CommunityCard({
                 {community.title}
               </CardTitle>
               {/* Right-aligned content in the header */}
-              <div className="flex items-center gap-2">
-                {/* Only show if canManage is true AND relevant callbacks are provided */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    {/* Use shadcn/ui Button as trigger for consistent styling and accessibility */}
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreVertical className="h-4 w-4" />{" "}
-                      {/* Changed from MoreHorizontal to MoreVertical */}
-                      <span className="sr-only">Community actions</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onEdit(community)}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href={`/communities/${community.slug}`}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        Detail
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => onDelete(community)}
-                      className="text-red-600 focus:text-red-600"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />{" "}
-                      {/* Added Trash2 icon */}
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              {allowAction && (
+                <div className="flex items-center gap-2">
+                  {/* Only show if canManage is true AND relevant callbacks are provided */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      {/* Use shadcn/ui Button as trigger for consistent styling and accessibility */}
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" />{" "}
+                        {/* Changed from MoreHorizontal to MoreVertical */}
+                        <span className="sr-only">Community actions</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {canEdit && (
+                        <DropdownMenuItem onClick={() => onEdit(community)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                      )}
+                      {canView && (
+                        <DropdownMenuItem asChild>
+                          <Link href={`/communities/${community.slug}`}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            Detail
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {canDelete && (
+                        <DropdownMenuItem
+                          onClick={() => onDelete(community)}
+                          className="text-red-600 focus:text-red-600"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />{" "}
+                          {/* Added Trash2 icon */}
+                          Delete
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="outline">{community?.category?.name}</Badge>
@@ -104,6 +131,10 @@ export default function CommunityCard({
               ) : community.type === "private" ? (
                 <Lock className="h-4 w-4 text-yellow-500" />
               ) : null}
+              <div className="flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                <span>{community.communityMembers?.length || 0}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -114,12 +145,13 @@ export default function CommunityCard({
         </CardDescription>
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
-            <Users className="h-4 w-4" />
-            <span>{community.communityMembers?.length || 0}</span>
-          </div>
-          <div className="flex items-center gap-1">
             <Hash className="h-4 w-4" />
             <span>{community.channels?.length || 0} channels</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Link href={`/communities/${community.slug}`}>
+              <Button variant="outline">View</Button>
+            </Link>
           </div>
         </div>
       </CardContent>

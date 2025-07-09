@@ -9,7 +9,8 @@ import {
   SelectChannel,
   ChannelUsersTable,
   communityCategoriesTable,
-  SelectCommunityCategory
+  SelectCommunityCategory,
+  SelectUser
 } from "../../schema"
 import {
   eq,
@@ -383,11 +384,10 @@ export type CommunityDetailData = {
     lastName: string
     fullName: string
   }
-  channels: {
+  users: {
     id: string
-    name: string
-    createdAt: Date | null
-    membersCount: number
+    community_id: string
+    user_id: string
   }[]
 }
 
@@ -405,18 +405,12 @@ export async function GetCommunityById(
             last_name: true
           }
         },
-        channels: {
-          columns: {
-            id: true,
-            channel_name: true,
-            created_at: true
-          }
-        },
         category: {
           columns: {
             name: true
           }
-        }
+        },
+        communityMembers: true
       }
     })
 
@@ -424,34 +418,10 @@ export async function GetCommunityById(
       return null
     }
     const categoryName = communityDetails.category?.name || ""
-    const membersResult = await db
-      .select({
-        count: count(communityUsersTable.user_id)
-      })
-      .from(communityUsersTable)
-      .where(eq(communityUsersTable.community_id, communityDetails.id))
-    const totalCommunityMembers = membersResult[0]?.count || 0
+    const totalCommunityMembers =
+      communityDetails?.communityMembers?.length || 0
 
     const totalMessages = 0
-    const enrichedChannels = await Promise.all(
-      communityDetails.channels.map(async (channel) => {
-        const channelMembersCountResult = await db
-          .select({
-            count: count(ChannelUsersTable.user_id)
-          })
-          .from(ChannelUsersTable)
-          .where(eq(ChannelUsersTable.channel_id, channel.id))
-
-        const channelMembersCount = channelMembersCountResult[0]?.count || 0
-
-        return {
-          id: channel.id,
-          name: channel.channel_name,
-          createdAt: channel.created_at ? new Date(channel.created_at) : null,
-          membersCount: channelMembersCount
-        }
-      })
-    )
 
     const createdAtDate = communityDetails.created_at
       ? new Date(communityDetails.created_at)
@@ -479,7 +449,7 @@ export async function GetCommunityById(
         fullName:
           `${communityDetails.creator?.first_name || "Unknown"} ${communityDetails.creator?.last_name || ""}`.trim()
       },
-      channels: enrichedChannels
+      users: communityDetails.communityMembers
     }
 
     return finalCommunityData
