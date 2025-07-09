@@ -70,7 +70,7 @@ export default function CommunityDetailsClient({
 
   const isUserMember =
     community.type === "private"
-      ? community.users?.some((user) => user.id === currentUserId)
+      ? community.users?.some((user) => user.user_id === currentUserId)
       : true
   const showAccessDeniedOverlay =
     community.type === "private" && !isUserMember && !isSuperAdmin
