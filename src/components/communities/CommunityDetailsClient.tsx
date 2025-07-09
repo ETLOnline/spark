@@ -59,25 +59,19 @@ export default function CommunityDetailsClient({
     ? community.title.charAt(0).toUpperCase()
     : "C"
 
-  const [channelsData, setChannelsData] =
-    useState<ChannelsDataStructure | null>(null)
   const [loadingChannels, setLoadingChannels] = useState(true)
-  const [channelRefreshTrigger, setChannelRefreshTrigger] = useState(0)
+
+  const [channels, setChannels] = useAtom(channelStore.channels)
+  const [pagination, setPagination] = useState<PaginationType | null>(null)
 
   const searchParams = useSearchParams()
   const page = Number(searchParams.get("page")) || 1
 
-  const [, setChannelFormModelVisibility] = useAtom(
-    channelStore.channelformModalVisibility
-  )
-
   useEffect(() => {
     const fetchCommunityChannels = async () => {
       if (!community?.id) {
-        setChannelsData({
-          channels: [],
-          pagination: { total: 0, page: 1, limit: 6, totalPages: 0 }
-        })
+        setChannels([])
+        setPagination({ total: 0, page: 1, limit: 6, totalPages: 0 })
         setLoadingChannels(false)
         return
       }
@@ -89,34 +83,58 @@ export default function CommunityDetailsClient({
           limit: 6
         })
         if (res?.data) {
-          setChannelsData(res.data)
+          setChannels(res.data.channels)
+          setPagination(res.data.pagination)
         } else {
-          setChannelsData({
-            channels: [],
-            pagination: { total: 0, page: 1, limit: 6, totalPages: 0 }
-          })
+          setChannels([])
+          setPagination({ total: 0, page: 1, limit: 6, totalPages: 0 })
         }
       } catch (error) {
         console.error("Failed to fetch community channels:", error)
-        setChannelsData({
-          channels: [],
-          pagination: { total: 0, page: 1, limit: 6, totalPages: 0 }
-        })
+        setChannels([])
+        setPagination({ total: 0, page: 1, limit: 6, totalPages: 0 })
       } finally {
         setLoadingChannels(false)
       }
     }
 
     fetchCommunityChannels()
-  }, [community?.id, channelRefreshTrigger, page])
+  }, [community?.id, page, setChannels])
 
-  const handleNewChannelCreated = () => {
-    setChannelRefreshTrigger((prev) => prev + 1)
+  const onActionComplete = (
+    actionType: "create" | "updated" | "deleted",
+    channel: SelectChannel
+  ) => {
+    if (actionType === "create") {
+      setChannels((prevChannels) => [channel, ...prevChannels])
+      if (pagination) {
+        setPagination((prev) => ({
+          ...prev!,
+          total: prev!.total + 1,
+          totalPages: Math.ceil((prev!.total + 1) / prev!.limit)
+        }))
+      }
+    } else if (actionType === "updated") {
+      console.log("Channel updated:", channel)
+      setChannels((prevChannels) =>
+        prevChannels.map((c) => (c.id === channel.id ? channel : c))
+      )
+    } else if (actionType === "deleted") {
+      setChannels((prevChannels) =>
+        prevChannels.filter((c) => c.id !== channel.id)
+      )
+      if (pagination) {
+        setPagination((prev) => ({
+          ...prev!,
+          total: prev!.total - 1,
+          totalPages: Math.ceil((prev!.total - 1) / prev!.limit)
+        }))
+      }
+    }
   }
 
-  const currentChannels = channelsData?.channels || []
+  const currentChannels = channels || []
   const channelsCount = currentChannels.length
-  const pagination = channelsData?.pagination
 
   const handleChannelRowClick = (channel_slug: string) => {
     router.push(`/channels/${channel_slug}/spaces`)
@@ -257,11 +275,8 @@ export default function CommunityDetailsClient({
                   {/* PERMISSION CHECKS */}
                   {true && (
                     <CreateChannels
-                      onChannelCreated={handleNewChannelCreated}
                       communityId={community?.id}
-                      onActionComplete={() =>
-                        setChannelRefreshTrigger((prev) => prev + 1)
-                      }
+                      onActionComplete={onActionComplete}
                     />
                   )}
                 </div>
@@ -316,9 +331,7 @@ export default function CommunityDetailsClient({
                               {/* Action Menu */}
                               <ChannelsContextMenu
                                 channel={channel}
-                                onActionComplete={() =>
-                                  setChannelRefreshTrigger((prev) => prev + 1)
-                                }
+                                onActionComplete={onActionComplete}
                               />
                             </div>
                           </div>

@@ -57,23 +57,20 @@ const channelSchema = z.object({
 })
 
 type CreateChannelsProps = {
-  onChannelCreated?: (newChannel: SelectChannel) => void
   communityId?: string
   onActionComplete?: (
-    channel: SelectChannel,
-    actionType: "create" | "update"
+    actionType: "create" | "updated",
+    channel: SelectChannel
   ) => void
 }
 
 function CreateChannels({
-  onChannelCreated,
   communityId,
   onActionComplete
 }: CreateChannelsProps) {
   const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
   const [slugAvailableMessage, setSlugAvailableMessage] = useState<string>("")
 
-  const [channels, setChannels] = useAtom(channelStore.channels)
   const authUser = useAtomValue(userStore.AuthUser)
   const [channelFormModelVisibility, setChannelFormModelVisibility] = useAtom(
     channelStore.channelformModalVisibility
@@ -225,9 +222,8 @@ function CreateChannels({
 
       if (createdChannel?.success && createdChannel?.data) {
         await refreshAuthUser()
-        onChannelCreated?.(createdChannel.data)
         setChannelFormModelVisibility(false)
-        onActionComplete?.(createdChannel.data, "create")
+        onActionComplete?.("create", createdChannel.data)
         toast({
           title: "Channel Created",
           description: "Your channel has been created successfully.",
@@ -267,15 +263,8 @@ function CreateChannels({
       }
       const updatedChannel = await UpdateChannel(selectedChannel.id, payload)
       if (updatedChannel?.success && updatedChannel.data) {
-        setChannels((prev) =>
-          prev.map((channel) =>
-            channel.id === selectedChannel.id
-              ? { ...channel, ...updatedChannel.data }
-              : channel
-          )
-        )
         setChannelFormModelVisibility(false)
-        onActionComplete?.(updatedChannel.data as SelectChannel, "update")
+        onActionComplete?.("updated", updatedChannel.data as SelectChannel)
         toast({
           title: "Channel Updated",
           description: "Your channel has been updated successfully.",
