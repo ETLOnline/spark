@@ -22,7 +22,7 @@ import {
 } from "lucide-react"
 import { CommunityDetailData } from "@/src/db/data-access/communities/query"
 import CreateChannels from "@/src/components/Dashboard/Channels/CreateChannels"
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { channelStore } from "@/src/store/channel/channelStore"
 import { SelectChannel } from "@/src/db/schema"
 import { GetChannelsAction } from "@/src/server-actions/Channel/Channel"
@@ -32,7 +32,8 @@ import PaginationComponent from "../common/Pagination"
 import { PaginationType } from "../common/types/pagination.type"
 import { useSearchParams } from "next/navigation"
 import ChannelsContextMenu from "@/src/components/Dashboard/Channels/ChannelDetails/ChannelsContextMenu"
-import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { userStore } from "@/src/store/user/userStore"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -47,14 +48,14 @@ const demoRules = [
   "Be respectful and professional",
   "No spam or self-promotion without permission",
   "Keep discussions relevant to technology",
-  "Help others and share knowledge",
-  "Follow Community guidelines"
+  "Help others and share knowledge"
 ]
 
 export default function CommunityDetailsClient({
   community
 }: CommunityDetailsClientProps) {
-  const router = useRouter()
+  const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
+  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
   const communityInitial = community?.title
     ? community.title.charAt(0).toUpperCase()
     : "C"
@@ -67,9 +68,16 @@ export default function CommunityDetailsClient({
   const searchParams = useSearchParams()
   const page = Number(searchParams.get("page")) || 1
 
+  const isUserMember =
+    community.type === "private"
+      ? community.users?.some((user) => user.id === currentUserId)
+      : true
+  const showAccessDeniedOverlay =
+    community.type === "private" && !isUserMember && !isSuperAdmin
   useEffect(() => {
     const fetchCommunityChannels = async () => {
-      if (!community?.id) {
+      // If access is denied, don't fetch channels
+      if (showAccessDeniedOverlay || !community?.id) {
         setChannels([])
         setPagination({ total: 0, page: 1, limit: 6, totalPages: 0 })
         setLoadingChannels(false)
@@ -99,7 +107,7 @@ export default function CommunityDetailsClient({
     }
 
     fetchCommunityChannels()
-  }, [community?.id, page, setChannels])
+  }, [community?.id, page, setChannels, showAccessDeniedOverlay])
 
   const onActionComplete = (
     actionType: "create" | "updated" | "deleted",
@@ -136,12 +144,24 @@ export default function CommunityDetailsClient({
   const currentChannels = channels || []
   const channelsCount = currentChannels.length
 
-  const handleChannelRowClick = (channel_slug: string) => {
-    router.push(`/channels/${channel_slug}/spaces`)
-  }
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      {" "}
+      {/* Added relative for the overlay positioning */}
+      {showAccessDeniedOverlay && (
+        <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-4 text-center">
+          <Lock className="h-16 w-16 text-muted-foreground mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Private Community</h2>
+          <p className="text-muted-foreground mb-6 max-w-sm">
+            This community is private. You must be a member to view its content.
+            Please request access or wait for an invitation.
+          </p>
+          {/* You can add a button here for requesting access if that's a feature */}
+          <Link href="/communities">
+            <Button>Go Back</Button>
+          </Link>
+        </div>
+      )}
       <div className="flex flex-col min-h-screen">
         {/* Community Header Banner */}
         <div className="relative sm:h-44 h-36 shadow-sm shadow-secondary rounded-lg overflow-hidden">
@@ -273,7 +293,7 @@ export default function CommunityDetailsClient({
                     Channels
                   </h3>
                   {/* PERMISSION CHECKS */}
-                  {true && (
+                  {true && ( // You might want to adjust this 'true' condition based on user roles and permissions
                     <CreateChannels
                       communityId={community?.id}
                       onActionComplete={onActionComplete}
@@ -295,40 +315,45 @@ export default function CommunityDetailsClient({
                           <div
                             key={channel.id}
                             className="flex items-center justify-between p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
-                            // onClick={() => handleChannelRowClick(channel.channel_slug)}
                           >
-                            <div className="flex items-center gap-3 flex-grow min-w-0">
-                              <Hash className="h-5 w-5 text-muted-foreground shrink-0" />
-                              <div className="flex flex-col min-w-0 flex-grow">
-                                <span className="font-medium truncate">
-                                  {channel.channel_name}
-                                </span>
-                                <span className="text-xs text-muted-foreground mt-0.5">
-                                  {channel.description ||
-                                    "No description available"}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4 text-right text-sm text-muted-foreground ml-4">
-                              {/* Channel Stats */}
-                              <div className="flex flex-col items-end whitespace-nowrap">
-                                <div className="text-xs">
-                                  {channel.created_at
-                                    ? new Date(
-                                        channel.created_at
-                                      ).toLocaleString("default", {
-                                        month: "long",
-                                        day: "numeric",
-                                        year: "numeric"
-                                      })
-                                    : "N/A"}
+                            {/* Main Content Area */}
+                            <Link
+                              className="flex items-center gap-3 flex-grow min-w-0"
+                              href={`/channels/${channel.channel_slug}/spaces`}
+                            >
+                              <div className="flex items-center gap-3 flex-grow min-w-0">
+                                <Hash className="h-5 w-5 text-muted-foreground shrink-0" />
+                                <div className="flex flex-col min-w-0 flex-grow">
+                                  <span className="font-medium truncate">
+                                    {channel.channel_name}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground mt-0.5">
+                                    {channel.description ||
+                                      "No description available"}
+                                  </span>
                                 </div>
-                                <div className="text-xs mt-0.5">
-                                  {(channel.users as Array<any>)?.length ?? 0}{" "}
-                                  members
+                                {/* Channel Stats (still part of the content, but aligned to the right within this section) */}
+                                <div className="flex flex-col items-end whitespace-nowrap text-right text-sm text-muted-foreground ml-4">
+                                  <div className="text-xs">
+                                    {channel.created_at
+                                      ? new Date(
+                                          channel.created_at
+                                        ).toLocaleString("default", {
+                                          month: "long",
+                                          day: "numeric",
+                                          year: "numeric"
+                                        })
+                                      : "N/A"}
+                                  </div>
+                                  <div className="text-xs mt-0.5">
+                                    {(channel.users as Array<any>)?.length ?? 0}{" "}
+                                    members
+                                  </div>
                                 </div>
                               </div>
-                              {/* Action Menu */}
+                            </Link>
+                            {/* Action Menu Area */}
+                            <div className="flex items-center ml-4">
                               <ChannelsContextMenu
                                 channel={channel}
                                 onActionComplete={onActionComplete}

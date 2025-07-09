@@ -57,6 +57,7 @@ const channelSchema = z.object({
 })
 
 type CreateChannelsProps = {
+  onChannelCreated?: (newChannel: any) => void
   communityId?: string
   onActionComplete?: (
     actionType: "create" | "updated",

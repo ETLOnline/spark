@@ -9,7 +9,8 @@ import {
   SelectChannel,
   ChannelUsersTable,
   communityCategoriesTable,
-  SelectCommunityCategory
+  SelectCommunityCategory,
+  SelectUser
 } from "../../schema"
 import {
   eq,
@@ -383,6 +384,11 @@ export type CommunityDetailData = {
     lastName: string
     fullName: string
   }
+  users: {
+    id: string
+    community_id: string
+    user_id: string
+  }[]
 }
 
 export async function GetCommunityById(
@@ -403,7 +409,8 @@ export async function GetCommunityById(
           columns: {
             name: true
           }
-        }
+        },
+        communityMembers: true
       }
     })
 
@@ -411,13 +418,8 @@ export async function GetCommunityById(
       return null
     }
     const categoryName = communityDetails.category?.name || ""
-    const membersResult = await db
-      .select({
-        count: count(communityUsersTable.user_id)
-      })
-      .from(communityUsersTable)
-      .where(eq(communityUsersTable.community_id, communityDetails.id))
-    const totalCommunityMembers = membersResult[0]?.count || 0
+    const totalCommunityMembers =
+      communityDetails?.communityMembers?.length || 0
 
     const totalMessages = 0
 
@@ -446,7 +448,8 @@ export async function GetCommunityById(
         lastName: communityDetails.creator?.last_name || "",
         fullName:
           `${communityDetails.creator?.first_name || "Unknown"} ${communityDetails.creator?.last_name || ""}`.trim()
-      }
+      },
+      users: communityDetails.communityMembers
     }
 
     return finalCommunityData

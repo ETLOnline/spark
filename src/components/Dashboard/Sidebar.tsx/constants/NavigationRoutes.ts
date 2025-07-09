@@ -71,8 +71,7 @@ export const siteRoutes: SiteRoutes = {
     {
       title: "Communities",
       url: "/communities",
-      icon: Group,
-      permission: "communities.view"
+      icon: Group
     }
   ],
   testNav: [
