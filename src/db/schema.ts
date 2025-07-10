@@ -5,7 +5,8 @@ import {
   pgTable,
   primaryKey,
   varchar,
-  json
+  json,
+  unique
 } from "drizzle-orm/pg-core"
 // import { integer, primaryKey, pgTable, varchar } from "drizzle-orm/sqlite-core"
 
@@ -80,6 +81,24 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
   roles: many(userRolesTable, {
     relationName: "userRolesToUser"
+  }),
+  mentorRatingsGiven: many(mentorRatingsTable, {
+    relationName: "reviewerToRatings"
+  }),
+  mentorRatingsReceived: many(mentorRatingsTable, {
+    relationName: "mentorToRatings"
+  }),
+  mentorRelationshipsAsMentor: many(mentorRelationshipsTable, {
+    relationName: "mentorToRelationships"
+  }),
+  mentorRelationshipsAsMentee: many(mentorRelationshipsTable, {
+    relationName: "menteeToRelationships"
+  }),
+  favoriteMentors: many(mentorFavoritesTable, {
+    relationName: "userToFavorites"
+  }),
+  favoriteUsers: many(mentorFavoritesTable, {
+    relationName: "mentorToFavorites"
   })
 }))
 
@@ -101,6 +120,12 @@ export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> & {
   channels?: SelectChannelUser[]
   roles?: SelectUserRole[] | null
   profile?: SelectProfile | null
+  mentorRatingsGiven?: SelectMentorRating[]
+  mentorRatingsReceived?: SelectMentorRating[]
+  mentorRelationshipsAsMentor?: SelectMentorRelationship[]
+  mentorRelationshipsAsMentee?: SelectMentorRelationship[]
+  favoriteMentors?: SelectMentorFavorite[]
+  favoriteUsers?: SelectMentorFavorite[]
 }
 
 export const profileTable = pgTable("profile", {
@@ -118,20 +143,136 @@ export const profileTable = pgTable("profile", {
   instagram_url: varchar(),
   twitter_url: varchar(),
   personal_website_url: varchar(),
+  // Mentor-specific fields
+  company: varchar(),
+  job_title: varchar(),
+  location: varchar(),
+  years_experience: integer().default(0),
+  languages: json("languages").default(["English"]),
+  availability_status: varchar().default("true"),
+  response_time: varchar().default("< 24 hours"),
+  mentee_count: integer().default(0),
   ...timestamps
 })
 
-export const profileRelations = relations(profileTable, ({ one }) => ({
+export const profileRelations = relations(profileTable, ({ one, many }) => ({
   user: one(usersTable, {
     fields: [profileTable.user_id],
     references: [usersTable.unique_id],
     relationName: "userToProfile"
+  }),
+  mentorRatings: many(mentorRatingsTable, {
+    relationName: "profileToMentorRatings"
+  }),
+  mentorRelationships: many(mentorRelationshipsTable, {
+    relationName: "profileToMentorRelationships"
   })
 }))
 
 export type InsertProfile = typeof profileTable.$inferInsert
 export type SelectProfile = typeof profileTable.$inferSelect & {
   user?: SelectUser
+  mentorRatings?: SelectMentorRating[]
+  mentorRelationships?: SelectMentorRelationship[]
+}
+
+// Mentor Ratings Table
+export const mentorRatingsTable = pgTable("mentor_ratings", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  mentor_id: varchar("mentor_id")
+    .notNull()
+    .references(() => usersTable.unique_id),
+  reviewer_id: varchar("reviewer_id")
+    .notNull()
+    .references(() => usersTable.unique_id),
+  rating: varchar("rating").notNull(), // Store as string to handle decimals like "4.5"
+  review_text: varchar("review_text"),
+  ...timestamps
+})
+
+export const mentorRatingsRelations = relations(mentorRatingsTable, ({ one }) => ({
+  mentor: one(usersTable, {
+    fields: [mentorRatingsTable.mentor_id],
+    references: [usersTable.unique_id],
+    relationName: "mentorToRatings"
+  }),
+  reviewer: one(usersTable, {
+    fields: [mentorRatingsTable.reviewer_id],
+    references: [usersTable.unique_id],
+    relationName: "reviewerToRatings"
+  })
+}))
+
+export type InsertMentorRating = typeof mentorRatingsTable.$inferInsert
+export type SelectMentorRating = typeof mentorRatingsTable.$inferSelect & {
+  mentor?: SelectUser
+  reviewer?: SelectUser
+}
+
+// Mentor Relationships Table
+export const mentorRelationshipsTable = pgTable("mentor_relationships", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  mentor_id: varchar("mentor_id")
+    .notNull()
+    .references(() => usersTable.unique_id),
+  mentee_id: varchar("mentee_id")
+    .notNull()
+    .references(() => usersTable.unique_id),
+  status: varchar("status").notNull().default("pending"), // pending, accepted, rejected, completed
+  request_message: varchar("request_message"),
+  ...timestamps
+})
+
+export const mentorRelationshipsRelations = relations(mentorRelationshipsTable, ({ one }) => ({
+  mentor: one(usersTable, {
+    fields: [mentorRelationshipsTable.mentor_id],
+    references: [usersTable.unique_id],
+    relationName: "mentorToRelationships"
+  }),
+  mentee: one(usersTable, {
+    fields: [mentorRelationshipsTable.mentee_id],
+    references: [usersTable.unique_id],
+    relationName: "menteeToRelationships"
+  })
+}))
+
+export type InsertMentorRelationship = typeof mentorRelationshipsTable.$inferInsert
+export type SelectMentorRelationship = typeof mentorRelationshipsTable.$inferSelect & {
+  mentor?: SelectUser
+  mentee?: SelectUser
+}
+
+// Mentor Favorites Table
+export const mentorFavoritesTable = pgTable("mentor_favorites", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  user_id: varchar("user_id")
+    .notNull()
+    .references(() => usersTable.unique_id),
+  mentor_id: varchar("mentor_id")
+    .notNull()
+    .references(() => usersTable.unique_id),
+  ...timestamps
+}, (table) => ({
+  unique_user_mentor: unique().on(table.user_id, table.mentor_id),
+}))
+
+export const mentorFavoritesRelations = relations(mentorFavoritesTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [mentorFavoritesTable.user_id],
+    references: [usersTable.unique_id],
+    relationName: "userToFavorites"
+  }),
+  mentor: one(usersTable, {
+    fields: [mentorFavoritesTable.mentor_id],
+    references: [usersTable.unique_id],
+    relationName: "mentorToFavorites"
+  })
+}))
+
+export type InsertMentorFavorite = typeof mentorFavoritesTable.$inferInsert
+export type SelectMentorFavorite = typeof mentorFavoritesTable.$inferSelect & {
+  user?: SelectUser
+  mentor?: SelectUser
 }
 
 export const chatsTable = pgTable("chats", {

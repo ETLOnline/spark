@@ -50,6 +50,13 @@
       "when": 1751556047435,
       "tag": "0006_2025_07_03_202044__update_space_table",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1751978130662,
+      "tag": "0007_2025_07_08_173527__test_spark",
+      "breakpoints": true
     }
   ]
 }

@@ -64,3 +64,17 @@ export const DeleteUserTags = async (userId: string, tagIds: number) => {
     )
     .returning()
 }
+
+export const getUserTags = async (userId: string) => {
+  const userTags = await db
+    .select({
+      tag_id: userTagsTable.tag_id,
+      tag_name: tagsTable.name,
+      tag_type: tagsTable.type
+    })
+    .from(userTagsTable)
+    .innerJoin(tagsTable, eq(userTagsTable.tag_id, tagsTable.id))
+    .where(eq(userTagsTable.user_id, userId))
+
+  return userTags
+}

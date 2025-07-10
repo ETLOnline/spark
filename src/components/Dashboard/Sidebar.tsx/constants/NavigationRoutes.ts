@@ -74,6 +74,12 @@ export const siteRoutes: SiteRoutes = {
       url: "/channels",
       icon: Boxes,
       permission: "channel.view"
+    },
+    {
+      title: "Find Mentor",
+      url: "/find_mentor",
+      icon: User,
+      //permission: "channel.view"
     }
   ],
   testNav: [
