@@ -59,7 +59,7 @@ function SprintTasks({
   const [isAlertOpen, setIsAlertOpen] = useState(false)
   const [isTaskDropDownOpen, setIsTaskDropDownOpen] = useState(false)
   const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useState(false)
-  const [assignedUser, setAssignedUser] = useState<SelectUser | null>(null)
+  const [assignee, setAssignee] = useState<SelectUser | null>(null)
 
   const [removeTaskLoading, , , RemoveTask] = useServerAction(UpdateTaskAction)
 
@@ -67,7 +67,7 @@ function SprintTasks({
     const getUser = async () => {
       const res = await FindUserByUniqueIdAction(task.assign_to || "")
       if (res.success && res.data) {
-        setAssignedUser(res.data)
+        setAssignee(res.data)
       }
     }
     getUser()
@@ -195,20 +195,20 @@ function SprintTasks({
                   <Avatar className="h-6 w-6">
                     <AvatarImage
                       src={
-                        (assignedUser?.first_name ?? "") +
-                        (assignedUser?.last_name ?? "")
+                        (assignee?.first_name ?? "") +
+                        (assignee?.last_name ?? "")
                       }
-                      alt={assignedUser?.first_name}
+                      alt={assignee?.first_name}
                     />
                     <AvatarFallback className="text-xs">
-                      {assignedUser?.first_name[0]}
-                      {assignedUser?.last_name[0]}
+                      {assignee?.first_name[0]}
+                      {assignee?.last_name[0]}
                     </AvatarFallback>
                   </Avatar>
                 </TooltipTrigger>
                 <TooltipContent>
                   <span>
-                    {assignedUser?.first_name} {assignedUser?.last_name}
+                    {assignee?.first_name} {assignee?.last_name}
                   </span>
                 </TooltipContent>
               </Tooltip>

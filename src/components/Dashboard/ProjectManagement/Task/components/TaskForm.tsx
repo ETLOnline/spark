@@ -67,14 +67,14 @@ export default function TaskForm({
 }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null)
   const [usersList, setUsersList] = useState<(SelectUser | null)[]>([])
-  const [selectedAssignedUser, setSelectedAssignedUser] = useState<
-    MultiSelectOption[]
-  >([])
-  const [selectedAssigneeUser, setSelectedAssigneeUser] = useState<
-    MultiSelectOption[]
-  >([])
-  const [assignToUser, setAssignToUser] = useState<SelectUser | null>(null)
-  const [assignByUser, setAssignByUser] = useState<SelectUser | null>(null)
+  const [selectedAssignee, setSelectedAssignee] = useState<MultiSelectOption[]>(
+    []
+  )
+  const [selectedAssignor, setSelectedAssignor] = useState<MultiSelectOption[]>(
+    []
+  )
+  const [assignee, setAssignee] = useState<SelectUser | null>(null)
+  const [assignor, setAssignor] = useState<SelectUser | null>(null)
 
   const form = useForm({
     resolver: zodResolver(projectSchema)
@@ -132,8 +132,8 @@ export default function TaskForm({
 
   useEffect(() => {
     const fetchUserById = async () => {
-      const assignToId = selectedAssignedUser?.[0]?.value
-      const assignById = selectedAssigneeUser?.[0]?.value
+      const assignToId = selectedAssignee?.[0]?.value
+      const assignById = selectedAssignor?.[0]?.value
 
       const [assignToResult, assignByResult] = await Promise.all([
         assignToId
@@ -145,21 +145,21 @@ export default function TaskForm({
       ])
 
       if (assignToResult?.success && assignToResult.data) {
-        setAssignToUser(assignToResult.data)
+        setAssignee(assignToResult.data)
         form.setValue("assign_to", assignToResult.data.unique_id)
       } else {
         form.setValue("assign_to", "")
-        setAssignToUser(null)
+        setAssignee(null)
       }
 
       if (assignByResult?.success && assignByResult.data) {
-        setAssignByUser(assignByResult.data)
+        setAssignor(assignByResult.data)
         form.setValue("assign_by", assignByResult.data.unique_id)
       }
     }
 
     fetchUserById()
-  }, [selectedAssignedUser, selectedAssigneeUser])
+  }, [selectedAssignee, selectedAssignor])
 
   useEffect(() => {
     const fetchUserById = async () => {
@@ -176,8 +176,8 @@ export default function TaskForm({
       ])
 
       if (assignToResult?.success && assignToResult.data) {
-        setAssignToUser(assignToResult.data)
-        setSelectedAssignedUser([
+        setAssignee(assignToResult.data)
+        setSelectedAssignee([
           {
             label: `${assignToResult.data.first_name} ${assignToResult.data.last_name}`,
             value: assignToResult.data.unique_id
@@ -187,8 +187,8 @@ export default function TaskForm({
       }
 
       if (assignByResult?.success && assignByResult.data) {
-        setAssignByUser(assignByResult.data)
-        setSelectedAssigneeUser([
+        setAssignor(assignByResult.data)
+        setSelectedAssignor([
           {
             label: `${assignByResult.data.first_name} ${assignByResult.data.last_name}`,
             value: assignByResult.data.unique_id
@@ -401,11 +401,11 @@ export default function TaskForm({
                       activeField === "assignTo" ? (
                         <MultiSelect
                           options={options}
-                          selected={selectedAssignedUser}
+                          selected={selectedAssignee}
                           onChange={(newselected) => {
                             const latestSelected =
                               newselected?.[newselected.length - 1]
-                            setSelectedAssignedUser(
+                            setSelectedAssignee(
                               latestSelected ? [latestSelected] : []
                             )
                           }}
@@ -423,22 +423,18 @@ export default function TaskForm({
                         >
                           <Avatar className="h-5 w-5">
                             <AvatarImage
-                              src={
-                                assignToUser?.profile_url || "/placeholder.svg"
-                              }
-                              alt={assignToUser?.first_name}
+                              src={assignee?.profile_url || "/placeholder.svg"}
+                              alt={assignee?.first_name}
                             />
                             <AvatarFallback className="text-xs">
-                              {assignToUser?.first_name[0]}
-                              {assignToUser?.last_name[0]}
+                              {assignee?.first_name[0]}
+                              {assignee?.last_name[0]}
                             </AvatarFallback>
                           </Avatar>
 
                           <span>
-                            {assignToUser
-                              ? assignToUser.first_name +
-                                " " +
-                                assignToUser.last_name
+                            {assignee
+                              ? assignee.first_name + " " + assignee.last_name
                               : "Unassigned"}
                           </span>
                         </div>
@@ -457,11 +453,11 @@ export default function TaskForm({
                       activeField === "assignBy" ? (
                         <MultiSelect
                           options={options}
-                          selected={selectedAssigneeUser}
+                          selected={selectedAssignor}
                           onChange={(newselected) => {
                             const latestSelected =
                               newselected?.[newselected.length - 1]
-                            setSelectedAssigneeUser(
+                            setSelectedAssignor(
                               latestSelected ? [latestSelected] : []
                             )
                           }}
@@ -479,22 +475,18 @@ export default function TaskForm({
                         >
                           <Avatar className="h-5 w-5">
                             <AvatarImage
-                              src={
-                                assignByUser?.profile_url || "/placeholder.svg"
-                              }
-                              alt={assignByUser?.first_name}
+                              src={assignor?.profile_url || "/placeholder.svg"}
+                              alt={assignor?.first_name}
                             />
                             <AvatarFallback className="text-xs">
-                              {assignByUser?.first_name[0]}
-                              {assignByUser?.last_name[0]}
+                              {assignor?.first_name[0]}
+                              {assignor?.last_name[0]}
                             </AvatarFallback>
                           </Avatar>
 
                           <span>
-                            {assignByUser
-                              ? assignByUser.first_name +
-                                " " +
-                                assignByUser.last_name
+                            {assignor
+                              ? assignor.first_name + " " + assignor.last_name
                               : "Unassigned"}
                           </span>
                         </div>
