@@ -279,7 +279,19 @@ export default function TaskStatus() {
           return await createTaskStatus(payload)
         })
       )
-
+      setStatuses(
+        res
+          .filter(
+            (r) =>
+              r &&
+              r.success &&
+              Array.isArray(r.data) &&
+              r.data &&
+              r.data.length > 0
+          )
+          .map((r) => (r && r.data ? r.data[0] : undefined))
+          .filter((status) => status !== undefined)
+      )
       toast({
         title: "Changes saved",
         description: "Your status configuration has been saved successfully",

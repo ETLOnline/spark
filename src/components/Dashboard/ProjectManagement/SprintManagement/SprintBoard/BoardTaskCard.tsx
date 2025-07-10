@@ -159,9 +159,9 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
         <div className="flex justify-between items-start">
           <div>
             <h4 className="font-medium text-sm">{task.task_title}</h4>
-            <p className="text-xs text-muted-foreground mt-1">
+            {/* <p className="text-xs text-muted-foreground mt-1">
               {task.description}
-            </p>
+            </p> */}
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -190,7 +190,10 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
                   <TooltipTrigger asChild>
                     <Avatar className="h-5 w-5">
                       <AvatarImage
-                        src={assignedUser?.profile_url || "/placeholder.svg"}
+                        src={
+                          (assignedUser?.first_name ?? "") +
+                          (assignedUser?.last_name ?? "")
+                        }
                         alt={assignedUser?.first_name}
                       />
                       <AvatarFallback className="text-xs">

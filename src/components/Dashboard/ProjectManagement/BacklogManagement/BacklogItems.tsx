@@ -204,27 +204,32 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
         <div className="col-span-1">{task.story_points}</div>
         <div className="col-span-1">
           {task.assign_to ? (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage
-                      src={assignedUser?.profile_url || "/placeholder.svg"}
-                      alt={assignedUser?.first_name}
-                    />
-                    <AvatarFallback className="text-xs">
-                      {assignedUser?.first_name[0]}
-                      {assignedUser?.last_name[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span>
-                    {assignedUser?.first_name} {assignedUser?.last_name}
-                  </span>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={
+                          (assignedUser?.first_name ?? "") +
+                          (assignedUser?.last_name ?? "")
+                        }
+                        alt={assignedUser?.first_name}
+                      />
+                      <AvatarFallback className="text-xs">
+                        {assignedUser?.first_name[0]}
+                        {assignedUser?.last_name[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span>
+                      {assignedUser?.first_name} {assignedUser?.last_name}
+                    </span>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           ) : (
             <CircleHelp />
           )}
@@ -246,7 +251,6 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
                     <DropdownMenuItem onClick={() => EditTask(task)}>
                       Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem>Assign</DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
                         setIsTaskMoveDialogOpen(true)

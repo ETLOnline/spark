@@ -194,7 +194,10 @@ function SprintTasks({
                 <TooltipTrigger asChild>
                   <Avatar className="h-6 w-6">
                     <AvatarImage
-                      src={assignedUser?.profile_url || "/placeholder.svg"}
+                      src={
+                        (assignedUser?.first_name ?? "") +
+                        (assignedUser?.last_name ?? "")
+                      }
                       alt={assignedUser?.first_name}
                     />
                     <AvatarFallback className="text-xs">

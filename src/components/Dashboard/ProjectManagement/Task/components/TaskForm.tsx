@@ -298,7 +298,7 @@ export default function TaskForm({
                     <Tiptap value={field.value} onChange={field.onChange} />
                   ) : (
                     <div
-                      className="rich-editor border-b border-dashed border-gray-300 py-2  cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2"
+                      className="rich-editor py-2  cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2"
                       onClick={() => setActiveField("description")}
                     >
                       {field.value ? (
@@ -331,6 +331,8 @@ export default function TaskForm({
                   {selectedTask ? "Update Task" : "Create Task"}
                 </Button>
               </div>
+
+              {/* status */}
               <div className="space-y-6">
                 <div className="space-y-2">
                   <Label>Status</Label>
@@ -364,7 +366,7 @@ export default function TaskForm({
                         </Select>
                       ) : (
                         <div
-                          className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
+                          className=" py-2 cursor-pointer flex items-center gap-2"
                           onClick={() => {
                             setActiveField("status")
                             requestAnimationFrame(() => {
@@ -389,167 +391,6 @@ export default function TaskForm({
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Issue Type</Label>
-
-                  <Controller
-                    name="task_type"
-                    defaultValue=""
-                    control={form.control}
-                    render={({ field }) =>
-                      activeField === "issueType" ? (
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger id="task_type" className="col-span-3">
-                            <SelectValue placeholder="Select type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {projectTaskTypes.map((type, index) => (
-                              <SelectItem key={index} value={type.key}>
-                                {type.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <>
-                          <div>
-                            {errors.task_type && (
-                              <span className="text-red-500 text-sm flex items-center gap-2">
-                                <CircleAlert size={16} />
-                                {String(errors.task_type.message)}
-                              </span>
-                            )}
-                          </div>
-
-                          <div
-                            className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
-                            onClick={() => {
-                              setActiveField("issueType")
-                              requestAnimationFrame(() => {
-                                document.getElementById("task_type")?.click()
-                              })
-                            }}
-                          >
-                            <IssueTypeIcon type={field.value} />
-                            <span>
-                              {field.value
-                                ? ToUpperCase(field.value)
-                                : "Select Type"}
-                            </span>
-                          </div>
-                        </>
-                      )
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Story Points</Label>
-                  <Controller
-                    name="story_points"
-                    defaultValue=""
-                    control={form.control}
-                    render={({ field }) =>
-                      activeField === "points" ? (
-                        <Input
-                          id="story_points"
-                          type="number"
-                          min={0}
-                          placeholder="Select Points"
-                          {...field}
-                          className="col-span-3"
-                        />
-                      ) : (
-                        <div
-                          className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
-                          onClick={() => {
-                            setActiveField("points")
-                            requestAnimationFrame(() => {
-                              document.getElementById("story_points")?.focus()
-                            })
-                          }}
-                        >
-                          <div>
-                            {errors.story_points && (
-                              <span className="text-red-500 text-sm flex items-center gap-2">
-                                <CircleAlert size={16} />
-                                {String(errors.story_points.message)}
-                              </span>
-                            )}
-                          </div>
-                          <BarChart2 className="h-5 w-5 text-gray-500" />
-                          <span>{field.value || "Select Points"}</span>
-                        </div>
-                      )
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Priority</Label>
-
-                  <Controller
-                    name="task_priority"
-                    defaultValue=""
-                    control={form.control}
-                    render={({ field }) =>
-                      activeField === "priority" ? (
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger
-                            id="task_priority"
-                            className="col-span-3"
-                          >
-                            <SelectValue placeholder="Select priority" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {projectTaskPriority.map((priority, index) => (
-                              <SelectItem key={index} value={priority.key}>
-                                {priority.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <>
-                          <div>
-                            {errors.task_priority && (
-                              <span className="text-red-500 text-sm flex items-center gap-2">
-                                <CircleAlert size={16} />
-                                {String(errors.task_priority.message)}
-                              </span>
-                            )}
-                          </div>
-
-                          <div
-                            className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
-                            onClick={() => {
-                              setActiveField("priority")
-                              requestAnimationFrame(() => {
-                                document
-                                  .getElementById("task_priority")
-                                  ?.click()
-                              })
-                            }}
-                          >
-                            <PriorityIcon priority={field.value} />
-                            <span>
-                              {field.value
-                                ? ToUpperCase(field.value)
-                                : "Select Priority"}
-                            </span>
-                          </div>
-                        </>
-                      )
-                    }
-                  />
-                </div>
-
                 {/* Assign To */}
                 <div className="space-y-2">
                   <Label>Assign To</Label>
@@ -561,12 +402,18 @@ export default function TaskForm({
                         <MultiSelect
                           options={options}
                           selected={selectedAssignedUser}
-                          onChange={setSelectedAssignedUser}
+                          onChange={(newselected) => {
+                            const latestSelected =
+                              newselected?.[newselected.length - 1]
+                            setSelectedAssignedUser(
+                              latestSelected ? [latestSelected] : []
+                            )
+                          }}
                           placeholder="Select Assignee"
                         />
                       ) : (
                         <div
-                          className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
+                          className=" py-2 cursor-pointer flex items-center gap-2"
                           onClick={() => {
                             setActiveField("assignTo")
                             requestAnimationFrame(() => {
@@ -611,12 +458,18 @@ export default function TaskForm({
                         <MultiSelect
                           options={options}
                           selected={selectedAssigneeUser}
-                          onChange={setSelectedAssigneeUser}
-                          placeholder="Select Assignee"
+                          onChange={(newselected) => {
+                            const latestSelected =
+                              newselected?.[newselected.length - 1]
+                            setSelectedAssigneeUser(
+                              latestSelected ? [latestSelected] : []
+                            )
+                          }}
+                          placeholder="Select Assignor"
                         />
                       ) : (
                         <div
-                          className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
+                          className=" py-2 cursor-pointer flex items-center gap-2"
                           onClick={() => {
                             setActiveField("assignBy")
                             requestAnimationFrame(() => {
@@ -644,6 +497,170 @@ export default function TaskForm({
                                 assignByUser.last_name
                               : "Unassigned"}
                           </span>
+                        </div>
+                      )
+                    }
+                  />
+                </div>
+
+                {/* Priority */}
+                <div className="space-y-2">
+                  <Label>Priority</Label>
+
+                  <Controller
+                    name="task_priority"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) =>
+                      activeField === "priority" ? (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger
+                            id="task_priority"
+                            className="col-span-3"
+                          >
+                            <SelectValue placeholder="Select priority" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {projectTaskPriority.map((priority, index) => (
+                              <SelectItem key={index} value={priority.key}>
+                                {priority.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <>
+                          <div>
+                            {errors.task_priority && (
+                              <span className="text-red-500 text-sm flex items-center gap-2">
+                                <CircleAlert size={16} />
+                                {String(errors.task_priority.message)}
+                              </span>
+                            )}
+                          </div>
+
+                          <div
+                            className=" py-2 cursor-pointer flex items-center gap-2"
+                            onClick={() => {
+                              setActiveField("priority")
+                              requestAnimationFrame(() => {
+                                document
+                                  .getElementById("task_priority")
+                                  ?.click()
+                              })
+                            }}
+                          >
+                            <PriorityIcon priority={field.value} />
+                            <span>
+                              {field.value
+                                ? ToUpperCase(field.value)
+                                : "Select Priority"}
+                            </span>
+                          </div>
+                        </>
+                      )
+                    }
+                  />
+                </div>
+
+                {/* Issue Type */}
+                <div className="space-y-2">
+                  <Label>Issue Type</Label>
+
+                  <Controller
+                    name="task_type"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) =>
+                      activeField === "issueType" ? (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger id="task_type" className="col-span-3">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {projectTaskTypes.map((type, index) => (
+                              <SelectItem key={index} value={type.key}>
+                                {type.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <>
+                          <div>
+                            {errors.task_type && (
+                              <span className="text-red-500 text-sm flex items-center gap-2">
+                                <CircleAlert size={16} />
+                                {String(errors.task_type.message)}
+                              </span>
+                            )}
+                          </div>
+
+                          <div
+                            className=" py-2 cursor-pointer flex items-center gap-2"
+                            onClick={() => {
+                              setActiveField("issueType")
+                              requestAnimationFrame(() => {
+                                document.getElementById("task_type")?.click()
+                              })
+                            }}
+                          >
+                            <IssueTypeIcon type={field.value} />
+                            <span>
+                              {field.value
+                                ? ToUpperCase(field.value)
+                                : "Select Type"}
+                            </span>
+                          </div>
+                        </>
+                      )
+                    }
+                  />
+                </div>
+
+                {/* Story Points */}
+                <div className="space-y-2">
+                  <Label>Story Points</Label>
+                  <Controller
+                    name="story_points"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) =>
+                      activeField === "points" ? (
+                        <Input
+                          id="story_points"
+                          type="number"
+                          min={0}
+                          placeholder="Select Points"
+                          {...field}
+                          className="col-span-3"
+                        />
+                      ) : (
+                        <div
+                          className=" py-2 cursor-pointer flex items-center gap-2"
+                          onClick={() => {
+                            setActiveField("points")
+                            requestAnimationFrame(() => {
+                              document.getElementById("story_points")?.focus()
+                            })
+                          }}
+                        >
+                          <div>
+                            {errors.story_points && (
+                              <span className="text-red-500 text-sm flex items-center gap-2">
+                                <CircleAlert size={16} />
+                                {String(errors.story_points.message)}
+                              </span>
+                            )}
+                          </div>
+                          <BarChart2 className="h-5 w-5 text-gray-500" />
+                          <span>{field.value || "Select Points"}</span>
                         </div>
                       )
                     }
