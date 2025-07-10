@@ -6,9 +6,11 @@ import {
 } from "@/src/components/ui/tabs"
 import { Badge } from "@/src/components/ui/badge"
 import CommunityCard from "./CommunityCard"
-import CommunitySkeletonCards from "./CommunitySkeleton"
+import CommunitySkeletonCards from "./CommunitySkeleton" // Assuming this exists
 import { SelectCommunity } from "@/src/db/schema"
 import { GetCommunitiesActionResponse } from "@/src/server-actions/Community/Community"
+import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard" // Make sure to import this
+import { Group } from "lucide-react" // Make sure to import this icon
 
 interface CommunityListTabsProps {
   loading: boolean
@@ -45,16 +47,19 @@ export default function CommunityListTabs({
         </TabsTrigger>
       </TabsList>
 
-      {/* Loading State */}
-      {loading && <CommunitySkeletonCards count={6} />}
-
       {/* All Communities Tab Content */}
       <TabsContent value="all" className="space-y-6">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {!loading &&
-            !error &&
-            allCommunities.length > 0 &&
-            allCommunities.map((community: any) => (
+        {loading ? (
+          <CommunitySkeletonCards count={6} />
+        ) : error ? (
+          <NoDataCard
+            icon={<Group className="h-16 w-16 text-destructive mb-4" />}
+            title="Error Loading Communities"
+            description="There was an issue fetching communities. Please try again later."
+          />
+        ) : allCommunities.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {allCommunities.map((community: any) => (
               <CommunityCard
                 key={community.id}
                 community={community}
@@ -63,16 +68,29 @@ export default function CommunityListTabs({
                 onDelete={onDeleteCommunity}
               />
             ))}
-        </div>
+          </div>
+        ) : (
+          <NoDataCard
+            icon={<Group className="h-16 w-16 text-muted-foreground mb-4" />}
+            title="No communities found"
+            description="Adjust your filters or try a different search term."
+          />
+        )}
       </TabsContent>
 
       {/* My Communities Tab Content */}
       <TabsContent value="my" className="space-y-6">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {!loading &&
-            !error &&
-            joinedCommunities.length > 0 &&
-            joinedCommunities.map((community: any) => (
+        {loading ? (
+          <CommunitySkeletonCards count={6} />
+        ) : error ? (
+          <NoDataCard
+            icon={<Group className="h-16 w-16 text-destructive mb-4" />}
+            title="Error Loading Communities"
+            description="There was an issue fetching your communities. Please try again later."
+          />
+        ) : joinedCommunities.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {joinedCommunities.map((community: any) => (
               <CommunityCard
                 key={community.id}
                 community={community}
@@ -81,7 +99,14 @@ export default function CommunityListTabs({
                 onDelete={onDeleteCommunity}
               />
             ))}
-        </div>
+          </div>
+        ) : (
+          <NoDataCard
+            icon={<Group className="h-16 w-16 text-muted-foreground mb-4" />}
+            title="No joined communities found"
+            description="You haven't joined any communities yet."
+          />
+        )}
       </TabsContent>
     </Tabs>
   )

@@ -30,8 +30,6 @@ import {
   PaginationNext,
   PaginationPrevious
 } from "@/src/components/ui/pagination"
-import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
-import { Group } from "lucide-react"
 
 interface EnhancedCommunityQueryFilters extends CommunityQueryFilters {
   refreshTriggerValue?: boolean
@@ -92,7 +90,6 @@ export default function CommunitiesPage() {
       ) {
         return
       }
-      // NEW: Pass activeTab to fetchCommunities server action
       const res = await fetchCommunities(filters, page, limit, currentActiveTab)
 
       if (res?.success && res.data) {
@@ -264,33 +261,22 @@ export default function CommunitiesPage() {
         availableCategories={communityCategories}
       />
 
-      {/* Community List Tabs: Displays communities based on fetched data */}
-      {!loading &&
-      !error &&
-      communitiesList &&
-      communitiesList.communities.length > 0 ? (
-        <CommunityListTabs
-          loading={loading}
-          error={error}
-          communitiesList={communitiesList}
-          onEditCommunity={handleEditCommunity}
-          onDeleteCommunity={handleDeleteCommunity}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-        />
-      ) : (
-        <NoDataCard
-          icon={<Group className="h-16 w-16 text-muted-foreground mb-4" />}
-          title="No communities found"
-          description="Adjust your filters or try a different search term."
-        />
-      )}
+      {/* Community List Tabs: ALWAYS RENDER THIS COMPONENT */}
+      <CommunityListTabs
+        loading={loading}
+        error={error}
+        communitiesList={communitiesList}
+        onEditCommunity={handleEditCommunity}
+        onDeleteCommunity={handleDeleteCommunity}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+      />
 
-      {/* Pagination UI */}
+      {/* Pagination UI - Only show if not loading, no error, and there's more than one page */}
       {!loading &&
         !error &&
-        communitiesList &&
-        communitiesList.communities.length > 0 &&
+        paginationData &&
+        paginationData.total > 0 && // Check total communities for pagination visibility
         totalPages > 1 && (
           <Pagination className="mt-8">
             <PaginationContent>

@@ -20,9 +20,16 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface ChannelProps {
   channel: SelectChannel
+  onActionComplete?: (
+    actionType: "deleted" | "updated",
+    channel: SelectChannel
+  ) => void
 }
 
-const ChannelsContextMenu: React.FC<ChannelProps> = ({ channel }) => {
+const ChannelsContextMenu: React.FC<ChannelProps> = ({
+  channel,
+  onActionComplete
+}) => {
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "CHANNEL",
@@ -43,13 +50,10 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({ channel }) => {
     : false
 
   const router = useRouter()
-
-  const setChannels = useSetAtom(channelStore.channels)
   const setSelectedChannel = useSetAtom(channelStore.selectedChannel)
   const setChannelFormModelVisibility = useSetAtom(
     channelStore.channelformModalVisibility
   )
-  const setRefreshTrigger = useSetAtom(channelStore.refreshChannelsTriggerAtom)
 
   const { toast } = useToast()
 
@@ -65,16 +69,19 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({ channel }) => {
     setChannelFormModelVisibility(true)
   }
 
-  async function handleDeleteChannel(channel: SelectChannel) {
-    const deletedChannel = await DeleteChannel(channel as SelectChannel)
+  async function handleDeleteChannel(channelToDelete: SelectChannel) {
+    const deletedChannel = await DeleteChannel(channelToDelete)
     if (deletedChannel?.success) {
-      setChannels((preChannels) =>
-        preChannels.filter((c) => c.id !== channel.id)
-      )
-      setRefreshTrigger((prev) => !prev)
+      onActionComplete?.("deleted", channelToDelete)
       setChannelFormModelVisibility(false)
       toast({
         title: "Channel deleted successfully",
+        duration: 3000
+      })
+    } else {
+      toast({
+        title: "Failed to delete channel",
+        variant: "destructive",
         duration: 3000
       })
     }
