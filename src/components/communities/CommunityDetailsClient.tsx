@@ -324,8 +324,15 @@ export default function CommunityDetailsClient({
                               <div className="flex items-center gap-3 flex-grow min-w-0">
                                 <Hash className="h-5 w-5 text-muted-foreground shrink-0" />
                                 <div className="flex flex-col min-w-0 flex-grow">
-                                  <span className="font-medium truncate">
-                                    {channel.channel_name}
+                                  <span className="flex items-center gap-2 font-medium min-w-0">
+                                    <span className="truncate">
+                                      {channel.channel_name}
+                                    </span>
+                                    {channel.channel_type === "public" ? (
+                                      <Globe className="h-4 w-4 text-green-500 shrink-0" />
+                                    ) : channel.channel_type === "private" ? (
+                                      <Lock className="h-4 w-4 text-yellow-500 shrink-0" />
+                                    ) : null}
                                   </span>
                                   <span className="text-xs text-muted-foreground mt-0.5">
                                     {channel.description ||
