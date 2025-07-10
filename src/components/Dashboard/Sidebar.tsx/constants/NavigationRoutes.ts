@@ -73,7 +73,7 @@ export const siteRoutes: SiteRoutes = {
       url: "/communities",
       icon: Group
     },
-    {}
+    {
       title: "Channels",
       url: "/channels",
       icon: Boxes,
