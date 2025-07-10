@@ -14,7 +14,12 @@ import {
 } from "@/src/components/ui/select"
 import { AlertCircle, BarChart2, CircleAlert, Flag } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
-import { InsertTaskStatus, SelectTask } from "@/src/db/schema"
+import {
+  InsertTaskStatus,
+  SelectProjectUser,
+  SelectTask,
+  SelectUser
+} from "@/src/db/schema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { ToUpperCase } from "@/src/utils/helpers"
@@ -26,6 +31,13 @@ import {
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import "@/src/components/common/RichEditorFormat.css"
 import Tiptap from "@/src/components/common/TiptapRichEditor"
+import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
+import MultiSelect, {
+  MultiSelectOption
+} from "@/src/components/ui/multi-select"
+import { useParams } from "next/navigation"
+import { GetProjectUsersAction } from "@/src/server-actions/ProjectManagement/projectManagement"
+import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
 
 interface Props {
   onSubmit: (task: any) => void
@@ -41,7 +53,9 @@ const projectSchema = z.object({
   task_type: z.string().min(1, "Required"),
   task_priority: z.string().min(1, "Required"),
   story_points: z.string().optional(),
-  status_id: z.string().optional()
+  status_id: z.string().optional(),
+  assign_to: z.string().optional(),
+  assign_by: z.string().optional()
 })
 
 export default function TaskForm({
@@ -52,12 +66,41 @@ export default function TaskForm({
   loading = false
 }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null)
+  const [usersList, setUsersList] = useState<(SelectUser | null)[]>([])
+  const [selectedAssignedUser, setSelectedAssignedUser] = useState<
+    MultiSelectOption[]
+  >([])
+  const [selectedAssigneeUser, setSelectedAssigneeUser] = useState<
+    MultiSelectOption[]
+  >([])
+  const [assignToUser, setAssignToUser] = useState<SelectUser | null>(null)
+  const [assignByUser, setAssignByUser] = useState<SelectUser | null>(null)
 
   const form = useForm({
     resolver: zodResolver(projectSchema)
   })
   const errors = form.formState.errors
   const toDoStatus = statuses?.find((s) => s.name === "To Do")
+
+  const params = useParams<{ id: string }>()
+  const projectId = params?.id
+
+  const options: MultiSelectOption[] = usersList.map((user) => ({
+    label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
+    value: user?.unique_id ?? ""
+  }))
+
+  useEffect(() => {
+    const fetchProjectUsers = async () => {
+      const projectUsersResult = await GetProjectUsersAction(projectId)
+
+      if (projectUsersResult.success && projectUsersResult.data) {
+        setUsersList(projectUsersResult.data.map((u) => u.user) ?? [])
+      }
+    }
+
+    fetchProjectUsers()
+  }, [])
 
   useEffect(() => {
     if (!isTaskModelOpen) {
@@ -67,7 +110,8 @@ export default function TaskForm({
         task_type: "",
         task_priority: "",
         story_points: "",
-        status_id: toDoStatus?.id
+        status_id: toDoStatus?.id,
+        assign_to: ""
       })
       form.clearErrors()
     }
@@ -84,6 +128,77 @@ export default function TaskForm({
     } else {
       form.setValue("status_id", toDoStatus?.id)
     }
+  }, [selectedTask])
+
+  useEffect(() => {
+    const fetchUserById = async () => {
+      const assignToId = selectedAssignedUser?.[0]?.value
+      const assignById = selectedAssigneeUser?.[0]?.value
+
+      const [assignToResult, assignByResult] = await Promise.all([
+        assignToId
+          ? FindUserByUniqueIdAction(assignToId)
+          : Promise.resolve(null),
+        assignById
+          ? FindUserByUniqueIdAction(assignById)
+          : Promise.resolve(null)
+      ])
+
+      if (assignToResult?.success && assignToResult.data) {
+        setAssignToUser(assignToResult.data)
+        form.setValue("assign_to", assignToResult.data.unique_id)
+      } else {
+        form.setValue("assign_to", "")
+        setAssignToUser(null)
+      }
+
+      if (assignByResult?.success && assignByResult.data) {
+        setAssignByUser(assignByResult.data)
+        form.setValue("assign_by", assignByResult.data.unique_id)
+      }
+    }
+
+    fetchUserById()
+  }, [selectedAssignedUser, selectedAssigneeUser])
+
+  useEffect(() => {
+    const fetchUserById = async () => {
+      const assignToId = selectedTask?.assign_to
+      const assignById = selectedTask?.assign_by
+
+      const [assignToResult, assignByResult] = await Promise.all([
+        assignToId
+          ? FindUserByUniqueIdAction(assignToId)
+          : Promise.resolve(null),
+        assignById
+          ? FindUserByUniqueIdAction(assignById)
+          : Promise.resolve(null)
+      ])
+
+      if (assignToResult?.success && assignToResult.data) {
+        setAssignToUser(assignToResult.data)
+        setSelectedAssignedUser([
+          {
+            label: `${assignToResult.data.first_name} ${assignToResult.data.last_name}`,
+            value: assignToResult.data.unique_id
+          }
+        ])
+        form.setValue("assign_to", assignToResult.data.unique_id)
+      }
+
+      if (assignByResult?.success && assignByResult.data) {
+        setAssignByUser(assignByResult.data)
+        setSelectedAssigneeUser([
+          {
+            label: `${assignByResult.data.first_name} ${assignByResult.data.last_name}`,
+            value: assignByResult.data.unique_id
+          }
+        ])
+        form.setValue("assign_by", assignByResult.data.unique_id)
+      }
+    }
+
+    fetchUserById()
   }, [selectedTask])
 
   function IssueTypeIcon({ type }: { type: string }) {
@@ -435,59 +550,105 @@ export default function TaskForm({
                   />
                 </div>
 
-                {/* <div className="space-y-2">
-                  <Label>Assignee</Label>
-                  {activeField === "assignee" ? (
-                    <Select
-                      value={assignee?.toString() || ""}
-                      onValueChange={(value) => {
-                        setAssignee(value === "unassigned" ? null : Number.parseInt(value))
-                        setActiveField(null)
-                      }}
-                      onOpenChange={(open) => {
-                        if (!open) setActiveField(null)
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Unassigned" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="unassigned">Unassigned</SelectItem>
-                        {users.map((user) => (
-                          <SelectItem key={user.id} value={user.id.toString()}>
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                                <AvatarFallback>{user.initials}</AvatarFallback>
-                              </Avatar>
-                              <span>{user.name}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <div
-                      className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
-                      onClick={() => setActiveField("assignee")}
-                    >
-                      {assignee ? (
-                        <>
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage
-                              src={users.find((u) => u.id === assignee)?.avatar || "/placeholder.svg"}
-                              alt={users.find((u) => u.id === assignee)?.name || "User"}
-                            />
-                            <AvatarFallback>{users.find((u) => u.id === assignee)?.initials || "??"}</AvatarFallback>
-                          </Avatar>
-                          <span>{users.find((u) => u.id === assignee)?.name}</span>
-                        </>
+                {/* Assign To */}
+                <div className="space-y-2">
+                  <Label>Assign To</Label>
+                  <Controller
+                    name="assign_to"
+                    control={form.control}
+                    render={({ field }) =>
+                      activeField === "assignTo" ? (
+                        <MultiSelect
+                          options={options}
+                          selected={selectedAssignedUser}
+                          onChange={setSelectedAssignedUser}
+                          placeholder="Select Assignee"
+                        />
                       ) : (
-                        "Unassigned"
-                      )}
-                    </div>
-                  )}
-                </div> */}
+                        <div
+                          className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
+                          onClick={() => {
+                            setActiveField("assignTo")
+                            requestAnimationFrame(() => {
+                              document.getElementById("assign_to")?.click()
+                            })
+                          }}
+                        >
+                          <Avatar className="h-5 w-5">
+                            <AvatarImage
+                              src={
+                                assignToUser?.profile_url || "/placeholder.svg"
+                              }
+                              alt={assignToUser?.first_name}
+                            />
+                            <AvatarFallback className="text-xs">
+                              {assignToUser?.first_name[0]}
+                              {assignToUser?.last_name[0]}
+                            </AvatarFallback>
+                          </Avatar>
+
+                          <span>
+                            {assignToUser
+                              ? assignToUser.first_name +
+                                " " +
+                                assignToUser.last_name
+                              : "Unassigned"}
+                          </span>
+                        </div>
+                      )
+                    }
+                  />
+                </div>
+
+                {/* Assign By */}
+                <div className="space-y-2">
+                  <Label>Assigned By</Label>
+                  <Controller
+                    name="assign_by"
+                    control={form.control}
+                    render={({ field }) =>
+                      activeField === "assignBy" ? (
+                        <MultiSelect
+                          options={options}
+                          selected={selectedAssigneeUser}
+                          onChange={setSelectedAssigneeUser}
+                          placeholder="Select Assignee"
+                        />
+                      ) : (
+                        <div
+                          className="border-b border-dashed border-gray-300 py-2 cursor-pointer flex items-center gap-2"
+                          onClick={() => {
+                            setActiveField("assignBy")
+                            requestAnimationFrame(() => {
+                              document.getElementById("assign_to")?.click()
+                            })
+                          }}
+                        >
+                          <Avatar className="h-5 w-5">
+                            <AvatarImage
+                              src={
+                                assignByUser?.profile_url || "/placeholder.svg"
+                              }
+                              alt={assignByUser?.first_name}
+                            />
+                            <AvatarFallback className="text-xs">
+                              {assignByUser?.first_name[0]}
+                              {assignByUser?.last_name[0]}
+                            </AvatarFallback>
+                          </Avatar>
+
+                          <span>
+                            {assignByUser
+                              ? assignByUser.first_name +
+                                " " +
+                                assignByUser.last_name
+                              : "Unassigned"}
+                          </span>
+                        </div>
+                      )
+                    }
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>

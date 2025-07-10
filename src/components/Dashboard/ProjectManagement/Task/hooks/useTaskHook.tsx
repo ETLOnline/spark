@@ -55,7 +55,9 @@ const useTaskHook = ({
           ...data,
           created_by: authUser?.unique_id,
           project_id: projectId || "",
-          sprint_id: sprintId || null
+          sprint_id: sprintId || null,
+          assign_to: data.assign_to || null,
+          assign_by: data.assign_by || authUser?.unique_id
         }
         const task = await CreateTask(payload)
         if (task?.success && task.data) {
@@ -83,7 +85,12 @@ const useTaskHook = ({
   async function handleUpdateTask(data: SelectTask) {
     try {
       if (selectedTask?.id) {
-        const updatedTask = await UpdateTask(selectedTask?.id, data)
+        const payload = {
+          ...data,
+          assign_to: data.assign_to || null,
+          assign_by: data.assign_by || authUser?.unique_id
+        }
+        const updatedTask = await UpdateTask(selectedTask?.id, payload)
         if (updatedTask?.success && updatedTask.data) {
           if (onUpdateComplete) {
             onUpdateComplete(updatedTask?.data)
