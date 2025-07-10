@@ -1,5 +1,5 @@
 import { ChannelUsersTable, SelectChannelUser } from "./../../schema"
-import { and, eq, or, sql, SQLWrapper } from "drizzle-orm"
+import { and, asc, eq, or, sql, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
 import { channelsTable, InsertChannel, SelectChannel } from "../../schema"
 
@@ -9,6 +9,7 @@ export type channelQueryFilters = {
   ownerId?: string
   page?: number
   limit?: number
+  communityId?: string
 }
 
 export async function CreateChannel(channelData: InsertChannel) {
@@ -27,6 +28,7 @@ export async function CreateChannel(channelData: InsertChannel) {
 
 export async function GetChannels(filters?: channelQueryFilters) {
   try {
+    const communityId = filters?.communityId
     const page = filters?.page
     const limit = filters?.limit
     const offset = page && limit ? (page - 1) * limit : 0
@@ -44,6 +46,10 @@ export async function GetChannels(filters?: channelQueryFilters) {
         )
       }
 
+      if (communityId) {
+        whereClauses.push(eq(channelsTable.community_id, communityId))
+      }
+
       if (filters.ownerId) {
         whereClauses.push(eq(channelsTable.ownerId, filters.ownerId))
       }
@@ -53,10 +59,16 @@ export async function GetChannels(filters?: channelQueryFilters) {
       limit: limit,
       offset: offset,
       where: whereClauses.length ? and(...whereClauses) : undefined,
+      orderBy: [asc(channelsTable.channel_name)],
       with: {
         spaces: {
           with: {
             features: true
+          }
+        },
+        users: {
+          with: {
+            user: true
           }
         }
       }

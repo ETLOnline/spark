@@ -11,9 +11,8 @@ import {
   Network,
   Newspaper,
   Send,
-  Settings2,
-  Shield,
-  User
+  User,
+  Group
 } from "lucide-react"
 
 export const siteRoutes: SiteRoutes = {
@@ -70,6 +69,11 @@ export const siteRoutes: SiteRoutes = {
       permission: "events.view"
     },
     {
+      title: "Communities",
+      url: "/communities",
+      icon: Group
+    },
+    {}
       title: "Channels",
       url: "/channels",
       icon: Boxes,

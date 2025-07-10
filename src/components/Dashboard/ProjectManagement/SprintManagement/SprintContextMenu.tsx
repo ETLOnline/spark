@@ -11,9 +11,12 @@ import { MoreHorizontal } from "lucide-react"
 import CreateSprintModal from "./CreateSprintModal"
 import { SelectSprint, SelectTask } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { DeleteSprintAction } from "@/src/server-actions/Sprint/sprint"
+import {
+  DeleteSprintAction,
+  UpdateSprintAction
+} from "@/src/server-actions/Sprint/sprint"
 import { toast } from "@/src/hooks/use-toast"
-import { useAtom, useAtomValue, useSetAtom } from "jotai"
+import { useSetAtom } from "jotai"
 import { sprintStore } from "@/src/store/sprint/sprintsStore"
 import {
   AlertDialog,
@@ -25,8 +28,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/src/components/ui/alert-dialog"
-import { taskStore } from "@/src/store/tasks/taskStore"
-import { projectStore } from "@/src/store/project/projectStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { useParams } from "next/navigation"
 
@@ -56,6 +57,9 @@ function SprintContextMenu({
 
   const [deleteSprintLoading, , , DeleteSprint] =
     useServerAction(DeleteSprintAction)
+
+  const [updateSprintLoading, , , UpdateSprint] =
+    useServerAction(UpdateSprintAction)
 
   function EditSprint(sprint: SelectSprint) {
     setSelectedSprint(sprint)
@@ -109,6 +113,29 @@ function SprintContextMenu({
     ? permissionChecker?.canAccess("project.sprint.delete")
     : false
 
+  async function HandleStartSprint(sprint: SelectSprint) {
+    if (sprint) {
+      const res = await UpdateSprint(sprint.id, { sprint_status: "active" })
+      if (res?.success && res.data) {
+        setSprintList((prev) =>
+          prev.map((s) => (s.id === res.data.id ? res.data : s))
+        )
+      }
+    }
+  }
+
+  async function HandleEndSprint(sprint: SelectSprint) {
+    if (sprint) {
+      const res = await UpdateSprint(sprint.id, { sprint_status: "closed" })
+      if (res?.success && res.data) {
+        setSprintList((prev) =>
+          prev.map((s) => (s.id === res.data.id ? res.data : s))
+        )
+      }
+      console.log("id", sprint.id, "data", res?.data)
+    }
+  }
+
   return (
     <>
       {(canDelete || canUpdate) && (
@@ -127,6 +154,18 @@ function SprintContextMenu({
                 Edit Sprint
               </DropdownMenuItem>
             )}
+            {sprint.sprint_status !== "active" ? (
+              <DropdownMenuItem
+                onClick={() => {
+                  HandleStartSprint(sprint)
+                }}
+              >
+                Start Sprint
+              </DropdownMenuItem>
+            ) : null}
+            <DropdownMenuItem onClick={() => HandleEndSprint(sprint)}>
+              End Sprint
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             {canDelete && (
               <DropdownMenuItem

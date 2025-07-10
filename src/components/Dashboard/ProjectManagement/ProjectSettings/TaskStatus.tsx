@@ -188,15 +188,15 @@ export default function TaskStatus() {
     })
   }
 
-  // Modify the moveStatus function to prevent moving Backlog and Done
+  // Modify the moveStatus function to prevent moving To Do and Done
   const moveStatus = (index: number, direction: "up" | "down") => {
     const status = statuses[index]
 
-    // Prevent moving Backlog (should always be first)
-    if (status.name === "Backlog") {
+    // Prevent moving To Do (should always be first)
+    if (status.name === "To Do") {
       toast({
         title: "Error",
-        description: "Backlog must always be the first status",
+        description: "To Do must always be the first status",
         variant: "destructive",
         duration: 2000
       })
@@ -214,12 +214,12 @@ export default function TaskStatus() {
       return
     }
 
-    // Prevent moving a status before Backlog or after Done
+    // Prevent moving a status before To Do or after Done
     const targetIndex = direction === "up" ? index - 1 : index + 1
     if (
       (direction === "up" && index === 0) ||
       (direction === "down" && index === statuses.length - 1) ||
-      (direction === "up" && statuses[index - 1].name === "Backlog") ||
+      (direction === "up" && statuses[index - 1].name === "To Do") ||
       (direction === "down" && statuses[index + 1].name === "Done")
     ) {
       return
@@ -258,7 +258,7 @@ export default function TaskStatus() {
 
     if (!isChangesSaved) {
       const statusRemove = statuses.find((s) => s.name === status)
-
+      console.log("statusRemove", statusRemove)
       if (statusRemove?.id) {
         setRemovedStatus([statusRemove as SelectTaskStatus])
       }
@@ -268,17 +268,28 @@ export default function TaskStatus() {
   // Function to save the current status configuration
   const saveStatusConfiguration = async () => {
     setIsSaving(true)
-
+    console.log("status", statuses)
     try {
       // Simulate saving the status configuration, this would be replaced with an API call
-      for (const status of statuses) {
-        const payload = {
-          ...status,
-          position: statuses.findIndex((s) => s.name === status.name),
-          project_id: projectId
-        }
-        const taskStatuses = await createTaskStatus(payload)
-      }
+      const res = await Promise.all(
+        statuses.map(async (status) => {
+          const payload = {
+            ...status,
+            position: statuses.findIndex((s) => s.name === status.name),
+            project_id: projectId
+          }
+          return await createTaskStatus(payload)
+        })
+      )
+      console.log("res", res)
+      // for (const status of statuses) {
+      //   const payload = {
+      //     ...status,
+      //     position: statuses.findIndex((s) => s.name === status.name),
+      //     project_id: projectId
+      //   }
+      //   await createTaskStatus(payload)
+      // }
 
       toast({
         title: "Changes saved",
@@ -341,7 +352,22 @@ export default function TaskStatus() {
 
   async function handleUpdateTaskStatus() {
     try {
-      if (newStatusId) {
+      if (tasks.length === 0) {
+        if (removedStatus.length > 0) {
+          const deleted = await Promise.all(
+            removedStatus.map(async (s) => {
+              return await DeleteStatus(s.id)
+            })
+          )
+          setStatuses(statuses.filter((s) => s.name !== removedStatus[0].name))
+          setIsDeleteStatusModelOpen(false)
+          fetchStatuses()
+          toast({
+            title: "Status deleted",
+            duration: 2000
+          })
+        }
+      } else if (newStatusId) {
         for (const task of tasks) {
           const updatedTaskStatus = await UpdateTask(task.id, {
             ...task,
@@ -458,9 +484,9 @@ export default function TaskStatus() {
                               onClick={() => moveStatus(index, "up")}
                               disabled={
                                 index === 0 ||
-                                status.name === "Backlog" ||
+                                status.name === "To Do" ||
                                 status.name === "Done" ||
-                                statuses[index - 1].name === "Backlog"
+                                statuses[index - 1].name === "To Do"
                               }
                             >
                               <ArrowUp className="h-3.5 w-3.5" />
@@ -473,7 +499,7 @@ export default function TaskStatus() {
                               onClick={() => moveStatus(index, "down")}
                               disabled={
                                 index === statuses.length - 1 ||
-                                status.name === "Backlog" ||
+                                status.name === "To Do" ||
                                 status.name === "Done" ||
                                 statuses[index + 1].name === "Done"
                               }
@@ -657,7 +683,9 @@ export default function TaskStatus() {
               <Button variant="outline">Cancel</Button>
               <Button
                 variant="destructive"
-                onClick={() => handleUpdateTaskStatus()}
+                onClick={() => {
+                  handleUpdateTaskStatus()
+                }}
                 loading={deleteStatusLoading}
               >
                 {tasks.length > 0 ? "Reassign & Delete" : "Delete"}

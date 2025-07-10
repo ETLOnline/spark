@@ -5,6 +5,7 @@ import { PermissionsSeed } from "./PermissionsSeed"
 import { RolePermissionsSeed } from "./RolePermissionsSeed"
 import { TagSeed } from "./TagsSeeder"
 import { seedMentorData } from "./mentorData"
+import { CommunityCategorySeed } from "./CommunityCategories"
 
 const SEEDERS: Record<string, () => Promise<void>> = {
   FeatureSeed,
@@ -13,7 +14,8 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   RolesSeed,
   RolePermissionsSeed,
   UserSeed,
-  MentorSeed: seedMentorData
+  MentorSeed: seedMentorData,
+  CommunityCategorySeed
 }
 
 async function runSeeders() {

@@ -4,7 +4,7 @@ import { userStore } from "@/src/store/user/userStore"
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
 export const usePermissionChecker = (
   permissionType: "scoped" | "global",
-  entityType?: "SPACE" | "CHANNEL" | "PROJECT",
+  entityType?: "SPACE" | "CHANNEL" | "PROJECT" | "COMMUNITY",
   entityId?: string
 ) => {
   const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
