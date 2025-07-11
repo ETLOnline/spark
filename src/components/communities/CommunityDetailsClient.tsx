@@ -34,6 +34,9 @@ import { useSearchParams } from "next/navigation"
 import ChannelsContextMenu from "@/src/components/Dashboard/Channels/ChannelDetails/ChannelsContextMenu"
 import Link from "next/link"
 import { userStore } from "@/src/store/user/userStore"
+import Overlay from "../common/Overlay/OverLay"
+import { communityStore } from "@/src/store/community/communityStore"
+import { useSetAtom } from "jotai"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -54,6 +57,12 @@ const demoRules = [
 export default function CommunityDetailsClient({
   community
 }: CommunityDetailsClientProps) {
+  const setCurrentCommunity = useSetAtom(communityStore.selectedCommunity)
+
+  useEffect(() => {
+    setCurrentCommunity(community)
+  }, [community])
+
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
   const communityInitial = community?.title
@@ -146,21 +155,9 @@ export default function CommunityDetailsClient({
 
   return (
     <div className="min-h-screen bg-background relative">
-      {" "}
       {/* Added relative for the overlay positioning */}
       {showAccessDeniedOverlay && (
-        <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-4 text-center">
-          <Lock className="h-16 w-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Private Community</h2>
-          <p className="text-muted-foreground mb-6 max-w-sm">
-            This community is private. You must be a member to view its content.
-            Please request access or wait for an invitation.
-          </p>
-          {/* You can add a button here for requesting access if that's a feature */}
-          <Link href="/communities">
-            <Button>Go Back</Button>
-          </Link>
-        </div>
+        <Overlay page="Community" pageHref="/communities" />
       )}
       <div className="flex flex-col min-h-screen">
         {/* Community Header Banner */}

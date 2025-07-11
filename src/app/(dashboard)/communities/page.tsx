@@ -45,8 +45,6 @@ export default function CommunitiesPage() {
   const [communityFormModalVisibility, setCommunityFormModalVisibility] =
     useAtom(communityStore.communityFormModalVisibility)
 
-  const [, setSelectedCommunity] = useAtom(communityStore.selectedCommunity)
-
   const [refreshTrigger, setRefreshTrigger] = useAtom(
     communityStore.refreshCommunitiesTriggerAtom
   )
@@ -175,12 +173,10 @@ export default function CommunitiesPage() {
   }
 
   const handleCreateCommunityClick = () => {
-    setSelectedCommunity(null)
     setCommunityFormModalVisibility(true)
   }
 
   const handleEditCommunity = (communityToEdit: SelectCommunity) => {
-    setSelectedCommunity(communityToEdit)
     setCommunityFormModalVisibility(true)
   }
 

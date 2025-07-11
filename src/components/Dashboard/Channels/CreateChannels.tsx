@@ -41,6 +41,7 @@ import { LoaderSizes } from "../../common/types/loader-types"
 import { Switch } from "../../ui/switch"
 import { useDebouncedCallback } from "use-debounce"
 import { useAuthUser } from "@/src/hooks/useAuthUser"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 const channelSchema = z.object({
   channel_name: z
@@ -295,7 +296,14 @@ function CreateChannels({
       })
     }
   }
-
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "COMMUNITY",
+    communityId
+  )
+  const canCreteChannel = permissionChecker
+    ? permissionChecker.canAccess("channel.create")
+    : false
   return (
     <Dialog
       open={channelFormModelVisibility}
@@ -304,10 +312,12 @@ function CreateChannels({
       }}
     >
       <DialogTrigger asChild>
-        <Button>
-          <CirclePlus className=" h-4 w-4" />
-          Create Channel
-        </Button>
+        {canCreteChannel && (
+          <Button>
+            <CirclePlus className=" h-4 w-4" />
+            Create Channel
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] sm:max-w-[425px]">
         <DialogHeader>
