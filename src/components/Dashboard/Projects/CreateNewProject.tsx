@@ -307,7 +307,7 @@ function ProjectFormModal({
           </div> */}
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="project_type" className="text-right">
-                Active / Draft
+                Draft / Active
               </Label>
 
               <Controller

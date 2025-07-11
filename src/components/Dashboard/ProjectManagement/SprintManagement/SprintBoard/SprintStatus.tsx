@@ -11,7 +11,7 @@ function SprintStatus({ sprint }: Props) {
   const pastDate = moment(sprint?.end_date).isBefore(moment())
 
   return (
-    <div className="text-sm text-muted-foreground">
+    <div className="text-sm text-muted-foreground flex items-center">
       <Clock
         className={`inline-block mr-1 h-4 w-4 ${pastDate ? "text-red-500" : "text-muted-foreground"}`}
       />

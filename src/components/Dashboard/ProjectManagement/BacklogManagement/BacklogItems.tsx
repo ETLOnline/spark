@@ -18,13 +18,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/src/components/ui/dropdown-menu"
-import { SelectTask } from "@/src/db/schema"
+import { SelectTask, SelectUser } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { DeleteTaskAction } from "@/src/server-actions/Tasks/Task"
 import { projectStore } from "@/src/store/project/projectStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
-import { useAtom, useAtomValue, useSetAtom } from "jotai"
+import { useAtom, useSetAtom } from "jotai"
 import { CircleHelp, MoreHorizontal } from "lucide-react"
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import {
@@ -34,7 +34,14 @@ import {
 import { useParams } from "next/navigation"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import TaskMoveDialog from "../Task/components/task-move-dialog"
-import { TaskModal } from "../Task/components/TaskModal"
+import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
+import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/src/components/ui/tooltip"
 
 interface Props {
   selectedItems: string[]
@@ -47,16 +54,24 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
   const projectId = params.id as string
   const [isDropdownOpen, setIsDropDownOpen] = useState(false)
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
-  // const [selectedTask, setSelectedTask] = useState<SelectTask | null>(null)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
   const SetTasks = useSetAtom(taskStore.BackLogTasks)
-  // const
   const [status, setStatus] = useAtom(projectStore.projectStatusList)
   const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useState(false)
-  // const [isTaskModelOpen, setIsTaskModelOpen] = useState(false)
+  const [assignee, setAssignee] = useState<SelectUser | null>(null)
 
   const [deleteTaskLoading, deleteTaskData, deleteTaskError, DeleteTask] =
     useServerAction(DeleteTaskAction)
+
+  useEffect(() => {
+    const getUser = async () => {
+      const res = await FindUserByUniqueIdAction(task.assign_to || "")
+      if (res.success && res.data) {
+        setAssignee(res.data)
+      }
+    }
+    getUser()
+  }, [task.assign_to])
 
   const handleSelectItem = (id: string) => {
     setSelectedItems(
@@ -68,7 +83,6 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
 
   function EditTask(task: SelectTask) {
     setSelectedTask(task)
-    // setIsTaskModelOpen(true)
     setIsDropDownOpen(false)
   }
 
@@ -189,18 +203,36 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
         </div>
         <div className="col-span-1">{task.story_points}</div>
         <div className="col-span-1">
-          {/* {task.assignee ? (
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={task.assignee.avatar} />
-            <AvatarFallback>{task.assignee.name[0]}</AvatarFallback>
-          </Avatar>
-        ) : (
-          <Badge variant="outline" className="text-xs">
-            Unassigned
-          </Badge>
-        )} */}
-
-          <CircleHelp />
+          {task.assign_to ? (
+            <div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={
+                          (assignee?.first_name ?? "") +
+                          (assignee?.last_name ?? "")
+                        }
+                        alt={assignee?.first_name}
+                      />
+                      <AvatarFallback className="text-xs">
+                        {assignee?.first_name[0]}
+                        {assignee?.last_name[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span>
+                      {assignee?.first_name} {assignee?.last_name}
+                    </span>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          ) : (
+            <CircleHelp />
+          )}
         </div>
         <div className="col-span-1 text-right">
           {(canUpdate || canDelete) && (
@@ -219,7 +251,6 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
                     <DropdownMenuItem onClick={() => EditTask(task)}>
                       Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem>Assign</DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
                         setIsTaskMoveDialogOpen(true)

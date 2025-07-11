@@ -6,15 +6,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/src/components/ui/dropdown-menu"
-import { SelectTask } from "@/src/db/schema"
+import { SelectTask, SelectUser } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { UpdateTaskAction } from "@/src/server-actions/Tasks/Task"
-import { taskStore } from "@/src/store/tasks/taskStore"
-import { useSetAtom } from "jotai"
 import {
   ChevronDown,
   ChevronsDown,
@@ -22,10 +19,9 @@ import {
   ChevronUp,
   CircleHelp,
   Equal,
-  Minus,
   MoreHorizontal
 } from "lucide-react"
-import React, { Dispatch, SetStateAction, useState } from "react"
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +38,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
+import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
 
 interface Props {
   task: SelectTask
@@ -51,8 +48,19 @@ interface Props {
 
 function BoardTaskCard({ task, onClick, setTasks }: Props) {
   const [isAlertOpen, setIsAlertOpen] = useState(false)
+  const [assignee, setAssignee] = useState<SelectUser | null>(null)
 
   const [removeTaskLoading, , , RemoveTask] = useServerAction(UpdateTaskAction)
+
+  useEffect(() => {
+    const getUser = async () => {
+      const res = await FindUserByUniqueIdAction(task.assign_to || "")
+      if (res.success && res.data) {
+        setAssignee(res.data)
+      }
+    }
+    getUser()
+  }, [task.assign_to])
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
@@ -151,9 +159,9 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
         <div className="flex justify-between items-start">
           <div>
             <h4 className="font-medium text-sm">{task.task_title}</h4>
-            <p className="text-xs text-muted-foreground mt-1">
+            {/* <p className="text-xs text-muted-foreground mt-1">
               {task.description}
-            </p>
+            </p> */}
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -175,12 +183,35 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
           </DropdownMenu>
         </div>
         <div className="flex flex-wrap justify-between items-center mt-3">
-          <div className="flex items-center">
-            {/* <Avatar className="h-6 w-6 mr-2">
-            <AvatarImage src={task.assignee.avatar} />
-            <AvatarFallback>{task.assignee.name[0]}</AvatarFallback>
-          </Avatar> */}
-            <CircleHelp className="h-4 w-4 mr-2" />
+          <div className="flex gap-2 items-center">
+            {task.assign_to ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Avatar className="h-5 w-5">
+                      <AvatarImage
+                        src={
+                          (assignee?.first_name ?? "") +
+                          (assignee?.last_name ?? "")
+                        }
+                        alt={assignee?.first_name}
+                      />
+                      <AvatarFallback className="text-xs">
+                        {assignee?.first_name[0]}
+                        {assignee?.last_name[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span>
+                      {assignee?.first_name} {assignee?.last_name}
+                    </span>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <CircleHelp className="h-5 w-5" />
+            )}
             <span className="text-xs">#{task.task_num}</span>
           </div>
           {getPriorityBadge(task.task_priority)}
