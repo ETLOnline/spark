@@ -83,6 +83,9 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
   joinedCommunities: many(communityUsersTable, {
     relationName: "userToCommunity"
+  }),
+  projectUsers: many(ProjectUsersTable, {
+    relationName: "userToProject"
   })
 }))
 
@@ -934,6 +937,8 @@ export const taskTable = pgTable("task", {
   created_by: varchar().notNull(),
   status_id: varchar(),
   sprint_id: varchar(),
+  assign_to: varchar(),
+  assign_by: varchar(),
   ...timestamps
 })
 
@@ -1006,7 +1011,26 @@ export const ProjectUsersTable = pgTable("project_users", {
 })
 
 export type InsertProjectUser = typeof ProjectUsersTable.$inferInsert
-export type SelectProjectUser = typeof ProjectUsersTable.$inferSelect
+export type SelectProjectUser = typeof ProjectUsersTable.$inferSelect & {
+  user?: SelectUser
+  project?: SelectProject
+}
+
+export const ProjectUsersRelations = relations(
+  ProjectUsersTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [ProjectUsersTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "userToProject"
+    }),
+    project: one(projectTable, {
+      fields: [ProjectUsersTable.project_id],
+      references: [projectTable.id],
+      relationName: "projectToProjectUsers" // Must match relation name in projectTable
+    })
+  })
+)
 
 // Permissions
 export const permissionsTable = pgTable("permissions", {
@@ -1174,15 +1198,6 @@ export const communityCategoriesTable = pgTable("community_categories", {
   slug: varchar("slug").notNull().unique(),
   ...timestamps
 })
-
-export const communityCategoriesRelations = relations(
-  communityCategoriesTable,
-  ({ many }) => ({
-    communities: many(communitiesTable, {
-      relationName: "categoryToCommunity"
-    })
-  })
-)
 
 export type SelectCommunityCategory =
   typeof communityCategoriesTable.$inferSelect & {

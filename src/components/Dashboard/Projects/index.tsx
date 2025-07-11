@@ -22,6 +22,8 @@ import { space } from "postcss/lib/list"
 import { navStore } from "@/src/store/nav/navStore"
 import CreateNewProject from "./CreateNewProject"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import NoDataCard from "../Channels/ChannelDetails/NoDataCard"
+import { ListX } from "lucide-react"
 
 interface Props {
   space: SelectSpace
@@ -109,11 +111,19 @@ export function ProjectScreen({ space }: Props) {
               <TabsContent value="all">
                 <ScrollArea>
                   {canView &&
-                    projects.map((project) => (
-                      <ProjectCards
-                        key={project.id}
-                        project={project}
-                        onEdit={handleEdit}
+                    (projects.length > 0 ? (
+                      projects.map((project) => (
+                        <ProjectCards
+                          key={project.id}
+                          project={project}
+                          onEdit={handleEdit}
+                        />
+                      ))
+                    ) : (
+                      <NoDataCard
+                        icon={<ListX className="h-16 w-16" />}
+                        title="No projects found"
+                        description="Create a project to get started"
                       />
                     ))}
                 </ScrollArea>
