@@ -24,7 +24,7 @@ import { CommunityDetailData } from "@/src/db/data-access/communities/query"
 import CreateChannels from "@/src/components/Dashboard/Channels/CreateChannels"
 import { useAtom, useAtomValue } from "jotai"
 import { channelStore } from "@/src/store/channel/channelStore"
-import { SelectChannel } from "@/src/db/schema"
+import { SelectChannel, SelectCommunity } from "@/src/db/schema"
 import { GetChannelsAction } from "@/src/server-actions/Channel/Channel"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
@@ -60,7 +60,24 @@ export default function CommunityDetailsClient({
   const setCurrentCommunity = useSetAtom(communityStore.selectedCommunity)
 
   useEffect(() => {
-    setCurrentCommunity(community)
+    if (community) {
+      const transformedCommunity: SelectCommunity = {
+        id: community.id,
+        title: community.title,
+        description: community.description,
+        slug: community.slug,
+        type: community.type,
+
+        category_id: community.category,
+        created_by: "unknown",
+        updated_at: null,
+        created_at: community.created_at
+          ? community.created_at.toISOString()
+          : null,
+        deleted_at: null
+      }
+      setCurrentCommunity(transformedCommunity)
+    }
   }, [community])
 
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id

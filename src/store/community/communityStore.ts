@@ -1,12 +1,12 @@
 import { atom } from "jotai"
 import { GetCommunitiesActionResponse } from "@/src/server-actions/Community/Community"
 import { PaginationType } from "@/src/components/common/types/pagination.type" // Ensure this is imported
-import { CommunityDetailData } from "@/src/db/data-access/communities/query"
+import { SelectCommunity } from "@/src/db/schema"
 
 type CommunityStoreType = {
   communities: GetCommunitiesActionResponse | null
   communityFormModalVisibility: boolean
-  selectedCommunity: CommunityDetailData | null
+  selectedCommunity: SelectCommunity | null
   refreshCommunitiesTriggerAtom: boolean
 }
 

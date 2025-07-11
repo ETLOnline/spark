@@ -41,8 +41,6 @@ interface CommunityCardProps {
 
 export default function CommunityCard({
   community,
-  showStar,
-  canManage = false,
   onEdit,
   onDelete
 }: CommunityCardProps) {
