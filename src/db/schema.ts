@@ -1199,15 +1199,6 @@ export const communityCategoriesTable = pgTable("community_categories", {
   ...timestamps
 })
 
-// export const communityCategoriesRelations = relations(
-//   communityCategoriesTable,
-//   ({ many }) => ({
-//     communities: many(communitiesTable, {
-//       relationName: "categoryToCommunity"
-//     })
-//   })
-// )
-
 export type SelectCommunityCategory =
   typeof communityCategoriesTable.$inferSelect & {
     communities?: SelectCommunity[]
