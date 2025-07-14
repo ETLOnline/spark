@@ -132,29 +132,21 @@ export default function TaskForm({
 
   useEffect(() => {
     const fetchUserById = async () => {
-      const assignToId = selectedAssignee?.[0]?.value
-      const assignById = selectedAssignor?.[0]?.value
+      const assign_to = usersList.find(
+        (u) => u?.unique_id === selectedAssignee?.[0]?.value
+      )
+      const assign_by = usersList.find(
+        (u) => u?.unique_id === selectedAssignor?.[0]?.value
+      )
 
-      const [assignToResult, assignByResult] = await Promise.all([
-        assignToId
-          ? FindUserByUniqueIdAction(assignToId)
-          : Promise.resolve(null),
-        assignById
-          ? FindUserByUniqueIdAction(assignById)
-          : Promise.resolve(null)
-      ])
-
-      if (assignToResult?.success && assignToResult.data) {
-        setAssignee(assignToResult.data)
-        form.setValue("assign_to", assignToResult.data.unique_id)
-      } else {
-        form.setValue("assign_to", "")
-        setAssignee(null)
+      if (assign_to) {
+        setAssignee(assign_to)
+        form.setValue("assign_to", assign_to.unique_id)
       }
 
-      if (assignByResult?.success && assignByResult.data) {
-        setAssignor(assignByResult.data)
-        form.setValue("assign_by", assignByResult.data.unique_id)
+      if (assign_by) {
+        setAssignor(assign_by)
+        form.setValue("assign_by", assign_by.unique_id)
       }
     }
 
@@ -163,38 +155,36 @@ export default function TaskForm({
 
   useEffect(() => {
     const fetchUserById = async () => {
-      const assignToId = selectedTask?.assign_to
-      const assignById = selectedTask?.assign_by
+      const taskAssignee = selectedTask?.assignee
+        ? selectedTask?.assignee
+        : usersList.find((u) => u?.unique_id === selectedTask?.assign_to)
+      const taskAssignor = selectedTask?.assigner
+        ? selectedTask?.assigner
+        : usersList.find((u) => u?.unique_id === selectedTask?.assign_by)
 
-      const [assignToResult, assignByResult] = await Promise.all([
-        assignToId
-          ? FindUserByUniqueIdAction(assignToId)
-          : Promise.resolve(null),
-        assignById
-          ? FindUserByUniqueIdAction(assignById)
-          : Promise.resolve(null)
-      ])
+      console.log("taskAssignee", taskAssignee)
+      console.log("taskAssignor", taskAssignor)
 
-      if (assignToResult?.success && assignToResult.data) {
-        setAssignee(assignToResult.data)
+      if (taskAssignee) {
+        setAssignee(taskAssignee)
         setSelectedAssignee([
           {
-            label: `${assignToResult.data.first_name} ${assignToResult.data.last_name}`,
-            value: assignToResult.data.unique_id
+            label: `${taskAssignee.first_name} ${taskAssignee.last_name}`,
+            value: taskAssignee.unique_id
           }
         ])
-        form.setValue("assign_to", assignToResult.data.unique_id)
+        form.setValue("assign_to", taskAssignee.unique_id)
       }
 
-      if (assignByResult?.success && assignByResult.data) {
-        setAssignor(assignByResult.data)
+      if (taskAssignor) {
+        setAssignor(taskAssignor)
         setSelectedAssignor([
           {
-            label: `${assignByResult.data.first_name} ${assignByResult.data.last_name}`,
-            value: assignByResult.data.unique_id
+            label: `${taskAssignor.first_name} ${taskAssignor.last_name}`,
+            value: taskAssignor.unique_id
           }
         ])
-        form.setValue("assign_by", assignByResult.data.unique_id)
+        form.setValue("assign_by", taskAssignor.unique_id)
       }
     }
 

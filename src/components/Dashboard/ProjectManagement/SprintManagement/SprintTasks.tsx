@@ -31,7 +31,6 @@ import { UpdateTaskAction } from "@/src/server-actions/Tasks/Task"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import TaskMoveDialog from "../Task/components/task-move-dialog"
-import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   Tooltip,
@@ -39,6 +38,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
+import { getInitials } from "@/src/utils/helpers"
 
 interface Props {
   task: SelectTask
@@ -59,19 +59,8 @@ function SprintTasks({
   const [isAlertOpen, setIsAlertOpen] = useState(false)
   const [isTaskDropDownOpen, setIsTaskDropDownOpen] = useState(false)
   const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useState(false)
-  const [assignee, setAssignee] = useState<SelectUser | null>(null)
 
   const [removeTaskLoading, , , RemoveTask] = useServerAction(UpdateTaskAction)
-
-  useEffect(() => {
-    const getUser = async () => {
-      const res = await FindUserByUniqueIdAction(task.assign_to || "")
-      if (res.success && res.data) {
-        setAssignee(res.data)
-      }
-    }
-    getUser()
-  }, [task.assign_to])
 
   function EditTask(task: SelectTask) {
     setSelectedTask(task)
@@ -167,7 +156,7 @@ function SprintTasks({
 
         <div className="col-span-3 ">
           <div
-            className="font-semibold break-words whitespace-normal cursor-pointer"
+            className="font-semibold break-words whitespace-normal line-clamp-2 cursor-pointer"
             onClick={() => EditTask(task)}
           >
             {task.task_title}
@@ -192,23 +181,23 @@ function SprintTasks({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Avatar className="h-6 w-6">
+                  <Avatar className="h-8 w-8 cursor-pointer">
                     <AvatarImage
-                      src={
-                        (assignee?.first_name ?? "") +
-                        (assignee?.last_name ?? "")
-                      }
-                      alt={assignee?.first_name}
+                      src={getInitials(
+                        `${task?.assignee?.first_name ?? ""} ${task?.assignee?.last_name ?? ""}`
+                      )}
+                      alt={task.assignee?.first_name ?? ""}
                     />
                     <AvatarFallback className="text-xs">
-                      {assignee?.first_name[0]}
-                      {assignee?.last_name[0]}
+                      {getInitials(
+                        `${task?.assignee?.first_name ?? ""} ${task?.assignee?.last_name ?? ""}`
+                      )}
                     </AvatarFallback>
                   </Avatar>
                 </TooltipTrigger>
                 <TooltipContent>
                   <span>
-                    {assignee?.first_name} {assignee?.last_name}
+                    {task.assignee?.first_name} {task.assignee?.last_name}
                   </span>
                 </TooltipContent>
               </Tooltip>
