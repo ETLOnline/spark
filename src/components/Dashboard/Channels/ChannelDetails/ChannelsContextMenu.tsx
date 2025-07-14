@@ -3,9 +3,12 @@
 import { SelectChannel } from "@/src/db/schema"
 import { useToast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { DeleteChannelAction } from "@/src/server-actions/Channel/Channel"
+import {
+  AttachChannelUserAction,
+  DeleteChannelAction
+} from "@/src/server-actions/Channel/Channel"
 import { channelStore } from "@/src/store/channel/channelStore"
-import { useSetAtom } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { useRouter } from "next/navigation"
 import {
   DropdownMenu,
@@ -14,9 +17,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/src/components/ui/dropdown-menu"
-import { Edit, Layout, MoreHorizontal, Trash2, User } from "lucide-react"
+import {
+  Edit,
+  Layout,
+  MoreHorizontal,
+  PlusCircle,
+  Trash2,
+  User
+} from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { useEffect, useState } from "react"
+import { userStore } from "@/src/store/user/userStore"
+import { isUserAdmin } from "@/src/utils/helpers"
+import { useChannelJoin } from "@/src/hooks/useChannle"
 
 interface ChannelProps {
   channel: SelectChannel
@@ -30,6 +44,12 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
   channel,
   onActionComplete
 }) => {
+  // const user = useAtomValue(userStore.AuthUser)
+  const [isChannelMember, setIsChannelMember] = useState<boolean>(false)
+  const authUser = useAtomValue(userStore.AuthUser)
+  const user = useAtomValue(userStore.Iam)
+  const isAdmin = authUser ? isUserAdmin(authUser) : false
+
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "CHANNEL",
@@ -87,6 +107,31 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
     }
   }
 
+  useEffect(() => {
+    const isMember = channel?.users?.some(
+      (u: { user_id: string }) => u.user_id === authUser?.unique_id
+    )
+
+    if (isMember) setIsChannelMember(true)
+    else {
+      setIsChannelMember(false)
+    }
+  }, [channel, authUser])
+
+  const { joinLoading, joinResult, joinError, handleJoinChannel } =
+    useChannelJoin(channel, authUser, isChannelMember)
+
+  const handleJoin = async () => {
+    try {
+      const res = await handleJoinChannel()
+      // if(res?.success) setIsChannelMember(true);
+      if (res?.success) setIsChannelMember(true)
+    } catch (error) {
+      setIsChannelMember(false)
+      console.log("error in handle join in ", error)
+    }
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -120,6 +165,15 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
           >
             <User className="mr-2 h-4 w-4" />
             Users
+          </DropdownMenuItem>
+        )}
+        {!isAdmin && (
+          <DropdownMenuItem
+            onClick={handleJoin}
+            disabled={isChannelMember || joinLoading}
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            {isChannelMember ? "Joined" : "Join"}
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />

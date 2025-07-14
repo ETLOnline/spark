@@ -19,6 +19,8 @@ import { spaceStore } from "@/src/store/space/spaceStore"
 import { SelectSpace } from "@/src/db/schema"
 import { isUserAdmin } from "@/src/utils/helpers"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { AttachChannelUserAction } from "@/src/server-actions/Channel/Channel"
+import { useChannelJoin } from "@/src/hooks/useChannle"
 
 export default function ChannelPage() {
   const [selectedChannel, setSelectedChannel] = useAtom(
@@ -31,7 +33,7 @@ export default function ChannelPage() {
     useState(false)
   const authUser = useAtomValue(userStore.AuthUser)
   const isAdmin = authUser ? isUserAdmin(authUser) : false
-
+  const [isChannelMember, setIsChannelMember] = useState<boolean>(false)
   const channelSlug = useParams().channel_slug
 
   const [spacesLoading, spacesData, spacesError, getSpaces] =
@@ -79,6 +81,30 @@ export default function ChannelPage() {
     setSpaceFormModelVisibility(true)
   }
 
+  useEffect(() => {
+    const isMember = selectedChannel?.users?.some(
+      (u: { user_id: string }) => u.user_id === authUser?.unique_id
+    )
+    if (isMember) setIsChannelMember(true)
+    else {
+      setIsChannelMember(false)
+    }
+  }, [selectedChannel, authUser])
+
+  const { joinLoading, joinResult, joinError, handleJoinChannel } =
+    useChannelJoin(selectedChannel, authUser, isChannelMember)
+
+  const handleJoin = async () => {
+    const res = await handleJoinChannel()
+
+    if (res?.success) {
+      setIsChannelMember(true)
+    } else {
+      setIsChannelMember(false)
+      console.error("Join failed:", res)
+    }
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <main className="flex-1 p-4 sm:p-6">
@@ -90,12 +116,28 @@ export default function ChannelPage() {
                 {selectedChannel?.channel_name}
               </span>
             </h1>
-            <div>
+            <div className="flex items-center gap-2">
+              {/* Show Join button for non-admins if there are joinable spaces */}
+              {!isAdmin && selectedChannel?.channel_type === "public" && (
+                <Button
+                  variant="outline"
+                  onClick={handleJoin}
+                  disabled={isChannelMember || joinLoading}
+                  className={`border-2 border-red-500 font-bold px-6 py-2 ${isChannelMember ? "bg-red-500 text-white" : "text-red-500 hover:bg-red-500 hover:text-white"}`}
+                >
+                  {isChannelMember
+                    ? "Joined"
+                    : joinLoading
+                      ? "Joining..."
+                      : "Join"}
+                </Button>
+              )}
+              {/* Admin/creator controls */}
               {(selectedChannel?.id &&
                 user &&
                 canControlChannel(selectedChannel.id, user)) ||
               canCreateSpace ? (
-                <>
+                <div className="space-x-2">
                   <CreateSpaceModal
                     spaceFormModelVisibility={spaceFormModelVisibility}
                     setSpaceFormModelVisibility={setSpaceFormModelVisibility}
@@ -104,7 +146,7 @@ export default function ChannelPage() {
                     <CirclePlus className="h-4 w-4" />
                     Create Space
                   </Button>
-                </>
+                </div>
               ) : null}
             </div>
           </div>
