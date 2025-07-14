@@ -64,6 +64,13 @@
       "when": 1751961838709,
       "tag": "0008_2025_07_08_130354__update_sprint_table",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1752071034384,
+      "tag": "0009_2025_07_09_192350__update_tasks_table",
+      "breakpoints": true
     }
   ]
 }

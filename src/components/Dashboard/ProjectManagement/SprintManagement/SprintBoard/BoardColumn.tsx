@@ -4,10 +4,6 @@ import { InsertTaskStatus, SelectSprint, SelectTask } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import BoardTaskCard from "./BoardTaskCard"
-import { TaskModal } from "../../Task/components/TaskModal"
-import { useAtomValue } from "jotai"
-import { taskStore } from "@/src/store/tasks/taskStore"
-import NoDataCard from "../../../Channels/ChannelDetails/NoDataCard"
 interface Props {
   sprint?: SelectSprint
   status?: InsertTaskStatus
