@@ -64,7 +64,7 @@ export default function TaskMoveDialog({
       })
       if (updatedTask?.success && updatedTask.data) {
         setTasks((prevTask) =>
-          prevTask.filter((task) => task.id !== updatedTask.data.id)
+          prevTask.filter((task) => task.id !== updatedTask?.data?.id)
         )
 
         toast({
