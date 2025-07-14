@@ -29,10 +29,32 @@ interface PostQueryFilters {
   orderBy?: "created_at" | "likes" | "comments"
   orderDirection?: "asc" | "desc"
   category?: string
+  globalPostsOnly?: boolean
 }
 
 export const CreatePost = async (post: InsertPost) => {
   return await db.insert(postsTable).values(post).returning()
+}
+
+export const GetPostById = async (postId: string) => {
+  try {
+    return await db.query.postsTable.findFirst({
+      where: eq(postsTable.id, postId),
+      with: {
+        author: true,
+        postComments: {
+          with: { commentor: true },
+          orderBy: [desc(commentsTable.created_at)]
+        },
+        hashtags: { with: { hashtag: true } },
+        options: { with: { votes: true } },
+        file: { with: { postFile: true } },
+        postLikes: true
+      }
+    })
+  } catch (error: any) {
+    throw new Error(error)
+  }
 }
 
 export const AddPostFileLink = async (postId: string, fileId: number) => {
@@ -137,14 +159,17 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
       orderBy = "created_at",
       orderDirection = "desc",
       entityId = "",
-      category = ""
+      category = "",
+      globalPostsOnly = false
     } = filters
     const whereClauses = [
       ...(userIds.length ? [inArray(postsTable.user_id, userIds)] : []),
       ...(category ? [eq(postsTable.category, category)] : [])
     ]
 
-    if (entityId) {
+    if (globalPostsOnly) {
+      whereClauses.push(isNull(postsTable.entity_id))
+    } else if (entityId) {
       whereClauses.push(eq(postsTable.entity_id, entityId))
     } else {
       // If entity_id is not provided, get public space ids.
@@ -164,27 +189,51 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
       )
     }
 
-    return await db.query.postsTable.findMany({
-      limit,
-      offset,
-      where: whereClauses.length ? and(...whereClauses) : undefined,
-      with: {
-        author: true,
-        postComments: {
-          with: { commentor: true },
-          limit: 5,
-          orderBy: [desc(commentsTable.created_at)]
+    if (entityId && !globalPostsOnly) {
+      return await db.query.postsTable.findMany({
+        limit,
+        offset,
+        where: whereClauses.length ? and(...whereClauses) : undefined,
+        with: {
+          author: true,
+          postComments: {
+            with: { commentor: true },
+            orderBy: [desc(commentsTable.created_at)]
+          },
+          hashtags: { with: { hashtag: true } },
+          options: { with: { votes: true } },
+          file: { with: { postFile: true } },
+          postLikes: true
         },
-        hashtags: { with: { hashtag: true } },
-        options: { with: { votes: true } },
-        file: { with: { postFile: true } },
-        postLikes: true
-      },
-      orderBy:
-        orderDirection === "desc"
-          ? [desc(postsTable[orderBy])]
-          : [postsTable[orderBy]]
-    })
+        orderBy:
+          orderDirection === "desc"
+            ? [desc(postsTable[orderBy])]
+            : [postsTable[orderBy]]
+      })
+    } else {
+      // Global posts - limit comments to 3
+      return await db.query.postsTable.findMany({
+        limit,
+        offset,
+        where: whereClauses.length ? and(...whereClauses) : undefined,
+        with: {
+          author: true,
+          postComments: {
+            with: { commentor: true },
+            limit: 3,
+            orderBy: [desc(commentsTable.created_at)]
+          },
+          hashtags: { with: { hashtag: true } },
+          options: { with: { votes: true } },
+          file: { with: { postFile: true } },
+          postLikes: true
+        },
+        orderBy:
+          orderDirection === "desc"
+            ? [desc(postsTable[orderBy])]
+            : [postsTable[orderBy]]
+      })
+    }
   } catch (error: any) {
     throw new Error(error)
   }
