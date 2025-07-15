@@ -131,7 +131,7 @@ export default function TaskForm({
   }, [selectedTask])
 
   useEffect(() => {
-    const fetchUserById = async () => {
+    const getSelectedUsers = async () => {
       const assign_to = usersList.find(
         (u) => u?.unique_id === selectedAssignee?.[0]?.value
       )
@@ -150,20 +150,17 @@ export default function TaskForm({
       }
     }
 
-    fetchUserById()
+    getSelectedUsers()
   }, [selectedAssignee, selectedAssignor])
 
   useEffect(() => {
-    const fetchUserById = async () => {
+    const LoadUsersFromTask = async () => {
       const taskAssignee = selectedTask?.assignee
         ? selectedTask?.assignee
         : usersList.find((u) => u?.unique_id === selectedTask?.assign_to)
-      const taskAssignor = selectedTask?.assigner
-        ? selectedTask?.assigner
+      const taskAssignor = selectedTask?.assignor
+        ? selectedTask?.assignor
         : usersList.find((u) => u?.unique_id === selectedTask?.assign_by)
-
-      console.log("taskAssignee", taskAssignee)
-      console.log("taskAssignor", taskAssignor)
 
       if (taskAssignee) {
         setAssignee(taskAssignee)
@@ -188,7 +185,7 @@ export default function TaskForm({
       }
     }
 
-    fetchUserById()
+    LoadUsersFromTask()
   }, [selectedTask])
 
   function IssueTypeIcon({ type }: { type: string }) {

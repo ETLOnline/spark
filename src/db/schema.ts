@@ -91,7 +91,7 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
     relationName: "taskAssignee"
   }),
   tasksCreatedBy: many(taskTable, {
-    relationName: "taskAssinor"
+    relationName: "taskAssignor"
   })
 }))
 
@@ -951,7 +951,7 @@ export const taskTable = pgTable("task", {
 export type InsertTask = typeof taskTable.$inferInsert
 export type SelectTask = typeof taskTable.$inferSelect & {
   assignee?: SelectUser | null
-  assigner?: SelectUser | null
+  assignor?: SelectUser | null
 }
 
 export const taskRelations = relations(taskTable, ({ one }) => ({
@@ -960,10 +960,10 @@ export const taskRelations = relations(taskTable, ({ one }) => ({
     references: [usersTable.unique_id],
     relationName: "taskAssignee"
   }),
-  assigner: one(usersTable, {
+  assignor: one(usersTable, {
     fields: [taskTable.assign_by],
     references: [usersTable.unique_id],
-    relationName: "taskAssinor"
+    relationName: "taskAssignor"
   })
 }))
 

@@ -24,13 +24,7 @@ export async function CreateTask(taskData: InsertTask) {
       .values(taskData)
       .returning()
 
-    const taskWithUsers = await db.query.taskTable.findFirst({
-      where: eq(taskTable.id, insertedTask.id),
-      with: {
-        assignee: true,
-        assigner: true
-      }
-    })
+    const taskWithUsers = await GetTaskById(insertedTask.id)
 
     return taskWithUsers
   } catch (e: any) {
@@ -93,7 +87,7 @@ export async function GetTasks(filters?: taskQueryFilters) {
       ],
       with: {
         assignee: true,
-        assigner: true
+        assignor: true
       }
     })
 
@@ -119,12 +113,15 @@ export async function GetTasks(filters?: taskQueryFilters) {
 
 export async function GetTaskById(taskId: string) {
   try {
-    const task = await db
-      .select()
-      .from(taskTable)
-      .where(and(isNull(taskTable.deleted_at), eq(taskTable.id, taskId)))
+    const task = await db.query.taskTable.findFirst({
+      where: and(isNull(taskTable.deleted_at), eq(taskTable.id, taskId)),
+      with: {
+        assignee: true,
+        assignor: true
+      }
+    })
 
-    return task[0]
+    return task
   } catch (e: any) {
     throw new Error(e.message)
   }
@@ -156,13 +153,7 @@ export async function UpdateTask(
       .where(eq(taskTable.id, taskId))
       .returning()
 
-    const updatedTaskWithUsers = await db.query.taskTable.findFirst({
-      where: eq(taskTable.id, UpdatedTask.id),
-      with: {
-        assignee: true,
-        assigner: true
-      }
-    })
+    const updatedTaskWithUsers = await GetTaskById(UpdatedTask.id)
 
     return updatedTaskWithUsers
   } catch (e: any) {
