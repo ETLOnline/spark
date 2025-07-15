@@ -18,7 +18,8 @@ import {
   Trash2,
   Eye,
   Lock,
-  Globe
+  Globe,
+  User
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -99,6 +100,12 @@ export default function CommunityCard({
                           Edit
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuItem asChild>
+                        <Link href={`/communities/${community.slug}/users`}>
+                          <User className="mr-2 h-4 w-4" />
+                          User
+                        </Link>
+                      </DropdownMenuItem>
                       {canView && (
                         <DropdownMenuItem asChild>
                           <Link href={`/communities/${community.slug}`}>

@@ -37,6 +37,7 @@ import { userStore } from "@/src/store/user/userStore"
 import Overlay from "../common/Overlay/OverLay"
 import { communityStore } from "@/src/store/community/communityStore"
 import { useSetAtom } from "jotai"
+import { InviteUserDialog } from "../UserListAndInvite/UserInviteDialog"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -58,6 +59,7 @@ export default function CommunityDetailsClient({
   community
 }: CommunityDetailsClientProps) {
   const setCurrentCommunity = useSetAtom(communityStore.selectedCommunity)
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
 
   useEffect(() => {
     if (community) {
@@ -247,6 +249,7 @@ export default function CommunityDetailsClient({
                   variant="outline"
                   size="sm"
                   className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  onClick={() => setIsInviteDialogOpen(true)}
                 >
                   <UserPlus className="h-4 w-4 md:mr-2" />
                   <span className="hidden md:inline">Invite</span>
@@ -284,7 +287,12 @@ export default function CommunityDetailsClient({
             {community?.category}
           </Badge>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="flex-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => setIsInviteDialogOpen(true)}
+            >
               <UserPlus className="h-4 w-4 mr-2" />
               Invite
             </Button>
@@ -306,13 +314,10 @@ export default function CommunityDetailsClient({
                     <Hash className="h-5 w-5" />
                     Channels
                   </h3>
-                  {/* PERMISSION CHECKS */}
-                  {true && ( // You might want to adjust this 'true' condition based on user roles and permissions
-                    <CreateChannels
-                      communityId={community?.id}
-                      onActionComplete={onActionComplete}
-                    />
-                  )}
+                  <CreateChannels
+                    communityId={community?.id}
+                    onActionComplete={onActionComplete}
+                  />
                 </div>
                 {loadingChannels ? (
                   <div className="flex justify-center py-8">
@@ -601,6 +606,14 @@ export default function CommunityDetailsClient({
           </div>
         </div>
       </div>
+      <InviteUserDialog
+        open={isInviteDialogOpen}
+        onOpenChange={setIsInviteDialogOpen}
+        spaceName="Platform"
+        type={["link"]}
+        entityType="community"
+        entity={community}
+      />
     </div>
   )
 }
