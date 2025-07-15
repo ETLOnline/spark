@@ -157,11 +157,17 @@ export default function ChannelUserList({
   const entityName =
     entityType === "channel"
       ? (entity as SelectChannel).channel_name
-      : (entity as SelectSpace).space_name
+      : entityType === "community"
+        ? (entity as CommunityDetailData).title
+        : (entity as SelectSpace).space_name
 
   const { permissionChecker } = usePermissionChecker(
     "scoped",
-    entityType === "channel" ? "CHANNEL" : "SPACE",
+    entityType === "channel"
+      ? "CHANNEL"
+      : entityType === "community"
+        ? "COMMUNITY"
+        : "SPACE",
     entity.id
   )
 

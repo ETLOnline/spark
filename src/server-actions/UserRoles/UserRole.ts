@@ -4,7 +4,7 @@ import {
   attachUsersToRole,
   createScopedRole,
   deleteRoleById,
-  getAllGlobalAndScopeRoles,
+  getAllGlobalRolesWithUserCount,
   getAllGlobalRoles,
   getAllPermissoins,
   getRoleByEntityTypeAndId,
@@ -63,7 +63,7 @@ export const getAllGlobalAndScopeRolesAction = CreateServerAction(
   true,
   async () => {
     try {
-      const roles = await getAllGlobalAndScopeRoles()
+      const roles = await getAllGlobalRolesWithUserCount()
       return { success: true, data: roles }
     } catch (error) {
       console.error("Error saving persona:", error)

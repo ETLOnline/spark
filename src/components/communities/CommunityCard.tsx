@@ -19,7 +19,8 @@ import {
   Eye,
   Lock,
   Globe,
-  User
+  User,
+  PlusCircle
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -32,24 +33,41 @@ import { SelectCommunity } from "@/src/db/schema"
 import Link from "next/link"
 import { getInitials } from "@/src/utils/helpers"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { useAtomValue } from "jotai"
+import { userStore } from "@/src/store/user/userStore"
+import { AttachCommunityUserAction } from "@/src/server-actions/Community/Community"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { useToast } from "@/src/hooks/use-toast"
+
 interface CommunityCardProps {
   community: SelectCommunity
   showStar?: boolean
   canManage?: boolean
   onEdit: (community: SelectCommunity) => void
   onDelete: (community: SelectCommunity) => void
+  onJoin: () => void
 }
 
 export default function CommunityCard({
   community,
   onEdit,
-  onDelete
+  onDelete,
+  onJoin
 }: CommunityCardProps) {
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "COMMUNITY",
     community.id
   )
+  const { toast } = useToast()
+  const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
+  const superAdmin = useAtomValue(userStore.SuperAdmin)
+  const isCurrentUserMember = community?.communityMembers?.some(
+    (member) => member.user_id === currentUserId
+  )
+  const [joinLoading, joinResult, joinError, attachCommunityUser] =
+    useServerAction(AttachCommunityUserAction)
+
   const allowAction = permissionChecker
     ? permissionChecker?.canAccess("community.allow.action")
     : false
@@ -62,6 +80,22 @@ export default function CommunityCard({
   const canView = permissionChecker
     ? permissionChecker?.canAccess("community.view")
     : false
+
+  const handleJoinCommunity = async () => {
+    if (community.id && currentUserId) {
+      const res = await attachCommunityUser(community.id, currentUserId)
+      if (res?.success) {
+        onJoin()
+        toast({
+          title: "Community Created",
+          description: "Your community has been created successfully.",
+          duration: 3000
+        })
+      } else {
+        console.error("Failed to join community:", res?.error)
+      }
+    }
+  }
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -81,7 +115,7 @@ export default function CommunityCard({
                 {community.title}
               </CardTitle>
               {/* Right-aligned content in the header */}
-              {allowAction && (
+              {(allowAction || community.type === "public") && (
                 <div className="flex items-center gap-2">
                   {/* Only show if canManage is true AND relevant callbacks are provided */}
                   <DropdownMenu>
@@ -98,6 +132,24 @@ export default function CommunityCard({
                         <DropdownMenuItem onClick={() => onEdit(community)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
+                        </DropdownMenuItem>
+                      )}
+                      {!superAdmin && (
+                        <DropdownMenuItem
+                          onClick={handleJoinCommunity}
+                          disabled={isCurrentUserMember || joinLoading}
+                          className={
+                            isCurrentUserMember
+                              ? "text-gray-500 cursor-not-allowed"
+                              : ""
+                          }
+                        >
+                          <PlusCircle className="mr-2 h-4 w-4" />
+                          {joinLoading
+                            ? "Joining..."
+                            : isCurrentUserMember
+                              ? "Joined"
+                              : "Join"}
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuItem asChild>
@@ -119,9 +171,7 @@ export default function CommunityCard({
                           onClick={() => onDelete(community)}
                           className="text-red-600 focus:text-red-600"
                         >
-                          <Trash2 className="mr-2 h-4 w-4" />{" "}
-                          {/* Added Trash2 icon */}
-                          Delete
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>
