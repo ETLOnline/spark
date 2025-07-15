@@ -41,8 +41,6 @@ interface CommunityCardProps {
 
 export default function CommunityCard({
   community,
-  showStar,
-  canManage = false,
   onEdit,
   onDelete
 }: CommunityCardProps) {
@@ -58,7 +56,7 @@ export default function CommunityCard({
     ? permissionChecker?.canAccess("community.update")
     : false
   const canDelete = permissionChecker
-    ? permissionChecker?.canAccess("community.update")
+    ? permissionChecker?.canAccess("community.delete")
     : false
   const canView = permissionChecker
     ? permissionChecker?.canAccess("community.view")

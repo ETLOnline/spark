@@ -72,7 +72,6 @@ export const GetChannelsAction = CreateServerAction(
       } else {
         channels = await GetChannels({
           ...filters,
-          channelType: "public",
           isPublished: true
         })
         joinedChannels = authUser?.channels
