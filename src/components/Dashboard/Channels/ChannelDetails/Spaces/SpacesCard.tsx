@@ -102,13 +102,11 @@ function SpacesCard({ space }: Props) {
           {/* {space.membersCount} {space.membersCount === 1 ? 'Member' : 'Members'} */}
           0 Members
         </Badge>
-        {canViewSpace && (
-          <Link href={`./spaces/${space.space_slug}`}>
-            <Button>
-              Launch Space <ArrowRight />
-            </Button>
-          </Link>
-        )}
+        <Link href={`./spaces/${space.space_slug}`}>
+          <Button>
+            Launch Space <ArrowRight />
+          </Button>
+        </Link>
       </CardFooter>
     </Card>
   )

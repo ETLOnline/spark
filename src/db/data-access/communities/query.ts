@@ -282,7 +282,6 @@ export async function IsCommunitySlugAvailable(
 ): Promise<boolean> {
   try {
     let whereClause: SQL<boolean> | undefined
-    console.log(communityId, "communityIdcommunityIdcommunityId")
     if (communityId) {
       whereClause = and(
         eq(communitiesTable.slug, slug),

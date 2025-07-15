@@ -59,6 +59,9 @@ function SpaceSidebar({ space }: Props) {
   const canViewProject = permissionChecker
     ? permissionChecker.canAccess("project.view")
     : false
+  const canViewSetting = permissionChecker
+    ? permissionChecker.canAccess("space.setting.update")
+    : false
 
   const hasFeaturePermission = (featureSlug: string): boolean => {
     switch (featureSlug) {
@@ -159,28 +162,33 @@ function SpaceSidebar({ space }: Props) {
           {/* Static Features */}
 
           <SidebarGroupLabel>Other</SidebarGroupLabel>
-          {spaceStaticFeatures.map((feature) => (
-            <Link
-              key={feature.slug}
-              href={feature ? getFeatureUrl(feature.slug ?? "") : "#"}
-            >
-              <SidebarMenuItem
-                className={`flex flex-row items-center gap-2 p-2 rounded
-             ${
-               pathname.includes(`${feature.slug}`) ||
-               pageType.get("page-type") === feature.slug
-                 ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                 : "hover:bg-sidebar-accent"
-             }`}
+          {spaceStaticFeatures.map((feature) => {
+            if (feature.name === "settings" && !canViewSetting) {
+              return null
+            }
+            return (
+              <Link
+                key={feature.slug}
+                href={feature ? getFeatureUrl(feature.slug ?? "") : "#"}
               >
-                <DynamicIcon
-                  name={feature.icon as IconName}
-                  className="h-4 w-4"
-                />
-                {feature.name}
-              </SidebarMenuItem>
-            </Link>
-          ))}
+                <SidebarMenuItem
+                  className={`flex flex-row items-center gap-2 p-2 rounded
+          ${
+            pathname.includes(`${feature.slug}`) ||
+            pageType.get("page-type") === feature.slug
+              ? "bg-sidebar-accent text-sidebar-accent-foreground"
+              : "hover:bg-sidebar-accent"
+          }`}
+                >
+                  <DynamicIcon
+                    name={feature.icon as IconName}
+                    className="h-4 w-4"
+                  />
+                  {feature.name}
+                </SidebarMenuItem>
+              </Link>
+            )
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

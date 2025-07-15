@@ -151,7 +151,8 @@ export async function GetChannelBySlug(channelSlug: string) {
           with: {
             features: true
           }
-        }
+        },
+        users: true
       }
     })
     return channel
