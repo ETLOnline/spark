@@ -3,7 +3,6 @@
 import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
 import { Card, CardContent, CardHeader } from "@/src/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import moment from "moment-timezone"
 import FilePost from "./post-file"
 import ImagePost from "./post-image"
 import PollPost from "./post-poll"
@@ -11,6 +10,7 @@ import TextPost from "./post-text"
 import { useAtom } from "jotai"
 import { postStore } from "@/src/store/post/postStore"
 import { useEffect } from "react"
+import { formatRelativeTime } from "@/src/utils/helpers"
 
 interface SharedPostViewProps {
   post: SelectPost | SelectFilePost | SelectPollPost
@@ -43,10 +43,7 @@ const SharedPostView: React.FC<SharedPostViewProps> = ({
             <div>
               <p className="font-semibold">{name}</p>
               <p className="text-sm text-muted-foreground">
-                {moment
-                  .utc(post.created_at || "")
-                  .local()
-                  .fromNow()}
+                {formatRelativeTime(post.created_at || "")}
               </p>
             </div>
           </div>

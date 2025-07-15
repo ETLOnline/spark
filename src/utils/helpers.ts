@@ -9,6 +9,7 @@ import {
   SelectUserRole
 } from "../db/schema"
 import { AblyClient } from "../services/realtime/AblyClient"
+import moment from "moment-timezone"
 export type RoleWithPermissions = {
   id: number
   name: string
@@ -303,4 +304,13 @@ export async function isSuperAdmin(user: SelectUser): Promise<boolean> {
     console.error("Error checking if user is super admin:", error)
     return false
   }
+}
+
+export const formatRelativeTime = (
+  dateString: string | null | undefined
+): string => {
+  return moment
+    .utc(dateString || "")
+    .local()
+    .fromNow()
 }

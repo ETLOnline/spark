@@ -11,8 +11,8 @@ import { postStore } from "@/src/store/post/postStore"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Card, CardContent, CardHeader } from "@/src/components/ui/card"
 import PostMenu from "./post-menu"
-import moment from "moment-timezone"
 import NoDataCard from "../Channels/ChannelDetails/NoDataCard"
+import { formatRelativeTime } from "@/src/utils/helpers"
 import {
   GetPostsAction,
   GetSpacePostsAction
@@ -119,10 +119,7 @@ const PostFeed: React.FC<PostFeedProps> = ({
                       <div>
                         <p className="font-semibold">{name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {moment
-                            .utc(post.created_at || "")
-                            .local()
-                            .fromNow()}
+                          {formatRelativeTime(post.created_at || "")}
                         </p>
                       </div>
                     </div>

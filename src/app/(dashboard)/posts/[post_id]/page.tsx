@@ -1,6 +1,6 @@
 import { GetPostByIdAction } from "@/src/server-actions/Post/Post"
-import { notFound } from "next/navigation"
 import SharedPostView from "@/src/components/Dashboard/posts/SharedPostView"
+import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
 
 interface PostDetailPageProps {
   params: Promise<{
@@ -13,7 +13,7 @@ const PostDetailPage = async ({ params }: PostDetailPageProps) => {
   const result = await GetPostByIdAction(post_id)
 
   if (!result?.success || !result?.data) {
-    notFound()
+    return <NotFound />
   }
 
   return (

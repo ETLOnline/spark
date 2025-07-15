@@ -16,7 +16,7 @@ import { Separator } from "@/src/components/ui/separator"
 import PostComments from "./post-comments"
 import PostCommentForm from "./post-comment-form"
 import PostCommentsSection from "./post-comments-section"
-import { useRouter, useParams } from "next/navigation"
+import { usePostNavigation } from "@/src/hooks/usePostNavigation"
 
 type Props = {
   post: SelectPollPost
@@ -25,8 +25,7 @@ type Props = {
 
 const PollPost: React.FC<Props> = ({ post, spaceId }) => {
   const [selectedOption, setSelectedOption] = useState<string>("")
-  const router = useRouter()
-  const params = useParams()
+  const { navigateToPost } = usePostNavigation()
 
   const setPosts = useSetAtom(postStore.posts)
   const userId = useAtomValue(userStore.AuthUser)?.unique_id
@@ -37,19 +36,7 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
   const { toast } = useToast()
 
   const handleContentClick = () => {
-    if (spaceId && spaceId !== "shared") {
-      const channelSlug = params?.channel_slug as string
-      const spaceSlug = params?.space_slug as string
-      if (channelSlug && spaceSlug) {
-        router.push(
-          `/channels/${channelSlug}/spaces/${spaceSlug}?page-type=posts&post-id=${post.id}`
-        )
-      } else {
-        router.push(`/posts/${post.id}`)
-      }
-    } else {
-      router.push(`/posts/${post.id}`)
-    }
+    navigateToPost(post.id, spaceId)
   }
 
   useEffect(() => {

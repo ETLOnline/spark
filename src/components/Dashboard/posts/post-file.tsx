@@ -9,7 +9,7 @@ import PostComments from "./post-comments"
 import PostCommentForm from "./post-comment-form"
 import { formatFileSize } from "@/src/utils/helpers"
 import PostCommentsSection from "./post-comments-section"
-import { useRouter, useParams } from "next/navigation"
+import { usePostNavigation } from "@/src/hooks/usePostNavigation"
 
 type Props = {
   post: SelectFilePost
@@ -17,23 +17,10 @@ type Props = {
 }
 
 const FilePost: React.FC<Props> = ({ post, spaceId }) => {
-  const router = useRouter()
-  const params = useParams()
+  const { navigateToPost } = usePostNavigation()
 
   const handleContentClick = () => {
-    if (spaceId && spaceId !== "shared") {
-      const channelSlug = params?.channel_slug as string
-      const spaceSlug = params?.space_slug as string
-      if (channelSlug && spaceSlug) {
-        router.push(
-          `/channels/${channelSlug}/spaces/${spaceSlug}?page-type=posts&post-id=${post.id}`
-        )
-      } else {
-        router.push(`/posts/${post.id}`)
-      }
-    } else {
-      router.push(`/posts/${post.id}`)
-    }
+    navigateToPost(post.id, spaceId)
   }
 
   const handleFileClick = (e: React.MouseEvent) => {
