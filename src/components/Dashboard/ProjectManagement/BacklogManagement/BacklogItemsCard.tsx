@@ -16,9 +16,15 @@ interface Props {
   searchedItem: string
   orderList: string
   limit: number
+  filters: {
+    assignee?: string | null
+    priority?: string
+    type?: string
+    status?: string
+  }
 }
 
-function BacklogItemsCard({ searchedItem, orderList, limit }: Props) {
+function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [tasks, setTasks] = useAtom(taskStore.BackLogTasks)
   const [Pagination, setPagination] = useState<PaginationType>()
@@ -37,16 +43,31 @@ function BacklogItemsCard({ searchedItem, orderList, limit }: Props) {
         page: page ? page : 1,
         limit: limit,
         searchedItem,
-        orderList
+        orderList,
+        assignee: filters.assignee,
+        priority: filters.priority,
+        type: filters.type,
+        status: filters.status
       })
       if (res?.success && res.data) {
         const tasks = res?.data
+        console.log(tasks.tasks)
         setTasks(tasks?.tasks)
         setPagination(tasks.pagination)
       }
     }
     fatchTasks()
-  }, [projectId, searchParams, searchedItem, orderList, limit])
+  }, [
+    projectId,
+    searchParams,
+    searchedItem,
+    orderList,
+    limit,
+    filters.assignee,
+    filters.priority,
+    filters.type,
+    filters.status
+  ])
 
   // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(
