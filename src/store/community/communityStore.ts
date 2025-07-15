@@ -1,7 +1,7 @@
 import { atom } from "jotai"
-import { SelectCommunity } from "@/src/db/schema"
 import { GetCommunitiesActionResponse } from "@/src/server-actions/Community/Community"
 import { PaginationType } from "@/src/components/common/types/pagination.type" // Ensure this is imported
+import { SelectCommunity } from "@/src/db/schema"
 
 type CommunityStoreType = {
   communities: GetCommunitiesActionResponse | null

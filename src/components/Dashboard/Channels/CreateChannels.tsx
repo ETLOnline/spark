@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -41,6 +41,7 @@ import { LoaderSizes } from "../../common/types/loader-types"
 import { Switch } from "../../ui/switch"
 import { useDebouncedCallback } from "use-debounce"
 import { useAuthUser } from "@/src/hooks/useAuthUser"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 const channelSchema = z.object({
   channel_name: z
@@ -53,25 +54,29 @@ const channelSchema = z.object({
     .max(150, "Description is too long"),
   channel_type: z.string().min(1, "Channel type required"),
   channel_slug: z.string().max(50, "Slug is too long"),
-  publish_channel: z.boolean().optional()
+  publish_channel: z.boolean().optional(),
+  community_id: z.string().min(1, "Community ID is required")
 })
 
 type CreateChannelsProps = {
-  onChannelCreated?: (newChannel: any) => void
-  communityId?: string
+  onChannelCreated?: (newChannel: SelectChannel) => void
   onActionComplete?: (
     actionType: "create" | "updated",
     channel: SelectChannel
   ) => void
+  communityId?: string
 }
 
 function CreateChannels({
-  communityId,
-  onActionComplete
+  onChannelCreated,
+  onActionComplete,
+  communityId
 }: CreateChannelsProps) {
   const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
+  const [editChannel, setEditChannel] = useState<boolean>(false)
   const [slugAvailableMessage, setSlugAvailableMessage] = useState<string>("")
 
+  const [channels, setChannels] = useAtom(channelStore.channels)
   const authUser = useAtomValue(userStore.AuthUser)
   const [channelFormModelVisibility, setChannelFormModelVisibility] = useAtom(
     channelStore.channelformModalVisibility
@@ -79,7 +84,6 @@ function CreateChannels({
   const [selectedChannel, setSelectedChannel] = useAtom(
     channelStore.selectedChannel
   )
-  const isEditMode = useMemo(() => selectedChannel != null, [selectedChannel])
 
   const [addChannelLoading, addChannelData, addChannelError, CreateChannel] =
     useServerAction(CreateChannelAction)
@@ -99,7 +103,15 @@ function CreateChannels({
   const { toast } = useToast()
 
   const form = useForm({
-    resolver: zodResolver(channelSchema)
+    resolver: zodResolver(channelSchema),
+    defaultValues: {
+      channel_name: "",
+      description: "",
+      channel_type: "",
+      channel_slug: "",
+      publish_channel: false,
+      community_id: communityId || ""
+    }
   })
 
   const error = form.formState.errors
@@ -111,18 +123,19 @@ function CreateChannels({
         form.clearErrors("channel_slug")
         return
       }
-      try {
-        // Only check if slug is different from the current selected channel's slug in edit mode
-        if (
-          isEditMode &&
-          currentChannelId &&
-          selectedChannel?.channel_slug === slug
-        ) {
-          setSlugAvailableMessage("") // No need to re-check if it's the original slug
-          form.clearErrors("channel_slug")
-          return
-        }
 
+      if (
+        editChannel &&
+        currentChannelId &&
+        selectedChannel?.id === currentChannelId &&
+        selectedChannel?.channel_slug === slug
+      ) {
+        setSlugAvailableMessage(`${slug} is available`)
+        form.clearErrors("channel_slug")
+        return
+      }
+
+      try {
         const result = await checkSlugAvailability(slug)
 
         if (result?.data) {
@@ -137,109 +150,113 @@ function CreateChannels({
         }
       } catch (error) {
         console.error("Error checking slug availability:", error)
+        form.setError("channel_slug", {
+          type: "manual",
+          message: `Failed to check slug availability`
+        })
         setSlugAvailableMessage("")
       }
     },
-    500 // Debounce delay in milliseconds
+    500
   )
 
-  // Effect to handle form reset and data loading when dialog visibility or selected channel changes
   useEffect(() => {
-    if (!channelFormModelVisibility) {
-      form.reset()
-      form.clearErrors()
-      setSelectedChannel(null)
-      setSlugAvailableMessage("")
-    } else if (selectedChannel) {
-      form.setValue("channel_name", selectedChannel.channel_name)
-      form.setValue("description", selectedChannel.description || "")
-      form.setValue("channel_type", selectedChannel.channel_type || "")
-      form.setValue("publish_channel", selectedChannel.publish_channel === 1)
-      form.setValue("channel_slug", selectedChannel.channel_slug || "")
-      setSlugAvailableMessage("") // Clear message initially for edit mode
-    }
-  }, [channelFormModelVisibility, selectedChannel, form, setSelectedChannel])
+    setEditChannel(selectedChannel != null)
+  }, [selectedChannel])
 
   useEffect(() => {
-    const subscription = form.watch((value, { name }) => {
-      if (name === "channel_name") {
-        const channelName = value.channel_name || ""
-        const generatedSlug = channelName
-          .trim()
-          .replaceAll(" ", "-")
-          .toLowerCase()
-
-        if (generatedSlug !== form.getValues("channel_slug") || !isEditMode) {
-          form.setValue("channel_slug", generatedSlug)
-        }
-
-        if (
-          generatedSlug &&
-          (generatedSlug !== selectedChannel?.channel_slug || !isEditMode)
-        ) {
-          debouncedCheckSlugAvailability(generatedSlug, selectedChannel?.id)
-        } else {
-          setSlugAvailableMessage("")
-          form.clearErrors("channel_slug")
-        }
-      }
+    form.reset({
+      channel_name: "",
+      description: "",
+      channel_type: "",
+      channel_slug: "",
+      publish_channel: false,
+      community_id: communityId || ""
     })
-    return () => subscription.unsubscribe()
-  }, [form, debouncedCheckSlugAvailability, isEditMode, selectedChannel])
+    if (!channelFormModelVisibility) {
+      setSelectedChannel(null)
+    }
+    form.clearErrors()
+    setSlugAvailableMessage("")
+  }, [channelFormModelVisibility, form, setSelectedChannel, communityId])
 
-  async function channelSubmit(data: z.infer<typeof channelSchema>) {
-    const publishValue = data.publish_channel ? 1 : 0
+  useEffect(() => {
+    if (selectedChannel) {
+      form.setValue("channel_name", selectedChannel.channel_name)
+      form.setValue("description", selectedChannel.description as string)
+      form.setValue("channel_type", selectedChannel.channel_type as string)
+      form.setValue("publish_channel", selectedChannel.publish_channel === 1)
+      form.setValue(
+        "community_id",
+        selectedChannel.community_id || communityId || ""
+      )
 
-    if (!isEditMode) {
-      await handleCreateChannel({
-        ...data,
-        created_by: authUser?.unique_id as string,
-        publish_channel: publishValue
-      })
+      form.setValue("channel_slug", selectedChannel.channel_slug)
+
+      debouncedCheckSlugAvailability(
+        selectedChannel.channel_slug,
+        selectedChannel.id
+      )
+    }
+  }, [selectedChannel, form, communityId, debouncedCheckSlugAvailability])
+
+  const handleChannelNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const channelName = e.target.value
+
+    form.setValue("channel_name", channelName, { shouldValidate: true })
+
+    const generatedSlug = channelName.trim().replaceAll(" ", "-").toLowerCase()
+
+    form.setValue("channel_slug", generatedSlug, { shouldValidate: true })
+
+    if (generatedSlug) {
+      debouncedCheckSlugAvailability(generatedSlug, selectedChannel?.id)
     } else {
-      await handleUpdateChannel({ ...data, publish_channel: publishValue })
+      setSlugAvailableMessage("")
+      form.clearErrors("channel_slug")
+    }
+  }
+
+  async function channelSubmit(data: any) {
+    if (data.publish_channel === true) {
+      data.publish_channel = 1
+    } else {
+      data.publish_channel = 0
+    }
+    if (!selectedChannel) {
+      await handleCreateChannel(data)
+    }
+    if (selectedChannel) {
+      await handleUpdateChannel(data)
     }
   }
 
   async function handleCreateChannel(data: InsertChannel) {
-    if (!authUser?.unique_id || !communityId) {
-      toast({
-        title: "Error",
-        description: "Missing user or community ID for channel creation.",
-        variant: "destructive",
-        duration: 3000
-      })
-      return
-    }
     try {
-      const payload: InsertChannel = {
+      const payLoad = {
         ...data,
         channel_name: data.channel_name.trim(),
-        channel_slug: data.channel_slug?.trim() || "",
-        created_by: authUser.unique_id,
-        community_id: communityId
+        channel_slug: data.channel_slug,
+        created_by: authUser?.unique_id as string,
+        community_id: data.community_id
       }
-      const createdChannel = await CreateChannel(payload)
+      const createdChannel = await CreateChannel(payLoad as InsertChannel)
 
       if (createdChannel?.success && createdChannel?.data) {
         await refreshAuthUser()
-        setChannelFormModelVisibility(false)
+        onChannelCreated?.(createdChannel.data)
         onActionComplete?.("create", createdChannel.data)
+        setChannelFormModelVisibility(false)
         toast({
           title: "Channel Created",
-          description: "Your channel has been created successfully.",
-          duration: 3000
-        })
-      } else if (createdChannel?.error) {
-        toast({
-          title: "Channel Creation Failed",
-          variant: "destructive",
+          description: "Your channel has been created successfully",
           duration: 3000
         })
       }
     } catch (error) {
+      console.error("Error creating channel:", error)
       toast({
-        title: "Unable to create channel",
+        title: "Unable to created channel",
         variant: "destructive",
         duration: 3000
       })
@@ -247,66 +264,68 @@ function CreateChannels({
   }
 
   async function handleUpdateChannel(updatedData: Partial<SelectChannel>) {
-    if (!selectedChannel?.id) {
-      toast({
-        title: "Error",
-        description: "No channel selected for update.",
-        variant: "destructive",
-        duration: 3000
-      })
-      return
-    }
     try {
-      const payload: Partial<SelectChannel> = {
+      const payLoad = {
         ...updatedData,
-        channel_name: updatedData.channel_name?.trim() || "",
-        channel_slug: updatedData.channel_slug?.trim() || ""
+        channel_name: updatedData?.channel_name?.trim() || "",
+
+        channel_slug: form.getValues("channel_slug"),
+        community_id: updatedData?.community_id
       }
-      const updatedChannel = await UpdateChannel(selectedChannel.id, payload)
-      if (updatedChannel?.success && updatedChannel.data) {
+      if (!selectedChannel?.id) return
+      const updatedChannel = await UpdateChannel(selectedChannel.id, payLoad)
+      if (
+        updatedChannel?.success &&
+        updatedChannel.data &&
+        !(updatedChannel.data instanceof Error)
+      ) {
         setChannelFormModelVisibility(false)
         onActionComplete?.("updated", updatedChannel.data as SelectChannel)
         toast({
-          title: "Channel Updated",
-          description: "Your channel has been updated successfully.",
-          duration: 3000
-        })
-      } else if (updatedChannel?.error) {
-        toast({
-          title: "Channel Update Failed",
-          variant: "destructive",
-          duration: 3000
+          title: "Channel updated",
+          description: "Your channel successfully updated.",
+          duration: 300
         })
       }
     } catch (error) {
-      console.error("Failed to update channel:", error)
+      console.error("Error updating channel:", error)
       toast({
         title: "Unable to update channel",
-        description: "An unexpected error occurred.",
         variant: "destructive",
         duration: 3000
       })
     }
   }
-
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "COMMUNITY",
+    communityId
+  )
+  const canCreteChannel = permissionChecker
+    ? permissionChecker.canAccess("channel.create")
+    : false
   return (
     <Dialog
       open={channelFormModelVisibility}
-      onOpenChange={setChannelFormModelVisibility}
+      onOpenChange={(open) => {
+        setChannelFormModelVisibility(open)
+      }}
     >
       <DialogTrigger asChild>
-        <Button>
-          <CirclePlus className=" h-4 w-4" />
-          Create Channel
-        </Button>
+        {canCreteChannel && (
+          <Button>
+            <CirclePlus className=" h-4 w-4" />
+            Create Channel
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {isEditMode ? "Edit Channel" : "Create Channel"}
+            {editChannel === true ? "Edit Channel" : "Create Channel"}
           </DialogTitle>
           <DialogDescription>
-            {isEditMode
+            {editChannel === true
               ? "You can edit your channel."
               : "You can create Channels."}
           </DialogDescription>
@@ -322,7 +341,13 @@ function CreateChannels({
                     defaultValue=""
                     control={form.control}
                     render={({ field }) => (
-                      <Input id="channel_name" {...field} />
+                      <Input
+                        id="channel_name"
+                        {...field}
+                        onChange={(e) => {
+                          handleChannelNameChange(e)
+                        }}
+                      />
                     )}
                   />
                 </div>
@@ -442,15 +467,28 @@ function CreateChannels({
                 />
               </div>
             </div>
+
+            {/* HIDDEN COMMUNITY_ID FIELD */}
+            <Controller
+              name="community_id"
+              control={form.control}
+              render={({ field }) => <input type="hidden" {...field} />}
+            />
           </div>
           <DialogFooter>
-            <Button
-              type="submit"
-              loading={isEditMode ? addUpdateChannelLoading : addChannelLoading}
-              disabled={!!error.channel_slug?.message}
-            >
-              {isEditMode ? "Save Changes" : "Create Channel"}
-            </Button>
+            {editChannel === true ? (
+              <Button type="submit" loading={addUpdateChannelLoading}>
+                Save
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                loading={addChannelLoading}
+                disabled={error.channel_slug?.message ? true : false}
+              >
+                Create
+              </Button>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>

@@ -24,7 +24,7 @@ import { CommunityDetailData } from "@/src/db/data-access/communities/query"
 import CreateChannels from "@/src/components/Dashboard/Channels/CreateChannels"
 import { useAtom, useAtomValue } from "jotai"
 import { channelStore } from "@/src/store/channel/channelStore"
-import { SelectChannel } from "@/src/db/schema"
+import { SelectChannel, SelectCommunity } from "@/src/db/schema"
 import { GetChannelsAction } from "@/src/server-actions/Channel/Channel"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
@@ -34,6 +34,9 @@ import { useSearchParams } from "next/navigation"
 import ChannelsContextMenu from "@/src/components/Dashboard/Channels/ChannelDetails/ChannelsContextMenu"
 import Link from "next/link"
 import { userStore } from "@/src/store/user/userStore"
+import Overlay from "../common/Overlay/OverLay"
+import { communityStore } from "@/src/store/community/communityStore"
+import { useSetAtom } from "jotai"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -54,6 +57,29 @@ const demoRules = [
 export default function CommunityDetailsClient({
   community
 }: CommunityDetailsClientProps) {
+  const setCurrentCommunity = useSetAtom(communityStore.selectedCommunity)
+
+  useEffect(() => {
+    if (community) {
+      const transformedCommunity: SelectCommunity = {
+        id: community.id,
+        title: community.title,
+        description: community.description,
+        slug: community.slug,
+        type: community.type,
+
+        category_id: community.category,
+        created_by: "unknown",
+        updated_at: null,
+        created_at: community.created_at
+          ? community.created_at.toISOString()
+          : null,
+        deleted_at: null
+      }
+      setCurrentCommunity(transformedCommunity)
+    }
+  }, [community])
+
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
   const communityInitial = community?.title
@@ -146,21 +172,9 @@ export default function CommunityDetailsClient({
 
   return (
     <div className="min-h-screen bg-background relative">
-      {" "}
       {/* Added relative for the overlay positioning */}
       {showAccessDeniedOverlay && (
-        <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-4 text-center">
-          <Lock className="h-16 w-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Private Community</h2>
-          <p className="text-muted-foreground mb-6 max-w-sm">
-            This community is private. You must be a member to view its content.
-            Please request access or wait for an invitation.
-          </p>
-          {/* You can add a button here for requesting access if that's a feature */}
-          <Link href="/communities">
-            <Button>Go Back</Button>
-          </Link>
-        </div>
+        <Overlay page="Community" pageHref="/communities" />
       )}
       <div className="flex flex-col min-h-screen">
         {/* Community Header Banner */}
@@ -324,8 +338,15 @@ export default function CommunityDetailsClient({
                               <div className="flex items-center gap-3 flex-grow min-w-0">
                                 <Hash className="h-5 w-5 text-muted-foreground shrink-0" />
                                 <div className="flex flex-col min-w-0 flex-grow">
-                                  <span className="font-medium truncate">
-                                    {channel.channel_name}
+                                  <span className="flex items-center gap-2 font-medium min-w-0">
+                                    <span className="truncate">
+                                      {channel.channel_name}
+                                    </span>
+                                    {channel.channel_type === "public" ? (
+                                      <Globe className="h-4 w-4 text-green-500 shrink-0" />
+                                    ) : channel.channel_type === "private" ? (
+                                      <Lock className="h-4 w-4 text-yellow-500 shrink-0" />
+                                    ) : null}
                                   </span>
                                   <span className="text-xs text-muted-foreground mt-0.5">
                                     {channel.description ||

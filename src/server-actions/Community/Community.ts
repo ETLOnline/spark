@@ -12,23 +12,22 @@ import {
   GetCommunityById,
   getCategories
 } from "@/src/db/data-access/communities/query"
-import { isUserAdmin } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import { InsertCommunity, SelectCommunity } from "@/src/db/schema"
-import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
+import { createScopedCommunityRolesAndAssignAdmin } from "@/src/db/data-access/roles/query"
 
 export const CreateCommunityAction = CreateServerAction(
   true,
   async (communityData: InsertCommunity) => {
     try {
       const newCommunity = await CreateCommunity(communityData)
-
-      const channel = AblyClientRest.channels.get(
-        "broadcast-communities-update"
+      const result = await createScopedCommunityRolesAndAssignAdmin(
+        newCommunity.id,
+        newCommunity.title,
+        newCommunity.created_by
       )
-      await channel.publish("community-add", newCommunity)
 
       return { success: true, data: newCommunity }
     } catch (error: any) {
@@ -150,10 +149,6 @@ export const UpdateCommunityAction = CreateServerAction(
   async (communityID: string, updatedData: Partial<SelectCommunity>) => {
     try {
       const updatedCommunity = await UpdateCommunity(communityID, updatedData)
-      const channel = AblyClientRest.channels.get(
-        "broadcast-communities-update"
-      )
-      await channel.publish("community-edit", updatedCommunity)
       return { success: true, data: updatedCommunity }
     } catch (error: any) {
       console.error("Error in UpdateCommunityAction:", error)

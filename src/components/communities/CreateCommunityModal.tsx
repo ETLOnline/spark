@@ -69,6 +69,7 @@ export default function CreateCommunityModal({
   const { refreshAuthUser } = useAuthUser()
   const [editMode, setEditMode] = useState<boolean>(false)
   const [slugAvailableMessage, setSlugAvailableMessage] = useState<string>("")
+  const [currentTitle, setCurrentTitle] = useState<string>("")
 
   const [communities, setCommunities] = useAtom(communityStore.communities)
   const authUser = useAtomValue(userStore.AuthUser)
@@ -140,47 +141,9 @@ export default function CreateCommunityModal({
     1000
   )
 
-  useEffect(() => {
-    if (selectedCommunity) {
-      setEditMode(true)
-    } else {
-      setEditMode(false)
-    }
-  }, [selectedCommunity])
+  const handleTitleChange = (titleValue: string) => {
+    setCurrentTitle(titleValue)
 
-  useEffect(() => {
-    if (!communityFormModalVisibility) {
-      form.reset({
-        title: "",
-        slug: "",
-        description: "",
-        category: "",
-        type: "public"
-      })
-      form.clearErrors()
-      setSelectedCommunity(null)
-      setEditMode(false)
-      setSlugAvailableMessage("")
-    }
-  }, [communityFormModalVisibility, form, setSelectedCommunity])
-
-  useEffect(() => {
-    if (selectedCommunity) {
-      form.setValue("title", selectedCommunity.title || "")
-      form.setValue("description", selectedCommunity.description || "")
-      form.setValue("category", selectedCommunity.category_id || "")
-      form.setValue("slug", selectedCommunity.slug || "")
-      form.setValue(
-        "type",
-        selectedCommunity.type === "public" ? "public" : "private"
-      )
-
-      form.clearErrors("slug")
-    }
-  }, [selectedCommunity, form])
-
-  useEffect(() => {
-    const titleValue = form.watch("title")
     const generatedSlug = (titleValue?.trim() || "")
       .replaceAll(" ", "-")
       .toLowerCase()
@@ -218,13 +181,49 @@ export default function CreateCommunityModal({
         setSlugAvailableMessage("")
       }
     )
-  }, [
-    form.watch("title"),
-    selectedCommunity,
-    editMode,
-    debouncedCheckSlugAvailability,
-    form
-  ])
+  }
+
+  useEffect(() => {
+    if (selectedCommunity) {
+      setEditMode(true)
+    } else {
+      setEditMode(false)
+    }
+  }, [selectedCommunity])
+
+  useEffect(() => {
+    if (!communityFormModalVisibility) {
+      form.reset({
+        title: "",
+        slug: "",
+        description: "",
+        category: "",
+        type: "public"
+      })
+      form.clearErrors()
+      setSelectedCommunity(null)
+      setEditMode(false)
+      setSlugAvailableMessage("")
+      setCurrentTitle("")
+    }
+  }, [communityFormModalVisibility, form, setSelectedCommunity])
+
+  useEffect(() => {
+    if (selectedCommunity) {
+      const title = selectedCommunity.title || ""
+      setCurrentTitle(title)
+      form.setValue("title", title)
+      form.setValue("description", selectedCommunity.description || "")
+      form.setValue("category", selectedCommunity.category_id || "")
+      form.setValue("slug", selectedCommunity.slug || "")
+      form.setValue(
+        "type",
+        selectedCommunity.type === "public" ? "public" : "private"
+      )
+
+      form.clearErrors("slug")
+    }
+  }, [selectedCommunity, form])
 
   async function communitySubmit(data: CommunityFormData) {
     if (!selectedCommunity) {
@@ -387,7 +386,16 @@ export default function CreateCommunityModal({
                     name="title"
                     defaultValue=""
                     control={form.control}
-                    render={({ field }) => <Input id="title" {...field} />}
+                    render={({ field }) => (
+                      <Input
+                        id="title"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e)
+                          handleTitleChange(e.target.value)
+                        }}
+                      />
+                    )}
                   />
                 </div>
               </div>
@@ -503,7 +511,7 @@ export default function CreateCommunityModal({
               </div>
             </div>
 
-            {/* NEW: Community Type (Public/Private) Select */}
+            {/* Community Type (Public/Private) Select */}
             <div className="flex flex-col">
               <div className="flex items-center justify-between">
                 <Label htmlFor="type">Community Type</Label>
@@ -541,8 +549,8 @@ export default function CreateCommunityModal({
             {editMode === true ? (
               <Button
                 type="submit"
-                loading={addUpdateCommunityLoading} // <-- Use update loading state
-                disabled={!!error.slug?.message || isSlugAvailableLoading} // <-- Enable button, disable if slug error/loading
+                loading={addUpdateCommunityLoading}
+                disabled={!!error.slug?.message || isSlugAvailableLoading}
               >
                 Save Changes
               </Button>
