@@ -19,8 +19,14 @@ export type taskQueryFilters = {
 
 export async function CreateTask(taskData: InsertTask) {
   try {
-    const Task = await db.insert(taskTable).values(taskData).returning()
-    return Task[0]
+    const [insertedTask] = await db
+      .insert(taskTable)
+      .values(taskData)
+      .returning()
+
+    const taskWithUsers = await GetTaskById(insertedTask.id)
+
+    return taskWithUsers
   } catch (e: any) {
     throw new Error(e.message)
   }
@@ -78,7 +84,11 @@ export async function GetTasks(filters?: taskQueryFilters) {
         filters?.orderList === "desc"
           ? desc(taskTable.created_at)
           : asc(taskTable.created_at)
-      ]
+      ],
+      with: {
+        assignee: true,
+        assignor: true
+      }
     })
 
     const totalCount = await db.$count(
@@ -103,12 +113,15 @@ export async function GetTasks(filters?: taskQueryFilters) {
 
 export async function GetTaskById(taskId: string) {
   try {
-    const task = await db
-      .select()
-      .from(taskTable)
-      .where(and(isNull(taskTable.deleted_at), eq(taskTable.id, taskId)))
+    const task = await db.query.taskTable.findFirst({
+      where: and(isNull(taskTable.deleted_at), eq(taskTable.id, taskId)),
+      with: {
+        assignee: true,
+        assignor: true
+      }
+    })
 
-    return task[0]
+    return task
   } catch (e: any) {
     throw new Error(e.message)
   }
@@ -134,13 +147,15 @@ export async function UpdateTask(
   updatedData: Partial<SelectTask>
 ) {
   try {
-    const UpdatedTask = await db
+    const [UpdatedTask] = await db
       .update(taskTable)
       .set(updatedData)
       .where(eq(taskTable.id, taskId))
       .returning()
 
-    return UpdatedTask[0]
+    const updatedTaskWithUsers = await GetTaskById(UpdatedTask.id)
+
+    return updatedTaskWithUsers
   } catch (e: any) {
     throw new Error(e.message)
   }

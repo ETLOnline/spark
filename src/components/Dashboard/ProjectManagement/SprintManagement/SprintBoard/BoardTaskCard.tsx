@@ -13,6 +13,7 @@ import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { UpdateTaskAction } from "@/src/server-actions/Tasks/Task"
 import {
+  AlertCircle,
   ChevronDown,
   ChevronsDown,
   ChevronsUp,
@@ -38,7 +39,8 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
-import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
+import { projectTaskTypes } from "../../constants/projectManagment"
+import { DynamicIcon, IconName } from "lucide-react/dynamic"
 
 interface Props {
   task: SelectTask
@@ -48,19 +50,8 @@ interface Props {
 
 function BoardTaskCard({ task, onClick, setTasks }: Props) {
   const [isAlertOpen, setIsAlertOpen] = useState(false)
-  const [assignee, setAssignee] = useState<SelectUser | null>(null)
 
   const [removeTaskLoading, , , RemoveTask] = useServerAction(UpdateTaskAction)
-
-  useEffect(() => {
-    const getUser = async () => {
-      const res = await FindUserByUniqueIdAction(task.assign_to || "")
-      if (res.success && res.data) {
-        setAssignee(res.data)
-      }
-    }
-    getUser()
-  }, [task.assign_to])
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
@@ -149,6 +140,19 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
     }
   }
 
+  function IssueTypeIcon({ type }: { type: string }) {
+    const typeMap = projectTaskTypes.find((t) => t.key === type)
+    return typeMap ? (
+      <DynamicIcon
+        name={typeMap.icon as IconName}
+        className="h-4 w-4"
+        style={{ color: typeMap.iconColor }}
+      />
+    ) : (
+      <AlertCircle className="h-5 w-5" />
+    )
+  }
+
   return (
     <>
       <Card
@@ -158,7 +162,13 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
       >
         <div className="flex justify-between items-start">
           <div>
-            <h4 className="font-medium text-sm">{task.task_title}</h4>
+            <span className="text-xs flex items-center gap-2 mb-2">
+              <IssueTypeIcon type={task.task_type} />
+              <span className="text-muted-foreground">{task.task_num}</span>
+            </span>
+            <h4 className="font-medium text-sm line-clamp-2">
+              {task.task_title}
+            </h4>
             {/* <p className="text-xs text-muted-foreground mt-1">
               {task.description}
             </p> */}
@@ -188,23 +198,20 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Avatar className="h-5 w-5">
+                    <Avatar className="h-5 w-5 cursor-pointer">
                       <AvatarImage
-                        src={
-                          (assignee?.first_name ?? "") +
-                          (assignee?.last_name ?? "")
-                        }
-                        alt={assignee?.first_name}
+                        src={task.assignee?.profile_url || ""}
+                        alt={task.assignee?.first_name}
                       />
                       <AvatarFallback className="text-xs">
-                        {assignee?.first_name[0]}
-                        {assignee?.last_name[0]}
+                        {task.assignee?.first_name[0]}
+                        {task.assignee?.last_name[0]}
                       </AvatarFallback>
                     </Avatar>
                   </TooltipTrigger>
                   <TooltipContent>
                     <span>
-                      {assignee?.first_name} {assignee?.last_name}
+                      {task.assignee?.first_name} {task.assignee?.last_name}
                     </span>
                   </TooltipContent>
                 </Tooltip>
@@ -212,7 +219,9 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
             ) : (
               <CircleHelp className="h-5 w-5" />
             )}
-            <span className="text-xs">#{task.task_num}</span>
+            <span className="text-sm text-muted-foreground">
+              {task.assignee?.first_name} {task.assignee?.last_name}
+            </span>
           </div>
           {getPriorityBadge(task.task_priority)}
         </div>
