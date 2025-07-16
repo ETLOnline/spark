@@ -21,11 +21,14 @@ import { isUserAdmin } from "@/src/utils/helpers"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import Overlay from "@/src/components/common/Overlay/OverLay"
 import { communityStore } from "@/src/store/community/communityStore"
+import { AttachChannelUserAction } from "@/src/server-actions/Channel/Channel"
 
 export default function ChannelPage() {
   const community = useAtomValue(communityStore.selectedCommunity)
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
+  const [isChannelMember, setIsChannelMember] = useState<boolean>(false)
+
   const [selectedChannel, setSelectedChannel] = useAtom(
     channelStore.selectedChannel
   )
@@ -41,6 +44,37 @@ export default function ChannelPage() {
 
   const [spacesLoading, spacesData, spacesError, getSpaces] =
     useServerAction(GetSpacesAction)
+
+  const [joinLoading, joinResult, joinError, joinChannel] = useServerAction(
+    AttachChannelUserAction
+  )
+
+  useEffect(() => {
+    const isMember = selectedChannel?.users?.some(
+      (u: { user_id: string }) => u.user_id === authUser?.unique_id
+    )
+
+    if (isMember) setIsChannelMember(true)
+    else {
+      setIsChannelMember(false)
+    }
+  }, [selectedChannel, authUser])
+
+  async function handleJoinChannel() {
+    if (
+      selectedChannel?.channel_type === "public" &&
+      !isChannelMember &&
+      selectedChannel?.id &&
+      authUser?.unique_id
+    ) {
+      const res = await joinChannel(selectedChannel.id, authUser.unique_id)
+      if (res?.success) setIsChannelMember(true)
+      else {
+        setIsChannelMember(false)
+      }
+      // return { success: false, error: res?.error }
+    }
+  }
 
   useEffect(() => {
     const fetchChannel = async () => {
@@ -122,7 +156,23 @@ export default function ChannelPage() {
                   {selectedChannel?.channel_name}
                 </span>
               </h1>
-              <div>
+              <div className="flex items-center gap-2 ">
+                {!isSuperAdmin &&
+                  selectedChannel?.channel_type === "public" && (
+                    <Button
+                      variant="outline"
+                      onClick={handleJoinChannel}
+                      disabled={isChannelMember || joinLoading}
+                      className={`border-2 border-red-500 font-bold px-6 py-2 ${isChannelMember ? "bg-red-500 text-white" : "text-red-500 hover:bg-red-500 hover:text-white"}`}
+                    >
+                      {isChannelMember
+                        ? "Joined"
+                        : joinLoading
+                          ? "Joining..."
+                          : "Join"}
+                    </Button>
+                  )}
+
                 {(selectedChannel?.id &&
                   user &&
                   canControlChannel(selectedChannel.id, user)) ||
