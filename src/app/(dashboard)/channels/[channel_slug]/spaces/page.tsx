@@ -39,7 +39,6 @@ export default function ChannelPage() {
     useState(false)
   const authUser = useAtomValue(userStore.AuthUser)
   const isAdmin = authUser ? isUserAdmin(authUser) : false
-
   const channelSlug = useParams().channel_slug
 
   const [spacesLoading, spacesData, spacesError, getSpaces] =
