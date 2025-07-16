@@ -17,6 +17,7 @@ import { useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import { TaskModal } from "../../Task/components/TaskModal"
+import TaskFilters from "../../BacklogManagement/TaskFilters"
 
 interface Props {
   sprint: SelectSprint
@@ -27,6 +28,12 @@ function SprintBoardCard({ sprint }: Props) {
   const [tasks, setTasks] = useState<SelectTask[]>([])
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState<SelectTask | null>()
+  const [filters, setFilters] = useState<{
+    assignee?: string | null
+    priority?: string
+    type?: string
+    status?: string
+  }>({})
 
   const [getTaskLoading, , , GetSPrintTask] =
     useServerAction(GetSprintTasksAction)
@@ -34,14 +41,21 @@ function SprintBoardCard({ sprint }: Props) {
   useEffect(() => {
     const getTask = async () => {
       if (sprint) {
-        const tasks = await GetSPrintTask({ sprint_id: sprint.id })
+        const tasks = await GetSPrintTask({
+          project_id: sprint.projectId,
+          sprint_id: sprint.id,
+          priority: filters.priority,
+          type: filters.type,
+          status: filters.status,
+          assignee: filters.assignee
+        })
         if (tasks?.success && tasks.data) {
           setTasks(tasks.data.tasks)
         }
       }
     }
     getTask()
-  }, [sprint])
+  }, [sprint, filters.assignee, filters.priority, filters.type, filters.status])
 
   function handleOnTaskClick(task: SelectTask) {
     setSelectedTask(task)
@@ -59,6 +73,15 @@ function SprintBoardCard({ sprint }: Props) {
     }
   }, [selectedTask])
 
+  function HandleTaskFilters(filters: {
+    assignee?: string | null
+    priority?: string
+    type?: string
+    status?: string
+  }) {
+    setFilters(filters)
+  }
+
   return (
     <>
       <Card key={sprint.id} className="mb-6 ">
@@ -73,6 +96,11 @@ function SprintBoardCard({ sprint }: Props) {
             </div>
             <div className="flex items-center space-x-2 mt-2 sm:mt-0">
               <Badge>Active</Badge>
+
+              <TaskFilters
+                projectId={sprint.projectId}
+                onApplyFilters={HandleTaskFilters}
+              />
             </div>
           </div>
 
