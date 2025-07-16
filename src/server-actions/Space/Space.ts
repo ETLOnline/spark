@@ -100,7 +100,6 @@ export const GetSpacesAction = CreateServerAction(
       } else {
         const spacesResponse = await GetSpaces({
           ...filters,
-          space_type: "public",
           isPublished: true
         })
         const spaceIds = (channel?.spaces || []).map((s) => s.id)

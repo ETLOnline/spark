@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { useAtom } from "jotai"
+import { useAtom, useSetAtom } from "jotai"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   DeleteCommunityAction,
@@ -45,7 +45,7 @@ export default function CommunitiesPage() {
   const [communityFormModalVisibility, setCommunityFormModalVisibility] =
     useAtom(communityStore.communityFormModalVisibility)
 
-  const [, setSelectedCommunity] = useAtom(communityStore.selectedCommunity)
+  const setSelectedCommunity = useSetAtom(communityStore.selectedCommunity)
 
   const [refreshTrigger, setRefreshTrigger] = useAtom(
     communityStore.refreshCommunitiesTriggerAtom

@@ -768,3 +768,88 @@ export async function deleteUserRole(userId: string, roleId: number) {
     throw new Error(`Failed to delete user role: ${error.message}`)
   }
 }
+
+export async function createScopedCommunityRolesAndAssignAdmin(
+  communityId: string,
+  communityName: string,
+  creatorUserId: string
+) {
+  return await db.transaction(async (trx) => {
+    try {
+      const defaultRoleSlugs = [
+        "community_admin",
+        "community_editor",
+        "community_viewer"
+      ]
+      const defaultRoles = await getDefaultRolesBySlugs(defaultRoleSlugs)
+      const createdScopedRoles: {
+        id: number
+        name: string
+        slug: string | null
+      }[] = []
+
+      for (const getDefaultRole of defaultRoles) {
+        const roleName = getDefaultRole.name || "Default Community Role"
+        const createRoleName = `${communityName} ${roleName}` // Naming convention for community roles
+        const newScopedRole = await createScopedRole({
+          name: createRoleName,
+          roleSlug: getDefaultRole.slug,
+          entityType: "COMMUNITY",
+          entityId: communityId
+        })
+
+        if (!newScopedRole) {
+          throw new Error(
+            `Failed to create scoped role for ${getDefaultRole.name}.`
+          )
+        }
+
+        const newScopedRoleId = newScopedRole.id
+        createdScopedRoles.push(newScopedRole)
+
+        // Copy permissions
+        if (getDefaultRole.permissions.length > 0) {
+          const rolePermissionsToInsert = getDefaultRole.permissions.map(
+            (rp) => ({
+              role_id: newScopedRoleId,
+              permission_id: rp.permission_id
+            })
+          )
+          await trx.insert(rolePermissionsTable).values(rolePermissionsToInsert)
+        }
+      }
+
+      // Find the newly created "Community Admin" scoped role
+      const adminRole = createdScopedRoles.find(
+        (role) => role.slug === "community_admin"
+      )
+
+      if (adminRole) {
+        // Assign only the "Community Admin" scoped role to the community creator
+        await trx.insert(userRolesTable).values({
+          user_id: creatorUserId,
+          role_id: adminRole.id
+        })
+        console.log(
+          `Assigned scoped Community Admin role (${adminRole.name}) to user ${creatorUserId} for community ${communityId}.`
+        )
+      } else {
+        console.warn(
+          "Scoped Community Admin role not found after creation. User not assigned as admin."
+        )
+      }
+
+      return {
+        success: true,
+        createdRoles: createdScopedRoles,
+        adminRole: adminRole
+      }
+    } catch (error: any) {
+      console.error("Error in createScopedCommunityRolesAndAssignAdmin:", error)
+      trx.rollback()
+      throw new Error(
+        `Failed to create scoped community roles: ${error.message}`
+      )
+    }
+  })
+}

@@ -36,6 +36,9 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
     channel?.id
   )
 
+  const canViewActions = permissionChecker
+    ? permissionChecker?.canAccess("channel.allow.action")
+    : false
   const canEdit = permissionChecker
     ? permissionChecker?.canAccess("channel.update")
     : false
@@ -88,52 +91,54 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <MoreHorizontal className="h-5 w-5" />
-          <span className="sr-only">More options</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {(canViewSpace || channel.channel_type === "public") && (
-          <DropdownMenuItem
-            onClick={() =>
-              router.push(`/channels/${channel.channel_slug}/spaces`)
-            }
-          >
-            <Layout className="mr-2 h-4 w-4" />
-            View Spaces
-          </DropdownMenuItem>
-        )}
-        {canEdit && (
-          <DropdownMenuItem onClick={() => editChannel(channel)}>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </DropdownMenuItem>
-        )}
-        {canViewUser && (
-          <DropdownMenuItem
-            onClick={() =>
-              router.push(`/channels/${channel.channel_slug}/users`)
-            }
-          >
-            <User className="mr-2 h-4 w-4" />
-            Users
-          </DropdownMenuItem>
-        )}
-        <DropdownMenuSeparator />
-        {canDeletChannel && (
-          <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
-            onClick={() => handleDeleteChannel(channel)}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </DropdownMenuItem>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    canViewActions && (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon">
+            <MoreHorizontal className="h-5 w-5" />
+            <span className="sr-only">More options</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {(canViewSpace || channel.channel_type === "public") && (
+            <DropdownMenuItem
+              onClick={() =>
+                router.push(`/channels/${channel.channel_slug}/spaces`)
+              }
+            >
+              <Layout className="mr-2 h-4 w-4" />
+              View Spaces
+            </DropdownMenuItem>
+          )}
+          {canEdit && (
+            <DropdownMenuItem onClick={() => editChannel(channel)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+          )}
+          {canViewUser && (
+            <DropdownMenuItem
+              onClick={() =>
+                router.push(`/channels/${channel.channel_slug}/users`)
+              }
+            >
+              <User className="mr-2 h-4 w-4" />
+              Users
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuSeparator />
+          {canDeletChannel && (
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() => handleDeleteChannel(channel)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
   )
 }
 
