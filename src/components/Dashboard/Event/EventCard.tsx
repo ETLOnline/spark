@@ -88,6 +88,7 @@ const EventCard = ({ event }: EventcardProps) => {
             onClick={() => {
               openDialog(event)
             }}
+            className="text-primary"
           >
             Edit
           </Button>
@@ -140,7 +141,7 @@ const EventCard = ({ event }: EventcardProps) => {
         </div>
       </CardContent>
       <CardFooter className="justify-end">
-        <Button>Register</Button>
+        <Button className="text-primary">Register</Button>
       </CardFooter>
     </Card>
   )

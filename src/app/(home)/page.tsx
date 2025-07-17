@@ -74,25 +74,25 @@ const stats = [
     number: "15,000+",
     label: "Active Students",
     icon: Users,
-    color: "from-blue-500 to-cyan-500"
+    color: "bg-purple-600"
   },
   {
     number: "800+",
     label: "Industry Mentors",
     icon: Briefcase,
-    color: "from-purple-500 to-pink-500"
+    color: "bg-orange-500"
   },
   {
     number: "75+",
     label: "Universities",
     icon: GraduationCap,
-    color: "from-green-500 to-emerald-500"
+    color: "bg-emerald-400"
   },
   {
     number: "2,500+",
     label: "Projects Launched",
     icon: Target,
-    color: "from-orange-500 to-red-500"
+    color: "bg-indigo-600"
   }
 ]
 
@@ -109,7 +109,7 @@ const communityStats = [
       { label: "Other Tech Fields", count: "1,000", percentage: 7 }
     ],
     icon: GraduationCap,
-    color: "from-blue-500 to-cyan-500"
+    color: "bg-rose-500"
   },
   {
     category: "Mentors",
@@ -122,7 +122,7 @@ const communityStats = [
       { label: "Researchers", count: "124", percentage: 14 }
     ],
     icon: Briefcase,
-    color: "from-purple-500 to-pink-500"
+    color: "bg-amber-500"
   },
   {
     category: "Universities",
@@ -133,7 +133,7 @@ const communityStats = [
       { label: "International", count: "5", percentage: 6 }
     ],
     icon: Building,
-    color: "from-green-500 to-emerald-500"
+    color: "bg-emerald-400"
   },
   {
     category: "Companies",
@@ -145,7 +145,7 @@ const communityStats = [
       { label: "Consulting Firms", count: "45", percentage: 10 }
     ],
     icon: Globe,
-    color: "from-orange-500 to-red-500"
+    color: "bg-blue-500"
   }
 ]
 
@@ -171,7 +171,7 @@ const architectureTiers = [
       "Dark/Light Themes"
     ],
     icon: Monitor,
-    color: "from-blue-500 to-cyan-500"
+    color: "bg-violet-500"
   },
   {
     tier: "Backend Layer",
@@ -187,7 +187,7 @@ const architectureTiers = [
       "Event-Driven Design"
     ],
     icon: Server,
-    color: "from-purple-500 to-pink-500"
+    color: "bg-cyan-500"
   },
   {
     tier: "Infrastructure Layer",
@@ -203,7 +203,7 @@ const architectureTiers = [
       "Performance Analytics"
     ],
     icon: Cloud,
-    color: "from-green-500 to-emerald-500"
+    color: "from-[#57ffbb] to-[#497eff]"
   }
 ]
 
@@ -214,7 +214,7 @@ const communityValues = [
     description:
       "Connect with 15,000+ students, 800+ mentors, and faculty from top universities across Pakistan",
     benefit: "Expand your circle",
-    color: "from-blue-500 to-cyan-500",
+    color: "from-[#497eff] to-[#40d5ff]",
     stats: "15,000+ connections made"
   },
   {
@@ -223,7 +223,7 @@ const communityValues = [
     description:
       "Get mentored by professionals from Google, Microsoft, Meta, and leading Pakistani tech companies",
     benefit: "Accelerate growth",
-    color: "from-purple-500 to-pink-500",
+    color: "from-[#40d5ff] to-[#57ffbb]",
     stats: "800+ expert mentors"
   },
   {
@@ -232,7 +232,7 @@ const communityValues = [
     description:
       "Collaborate on industry-sponsored projects and build a portfolio that gets you hired",
     benefit: "Gain experience",
-    color: "from-green-500 to-emerald-500",
+    color: "from-[#57ffbb] to-[#497eff]",
     stats: "2,500+ projects completed"
   },
   {
@@ -241,7 +241,7 @@ const communityValues = [
     description:
       "Get certified skills, badges, and recommendations that boost your career prospects",
     benefit: "Stand out",
-    color: "from-orange-500 to-red-500",
+    color: "from-[#497eff] to-[#40d5ff]",
     stats: "5,000+ skills validated"
   }
 ]
@@ -253,7 +253,7 @@ const features = [
     description:
       "Join university-specific or topic-based communities with AI-powered content recommendations",
     stats: "50+ Active Communities",
-    color: "from-blue-500 to-cyan-500",
+    color: "from-[#497eff] to-[#40d5ff]",
     details: [
       "University-specific channels",
       "Topic-based discussions",
@@ -268,7 +268,7 @@ const features = [
     description:
       "Book 1-on-1 or group sessions with industry experts. Open sessions and private mentoring available",
     stats: "1000+ Sessions Monthly",
-    color: "from-purple-500 to-pink-500",
+    color: "from-[#40d5ff] to-[#57ffbb]",
     details: [
       "1-on-1 mentoring",
       "Group sessions",
@@ -283,7 +283,7 @@ const features = [
     description:
       "Collaborative workspaces with task management, file sharing, and real-time collaboration tools",
     stats: "500+ Active Projects",
-    color: "from-green-500 to-emerald-500",
+    color: "from-[#57ffbb] to-[#497eff]",
     details: [
       "Team collaboration",
       "Version control",
@@ -298,7 +298,7 @@ const features = [
     description:
       "Personalized skill development recommendations based on your goals and industry trends",
     stats: "10,000+ Paths Created",
-    color: "from-orange-500 to-red-500",
+    color: "from-[#497eff] to-[#40d5ff]",
     details: [
       "Personalized recommendations",
       "Skill assessments",
@@ -313,7 +313,7 @@ const features = [
     description:
       "Peer endorsements, project reviews, and industry-recognized certifications",
     stats: "5,000+ Skills Validated",
-    color: "from-pink-500 to-rose-500",
+    color: "from-[#40d5ff] to-[#57ffbb]",
     details: [
       "Peer endorsements",
       "Project portfolios",
@@ -328,7 +328,7 @@ const features = [
     description:
       "Job board, internship opportunities, and direct connections with hiring companies",
     stats: "200+ Job Placements",
-    color: "from-indigo-500 to-purple-500",
+    color: "from-[#497eff] to-[#40d5ff]",
     details: [
       "Job opportunities",
       "Internship programs",
@@ -441,18 +441,18 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 overflow-x-hidden">
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-blue-400/20 to-purple-400/20 dark:from-blue-400/10 dark:to-purple-400/10 rounded-full blur-3xl"
+          className="absolute top-20 left-10 w-72 h-72 bg-purple-500/20 dark:bg-purple-500/10 rounded-full blur-3xl"
           animate={{
             x: mousePosition.x * 0.02,
             y: mousePosition.y * 0.02
           }}
         />
         <motion.div
-          className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-purple-400/20 to-pink-400/20 dark:from-purple-400/10 dark:to-pink-400/10 rounded-full blur-3xl"
+          className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/20 dark:bg-cyan-500/10 rounded-full blur-3xl"
           animate={{
             x: mousePosition.x * -0.02,
             y: mousePosition.y * -0.02
@@ -468,23 +468,23 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <Badge className="mb-6 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 border-blue-200 dark:border-blue-700">
+            <Badge className="mb-6 bg-pink-500 text-white hover:bg-pink-600 border-0 shadow-lg">
               <Rocket className="w-4 h-4 mr-2" />
               🇵🇰 Empowering Pakistan's Tech Revolution
             </Badge>
           </motion.div>
 
           <motion.h1
-            className="text-6xl md:text-8xl font-bold mb-8 bg-gradient-to-r from-blue-600 via-orange-600 to-red-600 bg-clip-text text-transparent leading-tight"
+            className="text-4xl md:text-6xl font-bold mb-8 text-purple-600 dark:text-purple-400 leading-tight"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            Where Tech Dreams
+            Spark Learning. Ignite Growth
             <br />
-            <span className="inline-block text-blue-600 dark:text-blue-400">
+            <span className="inline-block text-purple-600 dark:text-pink-400">
               <Image
-                src="/logo/spark-logo-animated.gif"
+                src="/logo/Spark Logo.png"
                 width={100}
                 height={100}
                 alt="Spark logo"
@@ -499,17 +499,17 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.4 }}
           >
             Join Pakistan's largest tech community where
-            <span className="text-blue-600 dark:text-blue-400 font-bold">
+            <span className="text-purple-600 dark:text-purple-400 font-bold">
               {" "}
               15,000+ students
             </span>
             ,
-            <span className="text-green-600 dark:text-green-400 font-bold">
+            <span className="text-orange-500 dark:text-orange-400 font-bold">
               {" "}
               800+ mentors
             </span>
             , and
-            <span className="text-purple-600 dark:text-purple-400 font-bold">
+            <span className="text-teal-500 dark:text-teal-400 font-bold">
               {" "}
               75+ universities
             </span>
@@ -526,7 +526,7 @@ export default function HomePage() {
             <LinkAsButton
               href="/profile"
               size="lg"
-              className="bg-gradient-to-r from-blue-600 via-red-600 to-blue-600 hover:from-blue-700 hover:via-orange-700 hover:to-blue-700 text-white text-xl px-12 py-6 shadow-2xl transform hover:scale-105 transition-all duration-300"
+              className="bg-purple-600 hover:bg-purple-700 text-white text-xl px-12 py-6 shadow-2xl transform hover:scale-105 transition-all duration-300"
             >
               Start Your Journey
               <ArrowRight className="ml-3 w-6 h-6" />
@@ -582,7 +582,7 @@ export default function HomePage() {
           variants={floatingAnimation}
           animate="animate"
         >
-          <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-20" />
+          <div className="w-16 h-16 bg-purple-600 rounded-full opacity-30" />
         </motion.div>
         <motion.div
           className="absolute top-60 right-32 hidden lg:block"
@@ -590,16 +590,16 @@ export default function HomePage() {
           animate="animate"
           transition={{ delay: 1 }}
         >
-          <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-20" />
+          <div className="w-12 h-12 bg-cyan-500 rounded-full opacity-30" />
         </motion.div>
       </section>
 
       {/* Community Statistics Section */}
       <section
         id="community"
-        className="py-24 px-6 bg-white dark:bg-slate-900 relative overflow-hidden"
+        className="py-24 px-6 bg-orange-50 dark:bg-slate-800 relative overflow-hidden"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-950/20 dark:to-purple-950/20" />
+        <div className="absolute inset-0 bg-orange-100/30 dark:bg-orange-950/20" />
         <div className="container mx-auto relative z-10">
           <motion.div
             className="text-center mb-20"
@@ -608,16 +608,13 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <Badge className="mb-6 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700">
+            <Badge className="mb-6 bg-orange-500 text-white border-0 shadow-lg">
               <Users className="w-4 h-4 mr-2" />
               Community Insights
             </Badge>
-            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-gray-900 dark:text-white">
+            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-slate-900 dark:text-white">
               Our Growing
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                {" "}
-                Community
-              </span>
+              <span className="text-orange-600"> Community</span>
             </h2>
             <p className="text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
               Detailed breakdown of our diverse and thriving tech ecosystem
@@ -634,7 +631,7 @@ export default function HomePage() {
           >
             {communityStats.map((stat, index) => (
               <motion.div key={index} variants={fadeInUp}>
-                <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl group bg-white dark:bg-slate-800">
+                <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl group bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm hover:bg-white dark:hover:bg-slate-800 hover:scale-105">
                   <CardContent className="p-8">
                     <div
                       className={`w-16 h-16 bg-gradient-to-r ${stat.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg`}
@@ -644,7 +641,7 @@ export default function HomePage() {
                     <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
                       {stat.category}
                     </h3>
-                    <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-6">
+                    <div className="text-4xl font-bold text-slate-900 dark:text-orange-400 mb-6">
                       {stat.total}
                     </div>
                     <div className="space-y-3">
@@ -681,9 +678,9 @@ export default function HomePage() {
       {/* Universities & Industry Section */}
       <section
         id="enterprise"
-        className="py-24 px-6 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 relative overflow-hidden"
+        className="py-24 px-6 bg-teal-50 dark:bg-slate-800 relative overflow-hidden"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-100/30 to-purple-100/30 dark:from-indigo-950/10 dark:to-purple-950/10" />
+        <div className="absolute inset-0 bg-teal-100/30 dark:bg-teal-950/20" />
         <div className="container mx-auto relative z-10">
           <motion.div
             className="text-center mb-20"
@@ -692,16 +689,12 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <Badge className="mb-6 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700">
+            <Badge className="mb-6 bg-teal-500 text-white border-0 shadow-lg">
               <Building className="w-4 h-4 mr-2" />
               Enterprise Solutions
             </Badge>
-            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-gray-900 dark:text-white">
-              For Universities &
-              <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                {" "}
-                Industry
-              </span>
+            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-slate-900 dark:text-white">
+              For Universities &<span className="text-teal-600"> Industry</span>
             </h2>
             <p className="text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
               Create custom communities with enterprise-grade tools and
@@ -721,7 +714,7 @@ export default function HomePage() {
               <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl bg-white dark:bg-slate-800">
                 <CardContent className="p-10">
                   <div className="flex items-center gap-4 mb-8">
-                    <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
+                    <div className="w-16 h-16 bg-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
                       <GraduationCap className="w-8 h-8 text-white" />
                     </div>
                     <div>
@@ -741,50 +734,50 @@ export default function HomePage() {
                       </h4>
                       <ul className="space-y-3">
                         <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">
+                          <CheckCircle className="w-5 h-5 text-teal-500 mt-0.5 flex-shrink-0" />
+                          <span className="text-slate-700 dark:text-slate-300">
                             Department-specific spaces with custom branding
                           </span>
                         </li>
                         <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">
+                          <CheckCircle className="w-5 h-5 text-teal-500 mt-0.5 flex-shrink-0" />
+                          <span className="text-slate-700 dark:text-slate-300">
                             Student-faculty collaboration channels
                           </span>
                         </li>
                         <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">
+                          <CheckCircle className="w-5 h-5 text-teal-500 mt-0.5 flex-shrink-0" />
+                          <span className="text-slate-700 dark:text-slate-300">
                             Research project management tools
                           </span>
                         </li>
                         <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">
+                          <CheckCircle className="w-5 h-5 text-teal-500 mt-0.5 flex-shrink-0" />
+                          <span className="text-slate-700 dark:text-slate-300">
                             Industry partnership integration
                           </span>
                         </li>
                       </ul>
                     </div>
 
-                    <div className="bg-blue-50 dark:bg-blue-950/20 p-6 rounded-xl">
-                      <h5 className="font-semibold text-blue-900 dark:text-blue-300 mb-3">
+                    <div className="bg-teal-100 dark:bg-teal-900/30 p-6 rounded-xl border border-teal-200 dark:border-teal-700">
+                      <h5 className="font-semibold text-slate-900 dark:text-teal-300 mb-3">
                         Success Metrics
                       </h5>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                          <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">
                             40%
                           </div>
-                          <div className="text-sm text-blue-700 dark:text-blue-300">
+                          <div className="text-sm text-slate-700 dark:text-slate-300">
                             Better Placements
                           </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                          <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">
                             75+
                           </div>
-                          <div className="text-sm text-blue-700 dark:text-blue-300">
+                          <div className="text-sm text-slate-700 dark:text-slate-300">
                             Partner Universities
                           </div>
                         </div>
@@ -825,25 +818,25 @@ export default function HomePage() {
                       </h4>
                       <ul className="space-y-3">
                         <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                          <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
                           <span className="text-gray-700 dark:text-gray-300">
                             Company-branded mentorship spaces
                           </span>
                         </li>
                         <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                          <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
                           <span className="text-gray-700 dark:text-gray-300">
                             Talent pipeline development
                           </span>
                         </li>
                         <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                          <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
                           <span className="text-gray-700 dark:text-gray-300">
                             Technical interview preparation
                           </span>
                         </li>
                         <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                          <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
                           <span className="text-gray-700 dark:text-gray-300">
                             Industry project collaboration
                           </span>
@@ -890,7 +883,7 @@ export default function HomePage() {
             <Card className="hover:shadow-2xl transition-all duration-500 border-0 shadow-xl bg-white dark:bg-slate-800">
               <CardContent className="p-12">
                 <div className="text-center mb-12">
-                  <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                  <div className="w-20 h-20 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                     <Zap className="w-10 h-10 text-white" />
                   </div>
                   <h3 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -915,7 +908,7 @@ export default function HomePage() {
                         "Thread management",
                         "Rich media support"
                       ],
-                      color: "from-blue-500 to-cyan-500"
+                      color: "from-[#497eff] to-[#40d5ff]"
                     },
                     {
                       icon: BookOpen,
@@ -928,7 +921,7 @@ export default function HomePage() {
                         "Access permissions",
                         "Cloud storage"
                       ],
-                      color: "from-green-500 to-emerald-500"
+                      color: "from-[#57ffbb] to-[#497eff]"
                     },
                     {
                       icon: Network,
@@ -941,7 +934,7 @@ export default function HomePage() {
                         "Peer endorsements",
                         "Content curation"
                       ],
-                      color: "from-purple-500 to-pink-500"
+                      color: "from-[#40d5ff] to-[#57ffbb]"
                     },
                     {
                       icon: Target,
@@ -954,7 +947,7 @@ export default function HomePage() {
                         "Task tracking",
                         "Team analytics"
                       ],
-                      color: "from-orange-500 to-red-500"
+                      color: "from-[#497eff] to-[#40d5ff]"
                     }
                   ].map((feature, index) => (
                     <motion.div
@@ -1016,7 +1009,7 @@ export default function HomePage() {
                         </p>
                       </div>
                       <div className="text-center">
-                        <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <div className="w-12 h-12 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                           <TrendingUp className="w-6 h-6 text-white" />
                         </div>
                         <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
@@ -1157,7 +1150,7 @@ export default function HomePage() {
                                 key={featureIndex}
                                 className="flex items-center gap-2 text-gray-600 dark:text-gray-300"
                               >
-                                <CheckCircle className="w-4 h-4 text-green-500" />
+                                <CheckCircle className="w-4 h-4 text-emerald-400" />
                                 {feature}
                               </li>
                             ))}
@@ -1191,7 +1184,7 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <Badge className="mb-6 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700">
+            <Badge className="mb-6 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700">
               <Trophy className="w-4 h-4 mr-2" />
               Community Value
             </Badge>
@@ -1225,7 +1218,7 @@ export default function HomePage() {
                     >
                       <value.icon className="w-8 h-8 text-white" />
                     </div>
-                    <Badge className="mb-4 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700">
+                    <Badge className="mb-4 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700">
                       {value.benefit}
                     </Badge>
                     <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
@@ -1307,7 +1300,9 @@ export default function HomePage() {
                           key={detailIndex}
                           className="flex items-center gap-2"
                         >
-                          <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                          <div
+                            className={`w-2 h-2 rounded-full bg-gradient-to-r ${feature.color}`}
+                          />
                           <span className="text-sm text-gray-600 dark:text-gray-400">
                             {detail}
                           </span>
@@ -1332,7 +1327,7 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <Badge className="mb-6 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700">
+            <Badge className="mb-6 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700">
               <TrendingUp className="w-4 h-4 mr-2" />
               Our Journey
             </Badge>
@@ -1367,7 +1362,7 @@ export default function HomePage() {
                     <div
                       className={`w-20 h-20 rounded-full flex items-center justify-center shadow-xl ${
                         phase.status === "completed"
-                          ? "bg-gradient-to-r from-green-500 to-emerald-500"
+                          ? "bg-gradient-to-r from-emerald-400 to-emerald-500"
                           : phase.status === "current"
                             ? "bg-gradient-to-r from-blue-500 to-purple-500"
                             : "bg-gradient-to-r from-gray-400 to-gray-500"
@@ -1393,7 +1388,7 @@ export default function HomePage() {
                         <Badge
                           className={`${
                             phase.status === "completed"
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
                               : phase.status === "current"
                                 ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
                                 : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
@@ -1404,7 +1399,7 @@ export default function HomePage() {
                         <Badge
                           className={`${
                             phase.status === "completed"
-                              ? "bg-green-500 text-white"
+                              ? "bg-emerald-500 text-white"
                               : phase.status === "current"
                                 ? "bg-blue-500 text-white"
                                 : "bg-gray-500 text-white"
@@ -1429,7 +1424,7 @@ export default function HomePage() {
                             <div
                               className={`w-2 h-2 rounded-full ${
                                 phase.status === "completed"
-                                  ? "bg-green-500"
+                                  ? "bg-emerald-500"
                                   : phase.status === "current"
                                     ? "bg-blue-500"
                                     : "bg-gray-400"
@@ -1524,7 +1519,7 @@ export default function HomePage() {
                         <div className="text-gray-600 dark:text-gray-400 mb-2">
                           {testimonials[currentTestimonial].role}
                         </div>
-                        <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700">
+                        <Badge className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700">
                           {testimonials[currentTestimonial].achievement}
                         </Badge>
                       </div>

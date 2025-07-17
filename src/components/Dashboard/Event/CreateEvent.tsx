@@ -555,6 +555,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                       type="button"
                       loading={addDeleteEventLoading}
                       variant="destructive"
+                      className=""
                     >
                       Delete
                     </Button>
@@ -577,12 +578,20 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-                <Button loading={addUpdatedEventLoading} type="submit">
+                <Button
+                  loading={addUpdatedEventLoading}
+                  type="submit"
+                  className="text-primary"
+                >
                   Save
                 </Button>
               </>
             ) : (
-              <Button type="submit" loading={addEventLoading}>
+              <Button
+                type="submit"
+                loading={addEventLoading}
+                className="text-primary"
+              >
                 Create Event
               </Button>
             )}

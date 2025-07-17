@@ -338,7 +338,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
       {!showCard ? (
         canCreate ? (
           <Button
-            className="rounded-lg relative w-36 h-10 cursor-pointer flex items-center border group overflow-hidden"
+            className="rounded-lg relative w-36 h-10 cursor-pointer flex items-center border group overflow-hidden text-primary"
             onClick={() => setShowCard(true)}
           >
             <span className="font-semibold transform mr-3 group-hover:translate-x-20 transition-all duration-300">
@@ -357,6 +357,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
               variant="outline"
               size="icon"
               onClick={() => setShowCard(false)}
+              className="text-primary"
             >
               <X className="h-4 w-4" />
             </Button>

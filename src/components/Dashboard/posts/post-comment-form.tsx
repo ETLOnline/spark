@@ -103,7 +103,7 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
       />
       <Button
         size="sm"
-        className="mt-4"
+        className="mt-4 text-primary"
         type="submit"
         loading={createCommentLoading}
         disabled={createCommentLoading}

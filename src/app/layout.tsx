@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import localFont from "next/font/local"
+import { Inter, Fira_Code, Source_Code_Pro } from "next/font/google"
 import "./globals.css"
 import { ClerkProvider } from "@clerk/nextjs"
 import ThemeProvider from "../components/ThemeProvider/ThemeProvider"
@@ -7,15 +7,19 @@ import { Toaster } from "../components/ui/toaster"
 import { dark } from "@clerk/themes"
 import AuthInitializer from "../services/auth/AuthInitializer"
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900"
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter"
 })
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900"
+
+const firaCode = Fira_Code({
+  subsets: ["latin"],
+  variable: "--font-fira-code"
+})
+
+const sourceCodePro = Source_Code_Pro({
+  subsets: ["latin"],
+  variable: "--font-source-code-pro"
 })
 
 export const metadata: Metadata = {
@@ -33,7 +37,7 @@ export default function RootLayout({
       <AuthInitializer />
       <html lang="en" suppressHydrationWarning>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${inter.variable} ${firaCode.variable} ${sourceCodePro.variable} antialiased`}
         >
           <ThemeProvider
             attribute="class"
