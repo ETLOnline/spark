@@ -155,7 +155,6 @@ function ProjectFormModal({
 
   async function handleCreateProject(data: any) {
     try {
-      console.log("space", space)
       const payLoad = {
         ...data,
         created_by: AuthUser?.unique_id,
@@ -170,7 +169,6 @@ function ProjectFormModal({
           .format("DD-MM-YYYY")
       }
       const createdProject = await createProject(payLoad as InsertProject)
-      console.log("error", createdProject?.error)
       if (createdProject?.success && createdProject?.data) {
         await refreshAuthUser()
         if (!AuthUser?.unique_id) {

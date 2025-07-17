@@ -77,11 +77,9 @@ function ProjectCards({ project, onEdit }: Props) {
               Launch Board
             </LinkAsButton>
           )}
-          {canViewDetail && (
-            <LinkAsButton href={`/project/${project.id}/details`}>
-              View Details
-            </LinkAsButton>
-          )}
+          <LinkAsButton href={`/project/${project.id}/details`}>
+            View Details
+          </LinkAsButton>
           {canUpdate && (
             <Button onClick={() => onEdit(project)}>Edit Project</Button>
           )}
