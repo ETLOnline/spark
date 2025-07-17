@@ -4,7 +4,7 @@ import {
   attachUsersToRole,
   createScopedRole,
   deleteRoleById,
-  getAllGlobalAndScopeRoles,
+  getAllGlobalRolesWithUserCount,
   getAllGlobalRoles,
   getAllPermissoins,
   getRoleByEntityTypeAndId,
@@ -26,6 +26,7 @@ import { buildUserPerms } from "@/src/utils/clientHelper"
 import { updateChannelUser } from "@/src/db/data-access/channels/query"
 import { updateSpaceUser } from "@/src/db/data-access/spaces/query"
 import { updateProjectUserRole } from "@/src/db/data-access/project-management/query"
+import { updateCommunityUser } from "@/src/db/data-access/communities/query"
 
 export const getPersonasAction = CreateServerAction(true, async () => {
   const globalRoles = await getAllGlobalRoles()
@@ -62,7 +63,7 @@ export const getAllGlobalAndScopeRolesAction = CreateServerAction(
   true,
   async () => {
     try {
-      const roles = await getAllGlobalAndScopeRoles()
+      const roles = await getAllGlobalRolesWithUserCount()
       return { success: true, data: roles }
     } catch (error) {
       console.error("Error saving persona:", error)
@@ -152,7 +153,10 @@ export const getUsersByRoleIDAction = CreateServerAction(
 )
 export const getRoleByEntityTypeAndIdAction = CreateServerAction(
   true,
-  async (entityType: "CHANNEL" | "SPACE" | "PROJECT", id: string) => {
+  async (
+    entityType: "CHANNEL" | "SPACE" | "PROJECT" | "COMMUNITY",
+    id: string
+  ) => {
     try {
       const scopedROles = await getRoleByEntityTypeAndId(entityType, id)
       if (!scopedROles) {
@@ -170,7 +174,7 @@ export const updateUserRoleForEntityAction = CreateServerAction(
   async (
     userId: string,
     entityId: string,
-    entityType: "CHANNEL" | "SPACE" | "PROJECT",
+    entityType: "CHANNEL" | "SPACE" | "PROJECT" | "COMMUNITY",
     newRoleId: number,
     oldRoleId: number,
     newRoleName: string
@@ -184,7 +188,9 @@ export const updateUserRoleForEntityAction = CreateServerAction(
         oldRoleId
       )
       // here we will also change the eneity attach user like channel_user, space_user, project_user
-      if (entityType === "CHANNEL") {
+      if (entityType === "COMMUNITY") {
+        await updateCommunityUser(entityId, userId, { role: newRoleName })
+      } else if (entityType === "CHANNEL") {
         await updateChannelUser(entityId, userId, { role: newRoleName })
       } else if (entityType === "SPACE") {
         await updateSpaceUser(entityId, userId, { role: newRoleName })

@@ -13,8 +13,12 @@ import {
 } from "@/src/components/ui/card"
 import { Avatar, AvatarFallback } from "@/src/components/ui/avatar"
 import { Badge } from "@/src/components/ui/badge"
-import { SelectChannel, SelectSpace } from "@/src/db/schema"
-import { isEntityChannel, isEntitySpace } from "@/src/utils/helpers"
+import { SelectChannel, SelectCommunity, SelectSpace } from "@/src/db/schema"
+import {
+  isEntityChannel,
+  isEntityCommunity,
+  isEntitySpace
+} from "@/src/utils/helpers"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { AttachChannelUserAction } from "@/src/server-actions/Channel/Channel"
 import { useActionState, useEffect, useState } from "react"
@@ -24,21 +28,26 @@ import { useToast } from "@/src/hooks/use-toast"
 import { AttachSpaceUserAction } from "@/src/server-actions/Space/Space"
 import { useRouter } from "next/navigation"
 import { useAuthUser } from "@/src/hooks/useAuthUser"
+import { AttachCommunityUserAction } from "@/src/server-actions/Community/Community"
 
 interface Props {
-  entityType: "channel" | "space"
-  entity: SelectChannel | SelectSpace
+  entityType: "channel" | "space" | "community"
+  entity: SelectChannel | SelectSpace | SelectCommunity
 }
 
 const InviteScreen = ({ entityType, entity }: Props) => {
   const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
-  const entityName = isEntityChannel(entity)
-    ? entity.channel_name
-    : entity.space_name
+  const entityName = isEntityCommunity(entity)
+    ? entity.title
+    : isEntityChannel(entity)
+      ? entity.channel_name
+      : entity.space_name
   const entityDescription = entity.description
-  const entityTypeValue = isEntityChannel(entity)
-    ? entity.channel_type
-    : entity.space_type
+  const entityTypeValue = isEntityCommunity(entity)
+    ? entity.slug
+    : isEntityChannel(entity)
+      ? entity.channel_type
+      : entity.space_type
 
   const title = `Join ${entityName} ${entityType}`
   const description = `You have been invited to Join the ${entityType} to start collaborating.`
@@ -46,6 +55,12 @@ const InviteScreen = ({ entityType, entity }: Props) => {
   const { toast } = useToast()
   const router = useRouter()
   const authUser = useAtomValue(userStore.AuthUser)
+  const [
+    loadingCommunityAttach,
+    ___,
+    errorAttachingCommunity,
+    attachCommunityUser
+  ] = useServerAction(AttachCommunityUserAction)
   const [loadingChannelAttach, _, errorAttachingChannel, attachChannelUser] =
     useServerAction(AttachChannelUserAction)
   const [loadingSpaceAttach, __, errorAttachingSpace, attachSpaceUser] =
@@ -55,7 +70,11 @@ const InviteScreen = ({ entityType, entity }: Props) => {
 
   useEffect(() => {
     if (navigate) {
-      if (isEntityChannel(entity)) {
+      if (isEntityCommunity(entity)) {
+        router.push(
+          `/communities/${isEntityCommunity(entity) ? entity.slug : ""}`
+        )
+      } else if (isEntityChannel(entity)) {
         router.push(
           `/channels/${isEntityChannel(entity) ? entity.channel_slug : ""}/spaces`
         )
@@ -70,6 +89,10 @@ const InviteScreen = ({ entityType, entity }: Props) => {
   const handleJoin = async () => {
     if (authUser?.unique_id && entity.id) {
       try {
+        if (isEntityCommunity(entity)) {
+          await attachCommunityUser(entity.id, authUser.unique_id)
+        }
+
         if (isEntityChannel(entity)) {
           await attachChannelUser(entity.id, authUser.unique_id)
         }

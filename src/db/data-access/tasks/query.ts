@@ -15,6 +15,10 @@ export type taskQueryFilters = {
   searchedItem?: string
   orderList?: string
   sprint_id?: string
+  priority?: string
+  type?: string
+  assignee?: string | null
+  status?: string
 }
 
 export async function CreateTask(taskData: InsertTask) {
@@ -73,6 +77,24 @@ export async function GetTasks(filters?: taskQueryFilters) {
             like(taskTable.task_num, `%${filters.searchedItem}%`)
           )
         )
+      }
+
+      if (filters.priority) {
+        whereClauses.push(eq(taskTable.task_priority, filters.priority))
+      }
+
+      if (filters.type) {
+        whereClauses.push(eq(taskTable.task_type, filters.type))
+      }
+
+      if (filters.assignee) {
+        whereClauses.push(eq(taskTable.assign_to, filters.assignee))
+      } else if (filters.assignee === null) {
+        whereClauses.push(isNull(taskTable.assign_to))
+      }
+
+      if (filters.status) {
+        whereClauses.push(eq(taskTable.status_id, filters.status))
       }
     }
 

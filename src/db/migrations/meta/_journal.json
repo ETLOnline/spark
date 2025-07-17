@@ -71,6 +71,13 @@
       "when": 1752071034384,
       "tag": "0009_2025_07_09_192350__update_tasks_table",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1752520782687,
+      "tag": "0010_2025_07_15_001939__add_role_and_status_in_the_community_users_table",
+      "breakpoints": true
     }
   ]
 }
