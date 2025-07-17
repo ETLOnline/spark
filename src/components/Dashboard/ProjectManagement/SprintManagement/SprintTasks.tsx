@@ -148,16 +148,18 @@ function SprintTasks({
         className="grid grid-cols-12 gap-2 p-4 border-t items-center hover:bg-muted/50  transition delay-150 duration-300"
       >
         <div
-          className="col-span-2 text-sm font-medium text-muted-foreground cursor-pointer"
-          onClick={() => EditTask(task)}
+          className={`col-span-2 text-sm font-medium text-muted-foreground 
+          ${canUpdateTask ? "cursor-pointer" : "cursor-default"}`}
+          onClick={() => canUpdateTask && EditTask(task)}
         >
           #{task.task_num}
         </div>
 
         <div className="col-span-3 ">
           <div
-            className="font-semibold break-words whitespace-normal line-clamp-2 cursor-pointer"
-            onClick={() => EditTask(task)}
+            className={`font-semibold break-words whitespace-normal line-clamp-2
+            ${canUpdateTask ? "cursor-pointer" : "cursor-default"}`}
+            onClick={() => canUpdateTask && EditTask(task)}
           >
             {task.task_title}
           </div>

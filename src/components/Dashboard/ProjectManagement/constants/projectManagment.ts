@@ -124,12 +124,13 @@ export const ProjectManagementPages = [
     title: "Backlog",
     icon: "list-todo"
   },
-  {
-    key: "files",
-    link: "/files",
-    title: "Files",
-    icon: "files"
-  },
+  // For future use
+  // {
+  //   key: "files",
+  //   link: "/files",
+  //   title: "Files",
+  //   icon: "files"
+  // },
   {
     key: "teams",
     link: "/teams",
