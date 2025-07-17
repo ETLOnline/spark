@@ -1,6 +1,6 @@
 {
-  "id": "6b63c4d1-b925-486f-aa1c-4948682b3484",
-  "prevId": "d234e1db-960f-4497-9458-ef1f5a24e872",
+  "id": "e1fc63b6-595c-469b-9bc4-b22b38f8a7b9",
+  "prevId": "0912d7ba-4346-4d28-9bb4-78bf38c70a69",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -275,6 +275,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "sprint_status": {
+          "name": "sprint_status",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "varchar",
@@ -491,6 +497,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "community_id": {
+          "name": "community_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": false
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "varchar",
@@ -512,7 +524,17 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "channels_community_id_communities_id_fk": {
+          "name": "channels_community_id_communities_id_fk",
+          "tableFrom": "channels",
+          "tableTo": "communities",
+          "columnsFrom": ["community_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -679,6 +701,193 @@
       },
       "indexes": {},
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.communities": {
+      "name": "communities",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(36)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'public'"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "communities_slug_unique": {
+          "name": "communities_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": ["slug"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.community_categories": {
+      "name": "community_categories",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(36)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "community_categories_slug_unique": {
+          "name": "community_categories_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": ["slug"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.community_users": {
+      "name": "community_users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(36)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "community_id": {
+          "name": "community_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "community_users_community_id_communities_id_fk": {
+          "name": "community_users_community_id_communities_id_fk",
+          "tableFrom": "community_users",
+          "tableTo": "communities",
+          "columnsFrom": ["community_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "community_users_user_id_users_unique_id_fk": {
+          "name": "community_users_user_id_users_unique_id_fk",
+          "tableFrom": "community_users",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["unique_id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -986,207 +1195,6 @@
       },
       "indexes": {},
       "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.mentor_ratings": {
-      "name": "mentor_ratings",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "always",
-            "name": "mentor_ratings_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "mentor_id": {
-          "name": "mentor_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "reviewer_id": {
-          "name": "reviewer_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "rating": {
-          "name": "rating",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "review_text": {
-          "name": "review_text",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "mentor_ratings_mentor_id_users_unique_id_fk": {
-          "name": "mentor_ratings_mentor_id_users_unique_id_fk",
-          "tableFrom": "mentor_ratings",
-          "tableTo": "users",
-          "columnsFrom": [
-            "mentor_id"
-          ],
-          "columnsTo": [
-            "unique_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "mentor_ratings_reviewer_id_users_unique_id_fk": {
-          "name": "mentor_ratings_reviewer_id_users_unique_id_fk",
-          "tableFrom": "mentor_ratings",
-          "tableTo": "users",
-          "columnsFrom": [
-            "reviewer_id"
-          ],
-          "columnsTo": [
-            "unique_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.mentor_relationships": {
-      "name": "mentor_relationships",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "always",
-            "name": "mentor_relationships_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "mentor_id": {
-          "name": "mentor_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "mentee_id": {
-          "name": "mentee_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "request_message": {
-          "name": "request_message",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "mentor_relationships_mentor_id_users_unique_id_fk": {
-          "name": "mentor_relationships_mentor_id_users_unique_id_fk",
-          "tableFrom": "mentor_relationships",
-          "tableTo": "users",
-          "columnsFrom": [
-            "mentor_id"
-          ],
-          "columnsTo": [
-            "unique_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "mentor_relationships_mentee_id_users_unique_id_fk": {
-          "name": "mentor_relationships_mentee_id_users_unique_id_fk",
-          "tableFrom": "mentor_relationships",
-          "tableTo": "users",
-          "columnsFrom": [
-            "mentee_id"
-          ],
-          "columnsTo": [
-            "unique_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -1748,59 +1756,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "company": {
-          "name": "company",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "job_title": {
-          "name": "job_title",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "location": {
-          "name": "location",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "years_experience": {
-          "name": "years_experience",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 0
-        },
-        "languages": {
-          "name": "languages",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'[\"English\"]'::json"
-        },
-        "availability_status": {
-          "name": "availability_status",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'true'"
-        },
-        "response_time": {
-          "name": "response_time",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'< 24 hours'"
-        },
-        "mentee_count": {
-          "name": "mentee_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 0
-        },
         "updated_at": {
           "name": "updated_at",
           "type": "varchar",
@@ -1827,12 +1782,8 @@
           "name": "profile_user_id_users_unique_id_fk",
           "tableFrom": "profile",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "unique_id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["unique_id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2537,6 +2488,18 @@
           "primaryKey": false,
           "notNull": false
         },
+        "assign_to": {
+          "name": "assign_to",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "assign_by": {
+          "name": "assign_by",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "varchar",
@@ -2913,16 +2876,12 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         },
         "users_external_auth_id_unique": {
           "name": "users_external_auth_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "external_auth_id"
-          ]
+          "columns": ["external_auth_id"]
         }
       },
       "policies": {},

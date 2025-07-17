@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { useAtom } from "jotai"
+import { useAtom, useSetAtom } from "jotai"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   DeleteCommunityAction,
@@ -45,7 +45,7 @@ export default function CommunitiesPage() {
   const [communityFormModalVisibility, setCommunityFormModalVisibility] =
     useAtom(communityStore.communityFormModalVisibility)
 
-  const [, setSelectedCommunity] = useAtom(communityStore.selectedCommunity)
+  const setSelectedCommunity = useSetAtom(communityStore.selectedCommunity)
 
   const [refreshTrigger, setRefreshTrigger] = useAtom(
     communityStore.refreshCommunitiesTriggerAtom
@@ -184,6 +184,11 @@ export default function CommunitiesPage() {
     setCommunityFormModalVisibility(true)
   }
 
+  const handleJoinCommunity = () => {
+    setRefreshTrigger((prev) => !prev)
+    setCurrentPage(1)
+  }
+
   const handleDeleteCommunity = async (communityToDelete: SelectCommunity) => {
     try {
       const res = await deleteCommunity(communityToDelete)
@@ -268,6 +273,7 @@ export default function CommunitiesPage() {
         communitiesList={communitiesList}
         onEditCommunity={handleEditCommunity}
         onDeleteCommunity={handleDeleteCommunity}
+        onJoinCommunity={handleJoinCommunity}
         activeTab={activeTab}
         onTabChange={handleTabChange}
       />

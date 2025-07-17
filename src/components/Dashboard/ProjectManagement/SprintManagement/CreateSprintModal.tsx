@@ -108,27 +108,12 @@ function CreateSprintModal({
     }
   }
 
-  function handleSprintStatus(sprint: SelectSprint) {
-    const start = moment(sprint.start_date).startOf("day")
-    const end = moment(sprint.end_date).endOf("day")
-
-    let status
-    if (moment().isBefore(moment(start))) {
-      status = "upcoming"
-    } else if (moment().isAfter(moment(end))) {
-      status = "closed"
-    } else {
-      status = "active"
-    }
-    return status
-  }
-
   async function handleCreateSprint(data: SelectSprint) {
     try {
       const payload = {
         ...data,
         projectId: projectId,
-        sprint_status: handleSprintStatus(data)
+        sprint_status: "upcoming"
       }
       const sprint = await CreateSprint(payload)
       if (sprint?.success && sprint.data) {
@@ -151,7 +136,7 @@ function CreateSprintModal({
       if (selectedSprint?.id) {
         const finalData = {
           ...data,
-          sprint_status: handleSprintStatus(data)
+          sprint_status: selectedSprint.sprint_status
         }
         const UpdatedSprint = await UpdateSprint(selectedSprint.id, finalData)
         if (UpdatedSprint?.success && UpdatedSprint.data) {

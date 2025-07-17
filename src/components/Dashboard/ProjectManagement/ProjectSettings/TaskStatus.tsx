@@ -258,7 +258,6 @@ export default function TaskStatus() {
 
     if (!isChangesSaved) {
       const statusRemove = statuses.find((s) => s.name === status)
-      console.log("statusRemove", statusRemove)
       if (statusRemove?.id) {
         setRemovedStatus([statusRemove as SelectTaskStatus])
       }
@@ -268,7 +267,6 @@ export default function TaskStatus() {
   // Function to save the current status configuration
   const saveStatusConfiguration = async () => {
     setIsSaving(true)
-    console.log("status", statuses)
     try {
       // Simulate saving the status configuration, this would be replaced with an API call
       const res = await Promise.all(
@@ -281,16 +279,19 @@ export default function TaskStatus() {
           return await createTaskStatus(payload)
         })
       )
-      console.log("res", res)
-      // for (const status of statuses) {
-      //   const payload = {
-      //     ...status,
-      //     position: statuses.findIndex((s) => s.name === status.name),
-      //     project_id: projectId
-      //   }
-      //   await createTaskStatus(payload)
-      // }
-
+      setStatuses(
+        res
+          .filter(
+            (r) =>
+              r &&
+              r.success &&
+              Array.isArray(r.data) &&
+              r.data &&
+              r.data.length > 0
+          )
+          .map((r) => (r && r.data ? r.data[0] : undefined))
+          .filter((status) => status !== undefined)
+      )
       toast({
         title: "Changes saved",
         description: "Your status configuration has been saved successfully",

@@ -18,6 +18,7 @@ interface CommunityListTabsProps {
   communitiesList: GetCommunitiesActionResponse | null
   onEditCommunity: (community: SelectCommunity) => void
   onDeleteCommunity: (community: SelectCommunity) => void
+  onJoinCommunity: () => void
   activeTab: "all" | "my"
   onTabChange: (tabValue: string) => void
 }
@@ -29,7 +30,8 @@ export default function CommunityListTabs({
   onEditCommunity,
   onDeleteCommunity,
   activeTab,
-  onTabChange
+  onTabChange,
+  onJoinCommunity
 }: CommunityListTabsProps) {
   const allCommunities = communitiesList?.communities || []
   const joinedCommunities = communitiesList?.joinedCommunities || []
@@ -66,6 +68,7 @@ export default function CommunityListTabs({
                 showStar={true}
                 onEdit={onEditCommunity}
                 onDelete={onDeleteCommunity}
+                onJoin={onJoinCommunity}
               />
             ))}
           </div>
@@ -97,6 +100,7 @@ export default function CommunityListTabs({
                 showStar={true}
                 onEdit={onEditCommunity}
                 onDelete={onDeleteCommunity}
+                onJoin={onJoinCommunity}
               />
             ))}
           </div>

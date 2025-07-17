@@ -53,7 +53,6 @@ function SprintContextMenu({
   )
   const setSprintList = useSetAtom(sprintStore.sprints)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
-  // const tasks = useAtomValue(taskStore.tasks)
 
   const [deleteSprintLoading, , , DeleteSprint] =
     useServerAction(DeleteSprintAction)
@@ -132,7 +131,6 @@ function SprintContextMenu({
           prev.map((s) => (s.id === res.data.id ? res.data : s))
         )
       }
-      console.log("id", sprint.id, "data", res?.data)
     }
   }
 

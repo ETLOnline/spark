@@ -6,9 +6,10 @@ import {
   primaryKey,
   varchar,
   json,
-  unique
+  unique,
+  decimal,
+  index
 } from "drizzle-orm/pg-core"
-// import { integer, primaryKey, pgTable, varchar } from "drizzle-orm/sqlite-core"
 
 const timestamps = {
   updated_at: varchar("updated_at").$onUpdateFn(() => sql`CURRENT_TIMESTAMP`),
@@ -70,9 +71,7 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   comments: many(commentsTable, {
     relationName: "commentToUser"
   }),
-  // spaces: many(spacesTable, {
-  //   relationName: "spaceToOwner"
-  // }),
+  
   spaces: many(SpaceUsersTable, {
     relationName: "spaceUserToUser"
   }),
@@ -102,6 +101,15 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
   joinedCommunities: many(communityUsersTable, {
     relationName: "userToCommunity"
+  }),
+  projectUsers: many(ProjectUsersTable, {
+    relationName: "userToProject"
+  }),
+  tasksAssignedTo: many(taskTable, {
+    relationName: "taskAssignee"
+  }),
+  tasksCreatedBy: many(taskTable, {
+    relationName: "taskAssignor"
   })
 }))
 
@@ -150,26 +158,17 @@ export const profileTable = pgTable("profile", {
   ...timestamps
 })
 
-export const profileRelations = relations(profileTable, ({ one, many }) => ({
+export const profileRelations = relations(profileTable, ({ one }) => ({
   user: one(usersTable, {
     fields: [profileTable.user_id],
     references: [usersTable.unique_id],
     relationName: "userToProfile"
-  }),
-  mentorRatings: many(mentorRatingsTable, {
-    relationName: "profileToMentorRatings"
-  }),
-  mentorRelationships: many(mentorRelationshipsTable, {
-    relationName: "profileToMentorRelationships"
   })
-  // ...existing relations...
 }))
 
 export type InsertProfile = typeof profileTable.$inferInsert
 export type SelectProfile = typeof profileTable.$inferSelect & {
   user?: SelectUser
-  mentorRatings?: SelectMentorRating[]
-  mentorRelationships?: SelectMentorRelationship[]
 }
 
 // Mentor Ratings Table
@@ -181,10 +180,13 @@ export const mentorRatingsTable = pgTable("mentor_ratings", {
   reviewer_id: varchar("reviewer_id")
     .notNull()
     .references(() => usersTable.unique_id),
-  rating: varchar("rating").notNull(), // Store as string to handle decimals like "4.5"
+  rating: decimal("rating", { precision: 2, scale: 1 }).notNull(), // DECIMAL(2,1) for ratings 1.0-5.0
   review_text: varchar("review_text"),
   ...timestamps
-})
+}, (table) => ({
+  mentorIdIdx: index("idx_mentor_ratings_mentor_id").on(table.mentor_id),
+  reviewerIdIdx: index("idx_mentor_ratings_reviewer_id").on(table.reviewer_id),
+}))
 
 export const mentorRatingsRelations = relations(mentorRatingsTable, ({ one }) => ({
   mentor: one(usersTable, {
@@ -217,7 +219,11 @@ export const mentorRelationshipsTable = pgTable("mentor_relationships", {
   status: varchar("status").notNull().default("pending"), // pending, accepted, rejected, completed
   request_message: varchar("request_message"),
   ...timestamps
-})
+}, (table) => ({
+  mentorIdIdx: index("idx_mentor_relationships_mentor_id").on(table.mentor_id),
+  menteeIdIdx: index("idx_mentor_relationships_mentee_id").on(table.mentee_id),
+  statusIdx: index("idx_mentor_relationships_status").on(table.status),
+}))
 
 export const mentorRelationshipsRelations = relations(mentorRelationshipsTable, ({ one }) => ({
   mentor: one(usersTable, {
@@ -250,6 +256,8 @@ export const mentorFavoritesTable = pgTable("mentor_favorites", {
   ...timestamps
 }, (table) => ({
   unique_user_mentor: unique().on(table.user_id, table.mentor_id),
+  userIdIdx: index("idx_mentor_favorites_user_id").on(table.user_id),
+  mentorIdIdx: index("idx_mentor_favorites_mentor_id").on(table.mentor_id),
 }))
 
 export const mentorFavoritesRelations = relations(mentorFavoritesTable, ({ one }) => ({
@@ -1067,11 +1075,30 @@ export const taskTable = pgTable("task", {
   created_by: varchar().notNull(),
   status_id: varchar(),
   sprint_id: varchar(),
+  assign_to: varchar(),
+  assign_by: varchar(),
   ...timestamps
 })
 
 export type InsertTask = typeof taskTable.$inferInsert
-export type SelectTask = typeof taskTable.$inferSelect
+export type SelectTask = typeof taskTable.$inferSelect & {
+  assignee?: SelectUser | null
+  assignor?: SelectUser | null
+}
+
+export const taskRelations = relations(taskTable, ({ one }) => ({
+  assignee: one(usersTable, {
+    fields: [taskTable.assign_to],
+    references: [usersTable.unique_id],
+    relationName: "taskAssignee"
+  }),
+  assignor: one(usersTable, {
+    fields: [taskTable.assign_by],
+    references: [usersTable.unique_id],
+    relationName: "taskAssignor"
+  })
+}))
+
 export const SpaceChatsTable = pgTable("space_chats", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   space_id: varchar().notNull(),
@@ -1139,7 +1166,26 @@ export const ProjectUsersTable = pgTable("project_users", {
 })
 
 export type InsertProjectUser = typeof ProjectUsersTable.$inferInsert
-export type SelectProjectUser = typeof ProjectUsersTable.$inferSelect
+export type SelectProjectUser = typeof ProjectUsersTable.$inferSelect & {
+  user?: SelectUser
+  project?: SelectProject
+}
+
+export const ProjectUsersRelations = relations(
+  ProjectUsersTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [ProjectUsersTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "userToProject"
+    }),
+    project: one(projectTable, {
+      fields: [ProjectUsersTable.project_id],
+      references: [projectTable.id],
+      relationName: "projectToProjectUsers" // Must match relation name in projectTable
+    })
+  })
+)
 
 // Permissions
 export const permissionsTable = pgTable("permissions", {
@@ -1274,7 +1320,9 @@ export const communityUsersTable = pgTable("community_users", {
     .references(() => communitiesTable.id),
   user_id: varchar()
     .notNull()
-    .references(() => usersTable.unique_id)
+    .references(() => usersTable.unique_id),
+  role: varchar().default("member"),
+  status: varchar().default("active")
 })
 
 export const communityUsersRelations = relations(
@@ -1307,15 +1355,6 @@ export const communityCategoriesTable = pgTable("community_categories", {
   slug: varchar("slug").notNull().unique(),
   ...timestamps
 })
-
-export const communityCategoriesRelations = relations(
-  communityCategoriesTable,
-  ({ many }) => ({
-    communities: many(communitiesTable, {
-      relationName: "categoryToCommunity"
-    })
-  })
-)
 
 export type SelectCommunityCategory =
   typeof communityCategoriesTable.$inferSelect & {

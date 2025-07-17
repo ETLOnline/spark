@@ -268,6 +268,7 @@ export async function CreateCommunity(
 
     return newCommunity[0]
   } catch (e: any) {
+    console.log("Error creating community", e)
     console.error("Error creating community:", e)
     throw new Error(`Failed to create community: ${e.message}`)
   }
@@ -282,7 +283,6 @@ export async function IsCommunitySlugAvailable(
 ): Promise<boolean> {
   try {
     let whereClause: SQL<boolean> | undefined
-    console.log(communityId, "communityIdcommunityIdcommunityId")
     if (communityId) {
       whereClause = and(
         eq(communitiesTable.slug, slug),
@@ -391,7 +391,7 @@ export type CommunityDetailData = {
   }[]
 }
 
-export async function GetCommunityById(
+export async function GetCommunityBySlug(
   communitySlug: string
 ): Promise<CommunityDetailData | null> {
   try {
@@ -477,5 +477,109 @@ export async function getCategories(): Promise<CommunityCategory[]> {
   } catch (error) {
     console.error("Error fetching categories:", error)
     throw new Error("Failed to fetch categories")
+  }
+}
+
+export async function getCommunityUsers(communityId: string) {
+  try {
+    const communityUsers = await db.query.communityUsersTable.findMany({
+      where: eq(communityUsersTable.community_id, communityId),
+      with: {
+        user: true
+      }
+    })
+    return communityUsers
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function attachCommunityUser(
+  communityId: string,
+  userId: string,
+  user_role?: string
+) {
+  try {
+    const existingCommunityUser = await db
+      .select()
+      .from(communityUsersTable)
+      .where(
+        and(
+          eq(communityUsersTable.community_id, communityId),
+          eq(communityUsersTable.user_id, userId)
+        )
+      )
+      .limit(1)
+
+    if (existingCommunityUser.length > 0) {
+      console.log(
+        `User ${userId} already exists in community ${communityId}. Returning existing record.`
+      )
+      return existingCommunityUser[0]
+    }
+
+    const newCommunityUser = await db
+      .insert(communityUsersTable)
+      .values({
+        community_id: communityId,
+        user_id: userId,
+        role: user_role
+      })
+      .returning()
+
+    if (newCommunityUser.length > 0) {
+      return newCommunityUser[0]
+    } else {
+      throw new Error(
+        "Failed to attach community user: No record returned after insertion."
+      )
+    }
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function GetCommunityById(
+  communityId: string,
+  withCommunityUsers?: boolean
+) {
+  try {
+    const community = await db.query.communitiesTable.findFirst({
+      where: eq(communitiesTable.id, communityId),
+      with: {
+        communityMembers: withCommunityUsers
+          ? {
+              with: {
+                user: true
+              }
+            }
+          : undefined
+      }
+    })
+    return community
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
+
+export async function updateCommunityUser(
+  communityId: string,
+  userId: string,
+  updatedData: Partial<SelectCommunityUser>
+) {
+  try {
+    const communityUser = await db
+      .update(communityUsersTable)
+      .set(updatedData)
+      .where(
+        and(
+          eq(communityUsersTable.community_id, communityId),
+          eq(communityUsersTable.user_id, userId)
+        )
+      )
+      .returning()
+    return communityUser[0]
+  } catch (e: any) {
+    throw new Error(e.message)
   }
 }

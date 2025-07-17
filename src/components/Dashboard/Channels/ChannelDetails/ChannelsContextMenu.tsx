@@ -3,9 +3,12 @@
 import { SelectChannel } from "@/src/db/schema"
 import { useToast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { DeleteChannelAction } from "@/src/server-actions/Channel/Channel"
+import {
+  AttachChannelUserAction,
+  DeleteChannelAction
+} from "@/src/server-actions/Channel/Channel"
 import { channelStore } from "@/src/store/channel/channelStore"
-import { useSetAtom } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { useRouter } from "next/navigation"
 import {
   DropdownMenu,
@@ -14,9 +17,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/src/components/ui/dropdown-menu"
-import { Edit, Layout, MoreHorizontal, Trash2, User } from "lucide-react"
+import {
+  Edit,
+  Layout,
+  MoreHorizontal,
+  PlusCircle,
+  Trash2,
+  User
+} from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { userStore } from "@/src/store/user/userStore"
+import { useEffect, useState } from "react"
+import { isChannelUser } from "@/src/utils/clientHelper"
 
 interface ChannelProps {
   channel: SelectChannel
@@ -30,12 +43,47 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
   channel,
   onActionComplete
 }) => {
+  const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
+  const superAdmin = useAtomValue(userStore.SuperAdmin)
+  const [isChannelMember, setIsChannelMember] = useState<boolean>(false)
+
+  const [joinLoading, joinResult, joinError, joinChannel] = useServerAction(
+    AttachChannelUserAction
+  )
+
+  useEffect(() => {
+    const isMember = isChannelUser(channel, currentUserId as string)
+
+    if (isMember) setIsChannelMember(true)
+    else {
+      setIsChannelMember(false)
+    }
+  }, [channel, currentUserId])
+
+  const handleJoinChannel = async () => {
+    if (channel.id && currentUserId) {
+      const res = await joinChannel(channel.id, currentUserId)
+      if (res?.success) {
+        setIsChannelMember(true)
+        toast({
+          title: "Chnnel Joined",
+          duration: 3000
+        })
+      } else {
+        console.error("Failed to join Channel:", res?.error)
+      }
+    }
+  }
+
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "CHANNEL",
     channel?.id
   )
 
+  const canViewActions = permissionChecker
+    ? permissionChecker?.canAccess("channel.allow.action")
+    : false
   const canEdit = permissionChecker
     ? permissionChecker?.canAccess("channel.update")
     : false
@@ -88,52 +136,66 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <MoreHorizontal className="h-5 w-5" />
-          <span className="sr-only">More options</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {(canViewSpace || channel.channel_type === "public") && (
-          <DropdownMenuItem
-            onClick={() =>
-              router.push(`/channels/${channel.channel_slug}/spaces`)
-            }
-          >
-            <Layout className="mr-2 h-4 w-4" />
-            View Spaces
-          </DropdownMenuItem>
-        )}
-        {canEdit && (
-          <DropdownMenuItem onClick={() => editChannel(channel)}>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </DropdownMenuItem>
-        )}
-        {canViewUser && (
-          <DropdownMenuItem
-            onClick={() =>
-              router.push(`/channels/${channel.channel_slug}/users`)
-            }
-          >
-            <User className="mr-2 h-4 w-4" />
-            Users
-          </DropdownMenuItem>
-        )}
-        <DropdownMenuSeparator />
-        {canDeletChannel && (
-          <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
-            onClick={() => handleDeleteChannel(channel)}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </DropdownMenuItem>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    (canViewActions || channel?.channel_type === "public") && (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon">
+            <MoreHorizontal className="h-5 w-5" />
+            <span className="sr-only">More options</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {(canViewSpace || channel.channel_type === "public") && (
+            <DropdownMenuItem
+              onClick={() =>
+                router.push(`/channels/${channel.channel_slug}/spaces`)
+              }
+            >
+              <Layout className="mr-2 h-4 w-4" />
+              View Spaces
+            </DropdownMenuItem>
+          )}
+          {!superAdmin && (
+            <DropdownMenuItem
+              onClick={handleJoinChannel}
+              disabled={isChannelMember || joinLoading}
+              className={
+                isChannelMember ? "text-gray-500 cursor-not-allowed" : ""
+              }
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              {joinLoading ? "Joining..." : isChannelMember ? "Joined" : "Join"}
+            </DropdownMenuItem>
+          )}
+          {canEdit && (
+            <DropdownMenuItem onClick={() => editChannel(channel)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+          )}
+          {canViewUser && (
+            <DropdownMenuItem
+              onClick={() =>
+                router.push(`/channels/${channel.channel_slug}/users`)
+              }
+            >
+              <User className="mr-2 h-4 w-4" />
+              Users
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuSeparator />
+          {canDeletChannel && (
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() => handleDeleteChannel(channel)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
   )
 }
 

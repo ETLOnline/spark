@@ -9,26 +9,36 @@ import {
   UpdateCommunity,
   DeleteCommunity,
   CommunityDetailData,
-  GetCommunityById,
-  getCategories
+  GetCommunityBySlug,
+  getCategories,
+  getCommunityUsers,
+  attachCommunityUser,
+  GetCommunityById
 } from "@/src/db/data-access/communities/query"
-import { isUserAdmin } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import { InsertCommunity, SelectCommunity } from "@/src/db/schema"
-import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
+import {
+  createScopedCommunityRolesAndAssignAdmin,
+  getAndAssignViewerRoles
+} from "@/src/db/data-access/roles/query"
 
 export const CreateCommunityAction = CreateServerAction(
   true,
   async (communityData: InsertCommunity) => {
     try {
       const newCommunity = await CreateCommunity(communityData)
-
-      const channel = AblyClientRest.channels.get(
-        "broadcast-communities-update"
+      const result = await createScopedCommunityRolesAndAssignAdmin(
+        newCommunity.id,
+        newCommunity.title,
+        newCommunity.created_by
       )
-      await channel.publish("community-add", newCommunity)
+      await attachCommunityUser(
+        newCommunity.id,
+        newCommunity.created_by,
+        result.adminRole?.name
+      )
 
       return { success: true, data: newCommunity }
     } catch (error: any) {
@@ -150,10 +160,6 @@ export const UpdateCommunityAction = CreateServerAction(
   async (communityID: string, updatedData: Partial<SelectCommunity>) => {
     try {
       const updatedCommunity = await UpdateCommunity(communityID, updatedData)
-      const channel = AblyClientRest.channels.get(
-        "broadcast-communities-update"
-      )
-      await channel.publish("community-edit", updatedCommunity)
       return { success: true, data: updatedCommunity }
     } catch (error: any) {
       console.error("Error in UpdateCommunityAction:", error)
@@ -203,7 +209,7 @@ export const GetCommunityDetailsAction = CreateServerAction(
   true,
   async (communitySlug: string): Promise<CommunityDetailData | null> => {
     try {
-      const community = await GetCommunityById(communitySlug)
+      const community = await GetCommunityBySlug(communitySlug)
       return community
     } catch (error) {
       console.error("Error in getCommunityDetailsAction:", error)
@@ -221,6 +227,51 @@ export const GetCommunityCategoriesAction = CreateServerAction(
     } catch (error) {
       console.error("Error in getCommunityDetailsAction:", error)
       return []
+    }
+  }
+)
+
+export const GetCommunityUsersAction = CreateServerAction(
+  true,
+  async (communityId: string) => {
+    try {
+      const spaceUsers = await getCommunityUsers(communityId)
+      return { success: true, data: spaceUsers }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetCommunityByIdAction = CreateServerAction(
+  true,
+  async (spaceId: string, withSpaceUsers?: boolean) => {
+    try {
+      const space = await GetCommunityById(spaceId, withSpaceUsers)
+      return { success: true, data: space }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const AttachCommunityUserAction = CreateServerAction(
+  true,
+  async (communityId: string, userId: string) => {
+    try {
+      const attachUserRole = await getAndAssignViewerRoles(
+        userId,
+        "community_viewer",
+        communityId
+      )
+      const channelUser = await attachCommunityUser(
+        communityId,
+        userId,
+        attachUserRole?.viewerRole?.name
+      )
+      return { success: true, data: channelUser }
+    } catch (error) {
+      return { error: error }
     }
   }
 )

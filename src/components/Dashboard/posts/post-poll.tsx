@@ -15,13 +15,17 @@ import PostInteractions from "./post-interactions"
 import { Separator } from "@/src/components/ui/separator"
 import PostComments from "./post-comments"
 import PostCommentForm from "./post-comment-form"
+import PostCommentsSection from "./post-comments-section"
+import { usePostNavigation } from "@/src/hooks/usePostNavigation"
 
 type Props = {
   post: SelectPollPost
+  spaceId?: string
 }
 
-const PollPost: React.FC<Props> = ({ post }) => {
+const PollPost: React.FC<Props> = ({ post, spaceId }) => {
   const [selectedOption, setSelectedOption] = useState<string>("")
+  const { navigateToPost } = usePostNavigation()
 
   const setPosts = useSetAtom(postStore.posts)
   const userId = useAtomValue(userStore.AuthUser)?.unique_id
@@ -30,6 +34,10 @@ const PollPost: React.FC<Props> = ({ post }) => {
     useServerAction(VotePollAction)
 
   const { toast } = useToast()
+
+  const handleContentClick = () => {
+    navigateToPost(post.id, spaceId)
+  }
 
   useEffect(() => {
     if (userId && post.options && post.options.length) {
@@ -85,7 +93,10 @@ const PollPost: React.FC<Props> = ({ post }) => {
 
   return (
     <>
-      <CardContent>
+      <CardContent
+        className={spaceId !== "shared" ? "cursor-pointer" : ""}
+        onClick={spaceId !== "shared" ? handleContentClick : undefined}
+      >
         <p className="font-semibold mb-2">{post.content}</p>
         <RadioGroup
           onValueChange={handleVote}
@@ -95,6 +106,7 @@ const PollPost: React.FC<Props> = ({ post }) => {
             selectedOption.length > 0
           }
           value={selectedOption}
+          onClick={(e) => e.stopPropagation()}
         >
           {post.options?.map((option) => (
             <div
@@ -131,14 +143,10 @@ const PollPost: React.FC<Props> = ({ post }) => {
           likes={post.likes}
           comments={post.comments}
           likers={post.postLikes}
+          spaceId={spaceId}
         />
         <Separator />
-        <div className="w-full space-y-4">
-          {post.postComments &&
-            post.postComments.map((comment: SelectComment) => (
-              <PostComments key={comment.id} comment={comment} />
-            ))}
-        </div>
+        <PostCommentsSection comments={post.postComments || []} />
         <PostCommentForm postId={post.id} comments={post.comments} />
       </CardFooter>
     </>

@@ -1,4 +1,4 @@
-import { pgTable, integer, varchar, unique, json, serial, timestamp, foreignKey } from "drizzle-orm/pg-core"
+import { pgTable, integer, varchar, unique, json, serial, timestamp, foreignKey, decimal, index } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 
@@ -412,14 +412,7 @@ export const rolePermissions = pgTable("role_permissions", {
 	permissionId: integer("permission_id").notNull(),
 });
 
-export const mentorFavorites = pgTable("mentor_favorites", {
-	id: serial().primaryKey().notNull(),
-	userId: varchar("user_id").notNull(),
-	mentorId: varchar("mentor_id").notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
-	deletedAt: timestamp("deleted_at", { mode: 'string' }),
-});
+
 
 export const profile = pgTable("profile", {
 	id: integer().primaryKey().generatedAlwaysAsIdentity({ name: "profile_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 2147483647, cache: 1 }),
@@ -437,14 +430,6 @@ export const profile = pgTable("profile", {
 	updatedAt: varchar("updated_at"),
 	createdAt: varchar("created_at").default(sql`CURRENT_TIMESTAMP`),
 	deletedAt: varchar("deleted_at"),
-	company: varchar(),
-	jobTitle: varchar("job_title"),
-	location: varchar(),
-	yearsExperience: integer("years_experience").default(0),
-	languages: json().default(["English"]),
-	availabilityStatus: varchar("availability_status").default('true'),
-	responseTime: varchar("response_time").default('< 24 hours'),
-	menteeCount: integer("mentee_count").default(0),
 }, (table) => {
 	return {
 		profileUserIdUsersUniqueIdFk: foreignKey({
@@ -455,53 +440,9 @@ export const profile = pgTable("profile", {
 	}
 });
 
-export const mentorRatings = pgTable("mentor_ratings", {
-	id: integer().primaryKey().generatedAlwaysAsIdentity({ name: "mentor_ratings_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 2147483647, cache: 1 }),
-	mentorId: varchar("mentor_id").notNull(),
-	reviewerId: varchar("reviewer_id").notNull(),
-	rating: varchar().notNull(),
-	reviewText: varchar("review_text"),
-	updatedAt: varchar("updated_at"),
-	createdAt: varchar("created_at").default(sql`CURRENT_TIMESTAMP`),
-	deletedAt: varchar("deleted_at"),
-}, (table) => {
-	return {
-		mentorRatingsMentorIdUsersUniqueIdFk: foreignKey({
-			columns: [table.mentorId],
-			foreignColumns: [users.uniqueId],
-			name: "mentor_ratings_mentor_id_users_unique_id_fk"
-		}),
-		mentorRatingsReviewerIdUsersUniqueIdFk: foreignKey({
-			columns: [table.reviewerId],
-			foreignColumns: [users.uniqueId],
-			name: "mentor_ratings_reviewer_id_users_unique_id_fk"
-		}),
-	}
-});
 
-export const mentorRelationships = pgTable("mentor_relationships", {
-	id: integer().primaryKey().generatedAlwaysAsIdentity({ name: "mentor_relationships_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 2147483647, cache: 1 }),
-	mentorId: varchar("mentor_id").notNull(),
-	menteeId: varchar("mentee_id").notNull(),
-	status: varchar().default('pending').notNull(),
-	requestMessage: varchar("request_message"),
-	updatedAt: varchar("updated_at"),
-	createdAt: varchar("created_at").default(sql`CURRENT_TIMESTAMP`),
-	deletedAt: varchar("deleted_at"),
-}, (table) => {
-	return {
-		mentorRelationshipsMentorIdUsersUniqueIdFk: foreignKey({
-			columns: [table.mentorId],
-			foreignColumns: [users.uniqueId],
-			name: "mentor_relationships_mentor_id_users_unique_id_fk"
-		}),
-		mentorRelationshipsMenteeIdUsersUniqueIdFk: foreignKey({
-			columns: [table.menteeId],
-			foreignColumns: [users.uniqueId],
-			name: "mentor_relationships_mentee_id_users_unique_id_fk"
-		}),
-	}
-});
+
+
 
 export const communities = pgTable("communities", {
 	id: varchar({ length: 36 }).primaryKey().notNull(),
@@ -536,5 +477,83 @@ export const communityCategories = pgTable("community_categories", {
 }, (table) => {
 	return {
 		communityCategoriesSlugUnique: unique("community_categories_slug_unique").on(table.slug),
+	}
+});
+
+export const mentorFavorites = pgTable("mentor_favorites", {
+	id: integer().primaryKey().generatedAlwaysAsIdentity({ name: "mentor_favorites_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 2147483647, cache: 1 }),
+	userId: varchar("user_id").notNull(),
+	mentorId: varchar("mentor_id").notNull(),
+	updatedAt: varchar("updated_at"),
+	createdAt: varchar("created_at").default(sql`CURRENT_TIMESTAMP`),
+	deletedAt: varchar("deleted_at"),
+}, (table) => {
+	return {
+		mentorFavoritesUserIdMentorIdUnique: unique("mentor_favorites_user_id_mentor_id_unique").on(table.userId, table.mentorId),
+		mentorFavoritesUserIdForeignKey: foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.uniqueId],
+			name: "mentor_favorites_user_id_users_unique_id_fk"
+		}),
+		mentorFavoritesMentorIdForeignKey: foreignKey({
+			columns: [table.mentorId],
+			foreignColumns: [users.uniqueId],
+			name: "mentor_favorites_mentor_id_users_unique_id_fk"
+		}),
+		idxMentorFavoritesUserId: index("idx_mentor_favorites_user_id").on(table.userId),
+		idxMentorFavoritesMentorId: index("idx_mentor_favorites_mentor_id").on(table.mentorId),
+	}
+});
+
+export const mentorRatings = pgTable("mentor_ratings", {
+	id: integer().primaryKey().generatedAlwaysAsIdentity({ name: "mentor_ratings_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 2147483647, cache: 1 }),
+	mentorId: varchar("mentor_id").notNull(),
+	reviewerId: varchar("reviewer_id").notNull(),
+	rating: decimal({ precision: 2, scale: 1 }).notNull(),
+	reviewText: varchar("review_text"),
+	updatedAt: varchar("updated_at"),
+	createdAt: varchar("created_at").default(sql`CURRENT_TIMESTAMP`),
+	deletedAt: varchar("deleted_at"),
+}, (table) => {
+	return {
+		mentorRatingsMentorIdForeignKey: foreignKey({
+			columns: [table.mentorId],
+			foreignColumns: [users.uniqueId],
+			name: "mentor_ratings_mentor_id_users_unique_id_fk"
+		}),
+		mentorRatingsReviewerIdForeignKey: foreignKey({
+			columns: [table.reviewerId],
+			foreignColumns: [users.uniqueId],
+			name: "mentor_ratings_reviewer_id_users_unique_id_fk"
+		}),
+		idxMentorRatingsMentorId: index("idx_mentor_ratings_mentor_id").on(table.mentorId),
+		idxMentorRatingsReviewerId: index("idx_mentor_ratings_reviewer_id").on(table.reviewerId),
+	}
+});
+
+export const mentorRelationships = pgTable("mentor_relationships", {
+	id: integer().primaryKey().generatedAlwaysAsIdentity({ name: "mentor_relationships_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 2147483647, cache: 1 }),
+	mentorId: varchar("mentor_id").notNull(),
+	menteeId: varchar("mentee_id").notNull(),
+	status: varchar().default('pending').notNull(),
+	requestMessage: varchar("request_message"),
+	updatedAt: varchar("updated_at"),
+	createdAt: varchar("created_at").default(sql`CURRENT_TIMESTAMP`),
+	deletedAt: varchar("deleted_at"),
+}, (table) => {
+	return {
+		mentorRelationshipsMentorIdForeignKey: foreignKey({
+			columns: [table.mentorId],
+			foreignColumns: [users.uniqueId],
+			name: "mentor_relationships_mentor_id_users_unique_id_fk"
+		}),
+		mentorRelationshipsMenteeIdForeignKey: foreignKey({
+			columns: [table.menteeId],
+			foreignColumns: [users.uniqueId],
+			name: "mentor_relationships_mentee_id_users_unique_id_fk"
+		}),
+		idxMentorRelationshipsMentorId: index("idx_mentor_relationships_mentor_id").on(table.mentorId),
+		idxMentorRelationshipsMenteeId: index("idx_mentor_relationships_mentee_id").on(table.menteeId),
+		idxMentorRelationshipsStatus: index("idx_mentor_relationships_status").on(table.status),
 	}
 });

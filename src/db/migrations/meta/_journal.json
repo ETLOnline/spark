@@ -54,22 +54,36 @@
     {
       "idx": 7,
       "version": "7",
-      "when": 1751978130662,
-      "tag": "0007_2025_07_08_173527__test_spark",
+      "when": 1751894194077,
+      "tag": "0007_2025_07_07_181631__create_table_communities_and_communty_user_and_communty_category",
       "breakpoints": true
     },
     {
       "idx": 8,
       "version": "7",
-      "when": 1751894194077,
-      "tag": "0008_2025_07_07_181631__create_table_communities_and_communty_user_and_communty_category",
+      "when": 1751961838709,
+      "tag": "0008_2025_07_08_130354__update_sprint_table",
       "breakpoints": true
     },
     {
       "idx": 9,
       "version": "7",
-      "when": 1751961838709,
-      "tag": "0009_2025_07_08_130354__update_sprint_table",
+      "when": 1752071034384,
+      "tag": "0009_2025_07_09_192350__update_tasks_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1752520782687,
+      "tag": "0010_2025_07_15_001939__add_role_and_status_in_the_community_users_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1752776699469,
+      "tag": "0011_2025_07_17_232458__add_mentor_functionality",
       "breakpoints": true
     }
   ]

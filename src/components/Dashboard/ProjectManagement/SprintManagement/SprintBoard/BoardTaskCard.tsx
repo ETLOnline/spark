@@ -6,26 +6,23 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/src/components/ui/dropdown-menu"
-import { SelectTask } from "@/src/db/schema"
+import { SelectTask, SelectUser } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { UpdateTaskAction } from "@/src/server-actions/Tasks/Task"
-import { taskStore } from "@/src/store/tasks/taskStore"
-import { useSetAtom } from "jotai"
 import {
+  AlertCircle,
   ChevronDown,
   ChevronsDown,
   ChevronsUp,
   ChevronUp,
   CircleHelp,
   Equal,
-  Minus,
   MoreHorizontal
 } from "lucide-react"
-import React, { Dispatch, SetStateAction, useState } from "react"
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +39,8 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
+import { projectTaskTypes } from "../../constants/projectManagment"
+import { DynamicIcon, IconName } from "lucide-react/dynamic"
 
 interface Props {
   task: SelectTask
@@ -141,6 +140,19 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
     }
   }
 
+  function IssueTypeIcon({ type }: { type: string }) {
+    const typeMap = projectTaskTypes.find((t) => t.key === type)
+    return typeMap ? (
+      <DynamicIcon
+        name={typeMap.icon as IconName}
+        className="h-4 w-4"
+        style={{ color: typeMap.iconColor }}
+      />
+    ) : (
+      <AlertCircle className="h-5 w-5" />
+    )
+  }
+
   return (
     <>
       <Card
@@ -150,10 +162,16 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
       >
         <div className="flex justify-between items-start">
           <div>
-            <h4 className="font-medium text-sm">{task.task_title}</h4>
-            <p className="text-xs text-muted-foreground mt-1">
+            <span className="text-xs flex items-center gap-2 mb-2">
+              <IssueTypeIcon type={task.task_type} />
+              <span className="text-muted-foreground">{task.task_num}</span>
+            </span>
+            <h4 className="font-medium text-sm line-clamp-2">
+              {task.task_title}
+            </h4>
+            {/* <p className="text-xs text-muted-foreground mt-1">
               {task.description}
-            </p>
+            </p> */}
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -175,13 +193,35 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
           </DropdownMenu>
         </div>
         <div className="flex flex-wrap justify-between items-center mt-3">
-          <div className="flex items-center">
-            {/* <Avatar className="h-6 w-6 mr-2">
-            <AvatarImage src={task.assignee.avatar} />
-            <AvatarFallback>{task.assignee.name[0]}</AvatarFallback>
-          </Avatar> */}
-            <CircleHelp className="h-4 w-4 mr-2" />
-            <span className="text-xs">#{task.task_num}</span>
+          <div className="flex gap-2 items-center">
+            {task.assign_to ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Avatar className="h-5 w-5 cursor-pointer">
+                      <AvatarImage
+                        src={task.assignee?.profile_url || ""}
+                        alt={task.assignee?.first_name}
+                      />
+                      <AvatarFallback className="text-xs">
+                        {task.assignee?.first_name[0]}
+                        {task.assignee?.last_name[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span>
+                      {task.assignee?.first_name} {task.assignee?.last_name}
+                    </span>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <CircleHelp className="h-5 w-5" />
+            )}
+            <span className="text-sm text-muted-foreground">
+              {task.assignee?.first_name} {task.assignee?.last_name}
+            </span>
           </div>
           {getPriorityBadge(task.task_priority)}
         </div>
