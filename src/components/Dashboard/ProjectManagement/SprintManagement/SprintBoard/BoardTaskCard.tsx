@@ -41,6 +41,7 @@ import {
 } from "@/src/components/ui/tooltip"
 import { projectTaskTypes } from "../../constants/projectManagment"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   task: SelectTask
@@ -52,6 +53,16 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
   const [isAlertOpen, setIsAlertOpen] = useState(false)
 
   const [removeTaskLoading, , , RemoveTask] = useServerAction(UpdateTaskAction)
+
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    task?.project_id
+  )
+
+  const canUpdate = permissionChecker
+    ? permissionChecker.canAccess("project.task.update")
+    : false
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
@@ -157,8 +168,10 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
     <>
       <Card
         key={task.id}
-        className="p-3 hover:cursor-pointer hover:bg-muted transition-colors"
-        onClick={() => onClick(task)}
+        className={`p-3 transition-colors ${
+          canUpdate ? "hover:cursor-pointer hover:bg-muted" : "cursor-default"
+        }`}
+        onClick={canUpdate ? () => onClick(task) : undefined}
       >
         <div className="flex justify-between items-start">
           <div>
@@ -173,24 +186,26 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
               {task.description}
             </p> */}
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setIsAlertOpen(true)
-                }}
-              >
-                Move to Backlog
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {canUpdate && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setIsAlertOpen(true)
+                  }}
+                >
+                  Move to Backlog
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
         <div className="flex flex-wrap justify-between items-center mt-3">
           <div className="flex gap-2 items-center">

@@ -12,7 +12,8 @@ import {
   updateProjectUserRole,
   updateProject,
   getExistingProjectUsers,
-  createProjectUser
+  createProjectUser,
+  countProjectMembers
 } from "@/src/db/data-access/project-management/query"
 import {
   createScopedProjectRolesAndAssignAdmin,
@@ -186,6 +187,19 @@ export const UpdateProjectUserRoleAction = CreateServerAction(
       return { success: true, data: projectUsers }
     } catch (error) {
       console.error("Failed to update project user role:", error)
+      return { success: false, error }
+    }
+  }
+)
+
+export const countProjectMembersAction = CreateServerAction(
+  true,
+  async (projectId: string) => {
+    try {
+      const count = await countProjectMembers(projectId)
+      return { success: true, data: count }
+    } catch (error) {
+      console.error("Failed to count project members:", error)
       return { success: false, error }
     }
   }

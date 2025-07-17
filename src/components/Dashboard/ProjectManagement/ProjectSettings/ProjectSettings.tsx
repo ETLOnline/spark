@@ -13,6 +13,9 @@ import { SelectProject } from "@/src/db/schema"
 import TaskStatus from "./TaskStatus"
 import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import NoDataCard from "../../Channels/ChannelDetails/NoDataCard"
+import { Ban } from "lucide-react"
 interface Props {
   currProject: SelectProject
 }
@@ -23,12 +26,22 @@ export function ProjectSettings({ currProject }: Props) {
   const UrlTab = searchParams.get("tab")
   const [activeTab, setActiveTab] = useState(UrlTab || "general")
 
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    currProject.id
+  )
+
+  const canUpdate = permissionChecker
+    ? permissionChecker.canAccess("project.update")
+    : false
+
   useEffect(() => {
     if (UrlTab !== activeTab) {
       router.push(`./settings?tab=${activeTab}`)
     }
   }, [activeTab, UrlTab])
-  return (
+  return canUpdate ? (
     <div className="space-y-6">
       <Tabs
         defaultValue="general"
@@ -62,5 +75,11 @@ export function ProjectSettings({ currProject }: Props) {
         </TabsContent>
       </Tabs>
     </div>
+  ) : (
+    <NoDataCard
+      title="Access Denied"
+      description="You don't have permission to update the project"
+      icon={<Ban className="h-16 w-16 text-muted-foreground mb-4" />}
+    />
   )
 }
