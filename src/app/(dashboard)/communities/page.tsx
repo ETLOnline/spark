@@ -184,6 +184,11 @@ export default function CommunitiesPage() {
     setCommunityFormModalVisibility(true)
   }
 
+  const handleJoinCommunity = () => {
+    setRefreshTrigger((prev) => !prev)
+    setCurrentPage(1)
+  }
+
   const handleDeleteCommunity = async (communityToDelete: SelectCommunity) => {
     try {
       const res = await deleteCommunity(communityToDelete)
@@ -268,6 +273,7 @@ export default function CommunitiesPage() {
         communitiesList={communitiesList}
         onEditCommunity={handleEditCommunity}
         onDeleteCommunity={handleDeleteCommunity}
+        onJoinCommunity={handleJoinCommunity}
         activeTab={activeTab}
         onTabChange={handleTabChange}
       />

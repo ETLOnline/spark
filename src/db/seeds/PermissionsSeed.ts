@@ -98,7 +98,10 @@ const permissionSeedList = [
   { namespace: "community", action: "view" },
   { namespace: "community", action: "update" },
   { namespace: "community", action: "delete" },
-  { namespace: "community", action: "allow.action" }
+  { namespace: "community", action: "allow.action" },
+  { namespace: "community", action: "user.invite" },
+  { namespace: "community", action: "user.update" },
+  { namespace: "community", action: "user.remove" }
 ]
 
 export const PermissionsSeed = async () => {

@@ -1188,7 +1188,9 @@ export const communityUsersTable = pgTable("community_users", {
     .references(() => communitiesTable.id),
   user_id: varchar()
     .notNull()
-    .references(() => usersTable.unique_id)
+    .references(() => usersTable.unique_id),
+  role: varchar().default("member"),
+  status: varchar().default("active")
 })
 
 export const communityUsersRelations = relations(
