@@ -3,9 +3,12 @@
 import { SelectChannel } from "@/src/db/schema"
 import { useToast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { DeleteChannelAction } from "@/src/server-actions/Channel/Channel"
+import {
+  AttachChannelUserAction,
+  DeleteChannelAction
+} from "@/src/server-actions/Channel/Channel"
 import { channelStore } from "@/src/store/channel/channelStore"
-import { useSetAtom } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { useRouter } from "next/navigation"
 import {
   DropdownMenu,
@@ -14,9 +17,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/src/components/ui/dropdown-menu"
-import { Edit, Layout, MoreHorizontal, Trash2, User } from "lucide-react"
+import {
+  Edit,
+  Layout,
+  MoreHorizontal,
+  PlusCircle,
+  Trash2,
+  User
+} from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { userStore } from "@/src/store/user/userStore"
+import { useEffect, useState } from "react"
+import { isChannelUser } from "@/src/utils/clientHelper"
 
 interface ChannelProps {
   channel: SelectChannel
@@ -30,6 +43,38 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
   channel,
   onActionComplete
 }) => {
+  const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
+  const superAdmin = useAtomValue(userStore.SuperAdmin)
+  const [isChannelMember, setIsChannelMember] = useState<boolean>(false)
+
+  const [joinLoading, joinResult, joinError, joinChannel] = useServerAction(
+    AttachChannelUserAction
+  )
+
+  useEffect(() => {
+    const isMember = isChannelUser(channel, currentUserId as string)
+
+    if (isMember) setIsChannelMember(true)
+    else {
+      setIsChannelMember(false)
+    }
+  }, [channel, currentUserId])
+
+  const handleJoinChannel = async () => {
+    if (channel.id && currentUserId) {
+      const res = await joinChannel(channel.id, currentUserId)
+      if (res?.success) {
+        setIsChannelMember(true)
+        toast({
+          title: "Chnnel Joined",
+          duration: 3000
+        })
+      } else {
+        console.error("Failed to join Channel:", res?.error)
+      }
+    }
+  }
+
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "CHANNEL",
@@ -91,7 +136,7 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
   }
 
   return (
-    canViewActions && (
+    (canViewActions || channel?.channel_type === "public") && (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon">
@@ -108,6 +153,18 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
             >
               <Layout className="mr-2 h-4 w-4" />
               View Spaces
+            </DropdownMenuItem>
+          )}
+          {!superAdmin && (
+            <DropdownMenuItem
+              onClick={handleJoinChannel}
+              disabled={isChannelMember || joinLoading}
+              className={
+                isChannelMember ? "text-gray-500 cursor-not-allowed" : ""
+              }
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              {joinLoading ? "Joining..." : isChannelMember ? "Joined" : "Join"}
             </DropdownMenuItem>
           )}
           {canEdit && (

@@ -49,6 +49,8 @@ export function ProjectScreen({ space }: Props) {
   const [selectedProject, setSelectedProject] = useState<SelectProject | null>(
     null
   )
+  const [activeProjects, setActiveProjects] = useState<SelectProject[]>([])
+  const [draftProjects, setDraftProjects] = useState<SelectProject[]>([])
 
   const handleEdit = (project: SelectProject) => {
     setSelectedProject(project)
@@ -81,6 +83,13 @@ export function ProjectScreen({ space }: Props) {
     }
   }, [getProjectData])
 
+  useEffect(() => {
+    setActiveProjects(
+      projects?.filter((p) => p.project_type === "active") ?? []
+    )
+    setDraftProjects(projects?.filter((p) => p.project_type === "draft") ?? [])
+  }, [projects])
+
   // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(
     "scoped",
@@ -106,7 +115,6 @@ export function ProjectScreen({ space }: Props) {
                 <TabsTrigger value="all">All Projects</TabsTrigger>
                 <TabsTrigger value="active">Active</TabsTrigger>
                 <TabsTrigger value="draft">Drafts</TabsTrigger>
-                <TabsTrigger value="completed">Completed</TabsTrigger>
               </TabsList>
               <TabsContent value="all">
                 <ScrollArea>
@@ -128,33 +136,48 @@ export function ProjectScreen({ space }: Props) {
                     ))}
                 </ScrollArea>
               </TabsContent>
-              {/* <TabsContent value="active">
-                    <ScrollArea>
-                      {proposals
-                        .filter((p) => p.status === "active")
-                        .map((proposal) => (
-                          <ProjectCards key={proposal.id} proposal={proposal} />
-                        ))}
-                    </ScrollArea>
-                  </TabsContent>
-                  <TabsContent value="draft">
-                    <ScrollArea>
-                      {proposals
-                        .filter((p) => p.status === "draft")
-                        .map((proposal) => (
-                          <ProjectCards key={proposal.id} proposal={proposal} />
-                        ))}
-                    </ScrollArea>
-                  </TabsContent>
-                  <TabsContent value="completed">
-                    <ScrollArea>
-                      {proposals
-                        .filter((p) => p.status === "completed")
-                        .map((proposal) => (
-                          <ProjectCards key={proposal.id} proposal={proposal} />
-                        ))}
-                    </ScrollArea>
-                  </TabsContent> */}
+
+              <TabsContent value="active">
+                <ScrollArea>
+                  {canView &&
+                    (activeProjects.length > 0 ? (
+                      activeProjects.map((project) => (
+                        <ProjectCards
+                          key={project.id}
+                          project={project}
+                          onEdit={handleEdit}
+                        />
+                      ))
+                    ) : (
+                      <NoDataCard
+                        icon={<ListX className="h-16 w-16" />}
+                        title="No active projects found"
+                        description="Create a project to get started"
+                      />
+                    ))}
+                </ScrollArea>
+              </TabsContent>
+
+              <TabsContent value="draft">
+                <ScrollArea>
+                  {canView &&
+                    (draftProjects.length > 0 ? (
+                      draftProjects.map((project) => (
+                        <ProjectCards
+                          key={project.id}
+                          project={project}
+                          onEdit={handleEdit}
+                        />
+                      ))
+                    ) : (
+                      <NoDataCard
+                        icon={<ListX className="h-16 w-16" />}
+                        title="No draft projects found"
+                        description="Create a project to get started"
+                      />
+                    ))}
+                </ScrollArea>
+              </TabsContent>
             </Tabs>
           </div>
           {isModalOpen && selectedProject && currSpace && (

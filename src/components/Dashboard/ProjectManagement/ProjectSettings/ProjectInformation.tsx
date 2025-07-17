@@ -9,17 +9,8 @@ import {
 } from "@/src/components/ui/card"
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/src/components/ui/select"
 import { Switch } from "@/src/components/ui/switch"
-import { Textarea } from "@/src/components/ui/textarea"
-import React, { useState } from "react"
-import { useAtom } from "jotai"
+import React from "react"
 import { SelectProject } from "@/src/db/schema"
 import { z } from "zod"
 import { useForm, Controller } from "react-hook-form"
@@ -27,7 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "@/src/hooks/use-toast"
 import { UpdateProjectAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { projectStore } from "@/src/store/project/projectStore"
+import Tiptap from "@/src/components/common/TiptapRichEditor"
 
 const projectSchema = z.object({
   project_name: z
@@ -116,7 +107,7 @@ function ProjectInformation({ currProjectData }: Props) {
               name="description"
               control={control}
               render={({ field }) => (
-                <Textarea id="project-description" {...field} rows={4} />
+                <Tiptap value={field.value} onChange={field.onChange} />
               )}
             />
           </div>

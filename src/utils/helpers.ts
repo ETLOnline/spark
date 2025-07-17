@@ -10,6 +10,7 @@ import {
   SelectUserRole
 } from "../db/schema"
 import { AblyClient } from "../services/realtime/AblyClient"
+import moment from "moment-timezone"
 import { CommunityDetailData } from "../db/data-access/communities/query"
 export type RoleWithPermissions = {
   id: number
@@ -117,7 +118,10 @@ export const canUserIntract = (
 }
 
 export const generateUrl = (path: string) => {
-  return `${window.location.origin}${path}`
+  if (typeof window !== "undefined") {
+    return `${window.location.origin}${path}`
+  }
+  return path // Return just the path on server-side
 }
 
 export const getPagePath = (page: string) => {
@@ -314,4 +318,13 @@ export async function isSuperAdmin(user: SelectUser): Promise<boolean> {
     console.error("Error checking if user is super admin:", error)
     return false
   }
+}
+
+export const formatRelativeTime = (
+  dateString: string | null | undefined
+): string => {
+  return moment
+    .utc(dateString || "")
+    .local()
+    .fromNow()
 }

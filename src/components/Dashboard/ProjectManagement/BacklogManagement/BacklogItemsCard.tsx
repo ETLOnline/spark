@@ -51,7 +51,6 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
       })
       if (res?.success && res.data) {
         const tasks = res?.data
-        console.log(tasks.tasks)
         setTasks(tasks?.tasks)
         setPagination(tasks.pagination)
       }

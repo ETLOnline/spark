@@ -231,10 +231,10 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           return
         }
 
-        let postData
+        let filePostData
 
         if (variant === "spaces") {
-          postData = {
+          filePostData = {
             type: newPost.type,
             fileSize: newPost.fileSize as number,
             fileName: newPost.fileName as string,
@@ -247,7 +247,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             folderPath: "spaces"
           }
         } else {
-          postData = {
+          filePostData = {
             type: newPost.type,
             fileSize: newPost.fileSize as number,
             fileName: newPost.fileName as string,
@@ -261,7 +261,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           }
         }
 
-        const post = await createFilePost(postData)
+        const post = await createFilePost(filePostData)
 
         if (post && post.data) {
           let linkedHashtags
@@ -305,9 +305,6 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         }
       }
       setHashtags([])
-      if (newPost.category) {
-        setActiveCategory(newPost.category)
-      }
       if (postData.id) {
         setPosts((posts) => [
           postData as unknown as SelectPost | SelectFilePost | SelectPollPost,

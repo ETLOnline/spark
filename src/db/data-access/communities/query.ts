@@ -268,6 +268,7 @@ export async function CreateCommunity(
 
     return newCommunity[0]
   } catch (e: any) {
+    console.log("Error creating community", e)
     console.error("Error creating community:", e)
     throw new Error(`Failed to create community: ${e.message}`)
   }

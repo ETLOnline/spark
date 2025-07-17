@@ -187,3 +187,15 @@ export async function updateProjectUserRole(
     throw new Error(error.message)
   }
 }
+
+export async function countProjectMembers(projectId: string) {
+  try {
+    const count = await db.$count(
+      ProjectUsersTable,
+      eq(ProjectUsersTable.project_id, projectId)
+    )
+    return count
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}

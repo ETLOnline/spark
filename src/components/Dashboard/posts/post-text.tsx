@@ -5,15 +5,27 @@ import PostComments from "./post-comments"
 import PostCommentForm from "./post-comment-form"
 import { SelectComment, SelectPost } from "@/src/db/schema"
 import { Badge } from "../../ui/badge"
+import PostCommentsSection from "./post-comments-section"
+import { usePostNavigation } from "@/src/hooks/usePostNavigation"
 
 type Props = {
   post: SelectPost
+  spaceId?: string
 }
 
-const TextPost: React.FC<Props> = ({ post }) => {
+const TextPost: React.FC<Props> = ({ post, spaceId }) => {
+  const { navigateToPost } = usePostNavigation()
+
+  const handleContentClick = () => {
+    navigateToPost(post.id, spaceId)
+  }
+
   return (
     <>
-      <CardContent>
+      <CardContent
+        className={spaceId !== "shared" ? "cursor-pointer" : ""}
+        onClick={spaceId !== "shared" ? handleContentClick : undefined}
+      >
         <p className="text-lg">{post.content}</p>
         <div className="mt-4 flex flex-wrap gap-2">
           {post.hashtags &&
@@ -30,14 +42,10 @@ const TextPost: React.FC<Props> = ({ post }) => {
           likes={post.likes}
           comments={post.comments}
           likers={post.postLikes}
+          spaceId={spaceId}
         />
         <Separator />
-        <div className="w-full space-y-4">
-          {post.postComments &&
-            post.postComments.map((comment: SelectComment) => (
-              <PostComments key={comment.id} comment={comment} />
-            ))}
-        </div>
+        <PostCommentsSection comments={post.postComments || []} />
         <PostCommentForm postId={post.id} comments={post.comments} />
       </CardFooter>
     </>

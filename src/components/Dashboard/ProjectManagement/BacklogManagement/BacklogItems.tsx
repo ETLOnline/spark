@@ -141,7 +141,6 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
     ? permissionChecker?.canAccess("project.backlog.task.delete")
     : false
   const onTaskCreated = (task: SelectTask) => {
-    console.log("new task => ", task)
     SetTasks((prev) => [...prev, task])
     setSelectedTask(task)
   }
@@ -170,15 +169,15 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
           />
         </div>
         <div
-          className="col-span-1 text-sm font-medium cursor-pointer"
-          onClick={() => EditTask(task)}
+          className={`col-span-1 text-sm font-medium ${canUpdate ? "cursor-pointer" : "cursor-default"}`}
+          onClick={() => canUpdate && EditTask(task)}
         >
           {task.task_num}
         </div>
         <div className="col-span-3">
           <div
-            className="font-medium break-words whitespace-normal line-clamp-2 cursor-pointer"
-            onClick={() => EditTask(task)}
+            className={`font-medium break-words whitespace-normal line-clamp-2 ${canUpdate ? "cursor-pointer" : "cursor-default"}`}
+            onClick={() => canUpdate && EditTask(task)}
           >
             {task.task_title}
           </div>
