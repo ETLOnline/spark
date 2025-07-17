@@ -11,6 +11,7 @@ import { Input } from "@/src/components/ui/input"
 import { Button } from "@/src/components/ui/button"
 import { Copy, Check } from "lucide-react"
 import { useToast } from "@/src/hooks/use-toast"
+import { generateUrl } from "@/src/utils/helpers"
 
 interface ShareDialogProps {
   postId: string
@@ -32,25 +33,29 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
   const [copied, setCopied] = useState(false)
   const { toast } = useToast()
 
-  const shareUrl =
-    spaceId && spaceId !== "shared" && channelSlug && spaceSlug
-      ? `${window.location.origin}/channels/${channelSlug}/spaces/${spaceSlug}?page-type=posts&post-id=${postId}`
-      : `${window.location.origin}/posts/${postId}`
-
   const handleCopy = async () => {
     try {
+      const shareUrl =
+        spaceId && spaceId !== "shared" && channelSlug && spaceSlug
+          ? generateUrl(
+              `/channels/${channelSlug}/spaces/${spaceSlug}?page-type=posts&post-id=${postId}`
+            )
+          : generateUrl(`/posts/${postId}`)
+
       await navigator.clipboard.writeText(shareUrl)
       setCopied(true)
       toast({
-        title: "Copied!",
-        description: "Post link copied to clipboard"
+        title: "URL copied!",
+        description: "Post link copied to clipboard",
+        duration: 3000
       })
       setTimeout(() => setCopied(false), 2000)
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to copy link"
+        description: "Failed to copy URL",
+        duration: 3000
       })
     }
   }
@@ -62,7 +67,17 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
           <DialogTitle>Share Post</DialogTitle>
         </DialogHeader>
         <div className="flex items-center space-x-2">
-          <Input value={shareUrl} readOnly className="flex-1" />
+          <Input
+            value={
+              spaceId && spaceId !== "shared" && channelSlug && spaceSlug
+                ? generateUrl(
+                    `/channels/${channelSlug}/spaces/${spaceSlug}?page-type=posts&post-id=${postId}`
+                  )
+                : generateUrl(`/posts/${postId}`)
+            }
+            readOnly
+            className="flex-1"
+          />
           <Button size="sm" onClick={handleCopy} disabled={copied}>
             {copied ? (
               <Check className="h-4 w-4" />

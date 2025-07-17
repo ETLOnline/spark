@@ -116,7 +116,10 @@ export const canUserIntract = (
 }
 
 export const generateUrl = (path: string) => {
-  return `${window.location.origin}${path}`
+  if (typeof window !== "undefined") {
+    return `${window.location.origin}${path}`
+  }
+  return path // Return just the path on server-side
 }
 
 export const getPagePath = (page: string) => {
