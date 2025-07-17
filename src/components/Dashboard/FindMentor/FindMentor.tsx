@@ -11,34 +11,7 @@ import {
 } from "@/src/server-actions/User/MentorConnectionAction";
 import { useAuth } from "@clerk/nextjs";
 
-// Default fallback data
-const defaultDomains = [
-	"Artificial Intelligence",
-	"Business Administration",
-	"Computer Science",
-	"Design",
-	"Engineering",
-	"Medicine",
-];
-
-const defaultSkills = [
-	"Machine Learning",
-	"Python",
-	"Data Science",
-	"AI",
-	"Cardiology",
-	"Medical Research",
-	"Patient Care",
-	"Medical Education",
-];
-
-const defaultInterests = [
-	"Research",
-	"Startups",
-	"Teaching",
-	"Medical Research",
-	"Global Health",
-];
+// Remove hardcoded fallback defaults, filters will be fetched from DB
 
 const experienceLevels = ["All Experience Levels", "1-3 years", "4-7 years", "8-12 years", "13+ years"];
 const sortOptions = [
@@ -83,9 +56,10 @@ const FindMentor: React.FC = () => {
 	
 	// New state for database data
 	const [mentors, setMentors] = useState<MentorData[]>([]);
-	const [domains, setDomains] = useState<string[]>(defaultDomains);
-	const [skills, setSkills] = useState<string[]>(defaultSkills);
-	const [interests, setInterests] = useState<string[]>(defaultInterests);
+	// Filter options loaded from database instead of hardcoded defaults
+	const [domains, setDomains] = useState<string[]>([]);
+	const [skills, setSkills] = useState<string[]>([]);
+	const [interests, setInterests] = useState<string[]>([]);
 	const [universities, setUniversities] = useState<string[]>([]);
 	const [companies, setCompanies] = useState<string[]>([]);
 	const [locations, setLocations] = useState<string[]>([]);
@@ -148,7 +122,7 @@ const FindMentor: React.FC = () => {
 		if (sortBy !== "rating") params.set('sortBy', sortBy);
 
 		const newUrl = params.toString() ? `?${params.toString()}` : '';
-		window.history.replaceState({}, '', `/dashboard/find-mentor${newUrl}`);
+		window.history.replaceState({}, '', `/find-mentor${newUrl}`);
 	}, [search, selectedDomains, selectedSkills, selectedInterests, selectedExperience, 
 		selectedUniversities, selectedCompanies, selectedLocations, selectedLanguages, 
 		availabilityFilter, minRating, sortBy, isLoaded]);
@@ -217,7 +191,10 @@ const FindMentor: React.FC = () => {
 			try {
 				// Fetch mentors
 				const mentorsResult = await GetAllMentorsAction();
+				console.log('[FindMentor] mentorsResult:', mentorsResult);
 				if (mentorsResult.success && mentorsResult.data) {
+					console.log('[FindMentor] mentors data:', mentorsResult.data);
+					mentorsResult.data.forEach((m) => console.log(`Mentor: ${m.name}`, 'Skills:', m.skills, 'Interests:', m.interests));
 					setMentors(mentorsResult.data);
 				} else {
 					setError(mentorsResult.error || "Failed to fetch mentors");
@@ -556,9 +533,9 @@ const FindMentor: React.FC = () => {
 						{selected.length > 0 && (
 							<div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
 								<div className="flex flex-wrap gap-1">
-									{selected.slice(0, 2).map((item) => (
+									{selected.slice(0, 2).map((item, index) => (
 										<span
-											key={item}
+											key={`${item}-${index}`}
 											className="inline-flex items-center gap-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-2 py-1 rounded-full"
 										>
 											{item}
@@ -948,19 +925,14 @@ const FindMentor: React.FC = () => {
 								<div className="mb-4">
 									<h4 className="font-medium text-gray-900 dark:text-white text-sm mb-2">Skills</h4>
 									<div className="flex flex-wrap gap-1">
-										{mentor.skills.slice(0, 4).map((skill) => (
+										{mentor.skills.map((skill, index) => (
 											<span
-												key={skill}
+												key={`${mentor.id}-skill-${index}`}
 												className="bg-gray-100 dark:bg-[hsl(240,5.9%,18%)] text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full text-xs"
 											>
 												{skill}
 											</span>
 										))}
-										{mentor.skills.length > 4 && (
-											<span className="bg-gray-100 dark:bg-[hsl(240,5.9%,18%)] text-gray-500 dark:text-gray-400 px-2 py-1 rounded-full text-xs">
-												+{mentor.skills.length - 4} more
-											</span>
-										)}
 									</div>
 								</div>
 
@@ -968,19 +940,14 @@ const FindMentor: React.FC = () => {
 								<div className="mb-4">
 									<h4 className="font-medium text-gray-900 dark:text-white text-sm mb-2">Interests</h4>
 									<div className="flex flex-wrap gap-1">
-										{mentor.interests.slice(0, 3).map((interest) => (
+										{mentor.interests.map((interest, index) => (
 											<span
-												key={interest}
+												key={`${mentor.id}-interest-${index}`}
 												className="border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full text-xs"
 											>
 												{interest}
 											</span>
 										))}
-										{mentor.interests.length > 3 && (
-											<span className="border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 px-2 py-1 rounded-full text-xs">
-												+{mentor.interests.length - 3} more
-											</span>
-										)}
 									</div>
 								</div>
 
@@ -1005,9 +972,9 @@ const FindMentor: React.FC = () => {
 								{/* Languages and Availability */}
 								<div className="flex items-center justify-between mb-4">
 									<div className="flex flex-wrap gap-1">
-										{mentor.languages.map((lang) => (
+										{mentor.languages.map((lang, index) => (
 											<span
-												key={lang}
+												key={`${mentor.id}-language-${index}`}
 												className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded-full text-xs"
 											>
 												{lang}

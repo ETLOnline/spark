@@ -14,8 +14,7 @@ const isProtectedRoute = createRouteMatcher([
   "/spaces(.*)",
   "/channels(.*)",
   "/personas(.*)",
-  "/find_mentor",
-  "/dashboard/find-mentor(.*)",
+  "/find-mentor",
   "/communities(.*)"
 ])
 
@@ -43,11 +42,8 @@ export const config = {
     "/invite",
     "/invite(.*)",
     "/personas(.*)",
-    "/find_mentor",
-    "/dashboard/find-mentor(.*)",
+    "/find-mentor(.*)",
     "/communities(.*)"
-    // Always run for API routes
-    // '/(api|trpc)(.*)',
-    // '/sign-in(.*)',
+   
   ]
 }

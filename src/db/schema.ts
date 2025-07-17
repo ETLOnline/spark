@@ -147,15 +147,6 @@ export const profileTable = pgTable("profile", {
   instagram_url: varchar(),
   twitter_url: varchar(),
   personal_website_url: varchar(),
-  // Mentor-specific fields
-  company: varchar(),
-  job_title: varchar(),
-  location: varchar(),
-  years_experience: integer().default(0),
-  languages: json("languages").default(["English"]),
-  availability_status: varchar().default("true"),
-  response_time: varchar().default("< 24 hours"),
-  mentee_count: integer().default(0),
   ...timestamps
 })
 
@@ -171,6 +162,7 @@ export const profileRelations = relations(profileTable, ({ one, many }) => ({
   mentorRelationships: many(mentorRelationshipsTable, {
     relationName: "profileToMentorRelationships"
   })
+  // ...existing relations...
 }))
 
 export type InsertProfile = typeof profileTable.$inferInsert
@@ -1329,3 +1321,4 @@ export type SelectCommunityCategory =
   typeof communityCategoriesTable.$inferSelect & {
     communities?: SelectCommunity[]
   }
+

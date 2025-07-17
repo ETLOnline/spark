@@ -1,10 +1,12 @@
 "use server"
 
 import { CreateServerAction } from ".."
-import { db } from "@/src/db"
-import { usersTable, userRolesTable, rolesTable, profileTable, mentorRatingsTable, mentorRelationshipsTable } from "@/src/db/schema"
-import { eq, and, like, or, desc, asc, sql } from "drizzle-orm"
+import { mentorRatingsTable, mentorRelationshipsTable, tagsTable } from "@/src/db/schema"
+import { eq } from "drizzle-orm"
 import { getUserTags } from "@/src/db/data-access/tag/query"
+import { GetAllMentors, GetMentorById } from "@/src/db/data-access/user/query"
+import { GetMentorRatings, GetMentorRelationships } from "@/src/db/data-access/mentor/query"
+import { db } from "@/src/db"
 
 export interface MentorData {
   id: string
@@ -39,117 +41,77 @@ export interface MentorFilters {
 }
 
 export const GetAllMentorsAction = CreateServerAction(
-  false, // Don't require auth for browsing mentors
+  true,  // Require auth for browsing mentors
   async (filters?: MentorFilters) => {
     try {
-      // Get users with mentor role
-      const mentorsQuery = db
-        .select({
-          user: {
-            unique_id: usersTable.unique_id,
-            first_name: usersTable.first_name,
-            last_name: usersTable.last_name,
-            email: usersTable.email,
-            profile_url: usersTable.profile_url,
-            role: usersTable.role
-          },
-          profile: {
-            bio: profileTable.bio,
-            degree: profileTable.degree,
-            institute: profileTable.institute,
-            linkedin_url: profileTable.linkedin_url,
-            github_url: profileTable.github_url,
-            company: profileTable.company,
-            job_title: profileTable.job_title,
-            location: profileTable.location,
-            years_experience: profileTable.years_experience,
-            languages: profileTable.languages,
-            availability_status: profileTable.availability_status,
-            response_time: profileTable.response_time,
-            mentee_count: profileTable.mentee_count
-          }
-        })
-        .from(usersTable)
-        .leftJoin(profileTable, eq(usersTable.unique_id, profileTable.user_id))
-        .leftJoin(userRolesTable, eq(usersTable.unique_id, userRolesTable.user_id))
-        .leftJoin(rolesTable, eq(userRolesTable.role_id, rolesTable.id))
-        .where(
-          or(
-            eq(usersTable.role, "mentor"), // If using simple role field
-            eq(rolesTable.name, "mentor")  // If using role table
-          )
-        )
+      // Get users with mentor role using data access layer
+      const mentorsData = await GetAllMentors()
 
-      const mentorsData = await mentorsQuery
+      // Filter mentors who have mentor role through role table
+      const mentorsWithRoles = mentorsData.filter(user => {
+        // Include users with mentor role flag or assigned mentor role in roles table
+        const hasRoleColumn = user.role === "mentor"
+        const hasAssignedRole = user.roles?.some(userRole => {
+          const roleName = userRole.role?.name?.toLowerCase()
+          const roleSlug = (userRole.role as any).slug?.toLowerCase()
+          return roleName === "mentor" || roleSlug === "mentor"
+        }) ?? false
+        return hasRoleColumn || hasAssignedRole
+      })
 
-      // Get tags for each mentor
+      // Use preloaded tags relation for each mentor
       const mentorsWithTags = await Promise.all(
-        mentorsData.map(async (mentor) => {
-          const tags = await getUserTags(mentor.user.unique_id)
+        mentorsWithRoles.map(async (mentor) => {
+          // Fetch user tags (skills and interests) directly from user_tags table
+          const userTags = await getUserTags(mentor.unique_id)
+          const tags = userTags ?? []
           
           // Separate skills and interests from tags
-          const skills = tags
-            .filter(tag => tag.tag_type === 'skill')
-            .map(tag => tag.tag_name)
+          const skills = [...new Set(tags
+            .filter(userTag => userTag.tag?.type === 'skill')
+            .map(userTag => userTag.tag?.name)
+            .filter(Boolean))] // Remove any undefined values and duplicates
           
-          const interests = tags
-            .filter(tag => tag.tag_type === 'interest')
-            .map(tag => tag.tag_name)
+          const interests = [...new Set(tags
+            .filter(userTag => userTag.tag?.type === 'interest')
+            .map(userTag => userTag.tag?.name)
+            .filter(Boolean))] // Remove any undefined values and duplicates
 
-          // Get mentor ratings directly from database
-          const mentorRatingsQuery = await db
-            .select()
-            .from(mentorRatingsTable)
-            .where(eq(mentorRatingsTable.mentor_id, mentor.user.unique_id))
+          // Get mentor ratings via data access layer
+          const mentorRatingsQuery = await GetMentorRatings(mentor.unique_id)
 
-          let avgRating = 4.0; // Default
-          let totalRatings = 94; // Default
+          let avgRating = 0; // Default
+          let totalRatings = 0; // Default
           
           if (mentorRatingsQuery.length > 0) {
             const ratings = mentorRatingsQuery.map((r: any) => parseFloat(r.rating));
-            avgRating = ratings.reduce((sum: number, rating: number) => sum + rating, 0) / ratings.length;
+            avgRating = Math.round((ratings.reduce((sum: number, rating: number) => sum + rating, 0) / ratings.length) * 10) / 10;
             totalRatings = ratings.length;
           } else {
-            // Mock data for demo
-            avgRating = Math.round((Math.random() * 2 + 3) * 10) / 10; // 3.0 to 5.0
-            totalRatings = Math.floor(Math.random() * 200) + 20;
+            avgRating = 0;
+            totalRatings = 0;
           }
 
-          // Get mentor relationships count
-          const mentorRelationshipsQuery = await db
-            .select()
-            .from(mentorRelationshipsTable)
-            .where(eq(mentorRelationshipsTable.mentor_id, mentor.user.unique_id))
+          // Get mentor relationships via data access layer
+          const mentorRelationshipsQuery = await GetMentorRelationships(mentor.unique_id)
 
           const activeMentees = mentorRelationshipsQuery.filter((rel: any) => rel.status === 'accepted').length;
-          
-          // Use profile data when available, fallback to defaults
-          const profileData = mentor.profile;
-          const yearsExp = profileData?.years_experience || Math.floor(Math.random() * 15) + 1;
-          const isAvailable = profileData?.availability_status === "true" || Math.random() > 0.3;
-          const responseTime = profileData?.response_time || (isAvailable ? "< 2 hours" : "< 12 hours");
-          
-          let languages = ["English"]; // Default
-          if (profileData?.languages) {
-            try {
-              languages = Array.isArray(profileData.languages) 
-                ? profileData.languages 
-                : JSON.parse(profileData.languages as string);
-            } catch {
-              languages = ["English"];
-            }
-          }
-          
-          const actualMenteeCount = profileData?.mentee_count || activeMentees || Math.floor(Math.random() * 80) + 10;
+         
+          const profileData: any = mentor.profile;
+          const yearsExp = 0;
+          const isAvailable = true;
+          const responseTime = "";
+          const languages: string[] = [];
+          const actualMenteeCount = 0;
 
           const mentorData: MentorData = {
-            id: mentor.user.unique_id,
-            name: `${mentor.user.first_name} ${mentor.user.last_name}`,
-            title: profileData?.job_title || profileData?.degree || "Professional",
-            company: profileData?.company || "Company Name", // Default until we have real data
-            university: profileData?.institute || "University",
-            domain: interests[0] || "General", // Use first interest as domain
-            location: profileData?.location || "Location", // Default until we have real data
+            id: mentor.unique_id,
+            name: `${mentor.first_name} ${mentor.last_name}`,
+            title: profileData?.degree || "",
+            company: "",
+            university: profileData?.institute || "",
+            domain: interests[0] || "General",
+            location: profileData?.location || "Remote",
             rating: avgRating,
             ratingCount: totalRatings,
             skills,
@@ -158,10 +120,10 @@ export const GetAllMentorsAction = CreateServerAction(
             experience: yearsExp,
             responseTime: responseTime,
             languages: languages,
-            description: profileData?.bio || "Experienced professional ready to mentor.",
+            description: profileData?.bio || "",
             available: isAvailable,
-            email: mentor.user.email,
-            profileUrl: mentor.user.profile_url || undefined
+            email: mentor.email,
+            profileUrl: mentor.profile_url || undefined
           }
 
           return mentorData
@@ -177,7 +139,7 @@ export const GetAllMentorsAction = CreateServerAction(
           mentor.name.toLowerCase().includes(searchLower) ||
           mentor.university.toLowerCase().includes(searchLower) ||
           mentor.company.toLowerCase().includes(searchLower) ||
-          mentor.skills.some(skill => skill.toLowerCase().includes(searchLower))
+          mentor.skills.some((skill: string) => skill.toLowerCase().includes(searchLower))
         )
       }
 
@@ -199,16 +161,6 @@ export const GetAllMentorsAction = CreateServerAction(
         )
       }
 
-      if (filters?.experienceLevel) {
-        filteredMentors = filteredMentors.filter(mentor => {
-          const exp = mentor.experience
-          if (filters.experienceLevel === "1-3 years") return exp >= 1 && exp <= 3
-          if (filters.experienceLevel === "4-7 years") return exp >= 4 && exp <= 7
-          if (filters.experienceLevel === "8-12 years") return exp >= 8 && exp <= 12
-          if (filters.experienceLevel === "13+ years") return exp >= 13
-          return true
-        })
-      }
 
       if (filters?.minRating) {
         filteredMentors = filteredMentors.filter(mentor =>
@@ -248,23 +200,10 @@ export const GetMentorByIdAction = CreateServerAction(
   false, // Don't require auth for viewing mentor profile
   async (mentorId: string) => {
     try {
-      const mentor = await db.query.usersTable.findFirst({
-        where: eq(usersTable.unique_id, mentorId),
-        with: {
-          profile: true,
-          roles: {
-            with: {
-              role: true
-            }
-          }
-        }
-      })
+      const mentor = await GetMentorById(mentorId)
 
       if (!mentor) {
-        return {
-          success: false,
-          error: "Mentor not found"
-        }
+        return { success: false, error: "Mentor not found" }
       }
 
       // Check if user has mentor role
@@ -272,62 +211,67 @@ export const GetMentorByIdAction = CreateServerAction(
         mentor.roles?.some(userRole => userRole.role?.name === "mentor")
 
       if (!isMentor) {
-        return {
-          success: false,
-          error: "User is not a mentor"
-        }
+        return { success: false, error: "User is not a mentor" }
       }
 
       // Get tags for the mentor
       const tags = await getUserTags(mentor.unique_id)
-      
       const skills = tags
-        .filter(tag => tag.tag_type === 'skill')
-        .map(tag => tag.tag_name)
-      
+        .filter(ut => ut.tag?.type === 'skill')
+        .map(ut => ut.tag?.name)
+        .filter(Boolean)
       const interests = tags
-        .filter(tag => tag.tag_type === 'interest')
-        .map(tag => tag.tag_name)
+        .filter(ut => ut.tag?.type === 'interest')
+        .map(ut => ut.tag?.name)
+        .filter(Boolean)
 
-      // Mock additional data
-      const mockRating = Math.round((Math.random() * 2 + 3) * 10) / 10
-      const mockRatingCount = Math.floor(Math.random() * 200) + 20
-      const mockMentees = Math.floor(Math.random() * 80) + 10
-      const mockExperience = Math.floor(Math.random() * 15) + 1
-      const mockAvailable = Math.random() > 0.3
+      // Get mentor ratings
+      const mentorRatingsQuery = await GetMentorRatings(mentor.unique_id)
+      
+      let avgRating = 0
+      let totalRatings = 0
+      
+      if (mentorRatingsQuery.length > 0) {
+        const ratings = mentorRatingsQuery.map((r: any) => parseFloat(r.rating));
+        avgRating = Math.round((ratings.reduce((sum: number, rating: number) => sum + rating, 0) / ratings.length) * 10) / 10;
+        totalRatings = ratings.length;
+      }
+
+      // Pull fields from mentor.profile
+      const p = mentor.profile
+      // Default mentor stats (extended profile fields not in use)
+      const mentees = 0
+      const experience = 0
+      const languages: string[] = []
+      const available = true
+      const responseTime = ''
 
       const mentorData: MentorData = {
         id: mentor.unique_id,
         name: `${mentor.first_name} ${mentor.last_name}`,
-        title: mentor.profile?.degree || "Professional",
-        company: "Company Name",
-        university: mentor.profile?.institute || "University",
-        domain: interests[0] || "General",
-        location: "Location",
-        rating: mockRating,
-        ratingCount: mockRatingCount,
+        title: p?.degree || 'Professional',
+        company: '',
+        university: p?.institute || '',
+        domain: interests[0] || 'General',
+        location: p?.institute || '',
+        rating: avgRating,
+        ratingCount: totalRatings,
         skills,
         interests,
-        mentees: mockMentees,
-        experience: mockExperience,
-        responseTime: mockAvailable ? "< 2 hours" : "< 12 hours",
-        languages: ["English"],
-        description: mentor.profile?.bio || "Experienced professional ready to mentor.",
-        available: mockAvailable,
+        mentees,
+        experience,
+        responseTime,
+        languages,
+        description: p?.bio || '',
+        available,
         email: mentor.email,
         profileUrl: mentor.profile_url || undefined
       }
 
-      return {
-        success: true,
-        data: mentorData
-      }
+      return { success: true, data: mentorData }
     } catch (error) {
       console.error("Error fetching mentor:", error)
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch mentor"
-      }
+      return { success: false, error: error instanceof Error ? error.message : "Failed to fetch mentor" }
     }
   }
 )
@@ -337,22 +281,28 @@ export const GetMentorFiltersDataAction = CreateServerAction(
   false,
   async () => {
     try {
-      // Get all mentors
+      // Get all mentors for domains
       const mentorsResult = await GetAllMentorsAction()
-      
       if (!mentorsResult.success || !mentorsResult.data) {
         return {
           success: false,
           error: "Failed to fetch mentors data for filters"
         }
       }
-
       const mentors = mentorsResult.data
-      
-      // Extract unique values
-      const domains = [...new Set(mentors.map(mentor => mentor.domain))]
-      const skills = [...new Set(mentors.flatMap(mentor => mentor.skills))]
-      const interests = [...new Set(mentors.flatMap(mentor => mentor.interests))]
+      // Extract unique domains from mentors
+      const domains = [...new Set(mentors.map(mentor => mentor.domain))].sort()
+      // Fetch all skill tags
+      const skillTags = await db.query.tagsTable.findMany({
+        where: eq(tagsTable.type, 'skill')
+      })
+      // Fetch all interest tags
+      const interestTags = await db.query.tagsTable.findMany({
+        where: eq(tagsTable.type, 'interest')
+      })
+      // Map tag names and sort
+      const skills = skillTags.map(tag => tag.name).sort()
+      const interests = interestTags.map(tag => tag.name).sort()
       
       return {
         success: true,

@@ -1,4 +1,4 @@
-import { eq, like } from "drizzle-orm"
+import { eq, like, or } from "drizzle-orm"
 import { db } from "../.."
 import { InsertUser, userContactsTable, usersTable } from "../../schema"
 
@@ -163,4 +163,27 @@ export async function getUserContacts(currentUserId: string) {
       eq(usersTable.unique_id, userContactsTable.contact_id)
     )
     .where(eq(userContactsTable.user_id, currentUserId))
+}
+
+// Mentor-specific queries
+export async function GetAllMentors() {
+  // Retrieve all users with profile, roles, and tags; filtering by role occurs at application level
+  return await db.query.usersTable.findMany({
+    with: {
+      profile: true,
+      roles: { with: { role: true } },
+      userTags: { with: { tag: true } }
+    }
+  })
+}
+
+export async function GetMentorById(mentorId: string) {
+  return await db.query.usersTable.findFirst({
+    where: eq(usersTable.unique_id, mentorId),
+    with: {
+      profile: true,
+      roles: { with: { role: true } },
+      userTags: { with: { tag: true } }
+    }
+  })
 }

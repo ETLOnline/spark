@@ -7,7 +7,7 @@ export function CreateServerAction<T, Args extends any[]>(
   return async (...args: Args): Promise<T> => {
     if (shouldCheckAuth) {
       const user = await auth()
-      if (!user.userId) {
+      if (!user || !user.userId) {
         throw new Error("Unauthorized", { cause: 401 })
       }
     }

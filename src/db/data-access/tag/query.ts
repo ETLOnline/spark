@@ -12,15 +12,16 @@ export const AddTag = async (data: InsertTag[]) => {
 }
 
 export const FindTagsByNames = async (names: string[]) => {
-  return await db.select().from(tagsTable).where(inArray(tagsTable.name, names))
+  return await db.query.tagsTable.findMany({
+    where: inArray(tagsTable.name, names)
+  })
 }
 export const GetTags = async (type: string) => {
   try {
-    const res = await db
-      .select()
-      .from(tagsTable)
-      .where(eq(tagsTable.type, type))
-      .limit(10)
+    const res = await db.query.tagsTable.findMany({
+      where: eq(tagsTable.type, type),
+      limit: 10
+    })
 
     return res
   } catch (e: any) {
@@ -29,22 +30,18 @@ export const GetTags = async (type: string) => {
 }
 
 export const SearchTagsByName = async (name: string, type: string) => {
-  const results = await db
-    .select()
-    .from(tagsTable)
-    .where(and(ilike(tagsTable.name, `%${name}%`), eq(tagsTable.type, type)))
-    .limit(10)
+  const results = await db.query.tagsTable.findMany({
+    where: and(ilike(tagsTable.name, `%${name}%`), eq(tagsTable.type, type)),
+    limit: 10
+  })
 
   return results ?? []
 }
 
 export const SearchUserTagsByTagId = async (userId: string, tagId: number) => {
-  const userTags = await db
-    .select()
-    .from(userTagsTable)
-    .where(
-      and(eq(userTagsTable.user_id, userId), eq(userTagsTable.tag_id, tagId))
-    )
+  const userTags = await db.query.userTagsTable.findMany({
+    where: and(eq(userTagsTable.user_id, userId), eq(userTagsTable.tag_id, tagId))
+  })
 
   return userTags
 }
@@ -66,15 +63,12 @@ export const DeleteUserTags = async (userId: string, tagIds: number) => {
 }
 
 export const getUserTags = async (userId: string) => {
-  const userTags = await db
-    .select({
-      tag_id: userTagsTable.tag_id,
-      tag_name: tagsTable.name,
-      tag_type: tagsTable.type
-    })
-    .from(userTagsTable)
-    .innerJoin(tagsTable, eq(userTagsTable.tag_id, tagsTable.id))
-    .where(eq(userTagsTable.user_id, userId))
+  const userTags = await db.query.userTagsTable.findMany({
+    where: eq(userTagsTable.user_id, userId),
+    with: {
+      tag: true
+    }
+  })
 
   return userTags
 }
