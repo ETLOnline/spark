@@ -86,6 +86,12 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
   projectUsers: many(ProjectUsersTable, {
     relationName: "userToProject"
+  }),
+  tasksAssignedTo: many(taskTable, {
+    relationName: "taskAssignee"
+  }),
+  tasksCreatedBy: many(taskTable, {
+    relationName: "taskAssignor"
   })
 }))
 
@@ -943,7 +949,24 @@ export const taskTable = pgTable("task", {
 })
 
 export type InsertTask = typeof taskTable.$inferInsert
-export type SelectTask = typeof taskTable.$inferSelect
+export type SelectTask = typeof taskTable.$inferSelect & {
+  assignee?: SelectUser | null
+  assignor?: SelectUser | null
+}
+
+export const taskRelations = relations(taskTable, ({ one }) => ({
+  assignee: one(usersTable, {
+    fields: [taskTable.assign_to],
+    references: [usersTable.unique_id],
+    relationName: "taskAssignee"
+  }),
+  assignor: one(usersTable, {
+    fields: [taskTable.assign_by],
+    references: [usersTable.unique_id],
+    relationName: "taskAssignor"
+  })
+}))
+
 export const SpaceChatsTable = pgTable("space_chats", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   space_id: varchar().notNull(),
@@ -1165,7 +1188,9 @@ export const communityUsersTable = pgTable("community_users", {
     .references(() => communitiesTable.id),
   user_id: varchar()
     .notNull()
-    .references(() => usersTable.unique_id)
+    .references(() => usersTable.unique_id),
+  role: varchar().default("member"),
+  status: varchar().default("active")
 })
 
 export const communityUsersRelations = relations(

@@ -31,6 +31,7 @@ import { InviteUserDialog } from "./UserInviteDialog"
 import {
   SelectChannel,
   SelectChannelUser,
+  SelectCommunityUser,
   SelectRole,
   SelectSpace,
   SelectSpaceUser
@@ -78,11 +79,12 @@ import {
 import { SpaceUserRole } from "../common/types/spaceuser.role"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { updateUserRoleForEntityAction } from "@/src/server-actions/UserRoles/UserRole"
+import { CommunityDetailData } from "@/src/db/data-access/communities/query"
 
 interface Props {
-  entityType: "channel" | "space"
-  entity: SelectChannel | SelectSpace
-  userList: SelectChannelUser[] | SelectSpaceUser[]
+  entityType: "channel" | "space" | "community"
+  entity: SelectChannel | SelectSpace | CommunityDetailData
+  userList: SelectChannelUser[] | SelectSpaceUser[] | SelectCommunityUser[]
   scopedRoles: SelectRole[]
 }
 
@@ -95,16 +97,16 @@ export default function ChannelUserList({
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [usersList, setUsersList] = useState<
-    SelectChannelUser[] | SelectSpaceUser[]
+    SelectChannelUser[] | SelectSpaceUser[] | SelectCommunityUser[]
   >(userList)
   const [filteredUsers, setFilteredUsers] = useState<
-    SelectChannelUser[] | SelectSpaceUser[]
+    SelectChannelUser[] | SelectSpaceUser[] | SelectCommunityUser[]
   >(userList)
   const [changeRoleModelVisibility, setChangeRoleModelVisibility] =
     useState(false)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<
-    SelectChannelUser | SelectSpaceUser | null
+    SelectChannelUser | SelectSpaceUser | SelectCommunityUser | null
   >(null)
   const [selectedRoleName, setSelectedRoleName] = useState("")
   const authUser = useAtomValue(userStore.AuthUser)
@@ -155,11 +157,17 @@ export default function ChannelUserList({
   const entityName =
     entityType === "channel"
       ? (entity as SelectChannel).channel_name
-      : (entity as SelectSpace).space_name
+      : entityType === "community"
+        ? (entity as CommunityDetailData).title
+        : (entity as SelectSpace).space_name
 
   const { permissionChecker } = usePermissionChecker(
     "scoped",
-    entityType === "channel" ? "CHANNEL" : "SPACE",
+    entityType === "channel"
+      ? "CHANNEL"
+      : entityType === "community"
+        ? "COMMUNITY"
+        : "SPACE",
     entity.id
   )
 
@@ -211,7 +219,11 @@ export default function ChannelUserList({
       const updatedUserRoleResponse = await updateUserRoleForEntity(
         userId,
         entityId,
-        entityType.toUpperCase() as "CHANNEL" | "SPACE" | "PROJECT",
+        entityType.toUpperCase() as
+          | "CHANNEL"
+          | "SPACE"
+          | "PROJECT"
+          | "COMMUNITY",
         newRole.id,
         oldRoleId ?? 0,
         selectedRoleName

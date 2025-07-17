@@ -27,7 +27,8 @@ import { SelectChannel, SelectSpace, SelectUser } from "@/src/db/schema"
 import { usePathname } from "next/navigation"
 import { entityKind } from "drizzle-orm"
 import { hostname } from "os"
-import { isEntityChannel } from "@/src/utils/helpers"
+import { isEntityChannel, isEntityCommunity } from "@/src/utils/helpers"
+import { CommunityDetailData } from "@/src/db/data-access/communities/query"
 
 // Sample data for platform users
 const platformUsers: SelectUser[] = []
@@ -39,8 +40,8 @@ interface InviteUserDialogProps {
   onOpenChange: (open: boolean) => void
   spaceName?: string
   type: InvitationType
-  entityType: "space" | "channel"
-  entity: SelectChannel | SelectSpace
+  entityType: "space" | "channel" | "community"
+  entity: SelectChannel | SelectSpace | CommunityDetailData
 }
 
 export function InviteUserDialog({
@@ -66,9 +67,11 @@ export function InviteUserDialog({
       const host = window.location.host
       const protocol = window.location.protocol
       const pathname = `${protocol}//${host}`
-      const link = isEntityChannel(entity)
-        ? `${pathname}/invite/${entity.id}?type=channel`
-        : `${pathname}/invite/${entity.id}?type=space`
+      const link = isEntityCommunity(entity)
+        ? `${pathname}/invite/${entity.id}?type=community`
+        : isEntityChannel(entity)
+          ? `${pathname}/invite/${entity.id}?type=channel`
+          : `${pathname}/invite/${entity.id}?type=space`
       setInviteLink(link)
     }
   }, [entity])
