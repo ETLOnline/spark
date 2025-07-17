@@ -49,7 +49,8 @@ export const CreateChannelAction = CreateServerAction(
         newChannel.created_by,
         result.adminRole?.name
       )
-      return { success: true, data: newChannel }
+      const channelWithUsers = await GetChannelById(newChannel.id, true)
+      return { success: true, data: channelWithUsers }
     } catch (error) {
       return { error: error }
     }
