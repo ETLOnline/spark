@@ -1,3 +1,5 @@
+import { SelectChannel } from "../db/schema"
+
 export type RawUserPerms = {
   global?: string[]
   scoped?: {
@@ -74,4 +76,15 @@ export function buildUserPerms(rows: RawPermissionRow[]): UserPerms {
     global,
     scoped: Object.keys(scoped).length ? scoped : {}
   }
+}
+
+export function isChannelUser(
+  channel: SelectChannel,
+  currentUserId: string
+): boolean {
+  return (
+    channel?.users?.some(
+      (u: { user_id: string }) => u.user_id === currentUserId
+    ) ?? false
+  )
 }
