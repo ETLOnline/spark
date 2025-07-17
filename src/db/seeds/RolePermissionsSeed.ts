@@ -178,7 +178,12 @@ const rolePermissionsSeedData = [
   { role_id: 16, permission_id: 64 },
   { role_id: 16, permission_id: 63 },
   { role_id: 17, permission_id: 66 },
-  { role_id: 17, permission_id: 63 }
+  { role_id: 17, permission_id: 63 },
+  { role_id: 15, permission_id: 67 },
+  { role_id: 15, permission_id: 68 },
+  { role_id: 15, permission_id: 69 },
+  { role_id: 16, permission_id: 67 },
+  { role_id: 16, permission_id: 68 }
 ]
 
 export const RolePermissionsSeed = async () => {

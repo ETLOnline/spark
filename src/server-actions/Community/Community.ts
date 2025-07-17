@@ -9,14 +9,20 @@ import {
   UpdateCommunity,
   DeleteCommunity,
   CommunityDetailData,
-  GetCommunityById,
-  getCategories
+  GetCommunityBySlug,
+  getCategories,
+  getCommunityUsers,
+  attachCommunityUser,
+  GetCommunityById
 } from "@/src/db/data-access/communities/query"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import { InsertCommunity, SelectCommunity } from "@/src/db/schema"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
-import { createScopedCommunityRolesAndAssignAdmin } from "@/src/db/data-access/roles/query"
+import {
+  createScopedCommunityRolesAndAssignAdmin,
+  getAndAssignViewerRoles
+} from "@/src/db/data-access/roles/query"
 
 export const CreateCommunityAction = CreateServerAction(
   true,
@@ -27,6 +33,11 @@ export const CreateCommunityAction = CreateServerAction(
         newCommunity.id,
         newCommunity.title,
         newCommunity.created_by
+      )
+      await attachCommunityUser(
+        newCommunity.id,
+        newCommunity.created_by,
+        result.adminRole?.name
       )
 
       return { success: true, data: newCommunity }
@@ -198,7 +209,7 @@ export const GetCommunityDetailsAction = CreateServerAction(
   true,
   async (communitySlug: string): Promise<CommunityDetailData | null> => {
     try {
-      const community = await GetCommunityById(communitySlug)
+      const community = await GetCommunityBySlug(communitySlug)
       return community
     } catch (error) {
       console.error("Error in getCommunityDetailsAction:", error)
@@ -216,6 +227,51 @@ export const GetCommunityCategoriesAction = CreateServerAction(
     } catch (error) {
       console.error("Error in getCommunityDetailsAction:", error)
       return []
+    }
+  }
+)
+
+export const GetCommunityUsersAction = CreateServerAction(
+  true,
+  async (communityId: string) => {
+    try {
+      const spaceUsers = await getCommunityUsers(communityId)
+      return { success: true, data: spaceUsers }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetCommunityByIdAction = CreateServerAction(
+  true,
+  async (spaceId: string, withSpaceUsers?: boolean) => {
+    try {
+      const space = await GetCommunityById(spaceId, withSpaceUsers)
+      return { success: true, data: space }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const AttachCommunityUserAction = CreateServerAction(
+  true,
+  async (communityId: string, userId: string) => {
+    try {
+      const attachUserRole = await getAndAssignViewerRoles(
+        userId,
+        "community_viewer",
+        communityId
+      )
+      const channelUser = await attachCommunityUser(
+        communityId,
+        userId,
+        attachUserRole?.viewerRole?.name
+      )
+      return { success: true, data: channelUser }
+    } catch (error) {
+      return { error: error }
     }
   }
 )

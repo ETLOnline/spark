@@ -8,18 +8,34 @@ import { Separator } from "@/src/components/ui/separator"
 import PostComments from "./post-comments"
 import PostCommentForm from "./post-comment-form"
 import { formatFileSize } from "@/src/utils/helpers"
+import PostCommentsSection from "./post-comments-section"
+import { usePostNavigation } from "@/src/hooks/usePostNavigation"
 
 type Props = {
   post: SelectFilePost
+  spaceId?: string
 }
 
-const FilePost: React.FC<Props> = ({ post }) => {
+const FilePost: React.FC<Props> = ({ post, spaceId }) => {
+  const { navigateToPost } = usePostNavigation()
+
+  const handleContentClick = () => {
+    navigateToPost(post.id, spaceId)
+  }
+
+  const handleFileClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+  }
+
   return (
     <>
-      <CardContent>
+      <CardContent
+        className={spaceId !== "shared" ? "cursor-pointer" : ""}
+        onClick={spaceId !== "shared" ? handleContentClick : undefined}
+      >
         <p className="text-lg pb-5">{post.content}</p>
         {post?.file ? (
-          <Link href={post?.file?.file_path}>
+          <Link href={post?.file?.file_path} onClick={handleFileClick}>
             <div className="flex items-center space-x-2 bg-muted p-4 rounded-lg w-fit">
               <FileIcon className="h-8 w-8" />
               <span className="font-medium">{post?.file?.file_name}</span>
@@ -44,14 +60,10 @@ const FilePost: React.FC<Props> = ({ post }) => {
           likes={post.likes}
           comments={post.comments}
           likers={post.postLikes}
+          spaceId={spaceId}
         />
         <Separator />
-        <div className="w-full space-y-4">
-          {post.postComments &&
-            post.postComments.map((comment: SelectComment) => (
-              <PostComments key={comment.id} comment={comment} />
-            ))}
-        </div>
+        <PostCommentsSection comments={post.postComments || []} />
         <PostCommentForm postId={post.id} comments={post.comments} />
       </CardFooter>
     </>

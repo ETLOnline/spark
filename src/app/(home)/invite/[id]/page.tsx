@@ -12,7 +12,7 @@ import {
 import { Avatar, AvatarFallback } from "@/src/components/ui/avatar"
 import { Badge } from "@/src/components/ui/badge"
 import InviteScreen from "@/src/components/Invite/InviteScreen"
-import { SelectChannel, SelectSpace } from "@/src/db/schema"
+import { SelectChannel, SelectCommunity, SelectSpace } from "@/src/db/schema"
 import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
 import { GetChannelByIdAction } from "@/src/server-actions/Channel/Channel"
 import {
@@ -20,6 +20,7 @@ import {
   GetSpacesAction
 } from "@/src/server-actions/Space/Space"
 import { Suspense } from "react"
+import { GetCommunityByIdAction } from "@/src/server-actions/Community/Community"
 
 // Mock data - in a real app, you would fetch this based on the invite code
 
@@ -36,7 +37,7 @@ export default async function InvitePage({ params, searchParams }: Props) {
   const { id } = await params
   const { type } = await searchParams
 
-  let entity: SelectChannel | SelectSpace | null = null
+  let entity: SelectChannel | SelectSpace | SelectCommunity | null = null
 
   if (type === "channel") {
     const currentChannel = await GetChannelByIdAction(id)
@@ -52,13 +53,23 @@ export default async function InvitePage({ params, searchParams }: Props) {
     }
   }
 
+  if (type === "community") {
+    const currentSpace = await GetCommunityByIdAction(id)
+    if (currentSpace.success && currentSpace.data) {
+      entity = currentSpace.data
+    }
+  }
+
   if (!entity) {
     return <NotFound />
   }
 
   return (
     <Suspense>
-      <InviteScreen entityType={type as "channel" | "space"} entity={entity} />
+      <InviteScreen
+        entityType={type as "channel" | "space" | "community"}
+        entity={entity}
+      />
     </Suspense>
   )
 }
