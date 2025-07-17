@@ -38,6 +38,7 @@ import Overlay from "../common/Overlay/OverLay"
 import { communityStore } from "@/src/store/community/communityStore"
 import { useSetAtom } from "jotai"
 import { InviteUserDialog } from "../UserListAndInvite/UserInviteDialog"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -172,6 +173,16 @@ export default function CommunityDetailsClient({
   const currentChannels = channels || []
   const channelsCount = currentChannels.length
 
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "COMMUNITY",
+    community?.id
+  )
+
+  const canInviteUser = permissionChecker
+    ? permissionChecker?.canAccess("community.user.invite")
+    : false
+
   return (
     <div className="min-h-screen bg-background relative">
       {/* Added relative for the overlay positioning */}
@@ -245,15 +256,17 @@ export default function CommunityDetailsClient({
 
               {/* Action Buttons */}
               <div className="hidden md:flex md:flex-col gap-2 self-start md:self-auto flex-shrink-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                  onClick={() => setIsInviteDialogOpen(true)}
-                >
-                  <UserPlus className="h-4 w-4 md:mr-2" />
-                  <span className="hidden md:inline">Invite</span>
-                </Button>
+                {canInviteUser && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                    onClick={() => setIsInviteDialogOpen(true)}
+                  >
+                    <UserPlus className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Invite</span>
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
