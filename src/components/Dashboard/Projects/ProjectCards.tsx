@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import {
   Card,
   CardContent,
@@ -12,6 +12,8 @@ import { SelectProject } from "@/src/db/schema"
 import { ProjectType } from "../ProjectManagement/types/project.type"
 import { Button } from "../../ui/button"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { Kanban, ScanEye, Users } from "lucide-react"
+import { countProjectMembersAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 
 interface Props {
   project: SelectProject
@@ -19,6 +21,8 @@ interface Props {
 }
 
 function ProjectCards({ project, onEdit }: Props) {
+  const [members, setMembers] = useState(0)
+
   // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(
     "scoped",
@@ -35,54 +39,74 @@ function ProjectCards({ project, onEdit }: Props) {
   const canUpdate = permissionChecker
     ? permissionChecker.canAccess("project.update")
     : false
+
+  useEffect(() => {
+    const countMembers = async () => {
+      const res = await countProjectMembersAction(project.id)
+
+      if (res.success && res.data) {
+        setMembers(res.data)
+      }
+    }
+    countMembers()
+  }, [project])
+
   return (
     <Card key={project.id} className="mb-4 w-full">
       <CardHeader>
         <div className="flex justify-between items-start">
-          <CardTitle>{project.project_name}</CardTitle>
-          <Badge
-            variant={
-              project.project_type === ProjectType.Active
-                ? "default"
-                : project.project_type === ProjectType.Draft
-                  ? "secondary"
-                  : "outline"
-            }
-          >
-            {project.project_type}
-          </Badge>
+          <CardTitle className="flex items-center gap-2">
+            {project.project_name}
+            <Badge
+              variant={
+                project.project_type === ProjectType.Active
+                  ? "default"
+                  : project.project_type === ProjectType.Draft
+                    ? "secondary"
+                    : "outline"
+              }
+            >
+              {project.project_type}
+            </Badge>
+          </CardTitle>
+
+          {canUpdate && (
+            <Button
+              variant={"edit"}
+              onClick={() => onEdit(project)}
+              className="text-xs"
+            >
+              Edit
+            </Button>
+          )}
         </div>
       </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground">{project.description}</p>
-      </CardContent>
       <CardFooter className="flex justify-between">
-        <div className="flex items-center space-x-2">
-          {/* <Avatar className="h-8 w-8">
-            <AvatarImage
-              src={project.author.avatar}
-              alt={project.author.name}
-            />
-            <AvatarFallback>
-              {project.author.name[0]}
-            </AvatarFallback>
-          </Avatar>
-          <span className="text-sm font-medium">
-            {project.author.name}
-          </span> */}
+        <div className="flex flex-col  ">
+          <p className="flex flex-row gap-2 text-muted-foreground text-sm">
+            <span>{members}</span>
+            <span className="flex items-center gap-1">
+              <Users className=" h-4 w-4" />
+            </span>
+          </p>
         </div>
         <div className="flex items-center space-x-2">
           {canViewLaunchBoard && (
-            <LinkAsButton href={`/project/${project.id}/board`}>
-              Launch Board
+            <LinkAsButton
+              href={`/project/${project.id}/board`}
+              className="text-xs"
+            >
+              <Kanban />
+              Scrum Board
             </LinkAsButton>
           )}
-          <LinkAsButton href={`/project/${project.id}/details`}>
-            View Details
+          <LinkAsButton
+            href={`/project/${project.id}/details`}
+            className="text-xs"
+          >
+            <ScanEye />
+            Details
           </LinkAsButton>
-          {canUpdate && (
-            <Button onClick={() => onEdit(project)}>Edit Project</Button>
-          )}
         </div>
       </CardFooter>
     </Card>
