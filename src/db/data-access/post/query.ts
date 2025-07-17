@@ -240,15 +240,29 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
 }
 
 export const CreateHashtags = async (names: string[]) => {
-  const newHashtags = await db
-    .insert(tagsTable)
-    .values(
-      names.map((name) => {
-        return { name, type: "hashtag" }
-      })
-    )
-    .returning()
-  return newHashtags
+  if (names.length === 0) return []
+  try {
+    const newHashtags = await db
+      .insert(tagsTable)
+      .values(
+        names.map((name) => {
+          return { name, type: "hashtag" }
+        })
+      )
+      .returning()
+    return newHashtags
+  } catch (error: any) {
+    if (
+      error.message?.includes("duplicate key value violates unique constraint")
+    ) {
+      const existingHashtags = await db
+        .select()
+        .from(tagsTable)
+        .where(inArray(tagsTable.name, names))
+      return existingHashtags
+    }
+    throw error
+  }
 }
 
 export const UpdateHashTagsCount = async (tags: Tag[]) => {
@@ -268,6 +282,8 @@ export const AddHashtagToPostLink = async (
   hashtags: SelectTag[],
   postId: string
 ) => {
+  if (hashtags.length === 0) return
+
   await db.insert(postHashtagsTable).values(
     hashtags.map((tag) => {
       return { post_id: postId, hashtag_id: tag.id }
