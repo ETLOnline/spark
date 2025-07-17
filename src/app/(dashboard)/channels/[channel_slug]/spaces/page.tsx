@@ -16,12 +16,13 @@ import { CirclePlus } from "lucide-react"
 import { canControlChannel } from "@/src/utils/channelRoleHelper"
 import { GetSpacesAction } from "@/src/server-actions/Space/Space"
 import { spaceStore } from "@/src/store/space/spaceStore"
-import { SelectSpace } from "@/src/db/schema"
+import { SelectChannel, SelectSpace } from "@/src/db/schema"
 import { isUserAdmin } from "@/src/utils/helpers"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import Overlay from "@/src/components/common/Overlay/OverLay"
 import { communityStore } from "@/src/store/community/communityStore"
 import { AttachChannelUserAction } from "@/src/server-actions/Channel/Channel"
+import { isChannelUser } from "@/src/utils/clientHelper"
 
 export default function ChannelPage() {
   const community = useAtomValue(communityStore.selectedCommunity)
@@ -49,8 +50,9 @@ export default function ChannelPage() {
   )
 
   useEffect(() => {
-    const isMember = selectedChannel?.users?.some(
-      (u: { user_id: string }) => u.user_id === authUser?.unique_id
+    const isMember = isChannelUser(
+      selectedChannel as SelectChannel,
+      authUser?.unique_id as string
     )
 
     if (isMember) setIsChannelMember(true)
@@ -71,7 +73,6 @@ export default function ChannelPage() {
       else {
         setIsChannelMember(false)
       }
-      // return { success: false, error: res?.error }
     }
   }
 
