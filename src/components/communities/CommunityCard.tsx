@@ -20,7 +20,8 @@ import {
   Lock,
   Globe,
   User,
-  PlusCircle
+  PlusCircle,
+  ArrowRight
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -87,8 +88,8 @@ export default function CommunityCard({
       if (res?.success) {
         onJoin()
         toast({
-          title: "Community Created",
-          description: "Your community has been created successfully.",
+          title: "Community Joined",
+          description: "You have successfully joined the community!",
           duration: 3000
         })
       } else {
@@ -132,24 +133,6 @@ export default function CommunityCard({
                         <DropdownMenuItem onClick={() => onEdit(community)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
-                        </DropdownMenuItem>
-                      )}
-                      {!superAdmin && (
-                        <DropdownMenuItem
-                          onClick={handleJoinCommunity}
-                          disabled={isCurrentUserMember || joinLoading}
-                          className={
-                            isCurrentUserMember
-                              ? "text-gray-500 cursor-not-allowed"
-                              : ""
-                          }
-                        >
-                          <PlusCircle className="mr-2 h-4 w-4" />
-                          {joinLoading
-                            ? "Joining..."
-                            : isCurrentUserMember
-                              ? "Joined"
-                              : "Join"}
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuItem asChild>
@@ -204,8 +187,27 @@ export default function CommunityCard({
             <span>{community.channels?.length || 0} channels</span>
           </div>
           <div className="flex items-center gap-1">
+            {!superAdmin && (
+              <Button
+                variant="outline"
+                onClick={handleJoinCommunity}
+                disabled={isCurrentUserMember || joinLoading}
+                className={
+                  isCurrentUserMember ? "text-gray-500 cursor-not-allowed" : ""
+                }
+              >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                {joinLoading
+                  ? "Joining..."
+                  : isCurrentUserMember
+                    ? "Joined"
+                    : "Join"}
+              </Button>
+            )}
             <Link href={`/communities/${community.slug}`}>
-              <Button variant="outline">View</Button>
+              <Button variant="outline">
+                View <ArrowRight />
+              </Button>
             </Link>
           </div>
         </div>

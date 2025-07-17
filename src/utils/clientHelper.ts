@@ -1,4 +1,5 @@
-import { SelectChannel } from "../db/schema"
+import { CommunityDetailData } from "../db/data-access/communities/query"
+import { SelectChannel, SelectSpace } from "../db/schema"
 
 export type RawUserPerms = {
   global?: string[]
@@ -78,12 +79,13 @@ export function buildUserPerms(rows: RawPermissionRow[]): UserPerms {
   }
 }
 
-export function isChannelUser(
-  channel: SelectChannel,
+// Entity is channel or space or community
+export function isEntityUser(
+  entity: SelectChannel | SelectSpace | CommunityDetailData,
   currentUserId: string
 ): boolean {
   return (
-    channel?.users?.some(
+    entity?.users?.some(
       (u: { user_id: string }) => u.user_id === currentUserId
     ) ?? false
   )

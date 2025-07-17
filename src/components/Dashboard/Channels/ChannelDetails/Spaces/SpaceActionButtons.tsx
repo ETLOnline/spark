@@ -3,13 +3,17 @@ import {
   Edit,
   ExternalLink,
   MoreHorizontal,
+  PlusCircle,
   Settings,
   Trash2,
   User
 } from "lucide-react"
 import { spaceStore } from "@/src/store/space/spaceStore"
-import { useSetAtom } from "jotai"
-import { DeleteSpaceAction } from "@/src/server-actions/Space/Space"
+import { useAtomValue, useSetAtom } from "jotai"
+import {
+  AttachSpaceUserAction,
+  DeleteSpaceAction
+} from "@/src/server-actions/Space/Space"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { SelectSpace } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
@@ -21,16 +25,50 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/src/components/ui/dropdown-menu"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import CreateSpaceModal from "./CreateSpaceModal"
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { userStore } from "@/src/store/user/userStore"
+import { isEntityUser } from "@/src/utils/clientHelper"
 
 interface Props {
   space: SelectSpace
 }
 
 function SpacesActionButtons({ space }: Props) {
+  const [joinLoading, joinResult, joinError, joinSpace] = useServerAction(
+    AttachSpaceUserAction
+  )
+  const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
+  const superAdmin = useAtomValue(userStore.SuperAdmin)
+  const [isSpaceMember, setIsSpaceMember] = useState<boolean>(false)
+
+  useEffect(() => {
+    const isMember = isEntityUser(space, currentUserId as string)
+
+    if (isMember) setIsSpaceMember(true)
+    else {
+      setIsSpaceMember(false)
+    }
+  }, [space, currentUserId])
+
+  const handleJoinChannel = async () => {
+    if (space.id && currentUserId) {
+      const res = await joinSpace(space.id, currentUserId)
+      if (res?.success) {
+        setIsSpaceMember(true)
+        toast({
+          title: "Space Joined",
+          description: "You have successfully joined the Space!",
+          duration: 3000
+        })
+      } else {
+        console.error("Failed to join Channel:", res?.error)
+      }
+    }
+  }
+
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "SPACE",
@@ -104,6 +142,18 @@ function SpacesActionButtons({ space }: Props) {
             <DropdownMenuItem onClick={() => handleEditSpace(space)}>
               <Edit className="mr-2 h-4 w-4" />
               Edit
+            </DropdownMenuItem>
+          )}
+          {!superAdmin && (
+            <DropdownMenuItem
+              onClick={handleJoinChannel}
+              disabled={isSpaceMember || joinLoading}
+              className={
+                isSpaceMember ? "text-gray-500 cursor-not-allowed" : ""
+              }
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              {joinLoading ? "Joining..." : isSpaceMember ? "Joined" : "Join"}
             </DropdownMenuItem>
           )}
           {canViewSpaceUsers && (

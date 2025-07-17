@@ -81,7 +81,7 @@ export const GetSpacesAction = CreateServerAction(
       let channel: SelectChannel | undefined
 
       const authUser = await AuthUserAction()
-
+      const authUserId = authUser?.unique_id
       if (filters?.channel_slug) {
         channel = await GetChannelBySlug(filters?.channel_slug || "")
       } else if (filters?.channel_id) {
@@ -103,18 +103,20 @@ export const GetSpacesAction = CreateServerAction(
           isPublished: true
         })
         const spaceIds = (channel?.spaces || []).map((s) => s.id)
-        joinedSpaces = (authUser?.spaces || [])
-          .filter((s) => spaceIds.includes(s.space_id))
-          .map((s) => s.space)
+        joinedSpaces = spacesResponse.spaces.filter(
+          (space) =>
+            space.users &&
+            space.users.some((user) => user.user_id === authUserId)
+        )
 
-        // Get the IDs of joined spaces for exclusion
-        const joinedSpaceIds = joinedSpaces.map((s) => s.id)
-
-        // Filter out joined spaces from the spaces array
         spaces = {
           ...spacesResponse,
           spaces: spacesResponse.spaces.filter(
-            (space) => !joinedSpaceIds.includes(space.id)
+            (space) =>
+              !(
+                space.users &&
+                space.users.some((user) => user.user_id === authUserId)
+              )
           )
         }
       }

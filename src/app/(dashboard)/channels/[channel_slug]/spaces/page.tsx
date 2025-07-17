@@ -22,7 +22,7 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import Overlay from "@/src/components/common/Overlay/OverLay"
 import { communityStore } from "@/src/store/community/communityStore"
 import { AttachChannelUserAction } from "@/src/server-actions/Channel/Channel"
-import { isChannelUser } from "@/src/utils/clientHelper"
+import { isEntityUser } from "@/src/utils/clientHelper"
 
 export default function ChannelPage() {
   const community = useAtomValue(communityStore.selectedCommunity)
@@ -50,7 +50,7 @@ export default function ChannelPage() {
   )
 
   useEffect(() => {
-    const isMember = isChannelUser(
+    const isMember = isEntityUser(
       selectedChannel as SelectChannel,
       authUser?.unique_id as string
     )

@@ -74,10 +74,8 @@ export const GetChannelsAction = CreateServerAction(
           ...filters,
           isPublished: true
         })
-        joinedChannels = authUser?.channels
-          .map((uc) => uc.channel)
-          .filter((c) => c.publish_channel === 1)
-          .filter((c) => typeof c !== "undefined")
+        const authUserId = authUser?.unique_id
+        joinedChannels = []
       }
 
       // const result = await GetChannels(filters)

@@ -86,7 +86,8 @@ export async function GetSpaces(filters?: spaceQueryFilters) {
             feature: true
           }
         },
-        channel: true
+        channel: true,
+        users: true
       }
     })
 
