@@ -47,6 +47,10 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
   const superAdmin = useAtomValue(userStore.SuperAdmin)
   const [isChannelMember, setIsChannelMember] = useState<boolean>(false)
 
+  const [joinLoading, joinResult, joinError, joinChannel] = useServerAction(
+    AttachChannelUserAction
+  )
+
   useEffect(() => {
     const isMember = isChannelUser(channel, currentUserId as string)
 
@@ -60,6 +64,7 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
     if (channel.id && currentUserId) {
       const res = await joinChannel(channel.id, currentUserId)
       if (res?.success) {
+        setIsChannelMember(true)
         toast({
           title: "Chnnel Joined",
           duration: 3000
@@ -106,9 +111,6 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
     addDeleteChannelError,
     DeleteChannel
   ] = useServerAction(DeleteChannelAction)
-  const [joinLoading, joinResult, joinError, joinChannel] = useServerAction(
-    AttachChannelUserAction
-  )
 
   function editChannel(channel: SelectChannel) {
     setSelectedChannel(channel)
