@@ -32,7 +32,6 @@ import { CircleCheck, CircleXIcon } from "lucide-react"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { useDebouncedCallback } from "use-debounce"
-import { useAuthUser } from "@/src/hooks/useAuthUser"
 
 import {
   CreateCommunityAction,
@@ -66,7 +65,6 @@ export default function CreateCommunityModal({
   onCommunityCreated,
   availableCategories
 }: CreateCommunityModalProps) {
-  const { refreshAuthUser } = useAuthUser()
   const [editMode, setEditMode] = useState<boolean>(false)
   const [slugAvailableMessage, setSlugAvailableMessage] = useState<string>("")
   const [currentTitle, setCurrentTitle] = useState<string>("")
@@ -186,30 +184,6 @@ export default function CreateCommunityModal({
   useEffect(() => {
     if (selectedCommunity) {
       setEditMode(true)
-    } else {
-      setEditMode(false)
-    }
-  }, [selectedCommunity])
-
-  useEffect(() => {
-    if (!communityFormModalVisibility) {
-      form.reset({
-        title: "",
-        slug: "",
-        description: "",
-        category: "",
-        type: "public"
-      })
-      form.clearErrors()
-      setSelectedCommunity(null)
-      setEditMode(false)
-      setSlugAvailableMessage("")
-      setCurrentTitle("")
-    }
-  }, [communityFormModalVisibility, form, setSelectedCommunity])
-
-  useEffect(() => {
-    if (selectedCommunity) {
       const title = selectedCommunity.title || ""
       setCurrentTitle(title)
       form.setValue("title", title)
@@ -220,10 +194,26 @@ export default function CreateCommunityModal({
         "type",
         selectedCommunity.type === "public" ? "public" : "private"
       )
-
       form.clearErrors("slug")
+    } else {
+      setEditMode(false)
+      form.reset({
+        title: "",
+        slug: "",
+        description: "",
+        category: "",
+        type: "public"
+      })
+      form.clearErrors()
+      setSlugAvailableMessage("")
+      setCurrentTitle("")
     }
   }, [selectedCommunity, form])
+  useEffect(() => {
+    if (!communityFormModalVisibility) {
+      setSelectedCommunity(null)
+    }
+  }, [communityFormModalVisibility, setSelectedCommunity])
 
   async function communitySubmit(data: CommunityFormData) {
     if (!selectedCommunity) {

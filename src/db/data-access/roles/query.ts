@@ -52,7 +52,7 @@ export const saveUserGlobalRole = async (personaID: number, userId: string) => {
 // we are getting the roles all scope and global
 
 // this query we are using for the superadmin
-export const getAllGlobalAndScopeRoles = async () => {
+export const getAllGlobalRolesWithUserCount = async () => {
   try {
     const roles = await db.query.rolesTable.findMany({
       where: (rolesTable, { eq }) => eq(rolesTable.role_type, "GLOBAL"),
@@ -553,12 +553,16 @@ export async function createScopedProjectRolesAndAssignAdmin( // Renamed and ref
  * @returns The viewer role or null if not found.
  */
 async function fetchViewerRole(
-  roleSlug: "channel_viewer" | "space_viewer" | "project_viewer",
+  roleSlug:
+    | "channel_viewer"
+    | "space_viewer"
+    | "project_viewer"
+    | "community_viewer",
   entityId: string
 ) {
   try {
     // Determine the actual entity type (CHANNEL or SPACE) based on the ro    let entityType: "CHANNEL" | "SPACE" | "PROJECT";
-    let entityType: "CHANNEL" | "SPACE" | "PROJECT"
+    let entityType: "CHANNEL" | "SPACE" | "PROJECT" | "COMMUNITY"
 
     if (roleSlug.includes("channel")) {
       entityType = "CHANNEL"
@@ -566,6 +570,8 @@ async function fetchViewerRole(
       entityType = "SPACE"
     } else if (roleSlug.includes("project")) {
       entityType = "PROJECT"
+    } else if (roleSlug.includes("community")) {
+      entityType = "COMMUNITY"
     } else {
       throw new Error("Invalid roleSlug provided")
     }
@@ -599,7 +605,11 @@ async function fetchViewerRole(
  */
 export async function getAndAssignViewerRoles(
   userId: string,
-  roleSlug: "channel_viewer" | "space_viewer" | "project_viewer",
+  roleSlug:
+    | "channel_viewer"
+    | "space_viewer"
+    | "project_viewer"
+    | "community_viewer",
   entityId: string
 ) {
   return await db.transaction(async (trx) => {
@@ -645,7 +655,7 @@ export async function getAndAssignViewerRoles(
  * @returns A list of roles matching the entity type and ID, or null if no roles are found.
  */
 export async function getRoleByEntityTypeAndId(
-  entityType: "CHANNEL" | "SPACE" | "PROJECT",
+  entityType: "CHANNEL" | "SPACE" | "PROJECT" | "COMMUNITY",
   entityId: string
 ) {
   try {
@@ -673,7 +683,7 @@ export async function getRoleByEntityTypeAndId(
 export async function updateUserRoleForEntity(
   userId: string,
   entityId: string,
-  entityType: "CHANNEL" | "SPACE" | "PROJECT",
+  entityType: "CHANNEL" | "SPACE" | "PROJECT" | "COMMUNITY",
   newRoleId: number,
   oldRoleId: number
 ) {
@@ -852,4 +862,13 @@ export async function createScopedCommunityRolesAndAssignAdmin(
       )
     }
   })
+}
+
+export const getAllRoles = async () => {
+  try {
+    const roles = await db.select().from(rolesTable)
+    return roles
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
 }

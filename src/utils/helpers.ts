@@ -3,6 +3,7 @@ import { ProfileActivity } from "../components/Dashboard/Connections/types/conne
 import {
   InsertNotification,
   SelectChannel,
+  SelectCommunity,
   SelectRole,
   SelectSpace,
   SelectUser,
@@ -10,6 +11,7 @@ import {
 } from "../db/schema"
 import { AblyClient } from "../services/realtime/AblyClient"
 import moment from "moment-timezone"
+import { CommunityDetailData } from "../db/data-access/communities/query"
 export type RoleWithPermissions = {
   id: number
   name: string
@@ -146,14 +148,23 @@ export const formatFileSize = (sizeInBytes: number) => {
   return `${kb.toFixed(2)} KB`
 }
 
+export const isEntityCommunity = (
+  entity: CommunityDetailData | SelectChannel | SelectSpace | SelectCommunity
+): entity is CommunityDetailData | SelectCommunity => {
+  return (
+    (entity as CommunityDetailData).title !== undefined ||
+    (entity as SelectCommunity).slug !== undefined
+  )
+}
+
 export const isEntityChannel = (
-  entity: SelectChannel | SelectSpace
+  entity: SelectChannel | SelectSpace | CommunityDetailData | SelectCommunity
 ): entity is SelectChannel => {
   return (entity as SelectChannel).channel_name !== undefined
 }
 
 export const isEntitySpace = (
-  entity: SelectChannel | SelectSpace
+  entity: SelectChannel | SelectSpace | CommunityDetailData | SelectCommunity
 ): entity is SelectSpace => {
   return (entity as SelectSpace).space_name !== undefined
 }
