@@ -10,14 +10,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/src/components/ui/select"
-import {
-  Plus,
-  Search,
-  Filter,
-  ArrowUpDown,
-  AlertCircle,
-  Settings
-} from "lucide-react"
+import { Plus, Search, ArrowUpDown } from "lucide-react"
 import BacklogItemsCard from "./BacklogItemsCard"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { useParams } from "next/navigation"
@@ -27,6 +20,7 @@ import { taskStore } from "@/src/store/tasks/taskStore"
 import StatusRequiredDialog from "../StatusRequiredDialog"
 import { TaskModal } from "../Task/components/TaskModal"
 import { SelectTask } from "@/src/db/schema"
+import TaskFilters from "./TaskFilters"
 
 export function BacklogManagement() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -38,6 +32,13 @@ export function BacklogManagement() {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
   const [tasks, setTasks] = useAtom(taskStore.BackLogTasks)
+  const [appliedFilters, setAppliedFilters] = useState<{
+    assignee?: string | null
+    priority?: string
+    type?: string
+    status?: string
+  }>({})
+
   const params = useParams()
   const projectId = params.id as string
 
@@ -75,6 +76,15 @@ export function BacklogManagement() {
     }
   }, [selectedTask])
 
+  function handleFilters(filters: {
+    assignee: string | null | undefined
+    priority: string | undefined
+    type: string | undefined
+    status: string | undefined
+  }) {
+    setAppliedFilters(filters)
+  }
+
   return projectStatusList.length > 0 ? (
     <>
       <TaskModal
@@ -90,6 +100,7 @@ export function BacklogManagement() {
           setSelectedTask(task)
         }}
       />
+
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h2 className="text-xl font-bold">Backlog</h2>
@@ -119,6 +130,8 @@ export function BacklogManagement() {
             </Button>
           </div>
           <div className="flex items-center space-x-2">
+            <TaskFilters projectId={projectId} onApplyFilters={handleFilters} />
+
             <Button
               variant="outline"
               size="sm"
@@ -148,6 +161,7 @@ export function BacklogManagement() {
           limit={limit}
           orderList={orderList}
           searchedItem={searchedItem}
+          filters={appliedFilters}
         />
       </div>
     </>

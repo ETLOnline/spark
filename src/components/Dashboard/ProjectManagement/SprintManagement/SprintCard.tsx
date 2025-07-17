@@ -21,6 +21,7 @@ import { TaskModal } from "../Task/components/TaskModal"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { ToUpperCase } from "@/src/utils/helpers"
+import TaskFilters from "../BacklogManagement/TaskFilters"
 
 interface Props {
   sprint: SelectSprint
@@ -32,6 +33,12 @@ export default function SprintCardPage({ sprint }: Props) {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState<SelectTask | null>(null)
   const [getTaskLoading, , , GetTasks] = useServerAction(GetSprintTasksAction)
+  const [filters, setFilters] = useState<{
+    assignee?: string | null
+    priority?: string
+    type?: string
+    status?: string
+  }>({})
 
   const projectId = useParams().id as string
 
@@ -39,14 +46,24 @@ export default function SprintCardPage({ sprint }: Props) {
     const fetchTasks = async () => {
       const tasks = await GetTasks({
         project_id: projectId,
-        sprint_id: sprint.id
+        sprint_id: sprint.id,
+        priority: filters.priority,
+        type: filters.type,
+        status: filters.status,
+        assignee: filters.assignee
       })
       if (tasks?.success && tasks.data) {
         setTasks(tasks.data.tasks)
       }
     }
     fetchTasks()
-  }, [projectId])
+  }, [
+    projectId,
+    filters.assignee,
+    filters.priority,
+    filters.type,
+    filters.status
+  ])
 
   useEffect(() => {
     if (!isTaskModalOpen) {
@@ -67,6 +84,15 @@ export default function SprintCardPage({ sprint }: Props) {
     ? permissionChecker?.canAccess("project.task.view")
     : false
 
+  function HandleTaskFilters(filters: {
+    assignee?: string | null
+    priority?: string
+    type?: string
+    status?: string
+  }) {
+    setFilters(filters)
+  }
+
   return (
     <>
       <Card className="w-full overflow-hidden">
@@ -84,6 +110,11 @@ export default function SprintCardPage({ sprint }: Props) {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <TaskFilters
+                projectId={projectId}
+                onApplyFilters={HandleTaskFilters}
+              />
+
               {canCreateTask && (
                 <Button
                   variant={"outline"}
