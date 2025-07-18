@@ -73,7 +73,6 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
         duration_to: profile.education_end_date || ""
       })
     }
-    console.log("pr", user.profile)
   }, [user])
 
   async function handleSubmit(data: any) {

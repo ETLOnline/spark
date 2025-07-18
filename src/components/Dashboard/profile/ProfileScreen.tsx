@@ -13,9 +13,16 @@ import {
   Plus,
   UserPlus,
   PencilIcon,
-  GraduationCap
+  GraduationCap,
+  SquarePen,
+  ListX
 } from "lucide-react"
-import { SelectProfile, SelectTag, SelectUser } from "@/src/db/schema"
+import {
+  SelectCertificate,
+  SelectProfile,
+  SelectTag,
+  SelectUser
+} from "@/src/db/schema"
 import { ExtendedRecommendations, Profile } from "./types/profile-types"
 import { Button } from "@/src/components/ui/button"
 import { useToast } from "@/src/hooks/use-toast"
@@ -40,11 +47,9 @@ import Loader from "../../common/Loader/Loader"
 import { LoaderSizes } from "../../common/types/loader-types"
 import { useUser } from "@clerk/nextjs"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import { auth } from "@clerk/nextjs/server"
 import ProfileFollowActions from "./user/ProfileFollowActions"
-import Image from "next/image"
 import EditEducationModal from "./EditEducationModal"
-import { serverHooks } from "next/dist/server/app-render/entry-base"
+import CertificateModal from "./CertificateModal"
 
 type ProfileScreenProps = {
   tab?: string
@@ -67,6 +72,11 @@ export default function ProfileScreen({
   const [currentImageUrl, setCurrentImageUrl] = useState(user?.profile_url) // State to manage current profile image URL
   const [authUser, setAuthUser] = useState<SelectUser | null>(null)
   const [profile, setProfile] = useState(user.profile)
+  const [certificates, setCertificates] = useState(user.certificates)
+  const [isQualificationModalOpen, setIsQualificationModalOpen] =
+    useState(false)
+  const [selectedCertificate, setSelectedCertificate] =
+    useState<SelectCertificate | null>(null)
 
   useEffect(() => {
     const GetAuthUser = async () => {
@@ -135,6 +145,11 @@ export default function ProfileScreen({
       }
     }
     reader.readAsDataURL(file)
+  }
+
+  function handleEditCertificate(Certificate: SelectCertificate) {
+    setSelectedCertificate(Certificate)
+    setIsQualificationModalOpen(true)
   }
 
   return (
@@ -316,11 +331,13 @@ export default function ProfileScreen({
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 Education
-                <EditEducationModal
-                  user={user}
-                  profile={profile as SelectProfile}
-                  setprofile={setProfile}
-                />
+                {authUser?.unique_id === user?.unique_id && (
+                  <EditEducationModal
+                    user={user}
+                    profile={profile as SelectProfile}
+                    setprofile={setProfile}
+                  />
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -345,31 +362,67 @@ export default function ProfileScreen({
           {/* Qualifications & Certifications */}
           <Card>
             <CardHeader>
-              <CardTitle>Qualifications & Certifications</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                Qualifications & Certifications
+                {authUser?.unique_id === user?.unique_id && (
+                  <Button
+                    size={"sm"}
+                    variant={"outline"}
+                    onClick={() => setIsQualificationModalOpen(true)}
+                  >
+                    <Plus className=" h-4 w-4" />
+                  </Button>
+                )}
+                <CertificateModal
+                  UserId={user.unique_id}
+                  certificates={certificates}
+                  setCertificates={setCertificates}
+                  isDialogOpen={isQualificationModalOpen}
+                  setIsDialogOpen={setIsQualificationModalOpen}
+                  selectedCertificate={selectedCertificate}
+                  setSelectedCertificate={setSelectedCertificate}
+                />
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-1">
-                <h4 className="font-medium text-sm">
-                  Meta Full Stack Developer Certificate
-                </h4>
-                <p className="text-sm text-muted-foreground">Meta</p>
-                <div className="flex items-center gap-1">
-                  <CalendarIcon className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">2024</span>
+              {certificates?.length && certificates?.length > 0 ? (
+                certificates
+                  ?.filter(
+                    (certificate) => certificate.user_id === user?.unique_id
+                  )
+                  .map((certificate) => (
+                    <div className="space-y-1" key={certificate.id}>
+                      <h4 className="font-medium text-sm flex items-center justify-between">
+                        {certificate.title}
+                        {authUser?.unique_id === user?.unique_id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditCertificate(certificate)}
+                          >
+                            <SquarePen className="h-2 w-2" />
+                          </Button>
+                        )}
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        {certificate.institute}
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <CalendarIcon className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">
+                          {certificate.year}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+              ) : (
+                <div className="w-full">
+                  <h4 className="font-medium text-sm flex flex-col items-center justify-center text-muted-foreground text-center">
+                    <ListX className="h-10 w-10 " />
+                    No Qualifications & Certifications
+                  </h4>
                 </div>
-              </div>
-              <div className="space-y-1">
-                <h4 className="font-medium text-sm">
-                  MongoDB Developer Certification
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  MongoDB University
-                </p>
-                <div className="flex items-center gap-1">
-                  <CalendarIcon className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">2025</span>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>

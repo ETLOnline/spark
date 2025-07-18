@@ -92,6 +92,9 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
   tasksCreatedBy: many(taskTable, {
     relationName: "taskAssignor"
+  }),
+  certificates: many(certificatesTable, {
+    relationName: "userToCertificate"
   })
 }))
 
@@ -114,6 +117,7 @@ export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> & {
   roles?: SelectUserRole[] | null
   profile?: SelectProfile | null
   joinedCommunities?: SelectCommunityUser[]
+  certificates?: SelectCertificate[]
 }
 
 export const profileTable = pgTable("profile", {
@@ -144,6 +148,33 @@ export const profileRelations = relations(profileTable, ({ one }) => ({
 
 export type InsertProfile = typeof profileTable.$inferInsert
 export type SelectProfile = typeof profileTable.$inferSelect & {
+  user?: SelectUser
+}
+
+export const certificatesTable = pgTable("certificates", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  user_id: varchar("user_id")
+    .notNull()
+    .references(() => usersTable.unique_id),
+  title: varchar(),
+  institute: varchar(),
+  year: varchar(),
+  ...timestamps
+})
+
+export const certificatesRelations = relations(
+  certificatesTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [certificatesTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "userToCertificate"
+    })
+  })
+)
+
+export type InsertCertificate = typeof certificatesTable.$inferInsert
+export type SelectCertificate = typeof certificatesTable.$inferSelect & {
   user?: SelectUser
 }
 
