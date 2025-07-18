@@ -16,7 +16,7 @@ function Footer() {
               <div className="relative">
                 <Image src='/logo/spark-logo-animated-themed.gif' width={40} height={30} alt='Spark logo' />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-yellow-600 via-orange-600 to-red-600 bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-gradient-to-r from-primary via-primary-hover to-foreground bg-clip-text ">
                 SPARK
               </span>
             </div>
