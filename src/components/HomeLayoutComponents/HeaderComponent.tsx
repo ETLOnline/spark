@@ -24,7 +24,7 @@ function Header() {
             <div className="flex items-center space-x-3" >
 
               <div className="relative">
-                <Image src='/logo/spark-logo-animated.gif' width={40} height={30} alt='Spark logo' />
+                <Image src='/logo/spark-logo-animated-themed.gif' width={40} height={30} alt='Spark logo' />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-yellow-600 via-orange-600 to-red-600 bg-clip-text text-transparent">
                 SPARK

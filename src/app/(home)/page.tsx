@@ -484,7 +484,7 @@ export default function HomePage() {
             <br />
             <span className="inline-block text-blue-600 dark:text-blue-400">
               <Image
-                src="/logo/spark-logo-animated.gif"
+                src="/logo/spark-logo-animated-themed.gif"
                 width={100}
                 height={100}
                 alt="Spark logo"
