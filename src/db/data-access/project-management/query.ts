@@ -1,9 +1,12 @@
 import { and, eq, inArray } from "drizzle-orm"
 import { db } from "../.."
 import {
+  channelsTable,
   InsertProject,
   projectTable,
   ProjectUsersTable,
+  SelectProject,
+  spacesTable,
   usersTable
 } from "../../schema"
 
@@ -31,15 +34,43 @@ export async function getProjects(spaceId: string) {
   }
 }
 
-export async function getProjectById(projectId: string) {
+export async function getProjectById(
+  projectId: string,
+  withRelations: boolean = false
+): Promise<SelectProject | null> {
   try {
-    const project = await db
-      .select()
+    if (!withRelations) {
+      const project = await db
+        .select()
+        .from(projectTable)
+        .where(eq(projectTable.id, projectId))
+      return project[0]
+    }
+
+    const result = await db
+      .select({
+        project: projectTable,
+        channel: channelsTable,
+        space: spacesTable
+      })
       .from(projectTable)
+      .leftJoin(channelsTable, eq(projectTable.channel_id, channelsTable.id))
+      .leftJoin(spacesTable, eq(projectTable.space_id, spacesTable.id))
       .where(eq(projectTable.id, projectId))
-    return project[0]
-  } catch (e: any) {
-    throw new Error(e.message)
+
+    const projectData = result[0]
+
+    if (projectData) {
+      return {
+        ...projectData.project,
+        channel: projectData?.channel ?? undefined,
+        space: projectData?.space ?? undefined
+      }
+    }
+    return null
+  } catch (error: unknown) {
+    console.error(`Failed to fetch project with ID ${projectId}:`, error)
+    throw new Error(`Could not retrieve project. An unexpected error occurred.`)
   }
 }
 export async function createProjectUser(

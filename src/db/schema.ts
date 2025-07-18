@@ -927,7 +927,10 @@ export const projectTable = pgTable("project", {
 })
 
 export type InsertProject = typeof projectTable.$inferInsert
-export type SelectProject = typeof projectTable.$inferSelect
+export type SelectProject = typeof projectTable.$inferSelect & {
+  channel?: SelectChannel
+  space?: SelectSpace
+}
 
 export const taskTable = pgTable("task", {
   id: varchar("id", { length: 36 })
