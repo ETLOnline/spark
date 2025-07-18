@@ -9,7 +9,7 @@ import {
   useSidebar
 } from "@/src/components/ui/sidebar"
 import { SelectSpace, SelectSpaceFeature } from "@/src/db/schema"
-import { Users } from "lucide-react"
+import { PlusCircle, Users } from "lucide-react"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import Image from "next/image"
 import Link from "next/link"
@@ -17,9 +17,15 @@ import { usePathname, useSearchParams } from "next/navigation"
 import React, { useEffect, useState } from "react"
 import { spaceStaticFeatures } from "./constants"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import Avvvatars from "avvvatars-react"
+import { Button } from "@/src/components/ui/button"
+import { userStore } from "@/src/store/user/userStore"
+import { isEntityUser } from "@/src/utils/clientHelper"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { AttachSpaceUserAction } from "@/src/server-actions/Space/Space"
+import { useToast } from "@/src/hooks/use-toast"
 
 interface Props {
   space: SelectSpace
@@ -31,6 +37,39 @@ function SpaceSidebar({ space }: Props) {
   const { setOpen: setSideBarCollapse } = useSidebar()
   const [currentSpace, setCurrentSpace] = useAtom(spaceStore.currentSpace)
   const [spaceFeatures, setSpaceFeatures] = useState<SelectSpaceFeature[]>([])
+  const { toast } = useToast()
+  const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
+  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
+  const [joinLoading, joinResult, joinError, joinSpace] = useServerAction(
+    AttachSpaceUserAction
+  )
+
+  const [isSpaceMember, setIsSpaceMember] = useState<boolean>(false)
+
+  useEffect(() => {
+    const isMember = isEntityUser(space, currentUserId as string)
+
+    if (isMember) setIsSpaceMember(true)
+    else {
+      setIsSpaceMember(false)
+    }
+  }, [space, currentUserId])
+
+  const handleJoinSpace = async () => {
+    if (space.id && currentUserId) {
+      const res = await joinSpace(space.id, currentUserId)
+      if (res?.success) {
+        setIsSpaceMember(true)
+        toast({
+          title: "Space Joined",
+          description: "You have successfully joined the Space!",
+          duration: 3000
+        })
+      } else {
+        console.error("Failed to join Space:", res?.error)
+      }
+    }
+  }
 
   useEffect(() => {
     setSideBarCollapse(false)
@@ -95,18 +134,46 @@ function SpaceSidebar({ space }: Props) {
         <SidebarMenu>
           {/* Space Name */}
           <SidebarMenuButton size={"lg"}>
-            <div className="flex aspect-square items-center justify-center rounded-lg text-sidebar-primary-foreground">
-              <Avvvatars value={space.space_name} size={40} style="shape" />
-            </div>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate  font-semibold color-accent">
-                {space.space_name}
-              </span>
-              <div></div>
-              <span className="truncate flex items-center gap-1 text-xs text-muted-foreground">
-                <Users className="h-3 w-3" />
-                {space.users?.length || 0} members
-              </span>
+            <div className="flex items-center gap-3 w-full">
+              {/* Avatar */}
+              <div className="flex aspect-square items-center justify-center rounded-lg text-sidebar-primary-foreground flex-shrink-0">
+                <Avvvatars value={space.space_name} size={40} style="shape" />
+              </div>
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="truncate font-semibold text-sm">
+                    {space.space_name}
+                  </span>
+                  {!isSuperAdmin && (
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        // Only handle click if not disabled
+                        if (!isSpaceMember && !joinLoading) {
+                          handleJoinSpace()
+                        }
+                      }}
+                      className={`inline-flex items-center rounded-md border border-input bg-background px-3 py-1 text-xs font-medium ring-offset-background transition-colors ${
+                        isSpaceMember || joinLoading
+                          ? "text-gray-500 cursor-not-allowed opacity-50"
+                          : "hover:bg-accent hover:text-accent-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      }`}
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      {joinLoading
+                        ? "Joining..."
+                        : isSpaceMember
+                          ? "Joined"
+                          : "Join"}
+                    </span>
+                  )}
+                </div>
+                <span className="truncate flex items-center gap-1 text-xs text-muted-foreground">
+                  <Users className="h-3 w-3" />
+                  {space.users?.length || 0} members
+                </span>
+              </div>
             </div>
           </SidebarMenuButton>
 

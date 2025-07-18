@@ -29,7 +29,7 @@ import { Button } from "@/src/components/ui/button"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { userStore } from "@/src/store/user/userStore"
 import { useEffect, useState } from "react"
-import { isChannelUser } from "@/src/utils/clientHelper"
+import { isEntityUser } from "@/src/utils/clientHelper"
 
 interface ChannelProps {
   channel: SelectChannel
@@ -52,7 +52,7 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
   )
 
   useEffect(() => {
-    const isMember = isChannelUser(channel, currentUserId as string)
+    const isMember = isEntityUser(channel, currentUserId as string)
 
     if (isMember) setIsChannelMember(true)
     else {
@@ -66,7 +66,8 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
       if (res?.success) {
         setIsChannelMember(true)
         toast({
-          title: "Chnnel Joined",
+          title: "Channel Joined",
+          description: "You have successfully joined the channel!",
           duration: 3000
         })
       } else {

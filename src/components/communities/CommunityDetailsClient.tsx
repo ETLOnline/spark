@@ -18,7 +18,8 @@ import {
   Settings,
   UserPlus,
   Lock,
-  Globe
+  Globe,
+  PlusCircle
 } from "lucide-react"
 import { CommunityDetailData } from "@/src/db/data-access/communities/query"
 import CreateChannels from "@/src/components/Dashboard/Channels/CreateChannels"
@@ -39,6 +40,10 @@ import { communityStore } from "@/src/store/community/communityStore"
 import { useSetAtom } from "jotai"
 import { InviteUserDialog } from "../UserListAndInvite/UserInviteDialog"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { AttachCommunityUserAction } from "@/src/server-actions/Community/Community"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { useToast } from "@/src/hooks/use-toast"
+import { isEntityUser } from "@/src/utils/clientHelper"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -59,6 +64,7 @@ const demoRules = [
 export default function CommunityDetailsClient({
   community
 }: CommunityDetailsClientProps) {
+  const { toast } = useToast()
   const setCurrentCommunity = useSetAtom(communityStore.selectedCommunity)
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
 
@@ -88,6 +94,8 @@ export default function CommunityDetailsClient({
   const communityInitial = community?.title
     ? community.title.charAt(0).toUpperCase()
     : "C"
+  const [joinLoading, joinResult, joinError, attachCommunityUser] =
+    useServerAction(AttachCommunityUserAction)
 
   const [loadingChannels, setLoadingChannels] = useState(true)
 
@@ -99,7 +107,7 @@ export default function CommunityDetailsClient({
 
   const isUserMember =
     community.type === "private"
-      ? community.users?.some((user) => user.user_id === currentUserId)
+      ? isEntityUser(community, currentUserId as string)
       : true
   const showAccessDeniedOverlay =
     community.type === "private" && !isUserMember && !isSuperAdmin
@@ -182,6 +190,33 @@ export default function CommunityDetailsClient({
   const canInviteUser = permissionChecker
     ? permissionChecker?.canAccess("community.user.invite")
     : false
+
+  const [isCommunityMember, setIsCommunityMember] = useState<boolean>(false)
+
+  useEffect(() => {
+    const isMember = isEntityUser(community, currentUserId as string)
+
+    if (isMember) setIsCommunityMember(true)
+    else {
+      setIsCommunityMember(false)
+    }
+  }, [community, currentUserId])
+
+  const handleJoinCommunity = async () => {
+    if (community.id && currentUserId) {
+      const res = await attachCommunityUser(community.id, currentUserId)
+      if (res?.success) {
+        setIsCommunityMember(true)
+        toast({
+          title: "Community Joined",
+          description: "You have successfully joined the community!",
+          duration: 3000
+        })
+      } else {
+        console.error("Failed to join community:", res?.error)
+      }
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -267,14 +302,25 @@ export default function CommunityDetailsClient({
                     <span className="hidden md:inline">Invite</span>
                   </Button>
                 )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                >
-                  <Settings className="h-4 w-4 md:mr-2" />
-                  <span className="hidden md:inline">Options</span>
-                </Button>
+                {!isSuperAdmin && (
+                  <Button
+                    variant="outline"
+                    onClick={handleJoinCommunity}
+                    disabled={isCommunityMember || joinLoading}
+                    className={
+                      isCommunityMember
+                        ? "text-gray-500 cursor-not-allowed"
+                        : ""
+                    }
+                  >
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    {joinLoading
+                      ? "Joining..."
+                      : isCommunityMember
+                        ? "Joined"
+                        : "Join"}
+                  </Button>
+                )}
               </div>
             </div>
           </div>

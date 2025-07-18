@@ -49,7 +49,8 @@ export const CreateChannelAction = CreateServerAction(
         newChannel.created_by,
         result.adminRole?.name
       )
-      return { success: true, data: newChannel }
+      const channelWithUsers = await GetChannelById(newChannel.id, true)
+      return { success: true, data: channelWithUsers }
     } catch (error) {
       return { error: error }
     }
@@ -74,10 +75,8 @@ export const GetChannelsAction = CreateServerAction(
           ...filters,
           isPublished: true
         })
-        joinedChannels = authUser?.channels
-          .map((uc) => uc.channel)
-          .filter((c) => c.publish_channel === 1)
-          .filter((c) => typeof c !== "undefined")
+        const authUserId = authUser?.unique_id
+        joinedChannels = []
       }
 
       // const result = await GetChannels(filters)
