@@ -27,15 +27,25 @@ function ProjectStatusAndTimeline({ project }: Props) {
             {project.project_type}
           </Badge>
         </div>
-        {/* <div className="flex items-center">
-          <Calendar className="mr-2 h-4 w-4" />
-          <span className="text-sm">Started: {new Date(project.startDate).toLocaleDateString()}</span>
+        <div className="flex items-center gap-2">
+          <Calendar className=" h-4 w-4" />
+          <p className="text-sm">
+            Started:
+            <span className="text-muted-foreground text-sm">
+              {project.project_startDate}
+            </span>
+          </p>
         </div>
-        <div className="flex items-center">
-          <Calendar className="mr-2 h-4 w-4" />
-          <span className="text-sm">Target: {new Date(project.targetDate).toLocaleDateString()}</span>
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4" />
+          <p className="text-sm">
+            Targeted:
+            <span className="text-muted-foreground text-sm">
+              {project.project_targetDate}
+            </span>
+          </p>
         </div>
-        <div>
+        {/* <div>
           <span className="text-sm font-medium">Progress</span>
           <Progress value={project.progress} className="mt-1" />
         </div> */}

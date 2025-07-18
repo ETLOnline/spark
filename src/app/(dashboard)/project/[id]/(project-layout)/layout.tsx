@@ -4,6 +4,11 @@ import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
 import ProjectSidebar from "../components/projectSidebar"
 import { GetTaskStatusAction } from "@/src/server-actions/Tasks/Task"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
+import { GetSpaceById } from "@/src/db/data-access/spaces/query"
+import { getProjectUsers } from "@/src/db/data-access/project-management/query"
+import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
+import Overlay from "@/src/components/common/Overlay/OverLay"
+import { GetSpaceByIdAction } from "@/src/server-actions/Space/Space"
 
 interface Props {
   children: ReactNode
@@ -21,22 +26,45 @@ async function layout({ children, params }: Props) {
   }
   const currentProject = currProject.data
 
+  const currSpace = await GetSpaceById(currentProject.space_id)
+
   const projectStatusList = await GetTaskStatusAction(projectId)
+
+  const space = await GetSpaceByIdAction(currentProject.space_id)
+
+  const projectUser = await getProjectUsers(projectId)
+
+  const currUser = await AuthUserAction()
+
+  const userRole = projectUser.find(
+    (user) => user.user_id === currUser.unique_id
+  )
+  console.log("userRole", userRole)
 
   return (
     <div className="grid grid-cols-12 w-full h-[80vh] overflow-hidden">
-      <div className="col-span-2 border-r p-2 pl-0 overflow-y-auto">
-        <ProjectSidebar
-          currProject={currentProject}
-          statusList={projectStatusList.data ?? []}
-        />
-      </div>
+      {userRole ? (
+        <>
+          <div className="col-span-2 border-r p-2 pl-0 overflow-y-auto">
+            <ProjectSidebar
+              currProject={currentProject}
+              statusList={projectStatusList.data ?? []}
+              currSpace={currSpace}
+            />
+          </div>
 
-      <div className="col-span-10 overflow-hidden">
-        <div className="grid grid-cols-1 h-full">
-          <ScrollArea className="min-h-[80vh] p-4">{children}</ScrollArea>
-        </div>
-      </div>
+          <div className="col-span-10 overflow-hidden">
+            <div className="grid grid-cols-1 h-full">
+              <ScrollArea className="min-h-[80vh] p-4">{children}</ScrollArea>
+            </div>
+          </div>
+        </>
+      ) : (
+        <Overlay
+          page="project"
+          pageHref={`/channels/${space.data?.channel.channel_slug}/spaces/${space.data?.space_slug}?page-type=project-management`}
+        />
+      )}
     </div>
   )
 }

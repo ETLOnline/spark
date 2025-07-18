@@ -1,48 +1,33 @@
-import React from "react"
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { AlertCircle } from "lucide-react"
-import { InsertTaskStatus, SelectSprint } from "@/src/db/schema"
-import SprintTaskCard from "./BoardTaskCard"
-
+import { InsertTaskStatus, SelectSprint, SelectTask } from "@/src/db/schema"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
+import BoardTaskCard from "./BoardTaskCard"
 interface Props {
   sprint?: SelectSprint
   status?: InsertTaskStatus
+  tasks: SelectTask[]
+  onTaskClick: (task: SelectTask) => void
+  setTasks: Dispatch<SetStateAction<SelectTask[]>>
 }
 
-interface Sprint {
-  id: string
-  name: string
-  startDate: string
-  endDate: string
-  status: "planning" | "active" | "completed"
-  progress: number
-  tasks: Task[]
-}
-
-interface Task {
-  id: string
-  title: string
-  description: string
-  status: "todo" | "in-progress" | "done"
-  priority: "low" | "medium" | "high"
-  assignee: {
-    name: string
-    avatar: string
-  }
-  storyPoints: number
-}
-
-function BoardColumn({ sprint, status }: Props) {
+function BoardColumn({ sprint, status, tasks, onTaskClick, setTasks }: Props) {
   return (
-    <div className="w-1/4 flex-shrink-0 space-y-2">
-      <div className="font-medium text-sm flex items-center">
-        <AlertCircle className="mr-2 h-4 w-4" />
-        {status?.name}
-      </div>
-      {/* {sprint?.tasks
-        .filter((task) => task.status === status)
+    <div className="w-[24%] border p-2 pb-4 rounded-xl flex-shrink-0 space-y-2">
+      <div className="font-medium text-sm mb-4 text-center">{status?.name}</div>
+      {tasks
+        .filter((t) => t.status_id === status?.id)
         .map((task) => (
-          <SprintTaskCard task={task} key={task.id} />
-          ))} */}
+          <BoardTaskCard
+            task={task}
+            key={task.id}
+            onClick={onTaskClick}
+            setTasks={setTasks}
+          />
+        ))}
+
+      {/* task modal */}
     </div>
   )
 }

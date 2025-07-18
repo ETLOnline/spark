@@ -18,13 +18,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/src/components/ui/dropdown-menu"
-import { SelectTask } from "@/src/db/schema"
+import { SelectTask, SelectUser } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { DeleteTaskAction } from "@/src/server-actions/Tasks/Task"
 import { projectStore } from "@/src/store/project/projectStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
-import { useAtom, useAtomValue, useSetAtom } from "jotai"
+import { useAtom, useSetAtom } from "jotai"
 import { CircleHelp, MoreHorizontal } from "lucide-react"
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import {
@@ -34,7 +34,14 @@ import {
 import { useParams } from "next/navigation"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import TaskMoveDialog from "../Task/components/task-move-dialog"
-import { TaskModal } from "../Task/components/TaskModal"
+import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/src/components/ui/tooltip"
+import { getInitials } from "@/src/utils/helpers"
 
 interface Props {
   selectedItems: string[]
@@ -47,13 +54,10 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
   const projectId = params.id as string
   const [isDropdownOpen, setIsDropDownOpen] = useState(false)
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
-  // const [selectedTask, setSelectedTask] = useState<SelectTask | null>(null)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
   const SetTasks = useSetAtom(taskStore.BackLogTasks)
-  // const
   const [status, setStatus] = useAtom(projectStore.projectStatusList)
   const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useState(false)
-  // const [isTaskModelOpen, setIsTaskModelOpen] = useState(false)
 
   const [deleteTaskLoading, deleteTaskData, deleteTaskError, DeleteTask] =
     useServerAction(DeleteTaskAction)
@@ -68,7 +72,6 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
 
   function EditTask(task: SelectTask) {
     setSelectedTask(task)
-    // setIsTaskModelOpen(true)
     setIsDropDownOpen(false)
   }
 
@@ -138,7 +141,6 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
     ? permissionChecker?.canAccess("project.backlog.task.delete")
     : false
   const onTaskCreated = (task: SelectTask) => {
-    console.log("new task => ", task)
     SetTasks((prev) => [...prev, task])
     setSelectedTask(task)
   }
@@ -167,15 +169,15 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
           />
         </div>
         <div
-          className="col-span-1 text-sm font-medium cursor-pointer"
-          onClick={() => EditTask(task)}
+          className={`col-span-1 text-sm font-medium ${canUpdate ? "cursor-pointer" : "cursor-default"}`}
+          onClick={() => canUpdate && EditTask(task)}
         >
           {task.task_num}
         </div>
         <div className="col-span-3">
           <div
-            className="font-medium break-words whitespace-normal cursor-pointer"
-            onClick={() => EditTask(task)}
+            className={`font-medium break-words whitespace-normal line-clamp-2 ${canUpdate ? "cursor-pointer" : "cursor-default"}`}
+            onClick={() => canUpdate && EditTask(task)}
           >
             {task.task_title}
           </div>
@@ -189,18 +191,36 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
         </div>
         <div className="col-span-1">{task.story_points}</div>
         <div className="col-span-1">
-          {/* {task.assignee ? (
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={task.assignee.avatar} />
-            <AvatarFallback>{task.assignee.name[0]}</AvatarFallback>
-          </Avatar>
-        ) : (
-          <Badge variant="outline" className="text-xs">
-            Unassigned
-          </Badge>
-        )} */}
-
-          <CircleHelp />
+          {task.assign_to ? (
+            <div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Avatar className="h-8 w-8 cursor-pointer">
+                      <AvatarImage
+                        src={getInitials(
+                          `${task?.assignee?.first_name ?? ""} ${task?.assignee?.last_name ?? ""}`
+                        )}
+                        alt={task.assignee?.first_name ?? ""}
+                      />
+                      <AvatarFallback className="text-xs">
+                        {getInitials(
+                          `${task?.assignee?.first_name ?? ""} ${task?.assignee?.last_name ?? ""}`
+                        )}
+                      </AvatarFallback>
+                    </Avatar>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span>
+                      {task.assignee?.first_name} {task.assignee?.last_name}
+                    </span>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          ) : (
+            <CircleHelp />
+          )}
         </div>
         <div className="col-span-1 text-right">
           {(canUpdate || canDelete) && (
@@ -219,7 +239,6 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
                     <DropdownMenuItem onClick={() => EditTask(task)}>
                       Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem>Assign</DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
                         setIsTaskMoveDialogOpen(true)

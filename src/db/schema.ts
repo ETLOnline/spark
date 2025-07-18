@@ -80,6 +80,18 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
   roles: many(userRolesTable, {
     relationName: "userRolesToUser"
+  }),
+  joinedCommunities: many(communityUsersTable, {
+    relationName: "userToCommunity"
+  }),
+  projectUsers: many(ProjectUsersTable, {
+    relationName: "userToProject"
+  }),
+  tasksAssignedTo: many(taskTable, {
+    relationName: "taskAssignee"
+  }),
+  tasksCreatedBy: many(taskTable, {
+    relationName: "taskAssignor"
   })
 }))
 
@@ -101,6 +113,7 @@ export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> & {
   channels?: SelectChannelUser[]
   roles?: SelectUserRole[] | null
   profile?: SelectProfile | null
+  joinedCommunities?: SelectCommunityUser[]
 }
 
 export const profileTable = pgTable("profile", {
@@ -685,15 +698,23 @@ export const channelsTable = pgTable("channels", {
   created_by: varchar().notNull(),
   publish_channel: integer().notNull().default(0),
   ownerId: varchar(),
+  community_id: varchar("community_id", { length: 36 }).references(
+    () => communitiesTable.id
+  ),
   ...timestamps
 })
 
-export const channelsRelations = relations(channelsTable, ({ many }) => ({
+export const channelsRelations = relations(channelsTable, ({ many, one }) => ({
   spaces: many(spacesTable, {
     relationName: "spaceToChannel"
   }),
   users: many(ChannelUsersTable, {
     relationName: "channelToChannelUser"
+  }),
+  community: one(communitiesTable, {
+    fields: [channelsTable.community_id],
+    references: [communitiesTable.id],
+    relationName: "channelToCommunity"
   })
 }))
 
@@ -701,6 +722,7 @@ export type InsertChannel = typeof channelsTable.$inferInsert
 export type SelectChannel = typeof channelsTable.$inferSelect & {
   spaces?: SelectSpace[]
   users?: SelectChannelUser[]
+  community?: SelectCommunity
 }
 
 export const spacesTable = pgTable("spaces", {
@@ -921,11 +943,30 @@ export const taskTable = pgTable("task", {
   created_by: varchar().notNull(),
   status_id: varchar(),
   sprint_id: varchar(),
+  assign_to: varchar(),
+  assign_by: varchar(),
   ...timestamps
 })
 
 export type InsertTask = typeof taskTable.$inferInsert
-export type SelectTask = typeof taskTable.$inferSelect
+export type SelectTask = typeof taskTable.$inferSelect & {
+  assignee?: SelectUser | null
+  assignor?: SelectUser | null
+}
+
+export const taskRelations = relations(taskTable, ({ one }) => ({
+  assignee: one(usersTable, {
+    fields: [taskTable.assign_to],
+    references: [usersTable.unique_id],
+    relationName: "taskAssignee"
+  }),
+  assignor: one(usersTable, {
+    fields: [taskTable.assign_by],
+    references: [usersTable.unique_id],
+    relationName: "taskAssignor"
+  })
+}))
+
 export const SpaceChatsTable = pgTable("space_chats", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   space_id: varchar().notNull(),
@@ -974,6 +1015,7 @@ export const SprintTable = pgTable("sprints", {
   start_date: varchar().notNull(),
   end_date: varchar().notNull(),
   projectId: varchar().notNull(),
+  sprint_status: varchar(),
   ...timestamps
 })
 
@@ -992,7 +1034,26 @@ export const ProjectUsersTable = pgTable("project_users", {
 })
 
 export type InsertProjectUser = typeof ProjectUsersTable.$inferInsert
-export type SelectProjectUser = typeof ProjectUsersTable.$inferSelect
+export type SelectProjectUser = typeof ProjectUsersTable.$inferSelect & {
+  user?: SelectUser
+  project?: SelectProject
+}
+
+export const ProjectUsersRelations = relations(
+  ProjectUsersTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [ProjectUsersTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "userToProject"
+    }),
+    project: one(projectTable, {
+      fields: [ProjectUsersTable.project_id],
+      references: [projectTable.id],
+      relationName: "projectToProjectUsers" // Must match relation name in projectTable
+    })
+  })
+)
 
 // Permissions
 export const permissionsTable = pgTable("permissions", {
@@ -1074,3 +1135,96 @@ export type SelectRole = typeof rolesTable.$inferSelect & {
 export type SelectUserRole = typeof userRolesTable.$inferSelect & {
   role?: SelectRole
 }
+
+export const communitiesTable = pgTable("communities", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  title: varchar().notNull(),
+  description: varchar(),
+  category_id: varchar().notNull(),
+  slug: varchar().notNull().unique(),
+  type: varchar().notNull().default("public"),
+  created_by: varchar().notNull(),
+  ...timestamps
+})
+
+export const communitiesRelations = relations(
+  communitiesTable,
+  ({ many, one }) => ({
+    creator: one(usersTable, {
+      fields: [communitiesTable.created_by],
+      references: [usersTable.unique_id],
+      relationName: "communityToCreator"
+    }),
+    communityMembers: many(communityUsersTable, {
+      relationName: "communityToUser"
+    }),
+    channels: many(channelsTable, {
+      relationName: "channelToCommunity"
+    }),
+    category: one(communityCategoriesTable, {
+      fields: [communitiesTable.category_id],
+      references: [communityCategoriesTable.id],
+      relationName: "communityToCategory"
+    })
+  })
+)
+
+export type InsertCommunity = typeof communitiesTable.$inferInsert
+export type SelectCommunity = typeof communitiesTable.$inferSelect & {
+  communityMembers?: SelectCommunityUser[]
+  channels?: SelectChannel[]
+  creator?: SelectUser
+  category?: SelectCommunityCategory
+}
+
+export const communityUsersTable = pgTable("community_users", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  community_id: varchar()
+    .notNull()
+    .references(() => communitiesTable.id),
+  user_id: varchar()
+    .notNull()
+    .references(() => usersTable.unique_id),
+  role: varchar().default("member"),
+  status: varchar().default("active")
+})
+
+export const communityUsersRelations = relations(
+  communityUsersTable,
+  ({ one }) => ({
+    community: one(communitiesTable, {
+      fields: [communityUsersTable.community_id],
+      references: [communitiesTable.id],
+      relationName: "communityToUser"
+    }),
+    user: one(usersTable, {
+      fields: [communityUsersTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "userToCommunity"
+    })
+  })
+)
+
+export type InsertCommunityUser = typeof communityUsersTable.$inferInsert
+export type SelectCommunityUser = typeof communityUsersTable.$inferSelect & {
+  community?: SelectCommunity
+  user?: SelectUser
+}
+
+export const communityCategoriesTable = pgTable("community_categories", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  name: varchar("name").notNull(),
+  slug: varchar("slug").notNull().unique(),
+  ...timestamps
+})
+
+export type SelectCommunityCategory =
+  typeof communityCategoriesTable.$inferSelect & {
+    communities?: SelectCommunity[]
+  }

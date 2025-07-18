@@ -119,30 +119,12 @@ export async function createProjectUsers(
 }
 export async function getProjectUsers(projectId: string) {
   try {
-    const projectUsers = await db
-      .select({
-        id: ProjectUsersTable.id,
-        project_id: ProjectUsersTable.project_id,
-        user_id: ProjectUsersTable.user_id,
-        role: ProjectUsersTable.role,
-        status: ProjectUsersTable.status,
-        updated_at: ProjectUsersTable.updated_at,
-        created_at: ProjectUsersTable.created_at,
-        deleted_at: ProjectUsersTable.deleted_at,
-        user: {
-          unique_id: usersTable.unique_id,
-          first_name: usersTable.first_name,
-          last_name: usersTable.last_name,
-          email: usersTable.email,
-          external_auth_id: usersTable.external_auth_id,
-          profile_url: usersTable.profile_url,
-          meta: usersTable.meta,
-          role: usersTable.role
-        }
-      })
-      .from(ProjectUsersTable)
-      .leftJoin(usersTable, eq(ProjectUsersTable.user_id, usersTable.unique_id))
-      .where(eq(ProjectUsersTable.project_id, projectId))
+    const projectUsers = await db.query.ProjectUsersTable.findMany({
+      with: {
+        user: true
+      },
+      where: eq(ProjectUsersTable.project_id, projectId)
+    })
 
     return projectUsers
   } catch (error: any) {
@@ -201,6 +183,18 @@ export async function updateProjectUserRole(
       .returning()
 
     return result[0]
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
+
+export async function countProjectMembers(projectId: string) {
+  try {
+    const count = await db.$count(
+      ProjectUsersTable,
+      eq(ProjectUsersTable.project_id, projectId)
+    )
+    return count
   } catch (error: any) {
     throw new Error(error.message)
   }

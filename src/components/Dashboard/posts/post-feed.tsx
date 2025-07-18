@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
 import FilePost from "./post-file"
 import ImagePost from "./post-image"
@@ -11,14 +11,14 @@ import { postStore } from "@/src/store/post/postStore"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Card, CardContent, CardHeader } from "@/src/components/ui/card"
 import PostMenu from "./post-menu"
-import moment from "moment-timezone"
 import NoDataCard from "../Channels/ChannelDetails/NoDataCard"
+import { formatRelativeTime } from "@/src/utils/helpers"
 import {
   GetPostsAction,
   GetSpacePostsAction
 } from "@/src/server-actions/Post/Post"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { useDebouncedCallback } from "use-debounce"
+import { Button } from "@/src/components/ui/button"
 
 type PostFeedProps = {
   fetchedPosts: (SelectPost | SelectFilePost | SelectPollPost)[]
@@ -33,56 +33,56 @@ const PostFeed: React.FC<PostFeedProps> = ({
 }) => {
   const [posts, setPosts] = useAtom(postStore.posts)
   const offset = useRef<number>(10)
-  const isLoading = useRef<boolean>(false)
+  const [hasMorePosts, setHasMorePosts] = useState<boolean>(true)
+  const [loadingMore, setLoadingMore] = useState<boolean>(false)
+  const previousCategory = useRef<string | undefined>(category)
 
   const [spacePostsLoading, oldSpacePosts, spacePostsError, getSpacePosts] =
     useServerAction(GetSpacePostsAction)
   const [postsLoading, oldPosts, postsError, getPosts] =
     useServerAction(GetPostsAction)
 
-  const handleScroll = useDebouncedCallback(() => {
-    if (isLoading.current) return
+  const handleLoadMore = () => {
+    if (loadingMore || !hasMorePosts) return
+    setLoadingMore(true)
+    fetchOldPosts()
+  }
 
-    const scrolledToBottom =
-      window.innerHeight + document.documentElement.scrollTop >=
-      document.documentElement.offsetHeight - 100
+  useEffect(() => {
+    const categoryChanged = previousCategory.current !== category
+    previousCategory.current = category
 
-    if (scrolledToBottom) {
-      isLoading.current = true
-      fetchOldPosts()
+    // Reset posts if category changed or this is initial load
+    if (categoryChanged || posts.length === 0) {
+      setPosts([...fetchedPosts])
+      offset.current = 10
+      setHasMorePosts(fetchedPosts.length === 10)
     }
-  }, 200)
+  }, [fetchedPosts, category])
 
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [handleScroll])
-
-  useEffect(() => {
-    setPosts([...fetchedPosts])
-  }, [fetchedPosts])
-
-  useEffect(() => {
-    console.log(oldPosts)
-
     if (oldPosts && oldPosts.success) {
-      setPosts((prevPosts) => [
-        ...prevPosts,
-        ...(oldPosts?.data as (SelectPost | SelectFilePost | SelectPollPost)[])
-      ])
+      const newPosts = oldPosts?.data as (
+        | SelectPost
+        | SelectFilePost
+        | SelectPollPost
+      )[]
+      setPosts((prevPosts) => [...prevPosts, ...newPosts])
+      setHasMorePosts(newPosts.length === 10) // If we got less than 10, no more posts
+      setLoadingMore(false)
     }
   }, [oldPosts])
 
   useEffect(() => {
     if (oldSpacePosts && oldSpacePosts.success) {
-      setPosts((prevPosts) => [
-        ...prevPosts,
-        ...(oldSpacePosts?.data as (
-          | SelectPost
-          | SelectFilePost
-          | SelectPollPost
-        )[])
-      ])
+      const newPosts = oldSpacePosts?.data as (
+        | SelectPost
+        | SelectFilePost
+        | SelectPollPost
+      )[]
+      setPosts((prevPosts) => [...prevPosts, ...newPosts])
+      setHasMorePosts(newPosts.length === 10) // If we got less than 10, no more posts
+      setLoadingMore(false)
     }
   }, [oldSpacePosts])
 
@@ -93,9 +93,6 @@ const PostFeed: React.FC<PostFeedProps> = ({
       getPosts(offset.current)
     }
     offset.current += 10
-    setTimeout(() => {
-      isLoading.current = false
-    }, 1000)
   }
 
   return (
@@ -103,50 +100,75 @@ const PostFeed: React.FC<PostFeedProps> = ({
       {posts.length === 0 ? (
         <NoDataCard title="No posts available" />
       ) : (
-        posts.map((post) => {
-          const name = `${post.author.first_name} ${post.author.last_name}`
+        <>
+          {posts.map((post) => {
+            const name = `${post.author.first_name} ${post.author.last_name}`
 
-          return (
-            <Card className="bg-background shadow-lg" key={post.id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <Avatar>
-                      <AvatarImage
-                        src={post.author.profile_url as string}
-                        alt={name}
-                      />
-                      <AvatarFallback>{name}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-semibold">{name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {moment
-                          .utc(post.created_at || "")
-                          .local()
-                          .fromNow()}
-                      </p>
+            return (
+              <Card className="bg-background shadow-lg" key={post.id}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <Avatar>
+                        <AvatarImage
+                          src={post.author.profile_url as string}
+                          alt={name}
+                        />
+                        <AvatarFallback>{name}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-semibold">{name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatRelativeTime(post.created_at || "")}
+                        </p>
+                      </div>
                     </div>
+                    <PostMenu post={post} spaceId={spaceId} />
                   </div>
-                  <PostMenu post={post} spaceId={spaceId} />
-                </div>
-              </CardHeader>
-              <CardContent>
-                {post.type === "text" ? (
-                  <TextPost key={post.id} post={post} />
-                ) : post.type === "image" ? (
-                  <ImagePost key={post.id} post={post as SelectFilePost} />
-                ) : post.type === "poll" ? (
-                  <PollPost key={post.id} post={post as SelectPollPost} />
-                ) : (
-                  post.type === "file" && (
-                    <FilePost key={post.id} post={post as SelectFilePost} />
-                  )
-                )}
-              </CardContent>
-            </Card>
-          )
-        })
+                </CardHeader>
+                <CardContent>
+                  {post.type === "text" ? (
+                    <TextPost key={post.id} post={post} spaceId={spaceId} />
+                  ) : post.type === "image" ? (
+                    <ImagePost
+                      key={post.id}
+                      post={post as SelectFilePost}
+                      spaceId={spaceId}
+                    />
+                  ) : post.type === "poll" ? (
+                    <PollPost
+                      key={post.id}
+                      post={post as SelectPollPost}
+                      spaceId={spaceId}
+                    />
+                  ) : (
+                    post.type === "file" && (
+                      <FilePost
+                        key={post.id}
+                        post={post as SelectFilePost}
+                        spaceId={spaceId}
+                      />
+                    )
+                  )}
+                </CardContent>
+              </Card>
+            )
+          })}
+
+          {hasMorePosts && (
+            <div className="flex justify-center mt-8 w-full">
+              <Button
+                onClick={handleLoadMore}
+                loading={loadingMore}
+                disabled={loadingMore}
+                variant="outline"
+                size="lg"
+              >
+                {loadingMore ? "Loading..." : "Load More Posts"}
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

@@ -10,16 +10,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env: # <-- Define environment variables for the build job here
-      DB_HOST : ${{ secrets.DB_HOST }}
-      DB_PORT : ${{ secrets.DB_PORT }}
-      DB_USER : ${{ secrets.DB_USER }}
-      DB_PWD : ${{ secrets.DB_PWD }}
-      DB_NAME : ${{ secrets.DB_NAME }}
-      DB_SSL : ${{ secrets.DB_SSL }}
-      WEBHOOK_SECRET : ${{ secrets.WEBHOOK_SECRET }}
-      ABLY_API_KEY : ${{ secrets.ABLY_API_KEY }}
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY : ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
-      CLERK_SECRET_KEY : ${{ secrets.CLERK_SECRET_KEY }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PWD: ${{ secrets.DB_PWD }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_SSL: ${{ secrets.DB_SSL }}
+      WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
+      ABLY_API_KEY: ${{ secrets.ABLY_API_KEY }}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
     permissions:
       contents: read # This is required for actions/checkout
 
@@ -29,11 +29,11 @@ jobs:
       - name: Set up Node.js version
         uses: actions/setup-node@v3
         with:
-          node-version: '22.x' # Ensure this matches your local and Azure App Service Node.js version
+          node-version: "22.x" # Ensure this matches your local and Azure App Service Node.js version
 
       - name: Get the Latest npm to avoid any caching issues
         run: npm install -g npm@latest
-        
+
       - name: Install dependencies
         run: npm ci --include=optional # Use 'npm ci' for CI/CD for consistent installs
 
@@ -59,7 +59,7 @@ jobs:
           ls -la ./.next/standalone/public
           echo "Contents of ./.next/standalone/.next/static:"
           ls -la ./.next/standalone/.next/static
-      
+
       - name: Zip artifact for deployment
         # The 'standalone' output creates a ./.next/standalone directory
         # which contains everything needed to run the app, including node_modules
@@ -100,10 +100,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B504ADCBAECC489C880B107DC7D4C6F1 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_48EAAAD533374BCD87BCBE58AD57951A }}
 
-      - name: 'Deploy to Azure Web App'
+      - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'etl-spark-dev'
-          slot-name: 'Production'
+          app-name: "etl-spark-dev"
+          slot-name: "Production"
           package: . # Deploy the current directory, which now contains the unzipped standalone build

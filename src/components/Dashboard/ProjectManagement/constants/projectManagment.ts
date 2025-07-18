@@ -80,12 +80,6 @@ interface InsertTaskStatusEx extends InsertTaskStatus {
 
 export const projectDefaultStatuses: Partial<InsertTaskStatusEx>[] = [
   {
-    name: "Backlog",
-    status_slug: "backlog",
-    position: 0,
-    iconColor: "#3a3c40"
-  },
-  {
     name: "To Do",
     status_slug: "to-do",
     position: 1,
@@ -130,12 +124,13 @@ export const ProjectManagementPages = [
     title: "Backlog",
     icon: "list-todo"
   },
-  {
-    key: "files",
-    link: "/files",
-    title: "Files",
-    icon: "files"
-  },
+  // For future use
+  // {
+  //   key: "files",
+  //   link: "/files",
+  //   title: "Files",
+  //   icon: "files"
+  // },
   {
     key: "teams",
     link: "/teams",

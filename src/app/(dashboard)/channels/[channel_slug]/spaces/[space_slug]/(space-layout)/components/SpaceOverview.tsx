@@ -15,6 +15,7 @@ import "@/src/components/common/RichEditorFormat.css"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { UpdateSpaceAction } from "@/src/server-actions/Space/Space"
 import { toast } from "@/src/hooks/use-toast"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface SpaceOverviewProps {
   features?: SelectSpaceFeature[]
@@ -34,6 +35,16 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
     }
   }, [space])
 
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "SPACE",
+    space?.id
+  )
+
+  const canEditDetails = permissionChecker
+    ? permissionChecker.canAccess("space.update")
+    : false
+
   const handleEditDetails = async () => {
     try {
       if (content) {
@@ -49,7 +60,13 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
           setIsEditDetail(false)
         }
       }
-    } catch {}
+    } catch {
+      toast({
+        title: "Something went wrong",
+        description: "Please try again later.",
+        duration: 3000
+      })
+    }
   }
 
   return (
@@ -107,22 +124,29 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
           <div className="space-y-8 rich-editor">
             <div>
               {isEditDetail ? (
-                <div className="space-y-2">
-                  <Tiptap value={content} onChange={setContent} />
-                  <Button
-                    className="float-right"
-                    onClick={() => {
-                      handleEditDetails()
-                    }}
-                    loading={overviewLoading}
-                  >
-                    Save
-                  </Button>
-                </div>
-              ) : (
+                canEditDetails ? (
+                  <div className="space-y-2">
+                    <Tiptap value={content} onChange={setContent} />
+                    <Button
+                      className="float-right"
+                      onClick={() => handleEditDetails()}
+                      loading={overviewLoading}
+                    >
+                      Save
+                    </Button>
+                  </div>
+                ) : null
+              ) : canEditDetails ? (
                 <Card
                   className="p-4 cursor-pointer"
                   onClick={() => setIsEditDetail(true)}
+                  dangerouslySetInnerHTML={{
+                    __html: content ?? ""
+                  }}
+                />
+              ) : (
+                <Card
+                  className="p-4"
                   dangerouslySetInnerHTML={{
                     __html: content ?? ""
                   }}

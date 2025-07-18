@@ -72,8 +72,9 @@ export const pageMeta = [
     description: "limit settings"
   },
   {
-    id: "projects",
-    url: "/projects",
+    id: "project",
+    url: (channel_slug: string, spaceSlug: string) =>
+      `/channels/${channel_slug}/spaces/${spaceSlug}?page-type=project-management`,
     title: "Projects",
     description: "projects"
   },

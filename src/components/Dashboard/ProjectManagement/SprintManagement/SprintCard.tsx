@@ -7,23 +7,21 @@ import {
   CardTitle
 } from "@/src/components/ui/card"
 import { Badge } from "@/src/components/ui/badge"
-import { useAtom, useSetAtom } from "jotai"
-import { sprintStore } from "@/src/store/sprint/sprintsStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import moment from "moment"
-import { taskStore } from "@/src/store/tasks/taskStore"
 import Loader from "@/src/components/common/Loader/Loader"
 import { SelectSprint, SelectTask } from "@/src/db/schema"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { Button } from "@/src/components/ui/button"
 import SprintTasks from "./SprintTasks"
 import SprintContextMenu from "./SprintContextMenu"
-import { SprintStatus } from "../constants/projectManagment"
 import { TaskModal } from "../Task/components/TaskModal"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { ToUpperCase } from "@/src/utils/helpers"
+import TaskFilters from "../BacklogManagement/TaskFilters"
 
 interface Props {
   sprint: SelectSprint
@@ -35,6 +33,12 @@ export default function SprintCardPage({ sprint }: Props) {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState<SelectTask | null>(null)
   const [getTaskLoading, , , GetTasks] = useServerAction(GetSprintTasksAction)
+  const [filters, setFilters] = useState<{
+    assignee?: string | null
+    priority?: string
+    type?: string
+    status?: string
+  }>({})
 
   const projectId = useParams().id as string
 
@@ -42,47 +46,30 @@ export default function SprintCardPage({ sprint }: Props) {
     const fetchTasks = async () => {
       const tasks = await GetTasks({
         project_id: projectId,
-        sprint_id: sprint.id
+        sprint_id: sprint.id,
+        priority: filters.priority,
+        type: filters.type,
+        status: filters.status,
+        assignee: filters.assignee
       })
       if (tasks?.success && tasks.data) {
         setTasks(tasks.data.tasks)
       }
     }
     fetchTasks()
-  }, [projectId])
+  }, [
+    projectId,
+    filters.assignee,
+    filters.priority,
+    filters.type,
+    filters.status
+  ])
 
   useEffect(() => {
     if (!isTaskModalOpen) {
       setSelectedTask(null)
     }
   }, [isTaskModalOpen])
-
-  function handleSprintStatus(sprint: SelectSprint) {
-    let status
-    if (moment().isBefore(moment(sprint.start_date))) {
-      status = "Upcoming"
-    } else if (moment().isAfter(moment(sprint.end_date))) {
-      status = "Ended"
-    } else {
-      status = "Active"
-    }
-    const SprintStatuses = SprintStatus.find((s) => s.title === status)
-    return SprintStatuses ? (
-      <Badge
-        variant={
-          SprintStatuses.badgeVariants as
-            | "outline"
-            | "default"
-            | "secondary"
-            | "destructive"
-            | null
-            | undefined
-        }
-      >
-        {SprintStatuses.title}
-      </Badge>
-    ) : null
-  }
 
   // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(
@@ -97,6 +84,15 @@ export default function SprintCardPage({ sprint }: Props) {
     ? permissionChecker?.canAccess("project.task.view")
     : false
 
+  function HandleTaskFilters(filters: {
+    assignee?: string | null
+    priority?: string
+    type?: string
+    status?: string
+  }) {
+    setFilters(filters)
+  }
+
   return (
     <>
       <Card className="w-full overflow-hidden">
@@ -107,13 +103,18 @@ export default function SprintCardPage({ sprint }: Props) {
                 <CardTitle className="text-lg font-bold">
                   {sprint.title}
                 </CardTitle>
-                {handleSprintStatus(sprint)}
+                <Badge>{ToUpperCase(sprint.sprint_status || "")}</Badge>
                 <CardDescription>
-                  <span>{`${moment(sprint.start_date).format("L")} - ${moment(sprint.end_date).format("L")}`}</span>
+                  {`${moment(sprint.start_date).format("L")} - ${moment(sprint.end_date).format("L")}`}
                 </CardDescription>
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <TaskFilters
+                projectId={projectId}
+                onApplyFilters={HandleTaskFilters}
+              />
+
               {canCreateTask && (
                 <Button
                   variant={"outline"}

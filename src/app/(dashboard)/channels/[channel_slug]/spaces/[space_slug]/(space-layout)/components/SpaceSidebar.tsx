@@ -59,6 +59,9 @@ function SpaceSidebar({ space }: Props) {
   const canViewProject = permissionChecker
     ? permissionChecker.canAccess("project.view")
     : false
+  const canViewSetting = permissionChecker
+    ? permissionChecker.canAccess("space.setting.update")
+    : false
 
   const hasFeaturePermission = (featureSlug: string): boolean => {
     switch (featureSlug) {
@@ -91,22 +94,20 @@ function SpaceSidebar({ space }: Props) {
       <SidebarGroupContent>
         <SidebarMenu>
           {/* Space Name */}
-          <SidebarMenuButton size={"lg"} asChild>
-            <Link href={`./${space.space_slug}`} className="mb-2">
-              <div className="flex aspect-square items-center justify-center rounded-lg text-sidebar-primary-foreground">
-                <Avvvatars value={space.space_name} size={40} style="shape" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate  font-semibold color-accent">
-                  {space.space_name}
-                </span>
-                <div></div>
-                <span className="truncate flex items-center gap-1 text-xs text-muted-foreground">
-                  <Users className="h-3 w-3" />
-                  {space.users?.length || 0} members
-                </span>
-              </div>
-            </Link>
+          <SidebarMenuButton size={"lg"}>
+            <div className="flex aspect-square items-center justify-center rounded-lg text-sidebar-primary-foreground">
+              <Avvvatars value={space.space_name} size={40} style="shape" />
+            </div>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate  font-semibold color-accent">
+                {space.space_name}
+              </span>
+              <div></div>
+              <span className="truncate flex items-center gap-1 text-xs text-muted-foreground">
+                <Users className="h-3 w-3" />
+                {space.users?.length || 0} members
+              </span>
+            </div>
           </SidebarMenuButton>
 
           {/* space overview */}
@@ -161,28 +162,33 @@ function SpaceSidebar({ space }: Props) {
           {/* Static Features */}
 
           <SidebarGroupLabel>Other</SidebarGroupLabel>
-          {spaceStaticFeatures.map((feature) => (
-            <Link
-              key={feature.slug}
-              href={feature ? getFeatureUrl(feature.slug ?? "") : "#"}
-            >
-              <SidebarMenuItem
-                className={`flex flex-row items-center gap-2 p-2 rounded
-             ${
-               pathname.includes(`${feature.slug}`) ||
-               pageType.get("page-type") === feature.slug
-                 ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                 : "hover:bg-sidebar-accent"
-             }`}
+          {spaceStaticFeatures.map((feature) => {
+            if (feature.name === "settings" && !canViewSetting) {
+              return null
+            }
+            return (
+              <Link
+                key={feature.slug}
+                href={feature ? getFeatureUrl(feature.slug ?? "") : "#"}
               >
-                <DynamicIcon
-                  name={feature.icon as IconName}
-                  className="h-4 w-4"
-                />
-                {feature.name}
-              </SidebarMenuItem>
-            </Link>
-          ))}
+                <SidebarMenuItem
+                  className={`flex flex-row items-center gap-2 p-2 rounded
+          ${
+            pathname.includes(`${feature.slug}`) ||
+            pageType.get("page-type") === feature.slug
+              ? "bg-sidebar-accent text-sidebar-accent-foreground"
+              : "hover:bg-sidebar-accent"
+          }`}
+                >
+                  <DynamicIcon
+                    name={feature.icon as IconName}
+                    className="h-4 w-4"
+                  />
+                  {feature.name}
+                </SidebarMenuItem>
+              </Link>
+            )
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

@@ -95,6 +95,27 @@ const roleSeedList = [
     slug: "project_viewer",
     entity_type: null,
     entity_id: null
+  },
+  {
+    name: "Community Admin",
+    role_type: "DEFAULT",
+    slug: "community_admin",
+    entity_type: null,
+    entity_id: null
+  },
+  {
+    name: "Community Editor",
+    role_type: "DEFAULT",
+    slug: "community_editor",
+    entity_type: null,
+    entity_id: null
+  },
+  {
+    name: "Community Viewer",
+    role_type: "DEFAULT",
+    slug: "community_viewer",
+    entity_type: null,
+    entity_id: null
   }
 ]
 

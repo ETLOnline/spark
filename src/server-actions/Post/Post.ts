@@ -12,6 +12,7 @@ import {
   AddHashtagToPostLink,
   UpdateHashTagsCount,
   GetPosts,
+  GetPostById,
   DeletePost,
   AddPostFileLink
 } from "@/src/db/data-access/post/query"
@@ -238,7 +239,7 @@ export const GetPostsAction = CreateServerAction(
   true,
   async (offset?: number) => {
     try {
-      const posts = await GetPosts({ offset })
+      const posts = await GetPosts({ offset, globalPostsOnly: true })
       const sanitizedPosts = posts.map((post) => ({
         ...post,
         hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
@@ -256,12 +257,18 @@ export const GetPostsAction = CreateServerAction(
 
 export const GetSpacePostsAction = CreateServerAction(
   true,
-  async (spaceId: string, category: string = "", offset?: number) => {
+  async (
+    spaceId: string,
+    category: string = "",
+    offset?: number,
+    limit?: number
+  ) => {
     try {
       const posts = await GetPosts({
         entityId: spaceId,
         category: category,
-        offset
+        offset,
+        limit
       })
       const sanitizedPosts = posts.map((post) => ({
         ...post,
@@ -338,6 +345,30 @@ export const DeletePostAction = CreateServerAction(
       return {
         success: false,
         error: error.message || "Failed to delete post"
+      }
+    }
+  }
+)
+
+export const GetPostByIdAction = CreateServerAction(
+  false,
+  async (postId: string) => {
+    try {
+      const post = await GetPostById(postId)
+      if (post) {
+        const sanitizedPost = {
+          ...post,
+          hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
+          file: post.file?.postFile
+        }
+        return { success: true, data: sanitizedPost }
+      } else {
+        return { success: false, error: "Post not found" }
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to fetch post"
       }
     }
   }

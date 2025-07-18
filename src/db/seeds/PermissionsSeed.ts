@@ -91,7 +91,17 @@ const permissionSeedList = [
   { namespace: "project", action: "teams.update" },
   { namespace: "project", action: "teams.delete" },
 
-  { namespace: "project", action: "settings.view" }
+  { namespace: "project", action: "settings.view" },
+
+  // community
+  { namespace: "community", action: "create" },
+  { namespace: "community", action: "view" },
+  { namespace: "community", action: "update" },
+  { namespace: "community", action: "delete" },
+  { namespace: "community", action: "allow.action" },
+  { namespace: "community", action: "user.invite" },
+  { namespace: "community", action: "user.update" },
+  { namespace: "community", action: "user.remove" }
 ]
 
 export const PermissionsSeed = async () => {

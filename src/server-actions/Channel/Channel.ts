@@ -70,26 +70,14 @@ export const GetChannelsAction = CreateServerAction(
       if (isUserAdmin(authUser)) {
         channels = await GetChannels({ ...filters })
       } else {
-        const channelsResponse = await GetChannels({
+        channels = await GetChannels({
           ...filters,
-          channelType: "public",
           isPublished: true
         })
         joinedChannels = authUser?.channels
           .map((uc) => uc.channel)
           .filter((c) => c.publish_channel === 1)
           .filter((c) => typeof c !== "undefined")
-
-        // Get the IDs of joined spaces for exclusion
-        const joinedSpaceIds = joinedChannels.map((s) => s.id)
-
-        // Filter out joined spaces from the spaces array
-        channels = {
-          ...channelsResponse,
-          channels: channelsResponse.channels.filter(
-            (channel) => !joinedSpaceIds.includes(channel.id)
-          )
-        }
       }
 
       // const result = await GetChannels(filters)

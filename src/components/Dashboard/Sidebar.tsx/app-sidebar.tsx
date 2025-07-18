@@ -76,7 +76,8 @@ export default function AppSidebar({
         {/* <NavMain items={routes.testNav} label="Test" /> */}
         {!isSuperAdmin && (
           <>
-            <NavMain items={routes.navChannels} label="Channels" />
+            {/* Commenting this we will have the communities and then we will have the channels */}
+            {/* <NavMain items={routes.navChannels} label="Channels" /> */}
             <NavSecondary items={routes.navSecondary} className="mt-auto" />
           </>
         )}

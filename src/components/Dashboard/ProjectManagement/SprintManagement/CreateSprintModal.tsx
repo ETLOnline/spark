@@ -20,6 +20,7 @@ import {
 import { sprintStore } from "@/src/store/sprint/sprintsStore"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAtom } from "jotai"
+import moment from "moment"
 import { useParams } from "next/navigation"
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
@@ -31,11 +32,43 @@ interface Props {
   selectedSprint?: SelectSprint | null
 }
 
-const projectSchema = z.object({
-  title: z.string().min(1, "Required").max(50, "Title is too long"),
-  start_date: z.string().min(1, "Required"),
-  end_date: z.string().min(1, "Required")
-})
+const projectSchema = z
+  .object({
+    title: z.string().min(1, "Required").max(50, "Title is too long"),
+    start_date: z.string().refine(
+      (value) => {
+        const inputValue = moment(value)
+        const today = moment().startOf("day")
+        return inputValue.isSameOrAfter(today)
+      },
+      {
+        message: "Date must not be in the past"
+      }
+    ),
+    end_date: z.string().refine(
+      (value) => {
+        const inputValue = moment(value)
+        const today = moment().startOf("day")
+        return inputValue.isSameOrAfter(today)
+      },
+      {
+        message: "End date must not be in the past"
+      }
+    )
+  })
+  .refine(
+    (data) => {
+      const start = moment(data.start_date)
+
+      const end = moment(data.end_date)
+
+      return end.isSameOrAfter(start)
+    },
+    {
+      message: "End date must be after start date",
+      path: ["end_date"]
+    }
+  )
 
 function CreateSprintModal({
   isCreateSprintOpen,
@@ -54,6 +87,8 @@ function CreateSprintModal({
   const form = useForm({
     resolver: zodResolver(projectSchema)
   })
+
+  const formError = form.formState.errors
 
   useEffect(() => {
     if (selectedSprint) {
@@ -77,7 +112,8 @@ function CreateSprintModal({
     try {
       const payload = {
         ...data,
-        projectId: projectId
+        projectId: projectId,
+        sprint_status: "upcoming"
       }
       const sprint = await CreateSprint(payload)
       if (sprint?.success && sprint.data) {
@@ -98,7 +134,11 @@ function CreateSprintModal({
   async function handleUpdateSprint(data: SelectSprint) {
     try {
       if (selectedSprint?.id) {
-        const UpdatedSprint = await UpdateSprint(selectedSprint.id, data)
+        const finalData = {
+          ...data,
+          sprint_status: selectedSprint.sprint_status
+        }
+        const UpdatedSprint = await UpdateSprint(selectedSprint.id, finalData)
         if (UpdatedSprint?.success && UpdatedSprint.data) {
           setSprints((prev) =>
             prev.map((s) =>
@@ -144,57 +184,85 @@ function CreateSprintModal({
                 Name
               </Label>
 
-              <Controller
-                name="title"
-                defaultValue=""
-                control={form.control}
-                render={({ field }) => (
-                  <Input
-                    id="title"
-                    {...field}
-                    type="text"
-                    className="col-span-3 "
-                  />
-                )}
-              />
+              <div className="col-span-3">
+                <Controller
+                  name="title"
+                  defaultValue=""
+                  control={form.control}
+                  render={({ field }) => (
+                    <Input
+                      id="title"
+                      {...field}
+                      type="text"
+                      className="col-span-3 "
+                    />
+                  )}
+                />
+                <div>
+                  {formError.title && (
+                    <p className="text-sm text-red-500">
+                      {formError.title.message}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="start_date" className="text-right">
                 Start Date
               </Label>
 
-              <Controller
-                name="start_date"
-                defaultValue=""
-                control={form.control}
-                render={({ field }) => (
-                  <Input
-                    id="start_date"
-                    {...field}
-                    className="col-span-3"
-                    type="date"
-                  />
-                )}
-              />
+              <div className="col-span-3">
+                <Controller
+                  name="start_date"
+                  defaultValue=""
+                  control={form.control}
+                  render={({ field }) => (
+                    <Input
+                      id="start_date"
+                      {...field}
+                      className="col-span-3"
+                      type="date"
+                    />
+                  )}
+                />
+                <div>
+                  {formError.start_date && (
+                    <p className="text-sm text-red-500">
+                      {formError.start_date.message}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="end_date" className="text-right">
                 End Date
               </Label>
 
-              <Controller
-                name="end_date"
-                defaultValue=""
-                control={form.control}
-                render={({ field }) => (
-                  <Input
-                    id="end_date"
-                    {...field}
-                    className="col-span-3"
-                    type="date"
-                  />
-                )}
-              />
+              <div className="col-span-3">
+                <Controller
+                  name="end_date"
+                  defaultValue=""
+                  control={form.control}
+                  render={({ field }) => (
+                    <Input
+                      id="end_date"
+                      {...field}
+                      className="col-span-3"
+                      type="date"
+                    />
+                  )}
+                />
+
+                <div>
+                  {formError.end_date && (
+                    <p className="text-sm text-red-500">
+                      {formError.end_date.message}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
