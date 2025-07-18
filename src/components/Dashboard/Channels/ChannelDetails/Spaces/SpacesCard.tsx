@@ -91,7 +91,9 @@ function SpacesCard({ space }: Props) {
               </TooltipProvider>
             )}
           </CardTitle>
-          {spaceControl || canSpaceAllowAction ? (
+          {spaceControl ||
+          canSpaceAllowAction ||
+          space.space_type === "public" ? (
             <SpacesActionButtons space={space} />
           ) : null}
         </div>

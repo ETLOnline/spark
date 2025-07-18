@@ -16,7 +16,7 @@ import { Input } from "../../ui/input"
 import { Textarea } from "../../ui/textarea"
 import { useAtom, useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
-import { InsertChannel, SelectChannel } from "@/src/db/schema"
+import { InsertChannel, SelectChannel, SelectCommunity } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateChannelAction,
@@ -42,6 +42,7 @@ import { Switch } from "../../ui/switch"
 import { useDebouncedCallback } from "use-debounce"
 import { useAuthUser } from "@/src/hooks/useAuthUser"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { CommunityDetailData } from "@/src/db/data-access/communities/query"
 
 const channelSchema = z.object({
   channel_name: z
@@ -64,13 +65,13 @@ type CreateChannelsProps = {
     actionType: "create" | "updated",
     channel: SelectChannel
   ) => void
-  communityId?: string
+  community?: CommunityDetailData
 }
 
 function CreateChannels({
   onChannelCreated,
   onActionComplete,
-  communityId
+  community
 }: CreateChannelsProps) {
   const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
   const [editChannel, setEditChannel] = useState<boolean>(false)
@@ -110,7 +111,7 @@ function CreateChannels({
       channel_type: "",
       channel_slug: "",
       publish_channel: false,
-      community_id: communityId || ""
+      community_id: community?.id || ""
     }
   })
 
@@ -171,14 +172,14 @@ function CreateChannels({
       channel_type: "",
       channel_slug: "",
       publish_channel: false,
-      community_id: communityId || ""
+      community_id: community?.id || ""
     })
     if (!channelFormModelVisibility) {
       setSelectedChannel(null)
     }
     form.clearErrors()
     setSlugAvailableMessage("")
-  }, [channelFormModelVisibility, form, setSelectedChannel, communityId])
+  }, [channelFormModelVisibility, form, setSelectedChannel, community?.id])
 
   useEffect(() => {
     if (selectedChannel) {
@@ -188,7 +189,7 @@ function CreateChannels({
       form.setValue("publish_channel", selectedChannel.publish_channel === 1)
       form.setValue(
         "community_id",
-        selectedChannel.community_id || communityId || ""
+        selectedChannel.community_id || community?.id || ""
       )
 
       form.setValue("channel_slug", selectedChannel.channel_slug)
@@ -198,14 +199,16 @@ function CreateChannels({
         selectedChannel.id
       )
     }
-  }, [selectedChannel, form, communityId, debouncedCheckSlugAvailability])
+  }, [selectedChannel, form, community?.id, debouncedCheckSlugAvailability])
 
   const handleChannelNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const channelName = e.target.value
 
     form.setValue("channel_name", channelName, { shouldValidate: true })
 
-    const generatedSlug = channelName.trim().replaceAll(" ", "-").toLowerCase()
+    const channelSlug = channelName.trim().replaceAll(" ", "-").toLowerCase()
+
+    const generatedSlug = `${community?.slug}-${channelSlug}`.trim()
 
     form.setValue("channel_slug", generatedSlug, { shouldValidate: true })
 
@@ -299,7 +302,7 @@ function CreateChannels({
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "COMMUNITY",
-    communityId
+    community?.id
   )
   const canCreteChannel = permissionChecker
     ? permissionChecker.canAccess("channel.create")

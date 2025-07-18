@@ -54,8 +54,8 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
                     ...post,
                     comments: (post.comments || 0) + 1,
                     postComments: [
-                      ...(post.postComments as SelectComment[]),
-                      addedComment
+                      addedComment,
+                      ...(post.postComments as SelectComment[])
                     ]
                   }
                 : post

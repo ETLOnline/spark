@@ -25,21 +25,7 @@ export async function SelectUserByExternalId(id: string) {
           role: true
         }
       },
-      profile: true,
-      channels: {
-        with: {
-          channel: {
-            with: {
-              spaces: true
-            }
-          }
-        }
-      },
-      spaces: {
-        with: {
-          space: true
-        }
-      }
+      profile: true
     }
   })
 

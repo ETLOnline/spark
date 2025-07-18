@@ -143,12 +143,8 @@ export default function ProfileScreen({
       ) : null}
 
       {/* Banner with Avatar */}
-      <div className="relative sm:h-44 h-36 shadow-sm shadow-secondary">
-        <img
-          src="/images/profile/background.svg"
-          alt="Profile Banner"
-          className=" w-full sm:h-48 h-36 rounded-lg shadow-sm shadow-secondary object-cover"
-        />
+      <div className="relative sm:h-44 h-36 shadow-sm shadow-secondary ">
+        <div className=" w-full sm:h-48 h-36 rounded-lg shadow-sm shadow-secondary object-cover cover-pattern" />
         <div className="absolute bottom-0 left-16 transform -translate-x-1/2 translate-y-1/2">
           <div className="relative">
             {/* Added relative positioning for the button */}
