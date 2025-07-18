@@ -15,7 +15,7 @@ import {
   PencilIcon,
   GraduationCap
 } from "lucide-react"
-import { SelectTag, SelectUser } from "@/src/db/schema"
+import { SelectProfile, SelectTag, SelectUser } from "@/src/db/schema"
 import { ExtendedRecommendations, Profile } from "./types/profile-types"
 import { Button } from "@/src/components/ui/button"
 import { useToast } from "@/src/hooks/use-toast"
@@ -43,6 +43,8 @@ import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { auth } from "@clerk/nextjs/server"
 import ProfileFollowActions from "./user/ProfileFollowActions"
 import Image from "next/image"
+import EditEducationModal from "./EditEducationModal"
+import { serverHooks } from "next/dist/server/app-render/entry-base"
 
 type ProfileScreenProps = {
   tab?: string
@@ -64,6 +66,7 @@ export default function ProfileScreen({
   const { user: clerkUser } = useUser()
   const [currentImageUrl, setCurrentImageUrl] = useState(user?.profile_url) // State to manage current profile image URL
   const [authUser, setAuthUser] = useState<SelectUser | null>(null)
+  const [profile, setProfile] = useState(user.profile)
 
   useEffect(() => {
     const GetAuthUser = async () => {
@@ -311,21 +314,28 @@ export default function ProfileScreen({
           {/* Education */}
           <Card>
             <CardHeader>
-              <CardTitle>Education</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                Education
+                <EditEducationModal
+                  user={user}
+                  profile={profile as SelectProfile}
+                  setprofile={setProfile}
+                />
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-start gap-3">
                 <GraduationCap className="h-6 w-6 text-muted-foreground mt-0.5" />
                 <div>
-                  <h4 className="font-medium">{user.profile?.institute}</h4>
+                  <h4 className="font-medium">{profile?.institute}</h4>
                   <p className="text-sm text-muted-foreground">
-                    {user.profile?.degree}
+                    {profile?.degree}
                   </p>
                   <div className="flex items-center gap-1 mt-1">
                     <CalendarIcon className="h-3 w-3 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">
-                      {user.profile?.education_start_date} -{" "}
-                      {user.profile?.education_end_date}
+                      {profile?.education_start_date} -{" "}
+                      {profile?.education_end_date}
                     </span>
                   </div>
                 </div>

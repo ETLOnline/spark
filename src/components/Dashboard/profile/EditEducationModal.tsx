@@ -1,23 +1,28 @@
-"use client"
-
-import { Button } from "@/src/components/ui/button"
-import { Input } from "@/src/components/ui/input"
-import { Label } from "@/src/components/ui/label"
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "../../ui/dialog"
+import { Button } from "../../ui/button"
+import { Label } from "../../ui/label"
 import { Controller, useForm } from "react-hook-form"
+import { Input } from "../../ui/input"
+import { SelectProfile, SelectUser } from "@/src/db/schema"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { updateUserProfileAction } from "@/src/server-actions/profile/profile"
+import { toast } from "@/src/hooks/use-toast"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Dispatch, SetStateAction, useEffect } from "react"
-import { useServerAction } from "@/src/hooks/useServerAction"
-import { SelectProfile, SelectUser } from "@/src/db/schema"
-import { toast } from "@/src/hooks/use-toast"
-import { updateUserProfileAction } from "@/src/server-actions/profile/profile"
 import moment from "moment"
-
-interface StepTwoProps {
-  step: number
-  setStep: Dispatch<SetStateAction<number>>
+interface Props {
   user: SelectUser
-  setUser: Dispatch<SetStateAction<SelectUser | undefined>>
+  profile: SelectProfile
+  setprofile: Dispatch<SetStateAction<SelectProfile | null | undefined>>
 }
 
 const userQualificationSchema = z
@@ -47,7 +52,9 @@ const userQualificationSchema = z
     }
   )
 
-export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
+function EditEducationModal({ user, profile, setprofile }: Props) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+
   const [submitDataLoading, , , submitUserProfileData] = useServerAction(
     updateUserProfileAction
   )
@@ -58,14 +65,8 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
 
   const error = form.formState.errors
 
-  const handlePrevious = () => {
-    setStep((prev) => prev - 1)
-    window.scrollTo(0, 0)
-  }
-
   useEffect(() => {
-    if (user.profile) {
-      const profile = user.profile as SelectProfile
+    if (profile) {
       form.reset({
         degree: profile.degree || "",
         institute: profile.institute || "",
@@ -73,8 +74,7 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
         duration_to: profile.education_end_date || ""
       })
     }
-    console.log("pr", user.profile)
-  }, [user])
+  }, [profile])
 
   async function handleSubmit(data: any) {
     try {
@@ -88,15 +88,18 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
         }
         const res = await submitUserProfileData(user.unique_id, payload)
         if (res?.success) {
+          setprofile({
+            ...profile,
+            degree: res.data.degree,
+            institute: res.data.institute,
+            education_start_date: res.data.education_start_date,
+            education_end_date: res.data.education_end_date
+          })
           toast({
             title: "Qualification details saved",
             duration: 2000
           })
-
-          if (!submitDataLoading) {
-            setStep((prev) => prev + 1)
-            window.scrollTo(0, 0)
-          }
+          setIsDialogOpen(false)
         }
       }
     } catch {
@@ -109,18 +112,23 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold">Education & Qualifications</h3>
-        <p className="text-sm text-muted-foreground">
-          Add your educational background
-        </p>
-      </div>
-
-      <div className="space-y-4">
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogTrigger asChild>
+        <Button variant="edit" size={"sm"}>
+          Edit
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Edit Education</DialogTitle>
+          <DialogDescription>
+            Make changes to your Education section here. Click save when you're
+            done.
+          </DialogDescription>
+        </DialogHeader>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
-          <div className="grid gap-4">
-            <div className="space-y-2">
+          <div className="grid gap-4 py-4">
+            <div className="flex flex-col gap-2">
               <Label htmlFor={`degree`} className="font-semibold">
                 Degree/Qualification
               </Label>
@@ -142,8 +150,7 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
                 </span>
               )}
             </div>
-
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor={`institute`} className="font-semibold">
                 University/Institution
               </Label>
@@ -166,59 +173,51 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
               )}
             </div>
 
-            <Label htmlFor="duration_from" className="font-semibold">
-              Year/Duration
-            </Label>
-            <div className="grid grid-cols-12 gap-2 mb-2">
-              <div className="col-span-6">
-                <Controller
-                  name="duration_from"
-                  defaultValue=""
-                  control={form.control}
-                  render={({ field }) => (
-                    <Input id="duration_from" placeholder="From" {...field} />
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="duration_from" className="font-semibold">
+                Year/Duration
+              </Label>
+              <div className="grid grid-cols-12 gap-2 mb-2">
+                <div className="col-span-6">
+                  <Controller
+                    name="duration_from"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input id="duration_from" placeholder="From" {...field} />
+                    )}
+                  />
+                  {error.duration_from && (
+                    <span className="text-red-500 text-sm">
+                      {String(error.duration_from.message)}
+                    </span>
                   )}
-                />
-                {error.duration_from && (
-                  <span className="text-red-500 text-sm">
-                    {String(error.duration_from.message)}
-                  </span>
-                )}
-              </div>
-              <div className="col-span-6">
-                <Controller
-                  name="duration_to"
-                  defaultValue=""
-                  control={form.control}
-                  render={({ field }) => (
-                    <Input id="duration_to" placeholder="To" {...field} />
+                </div>
+                <div className="col-span-6">
+                  <Controller
+                    name="duration_to"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input id="duration_to" placeholder="To" {...field} />
+                    )}
+                  />
+                  {error.duration_to && (
+                    <span className="text-red-500 text-sm">
+                      {String(error.duration_to.message)}
+                    </span>
                   )}
-                />
-                {error.duration_to && (
-                  <span className="text-red-500 text-sm">
-                    {String(error.duration_to.message)}
-                  </span>
-                )}
+                </div>
               </div>
             </div>
           </div>
-
-          {step < 4 && (
-            <div className="flex justify-between pt-6 border-t mt-4">
-              <Button
-                variant="outline"
-                onClick={handlePrevious}
-                disabled={step === 1}
-              >
-                Previous
-              </Button>
-              <Button type="submit" loading={submitDataLoading}>
-                Next
-              </Button>
-            </div>
-          )}
+          <DialogFooter>
+            <Button loading={submitDataLoading}>Save changes</Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
+
+export default EditEducationModal
