@@ -1,23 +1,22 @@
 import { eq } from "drizzle-orm"
 import { db } from "../.."
-import { InsertRecommendation, recommendationsTable } from "../../schema"
+import {
+  InsertRecommendation,
+  profileTable,
+  recommendationsTable
+} from "../../schema"
+import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 
 export async function AddRecommendation(data: InsertRecommendation) {
   try {
-    const response = await db
-      .insert(recommendationsTable)
-      .values(data)
-      .returning()
+    const response = (
+      await db.insert(recommendationsTable).values(data).returning()
+    ).at(0)
 
-    const recommendation = await GetRecommendationById(response[0].id)
-    const { averageRating } = await GetRecommendations(
-      data.receiver_id as string
-    )
+    if (!response?.id) throw new Error("Recommendation not created")
+    const recommendation = await GetRecommendationById(response?.id)
 
-    return {
-      recommendation,
-      averageRating
-    }
+    return recommendation
   } catch (e: any) {
     throw new Error(e.message)
   }

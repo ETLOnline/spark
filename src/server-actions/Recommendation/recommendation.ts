@@ -6,6 +6,10 @@ import {
 } from "@/src/db/data-access/recommendation/query"
 import { CreateServerAction } from ".."
 import { SelectRecommendation } from "@/src/db/schema"
+import { AuthUserAction } from "../User/AuthUserAction"
+import { updateUserProfileAction } from "../profile/profile"
+import { updateUserProfile } from "@/src/db/data-access/profile/query"
+import { SelectUserByUniqueId } from "@/src/db/data-access/user/query"
 
 export const AddRecommendationAction = CreateServerAction(
   true,
@@ -13,7 +17,25 @@ export const AddRecommendationAction = CreateServerAction(
     try {
       const recommendation = await AddRecommendation(data)
 
-      return { success: true, data: recommendation }
+      if (recommendation?.receiver_id == null)
+        return { success: false, error: "Receiver ID is null" }
+      const user = await SelectUserByUniqueId(recommendation?.receiver_id)
+
+      if (!user) return { success: false, error: "User not found" }
+      const sumOfRatings =
+        (user?.profile?.sum_of_ratings || 0) + (recommendation?.rating || 5)
+
+      const numberOfRatings = (user?.profile.number_of_ratings || 0) + 1
+
+      const totalAverageRating = sumOfRatings / numberOfRatings
+
+      const profile = await updateUserProfile(user.unique_id, {
+        total_average_rating: totalAverageRating.toString(),
+        sum_of_ratings: sumOfRatings,
+        number_of_ratings: numberOfRatings
+      })
+
+      return { success: true, data: { recommendation, profile } }
     } catch (error) {
       return { error: error }
     }

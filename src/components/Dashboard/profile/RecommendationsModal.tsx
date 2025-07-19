@@ -9,7 +9,7 @@ import {
   DialogTrigger
 } from "../../ui/dialog"
 import { Button } from "../../ui/button"
-import { FlameKindling, Plus, Star } from "lucide-react"
+import { Ban, FlameKindling, Plus, Star } from "lucide-react"
 import { Label } from "../../ui/label"
 import { Controller, useForm } from "react-hook-form"
 import { Textarea } from "../../ui/textarea"
@@ -17,13 +17,14 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { AddRecommendationAction } from "@/src/server-actions/Recommendation/recommendation"
 import { SelectRecommendation } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
+import NoDataCard from "../Channels/ChannelDetails/NoDataCard"
 
 interface RecommendationsModalProps {
   userId: string
   authUserId: string | undefined
   recommendations: SelectRecommendation[]
   setRecommendations: Dispatch<SetStateAction<SelectRecommendation[]>>
-  setAverageRating: Dispatch<SetStateAction<number>>
+  setAverageRating: Dispatch<SetStateAction<string | null | undefined>>
 }
 
 function RecommendationsModal({
@@ -42,6 +43,10 @@ function RecommendationsModal({
 
   const form = useForm()
 
+  const isRecommended = recommendations.some(
+    (rec) => rec.recommender_id === authUserId
+  )
+
   useEffect(() => {
     if (!isDialogOpen) {
       form.reset({
@@ -58,7 +63,7 @@ function RecommendationsModal({
         recommender_id: authUserId,
         receiver_id: userId,
         content: data.recommendation,
-        rating: data.rating
+        rating: data.rating > 0 ? data.rating : 5
       }
       const res = await AddRecommendation(recommendation)
       if (res?.success && res?.data) {
@@ -66,7 +71,7 @@ function RecommendationsModal({
           ...recommendations,
           res.data.recommendation as SelectRecommendation
         ])
-        setAverageRating(res.data.averageRating)
+        setAverageRating(res?.data?.profile?.total_average_rating || "0")
         setIsDialogOpen(false)
         toast({
           title: "Recommendation added!",
@@ -100,64 +105,73 @@ function RecommendationsModal({
             }
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="grid gap-4 py-4">
-            <Label htmlFor="rating" className="font-semibold">
-              Kindle Sticks
-            </Label>
-            <div className="flex flex-row gap-1">
-              {Array.from({ length: 5 }).map((_, kindle) => (
-                <Controller
-                  key={kindle}
-                  name="rating"
-                  control={form.control}
-                  defaultValue={0}
-                  render={({ field: { value, onChange } }) => (
-                    <FlameKindling
-                      key={kindle}
-                      onMouseEnter={() => setHovered(kindle)}
-                      onMouseLeave={() => setHovered(null)}
-                      onClick={() => onChange(kindle)}
-                      className={`w-10 h-10 cursor-pointer transition-colors ${(hovered ?? value) >= kindle ? "text-[#92400e] fill-[#fde68a]" : "fill-none"}`}
-                      strokeWidth={1.5}
+        {isRecommended ? (
+          <NoDataCard
+            title="You have already recommended this user"
+            icon={<Ban className="h-10 w-10" />}
+          />
+        ) : (
+          <>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <div className="grid gap-4 py-4">
+                <Label htmlFor="rating" className="font-semibold">
+                  Kindle Sticks
+                </Label>
+                <div className="flex flex-row gap-1">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <Controller
+                      key={index + 1}
+                      name="rating"
+                      control={form.control}
+                      defaultValue={0}
+                      render={({ field: { value, onChange } }) => (
+                        <FlameKindling
+                          key={index + 1}
+                          onMouseEnter={() => setHovered(index + 1)}
+                          onMouseLeave={() => setHovered(null)}
+                          onClick={() => onChange(index + 1)}
+                          className={`w-10 h-10 cursor-pointer transition-colors ${(hovered ?? value) >= index + 1 ? "text-[#92400e] fill-[#fde68a]" : "fill-none"}`}
+                          strokeWidth={1.5}
+                        />
+                      )}
                     />
-                  )}
-                />
-              ))}
-            </div>
+                  ))}
+                </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor={`degree`} className="font-semibold">
-                Recommendation
-              </Label>
-              <Controller
-                name="recommendation"
-                defaultValue=""
-                control={form.control}
-                render={({ field }) => (
-                  <Textarea
-                    id="recommendation"
-                    rows={4}
-                    placeholder="Recommendation...."
-                    {...field}
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`degree`} className="font-semibold">
+                    Recommendation
+                  </Label>
+                  <Controller
+                    name="recommendation"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) => (
+                      <Textarea
+                        id="recommendation"
+                        rows={4}
+                        placeholder="Recommendation...."
+                        {...field}
+                      />
+                    )}
                   />
-                )}
-              />
-              {/* {error.title && (
+                  {/* {error.title && (
                 <span className="text-red-500 text-sm">
                   {String(error.title.message)}
                 </span>
               )} */}
-            </div>
-          </div>
-          <DialogFooter>
-            {/* <Button>
+                </div>
+              </div>
+              <DialogFooter>
+                {/* <Button>
               Delete
             </Button> */}
 
-            <Button loading={recommendationLoading}>{"Add"}</Button>
-          </DialogFooter>
-        </form>
+                <Button loading={recommendationLoading}>{"Add"}</Button>
+              </DialogFooter>
+            </form>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   )

@@ -135,6 +135,9 @@ export const profileTable = pgTable("profile", {
   instagram_url: varchar(),
   twitter_url: varchar(),
   personal_website_url: varchar(),
+  sum_of_ratings: integer().default(0),
+  number_of_ratings: integer().default(0),
+  total_average_rating: varchar().default("0"),
   ...timestamps
 })
 

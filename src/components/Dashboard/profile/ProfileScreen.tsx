@@ -86,7 +86,9 @@ export default function ProfileScreen({
   const [recommendations, setRecommendations] = useState<
     SelectRecommendation[]
   >([])
-  const [averageRating, setAverageRating] = useState(0)
+  const [averageRating, setAverageRating] = useState(
+    user.profile?.total_average_rating
+  )
 
   const [recommendationLoading, , , GetRecommendations] = useServerAction(
     GetRecommendationAction
@@ -108,7 +110,6 @@ export default function ProfileScreen({
 
       if (res?.success && res?.data) {
         setRecommendations(res.data.recommendations as SelectRecommendation[])
-        setAverageRating(res.data.averageRating)
       }
     }
 
@@ -297,8 +298,11 @@ export default function ProfileScreen({
                 <div className="flex items-center gap-2">
                   Recommendations
                   <p className="flex items-center gap-1 text-muted-foreground">
-                    {averageRating}
-                    <FlameKindling className="h-6 w-6 text-[#92400e] fill-[#fde68a]" />
+                    {averageRating ? parseFloat(averageRating).toFixed(1) : ""}
+                    {user?.profile?.number_of_ratings &&
+                    user?.profile?.number_of_ratings > 0 ? (
+                      <FlameKindling className="h-6 w-6 text-[#92400e] fill-[#fde68a]" />
+                    ) : null}
                   </p>
                 </div>
                 {authUser?.unique_id !== user?.unique_id && (
@@ -322,17 +326,17 @@ export default function ProfileScreen({
                     >
                       <Avatar className="h-10 w-10">
                         <AvatarImage
-                          src={recommendation.recommender.profile_url as string}
+                          src={recommendation?.recommender?.profile_url || ""}
                         />
                         <AvatarFallback>
-                          {recommendation.recommender.first_name}
+                          {recommendation?.recommender?.first_name || ""}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <h4 className="font-medium">
-                            {recommendation.recommender.first_name}{" "}
-                            {recommendation.recommender.last_name}
+                            {recommendation?.recommender?.first_name}{" "}
+                            {recommendation?.recommender?.last_name}
                           </h4>
                           <span className="flex items-center gap-1 text-sm text-muted-foreground">
                             {recommendation.rating}
