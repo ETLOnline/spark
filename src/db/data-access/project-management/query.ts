@@ -1,9 +1,12 @@
 import { and, eq, inArray } from "drizzle-orm"
 import { db } from "../.."
 import {
+  channelsTable,
   InsertProject,
   projectTable,
   ProjectUsersTable,
+  SelectProject,
+  spacesTable,
   usersTable
 } from "../../schema"
 
@@ -31,17 +34,28 @@ export async function getProjects(spaceId: string) {
   }
 }
 
-export async function getProjectById(projectId: string) {
+export async function getProjectById(
+  projectId: string,
+  withRelations: boolean = false
+): Promise<SelectProject | null> {
   try {
-    const project = await db
-      .select()
-      .from(projectTable)
-      .where(eq(projectTable.id, projectId))
-    return project[0]
-  } catch (e: any) {
-    throw new Error(e.message)
+    const project = await db.query.projectTable.findFirst({
+      where: eq(projectTable.id, projectId),
+      with: withRelations
+        ? {
+            channel: true,
+            space: true
+          }
+        : undefined
+    })
+
+    return project || null
+  } catch (error: unknown) {
+    console.error(`Failed to fetch project with ID ${projectId}:`, error)
+    throw new Error(`Could not retrieve project. An unexpected error occurred.`)
   }
 }
+
 export async function createProjectUser(
   projectId: string,
   userId: string,
