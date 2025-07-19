@@ -29,7 +29,6 @@ export type ProfileData = {
 }
 
 export type Profile = {
-  recommendations: ExtendedRecommendations[]
   rewards: Reward[]
   activities: Activity[]
   tags: InsertTag[]

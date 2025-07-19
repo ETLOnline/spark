@@ -24,6 +24,7 @@ export async function updateUserProfile(
       .update(profileTable)
       .set(profileData)
       .where(eq(profileTable.user_id, userId))
+      .returning()
 
     return updatedProfile[0]
   } catch (e: any) {

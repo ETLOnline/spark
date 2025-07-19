@@ -1,4 +1,4 @@
-import { eq, like } from "drizzle-orm"
+import { eq, ilike, like } from "drizzle-orm"
 import { db } from "../.."
 import { InsertUser, userContactsTable, usersTable } from "../../schema"
 
@@ -25,7 +25,8 @@ export async function SelectUserByExternalId(id: string) {
           role: true
         }
       },
-      profile: true
+      profile: true,
+      certificates: true
     }
   })
 
@@ -62,8 +63,8 @@ export async function FindUserWildCard(wildcard: string) {
       },
       where: (usersTable, { or }) =>
         or(
-          like(usersTable.first_name, `%${wildcard}%`),
-          like(usersTable.last_name, `%${wildcard}%`)
+          ilike(usersTable.first_name, `%${wildcard}%`),
+          ilike(usersTable.last_name, `%${wildcard}%`)
         )
     })
     return users

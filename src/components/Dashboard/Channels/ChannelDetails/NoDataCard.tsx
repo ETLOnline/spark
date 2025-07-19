@@ -23,7 +23,7 @@ function NoDataCard({ title, description, icon }: Props) {
           ) : (
             <Search className="h-16 w-16 text-muted-foreground mb-4" />
           )}
-          <CardTitle className="text-xl">{title}</CardTitle>
+          <CardTitle className="text-xl text-center">{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
       </Card>

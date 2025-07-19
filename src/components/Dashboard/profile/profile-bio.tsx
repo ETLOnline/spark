@@ -10,21 +10,15 @@ import useUserProfile from "./hooks/useUserProfile"
 type ProfileBioProps = {
   userBio: string
   editable?: boolean
-  recommendations: ExtendedRecommendations[]
   tags: SelectTag[]
 }
 
-const ProfileBio: React.FC<ProfileBioProps> = ({
-  userBio,
-  editable = true,
-  recommendations,
-  tags
-}) => {
+const ProfileBio: React.FC<ProfileBioProps> = ({ userBio, tags }) => {
   const [setUserBio, setUserSkills, setUserInterests, skills, interests, bio] =
     useUserProfile()
 
   useEffect(() => {
-    if (tags.length) {
+    if (tags && tags.length) {
       const skillTags = tags.filter((tag) => (tag.type || "") === "skill")
 
       const interestTags = tags.filter((tag) => (tag.type || "") === "interest")

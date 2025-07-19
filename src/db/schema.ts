@@ -92,6 +92,9 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
   tasksCreatedBy: many(taskTable, {
     relationName: "taskAssignor"
+  }),
+  certificates: many(certificatesTable, {
+    relationName: "userToCertificate"
   })
 }))
 
@@ -114,6 +117,7 @@ export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> & {
   roles?: SelectUserRole[] | null
   profile?: SelectProfile | null
   joinedCommunities?: SelectCommunityUser[]
+  certificates?: SelectCertificate[]
 }
 
 export const profileTable = pgTable("profile", {
@@ -131,6 +135,9 @@ export const profileTable = pgTable("profile", {
   instagram_url: varchar(),
   twitter_url: varchar(),
   personal_website_url: varchar(),
+  sum_of_ratings: integer().default(0),
+  number_of_ratings: integer().default(0),
+  total_average_rating: varchar().default("0"),
   ...timestamps
 })
 
@@ -144,6 +151,33 @@ export const profileRelations = relations(profileTable, ({ one }) => ({
 
 export type InsertProfile = typeof profileTable.$inferInsert
 export type SelectProfile = typeof profileTable.$inferSelect & {
+  user?: SelectUser
+}
+
+export const certificatesTable = pgTable("certificates", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  user_id: varchar("user_id")
+    .notNull()
+    .references(() => usersTable.unique_id),
+  title: varchar(),
+  institute: varchar(),
+  year: varchar(),
+  ...timestamps
+})
+
+export const certificatesRelations = relations(
+  certificatesTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [certificatesTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "userToCertificate"
+    })
+  })
+)
+
+export type InsertCertificate = typeof certificatesTable.$inferInsert
+export type SelectCertificate = typeof certificatesTable.$inferSelect & {
   user?: SelectUser
 }
 
@@ -397,8 +431,9 @@ export type SelectUserActivity = typeof userActivitiesTable.$inferSelect
 export const recommendationsTable = pgTable("recommendations", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   content: varchar().notNull(),
-  recommender_id: varchar().notNull(),
-  receiver_id: varchar().notNull(),
+  rating: integer().notNull(),
+  recommender_id: varchar(),
+  receiver_id: varchar(),
   ...timestamps
 })
 
@@ -419,7 +454,10 @@ export const recommendationsRelations = relations(
 )
 
 export type InsertRecommendation = typeof recommendationsTable.$inferInsert
-export type SelectRecommendation = typeof recommendationsTable.$inferSelect
+export type SelectRecommendation = typeof recommendationsTable.$inferSelect & {
+  recommender: SelectUser
+  receiver: SelectUser
+}
 
 export const notificationsTable = pgTable("notifications", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),

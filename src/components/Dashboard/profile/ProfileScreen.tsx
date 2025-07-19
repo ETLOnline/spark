@@ -13,9 +13,18 @@ import {
   Plus,
   UserPlus,
   PencilIcon,
-  GraduationCap
+  GraduationCap,
+  SquarePen,
+  ListX,
+  FlameKindling
 } from "lucide-react"
-import { SelectTag, SelectUser } from "@/src/db/schema"
+import {
+  SelectCertificate,
+  SelectProfile,
+  SelectRecommendation,
+  SelectTag,
+  SelectUser
+} from "@/src/db/schema"
 import { ExtendedRecommendations, Profile } from "./types/profile-types"
 import { Button } from "@/src/components/ui/button"
 import { useToast } from "@/src/hooks/use-toast"
@@ -40,9 +49,12 @@ import Loader from "../../common/Loader/Loader"
 import { LoaderSizes } from "../../common/types/loader-types"
 import { useUser } from "@clerk/nextjs"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import { auth } from "@clerk/nextjs/server"
 import ProfileFollowActions from "./user/ProfileFollowActions"
-import Image from "next/image"
+import EditEducationModal from "./EditEducationModal"
+import CertificateModal from "./CertificateModal"
+import RecommendationsModal from "./RecommendationsModal"
+import { GetRecommendationAction } from "@/src/server-actions/Recommendation/recommendation"
+import moment from "moment"
 
 type ProfileScreenProps = {
   tab?: string
@@ -64,6 +76,23 @@ export default function ProfileScreen({
   const { user: clerkUser } = useUser()
   const [currentImageUrl, setCurrentImageUrl] = useState(user?.profile_url) // State to manage current profile image URL
   const [authUser, setAuthUser] = useState<SelectUser | null>(null)
+  const [profile, setProfile] = useState(user.profile)
+  const [certificates, setCertificates] = useState(user.certificates)
+  const [isQualificationModalOpen, setIsQualificationModalOpen] =
+    useState(false)
+  const [selectedCertificate, setSelectedCertificate] =
+    useState<SelectCertificate | null>(null)
+
+  const [recommendations, setRecommendations] = useState<
+    SelectRecommendation[]
+  >([])
+  const [averageRating, setAverageRating] = useState(
+    user.profile?.total_average_rating
+  )
+
+  const [recommendationLoading, , , GetRecommendations] = useServerAction(
+    GetRecommendationAction
+  )
 
   useEffect(() => {
     const GetAuthUser = async () => {
@@ -73,6 +102,18 @@ export default function ProfileScreen({
       }
     }
     GetAuthUser()
+  }, [user])
+
+  useEffect(() => {
+    const GetUserRecommendations = async () => {
+      const res = await GetRecommendations(user.unique_id)
+
+      if (res?.success && res?.data) {
+        setRecommendations(res.data.recommendations as SelectRecommendation[])
+      }
+    }
+
+    GetUserRecommendations()
   }, [user])
 
   const handleCopyUrl = async () => {
@@ -132,6 +173,11 @@ export default function ProfileScreen({
       }
     }
     reader.readAsDataURL(file)
+  }
+
+  function handleEditCertificate(Certificate: SelectCertificate) {
+    setSelectedCertificate(Certificate)
+    setIsQualificationModalOpen(true)
   }
 
   return (
@@ -243,41 +289,77 @@ export default function ProfileScreen({
           </div>
           <ProfileBio
             userBio={user?.profile?.bio as string}
-            recommendations={
-              profileData?.recommendations as unknown as ExtendedRecommendations[]
-            }
             tags={profileData?.tags as SelectTag[]}
           />
           {/* Recommendations */}
           <Card>
             <CardHeader>
-              <CardTitle>Recommendations</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  Recommendations
+                  <p className="flex items-center gap-1 text-muted-foreground">
+                    {averageRating ? parseFloat(averageRating).toFixed(1) : ""}
+                    {user?.profile?.number_of_ratings &&
+                    user?.profile?.number_of_ratings > 0 ? (
+                      <FlameKindling className="h-6 w-6 text-[#92400e] fill-[#fde68a]" />
+                    ) : null}
+                  </p>
+                </div>
+                {authUser?.unique_id !== user?.unique_id && (
+                  <RecommendationsModal
+                    userId={user?.unique_id}
+                    authUserId={authUser?.unique_id}
+                    recommendations={recommendations}
+                    setRecommendations={setRecommendations}
+                    setAverageRating={setAverageRating}
+                  />
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src="/placeholder.svg" alt="Jane Smith" />
-                    <AvatarFallback>JS</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-medium">Junaid Sami</h4>
-                      <span className="text-sm text-muted-foreground">•</span>
-                      <span className="text-sm text-muted-foreground">
-                        10/06/2025
-                      </span>
+                {recommendations.length > 0 ? (
+                  recommendations?.map((recommendation) => (
+                    <div
+                      className="flex items-start gap-3"
+                      key={recommendation.id}
+                    >
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage
+                          src={recommendation?.recommender?.profile_url || ""}
+                        />
+                        <AvatarFallback>
+                          {recommendation?.recommender?.first_name || ""}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">
+                            {recommendation?.recommender?.first_name}{" "}
+                            {recommendation?.recommender?.last_name}
+                          </h4>
+                          <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                            {recommendation.rating}
+                            <FlameKindling className="h-4 w-4 text-[#92400e] fill-[#fde68a]" />
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            •
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            {moment(recommendation.created_at).format(
+                              "DD MMMM YYYY"
+                            )}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-sm">{recommendation.content}</p>
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Software Developer at ETL Online
-                    </p>
-                    <p className="mt-2 text-sm">
-                      Abdul is a dedicated developer with great problem-solving
-                      skills. His attention to detail and willingness to help
-                      others makes him a great team player.
-                    </p>
+                  ))
+                ) : (
+                  <div className="flex items-center justify-center">
+                    <p className="text-muted-foreground">No Recommendations</p>
                   </div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -307,21 +389,30 @@ export default function ProfileScreen({
           {/* Education */}
           <Card>
             <CardHeader>
-              <CardTitle>Education</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                Education
+                {authUser?.unique_id === user?.unique_id && (
+                  <EditEducationModal
+                    user={user}
+                    profile={profile as SelectProfile}
+                    setprofile={setProfile}
+                  />
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-start gap-3">
                 <GraduationCap className="h-6 w-6 text-muted-foreground mt-0.5" />
                 <div>
-                  <h4 className="font-medium">{user.profile?.institute}</h4>
+                  <h4 className="font-medium">{profile?.institute}</h4>
                   <p className="text-sm text-muted-foreground">
-                    {user.profile?.degree}
+                    {profile?.degree}
                   </p>
                   <div className="flex items-center gap-1 mt-1">
                     <CalendarIcon className="h-3 w-3 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">
-                      {user.profile?.education_start_date} -{" "}
-                      {user.profile?.education_end_date}
+                      {profile?.education_start_date} -{" "}
+                      {profile?.education_end_date}
                     </span>
                   </div>
                 </div>
@@ -331,31 +422,67 @@ export default function ProfileScreen({
           {/* Qualifications & Certifications */}
           <Card>
             <CardHeader>
-              <CardTitle>Qualifications & Certifications</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                Qualifications & Certifications
+                {authUser?.unique_id === user?.unique_id && (
+                  <Button
+                    size={"sm"}
+                    variant={"outline"}
+                    onClick={() => setIsQualificationModalOpen(true)}
+                  >
+                    <Plus className=" h-4 w-4" />
+                  </Button>
+                )}
+                <CertificateModal
+                  UserId={user.unique_id}
+                  certificates={certificates}
+                  setCertificates={setCertificates}
+                  isDialogOpen={isQualificationModalOpen}
+                  setIsDialogOpen={setIsQualificationModalOpen}
+                  selectedCertificate={selectedCertificate}
+                  setSelectedCertificate={setSelectedCertificate}
+                />
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-1">
-                <h4 className="font-medium text-sm">
-                  Meta Full Stack Developer Certificate
-                </h4>
-                <p className="text-sm text-muted-foreground">Meta</p>
-                <div className="flex items-center gap-1">
-                  <CalendarIcon className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">2024</span>
+              {certificates?.length && certificates?.length > 0 ? (
+                certificates
+                  ?.filter(
+                    (certificate) => certificate.user_id === user?.unique_id
+                  )
+                  .map((certificate) => (
+                    <div className="space-y-1" key={certificate.id}>
+                      <h4 className="font-medium text-sm flex items-center justify-between">
+                        {certificate.title}
+                        {authUser?.unique_id === user?.unique_id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditCertificate(certificate)}
+                          >
+                            <SquarePen className="h-2 w-2" />
+                          </Button>
+                        )}
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        {certificate.institute}
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <CalendarIcon className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">
+                          {certificate.year}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+              ) : (
+                <div className="w-full">
+                  <h4 className="font-medium text-sm flex flex-col items-center justify-center text-muted-foreground text-center">
+                    <ListX className="h-10 w-10 " />
+                    No Qualifications & Certifications
+                  </h4>
                 </div>
-              </div>
-              <div className="space-y-1">
-                <h4 className="font-medium text-sm">
-                  MongoDB Developer Certification
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  MongoDB University
-                </p>
-                <div className="flex items-center gap-1">
-                  <CalendarIcon className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">2025</span>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
