@@ -191,11 +191,6 @@ const CertificateModal = ({
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      {/* <DialogTrigger asChild>
-        <Button size={"sm"} variant={"outline"}>
-          <Plus className=" h-4 w-4" />
-        </Button>
-      </DialogTrigger> */}
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>

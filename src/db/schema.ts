@@ -428,8 +428,9 @@ export type SelectUserActivity = typeof userActivitiesTable.$inferSelect
 export const recommendationsTable = pgTable("recommendations", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   content: varchar().notNull(),
-  recommender_id: varchar().notNull(),
-  receiver_id: varchar().notNull(),
+  rating: integer().notNull(),
+  recommender_id: varchar(),
+  receiver_id: varchar(),
   ...timestamps
 })
 
@@ -450,7 +451,10 @@ export const recommendationsRelations = relations(
 )
 
 export type InsertRecommendation = typeof recommendationsTable.$inferInsert
-export type SelectRecommendation = typeof recommendationsTable.$inferSelect
+export type SelectRecommendation = typeof recommendationsTable.$inferSelect & {
+  recommender: SelectUser
+  receiver: SelectUser
+}
 
 export const notificationsTable = pgTable("notifications", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),

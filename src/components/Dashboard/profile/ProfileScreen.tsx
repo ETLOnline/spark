@@ -15,11 +15,13 @@ import {
   PencilIcon,
   GraduationCap,
   SquarePen,
-  ListX
+  ListX,
+  FlameKindling
 } from "lucide-react"
 import {
   SelectCertificate,
   SelectProfile,
+  SelectRecommendation,
   SelectTag,
   SelectUser
 } from "@/src/db/schema"
@@ -50,6 +52,9 @@ import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import ProfileFollowActions from "./user/ProfileFollowActions"
 import EditEducationModal from "./EditEducationModal"
 import CertificateModal from "./CertificateModal"
+import RecommendationsModal from "./RecommendationsModal"
+import { GetRecommendationAction } from "@/src/server-actions/Recommendation/recommendation"
+import moment from "moment"
 
 type ProfileScreenProps = {
   tab?: string
@@ -78,6 +83,15 @@ export default function ProfileScreen({
   const [selectedCertificate, setSelectedCertificate] =
     useState<SelectCertificate | null>(null)
 
+  const [recommendations, setRecommendations] = useState<
+    SelectRecommendation[]
+  >([])
+  const [averageRating, setAverageRating] = useState(0)
+
+  const [recommendationLoading, , , GetRecommendations] = useServerAction(
+    GetRecommendationAction
+  )
+
   useEffect(() => {
     const GetAuthUser = async () => {
       const authUser = await AuthUserAction()
@@ -86,6 +100,19 @@ export default function ProfileScreen({
       }
     }
     GetAuthUser()
+  }, [user])
+
+  useEffect(() => {
+    const GetUserRecommendations = async () => {
+      const res = await GetRecommendations(user.unique_id)
+
+      if (res?.success && res?.data) {
+        setRecommendations(res.data.recommendations as SelectRecommendation[])
+        setAverageRating(res.data.averageRating)
+      }
+    }
+
+    GetUserRecommendations()
   }, [user])
 
   const handleCopyUrl = async () => {
@@ -265,41 +292,74 @@ export default function ProfileScreen({
           </div>
           <ProfileBio
             userBio={user?.profile?.bio as string}
-            recommendations={
-              profileData?.recommendations as unknown as ExtendedRecommendations[]
-            }
             tags={profileData?.tags as SelectTag[]}
           />
           {/* Recommendations */}
           <Card>
             <CardHeader>
-              <CardTitle>Recommendations</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  Recommendations
+                  <p className="flex items-center gap-1 text-muted-foreground">
+                    {averageRating}
+                    <FlameKindling className="h-6 w-6 text-[#92400e] fill-[#fde68a]" />
+                  </p>
+                </div>
+                {authUser?.unique_id !== user?.unique_id && (
+                  <RecommendationsModal
+                    userId={user?.unique_id}
+                    authUserId={authUser?.unique_id}
+                    recommendations={recommendations}
+                    setRecommendations={setRecommendations}
+                    setAverageRating={setAverageRating}
+                  />
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src="/placeholder.svg" alt="Jane Smith" />
-                    <AvatarFallback>JS</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-medium">Junaid Sami</h4>
-                      <span className="text-sm text-muted-foreground">•</span>
-                      <span className="text-sm text-muted-foreground">
-                        10/06/2025
-                      </span>
+                {recommendations.length > 0 ? (
+                  recommendations?.map((recommendation) => (
+                    <div
+                      className="flex items-start gap-3"
+                      key={recommendation.id}
+                    >
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage
+                          src={recommendation.recommender.profile_url as string}
+                        />
+                        <AvatarFallback>
+                          {recommendation.recommender.first_name}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">
+                            {recommendation.recommender.first_name}{" "}
+                            {recommendation.recommender.last_name}
+                          </h4>
+                          <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                            {recommendation.rating}
+                            <FlameKindling className="h-4 w-4 text-[#92400e] fill-[#fde68a]" />
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            •
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            {moment(recommendation.created_at).format(
+                              "DD MMMM YYYY"
+                            )}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-sm">{recommendation.content}</p>
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Software Developer at ETL Online
-                    </p>
-                    <p className="mt-2 text-sm">
-                      Abdul is a dedicated developer with great problem-solving
-                      skills. His attention to detail and willingness to help
-                      others makes him a great team player.
-                    </p>
+                  ))
+                ) : (
+                  <div className="flex items-center justify-center">
+                    <p className="text-muted-foreground">No Recommendations</p>
                   </div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>
