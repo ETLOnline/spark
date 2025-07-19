@@ -44,7 +44,7 @@ export default function AppSidebar({
                 <div className="flex aspect-square items-center justify-center rounded-lg text-sidebar-primary-foreground">
                   <Image
                     sizes="8"
-                    src="/logo/spark-logo-animated.gif"
+                    src="/logo/spark-logo-animated-themed.gif"
                     alt="spark-logo"
                     width={40}
                     height={40}

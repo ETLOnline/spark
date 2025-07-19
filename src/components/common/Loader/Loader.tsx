@@ -7,7 +7,7 @@ type LoaderProps = {
 
 const Loader: React.FC<LoaderProps> = ({ size = LoaderSizes.sm }) => {
   return (
-    <Image src="/logo/spark-logo-animated.gif" className={`${size}`} width={70} height={70} alt="loader" />
+    <Image src="/logo/spark-logo-animated-themed.gif" className={`${size}`} width={70} height={70} alt="loader" />
     // <svg
     //   aria-hidden="true"
     //   className={`${size} text-gray-200 animate-spin dark:text-gray-600 fill-blue-600`}
