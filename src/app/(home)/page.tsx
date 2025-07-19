@@ -480,7 +480,7 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <Badge className="mb-6 bg-primary/10 text-primary-foreground hover:bg-primary/20 border-primary/20">
+            <Badge className="mb-6 bg-primary/10 text-foreground hover:bg-primary/20 border-primary/20">
               <Rocket className="w-4 h-4 mr-2" />
               🇵🇰 Empowering Pakistan's Tech Revolution
             </Badge>
@@ -1152,7 +1152,7 @@ export default function HomePage() {
                             {tier.technologies.map((tech, techIndex) => (
                               <Badge
                                 key={techIndex}
-                                className="bg-primary/10 text-primary-foreground border-primary/20"
+                                className="bg-primary/10 text-foreground border-primary/20"
                               >
                                 {tech}
                               </Badge>
@@ -1304,7 +1304,7 @@ export default function HomePage() {
                     >
                       <feature.icon className="w-7 h-7 text-white" />
                     </div>
-                    <Badge className="mb-4 bg-primary/10 text-primary-foreground border-primary/20 text-xs">
+                    <Badge className="mb-4 bg-primary/10 text-foreground border-primary/20 text-xs">
                       {feature.stats}
                     </Badge>
                     <h3 className="text-xl font-bold mb-4 text-foreground">
@@ -1405,9 +1405,9 @@ export default function HomePage() {
                         <Badge
                           className={`${
                             phase.status === "completed"
-                              ? "bg-primary/10 text-primary-foreground"
+                              ? "bg-primary/10 text-foreground"
                               : phase.status === "current"
-                                ? "bg-primary/10 text-primary-foreground"
+                                ? "bg-primary/10 text-foreground"
                                 : "bg-muted text-muted-foreground"
                           } border-0`}
                         >
@@ -1416,9 +1416,9 @@ export default function HomePage() {
                         <Badge
                           className={`${
                             phase.status === "completed"
-                              ? "bg-primary text-primary-foreground"
+                              ? "bg-primary text-foreground"
                               : phase.status === "current"
-                                ? "bg-primary text-primary-foreground"
+                                ? "bg-primary text-foreground"
                                 : "bg-muted-foreground text-white"
                           } border-0`}
                         >
@@ -1591,7 +1591,7 @@ export default function HomePage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary text-xl px-12 py-6 shadow-2xl transform hover:scale-105 transition-all duration-300"
+                className="border-2 border-primary-foreground text-foreground hover:bg-primary-foreground hover:text-primary text-xl px-12 py-6 shadow-2xl transform hover:scale-105 transition-all duration-300"
               >
                 Become a Mentor
                 <Briefcase className="ml-3 w-6 h-6" />

@@ -37,37 +37,37 @@ function Header() {
             <div className="hidden md:flex items-center space-x-8">
               <Link
                 href="#community"
-                className="text-foreground dark:text-muted hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
+                className="text-foreground dark:text-foreground hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
               >
                 Community
               </Link>
               <Link
                 href="#enterprise"
-                className="text-foreground dark:text-muted hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
+                className="text-foreground dark:text-foreground hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
               >
                 Enterprise
               </Link>
               <Link
                 href="#architecture"
-                className="text-foreground dark:text-muted hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
+                className="text-foreground dark:text-foreground hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
               >
                 Architecture
               </Link>
               <Link
                 href="#features"
-                className="text-foreground dark:text-muted hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
+                className="text-foreground dark:text-foreground hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
               >
                 Features
               </Link>
               <Link
                 href="#roadmap"
-                className="text-foreground dark:text-muted hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
+                className="text-foreground dark:text-foreground hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
               >
                 Roadmap
               </Link>
               <Link
                 href="#testimonials"
-                className="text-foreground dark:text-muted hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
+                className="text-foreground dark:text-foreground hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
               >
                 Success Stories
               </Link>
