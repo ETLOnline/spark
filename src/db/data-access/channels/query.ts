@@ -70,7 +70,8 @@ export async function GetChannels(filters?: channelQueryFilters) {
           with: {
             user: true
           }
-        }
+        },
+        community: true
       }
     })
 
@@ -152,7 +153,8 @@ export async function GetChannelBySlug(channelSlug: string) {
             features: true
           }
         },
-        users: true
+        users: true,
+        community: true
       }
     })
     return channel
@@ -177,7 +179,8 @@ export async function GetChannelById(id: string, withChannelUsers?: boolean) {
                 user: true
               }
             }
-          : undefined
+          : undefined,
+        community: true
       }
     })
     return channel

@@ -10,6 +10,7 @@ import UnauthorizedAccessScreen from "@/src/components/common/UnauthorizedAccess
 import { isSuperAdmin } from "@/src/utils/helpers"
 import ChannelUserList from "@/src/components/UserListAndInvite/UserList"
 import { getRoleByEntityTypeAndIdAction } from "@/src/server-actions/UserRoles/UserRole"
+import { SelectChannel } from "@/src/db/schema"
 
 interface Props {
   params: Promise<{
@@ -48,12 +49,16 @@ const ChannelUsersPage = async ({ params }: Props) => {
 
   return (
     <Suspense>
-      <ChannelUserList
-        entity={currentChannel.data}
-        entityType="channel"
-        userList={channelUsers || []}
-        scopedRoles={scopedRoles || []}
-      />
+      {
+        currentChannel?.data ? (
+          <ChannelUserList
+            entity={currentChannel.data as SelectChannel} 
+            entityType="channel"
+            userList={channelUsers || []}
+            scopedRoles={scopedRoles || []}
+          />
+        ): null
+      }
     </Suspense>
   )
 }

@@ -16,6 +16,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { UpdateSpaceAction } from "@/src/server-actions/Space/Space"
 import { toast } from "@/src/hooks/use-toast"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 
 interface SpaceOverviewProps {
   features?: SelectSpaceFeature[]
@@ -76,6 +77,12 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
           <LayoutDashboard className="w-5 h-5" />
           <h1 className="text-xl font-semibold">Overview</h1>
         </div>
+        <CreateShortcut type="space" entity={
+          {
+            slug: space?.space_slug ?? '',
+            title: `${space?.channel?.channel_name} - ${space?.space_name}`
+          }
+        }/>
       </div>
 
       {/* Content */}
