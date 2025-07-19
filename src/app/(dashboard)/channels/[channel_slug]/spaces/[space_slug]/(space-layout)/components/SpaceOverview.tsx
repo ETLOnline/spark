@@ -79,7 +79,7 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
         </div>
         <CreateShortcut type="space" entity={
           {
-            slug: space?.space_slug ?? '',
+            slug: `${space.channel?.channel_slug}/spaces/${space?.space_slug}`,
             title: `${space?.channel?.channel_name} - ${space?.space_name}`
           }
         }/>
