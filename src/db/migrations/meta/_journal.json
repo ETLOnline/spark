@@ -82,15 +82,8 @@
     {
       "idx": 11,
       "version": "7",
-      "when": 1752841722286,
-      "tag": "0011_2025_07_18_172840__create_certificates_table",
-      "breakpoints": true
-    },
-    {
-      "idx": 12,
-      "version": "7",
-      "when": 1752855404805,
-      "tag": "0012_2025_07_18_211642__update_recommendation_table",
+      "when": 1752908819506,
+      "tag": "0011_2025_07_19_120658__create_shortcuts_table",
       "breakpoints": true
     }
   ]

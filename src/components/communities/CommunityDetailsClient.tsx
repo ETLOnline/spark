@@ -44,6 +44,7 @@ import { AttachCommunityUserAction } from "@/src/server-actions/Community/Commun
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
 import { isEntityUser } from "@/src/utils/clientHelper"
+import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -227,11 +228,7 @@ export default function CommunityDetailsClient({
       <div className="flex flex-col min-h-screen">
         {/* Community Header Banner */}
         <div className="relative sm:h-44 h-36 shadow-sm shadow-secondary rounded-lg overflow-hidden">
-          <img
-            src="/images/profile/background.svg"
-            alt="Community Banner"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
+          <div className="absolute inset-0 w-full h-full object-cover cover-pattern" />
           <div className="absolute inset-0 bg-black/50"></div>
           <div className="absolute inset-0 px-4 py-4 sm:py-6 sm:px-6 flex flex-col gap-4 justify-center h-full">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 h-full">
@@ -321,6 +318,13 @@ export default function CommunityDetailsClient({
                         : "Join"}
                   </Button>
                 )}
+                <CreateShortcut
+                  type="community"
+                  entity={{
+                    slug: community?.slug ?? "",
+                    title: community?.title ?? ""
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -374,7 +378,7 @@ export default function CommunityDetailsClient({
                     Channels
                   </h3>
                   <CreateChannels
-                    communityId={community?.id}
+                    community={community}
                     onActionComplete={onActionComplete}
                   />
                 </div>

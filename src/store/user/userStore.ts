@@ -1,4 +1,4 @@
-import { SelectUser } from "@/src/db/schema"
+import { SelectShortcut, SelectUser } from "@/src/db/schema"
 import { UserPerms } from "@/src/utils/clientHelper"
 import { atom } from "jotai"
 
@@ -9,6 +9,7 @@ const SuperAdmin = atom<boolean | false>(false)
 const LoadingUser = atom<boolean | null>(true)
 const ReloadUser = atom<boolean | null>(false)
 const IsReloadingPermissions = atom<boolean>(false)
+const shortcuts = atom<SelectShortcut[]>([])
 
 export const userStore = {
   Iam,
@@ -17,5 +18,6 @@ export const userStore = {
   SuperAdmin,
   LoadingUser,
   ReloadUser,
-  IsReloadingPermissions
+  IsReloadingPermissions,
+  shortcuts
 }
