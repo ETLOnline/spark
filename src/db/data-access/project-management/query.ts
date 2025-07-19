@@ -39,40 +39,23 @@ export async function getProjectById(
   withRelations: boolean = false
 ): Promise<SelectProject | null> {
   try {
-    if (!withRelations) {
-      const project = await db
-        .select()
-        .from(projectTable)
-        .where(eq(projectTable.id, projectId))
-      return project[0]
-    }
+    const project = await db.query.projectTable.findFirst({
+      where: eq(projectTable.id, projectId),
+      with: withRelations
+        ? {
+            channel: true,
+            space: true
+          }
+        : undefined
+    })
 
-    const result = await db
-      .select({
-        project: projectTable,
-        channel: channelsTable,
-        space: spacesTable
-      })
-      .from(projectTable)
-      .leftJoin(channelsTable, eq(projectTable.channel_id, channelsTable.id))
-      .leftJoin(spacesTable, eq(projectTable.space_id, spacesTable.id))
-      .where(eq(projectTable.id, projectId))
-
-    const projectData = result[0]
-
-    if (projectData) {
-      return {
-        ...projectData.project,
-        channel: projectData?.channel ?? undefined,
-        space: projectData?.space ?? undefined
-      }
-    }
-    return null
+    return project || null
   } catch (error: unknown) {
     console.error(`Failed to fetch project with ID ${projectId}:`, error)
     throw new Error(`Could not retrieve project. An unexpected error occurred.`)
   }
 }
+
 export async function createProjectUser(
   projectId: string,
   userId: string,
