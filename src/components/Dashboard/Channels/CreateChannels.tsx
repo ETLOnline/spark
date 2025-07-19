@@ -247,8 +247,8 @@ function CreateChannels({
 
       if (createdChannel?.success && createdChannel?.data) {
         await refreshAuthUser()
-        onChannelCreated?.(createdChannel.data)
-        onActionComplete?.("create", createdChannel.data)
+        onChannelCreated?.(createdChannel.data as SelectChannel)
+        onActionComplete?.("create", createdChannel.data as SelectChannel)
         setChannelFormModelVisibility(false)
         toast({
           title: "Channel Created",

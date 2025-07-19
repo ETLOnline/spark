@@ -39,7 +39,6 @@ async function layout({ children, params }: Props) {
   const userRole = projectUser.find(
     (user) => user.user_id === currUser.unique_id
   )
-  console.log("userRole", userRole)
 
   return (
     <div className="grid grid-cols-12 w-full h-[80vh] overflow-hidden">

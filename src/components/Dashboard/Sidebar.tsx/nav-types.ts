@@ -9,7 +9,7 @@ export type NavSubItem = {
 export type NavItem = {
   title: string
   url: string
-  icon: React.ComponentType
+  icon?: React.ComponentType
   permission?: string
   isActive?: boolean
   items?: NavSubItem[]

@@ -9,7 +9,7 @@ function Navbaritems() {
         <Image
           width={50}
           height={50}
-          src="/logo/spark-logo-animated.gif"
+          src="/logo/spark-logo-animated-themed.gif"
           alt="Spark logo"
         />
       </Link>

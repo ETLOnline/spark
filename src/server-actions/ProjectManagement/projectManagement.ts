@@ -69,9 +69,9 @@ export const GetProjectsAction = CreateServerAction(
 
 export const GetProjectByIdAction = CreateServerAction(
   true,
-  async (projectId: string) => {
+  async (projectId: string, WithChannelAndSpace: boolean = false) => {
     try {
-      const project = await getProjectById(projectId)
+      const project = await getProjectById(projectId, WithChannelAndSpace)
       return { success: true, data: project }
     } catch (error) {
       return { error: error }

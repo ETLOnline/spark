@@ -61,7 +61,7 @@ export const GetUserProfileAction = CreateServerAction(
         (recommendation) => {
           return {
             ...recommendation,
-            recommender_full_name: `${recommendation.recommender.first_name} ${recommendation.recommender.last_name}`
+            recommender_full_name: `${recommendation?.recommender?.first_name} ${recommendation?.recommender?.last_name}`
           }
         }
       )
