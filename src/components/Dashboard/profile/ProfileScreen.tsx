@@ -251,10 +251,11 @@ export default function ProfileScreen({
           {/* <p className="text-base text-muted-foreground">Postion</p>
           <p className="text-sm text-muted-foreground">Company Name</p> */}
 
-          <div className="mt-2 flex flex-wrap sm:gap-6 gap-3 text-sm">
+          {/* for future use */}
+          {/* <div className="mt-2 flex flex-wrap sm:gap-6 gap-3 text-sm">
             <div className="flex items-center gap-1">
               <UserIcon className="h-4 w-4" />
-              <span className="font-medium">000</span>
+              <span className="font-medium">{user.contacts?.filter(c=> c.is_accepted === 1).length}</span>
               <span className="text-muted-foreground">connections</span>
             </div>
             <div className="flex items-center gap-1">
@@ -265,7 +266,7 @@ export default function ProfileScreen({
               <span className="font-medium">000</span>
               <span className="text-muted-foreground">following</span>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {authUser?.unique_id === user?.unique_id ? null : (
@@ -376,14 +377,15 @@ export default function ProfileScreen({
                 <MailIcon className="h-5 w-5 text-gray-500" />
                 <span>{user?.email}</span>
               </div>
-              <div className="flex items-center space-x-2">
+              {/* for future use */}
+              {/* <div className="flex items-center space-x-2">
                 <PhoneIcon className="h-5 w-5 text-gray-500" />
                 <span>+923001234567</span>
               </div>
               <div className="flex items-center space-x-2">
                 <MapPinIcon className="h-5 w-5 text-gray-500" />
                 <span>City, Country</span>
-              </div>
+              </div> */}
             </CardContent>
           </Card>
           {/* Education */}
