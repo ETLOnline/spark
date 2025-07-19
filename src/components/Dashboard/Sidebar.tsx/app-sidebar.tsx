@@ -15,11 +15,14 @@ import {
 import { SignedIn } from "@clerk/nextjs"
 import Image from "next/image"
 import Link from "next/link"
-import { useAtomValue } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { navStore } from "@/src/store/nav/navStore"
 import useSideBarHook from "./hooks/useSideBarHook"
 import { adminSiteRoutes } from "./constants/AdminNavigationRouters"
 import { Skeleton } from "../../ui/skeleton"
+import { useEffect, useState } from "react"
+import { NavItem } from "./nav-types"
+import useShortcut from "../../common/Shortcut/hooks/useShortcut"
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   isSuperAdmin?: boolean
@@ -29,10 +32,40 @@ export default function AppSidebar({
   isSuperAdmin,
   ...props
 }: AppSidebarProps) {
-  const baseRoutes = useAtomValue(navStore.routes)
+  const [baseRoutes, setRoutes] = useAtom(navStore.routes)
   const isNavLoading = useAtomValue(navStore.isNavLoading)
   const routes = isSuperAdmin ? adminSiteRoutes : baseRoutes
   const _ = useSideBarHook()
+  const {shortcutMap, shortcutList ,getShortcuts, loadingShortcuts} = useShortcut()
+  const [sidebarShortcutList, setSidebarShortcutList] = useState<NavItem[]>([])
+
+  useEffect(()=>{
+    getShortcuts()
+  },[])
+
+  useEffect(()=>{
+    const navitems : NavItem[] = Object.keys(shortcutMap).map((key) => {
+      return {
+        title: key.charAt(0).toUpperCase() + key.slice(1),
+        url: "#",
+        items: shortcutMap[key].map((item)=> {
+          return {
+            title: item.title,
+            url: item.url,
+          }
+        })
+      }
+    })
+
+    setSidebarShortcutList(navitems.filter((item) => item.items && item.items.length > 0)) 
+  },[shortcutList])
+
+  useEffect(()=>{
+    setRoutes({
+      ...routes,
+      shortcuts: sidebarShortcutList
+    })
+  },[sidebarShortcutList])
 
   return (
     <Sidebar variant="inset" {...props}>
@@ -74,10 +107,9 @@ export default function AppSidebar({
           <NavMain items={routes.navMain} label="Platform" />
         )}
         {/* <NavMain items={routes.testNav} label="Test" /> */}
+        <NavMain items={routes.shortcuts} label="Shortcuts" />
         {!isSuperAdmin && (
           <>
-            {/* Commenting this we will have the communities and then we will have the channels */}
-            {/* <NavMain items={routes.navChannels} label="Channels" /> */}
             <NavSecondary items={routes.navSecondary} className="mt-auto" />
           </>
         )}

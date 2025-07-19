@@ -4,22 +4,12 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
-  SidebarInset,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarProvider,
+  SidebarSeparator,
   useSidebar
 } from "@/src/components/ui/sidebar"
-import {
-  ChartGantt,
-  Files,
-  ListTodo,
-  PictureInPicture2,
-  Settings,
-  SquareKanban,
-  Users
-} from "lucide-react"
+
 import { useParams, usePathname, useRouter } from "next/navigation"
 import Link from "next/link"
 import { InsertTaskStatus, SelectProject, SelectSpace } from "@/src/db/schema"
@@ -30,6 +20,8 @@ import { ProjectManagementPages } from "@/src/components/Dashboard/ProjectManage
 import { navStore } from "@/src/store/nav/navStore"
 import { getProjectCrumbsMapped } from "@/src/components/Dashboard/Sidebar.tsx/utils/helpers"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
+import Loader from "@/src/components/common/Loader/Loader"
 
 interface Props {
   statusList: InsertTaskStatus[]
@@ -116,9 +108,18 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
             })
           ) : (
             <SidebarMenuItem className="p-2 text-sm text-gray-500">
-              Loading navigation...
+              <Loader />
             </SidebarMenuItem>
           )}
+          <div className="mt-6 w-full flex flex-col gap-2">
+            <SidebarSeparator />
+            <CreateShortcut type="project" entity={
+              {
+                slug: currProject?.id ?? '',
+                title: `${currSpace?.space_name} - ${currProject?.project_name}`
+              }
+            }/>
+          </div>
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

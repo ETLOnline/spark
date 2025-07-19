@@ -44,6 +44,7 @@ import { AttachCommunityUserAction } from "@/src/server-actions/Community/Commun
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
 import { isEntityUser } from "@/src/utils/clientHelper"
+import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -317,6 +318,12 @@ export default function CommunityDetailsClient({
                         : "Join"}
                   </Button>
                 )}
+                <CreateShortcut type="community" entity={
+                  {
+                    slug: community?.slug ?? '',
+                    title: community?.title ?? ''
+                  }
+                }/>
               </div>
             </div>
           </div>
