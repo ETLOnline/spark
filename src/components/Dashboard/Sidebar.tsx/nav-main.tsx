@@ -41,11 +41,7 @@ export default function NavMain({
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild tooltip={item.title}>
                     <Link href={item.url}>
-                      {
-                        item.icon ? (
-                          <item.icon />                        
-                        ) :null
-                      }
+                      {item.icon ? <item.icon /> : null}
                       <span>{item.title}</span>
                       {item?.isPrivate ? (
                         <Lock className="text-sm" height={10} />

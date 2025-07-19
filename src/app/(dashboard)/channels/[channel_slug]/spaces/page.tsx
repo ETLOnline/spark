@@ -190,12 +190,13 @@ export default function ChannelPage() {
                   </>
                 ) : null}
 
-                <CreateShortcut type="channel" entity={
-                  {
-                    slug: selectedChannel?.channel_slug ?? '',
+                <CreateShortcut
+                  type="channel"
+                  entity={{
+                    slug: selectedChannel?.channel_slug ?? "",
                     title: `${selectedChannel?.community?.title} - ${selectedChannel?.channel_name}`
-                  }
-                }/>
+                  }}
+                />
               </div>
             </div>
             {spacesLoading ? (

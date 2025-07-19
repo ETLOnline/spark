@@ -36,36 +36,39 @@ export default function AppSidebar({
   const isNavLoading = useAtomValue(navStore.isNavLoading)
   const routes = isSuperAdmin ? adminSiteRoutes : baseRoutes
   const _ = useSideBarHook()
-  const {shortcutMap, shortcutList ,getShortcuts, loadingShortcuts} = useShortcut()
+  const { shortcutMap, shortcutList, getShortcuts, loadingShortcuts } =
+    useShortcut()
   const [sidebarShortcutList, setSidebarShortcutList] = useState<NavItem[]>([])
 
-  useEffect(()=>{
+  useEffect(() => {
     getShortcuts()
-  },[])
+  }, [])
 
-  useEffect(()=>{
-    const navitems : NavItem[] = Object.keys(shortcutMap).map((key) => {
+  useEffect(() => {
+    const navitems: NavItem[] = Object.keys(shortcutMap).map((key) => {
       return {
         title: key.charAt(0).toUpperCase() + key.slice(1),
         url: "#",
-        items: shortcutMap[key].map((item)=> {
+        items: shortcutMap[key].map((item) => {
           return {
             title: item.title,
-            url: item.url,
+            url: item.url
           }
         })
       }
     })
 
-    setSidebarShortcutList(navitems.filter((item) => item.items && item.items.length > 0)) 
-  },[shortcutList])
+    setSidebarShortcutList(
+      navitems.filter((item) => item.items && item.items.length > 0)
+    )
+  }, [shortcutList])
 
-  useEffect(()=>{
+  useEffect(() => {
     setRoutes({
       ...routes,
       shortcuts: sidebarShortcutList
     })
-  },[sidebarShortcutList])
+  }, [sidebarShortcutList])
 
   return (
     <Sidebar variant="inset" {...props}>

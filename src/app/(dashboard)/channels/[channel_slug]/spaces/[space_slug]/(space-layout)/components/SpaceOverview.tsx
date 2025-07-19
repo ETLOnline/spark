@@ -77,12 +77,13 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
           <LayoutDashboard className="w-5 h-5" />
           <h1 className="text-xl font-semibold">Overview</h1>
         </div>
-        <CreateShortcut type="space" entity={
-          {
+        <CreateShortcut
+          type="space"
+          entity={{
             slug: `${space.channel?.channel_slug}/spaces/${space?.space_slug}`,
             title: `${space?.channel?.channel_name} - ${space?.space_name}`
-          }
-        }/>
+          }}
+        />
       </div>
 
       {/* Content */}

@@ -5,24 +5,33 @@ import useShortcut from "../hooks/useShortcut"
 import { useEffect, useState } from "react"
 
 interface CreateShortcutProps {
-  type: 'space'| 'channel'| 'community'| 'project'
+  type: "space" | "channel" | "community" | "project"
   entity: {
-    slug: string,
+    slug: string
     title: string
   }
-  ctaType?: 'button' | 'menuItem'
+  ctaType?: "button" | "menuItem"
 }
 
-const CreateShortcut = ({ type, entity,ctaType = 'button' }: CreateShortcutProps) => {
-
-  const {createShortcut, loadingShortcuts, availableShortcut, deleteShortcut, shortcutList} = useShortcut()
+const CreateShortcut = ({
+  type,
+  entity,
+  ctaType = "button"
+}: CreateShortcutProps) => {
+  const {
+    createShortcut,
+    loadingShortcuts,
+    availableShortcut,
+    deleteShortcut,
+    shortcutList
+  } = useShortcut()
   const [shortcutExist, setShortcutExist] = useState(false)
-  const [selectShortcut , setSelectedshortcut]= useState<SelectShortcut | null>(null)
+  const [selectShortcut, setSelectedshortcut] = useState<SelectShortcut | null>(
+    null
+  )
 
-
-  const handleCreateShortcut = async() => {
-    
-    const newShortcut :Partial<InsertShortcut> = {
+  const handleCreateShortcut = async () => {
+    const newShortcut: Partial<InsertShortcut> = {
       type,
       url: entity.slug,
       title: entity.title
@@ -31,36 +40,45 @@ const CreateShortcut = ({ type, entity,ctaType = 'button' }: CreateShortcutProps
     await createShortcut(newShortcut)
   }
 
-  const handleDeleteShortcut = async()=>{
-    if(selectShortcut){
+  const handleDeleteShortcut = async () => {
+    if (selectShortcut) {
       await deleteShortcut(selectShortcut.id)
     }
   }
 
-  useEffect(()=>{
-    if(entity.slug){
+  useEffect(() => {
+    if (entity.slug) {
       const shortcutFound = availableShortcut(entity.slug)
       setSelectedshortcut(shortcutFound || null)
       setShortcutExist(shortcutFound ? true : false)
     }
-  },[entity, shortcutList])
-
+  }, [entity, shortcutList])
 
   return (
     <>
-    {
-      !shortcutExist ? (
+      {!shortcutExist ? (
         <>
-          {
-            ctaType === 'button' ? (
-              <Button variant={'outline'} loading={loadingShortcuts} onClick={handleCreateShortcut}> <Layers2 /> Create Shortcut</Button>
-            ):null
-          }
+          {ctaType === "button" ? (
+            <Button
+              variant={"outline"}
+              loading={loadingShortcuts}
+              onClick={handleCreateShortcut}
+            >
+              {" "}
+              <Layers2 /> Create Shortcut
+            </Button>
+          ) : null}
         </>
-      ):(
-        <Button variant={'outline'} loading={loadingShortcuts} onClick={handleDeleteShortcut}> <Layers2 /> Delete Shortcut</Button>
-      )
-    }
+      ) : (
+        <Button
+          variant={"outline"}
+          loading={loadingShortcuts}
+          onClick={handleDeleteShortcut}
+        >
+          {" "}
+          <Layers2 /> Delete Shortcut
+        </Button>
+      )}
     </>
   )
 }

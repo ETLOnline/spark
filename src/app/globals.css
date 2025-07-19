@@ -13,41 +13,40 @@ body {
 }
 
 @layer base {
-  
   :root {
-    --background: 0 0% 100%;              /* white */
-    --foreground: 220 10% 10%;            /* very dark text */
-  
-    --card: 0 0% 100%;                    /* white cards */
+    --background: 0 0% 100%; /* white */
+    --foreground: 220 10% 10%; /* very dark text */
+
+    --card: 0 0% 100%; /* white cards */
     --card-foreground: 220 10% 10%;
-  
-    --popover: 220 25% 98%;               /* light popover */
+
+    --popover: 220 25% 98%; /* light popover */
     --popover-foreground: 220 10% 15%;
-  
-    --primary: 174 78% 62%;               /* #51ecdc */
+
+    --primary: 174 78% 62%; /* #51ecdc */
     --primary-hover: 174 78% 54%;
     --primary-foreground: 0 0% 10%;
-  
-    --secondary: 174 78% 92%;             /* subtle tint */
+
+    --secondary: 174 78% 92%; /* subtle tint */
     --secondary-hover: 174 78% 85%;
     --secondary-foreground: 220 10% 15%;
-  
+
     --muted: 210 16% 95%;
     --muted-hover: 210 16% 90%;
     --muted-foreground: 220 10% 40%;
-  
+
     --accent: 174 78% 62%;
     --accent-hover: 174 78% 54%;
     --accent-foreground: 0 0% 10%;
-  
+
     --destructive: 0 72% 55%;
     --destructive-hover: 0 72% 48%;
     --destructive-foreground: 0 0% 100%;
-  
+
     --border: 210 16% 90%;
     --input: 210 16% 90%;
     --ring: 174 78% 62%;
-  
+
     --sidebar: 210 20% 97%;
     --sidebar-hover: 210 20% 92%;
     --sidebar-foreground: 220 10% 15%;
@@ -57,45 +56,45 @@ body {
     --sidebar-accent-foreground: 0 0% 10%;
     --sidebar-border: 210 16% 90%;
     --sidebar-ring: 174 78% 62%;
-  
+
     --radius: 0.5rem;
   }
-  
+
   .dark {
-    --background: 220 50% 7%;             /* very dark navy */
-    --foreground: 0 0% 96%;               /* light text */
-  
-    --card: 220 50% 10%;                  /* slightly lighter navy */
+    --background: 220 50% 7%; /* very dark navy */
+    --foreground: 0 0% 96%; /* light text */
+
+    --card: 220 50% 10%; /* slightly lighter navy */
     --card-foreground: 0 0% 96%;
-  
+
     --popover: 220 50% 12%;
     --popover-foreground: 0 0% 96%;
-  
-    --primary: 174 78% 62%;               /* primary color */
+
+    --primary: 174 78% 62%; /* primary color */
     --primary-hover: 174 78% 54%;
-    --primary-foreground: 0 0% 12%;       /* dark text on primary */
-  
-    --secondary: 174 50% 45%;             /* brighter secondary */
+    --primary-foreground: 0 0% 12%; /* dark text on primary */
+
+    --secondary: 174 50% 45%; /* brighter secondary */
     --secondary-hover: 174 50% 40%;
-    --secondary-foreground: 0 0% 100%;    /* white text */
-  
-    --muted: 220 30% 20%;                 /* muted background */
+    --secondary-foreground: 0 0% 100%; /* white text */
+
+    --muted: 220 30% 20%; /* muted background */
     --muted-hover: 220 30% 25%;
-    --muted-foreground: 174 60% 72%;     /* soft accent text */
-  
+    --muted-foreground: 174 60% 72%; /* soft accent text */
+
     --accent: 174 78% 62%;
     --accent-hover: 174 78% 54%;
     --accent-foreground: 0 0% 12%;
-  
+
     --destructive: 0 72% 55%;
     --destructive-hover: 0 72% 48%;
     --destructive-foreground: 0 0% 100%;
-  
+
     --border: 220 30% 25%;
     --input: 220 30% 25%;
     --ring: 174 78% 62%;
-  
-    --sidebar: 220 50% 7%;                /* match background */
+
+    --sidebar: 220 50% 7%; /* match background */
     --sidebar-hover: 220 50% 12%;
     --sidebar-foreground: 0 0% 90%;
     --sidebar-primary: 174 78% 62%;
@@ -104,14 +103,9 @@ body {
     --sidebar-accent-foreground: 0 0% 12%;
     --sidebar-border: 220 30% 25%;
     --sidebar-ring: 174 78% 62%;
-  
+
     --radius: 0.5rem;
   }
-  
-  
-  
-  
-  
 }
 
 @layer base {
@@ -148,7 +142,61 @@ body {
 .cover-pattern {
   /* background-color: #ffffff; */
   opacity: 0.7;
-  background-image:  linear-gradient(30deg, #53eadb 12%, transparent 12.5%, transparent 87%, #53eadb 87.5%, #53eadb), linear-gradient(150deg, #53eadb 12%, transparent 12.5%, transparent 87%, #53eadb 87.5%, #53eadb), linear-gradient(30deg, #53eadb 12%, transparent 12.5%, transparent 87%, #53eadb 87.5%, #53eadb), linear-gradient(150deg, #53eadb 12%, transparent 12.5%, transparent 87%, #53eadb 87.5%, #53eadb), linear-gradient(60deg, #53eadb77 25%, transparent 25.5%, transparent 75%, #53eadb77 75%, #53eadb77), linear-gradient(60deg, #53eadb77 25%, transparent 25.5%, transparent 75%, #53eadb77 75%, #53eadb77);
+  background-image:
+    linear-gradient(
+      30deg,
+      #53eadb 12%,
+      transparent 12.5%,
+      transparent 87%,
+      #53eadb 87.5%,
+      #53eadb
+    ),
+    linear-gradient(
+      150deg,
+      #53eadb 12%,
+      transparent 12.5%,
+      transparent 87%,
+      #53eadb 87.5%,
+      #53eadb
+    ),
+    linear-gradient(
+      30deg,
+      #53eadb 12%,
+      transparent 12.5%,
+      transparent 87%,
+      #53eadb 87.5%,
+      #53eadb
+    ),
+    linear-gradient(
+      150deg,
+      #53eadb 12%,
+      transparent 12.5%,
+      transparent 87%,
+      #53eadb 87.5%,
+      #53eadb
+    ),
+    linear-gradient(
+      60deg,
+      #53eadb77 25%,
+      transparent 25.5%,
+      transparent 75%,
+      #53eadb77 75%,
+      #53eadb77
+    ),
+    linear-gradient(
+      60deg,
+      #53eadb77 25%,
+      transparent 25.5%,
+      transparent 75%,
+      #53eadb77 75%,
+      #53eadb77
+    );
   background-size: 26px 46px;
-  background-position: 0 0, 0 0, 13px 23px, 13px 23px, 0 0, 13px 23px;
+  background-position:
+    0 0,
+    0 0,
+    13px 23px,
+    13px 23px,
+    0 0,
+    13px 23px;
 }

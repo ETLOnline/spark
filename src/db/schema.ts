@@ -926,8 +926,24 @@ export const projectTable = pgTable("project", {
   ...timestamps
 })
 
+export const projectRelations = relations(projectTable, ({ one }) => ({
+  channel: one(channelsTable, {
+    fields: [projectTable.channel_id],
+    references: [channelsTable.id],
+    relationName: "projectToChannel"
+  }),
+  space: one(spacesTable, {
+    fields: [projectTable.space_id],
+    references: [spacesTable.id],
+    relationName: "projectToSpace"
+  })
+}))
+
 export type InsertProject = typeof projectTable.$inferInsert
-export type SelectProject = typeof projectTable.$inferSelect
+export type SelectProject = typeof projectTable.$inferSelect & {
+  channel?: SelectChannel
+  space?: SelectSpace
+}
 
 export const taskTable = pgTable("task", {
   id: varchar("id", { length: 36 })
@@ -1228,7 +1244,6 @@ export type SelectCommunityCategory =
   typeof communityCategoriesTable.$inferSelect & {
     communities?: SelectCommunity[]
   }
-
 
 export const shortcutsTable = pgTable("shortcuts", {
   id: varchar("id", { length: 36 })

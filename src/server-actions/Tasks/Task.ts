@@ -27,7 +27,10 @@ export const CreateTaskAction = CreateServerAction(
       const taskCount = existingTaskCountResult + 1
 
       const project = await getProjectById(taskData.project_id)
-      const titleInitials = getInitials(project.project_name)
+      if (!project) {
+        return { success: false, error: "Project not found" }
+      }
+      const titleInitials = getInitials(project?.project_name)
 
       const task_num = `${titleInitials}-${taskCount}`
 

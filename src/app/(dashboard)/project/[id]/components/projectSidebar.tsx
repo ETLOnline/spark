@@ -113,12 +113,13 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
           )}
           <div className="mt-6 w-full flex flex-col gap-2">
             <SidebarSeparator />
-            <CreateShortcut type="project" entity={
-              {
-                slug: currProject?.id ?? '',
+            <CreateShortcut
+              type="project"
+              entity={{
+                slug: currProject?.id ?? "",
                 title: `${currSpace?.space_name} - ${currProject?.project_name}`
-              }
-            }/>
+              }}
+            />
           </div>
         </SidebarMenu>
       </SidebarGroupContent>

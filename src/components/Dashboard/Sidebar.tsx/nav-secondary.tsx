@@ -25,11 +25,7 @@ export default function NavSecondary({
             <SidebarMenuItem key={item.url + item.title}>
               <SidebarMenuButton asChild size="sm">
                 <Link href={item.url}>
-                  {
-                    item.icon ? (
-                      <item.icon />
-                    ):null
-                  }
+                  {item.icon ? <item.icon /> : null}
                   <span>{item.title}</span>
                 </Link>
               </SidebarMenuButton>

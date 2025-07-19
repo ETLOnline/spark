@@ -529,12 +529,8 @@
           "name": "channels_community_id_communities_id_fk",
           "tableFrom": "channels",
           "tableTo": "communities",
-          "columnsFrom": [
-            "community_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["community_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -785,9 +781,7 @@
         "communities_slug_unique": {
           "name": "communities_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -843,9 +837,7 @@
         "community_categories_slug_unique": {
           "name": "community_categories_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -895,12 +887,8 @@
           "name": "community_users_community_id_communities_id_fk",
           "tableFrom": "community_users",
           "tableTo": "communities",
-          "columnsFrom": [
-            "community_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["community_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -908,12 +896,8 @@
           "name": "community_users_user_id_users_unique_id_fk",
           "tableFrom": "community_users",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "unique_id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["unique_id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1812,12 +1796,8 @@
           "name": "profile_user_id_users_unique_id_fk",
           "tableFrom": "profile",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "unique_id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["unique_id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2972,16 +2952,12 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         },
         "users_external_auth_id_unique": {
           "name": "users_external_auth_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "external_auth_id"
-          ]
+          "columns": ["external_auth_id"]
         }
       },
       "policies": {},

@@ -1,4 +1,4 @@
-'use client'
+"use client"
 import React, { Suspense } from "react"
 import "./header.css"
 import { LinkAsButton } from "@/src/components/LinkAsButton/LinkAsButton"
@@ -8,7 +8,6 @@ import { motion } from "framer-motion"
 import Image from "next/image"
 import { Sparkles } from "lucide-react"
 import Link from "next/link"
-
 
 function Header() {
   return (
@@ -21,10 +20,14 @@ function Header() {
       >
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3" >
-
+            <div className="flex items-center space-x-3">
               <div className="relative">
-                <Image src='/logo/spark-logo-animated-themed.gif' width={40} height={30} alt='Spark logo' />
+                <Image
+                  src="/logo/spark-logo-animated-themed.gif"
+                  width={40}
+                  height={30}
+                  alt="Spark logo"
+                />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-primary via-primary-hover to-foreground bg-clip-text text-transparent">
                 SPARK
@@ -77,7 +80,10 @@ function Header() {
                   {/* <LinkAsButton href="/sign-in" variant={"default"}>
                     Log In
                   </LinkAsButton> */}
-                  <LinkAsButton href="/sign-up" className="bg-gradient-to-r from-primary to-accent hover:from-primary-hover hover:to-accent-hover text-primary-foreground shadow-lg">
+                  <LinkAsButton
+                    href="/sign-up"
+                    className="bg-gradient-to-r from-primary to-accent hover:from-primary-hover hover:to-accent-hover text-primary-foreground shadow-lg"
+                  >
                     Join SPARK
                     <Sparkles className="ml-2 w-4 h-4" />
                   </LinkAsButton>

@@ -75,11 +75,11 @@ const themeGradients = [
   "from-primary-hover to-primary", // Darker primary to very dark text
   "from-secondary-primary to-primary", // Muted primary to very dark text
   "from-primary to-secondary-primary" // Primary to dark text
-];
+]
 
 // Helper to cycle through gradients
-const getGradient = (index: number) => themeGradients[index % themeGradients.length];
-
+const getGradient = (index: number) =>
+  themeGradients[index % themeGradients.length]
 
 const stats = [
   {
@@ -513,16 +513,9 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.4 }}
           >
             Join Pakistan's largest tech community where
-            <span className="text-primary font-bold">
-              {" "}
-              15,000+ students
-            </span>
-            ,
-            <span className="text-primary-hover font-bold">
-              {" "}
-              800+ mentors
-            </span>
-            , and
+            <span className="text-primary font-bold"> 15,000+ students</span>,
+            <span className="text-primary-hover font-bold"> 800+ mentors</span>,
+            and
             <span className="text-secondary-foreground font-bold">
               {" "}
               75+ universities
@@ -818,7 +811,9 @@ export default function HomePage() {
               <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl bg-card">
                 <CardContent className="p-10">
                   <div className="flex items-center gap-4 mb-8">
-                    <div className={`w-16 h-16 bg-gradient-to-r ${getGradient(1)} rounded-2xl flex items-center justify-center shadow-lg`}>
+                    <div
+                      className={`w-16 h-16 bg-gradient-to-r ${getGradient(1)} rounded-2xl flex items-center justify-center shadow-lg`}
+                    >
                       <Briefcase className="w-8 h-8 text-white" />
                     </div>
                     <div>
@@ -1029,7 +1024,9 @@ export default function HomePage() {
                         </p>
                       </div>
                       <div className="text-center">
-                        <div className={`w-12 h-12 bg-gradient-to-r ${getGradient(1)} rounded-xl flex items-center justify-center mx-auto mb-3`}>
+                        <div
+                          className={`w-12 h-12 bg-gradient-to-r ${getGradient(1)} rounded-xl flex items-center justify-center mx-auto mb-3`}
+                        >
                           <TrendingUp className="w-6 h-6 text-white" />
                         </div>
                         <h5 className="font-semibold text-foreground mb-2">
@@ -1041,7 +1038,9 @@ export default function HomePage() {
                         </p>
                       </div>
                       <div className="text-center">
-                        <div className={`w-12 h-12 bg-gradient-to-r ${getGradient(2)} rounded-xl flex items-center justify-center mx-auto mb-3`}>
+                        <div
+                          className={`w-12 h-12 bg-gradient-to-r ${getGradient(2)} rounded-xl flex items-center justify-center mx-auto mb-3`}
+                        >
                           <Brain className="w-6 h-6 text-white" />
                         </div>
                         <h5 className="font-semibold text-foreground mb-2">

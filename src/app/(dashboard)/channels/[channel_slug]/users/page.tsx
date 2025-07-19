@@ -49,16 +49,14 @@ const ChannelUsersPage = async ({ params }: Props) => {
 
   return (
     <Suspense>
-      {
-        currentChannel?.data ? (
-          <ChannelUserList
-            entity={currentChannel.data as SelectChannel} 
-            entityType="channel"
-            userList={channelUsers || []}
-            scopedRoles={scopedRoles || []}
-          />
-        ): null
-      }
+      {currentChannel?.data ? (
+        <ChannelUserList
+          entity={currentChannel.data as SelectChannel}
+          entityType="channel"
+          userList={channelUsers || []}
+          scopedRoles={scopedRoles || []}
+        />
+      ) : null}
     </Suspense>
   )
 }

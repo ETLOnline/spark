@@ -318,12 +318,13 @@ export default function CommunityDetailsClient({
                         : "Join"}
                   </Button>
                 )}
-                <CreateShortcut type="community" entity={
-                  {
-                    slug: community?.slug ?? '',
-                    title: community?.title ?? ''
-                  }
-                }/>
+                <CreateShortcut
+                  type="community"
+                  entity={{
+                    slug: community?.slug ?? "",
+                    title: community?.title ?? ""
+                  }}
+                />
               </div>
             </div>
           </div>
