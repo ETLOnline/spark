@@ -23,6 +23,7 @@ import Overlay from "@/src/components/common/Overlay/OverLay"
 import { communityStore } from "@/src/store/community/communityStore"
 import { AttachChannelUserAction } from "@/src/server-actions/Channel/Channel"
 import { isEntityUser } from "@/src/utils/clientHelper"
+import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 
 export default function ChannelPage() {
   const community = useAtomValue(communityStore.selectedCommunity)
@@ -188,6 +189,14 @@ export default function ChannelPage() {
                     </Button>
                   </>
                 ) : null}
+
+                <CreateShortcut
+                  type="channel"
+                  entity={{
+                    slug: selectedChannel?.channel_slug ?? "",
+                    title: `${selectedChannel?.community?.title} - ${selectedChannel?.channel_name}`
+                  }}
+                />
               </div>
             </div>
             {spacesLoading ? (

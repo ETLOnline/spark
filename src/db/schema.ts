@@ -722,7 +722,7 @@ export type InsertChannel = typeof channelsTable.$inferInsert
 export type SelectChannel = typeof channelsTable.$inferSelect & {
   spaces?: SelectSpace[]
   users?: SelectChannelUser[]
-  community?: SelectCommunity
+  community?: SelectCommunity | null
 }
 
 export const spacesTable = pgTable("spaces", {
@@ -1244,3 +1244,17 @@ export type SelectCommunityCategory =
   typeof communityCategoriesTable.$inferSelect & {
     communities?: SelectCommunity[]
   }
+
+export const shortcutsTable = pgTable("shortcuts", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  title: varchar().notNull(),
+  url: varchar().notNull(),
+  type: varchar().notNull(),
+  user_id: varchar().notNull(),
+  ...timestamps
+})
+
+export type SelectShortcut = typeof shortcutsTable.$inferSelect
+export type InsertShortcut = typeof shortcutsTable.$inferInsert

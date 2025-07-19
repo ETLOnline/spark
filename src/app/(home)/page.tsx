@@ -69,30 +69,42 @@ const floatingAnimation = {
   }
 }
 
+// Define a set of theme-based gradient classes for consistent styling
+const themeGradients = [
+  "from-primary to-primary", // Primary to slightly darker primary
+  "from-primary-hover to-primary", // Darker primary to very dark text
+  "from-secondary-primary to-primary", // Muted primary to very dark text
+  "from-primary to-secondary-primary" // Primary to dark text
+]
+
+// Helper to cycle through gradients
+const getGradient = (index: number) =>
+  themeGradients[index % themeGradients.length]
+
 const stats = [
   {
     number: "15,000+",
     label: "Active Students",
     icon: Users,
-    color: "from-blue-500 to-cyan-500"
+    color: getGradient(0)
   },
   {
     number: "800+",
     label: "Industry Mentors",
     icon: Briefcase,
-    color: "from-purple-500 to-pink-500"
+    color: getGradient(0)
   },
   {
     number: "75+",
     label: "Universities",
     icon: GraduationCap,
-    color: "from-green-500 to-emerald-500"
+    color: getGradient(0)
   },
   {
     number: "2,500+",
     label: "Projects Launched",
     icon: Target,
-    color: "from-orange-500 to-red-500"
+    color: getGradient(0)
   }
 ]
 
@@ -109,7 +121,7 @@ const communityStats = [
       { label: "Other Tech Fields", count: "1,000", percentage: 7 }
     ],
     icon: GraduationCap,
-    color: "from-blue-500 to-cyan-500"
+    color: getGradient(0)
   },
   {
     category: "Mentors",
@@ -122,7 +134,7 @@ const communityStats = [
       { label: "Researchers", count: "124", percentage: 14 }
     ],
     icon: Briefcase,
-    color: "from-purple-500 to-pink-500"
+    color: getGradient(0)
   },
   {
     category: "Universities",
@@ -133,7 +145,7 @@ const communityStats = [
       { label: "International", count: "5", percentage: 6 }
     ],
     icon: Building,
-    color: "from-green-500 to-emerald-500"
+    color: getGradient(0)
   },
   {
     category: "Companies",
@@ -145,7 +157,7 @@ const communityStats = [
       { label: "Consulting Firms", count: "45", percentage: 10 }
     ],
     icon: Globe,
-    color: "from-orange-500 to-red-500"
+    color: getGradient(0)
   }
 ]
 
@@ -171,7 +183,7 @@ const architectureTiers = [
       "Dark/Light Themes"
     ],
     icon: Monitor,
-    color: "from-blue-500 to-cyan-500"
+    color: getGradient(0)
   },
   {
     tier: "Backend Layer",
@@ -187,7 +199,7 @@ const architectureTiers = [
       "Event-Driven Design"
     ],
     icon: Server,
-    color: "from-purple-500 to-pink-500"
+    color: getGradient(0)
   },
   {
     tier: "Infrastructure Layer",
@@ -203,7 +215,7 @@ const architectureTiers = [
       "Performance Analytics"
     ],
     icon: Cloud,
-    color: "from-green-500 to-emerald-500"
+    color: getGradient(0)
   }
 ]
 
@@ -214,7 +226,7 @@ const communityValues = [
     description:
       "Connect with 15,000+ students, 800+ mentors, and faculty from top universities across Pakistan",
     benefit: "Expand your circle",
-    color: "from-blue-500 to-cyan-500",
+    color: getGradient(0),
     stats: "15,000+ connections made"
   },
   {
@@ -223,7 +235,7 @@ const communityValues = [
     description:
       "Get mentored by professionals from Google, Microsoft, Meta, and leading Pakistani tech companies",
     benefit: "Accelerate growth",
-    color: "from-purple-500 to-pink-500",
+    color: getGradient(0),
     stats: "800+ expert mentors"
   },
   {
@@ -232,7 +244,7 @@ const communityValues = [
     description:
       "Collaborate on industry-sponsored projects and build a portfolio that gets you hired",
     benefit: "Gain experience",
-    color: "from-green-500 to-emerald-500",
+    color: getGradient(0),
     stats: "2,500+ projects completed"
   },
   {
@@ -241,7 +253,7 @@ const communityValues = [
     description:
       "Get certified skills, badges, and recommendations that boost your career prospects",
     benefit: "Stand out",
-    color: "from-orange-500 to-red-500",
+    color: getGradient(0),
     stats: "5,000+ skills validated"
   }
 ]
@@ -253,7 +265,7 @@ const features = [
     description:
       "Join university-specific or topic-based communities with AI-powered content recommendations",
     stats: "50+ Active Communities",
-    color: "from-blue-500 to-cyan-500",
+    color: getGradient(0),
     details: [
       "University-specific channels",
       "Topic-based discussions",
@@ -268,7 +280,7 @@ const features = [
     description:
       "Book 1-on-1 or group sessions with industry experts. Open sessions and private mentoring available",
     stats: "1000+ Sessions Monthly",
-    color: "from-purple-500 to-pink-500",
+    color: getGradient(0),
     details: [
       "1-on-1 mentoring",
       "Group sessions",
@@ -283,7 +295,7 @@ const features = [
     description:
       "Collaborative workspaces with task management, file sharing, and real-time collaboration tools",
     stats: "500+ Active Projects",
-    color: "from-green-500 to-emerald-500",
+    color: getGradient(0),
     details: [
       "Team collaboration",
       "Version control",
@@ -298,7 +310,7 @@ const features = [
     description:
       "Personalized skill development recommendations based on your goals and industry trends",
     stats: "10,000+ Paths Created",
-    color: "from-orange-500 to-red-500",
+    color: getGradient(0),
     details: [
       "Personalized recommendations",
       "Skill assessments",
@@ -313,7 +325,7 @@ const features = [
     description:
       "Peer endorsements, project reviews, and industry-recognized certifications",
     stats: "5,000+ Skills Validated",
-    color: "from-pink-500 to-rose-500",
+    color: getGradient(0), // Cycle back to first gradient
     details: [
       "Peer endorsements",
       "Project portfolios",
@@ -328,7 +340,7 @@ const features = [
     description:
       "Job board, internship opportunities, and direct connections with hiring companies",
     stats: "200+ Job Placements",
-    color: "from-indigo-500 to-purple-500",
+    color: getGradient(0), // Cycle back to second gradient
     details: [
       "Job opportunities",
       "Internship programs",
@@ -384,7 +396,7 @@ const testimonials = [
     role: "Software Engineer at Systems Ltd",
     content:
       "SPARK connected me with my mentor who guided my final year project. The community support was incredible - I got my dream job within 2 months of graduation!",
-    avatar: "/placeholder.svg?height=60&width=60",
+    avatar: "",
     company: "Systems Ltd",
     achievement: "Landed dream job"
   },
@@ -393,7 +405,7 @@ const testimonials = [
     role: "Head of CS Department, COMSATS",
     content:
       "The platform has transformed how we connect students with industry. Our placement rate increased by 40% since joining SPARK.",
-    avatar: "/placeholder.svg?height=60&width=60",
+    avatar: "",
     company: "COMSATS University",
     achievement: "40% better placements"
   },
@@ -402,7 +414,7 @@ const testimonials = [
     role: "Senior Developer at Careem",
     content:
       "Mentoring on SPARK is incredibly rewarding. I've guided 15+ students who are now working at top tech companies. The platform makes mentorship seamless.",
-    avatar: "/placeholder.svg?height=60&width=60",
+    avatar: "",
     company: "Careem",
     achievement: "15+ successful mentees"
   }
@@ -441,18 +453,18 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-blue-400/20 to-purple-400/20 dark:from-blue-400/10 dark:to-purple-400/10 rounded-full blur-3xl"
+          className="absolute top-20 left-10 w-72 h-72 bg-primary/20 dark:bg-primary/10 rounded-full blur-3xl"
           animate={{
             x: mousePosition.x * 0.02,
             y: mousePosition.y * 0.02
           }}
         />
         <motion.div
-          className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-purple-400/20 to-pink-400/20 dark:from-purple-400/10 dark:to-pink-400/10 rounded-full blur-3xl"
+          className="absolute bottom-20 right-10 w-96 h-96 bg-accent/20 dark:bg-accent/10 rounded-full blur-3xl"
           animate={{
             x: mousePosition.x * -0.02,
             y: mousePosition.y * -0.02
@@ -468,23 +480,25 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <Badge className="mb-6 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 border-blue-200 dark:border-blue-700">
+            <Badge className="mb-6 bg-primary/10 text-primary-foreground hover:bg-primary/20 border-primary/20">
               <Rocket className="w-4 h-4 mr-2" />
               🇵🇰 Empowering Pakistan's Tech Revolution
             </Badge>
           </motion.div>
 
           <motion.h1
-            className="text-6xl md:text-8xl font-bold mb-8 bg-gradient-to-r from-blue-600 via-orange-600 to-red-600 bg-clip-text text-transparent leading-tight"
+            className="text-6xl md:text-8xl font-bold mb-8 text-foreground leading-tight"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            Where Tech Dreams
+            <span className="bg-gradient-to-r from-primary via-primary-hover to-foreground bg-clip-text text-transparent">
+              Where Tech Dreams
+            </span>
             <br />
-            <span className="inline-block text-blue-600 dark:text-blue-400">
+            <span className="inline-block">
               <Image
-                src="/logo/spark-logo-animated.gif"
+                src="/logo/spark-logo-animated-themed.gif"
                 width={100}
                 height={100}
                 alt="Spark logo"
@@ -493,23 +507,16 @@ export default function HomePage() {
           </motion.h1>
 
           <motion.p
-            className="text-2xl md:text-3xl text-gray-700 dark:text-gray-300 mb-12 max-w-5xl mx-auto leading-relaxed font-medium"
+            className="text-2xl md:text-3xl text-muted-foreground mb-12 max-w-5xl mx-auto leading-relaxed font-medium"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
             Join Pakistan's largest tech community where
-            <span className="text-blue-600 dark:text-blue-400 font-bold">
-              {" "}
-              15,000+ students
-            </span>
-            ,
-            <span className="text-green-600 dark:text-green-400 font-bold">
-              {" "}
-              800+ mentors
-            </span>
-            , and
-            <span className="text-purple-600 dark:text-purple-400 font-bold">
+            <span className="text-primary font-bold"> 15,000+ students</span>,
+            <span className="text-primary-hover font-bold"> 800+ mentors</span>,
+            and
+            <span className="text-secondary-foreground font-bold">
               {" "}
               75+ universities
             </span>
@@ -526,7 +533,7 @@ export default function HomePage() {
             <LinkAsButton
               href="/profile"
               size="lg"
-              className="bg-gradient-to-r from-blue-600 via-red-600 to-blue-600 hover:from-blue-700 hover:via-orange-700 hover:to-blue-700 text-white text-xl px-12 py-6 shadow-2xl transform hover:scale-105 transition-all duration-300"
+              className="bg-gradient-to-r from-primary to-accent hover:from-primary-hover hover:to-accent-hover text-primary-foreground text-xl px-12 py-6 shadow-2xl transform hover:scale-105 transition-all duration-300"
             >
               Start Your Journey
               <ArrowRight className="ml-3 w-6 h-6" />
@@ -534,7 +541,7 @@ export default function HomePage() {
             <Button
               size="lg"
               variant="outline"
-              className="text-xl px-12 py-6 border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 shadow-lg transform hover:scale-105 transition-all duration-300"
+              className="text-xl px-12 py-6 border-2 border-border hover:bg-muted dark:hover:bg-muted-hover shadow-lg transform hover:scale-105 transition-all duration-300"
             >
               <Play className="mr-3 w-6 h-6" />
               Watch Success Stories
@@ -561,14 +568,14 @@ export default function HomePage() {
                   <stat.icon className="w-10 h-10 text-white" />
                 </motion.div>
                 <motion.div
-                  className="text-4xl font-bold text-gray-900 dark:text-white mb-2"
+                  className="text-4xl font-bold text-foreground mb-2"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 1, delay: index * 0.2 }}
                 >
                   {stat.number}
                 </motion.div>
-                <div className="text-gray-600 dark:text-gray-400 font-medium">
+                <div className="text-muted-foreground font-medium">
                   {stat.label}
                 </div>
               </motion.div>
@@ -582,24 +589,23 @@ export default function HomePage() {
           variants={floatingAnimation}
           animate="animate"
         >
-          <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-20" />
+          <div className="w-16 h-16 bg-primary/20 rounded-full opacity-20" />
         </motion.div>
         <motion.div
-          className="absolute top-60 right-32 hidden lg:block"
-          variants={floatingAnimation}
-          animate="animate"
-          transition={{ delay: 1 }}
-        >
-          <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-20" />
-        </motion.div>
+          className="absolute bottom-20 right-10 w-96 h-96 bg-accent/20 dark:bg-accent/10 rounded-full blur-3xl"
+          animate={{
+            x: mousePosition.x * -0.02,
+            y: mousePosition.y * -0.02
+          }}
+        />
       </section>
 
       {/* Community Statistics Section */}
       <section
         id="community"
-        className="py-24 px-6 bg-white dark:bg-slate-900 relative overflow-hidden"
+        className="py-24 px-6 bg-card relative overflow-hidden"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-950/20 dark:to-purple-950/20" />
+        <div className="absolute inset-0 bg-primary/5 dark:bg-primary/10" />
         <div className="container mx-auto relative z-10">
           <motion.div
             className="text-center mb-20"
@@ -608,18 +614,18 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <Badge className="mb-6 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700">
+            <Badge className="mb-6 bg-primary/10 text-primary-foreground border-primary/20">
               <Users className="w-4 h-4 mr-2" />
               Community Insights
             </Badge>
-            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-gray-900 dark:text-white">
+            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-foreground">
               Our Growing
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary via-primary-hover to-foreground bg-clip-text text-transparent">
                 {" "}
                 Community
               </span>
             </h2>
-            <p className="text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-2xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
               Detailed breakdown of our diverse and thriving tech ecosystem
               across Pakistan
             </p>
@@ -634,17 +640,17 @@ export default function HomePage() {
           >
             {communityStats.map((stat, index) => (
               <motion.div key={index} variants={fadeInUp}>
-                <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl group bg-white dark:bg-slate-800">
+                <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl group bg-card">
                   <CardContent className="p-8">
                     <div
                       className={`w-16 h-16 bg-gradient-to-r ${stat.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg`}
                     >
                       <stat.icon className="w-8 h-8 text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
+                    <h3 className="text-2xl font-bold mb-2 text-foreground">
                       {stat.category}
                     </h3>
-                    <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-6">
+                    <div className="text-4xl font-bold text-primary mb-6">
                       {stat.total}
                     </div>
                     <div className="space-y-3">
@@ -653,14 +659,14 @@ export default function HomePage() {
                           key={itemIndex}
                           className="flex justify-between items-center"
                         >
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-sm text-muted-foreground">
                             {item.label}
                           </span>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            <span className="text-sm font-medium text-foreground">
                               {item.count}
                             </span>
-                            <div className="w-12 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div className="w-12 h-2 bg-muted rounded-full overflow-hidden">
                               <div
                                 className={`h-full bg-gradient-to-r ${stat.color} transition-all duration-500`}
                                 style={{ width: `${item.percentage}%` }}
@@ -681,9 +687,9 @@ export default function HomePage() {
       {/* Universities & Industry Section */}
       <section
         id="enterprise"
-        className="py-24 px-6 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 relative overflow-hidden"
+        className="py-24 px-6 bg-background relative overflow-hidden"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-100/30 to-purple-100/30 dark:from-indigo-950/10 dark:to-purple-950/10" />
+        <div className="absolute inset-0 bg-secondary/10 dark:bg-secondary/20" />
         <div className="container mx-auto relative z-10">
           <motion.div
             className="text-center mb-20"
@@ -692,18 +698,18 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <Badge className="mb-6 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700">
+            <Badge className="mb-6 bg-secondary/10 text-secondary-foreground border-secondary/20">
               <Building className="w-4 h-4 mr-2" />
               Enterprise Solutions
             </Badge>
-            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-gray-900 dark:text-white">
+            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-foreground">
               For Universities &
-              <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary via-primary-hover to-foreground bg-clip-text text-transparent">
                 {" "}
                 Industry
               </span>
             </h2>
-            <p className="text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-2xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
               Create custom communities with enterprise-grade tools and
               on-demand feature enablement
             </p>
@@ -718,17 +724,17 @@ export default function HomePage() {
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
             >
-              <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl bg-white dark:bg-slate-800">
+              <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl bg-card">
                 <CardContent className="p-10">
                   <div className="flex items-center gap-4 mb-8">
-                    <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
+                    <div className="w-16 h-16 bg-gradient-to-r from-primary to-accent rounded-2xl flex items-center justify-center shadow-lg">
                       <GraduationCap className="w-8 h-8 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-3xl font-bold text-gray-900 dark:text-white">
+                      <h3 className="text-3xl font-bold text-foreground">
                         Universities
                       </h3>
-                      <p className="text-gray-600 dark:text-gray-400">
+                      <p className="text-muted-foreground">
                         Academic Excellence Platform
                       </p>
                     </div>
@@ -736,55 +742,55 @@ export default function HomePage() {
 
                   <div className="space-y-6">
                     <div>
-                      <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                      <h4 className="text-xl font-semibold text-foreground mb-4">
                         Create Your Campus Community
                       </h4>
                       <ul className="space-y-3">
                         <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">
+                          <CheckCircle className="w-5 h-5 text-primary-hover mt-0.5 flex-shrink-0" />
+                          <span className="text-muted-foreground">
                             Department-specific spaces with custom branding
                           </span>
                         </li>
                         <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">
+                          <CheckCircle className="w-5 h-5 text-primary-hover mt-0.5 flex-shrink-0" />
+                          <span className="text-muted-foreground">
                             Student-faculty collaboration channels
                           </span>
                         </li>
                         <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">
+                          <CheckCircle className="w-5 h-5 text-primary-hover mt-0.5 flex-shrink-0" />
+                          <span className="text-muted-foreground">
                             Research project management tools
                           </span>
                         </li>
                         <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">
+                          <CheckCircle className="w-5 h-5 text-primary-hover mt-0.5 flex-shrink-0" />
+                          <span className="text-muted-foreground">
                             Industry partnership integration
                           </span>
                         </li>
                       </ul>
                     </div>
 
-                    <div className="bg-blue-50 dark:bg-blue-950/20 p-6 rounded-xl">
-                      <h5 className="font-semibold text-blue-900 dark:text-blue-300 mb-3">
+                    <div className="bg-muted p-6 rounded-xl">
+                      <h5 className="font-semibold text-foreground mb-3">
                         Success Metrics
                       </h5>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                          <div className="text-2xl font-bold text-primary">
                             40%
                           </div>
-                          <div className="text-sm text-blue-700 dark:text-blue-300">
+                          <div className="text-sm text-muted-foreground">
                             Better Placements
                           </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                          <div className="text-2xl font-bold text-primary">
                             75+
                           </div>
-                          <div className="text-sm text-blue-700 dark:text-blue-300">
+                          <div className="text-sm text-muted-foreground">
                             Partner Universities
                           </div>
                         </div>
@@ -802,17 +808,19 @@ export default function HomePage() {
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
             >
-              <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl bg-white dark:bg-slate-800">
+              <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl bg-card">
                 <CardContent className="p-10">
                   <div className="flex items-center gap-4 mb-8">
-                    <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
+                    <div
+                      className={`w-16 h-16 bg-gradient-to-r ${getGradient(1)} rounded-2xl flex items-center justify-center shadow-lg`}
+                    >
                       <Briefcase className="w-8 h-8 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-3xl font-bold text-gray-900 dark:text-white">
+                      <h3 className="text-3xl font-bold text-foreground">
                         Industry Experts
                       </h3>
-                      <p className="text-gray-600 dark:text-gray-400">
+                      <p className="text-muted-foreground">
                         Professional Networks
                       </p>
                     </div>
@@ -820,55 +828,55 @@ export default function HomePage() {
 
                   <div className="space-y-6">
                     <div>
-                      <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                      <h4 className="text-xl font-semibold text-foreground mb-4">
                         Build Your Expert Community
                       </h4>
                       <ul className="space-y-3">
                         <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">
+                          <CheckCircle className="w-5 h-5 text-primary-hover mt-0.5 flex-shrink-0" />
+                          <span className="text-muted-foreground">
                             Company-branded mentorship spaces
                           </span>
                         </li>
                         <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">
+                          <CheckCircle className="w-5 h-5 text-primary-hover mt-0.5 flex-shrink-0" />
+                          <span className="text-muted-foreground">
                             Talent pipeline development
                           </span>
                         </li>
                         <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">
+                          <CheckCircle className="w-5 h-5 text-primary-hover mt-0.5 flex-shrink-0" />
+                          <span className="text-muted-foreground">
                             Technical interview preparation
                           </span>
                         </li>
                         <li className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">
+                          <CheckCircle className="w-5 h-5 text-primary-hover mt-0.5 flex-shrink-0" />
+                          <span className="text-muted-foreground">
                             Industry project collaboration
                           </span>
                         </li>
                       </ul>
                     </div>
 
-                    <div className="bg-purple-50 dark:bg-purple-950/20 p-6 rounded-xl">
-                      <h5 className="font-semibold text-purple-900 dark:text-purple-300 mb-3">
+                    <div className="bg-muted p-6 rounded-xl">
+                      <h5 className="font-semibold text-foreground mb-3">
                         Impact Numbers
                       </h5>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                          <div className="text-2xl font-bold text-secondary-foreground">
                             800+
                           </div>
-                          <div className="text-sm text-purple-700 dark:text-purple-300">
+                          <div className="text-sm text-muted-foreground">
                             Expert Mentors
                           </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                          <div className="text-2xl font-bold text-secondary-foreground">
                             450+
                           </div>
-                          <div className="text-sm text-purple-700 dark:text-purple-300">
+                          <div className="text-sm text-muted-foreground">
                             Partner Companies
                           </div>
                         </div>
@@ -887,16 +895,16 @@ export default function HomePage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            <Card className="hover:shadow-2xl transition-all duration-500 border-0 shadow-xl bg-white dark:bg-slate-800">
+            <Card className="hover:shadow-2xl transition-all duration-500 border-0 shadow-xl bg-card">
               <CardContent className="p-12">
                 <div className="text-center mb-12">
-                  <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                  <div className="w-20 h-20 bg-gradient-to-r from-primary to-accent rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                     <Zap className="w-10 h-10 text-white" />
                   </div>
-                  <h3 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                  <h3 className="text-4xl font-bold text-foreground mb-4">
                     On-Demand Feature Enablement
                   </h3>
-                  <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                  <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
                     Customize your community with enterprise-grade tools. Enable
                     features as needed for your specific use case.
                   </p>
@@ -915,7 +923,7 @@ export default function HomePage() {
                         "Thread management",
                         "Rich media support"
                       ],
-                      color: "from-blue-500 to-cyan-500"
+                      color: getGradient(0)
                     },
                     {
                       icon: BookOpen,
@@ -928,7 +936,7 @@ export default function HomePage() {
                         "Access permissions",
                         "Cloud storage"
                       ],
-                      color: "from-green-500 to-emerald-500"
+                      color: getGradient(1)
                     },
                     {
                       icon: Network,
@@ -941,7 +949,7 @@ export default function HomePage() {
                         "Peer endorsements",
                         "Content curation"
                       ],
-                      color: "from-purple-500 to-pink-500"
+                      color: getGradient(2)
                     },
                     {
                       icon: Target,
@@ -954,7 +962,7 @@ export default function HomePage() {
                         "Task tracking",
                         "Team analytics"
                       ],
-                      color: "from-orange-500 to-red-500"
+                      color: getGradient(3)
                     }
                   ].map((feature, index) => (
                     <motion.div
@@ -965,16 +973,16 @@ export default function HomePage() {
                       transition={{ duration: 0.6, delay: index * 0.1 }}
                       viewport={{ once: true }}
                     >
-                      <div className="bg-gray-50 dark:bg-slate-700 p-8 rounded-2xl h-full hover:bg-gray-100 dark:hover:bg-slate-600 transition-all duration-300 group-hover:shadow-lg">
+                      <div className="bg-muted p-8 rounded-2xl h-full hover:bg-muted-hover transition-all duration-300 group-hover:shadow-lg">
                         <div
                           className={`w-14 h-14 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg`}
                         >
                           <feature.icon className="w-7 h-7 text-white" />
                         </div>
-                        <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                        <h4 className="text-xl font-bold text-foreground mb-4">
                           {feature.title}
                         </h4>
-                        <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                        <p className="text-muted-foreground mb-6 leading-relaxed">
                           {feature.description}
                         </p>
                         <ul className="space-y-2">
@@ -986,7 +994,7 @@ export default function HomePage() {
                               <div
                                 className={`w-2 h-2 rounded-full bg-gradient-to-r ${feature.color}`}
                               />
-                              <span className="text-sm text-gray-600 dark:text-gray-400">
+                              <span className="text-sm text-muted-foreground">
                                 {item}
                               </span>
                             </li>
@@ -998,43 +1006,47 @@ export default function HomePage() {
                 </div>
 
                 <div className="mt-12 text-center">
-                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 p-8 rounded-2xl">
-                    <h4 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                  <div className="bg-muted p-8 rounded-2xl">
+                    <h4 className="text-2xl font-bold text-foreground mb-4">
                       Enterprise-Ready Architecture
                     </h4>
                     <div className="grid md:grid-cols-3 gap-6">
                       <div className="text-center">
-                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <div className="w-12 h-12 bg-gradient-to-r from-primary to-accent rounded-xl flex items-center justify-center mx-auto mb-3">
                           <Shield className="w-6 h-6 text-white" />
                         </div>
-                        <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
+                        <h5 className="font-semibold text-foreground mb-2">
                           Enterprise Security
                         </h5>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-muted-foreground">
                           SOC 2 compliance, SSO integration, and advanced access
                           controls
                         </p>
                       </div>
                       <div className="text-center">
-                        <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <div
+                          className={`w-12 h-12 bg-gradient-to-r ${getGradient(1)} rounded-xl flex items-center justify-center mx-auto mb-3`}
+                        >
                           <TrendingUp className="w-6 h-6 text-white" />
                         </div>
-                        <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
+                        <h5 className="font-semibold text-foreground mb-2">
                           Scalable Infrastructure
                         </h5>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-muted-foreground">
                           Auto-scaling, load balancing, and 99.9% uptime
                           guarantee
                         </p>
                       </div>
                       <div className="text-center">
-                        <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <div
+                          className={`w-12 h-12 bg-gradient-to-r ${getGradient(2)} rounded-xl flex items-center justify-center mx-auto mb-3`}
+                        >
                           <Brain className="w-6 h-6 text-white" />
                         </div>
-                        <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
+                        <h5 className="font-semibold text-foreground mb-2">
                           AI-Powered Insights
                         </h5>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-muted-foreground">
                           Advanced analytics, predictive modeling, and
                           intelligent recommendations
                         </p>
@@ -1046,7 +1058,7 @@ export default function HomePage() {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
                   <Button
                     size="lg"
-                    className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-lg px-10 py-4 shadow-xl transform hover:scale-105 transition-all duration-300"
+                    className="bg-gradient-to-r from-primary to-accent hover:from-primary-hover hover:to-accent-hover text-primary-foreground text-lg px-10 py-4 shadow-xl transform hover:scale-105 transition-all duration-300"
                   >
                     <Building className="mr-3 w-5 h-5" />
                     Create University Community
@@ -1054,7 +1066,7 @@ export default function HomePage() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="text-lg px-10 py-4 border-2 border-purple-300 dark:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/20 shadow-lg transform hover:scale-105 transition-all duration-300"
+                    className="text-lg px-10 py-4 border-2 border-border hover:bg-muted dark:hover:bg-muted-hover shadow-lg transform hover:scale-105 transition-all duration-300"
                   >
                     <Briefcase className="mr-3 w-5 h-5" />
                     Partner with Industry
@@ -1069,7 +1081,7 @@ export default function HomePage() {
       {/* Three-Tier Architecture Section */}
       <section
         id="architecture"
-        className="py-24 px-6 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-slate-800 dark:to-slate-900"
+        className="py-24 px-6 bg-background dark:bg-background"
       >
         <div className="container mx-auto">
           <motion.div
@@ -1079,18 +1091,18 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <Badge className="mb-6 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700">
+            <Badge className="mb-6 bg-secondary/10 text-secondary-foreground border-secondary/20">
               <Layers className="w-4 h-4 mr-2" />
               Platform Architecture
             </Badge>
-            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-gray-900 dark:text-white">
+            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-foreground">
               Built for
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary via-primary-hover to-foreground bg-clip-text text-transparent">
                 {" "}
                 Scale
               </span>
             </h2>
-            <p className="text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-2xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
               Modern three-tier architecture ensuring scalability, security, and
               exceptional performance
             </p>
@@ -1110,7 +1122,7 @@ export default function HomePage() {
                 className={`flex items-center ${index % 2 === 0 ? "flex-row" : "flex-row-reverse"} gap-12`}
               >
                 <div className="flex-1">
-                  <Card className="hover:shadow-2xl transition-all duration-500 border-0 shadow-xl bg-white dark:bg-slate-800">
+                  <Card className="hover:shadow-2xl transition-all duration-500 border-0 shadow-xl bg-card">
                     <CardContent className="p-10">
                       <div className="flex items-center gap-4 mb-6">
                         <div
@@ -1119,28 +1131,28 @@ export default function HomePage() {
                           <tier.icon className="w-8 h-8 text-white" />
                         </div>
                         <div>
-                          <Badge className="mb-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                          <Badge className="mb-2 bg-muted text-muted-foreground">
                             {tier.tier}
                           </Badge>
-                          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                          <h3 className="text-2xl font-bold text-foreground">
                             {tier.title}
                           </h3>
                         </div>
                       </div>
-                      <p className="text-gray-600 dark:text-gray-300 mb-8 text-lg leading-relaxed">
+                      <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
                         {tier.description}
                       </p>
 
                       <div className="grid md:grid-cols-2 gap-6">
                         <div>
-                          <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+                          <h4 className="font-semibold text-foreground mb-3">
                             Technologies
                           </h4>
                           <div className="flex flex-wrap gap-2">
                             {tier.technologies.map((tech, techIndex) => (
                               <Badge
                                 key={techIndex}
-                                className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700"
+                                className="bg-primary/10 text-primary-foreground border-primary/20"
                               >
                                 {tech}
                               </Badge>
@@ -1148,16 +1160,16 @@ export default function HomePage() {
                           </div>
                         </div>
                         <div>
-                          <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+                          <h4 className="font-semibold text-foreground mb-3">
                             Key Features
                           </h4>
                           <ul className="space-y-2">
                             {tier.features.map((feature, featureIndex) => (
                               <li
                                 key={featureIndex}
-                                className="flex items-center gap-2 text-gray-600 dark:text-gray-300"
+                                className="flex items-center gap-2 text-muted-foreground"
                               >
-                                <CheckCircle className="w-4 h-4 text-green-500" />
+                                <CheckCircle className="w-4 h-4 text-primary-hover" />
                                 {feature}
                               </li>
                             ))}
@@ -1181,8 +1193,8 @@ export default function HomePage() {
       </section>
 
       {/* Community Value Section */}
-      <section className="py-24 px-6 bg-white dark:bg-slate-900 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-950/20 dark:to-purple-950/20" />
+      <section className="py-24 px-6 bg-card relative overflow-hidden">
+        <div className="absolute inset-0 bg-primary/5 dark:bg-primary/10" />
         <div className="container mx-auto relative z-10">
           <motion.div
             className="text-center mb-20"
@@ -1191,18 +1203,18 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <Badge className="mb-6 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700">
+            <Badge className="mb-6 bg-secondary/10 text-secondary-foreground border-secondary/20">
               <Trophy className="w-4 h-4 mr-2" />
               Community Value
             </Badge>
-            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-gray-900 dark:text-white">
+            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-foreground">
               What You'll
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary via-primary-hover to-foreground bg-clip-text text-transparent">
                 {" "}
                 Gain
               </span>
             </h2>
-            <p className="text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-2xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
               Join a thriving ecosystem where every connection opens new
               possibilities
             </p>
@@ -1217,24 +1229,24 @@ export default function HomePage() {
           >
             {communityValues.map((value, index) => (
               <motion.div key={index} variants={fadeInUp}>
-                <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl group overflow-hidden bg-white dark:bg-slate-800">
+                <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl group bg-card">
                   <CardContent className="p-10 relative">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-bl-full opacity-50" />
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/10 dark:bg-secondary/20 rounded-bl-full opacity-50" />
                     <div
                       className={`w-16 h-16 bg-gradient-to-r ${value.color} rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300 shadow-lg`}
                     >
                       <value.icon className="w-8 h-8 text-white" />
                     </div>
-                    <Badge className="mb-4 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700">
+                    <Badge className="mb-4 bg-secondary/10 text-secondary-foreground border-secondary/20">
                       {value.benefit}
                     </Badge>
-                    <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+                    <h3 className="text-2xl font-bold mb-6 text-foreground">
                       {value.title}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-lg mb-6">
+                    <p className="text-muted-foreground leading-relaxed text-lg mb-6">
                       {value.description}
                     </p>
-                    <div className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                    <div className="text-sm font-medium text-primary">
                       {value.stats}
                     </div>
                   </CardContent>
@@ -1248,7 +1260,7 @@ export default function HomePage() {
       {/* Features Section */}
       <section
         id="features"
-        className="py-24 px-6 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-slate-800 dark:to-slate-900"
+        className="py-24 px-6 bg-background dark:bg-background"
       >
         <div className="container mx-auto">
           <motion.div
@@ -1258,18 +1270,18 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <Badge className="mb-6 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700">
+            <Badge className="mb-6 bg-secondary/10 text-secondary-foreground border-secondary/20">
               <Zap className="w-4 h-4 mr-2" />
               Platform Features
             </Badge>
-            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-gray-900 dark:text-white">
+            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-foreground">
               Powerful Tools for
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary via-primary-hover to-foreground bg-clip-text text-transparent">
                 {" "}
                 Success
               </span>
             </h2>
-            <p className="text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-2xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
               Everything you need to learn, grow, and succeed in your tech
               career
             </p>
@@ -1284,21 +1296,21 @@ export default function HomePage() {
           >
             {features.map((feature, index) => (
               <motion.div key={index} variants={fadeInUp}>
-                <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl group bg-white dark:bg-slate-800">
+                <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl group bg-card">
                   <CardContent className="p-8 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-bl-full opacity-50" />
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-secondary/10 dark:bg-secondary/20 rounded-bl-full opacity-50" />
                     <div
                       className={`w-14 h-14 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg`}
                     >
                       <feature.icon className="w-7 h-7 text-white" />
                     </div>
-                    <Badge className="mb-4 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700 text-xs">
+                    <Badge className="mb-4 bg-primary/10 text-primary-foreground border-primary/20 text-xs">
                       {feature.stats}
                     </Badge>
-                    <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+                    <h3 className="text-xl font-bold mb-4 text-foreground">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-6">
+                    <p className="text-muted-foreground leading-relaxed mb-6">
                       {feature.description}
                     </p>
                     <div className="space-y-2">
@@ -1307,8 +1319,8 @@ export default function HomePage() {
                           key={detailIndex}
                           className="flex items-center gap-2"
                         >
-                          <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <CheckCircle className="w-4 h-4 text-primary-hover flex-shrink-0" />
+                          <span className="text-sm text-muted-foreground">
                             {detail}
                           </span>
                         </div>
@@ -1323,7 +1335,7 @@ export default function HomePage() {
       </section>
 
       {/* Roadmap Section */}
-      <section id="roadmap" className="py-24 px-6 bg-white dark:bg-slate-900">
+      <section id="roadmap" className="py-24 px-6 bg-card">
         <div className="container mx-auto">
           <motion.div
             className="text-center mb-20"
@@ -1332,18 +1344,18 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <Badge className="mb-6 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700">
+            <Badge className="mb-6 bg-secondary/10 text-secondary-foreground border-secondary/20">
               <TrendingUp className="w-4 h-4 mr-2" />
               Our Journey
             </Badge>
-            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-gray-900 dark:text-white">
+            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-foreground">
               SPARK
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary via-primary-hover to-foreground bg-clip-text text-transparent">
                 {" "}
                 Roadmap
               </span>
             </h2>
-            <p className="text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-2xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
               Building the future of tech education and collaboration in
               Pakistan
             </p>
@@ -1367,10 +1379,10 @@ export default function HomePage() {
                     <div
                       className={`w-20 h-20 rounded-full flex items-center justify-center shadow-xl ${
                         phase.status === "completed"
-                          ? "bg-gradient-to-r from-green-500 to-emerald-500"
+                          ? `bg-gradient-to-r ${getGradient(0)}`
                           : phase.status === "current"
-                            ? "bg-gradient-to-r from-blue-500 to-purple-500"
-                            : "bg-gradient-to-r from-gray-400 to-gray-500"
+                            ? `bg-gradient-to-r ${getGradient(1)}`
+                            : `bg-gradient-to-r ${getGradient(2)}`
                       }`}
                     >
                       {phase.status === "completed" ? (
@@ -1382,21 +1394,21 @@ export default function HomePage() {
                       )}
                     </div>
                     {index < roadmapPhases.length - 1 && (
-                      <div className="absolute top-20 left-1/2 transform -translate-x-1/2 w-1 h-16 bg-gradient-to-b from-gray-300 dark:from-gray-600 to-transparent" />
+                      <div className="absolute top-20 left-1/2 transform -translate-x-1/2 w-1 h-16 bg-border dark:bg-border to-transparent" />
                     )}
                   </div>
 
                   {/* Content */}
-                  <Card className="flex-1 hover:shadow-2xl transition-all duration-300 border-0 shadow-lg bg-white dark:bg-slate-800">
+                  <Card className="flex-1 hover:shadow-2xl transition-all duration-300 border-0 shadow-lg bg-card">
                     <CardContent className="p-8">
                       <div className="flex items-center gap-4 mb-6">
                         <Badge
                           className={`${
                             phase.status === "completed"
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                              ? "bg-primary/10 text-primary-foreground"
                               : phase.status === "current"
-                                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-                                : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                                ? "bg-primary/10 text-primary-foreground"
+                                : "bg-muted text-muted-foreground"
                           } border-0`}
                         >
                           {phase.phase}
@@ -1404,10 +1416,10 @@ export default function HomePage() {
                         <Badge
                           className={`${
                             phase.status === "completed"
-                              ? "bg-green-500 text-white"
+                              ? "bg-primary text-primary-foreground"
                               : phase.status === "current"
-                                ? "bg-blue-500 text-white"
-                                : "bg-gray-500 text-white"
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted-foreground text-white"
                           } border-0`}
                         >
                           {phase.status === "completed"
@@ -1417,7 +1429,7 @@ export default function HomePage() {
                               : "Upcoming"}
                         </Badge>
                       </div>
-                      <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+                      <h3 className="text-2xl font-bold mb-6 text-foreground">
                         {phase.title}
                       </h3>
                       <ul className="space-y-3">
@@ -1429,13 +1441,13 @@ export default function HomePage() {
                             <div
                               className={`w-2 h-2 rounded-full ${
                                 phase.status === "completed"
-                                  ? "bg-green-500"
+                                  ? "bg-primary"
                                   : phase.status === "current"
-                                    ? "bg-blue-500"
-                                    : "bg-gray-400"
+                                    ? "bg-primary"
+                                    : "bg-muted-foreground"
                               }`}
                             />
-                            <span className="text-gray-700 dark:text-gray-300">
+                            <span className="text-muted-foreground">
                               {item}
                             </span>
                           </li>
@@ -1453,7 +1465,7 @@ export default function HomePage() {
       {/* Success Stories */}
       <section
         id="testimonials"
-        className="py-24 px-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-slate-800 dark:to-slate-900"
+        className="py-24 px-6 bg-background dark:bg-background"
       >
         <div className="container mx-auto">
           <motion.div
@@ -1463,18 +1475,18 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <Badge className="mb-6 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700">
+            <Badge className="mb-6 bg-muted text-muted-foreground border-border">
               <Star className="w-4 h-4 mr-2" />
               Success Stories
             </Badge>
-            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-gray-900 dark:text-white">
+            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-foreground">
               Real Impact,
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary via-primary-hover to-foreground bg-clip-text text-transparent">
                 {" "}
                 Real Results
               </span>
             </h2>
-            <p className="text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-2xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
               Hear from the community members whose careers were transformed
               through SPARK
             </p>
@@ -1487,7 +1499,7 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <Card className="p-12 shadow-2xl border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
+            <Card className="p-12 shadow-2xl border-0 bg-card/80 backdrop-blur-sm">
               <CardContent className="text-center">
                 <div className="flex justify-center mb-8">
                   {[...Array(5)].map((_, i) => (
@@ -1505,7 +1517,7 @@ export default function HomePage() {
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.5 }}
                   >
-                    <p className="text-2xl text-gray-700 dark:text-gray-300 mb-10 italic leading-relaxed font-medium">
+                    <p className="text-2xl text-foreground mb-10 italic leading-relaxed font-medium">
                       "{testimonials[currentTestimonial].content}"
                     </p>
                     <div className="flex items-center justify-center space-x-6">
@@ -1518,13 +1530,13 @@ export default function HomePage() {
                         className="w-16 h-16 rounded-full shadow-lg"
                       />
                       <div className="text-left">
-                        <div className="font-bold text-xl text-gray-900 dark:text-white">
+                        <div className="font-bold text-xl text-foreground">
                           {testimonials[currentTestimonial].name}
                         </div>
-                        <div className="text-gray-600 dark:text-gray-400 mb-2">
+                        <div className="text-muted-foreground mb-2">
                           {testimonials[currentTestimonial].role}
                         </div>
-                        <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700">
+                        <Badge className="bg-secondary/10 text-secondary-foreground border-secondary/20">
                           {testimonials[currentTestimonial].achievement}
                         </Badge>
                       </div>
@@ -1540,8 +1552,8 @@ export default function HomePage() {
                   key={index}
                   className={`w-4 h-4 rounded-full transition-all duration-300 ${
                     index === currentTestimonial
-                      ? "bg-gradient-to-r from-blue-600 to-purple-600 scale-125"
-                      : "bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500"
+                      ? "bg-gradient-to-r from-primary to-accent scale-125"
+                      : "bg-muted-foreground hover:bg-muted-foreground"
                   }`}
                   onClick={() => setCurrentTestimonial(index)}
                 />
@@ -1552,7 +1564,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 px-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 relative overflow-hidden">
+      <section className="py-24 px-6 bg-gradient-to-r from-primary via-secondary to-primary-hover relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10" />
         <div className="container mx-auto text-center relative z-10">
           <motion.div
@@ -1561,17 +1573,17 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-white">
+            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-primary-foreground">
               Ready to Spark Your Future?
             </h2>
-            <p className="text-2xl text-blue-100 mb-12 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-2xl text-primary-foreground/80 mb-12 max-w-4xl mx-auto leading-relaxed">
               Join 15,000+ students, 800+ mentors, and 75+ universities building
               Pakistan's tech future together
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Button
                 size="lg"
-                className="bg-white text-blue-600 hover:bg-gray-100 text-xl px-12 py-6 shadow-2xl transform hover:scale-105 transition-all duration-300"
+                className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 text-xl px-12 py-6 shadow-2xl transform hover:scale-105 transition-all duration-300"
               >
                 Join as Student
                 <GraduationCap className="ml-3 w-6 h-6" />
@@ -1579,7 +1591,7 @@ export default function HomePage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-2 border-white text-white hover:bg-white hover:text-blue-600 text-xl px-12 py-6 shadow-2xl transform hover:scale-105 transition-all duration-300"
+                className="border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary text-xl px-12 py-6 shadow-2xl transform hover:scale-105 transition-all duration-300"
               >
                 Become a Mentor
                 <Briefcase className="ml-3 w-6 h-6" />

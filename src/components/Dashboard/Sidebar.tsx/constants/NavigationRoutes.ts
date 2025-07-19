@@ -106,5 +106,6 @@ export const siteRoutes: SiteRoutes = {
       url: "/feedback",
       icon: Send
     }
-  ]
+  ],
+  shortcuts: []
 }
