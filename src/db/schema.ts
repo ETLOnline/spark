@@ -722,7 +722,7 @@ export type InsertChannel = typeof channelsTable.$inferInsert
 export type SelectChannel = typeof channelsTable.$inferSelect & {
   spaces?: SelectSpace[]
   users?: SelectChannelUser[]
-  community?: SelectCommunity
+  community?: SelectCommunity | null
 }
 
 export const spacesTable = pgTable("spaces", {

@@ -42,7 +42,7 @@ export default async function InvitePage({ params, searchParams }: Props) {
   if (type === "channel") {
     const currentChannel = await GetChannelByIdAction(id)
     if (currentChannel.success && currentChannel.data) {
-      entity = currentChannel.data
+      entity = currentChannel.data as SelectChannel
     }
   }
 
