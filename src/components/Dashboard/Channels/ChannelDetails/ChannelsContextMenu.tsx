@@ -30,6 +30,7 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { userStore } from "@/src/store/user/userStore"
 import { useEffect, useState } from "react"
 import { isEntityUser } from "@/src/utils/clientHelper"
+import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 
 interface ChannelProps {
   channel: SelectChannel
@@ -185,6 +186,14 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
+          <CreateShortcut
+            type="channel"
+            entity={{
+              slug: channel?.channel_slug ?? "",
+              title: `${channel?.community?.title} - ${channel?.channel_name}`
+            }}
+            ctaType="menuItem"
+          />
           {canDeletChannel && (
             <DropdownMenuItem
               className="text-destructive focus:text-destructive"
