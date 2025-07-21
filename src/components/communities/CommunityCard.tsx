@@ -39,6 +39,7 @@ import { userStore } from "@/src/store/user/userStore"
 import { AttachCommunityUserAction } from "@/src/server-actions/Community/Community"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
+import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
 
 interface CommunityCardProps {
   community: SelectCommunity
@@ -149,6 +150,14 @@ export default function CommunityCard({
                           </Link>
                         </DropdownMenuItem>
                       )}
+                      <CreateShortcut
+                        type="community"
+                        entity={{
+                          slug: community.slug ?? "",
+                          title: `${community.title}`
+                        }}
+                        ctaType="menuItem"
+                      />
                       {canDelete && (
                         <DropdownMenuItem
                           onClick={() => onDelete(community)}

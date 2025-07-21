@@ -31,6 +31,7 @@ import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { userStore } from "@/src/store/user/userStore"
 import { isEntityUser } from "@/src/utils/clientHelper"
+import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 
 interface Props {
   space: SelectSpace
@@ -175,6 +176,14 @@ function SpacesActionButtons({ space }: Props) {
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
+          <CreateShortcut
+            type="space"
+            entity={{
+              slug: `${space.channel?.channel_slug}/spaces/${space?.space_slug}`,
+              title: `${space?.channel?.channel_name} - ${space?.space_name}`
+            }}
+            ctaType="menuItem"
+          />
           {canDeleteSpace && (
             <DropdownMenuItem
               className="text-destructive focus:text-destructive"
