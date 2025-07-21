@@ -58,13 +58,30 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
 
   {
     path: "/channels",
-    label: "Channels",
     children: [
       {
         path: "/[channel_slug]",
         dynamicLabelFetcher: async (channelSlug: string) => {
-          const channel = await GetChannelBySlugAction(channelSlug)
-          return channel?.data?.channel_name || channelSlug
+          const channelResult = await GetChannelBySlugAction(channelSlug)
+          if (!channelResult || !channelResult.data) {
+            return null
+          }
+          const community = channelResult.data.community
+          const channel = channelResult.data
+          if (!community || !channel) {
+            return null
+          }
+          const crumbs: Array<{ label: string; href?: string }> = []
+          crumbs.push({
+            label: "Channels",
+            href: `/communities/${community.slug}`
+          })
+          crumbs.push({
+            label: channel.channel_name,
+            href: `/channels/${channel.channel_slug}/spaces/`
+          })
+
+          return crumbs
         },
         children: [
           {
