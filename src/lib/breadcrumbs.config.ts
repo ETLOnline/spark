@@ -179,20 +179,24 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
             label: "Board"
           },
           {
-            path: "/list",
-            label: "List"
+            path: "/sprint",
+            label: "Sprint"
           },
           {
-            path: "/calendar",
-            label: "Calendar"
+            path: "/backlog",
+            label: "Backlog"
           },
           {
-            path: "/files",
-            label: "Files"
+            path: "/teams",
+            label: "Teams"
           },
           {
-            path: "/chat",
-            label: "Chat"
+            path: "/settings",
+            label: "Settings"
+          },
+          {
+            path: "/task",
+            label: "Task"
           }
         ]
       }

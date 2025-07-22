@@ -38,6 +38,7 @@ import MultiSelect, {
 import { useParams } from "next/navigation"
 import { GetProjectUsersAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
+import { TaskComment } from "./task-comment"
 
 interface Props {
   onSubmit: (task: any) => void
@@ -285,7 +286,7 @@ export default function TaskForm({
                     <Tiptap value={field.value} onChange={field.onChange} />
                   ) : (
                     <div
-                      className="rich-editor py-2  cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2"
+                      className="rich-editor py-2  cursor-pointer w-full hover:bg-card rounded transition delay-150 duration-300 p-4"
                       onClick={() => setActiveField("description")}
                     >
                       {field.value ? (
@@ -302,6 +303,12 @@ export default function TaskForm({
                 }
               />
             </div>
+            {selectedTask && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold">Comments</h2>
+                <TaskComment taskId={selectedTask.id} />
+              </div>
+            )}
           </div>
         </div>
 
