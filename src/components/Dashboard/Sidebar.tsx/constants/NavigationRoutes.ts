@@ -72,6 +72,11 @@ export const siteRoutes: SiteRoutes = {
       title: "Communities",
       url: "/communities",
       icon: Group
+    },
+    {
+      title: "Find Mentor",
+      url: "/find-mentor",
+      icon: User,
     }
   ],
   testNav: [

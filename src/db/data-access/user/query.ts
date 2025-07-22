@@ -151,3 +151,27 @@ export async function getUserContacts(currentUserId: string) {
     )
     .where(eq(userContactsTable.user_id, currentUserId))
 }
+
+
+// Mentor-specific queries
+export async function GetAllMentors() {
+  // Retrieve all users with profile, roles, and tags; filtering by role occurs at application level
+  return await db.query.usersTable.findMany({
+    with: {
+      profile: true,
+      roles: { with: { role: true } },
+      userTags: { with: { tag: true } }
+    }
+  })
+}
+
+export async function GetMentorById(mentorId: string) {
+  return await db.query.usersTable.findFirst({
+    where: eq(usersTable.unique_id, mentorId),
+    with: {
+      profile: true,
+      roles: { with: { role: true } },
+      userTags: { with: { tag: true } }
+    }
+  })
+}

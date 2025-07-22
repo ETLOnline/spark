@@ -64,3 +64,14 @@ export const DeleteUserTags = async (userId: string, tagIds: number) => {
     )
     .returning()
 }
+
+export const getUserTags = async (userId: string) => {
+  const userTags = await db.query.userTagsTable.findMany({
+    where: eq(userTagsTable.user_id, userId),
+    with: {
+      tag: true
+    }
+  })
+
+  return userTags
+}

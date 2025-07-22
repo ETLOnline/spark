@@ -5,7 +5,10 @@ import {
   pgTable,
   primaryKey,
   varchar,
-  json
+  json,
+  decimal,
+  index,
+  unique,
 } from "drizzle-orm/pg-core"
 // import { integer, primaryKey, pgTable, varchar } from "drizzle-orm/sqlite-core"
 
@@ -1296,3 +1299,113 @@ export const shortcutsTable = pgTable("shortcuts", {
 
 export type SelectShortcut = typeof shortcutsTable.$inferSelect
 export type InsertShortcut = typeof shortcutsTable.$inferInsert
+
+
+
+// Mentor Ratings Table
+export const mentorRatingsTable = pgTable("mentor_ratings", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  mentor_id: varchar("mentor_id")
+    .notNull()
+    .references(() => usersTable.unique_id),
+  reviewer_id: varchar("reviewer_id")
+    .notNull()
+    .references(() => usersTable.unique_id),
+  rating: decimal("rating", { precision: 2, scale: 1 }).notNull(), // DECIMAL(2,1) for ratings 1.0-5.0
+  review_text: varchar("review_text"),
+  ...timestamps
+}, (table) => ({
+  mentorIdIdx: index("idx_mentor_ratings_mentor_id").on(table.mentor_id),
+  reviewerIdIdx: index("idx_mentor_ratings_reviewer_id").on(table.reviewer_id),
+}))
+
+export const mentorRatingsRelations = relations(mentorRatingsTable, ({ one }) => ({
+  mentor: one(usersTable, {
+    fields: [mentorRatingsTable.mentor_id],
+    references: [usersTable.unique_id],
+    relationName: "mentorToRatings"
+  }),
+  reviewer: one(usersTable, {
+    fields: [mentorRatingsTable.reviewer_id],
+    references: [usersTable.unique_id],
+    relationName: "reviewerToRatings"
+  })
+}))
+
+export type InsertMentorRating = typeof mentorRatingsTable.$inferInsert
+export type SelectMentorRating = typeof mentorRatingsTable.$inferSelect & {
+  mentor?: SelectUser
+  reviewer?: SelectUser
+}
+
+// Mentor Relationships Table
+export const mentorRelationshipsTable = pgTable("mentor_relationships", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  mentor_id: varchar("mentor_id")
+    .notNull()
+    .references(() => usersTable.unique_id),
+  mentee_id: varchar("mentee_id")
+    .notNull()
+    .references(() => usersTable.unique_id),
+  status: varchar("status").notNull().default("pending"), // pending, accepted, rejected, completed
+  request_message: varchar("request_message"),
+  ...timestamps
+}, (table) => ({
+  mentorIdIdx: index("idx_mentor_relationships_mentor_id").on(table.mentor_id),
+  menteeIdIdx: index("idx_mentor_relationships_mentee_id").on(table.mentee_id),
+  statusIdx: index("idx_mentor_relationships_status").on(table.status),
+}))
+
+export const mentorRelationshipsRelations = relations(mentorRelationshipsTable, ({ one }) => ({
+  mentor: one(usersTable, {
+    fields: [mentorRelationshipsTable.mentor_id],
+    references: [usersTable.unique_id],
+    relationName: "mentorToRelationships"
+  }),
+  mentee: one(usersTable, {
+    fields: [mentorRelationshipsTable.mentee_id],
+    references: [usersTable.unique_id],
+    relationName: "menteeToRelationships"
+  })
+}))
+
+export type InsertMentorRelationship = typeof mentorRelationshipsTable.$inferInsert
+export type SelectMentorRelationship = typeof mentorRelationshipsTable.$inferSelect & {
+  mentor?: SelectUser
+  mentee?: SelectUser
+}
+
+// Mentor Favorites Table
+export const mentorFavoritesTable = pgTable("mentor_favorites", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  user_id: varchar("user_id")
+    .notNull()
+    .references(() => usersTable.unique_id),
+  mentor_id: varchar("mentor_id")
+    .notNull()
+    .references(() => usersTable.unique_id),
+  ...timestamps
+}, (table) => ({
+  unique_user_mentor: unique().on(table.user_id, table.mentor_id),
+  userIdIdx: index("idx_mentor_favorites_user_id").on(table.user_id),
+  mentorIdIdx: index("idx_mentor_favorites_mentor_id").on(table.mentor_id),
+}))
+
+export const mentorFavoritesRelations = relations(mentorFavoritesTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [mentorFavoritesTable.user_id],
+    references: [usersTable.unique_id],
+    relationName: "userToFavorites"
+  }),
+  mentor: one(usersTable, {
+    fields: [mentorFavoritesTable.mentor_id],
+    references: [usersTable.unique_id],
+    relationName: "mentorToFavorites"
+  })
+}))
+
+export type InsertMentorFavorite = typeof mentorFavoritesTable.$inferInsert
+export type SelectMentorFavorite = typeof mentorFavoritesTable.$inferSelect & {
+  user?: SelectUser
+  mentor?: SelectUser
+}
