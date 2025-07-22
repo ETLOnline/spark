@@ -39,21 +39,25 @@ import { userStore } from "@/src/store/user/userStore"
 import { AttachCommunityUserAction } from "@/src/server-actions/Community/Community"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
+import { useEffect } from "react"
 
 interface CommunityCardProps {
   community: SelectCommunity
   showStar?: boolean
   canManage?: boolean
+
   onEdit: (community: SelectCommunity) => void
   onDelete: (community: SelectCommunity) => void
   onJoin: () => void
+  forceJoined?: boolean
 }
 
 export default function CommunityCard({
   community,
   onEdit,
   onDelete,
-  onJoin
+  onJoin,
+  forceJoined = false
 }: CommunityCardProps) {
   const { permissionChecker } = usePermissionChecker(
     "scoped",
@@ -63,9 +67,11 @@ export default function CommunityCard({
   const { toast } = useToast()
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const superAdmin = useAtomValue(userStore.SuperAdmin)
-  const isCurrentUserMember = community?.communityMembers?.some(
-    (member) => member.user_id === currentUserId
-  )
+  const isCurrentUserMember = forceJoined
+    ? true
+    : community?.communityMembers?.some(
+        (member) => member.user_id === currentUserId
+      )
   const [joinLoading, joinResult, joinError, attachCommunityUser] =
     useServerAction(AttachCommunityUserAction)
 

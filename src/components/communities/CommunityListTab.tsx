@@ -101,6 +101,7 @@ export default function CommunityListTabs({
                 onEdit={onEditCommunity}
                 onDelete={onDeleteCommunity}
                 onJoin={onJoinCommunity}
+                forceJoined={true}
               />
             ))}
           </div>
