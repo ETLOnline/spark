@@ -154,13 +154,13 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
 
             crumbs.push({
               label: "Project",
-              href: `/project/${project.id}`
+              href: `/project/${project.id}/board`
             })
 
             if (project) {
               crumbs.push({
                 label: project.project_name,
-                href: `/project/${project.id}`
+                href: `/project/${project.id}/board`
               })
             }
 
