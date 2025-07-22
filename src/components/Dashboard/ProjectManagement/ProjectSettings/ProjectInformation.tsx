@@ -20,17 +20,32 @@ import { UpdateProjectAction } from "@/src/server-actions/ProjectManagement/proj
 import { useServerAction } from "@/src/hooks/useServerAction"
 import Tiptap from "@/src/components/common/TiptapRichEditor"
 
-const projectSchema = z.object({
-  project_name: z
-    .string()
-    .min(1, "Title required")
-    .max(50, "Title is too long"),
-  description: z
-    .string()
-    .min(1, "Description required")
-    .max(150, "Description is too long"),
-  project_type: z.boolean().optional()
-})
+const projectSchema = z
+  .object({
+    project_name: z
+      .string()
+      .min(1, "Title required")
+      .max(50, "Title is too long"),
+    description: z
+      .string()
+      .min(1, "Description required")
+      .max(150, "Description is too long"),
+    project_type: z.boolean().optional(),
+    project_startDate: z.string().min(1, "Start date required"),
+    project_targetDate: z.string().min(1, "Target date required")
+  })
+  .refine(
+    (data) => {
+      if (!data.project_startDate || !data.project_targetDate) return true
+      return (
+        new Date(data.project_targetDate) >= new Date(data.project_startDate)
+      )
+    },
+    {
+      message: "Target date must be after or equal to start date",
+      path: ["project_targetDate"]
+    }
+  )
 
 type ProjectFormData = z.infer<typeof projectSchema>
 
@@ -51,7 +66,23 @@ function ProjectInformation({ currProjectData }: Props) {
     defaultValues: {
       project_name: currProjectData.project_name || "",
       description: currProjectData.description || "",
-      project_type: currProjectData.project_type === "active"
+      project_type: currProjectData.project_type === "active",
+      project_startDate: currProjectData.project_startDate
+        ? (() => {
+            const parts = currProjectData.project_startDate.split("-")
+            return parts.length === 3
+              ? `${parts[2]}-${parts[1]}-${parts[0]}`
+              : currProjectData.project_startDate
+          })()
+        : "",
+      project_targetDate: currProjectData.project_targetDate
+        ? (() => {
+            const parts = currProjectData.project_targetDate.split("-")
+            return parts.length === 3
+              ? `${parts[2]}-${parts[1]}-${parts[0]}`
+              : currProjectData.project_targetDate
+          })()
+        : ""
     }
   })
 
@@ -65,7 +96,23 @@ function ProjectInformation({ currProjectData }: Props) {
         ...data,
         id: currProjectData?.id,
         project_slug: data.project_name,
-        project_type: projectType
+        project_type: projectType,
+        project_startDate: data.project_startDate
+          ? (() => {
+              const parts = data.project_startDate.split("-")
+              return parts.length === 3
+                ? `${parts[2]}-${parts[1]}-${parts[0]}`
+                : data.project_startDate
+            })()
+          : "",
+        project_targetDate: data.project_targetDate
+          ? (() => {
+              const parts = data.project_targetDate.split("-")
+              return parts.length === 3
+                ? `${parts[2]}-${parts[1]}-${parts[0]}`
+                : data.project_targetDate
+            })()
+          : ""
       }
 
       const updatedProject = await updateProject(payload)
@@ -129,6 +176,36 @@ function ProjectInformation({ currProjectData }: Props) {
                 {currProjectData.project_type === "active" ? "Active" : "Draft"}
               </span>
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="project_startDate">Start Date</Label>
+            <Controller
+              name="project_startDate"
+              control={control}
+              render={({ field }) => (
+                <Input id="project_startDate" type="date" {...field} />
+              )}
+            />
+            {errors.project_startDate && (
+              <span className="text-red-500 text-sm">
+                {String(errors.project_startDate.message)}
+              </span>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="project_targetDate">Target Date</Label>
+            <Controller
+              name="project_targetDate"
+              control={control}
+              render={({ field }) => (
+                <Input id="project_targetDate" type="date" {...field} />
+              )}
+            />
+            {errors.project_targetDate && (
+              <span className="text-red-500 text-sm">
+                {String(errors.project_targetDate.message)}
+              </span>
+            )}
           </div>
           {/* <div className="space-y-2">
           <Label htmlFor="project-category">Category</Label>

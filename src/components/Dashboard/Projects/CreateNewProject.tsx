@@ -33,25 +33,38 @@ import { useAuthUser } from "@/src/hooks/useAuthUser"
 import Tiptap from "@/src/components/common/TiptapRichEditor"
 import { ScrollArea } from "@radix-ui/react-scroll-area"
 
-const projectSchema = z.object({
-  project_name: z
-    .string()
-    .min(1, "Title required")
-    .max(50, "Title is too long"),
-  project_startDate: z
-    .string()
-    .min(1, "Title required")
-    .max(50, "Title is too long"),
-  project_targetDate: z
-    .string()
-    .min(1, "Title required")
-    .max(50, "Title is too long"),
-  description: z
-    .string()
-    .min(1, "description required")
-    .max(150, "Description is too long"),
-  project_type: z.boolean().optional()
-})
+const projectSchema = z
+  .object({
+    project_name: z
+      .string()
+      .min(1, "Title required")
+      .max(50, "Title is too long"),
+    project_startDate: z
+      .string()
+      .min(1, "Title required")
+      .max(50, "Title is too long"),
+    project_targetDate: z
+      .string()
+      .min(1, "Title required")
+      .max(50, "Title is too long"),
+    description: z
+      .string()
+      .min(1, "description required")
+      .max(150, "Description is too long"),
+    project_type: z.boolean().optional()
+  })
+  .refine(
+    (data) => {
+      if (!data.project_startDate || !data.project_targetDate) return true
+      return (
+        new Date(data.project_targetDate) >= new Date(data.project_startDate)
+      )
+    },
+    {
+      message: "Target date must be after or equal to start date",
+      path: ["project_targetDate"]
+    }
+  )
 
 type ProjectFormData = z.infer<typeof projectSchema>
 
@@ -337,6 +350,11 @@ function ProjectFormModal({
                       />
                     )}
                   />
+                  {form.formState.errors.project_targetDate && (
+                    <span className="text-red-500 text-sm">
+                      {String(form.formState.errors.project_targetDate.message)}
+                    </span>
+                  )}
                 </div>
               </div>
 
