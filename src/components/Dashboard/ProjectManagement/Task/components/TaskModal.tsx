@@ -63,7 +63,6 @@ export const TaskModal = ({
     onCreateComplete,
     onUpdateComplete
   })
-
   return (
     <Dialog open={isTaskModelOpen} onOpenChange={setIsTaskModelOpen}>
       <DialogContent className="sm:max-w-5xl [&>button]:w-6 [&>button]:h-6 [&>button>svg]:w-6 [&>button>svg]:h-6">
@@ -77,6 +76,7 @@ export const TaskModal = ({
             onSubmit={handleSubmit}
             selectedTask={selectedTask}
             loading={createTaskLoading || updateTaskLoading}
+            isTaskModelOpen={isTaskModelOpen}
           />
         </ScrollArea>
       </DialogContent>

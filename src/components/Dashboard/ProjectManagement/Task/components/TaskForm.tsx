@@ -39,7 +39,6 @@ import { useParams } from "next/navigation"
 import { GetProjectUsersAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
 import { TaskComment } from "./task-comment"
-
 interface Props {
   onSubmit: (task: any) => void
   statuses?: InsertTaskStatus[]
@@ -76,7 +75,6 @@ export default function TaskForm({
   )
   const [assignee, setAssignee] = useState<SelectUser | null>(null)
   const [assignor, setAssignor] = useState<SelectUser | null>(null)
-
   const form = useForm({
     resolver: zodResolver(projectSchema)
   })
@@ -90,6 +88,21 @@ export default function TaskForm({
     label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
     value: user?.unique_id ?? ""
   }))
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const url = new URL(window.location.href)
+    console.log("window", location)
+
+    if (isTaskModelOpen && selectedTask?.id) {
+      url.searchParams.set("task", selectedTask.id)
+      window.history.pushState({}, "", url.toString())
+    } else if (!isTaskModelOpen) {
+      url.searchParams.delete("task")
+      window.history.pushState({}, "", url.pathname)
+    }
+  }, [isTaskModelOpen, selectedTask?.id])
 
   useEffect(() => {
     const fetchProjectUsers = async () => {
