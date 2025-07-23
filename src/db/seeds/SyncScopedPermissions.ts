@@ -1,20 +1,65 @@
-import { sql } from "drizzle-orm"
+import { and, eq, isNull, sql } from "drizzle-orm"
 import { db } from "../index"
+import { rolesTable } from "../schema"
 
 export const SyncRolePermissionsSeeder = async () => {
   console.log("🔄 Starting Role Permissions Sync Seeder...")
 
-  const ROLE_GROUPS: Record<string, string[]> = {
-    community: ["community_admin", "community_editor", "community_viewer"],
-    channel: ["channel_admin", "channel_editor", "channel_viewer"],
-    space: ["space_admin", "space_editor", "space_viewer"],
-    project: ["project_admin", "project_editor", "project_viewer"]
-  }
+  const defaultRoles = await db.query.rolesTable.findMany({
+    where: and(
+      eq(rolesTable.role_type, "DEFAULT"),
+      isNull(rolesTable.entity_id),
+      isNull(rolesTable.entity_type),
+    )
+  })
 
-  const selectedSlugs = Object.values(ROLE_GROUPS).flat()
+  const defaultRoleSlugs = defaultRoles.map(role => role.slug).filter(r=> r !== null)
 
-  for (const slug of selectedSlugs) {
+  for (const slug of defaultRoleSlugs) {
     console.log(`🔄 Syncing permissions for slug: ${slug}`)
+
+    const result = await db.execute(sql`
+      SELECT DISTINCT scoped.id AS scoped_role_id,
+                      scoped.name AS scoped_role_name,
+                      scoped.slug
+      FROM roles AS scoped
+      JOIN roles AS def
+        ON scoped.slug = def.slug AND def.role_type = 'DEFAULT'
+      WHERE scoped.role_type = 'SCOPED'
+        AND scoped.slug = ANY(${sql.raw(`'{${slug}}'`)})
+        AND (
+          EXISTS (
+            SELECT 1
+            FROM role_permissions AS def_rp
+            WHERE def_rp.role_id = def.id
+              AND NOT EXISTS (
+                SELECT 1
+                FROM role_permissions AS scoped_rp
+                WHERE scoped_rp.role_id = scoped.id
+                  AND scoped_rp.permission_id = def_rp.permission_id
+              )
+          )
+          OR
+          EXISTS (
+            SELECT 1
+            FROM role_permissions AS scoped_rp
+            WHERE scoped_rp.role_id = scoped.id
+              AND NOT EXISTS (
+                SELECT 1
+                FROM role_permissions AS def_rp
+                WHERE def_rp.role_id = def.id
+                  AND def_rp.permission_id = scoped_rp.permission_id
+              )
+          )
+        );
+    `)
+
+    if(result.length === 0) {
+      console.log(`✅ No conflict found for slug: ${slug}`)
+      continue
+    }else{
+      console.log(`⚠️ ${result.length} Conflict found for slug: ${slug}`)
+    }
 
     // Insert missing permissions
     await db.execute(sql`

@@ -1,23 +1,20 @@
-import { sql } from "drizzle-orm"
+import { rolesTable } from './../schema';
+import { and, eq, inArray, isNull, sql } from "drizzle-orm"
 import { db } from "../index"
 
 export const CheckRolePermissionMismatch = async () => {
-  const slugsToCheck: string[] = [
-    "community_admin",
-    "community_editor",
-    "community_viewer",
-    "channel_admin",
-    "channel_editor",
-    "channel_viewer",
-    "space_admin",
-    "space_editor",
-    "space_viewer",
-    "project_admin",
-    "project_editor",
-    "project_viewer"
-  ]
 
-  const arrayLiteral = `'{${slugsToCheck.join(",")}}'`
+  const defaultRoles = await db.query.rolesTable.findMany({
+    where: and(
+      eq(rolesTable.role_type, "DEFAULT"),
+      isNull(rolesTable.entity_id),
+      isNull(rolesTable.entity_type),
+    )
+  })
+
+  const defaultRoleSlugs = defaultRoles.map(role => role.slug)
+
+  const arrayLiteral = `'{${defaultRoleSlugs.join(",")}}'`
 
   const result = await db.execute(sql`
     SELECT DISTINCT scoped.id AS scoped_role_id,
