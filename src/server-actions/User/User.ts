@@ -1,6 +1,7 @@
 "use server"
 
 import {
+  GetRandomUsers,
   getUserContacts,
   GetUserProfileData,
   UpdateUserProfilePicture
@@ -136,3 +137,19 @@ export const UpdateUserProfilePictureAction = CreateServerAction(
     }
   }
 )
+
+export const GetRandomUsersAction = CreateServerAction(true, async () => {
+  try {
+    const users = await GetRandomUsers()
+
+    return {
+      success: true,
+      data: users
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error
+    }
+  }
+})

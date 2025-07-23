@@ -9,6 +9,7 @@ import { getProjectUsers } from "@/src/db/data-access/project-management/query"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import Overlay from "@/src/components/common/Overlay/OverLay"
 import { GetSpaceByIdAction } from "@/src/server-actions/Space/Space"
+import { isSuperAdmin } from "@/src/utils/helpers"
 
 interface Props {
   children: ReactNode
@@ -34,15 +35,16 @@ async function layout({ children, params }: Props) {
 
   const projectUser = await getProjectUsers(projectId)
 
-  const currUser = await AuthUserAction()
+  const authUser = await AuthUserAction()
+  const isAdmin = await isSuperAdmin(authUser)
 
   const userRole = projectUser.find(
-    (user) => user.user_id === currUser.unique_id
+    (user) => user.user_id === authUser.unique_id
   )
 
   return (
     <div className="grid grid-cols-12 w-full h-[80vh] overflow-hidden">
-      {userRole ? (
+      {userRole || isAdmin ? (
         <>
           <div className="col-span-2 border-r p-2 pl-0 overflow-y-auto">
             <ProjectSidebar

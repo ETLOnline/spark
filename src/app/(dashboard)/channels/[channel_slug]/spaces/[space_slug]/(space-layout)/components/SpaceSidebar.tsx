@@ -169,7 +169,7 @@ function SpaceSidebar({ space }: Props) {
                     </span>
                   )}
                 </div>
-                <span className="truncate flex items-center gap-1 text-xs text-muted-foreground">
+                <span className="truncate flex items-center gap-1 text-xs hover:text-sidebar-accent-foreground">
                   <Users className="h-3 w-3" />
                   {space.users?.length || 0} members
                 </span>
@@ -188,7 +188,7 @@ function SpaceSidebar({ space }: Props) {
                  pathname ===
                    `/channels/${space.channel?.channel_slug}/spaces/${space.space_slug}`
                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                   : "hover:bg-sidebar-accent"
+                   : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                }`}
             >
               <DynamicIcon name="layout-dashboard" className="h-4 w-4" />
@@ -210,7 +210,11 @@ function SpaceSidebar({ space }: Props) {
               >
                 <SidebarMenuItem
                   className={`flex flex-row items-center gap-2 p-2 rounded
-               ${pageType.get("page-type") === feature.feature?.feature_slug ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent"}`}
+               ${
+                 pageType.get("page-type") === feature.feature?.feature_slug
+                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                   : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+               }`}
                 >
                   <DynamicIcon
                     name={feature.feature?.feature_icon as IconName}
@@ -244,7 +248,7 @@ function SpaceSidebar({ space }: Props) {
             pathname.includes(`${feature.slug}`) ||
             pageType.get("page-type") === feature.slug
               ? "bg-sidebar-accent text-sidebar-accent-foreground"
-              : "hover:bg-sidebar-accent"
+              : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           }`}
                 >
                   <DynamicIcon
