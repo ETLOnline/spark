@@ -100,6 +100,7 @@ export default function RichTextEditor({
       <div className="border-b p-2 flex flex-wrap items-center gap-1">
         {/* Text Formatting */}
         <Button
+          type="button"
           variant={editor.isActive("bold") ? "default" : "ghost"}
           size="sm"
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -107,6 +108,7 @@ export default function RichTextEditor({
           <Bold className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           variant={editor.isActive("italic") ? "default" : "ghost"}
           size="sm"
           onClick={() => editor.chain().focus().toggleItalic().run()}
@@ -114,6 +116,7 @@ export default function RichTextEditor({
           <Italic className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           variant={editor.isActive("underline") ? "default" : "ghost"}
           size="sm"
           onClick={() => editor.chain().focus().toggleUnderline().run()}
@@ -121,6 +124,7 @@ export default function RichTextEditor({
           <UnderlineIcon className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           variant={editor.isActive("strike") ? "default" : "ghost"}
           size="sm"
           onClick={() => editor.chain().focus().toggleStrike().run()}
@@ -128,6 +132,7 @@ export default function RichTextEditor({
           <Strikethrough className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           variant={editor.isActive("code") ? "default" : "ghost"}
           size="sm"
           onClick={() => editor.chain().focus().toggleCode().run()}
@@ -139,6 +144,7 @@ export default function RichTextEditor({
 
         {/* Headings */}
         <Button
+          type="button"
           variant={
             editor.isActive("heading", { level: 1 }) ? "default" : "ghost"
           }
@@ -150,6 +156,7 @@ export default function RichTextEditor({
           <Heading1 className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           variant={
             editor.isActive("heading", { level: 2 }) ? "default" : "ghost"
           }
@@ -161,6 +168,7 @@ export default function RichTextEditor({
           <Heading2 className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           variant={
             editor.isActive("heading", { level: 3 }) ? "default" : "ghost"
           }
@@ -176,6 +184,7 @@ export default function RichTextEditor({
 
         {/* Lists */}
         <Button
+          type="button"
           variant={editor.isActive("bulletList") ? "default" : "ghost"}
           size="sm"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -183,6 +192,7 @@ export default function RichTextEditor({
           <List className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           variant={editor.isActive("orderedList") ? "default" : "ghost"}
           size="sm"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
@@ -190,6 +200,7 @@ export default function RichTextEditor({
           <ListOrdered className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           variant={editor.isActive("blockquote") ? "default" : "ghost"}
           size="sm"
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
@@ -201,6 +212,7 @@ export default function RichTextEditor({
 
         {/* Text Alignment */}
         <Button
+          type="button"
           variant={editor.isActive({ textAlign: "left" }) ? "default" : "ghost"}
           size="sm"
           onClick={() => editor.chain().focus().setTextAlign("left").run()}
@@ -208,6 +220,7 @@ export default function RichTextEditor({
           <AlignLeft className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           variant={
             editor.isActive({ textAlign: "center" }) ? "default" : "ghost"
           }
@@ -217,6 +230,7 @@ export default function RichTextEditor({
           <AlignCenter className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           variant={
             editor.isActive({ textAlign: "right" }) ? "default" : "ghost"
           }
@@ -226,6 +240,7 @@ export default function RichTextEditor({
           <AlignRight className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           variant={
             editor.isActive({ textAlign: "justify" }) ? "default" : "ghost"
           }
@@ -239,6 +254,7 @@ export default function RichTextEditor({
 
         {/* Link */}
         <Button
+          type="button"
           variant={editor.isActive("link") ? "default" : "ghost"}
           size="sm"
           onClick={() => setShowLinkInput(!showLinkInput)}
@@ -250,6 +266,7 @@ export default function RichTextEditor({
 
         {/* Undo/Redo */}
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().undo().run()}
@@ -258,6 +275,7 @@ export default function RichTextEditor({
           <Undo className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().redo().run()}
@@ -282,13 +300,19 @@ export default function RichTextEditor({
               }
             }}
           />
-          <Button size="sm" onClick={addLink}>
+          <Button type="button" size="sm" onClick={addLink}>
             Add Link
           </Button>
-          <Button size="sm" variant="outline" onClick={removeLink}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={removeLink}
+          >
             Remove Link
           </Button>
           <Button
+            type="button"
             size="sm"
             variant="ghost"
             onClick={() => setShowLinkInput(false)}

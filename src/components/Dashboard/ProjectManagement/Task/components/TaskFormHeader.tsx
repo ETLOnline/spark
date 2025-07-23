@@ -69,7 +69,7 @@ function TaskFormHeader({ selectedTask }: Props) {
             <a
               target="_blank"
               href={`/project/${project?.id}/task/${selectedTask.id}`}
-              className="flex items-center gap-2 text-gray-500 hover:text-gray-300"
+              className="flex items-center gap-2 text-blue-500 hover:text-blue-300"
             >
               <Ticket size={16} />
               {selectedTask.task_num}
