@@ -22,6 +22,7 @@ import { useToast } from "@/src/hooks/use-toast"
 import { MultiSelectOption } from "../../ui/multi-select"
 import useUserProfile from "./hooks/useUserProfile"
 import TagSelect from "../../TagsInput/tags"
+import { ScrollArea } from "../../ui/scroll-area"
 
 const EditProfileModal: React.FC = () => {
   const bio = useAtomValue(profileStore.bio)
@@ -176,104 +177,106 @@ const EditProfileModal: React.FC = () => {
             Make changes to your profile here. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={saveProfileChanges} className="edit-profile-form">
-          <div className="grid gap-4 py-4">
-            <div className="flex flex-col gap-y-7">
-              <div className="edit-bio w-full">
-                <Label htmlFor="bio" className="edit-label">
-                  Bio
-                </Label>
-                <Textarea
-                  id={"bio"}
-                  defaultValue={bio}
-                  className="min-h-[100px] w-full"
-                  onChange={(e) => setEditedBio(e.target.value)}
-                />
-                <div className="flex justify-between mt-1">
-                  <p
-                    className={`text-sm ${
-                      editedBio && editedBio?.length > 2000
-                        ? "text-red-500"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {editedBio?.length
-                      ? editedBio?.length
-                      : bio?.length
-                        ? bio.length
-                        : 0}
-                    /2000 characters
-                  </p>
-                  {bioError && (
-                    <p className="text-sm text-red-500">{bioError}</p>
-                  )}
+        <ScrollArea className="max-h-[78vh] overflow-auto">
+          <form onSubmit={saveProfileChanges} className="edit-profile-form p-2">
+            <div className="grid gap-4 py-4">
+              <div className="flex flex-col gap-y-7">
+                <div className="edit-bio w-full">
+                  <Label htmlFor="bio" className="edit-label">
+                    Bio
+                  </Label>
+                  <Textarea
+                    id={"bio"}
+                    defaultValue={bio}
+                    className="min-h-[100px] w-full"
+                    onChange={(e) => setEditedBio(e.target.value)}
+                  />
+                  <div className="flex justify-between mt-1">
+                    <p
+                      className={`text-sm ${
+                        editedBio && editedBio?.length > 2000
+                          ? "text-red-500"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {editedBio?.length
+                        ? editedBio?.length
+                        : bio?.length
+                          ? bio.length
+                          : 0}
+                      /2000 characters
+                    </p>
+                    {bioError && (
+                      <p className="text-sm text-red-500">{bioError}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="edit-skills w-full">
-                <Label htmlFor="skills" className="edit-label">
-                  Skills
-                </Label>
-                <TagSelect
-                  type="skill"
-                  selected={selectedSkillTags}
-                  setSelected={setSelectedSkillTags}
-                />
-                <div className={"flex justify-between mt-1"}>
-                  <p
-                    className={`text-sm ${
-                      selectedSkillTags.length > 20
-                        ? "text-red-500"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {`${selectedSkillTags.length}/20 skills`}
-                  </p>
-                  {skillsError && (
-                    <p className="text-sm text-red-500">{skillsError}</p>
-                  )}
+                <div className="edit-skills w-full">
+                  <Label htmlFor="skills" className="edit-label">
+                    Skills
+                  </Label>
+                  <TagSelect
+                    type="skill"
+                    selected={selectedSkillTags}
+                    setSelected={setSelectedSkillTags}
+                  />
+                  <div className={"flex justify-between mt-1"}>
+                    <p
+                      className={`text-sm ${
+                        selectedSkillTags.length > 20
+                          ? "text-red-500"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {`${selectedSkillTags.length}/20 skills`}
+                    </p>
+                    {skillsError && (
+                      <p className="text-sm text-red-500">{skillsError}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="edit-interests w-full">
-                <Label htmlFor="interests" className="edit-label">
-                  Interests
-                </Label>
-                <TagSelect
-                  type="interest"
-                  selected={selectedInterestTags}
-                  setSelected={setSelectedInterestTags}
-                />
-                <div className={"flex justify-between mt-1"}>
-                  <p
-                    className={`text-sm ${
-                      selectedInterestTags.length > 20
-                        ? "text-red-500"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {`${selectedInterestTags.length}/20 skills`}
-                  </p>
-                  {interestsError && (
-                    <p className="text-sm text-red-500">{interestsError}</p>
-                  )}
+                <div className="edit-interests w-full">
+                  <Label htmlFor="interests" className="edit-label">
+                    Interests
+                  </Label>
+                  <TagSelect
+                    type="interest"
+                    selected={selectedInterestTags}
+                    setSelected={setSelectedInterestTags}
+                  />
+                  <div className={"flex justify-between mt-1"}>
+                    <p
+                      className={`text-sm ${
+                        selectedInterestTags.length > 20
+                          ? "text-red-500"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {`${selectedInterestTags.length}/20 skills`}
+                    </p>
+                    {interestsError && (
+                      <p className="text-sm text-red-500">{interestsError}</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button
-              type="submit"
-              disabled={
-                bioError.length > 0 ||
-                skillsError.length > 0 ||
-                interestsError.length > 0 ||
-                updateProfileLoading
-              }
-              loading={updateProfileLoading}
-            >
-              Save changes
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button
+                type="submit"
+                disabled={
+                  bioError.length > 0 ||
+                  skillsError.length > 0 ||
+                  interestsError.length > 0 ||
+                  updateProfileLoading
+                }
+                loading={updateProfileLoading}
+              >
+                Save changes
+              </Button>
+            </DialogFooter>
+          </form>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   )
