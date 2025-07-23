@@ -10,7 +10,6 @@ import { Button } from "../../ui/button"
 import Link from "next/link"
 import { Check, Layout, Lock, PencilRuler } from "lucide-react"
 import { Badge } from "../../ui/badge"
-import { canUserIntract } from "@/src/utils/helpers"
 import ChannelsContextMenu from "./ChannelDetails/ChannelsContextMenu"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
@@ -87,8 +86,7 @@ function ChannelCard({ channel }: ChannelProps) {
               </TooltipProvider>
             )}
           </CardTitle>
-          {(authUser && canUserIntract(authUser, channel.created_by)) ||
-          canViewChannelAction ? (
+          {authUser || canViewChannelAction ? (
             <ChannelsContextMenu channel={channel} />
           ) : null}
         </div>
