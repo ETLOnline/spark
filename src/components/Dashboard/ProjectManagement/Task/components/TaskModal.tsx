@@ -6,7 +6,7 @@ import {
 } from "@/src/components/ui/dialog"
 import { projectStore } from "@/src/store/project/projectStore"
 import { useAtom } from "jotai"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import React, {
   Dispatch,
   SetStateAction,
@@ -50,6 +50,7 @@ export const TaskModal = ({
 
   const searchParams = useSearchParams()
   const router = useRouter()
+  const pathName = usePathname()
   const taskIdFromUrl = searchParams.get("task_id")
 
   const [internalTask, setInternalTask] = useState<SelectTask | undefined>(
@@ -79,12 +80,12 @@ export const TaskModal = ({
           setIsTaskModelOpen(true)
         } else {
           toast({ title: "Task not found" })
-          router.replace("?", { scroll: false })
+          router.replace(pathName)
         }
       } catch (err) {
         console.error("Error fetching task:", err)
         toast({ title: "Failed to fetch task" })
-        router.replace("?", { scroll: false })
+        router.replace(pathName)
       }
     }
 
@@ -113,9 +114,7 @@ export const TaskModal = ({
       !taskIdFromUrl &&
       !hasModifiedUrl
     ) {
-      const url = new URL(window.location.href)
-      url.searchParams.set("task_id", internalTask.id)
-      window.history.pushState({}, "", url.toString())
+      router.push(pathName + "?" + new URLSearchParams({ task_id: internalTask.id }))
       setHasModifiedUrl(true)
     }
   }, [isTaskModelOpen, internalTask?.id, taskIdFromUrl, hasModifiedUrl])
@@ -124,9 +123,7 @@ export const TaskModal = ({
     (open: boolean) => {
       if (!open) {
         if (typeof window !== "undefined") {
-          const url = new URL(window.location.href)
-          url.searchParams.delete("task_id")
-          window.history.replaceState({}, "", url.toString())
+          router.replace(pathName)
         }
 
         setInternalTask(undefined)
