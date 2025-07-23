@@ -12,6 +12,7 @@ import { Label } from "@/src/components/ui/label"
 import { Switch } from "@/src/components/ui/switch"
 import React from "react"
 import { SelectProject } from "@/src/db/schema"
+import { projectSchema } from "../../Projects/utils/projectSchema"
 import { z } from "zod"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -19,33 +20,7 @@ import { toast } from "@/src/hooks/use-toast"
 import { UpdateProjectAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import Tiptap from "@/src/components/common/TiptapRichEditor"
-
-const projectSchema = z
-  .object({
-    project_name: z
-      .string()
-      .min(1, "Title required")
-      .max(50, "Title is too long"),
-    description: z
-      .string()
-      .min(1, "Description required")
-      .max(150, "Description is too long"),
-    project_type: z.boolean().optional(),
-    project_startDate: z.string().min(1, "Start date required"),
-    project_targetDate: z.string().min(1, "Target date required")
-  })
-  .refine(
-    (data) => {
-      if (!data.project_startDate || !data.project_targetDate) return true
-      return (
-        new Date(data.project_targetDate) >= new Date(data.project_startDate)
-      )
-    },
-    {
-      message: "Target date must be after or equal to start date",
-      path: ["project_targetDate"]
-    }
-  )
+import moment from "moment"
 
 type ProjectFormData = z.infer<typeof projectSchema>
 
@@ -68,20 +43,14 @@ function ProjectInformation({ currProjectData }: Props) {
       description: currProjectData.description || "",
       project_type: currProjectData.project_type === "active",
       project_startDate: currProjectData.project_startDate
-        ? (() => {
-            const parts = currProjectData.project_startDate.split("-")
-            return parts.length === 3
-              ? `${parts[2]}-${parts[1]}-${parts[0]}`
-              : currProjectData.project_startDate
-          })()
+        ? moment(currProjectData.project_startDate, "DD-MM-YYYY").format(
+            "YYYY-MM-DD"
+          )
         : "",
       project_targetDate: currProjectData.project_targetDate
-        ? (() => {
-            const parts = currProjectData.project_targetDate.split("-")
-            return parts.length === 3
-              ? `${parts[2]}-${parts[1]}-${parts[0]}`
-              : currProjectData.project_targetDate
-          })()
+        ? moment(currProjectData.project_targetDate, "DD-MM-YYYY").format(
+            "YYYY-MM-DD"
+          )
         : ""
     }
   })
@@ -98,20 +67,10 @@ function ProjectInformation({ currProjectData }: Props) {
         project_slug: data.project_name,
         project_type: projectType,
         project_startDate: data.project_startDate
-          ? (() => {
-              const parts = data.project_startDate.split("-")
-              return parts.length === 3
-                ? `${parts[2]}-${parts[1]}-${parts[0]}`
-                : data.project_startDate
-            })()
+          ? moment(data.project_startDate, "YYYY-MM-DD").format("DD-MM-YYYY")
           : "",
         project_targetDate: data.project_targetDate
-          ? (() => {
-              const parts = data.project_targetDate.split("-")
-              return parts.length === 3
-                ? `${parts[2]}-${parts[1]}-${parts[0]}`
-                : data.project_targetDate
-            })()
+          ? moment(data.project_targetDate, "YYYY-MM-DD").format("DD-MM-YYYY")
           : ""
       }
 
