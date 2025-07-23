@@ -95,7 +95,7 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
                 <Link href={`.${page.link}`} key={page.key}>
                   <SidebarMenuItem
                     className={`flex flex-row items-center gap-2 p-2 rounded
-                    ${pathName.includes(page.link) ? "bg-muted" : "hover:bg-muted"}`}
+                    ${pathName.includes(page.link) ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}`}
                   >
                     <DynamicIcon
                       name={page.icon as IconName}

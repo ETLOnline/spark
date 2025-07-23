@@ -13,7 +13,6 @@ import { useAtomValue } from "jotai"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
 import { ArrowRight, Check, Lock, PencilRuler } from "lucide-react"
-import { canControlSpace } from "@/src/utils/spaceRoleHelper"
 import {
   Tooltip,
   TooltipContent,
@@ -28,14 +27,8 @@ interface Props {
 }
 
 function SpacesCard({ space }: Props) {
-  const [spaceControl, setSpaceControl] = useState(false)
   const user = useAtomValue(userStore.AuthUser)
 
-  useEffect(() => {
-    if (user && canControlSpace(space.channel_id, space.id, user)) {
-      setSpaceControl(true)
-    }
-  }, [user, space])
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "SPACE",
@@ -91,19 +84,17 @@ function SpacesCard({ space }: Props) {
               </TooltipProvider>
             )}
           </CardTitle>
-          {spaceControl ||
-          canSpaceAllowAction ||
-          space.space_type === "public" ? (
+          {canSpaceAllowAction || space.space_type === "public" ? (
             <SpacesActionButtons space={space} />
           ) : null}
         </div>
         <CardDescription>{space.description}</CardDescription>
       </CardHeader>
       <CardFooter className="flex flex-col items-start gap-2">
-        <Badge variant="secondary">
-          {/* {space.membersCount} {space.membersCount === 1 ? 'Member' : 'Members'} */}
+        {/* <Badge variant="secondary">
+          {space.membersCount} {space.membersCount === 1 ? 'Member' : 'Members'}
           0 Members
-        </Badge>
+        </Badge> */}
         <Link href={`./spaces/${space.space_slug}`}>
           <Button>
             Launch Space <ArrowRight />
