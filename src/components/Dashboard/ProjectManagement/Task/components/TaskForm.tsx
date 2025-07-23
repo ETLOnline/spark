@@ -90,21 +90,6 @@ export default function TaskForm({
   }))
 
   useEffect(() => {
-    if (typeof window === "undefined") return
-
-    const url = new URL(window.location.href)
-    console.log("window", location)
-
-    if (isTaskModelOpen && selectedTask?.id) {
-      url.searchParams.set("task", selectedTask.id)
-      window.history.pushState({}, "", url.toString())
-    } else if (!isTaskModelOpen) {
-      url.searchParams.delete("task")
-      window.history.pushState({}, "", url.pathname)
-    }
-  }, [isTaskModelOpen, selectedTask?.id])
-
-  useEffect(() => {
     const fetchProjectUsers = async () => {
       const projectUsersResult = await GetProjectUsersAction(projectId)
 
