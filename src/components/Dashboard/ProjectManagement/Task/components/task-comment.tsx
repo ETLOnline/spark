@@ -150,7 +150,7 @@ export function TaskComment({ taskId }: TaskCommentFormProps) {
         {comments.length > 0 ? (
           comments.map((comment) => (
             <Card
-              key={comment.id}
+              key={`${comment.id}-${comment.created_at}`}
               className="bg-card border-gray-700 text-gray-50"
             >
               <CardContent className="p-4 flex items-start gap-3">
