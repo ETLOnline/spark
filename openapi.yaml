@@ -1,0 +1,1191 @@
+openapi: 3.0.0
+info:
+  title: Spark ETL API
+  version: 1.0.0
+  description: API documentation for the Spark ETL application, wrapping server actions.
+servers:
+  - url: /api
+    description: Local API server
+paths:
+  /user/auth:
+    get:
+      summary: Authenticate User
+      description: Authenticates the current user and returns their profile information.
+      operationId: authUser
+      tags:
+        - User
+      responses:
+        '200':
+          description: User authenticated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized - User not found or authentication failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique ID of the user.
+          example: "user_123abc"
+        unique_id:
+          type: string
+          description: Another unique identifier for the user.
+          example: "clerk_user_id_xyz"
+        email:
+          type: string
+          format: email
+          description: User's email address.
+          example: "user@example.com"
+        first_name:
+          type: string
+          description: User's first name.
+          example: "John"
+        last_name:
+          type: string
+          description: User's last name.
+          example: "Doe"
+        profile:
+          type: object
+          properties:
+            total_average_rating:
+              type: string
+              description: User's average rating.
+              example: "4.5"
+            sum_of_ratings:
+              type: number
+              description: Sum of all ratings received.
+              example: 90
+            number_of_ratings:
+              type: number
+              description: Total number of ratings received.
+              example: 20
+          description: User's profile information.
+      required:
+        - id
+        - unique_id
+        - email
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: A descriptive error message.
+          example: "Unauthorized"
+      required:
+        - message
+    Channel:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique ID of the channel.
+          example: "channel_123"
+        channel_name:
+          type: string
+          description: Name of the channel.
+          example: "General Chat"
+        created_by:
+          type: string
+          description: User ID of the channel creator.
+          example: "user_abc"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp of channel creation.
+      required:
+        - id
+        - channel_name
+        - created_by
+        - created_at
+    UpdateChannelRequest:
+      type: object
+      properties:
+        channel_name:
+          type: string
+          description: New name for the channel.
+          example: "Updated Channel Name"
+        isPublished:
+          type: boolean
+          description: Whether the channel is published.
+          example: true
+      # Add other updatable fields as needed
+    DeleteChannelRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID of the channel to delete.
+          example: "channel_123"
+      required:
+        - id
+    InsertActivity:
+      type: object
+      properties:
+        activity_name:
+          type: string
+          description: Name of the activity.
+          example: "User Login"
+        activity_type:
+          type: string
+          description: Type of the activity (e.g., 'login', 'post').
+          example: "login"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp of when the activity occurred.
+      required:
+        - activity_name
+        - activity_type
+    Activity:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Unique ID of the activity.
+          example: 1
+        activity_name:
+          type: string
+          description: Name of the activity.
+          example: "User Login"
+        activity_type:
+          type: string
+          description: Type of the activity.
+          example: "login"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp of when the activity occurred.
+      required:
+        - id
+        - activity_name
+        - activity_type
+        - created_at
+    InsertUserActivity:
+      type: object
+      properties:
+        user_id:
+          type: string
+          description: The unique ID of the user associated with the activity.
+          example: "user_abc123"
+        activity_id:
+          type: number
+          description: The ID of the activity.
+          example: 1
+        assigned_date:
+          type: string
+          format: date-time
+          description: The date the activity was assigned to the user.
+      required:
+        - user_id
+        - activity_id
+    UserActivity:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Unique ID of the user activity record.
+          example: 101
+        user_id:
+          type: string
+          description: The unique ID of the user associated with the activity.
+          example: "user_abc123"
+        activity_id:
+          type: number
+          description: The ID of the activity.
+          example: 1
+        assigned_date:
+          type: string
+          format: date-time
+          description: The date the activity was assigned to the user.
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp of when the user activity record was created.
+      required:
+        - id
+        - user_id
+        - activity_id
+        - assigned_date
+        - created_at
+    InsertTaskStatus:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the task status.
+          example: "To Do"
+        project_id:
+          type: string
+          description: ID of the project this status belongs to.
+          example: "project_abc"
+        status_slug:
+          type: string
+          description: Slug for the task status (auto-generated).
+          readOnly: true
+      required:
+        - name
+        - project_id
+    TaskStatus:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Unique ID of the task status.
+          example: 1
+        name:
+          type: string
+          description: Name of the task status.
+          example: "To Do"
+        project_id:
+          type: string
+          description: ID of the project this status belongs to.
+          example: "project_abc"
+        status_slug:
+          type: string
+          description: Slug for the task status.
+          example: "to-do"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp of creation.
+      required:
+        - id
+        - name
+        - project_id
+        - status_slug
+        - created_at
+    InsertCertificate:
+      type: object
+      properties:
+        user_id:
+          type: string
+          description: The ID of the user who owns the certificate.
+          example: "user_123"
+        title:
+          type: string
+          description: The title of the certificate.
+          example: "AWS Certified Developer"
+        issue_date:
+          type: string
+          format: date
+          description: The date the certificate was issued.
+          example: "2023-01-15"
+        expiration_date:
+          type: string
+          format: date
+          description: The date the certificate expires.
+          example: "2026-01-15"
+        credential_id:
+          type: string
+          description: The ID of the credential.
+          example: "ABC123XYZ"
+        credential_url:
+          type: string
+          format: url
+          description: URL to verify the credential.
+          example: "https://example.com/credential/ABC123XYZ"
+      required:
+        - user_id
+        - title
+        - issue_date
+    Certificate:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Unique ID of the certificate.
+          example: 1
+        user_id:
+          type: string
+          description: The ID of the user who owns the certificate.
+          example: "user_123"
+        title:
+          type: string
+          description: The title of the certificate.
+          example: "AWS Certified Developer"
+        issue_date:
+          type: string
+          format: date
+          description: The date the certificate was issued.
+          example: "2023-01-15"
+        expiration_date:
+          type: string
+          format: date
+          description: The date the certificate expires.
+          example: "2026-01-15"
+        credential_id:
+          type: string
+          description: The ID of the credential.
+          example: "ABC123XYZ"
+        credential_url:
+          type: string
+          format: url
+          description: URL to verify the credential.
+          example: "https://example.com/credential/ABC123XYZ"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp of creation.
+      required:
+        - id
+        - user_id
+        - title
+        - issue_date
+        - created_at
+    UpdateCertificateRequest:
+      type: object
+      properties:
+        user_id:
+          type: string
+          description: The ID of the user who owns the certificate.
+          example: "user_123"
+        title:
+          type: string
+          description: The title of the certificate.
+          example: "Updated Certificate Title"
+        issue_date:
+          type: string
+          format: date
+          description: The date the certificate was issued.
+          example: "2023-01-15"
+        expiration_date:
+          type: string
+          format: date
+          description: The date the certificate expires.
+          example: "2026-01-15"
+        credential_id:
+          type: string
+          description: The ID of the credential.
+          example: "ABC123XYZ"
+        credential_url:
+          type: string
+          format: url
+          description: URL to verify the credential.
+          example: "https://example.com/credential/ABC123XYZ"
+      required:
+        - user_id
+        - title
+        - issue_date
+    Chat:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Unique ID of the chat.
+          example: 1
+        channel_id:
+          type: string
+          description: The ID of the channel associated with the chat.
+          example: "channel_abc"
+        chat_name:
+          type: string
+          description: Name of the chat (for group chats).
+          example: "My Group Chat"
+        is_group_chat:
+          type: boolean
+          description: Indicates if it's a group chat.
+          example: false
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp of chat creation.
+      required:
+        - id
+        - channel_id
+        - is_group_chat
+    ChatWithMessages:
+      type: object
+      properties:
+        chat:
+          $ref: '#/components/schemas/Chat'
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+      required:
+        - chat
+        - messages
+    Message:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Unique ID of the message.
+          example: 1
+        chat_id:
+          type: number
+          description: The ID of the chat the message belongs to.
+          example: 1
+        sender_id:
+          type: string
+          description: The ID of the user who sent the message.
+          example: "user_abc"
+        content:
+          type: string
+          description: The content of the message.
+          example: "Hello, how are you?"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp of message creation.
+      required:
+        - id
+        - chat_id
+        - sender_id
+        - content
+        - created_at
+    InsertMessage:
+      type: object
+      properties:
+        chat_id:
+          type: number
+          description: The ID of the chat the message belongs to.
+          example: 1
+        sender_id:
+          type: string
+          description: The ID of the user who sent the message.
+          example: "user_abc"
+        content:
+          type: string
+          description: The content of the message.
+          example: "Hello, how are you?"
+      required:
+        - chat_id
+        - sender_id
+        - content
+    Contact:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Unique ID of the contact record.
+          example: 1
+        user_id:
+          type: string
+          description: The ID of the user who initiated the contact.
+          example: "user_initiator"
+        contact_id:
+          type: string
+          description: The ID of the user who is the contact.
+          example: "user_contact"
+        is_accepted:
+          type: number
+          description: Whether the contact request has been accepted (0 for false, 1 for true).
+          example: 1
+        is_requested:
+          type: number
+          description: Whether a contact request is pending (0 for false, 1 for true).
+          example: 0
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp of contact record creation.
+      required:
+        - id
+        - user_id
+        - contact_id
+        - is_accepted
+        - is_requested
+        - created_at
+    InsertCommunity:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The title of the community.
+          example: "My Awesome Community"
+        description:
+          type: string
+          description: A brief description of the community.
+          example: "A community for developers to share ideas."
+        created_by:
+          type: string
+          description: The ID of the user who created the community.
+          example: "user_123"
+        slug:
+          type: string
+          description: A unique URL-friendly identifier for the community.
+          example: "my-awesome-community"
+        is_published:
+          type: boolean
+          description: Whether the community is publicly visible.
+          example: true
+      required:
+        - title
+        - description
+        - created_by
+        - slug
+    Community:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique ID of the community.
+          example: "community_abc"
+        title:
+          type: string
+          description: The title of the community.
+          example: "My Awesome Community"
+        description:
+          type: string
+          description: A brief description of the community.
+          example: "A community for developers to share ideas."
+        created_by:
+          type: string
+          description: The ID of the user who created the community.
+          example: "user_123"
+        slug:
+          type: string
+          description: A unique URL-friendly identifier for the community.
+          example: "my-awesome-community"
+        is_published:
+          type: boolean
+          description: Whether the community is publicly visible.
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp of community creation.
+      required:
+        - id
+        - title
+        - description
+        - created_by
+        - slug
+        - is_published
+        - created_at
+    Pagination:
+      type: object
+      properties:
+        totalItems:
+          type: number
+          description: Total number of items.
+          example: 100
+        totalPages:
+          type: number
+          description: Total number of pages.
+          example: 10
+        currentPage:
+          type: number
+          description: Current page number.
+          example: 1
+        itemsPerPage:
+          type: number
+          description: Number of items per page.
+          example: 10
+      required:
+        - totalItems
+        - totalPages
+        - currentPage
+        - itemsPerPage
+    CommunityUser:
+      type: object
+      properties:
+        community_id:
+          type: string
+          description: The ID of the community.
+          example: "community_abc"
+        user_id:
+          type: string
+          description: The ID of the user.
+          example: "user_123"
+        role:
+          type: string
+          description: The role of the user in the community.
+          example: "member"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp of when the user was added to the community.
+      required:
+        - community_id
+        - user_id
+        - role
+        - created_at
+    UpdateCommunityRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The updated title of the community.
+          example: "My New Community Title"
+        description:
+          type: string
+          description: The updated description of the community.
+          example: "An updated description for the community."
+        is_published:
+          type: boolean
+          description: The updated published status of the community.
+          example: false
+      # Add other updatable fields as needed
+    DeleteCommunityRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the community to delete.
+          example: "community_abc"
+      required:
+        - id
+    InsertEvent:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The title of the event.
+          example: "Team Meeting"
+        description:
+          type: string
+          description: A brief description of the event.
+          example: "Weekly sync-up for project X."
+        start_date:
+          type: string
+          format: date-time
+          description: The start date and time of the event.
+          example: "2025-07-25T10:00:00Z"
+        end_date:
+          type: string
+          format: date-time
+          description: The end date and time of the event.
+          example: "2025-07-25T11:00:00Z"
+        created_by:
+          type: string
+          description: The ID of the user who created the event.
+          example: "user_123"
+      required:
+        - title
+        - start_date
+        - end_date
+        - created_by
+    Event:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Unique ID of the event.
+          example: 1
+        title:
+          type: string
+          description: The title of the event.
+          example: "Team Meeting"
+        description:
+          type: string
+          description: A brief description of the event.
+          example: "Weekly sync-up for project X."
+        start_date:
+          type: string
+          format: date-time
+          description: The start date and time of the event.
+          example: "2025-07-25T10:00:00Z"
+        end_date:
+          type: string
+          format: date-time
+          description: The end date and time of the event.
+          example: "2025-07-25T11:00:00Z"
+        created_by:
+          type: string
+          description: The ID of the user who created the event.
+          example: "user_123"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp of event creation.
+      required:
+        - id
+        - title
+        - start_date
+        - end_date
+        - created_by
+        - created_at
+    UpdateEventRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The updated title of the event.
+          example: "Updated Team Meeting"
+        description:
+          type: string
+          description: The updated description of the event.
+          example: "Updated weekly sync-up for project X."
+        start_date:
+          type: string
+          format: date-time
+          description: The updated start date and time of the event.
+          example: "2025-07-26T10:00:00Z"
+        end_date:
+          type: string
+          format: date-time
+          description: The updated end date and time of the event.
+          example: "2025-07-26T11:00:00Z"
+      # Add other updatable fields as needed
+    DeleteEventRequest:
+      type: object
+      properties:
+        id:
+          type: number
+          description: The ID of the event to delete.
+          example: 1
+      required:
+        - id
+    Feature:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Unique ID of the feature.
+          example: 1
+        name:
+          type: string
+          description: The name of the feature.
+          example: "File Sharing"
+        type:
+          type: string
+          description: The type of the feature (e.g., 'core', 'addon').
+          example: "core"
+        description:
+          type: string
+          description: A description of the feature.
+          example: "Allows users to share files within spaces."
+      required:
+        - id
+        - name
+        - type
+    FileDirectoryEntry:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Unique ID of the directory entry.
+          example: 1
+        parent_id:
+          type: number
+          nullable: true
+          description: The ID of the parent directory, if any.
+          example: null
+        entity_type:
+          type: string
+          enum:
+            - folder
+            - file
+          description: The type of the entry (folder or file).
+          example: "folder"
+        name:
+          type: string
+          description: The name of the folder or file.
+          example: "Documents"
+        file_id:
+          type: number
+          nullable: true
+          description: The ID of the associated file record, if entity_type is 'file'.
+          example: null
+        created_by:
+          type: string
+          description: The ID of the user who created the entry.
+          example: "user_123"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp of creation.
+      required:
+        - id
+        - entity_type
+        - name
+        - created_by
+    InsertNotification:
+      type: object
+      properties:
+        created_by:
+          type: string
+          description: The ID of the user who created the notification.
+          example: "user_123"
+        received_by:
+          type: string
+          description: The ID of the user who receives the notification.
+          example: "user_456"
+        type:
+          type: string
+          description: The type of notification (e.g., 'message', 'alert').
+          example: "message"
+        entity_type:
+          type: string
+          description: The type of entity related to the notification (e.g., 'chat', 'post').
+          example: "chat"
+        entity_id:
+          type: string
+          description: The ID of the entity related to the notification.
+          example: "chat_789"
+        is_read:
+          type: boolean
+          description: Whether the notification has been read.
+          example: false
+      required:
+        - created_by
+        - received_by
+        - type
+        - entity_type
+        - entity_id
+    Notification:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Unique ID of the notification.
+          example: 1
+        created_by:
+          type: string
+          description: The ID of the user who created the notification.
+          example: "user_123"
+        received_by:
+          type: string
+          description: The ID of the user who receives the notification.
+          example: "user_456"
+        type:
+          type: string
+          description: The type of notification.
+          example: "message"
+        entity_type:
+          type: string
+          description: The type of entity related to the notification.
+          example: "chat"
+        entity_id:
+          type: string
+          description: The ID of the entity related to the notification.
+          example: "chat_789"
+        is_read:
+          type: boolean
+          description: Whether the notification has been read.
+          example: false
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp of notification creation.
+      required:
+        - id
+        - created_by
+        - received_by
+        - type
+        - entity_type
+        - entity_id
+        - is_read
+        - created_at
+    CreatePostRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          description: The content of the post.
+          example: "This is a new post!"
+        type:
+          type: string
+          description: The type of the post (e.g., 'text', 'image', 'poll').
+          example: "text"
+        category:
+          type: string
+          description: Optional category for the post.
+          example: "Announcements"
+        entityType:
+          type: string
+          description: Optional entity type (e.g., 'space', 'channel').
+          example: "space"
+        entityId:
+          type: string
+          description: Optional ID of the entity the post belongs to.
+          example: "space_abc"
+      required:
+        - content
+        - type
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique ID of the post.
+          example: "post_123"
+        content:
+          type: string
+          description: The content of the post.
+          example: "This is a new post!"
+        type:
+          type: string
+          description: The type of the post.
+          example: "text"
+        user_id:
+          type: string
+          description: The ID of the user who created the post.
+          example: "user_abc"
+        category:
+          type: string
+          description: Category of the post.
+          example: "Announcements"
+        entity_type:
+          type: string
+          description: Entity type the post belongs to.
+          example: "space"
+        entity_id:
+          type: string
+          description: ID of the entity the post belongs to.
+          example: "space_abc"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp of post creation.
+      required:
+        - id
+        - content
+        - type
+        - user_id
+        - created_at
+    CreateFilePostRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          description: The type of the post (e.g., 'image', 'document').
+          example: "image"
+        fileSize:
+          type: number
+          description: The size of the file in bytes.
+          example: 102400
+        fileName:
+          type: string
+          description: The name of the file.
+          example: "my_image.png"
+        fileType:
+          type: string
+          description: The MIME type of the file.
+          example: "image/png"
+        fileBase64:
+          type: string
+          description: Base64 encoded content of the file.
+          example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+        content:
+          type: string
+          description: Optional text content for the post.
+          example: "Check out this image!"
+        category:
+          type: string
+          description: Optional category for the post.
+          example: "Media"
+        entityType:
+          type: string
+          description: Optional entity type (e.g., 'space', 'channel').
+          example: "space"
+        entityId:
+          type: string
+          description: Optional ID of the entity the post belongs to.
+          example: "space_abc"
+        folderPath:
+          type: string
+          description: The path to the folder where the file will be stored.
+          example: "posts"
+      required:
+        - type
+        - fileSize
+        - fileName
+        - fileType
+        - fileBase64
+    PostWithFile:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique ID of the post.
+          example: "post_123"
+        content:
+          type: string
+          description: The content of the post.
+          example: "Check out this image!"
+        type:
+          type: string
+          description: The type of the post.
+          example: "image"
+        user_id:
+          type: string
+          description: The ID of the user who created the post.
+          example: "user_abc"
+        category:
+          type: string
+          description: Category of the post.
+          example: "Media"
+        entity_type:
+          type: string
+          description: Entity type the post belongs to.
+          example: "space"
+        entity_id:
+          type: string
+          description: ID of the entity the post belongs to.
+          example: "space_abc"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp of post creation.
+        file:
+          type: object
+          properties:
+            id:
+              type: number
+              description: Unique ID of the file record.
+              example: 1
+            file_path:
+              type: string
+              description: Path to the stored file.
+              example: "uploads/posts/my_image.png"
+            file_name:
+              type: string
+              description: Original name of the file.
+              example: "my_image.png"
+            file_type:
+              type: string
+              description: MIME type of the file.
+              example: "image/png"
+            file_size:
+              type: number
+              description: Size of the file in bytes.
+              example: 102400
+            created_at:
+              type: string
+              format: date-time
+              description: Timestamp of file record creation.
+          required:
+            - id
+            - file_path
+            - file_name
+            - file_type
+            - file_size
+            - created_at
+        url:
+          type: string
+          format: url
+          description: Public URL of the stored file.
+          example: "https://your-storage.com/uploads/posts/my_image.png"
+      required:
+        - id
+        - content
+        - type
+        - user_id
+        - created_at
+        - file
+        - url
+    CreatePollPostRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          description: The content of the poll post.
+          example: "What is your favorite color?"
+        type:
+          type: string
+          description: The type of the post (should be 'poll').
+          example: "poll"
+        options:
+          type: array
+          items:
+            type: string
+          description: An array of poll options.
+          example:
+            - "Red"
+            - "Blue"
+            - "Green"
+        category:
+          type: string
+          description: Optional category for the post.
+          example: "Survey"
+        entityType:
+          type: string
+          description: Optional entity type (e.g., 'space', 'channel').
+          example: "space"
+        entityId:
+          type: string
+          description: Optional ID of the entity the post belongs to.
+          example: "space_abc"
+      required:
+        - content
+        - type
+        - options
+    PostWithPoll:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique ID of the post.
+          example: "post_123"
+        content:
+          type: string
+          description: The content of the post.
+          example: "What is your favorite color?"
+        type:
+          type: string
+          description: The type of the post.
+          example: "poll"
+        user_id:
+          type: string
+          description: The ID of the user who created the post.
+          example: "user_abc"
+        category:
+          type: string
+          description: Category of the post.
+          example: "Survey"
+        entity_type:
+          type: string
+          description: Entity type the post belongs to.
+          example: "space"
+        entity_id:
+          type: string
+          description: ID of the entity the post belongs to.
+          example: "space_abc"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp of post creation.
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/PollOption'
+      required:
+        - id
+        - content
+        - type
+        - user_id
+        - created_at
+        - options
+    PollOption:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Unique ID of the poll option.
+          example: 1
+        post_id:
+          type: string
+          description: The ID of the post this option belongs to.
+          example: "post_123"
+        option_text:
+          type: string
+          description: The text of the poll option.
+          example: "Red"
+        votes:
+          type: number
+          description: The number of votes for this option.
+          example: 10
+      required:
+        - id
+        - post_id
+        - option_text
+        - votes
