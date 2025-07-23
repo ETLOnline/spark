@@ -92,6 +92,7 @@ function TaskFilters({ projectId, onApplyFilters }: Props) {
     setSelectedPriority(undefined)
     setSelectedType(undefined)
     setSelectedAssignee([])
+    setSelectedStatus(undefined)
 
     onApplyFilters({
       assignee: undefined,
