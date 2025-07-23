@@ -32,7 +32,7 @@ interface Props {
   selectedSprint?: SelectSprint | null
 }
 
-const projectSchema = z
+const sprintSchema = z
   .object({
     title: z.string().min(1, "Required").max(50, "Title is too long"),
     start_date: z
@@ -78,7 +78,7 @@ function CreateSprintModal({
   const projectId = useParams().id as string
 
   const form = useForm({
-    resolver: zodResolver(projectSchema)
+    resolver: zodResolver(sprintSchema)
   })
 
   const formError = form.formState.errors
