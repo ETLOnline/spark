@@ -8,7 +8,6 @@ import { GetAllMentors, GetMentorById } from "@/src/db/data-access/user/query"
 import { GetMentorRatings, GetMentorRelationships } from "@/src/db/data-access/mentor/query"
 import { db } from "@/src/db"
 
-
 export interface MentorData {
   id: string
   name: string
@@ -31,7 +30,6 @@ export interface MentorData {
   profileUrl?: string
 }
 
-
 export interface MentorFilters {
   search?: string
   domains?: string[]
@@ -42,9 +40,8 @@ export interface MentorFilters {
   sortBy?: 'rating' | 'experience'
 }
 
-
 export const GetAllMentorsAction = CreateServerAction(
-  true,  // Require auth for browsing mentors
+  true,  
   async (filters?: MentorFilters) => {
     try {
       // Get users with mentor role using data access layer
@@ -56,7 +53,7 @@ export const GetAllMentorsAction = CreateServerAction(
         const hasRoleColumn = user.role === "mentor"
         const hasAssignedRole = user.roles?.some(userRole => {
           const roleName = userRole.role?.name?.toLowerCase()
-          const roleSlug = (userRole.role as any).slug?.toLowerCase()
+          const roleSlug = userRole.role?.slug?.toLowerCase()
           return roleName === "mentor" || roleSlug === "mentor"
         }) ?? false
         return hasRoleColumn || hasAssignedRole
@@ -73,18 +70,18 @@ export const GetAllMentorsAction = CreateServerAction(
           const skills = [...new Set(tags
             .filter(userTag => userTag.tag?.type === 'skill')
             .map(userTag => userTag.tag?.name)
-            .filter(Boolean))] // Remove any undefined values and duplicates
+            .filter(Boolean))] 
           
           const interests = [...new Set(tags
             .filter(userTag => userTag.tag?.type === 'interest')
             .map(userTag => userTag.tag?.name)
-            .filter(Boolean))] // Remove any undefined values and duplicates
+            .filter(Boolean))]
 
           // Get mentor ratings via data access layer
           const mentorRatingsQuery = await GetMentorRatings(mentor.unique_id)
 
-          let avgRating = 0; // Default
-          let totalRatings = 0; // Default
+          let avgRating = 0; 
+          let totalRatings = 0; 
           
           if (mentorRatingsQuery.length > 0) {
             const ratings = mentorRatingsQuery.map((r: any) => parseFloat(r.rating));
@@ -133,7 +130,6 @@ export const GetAllMentorsAction = CreateServerAction(
         })
       )
 
-      // Apply filters
       let filteredMentors = mentorsWithTags
 
       if (filters?.search) {

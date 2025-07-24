@@ -1300,8 +1300,6 @@ export const shortcutsTable = pgTable("shortcuts", {
 export type SelectShortcut = typeof shortcutsTable.$inferSelect
 export type InsertShortcut = typeof shortcutsTable.$inferInsert
 
-
-
 // Mentor Ratings Table
 export const mentorRatingsTable = pgTable("mentor_ratings", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),

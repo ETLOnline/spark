@@ -1,6 +1,6 @@
 import { sql, eq } from "drizzle-orm"
 import { db } from ".."
-import { usersTable, profileTable, tagsTable, userTagsTable, userRolesTable, rolesTable, mentorRatingsTable, mentorRelationshipsTable } from "../schema"
+import { usersTable, profileTable, tagsTable, userTagsTable, userRolesTable, rolesTable, mentorRatingsTable } from "../schema"
 
 const mentorData = [
   {
@@ -121,7 +121,7 @@ export const MentorSeed = async () => {
 
     for (const mentorInfo of mentorData) {
       try {
-        // Check if user already exists
+       
         const existingUser = await tx
           .select()
           .from(usersTable)
@@ -132,7 +132,6 @@ export const MentorSeed = async () => {
         if (existingUser.length > 0) {
           userId = existingUser[0].unique_id
           console.log(`✅ User ${mentorInfo.user.first_name} already exists`)
-          // Ensure role column is set to mentor
           await tx
             .update(usersTable)
             .set({ role: "mentor" })
@@ -147,7 +146,6 @@ export const MentorSeed = async () => {
           console.log(`✅ Created user: ${mentorInfo.user.first_name} ${mentorInfo.user.last_name} with mentor role`)
         }
 
-        // Assign mentor role to user
         try {
           await tx.insert(userRolesTable).values({
             user_id: userId,
@@ -155,11 +153,9 @@ export const MentorSeed = async () => {
           })
           console.log(`✅ Assigned mentor role to ${mentorInfo.user.first_name}`)
         } catch (error) {
-          // Role assignment might already exist - ignore
           console.log(`ℹ️ Role assignment for ${mentorInfo.user.first_name} might already exist`)
         }
 
-        // Create or update profile (including mentor-specific fields)
         const profileData = { ...mentorInfo.profile, user_id: userId }
         const existingProfile = await tx
           .select()
@@ -178,16 +174,11 @@ export const MentorSeed = async () => {
           console.log(`✅ Created profile for ${mentorInfo.user.first_name}`)
         }
 
-        // Mentor-specific fields are stored in profile table; no separate mentor profile table actions required
-
-        // Clear existing user tags to prevent duplicates
         await tx.delete(userTagsTable).where(eq(userTagsTable.user_id, userId))
         console.log(`✅ Cleared existing tags for ${mentorInfo.user.first_name}`)
 
-        // Process skills
         for (const skill of mentorInfo.skills) {
           try {
-            // 1. Fetch or create the skill tag
             let skillTag = await tx
               .select()
               .from(tagsTable)
@@ -200,8 +191,6 @@ export const MentorSeed = async () => {
                 .values({ name: skill, type: "skill" })
                 .returning()
             }
-
-            // 2. Assign the skill tag to the user (ignore duplicates)
             try {
               await tx.insert(userTagsTable).values({
                 user_id: userId,
@@ -215,10 +204,8 @@ export const MentorSeed = async () => {
           }
         }
 
-        // Process interests
         for (const interest of mentorInfo.interests) {
           try {
-            // 1. Fetch or create the interest tag
             let interestTag = await tx
               .select()
               .from(tagsTable)
@@ -231,8 +218,6 @@ export const MentorSeed = async () => {
                 .values({ name: interest, type: "interest" })
                 .returning()
             }
-
-            // 2. Assign the interest tag to the user (ignore duplicates)
             try {
               await tx.insert(userTagsTable).values({
                 user_id: userId,
@@ -258,10 +243,8 @@ export const MentorSeed = async () => {
       }
     }
 
-    // Get all seeded mentors for ratings
     const allMentors = await tx.select().from(usersTable).where(eq(usersTable.role, "mentor"))
     
-    // Create sample reviewer users for ratings
     const reviewerUsers = [
       { first_name: "Student", last_name: "User1", email: "student1@example.com", external_auth_id: `reviewer_1_${Date.now()}` },
       { first_name: "Student", last_name: "User2", email: "student2@example.com", external_auth_id: `reviewer_2_${Date.now()}` },
@@ -288,7 +271,6 @@ export const MentorSeed = async () => {
       }
     }
 
-    // Create sample ratings for each mentor
     const sampleRatings = [
       { mentor_idx: 0, reviewer_idx: 0, rating: "4.8", review_text: "Excellent mentor! Very knowledgeable in AI and provided great guidance." },
       { mentor_idx: 0, reviewer_idx: 1, rating: "4.9", review_text: "Sarah helped me understand complex ML concepts. Highly recommend!" },

@@ -12,14 +12,12 @@ export interface ConnectionRequestData {
   message?: string
 }
 
-
 export interface FavoriteToggleData {
   mentorId: string
 }
 
-// Get user's connection status with a mentor (AC10: Mentor Interaction)
 export const GetMentorConnectionStatusAction = CreateServerAction(
-  true, // Require auth
+  true,
   async (mentorId: string) => {
     const { userId } = await auth()
     
@@ -28,7 +26,7 @@ export const GetMentorConnectionStatusAction = CreateServerAction(
     }
 
     try {
-      // Get user by external_auth_id (Clerk ID)
+     
       const user = await db
         .select()
         .from(usersTable)
@@ -64,10 +62,8 @@ export const GetMentorConnectionStatusAction = CreateServerAction(
   }
 )
 
-
-// Create a connection request to a mentor (AC10: Mentor Interaction
 export const CreateMentorConnectionAction = CreateServerAction(
-  true, // Require auth
+  true, 
   async (data: ConnectionRequestData) => {
     const { userId } = await auth()
     
@@ -76,7 +72,6 @@ export const CreateMentorConnectionAction = CreateServerAction(
     }
 
     try {
-      // Check if user exists by external_auth_id (Clerk ID)
       const user = await db
         .select()
         .from(usersTable)
@@ -89,7 +84,6 @@ export const CreateMentorConnectionAction = CreateServerAction(
 
       const currentUser = user[0];
 
-      // Check if mentor exists
       const mentor = await db
         .select()
         .from(usersTable)
@@ -100,7 +94,6 @@ export const CreateMentorConnectionAction = CreateServerAction(
         throw new Error("Mentor not found")
       }
 
-      // Check if connection already exists
       const existingConnection = await db
         .select()
         .from(mentorRelationshipsTable)
@@ -121,7 +114,6 @@ export const CreateMentorConnectionAction = CreateServerAction(
         }
       }
 
-      // Create new connection request
       const [newConnection] = await db
         .insert(mentorRelationshipsTable)
         .values({
@@ -147,9 +139,8 @@ export const CreateMentorConnectionAction = CreateServerAction(
   }
 )
 
-// Toggle favorite status for a mentor (AC10: Mentor Interaction)
 export const ToggleMentorFavoriteAction = CreateServerAction(
-  true, // Require auth
+  true, 
   async (data: FavoriteToggleData) => {
     const { userId } = await auth()
     
@@ -158,7 +149,6 @@ export const ToggleMentorFavoriteAction = CreateServerAction(
     }
 
     try {
-      // Get user by external_auth_id (Clerk ID)
       const user = await db
         .select()
         .from(usersTable)
@@ -168,8 +158,6 @@ export const ToggleMentorFavoriteAction = CreateServerAction(
       if (!user.length) {
         throw new Error("User not found in database")
       }
-
-      // Check if mentor exists
       const mentor = await db
         .select()
         .from(usersTable)
@@ -179,8 +167,6 @@ export const ToggleMentorFavoriteAction = CreateServerAction(
       if (!mentor.length) {
         throw new Error("Mentor not found")
       }
-
-      // Check if favorite already exists
       const existingFavorite = await db
         .select()
         .from(mentorFavoritesTable)
@@ -193,7 +179,6 @@ export const ToggleMentorFavoriteAction = CreateServerAction(
         .limit(1)
 
       if (existingFavorite.length > 0) {
-        // Remove from favorites
         await db
           .delete(mentorFavoritesTable)
           .where(eq(mentorFavoritesTable.id, existingFavorite[0].id))
@@ -204,7 +189,6 @@ export const ToggleMentorFavoriteAction = CreateServerAction(
           message: "Removed from favorites"
         }
       } else {
-        // Add to favorites
         const [newFavorite] = await db
           .insert(mentorFavoritesTable)
           .values({
@@ -229,10 +213,8 @@ export const ToggleMentorFavoriteAction = CreateServerAction(
   }
 )
 
-
-// Get user's favorite mentors (AC10: Mentor Interaction)
 export const GetUserFavoriteMentorsAction = CreateServerAction(
-  true, // Require auth
+  true,
   async () => {
     const { userId } = await auth()
     
@@ -241,7 +223,6 @@ export const GetUserFavoriteMentorsAction = CreateServerAction(
     }
 
     try {
-      // Get user by external_auth_id (Clerk ID)
       const user = await db
         .select()
         .from(usersTable)
@@ -275,9 +256,8 @@ export const GetUserFavoriteMentorsAction = CreateServerAction(
   }
 )
 
-// Get user's mentor connection requests (AC10: Mentor Interaction)
 export const GetUserMentorConnectionsAction = CreateServerAction(
-  true, // Require auth
+  true, 
   async () => {
     const { userId } = await auth()
     
@@ -286,7 +266,6 @@ export const GetUserMentorConnectionsAction = CreateServerAction(
     }
 
     try {
-      // Get user by external_auth_id (Clerk ID)
       const user = await db
         .select()
         .from(usersTable)

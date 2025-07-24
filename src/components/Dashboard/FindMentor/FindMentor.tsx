@@ -11,7 +11,6 @@ import {
 } from "@/src/server-actions/User/MentorConnectionAction";
 import { useAuth } from "@clerk/nextjs";
 
-// Remove hardcoded fallback defaults, filters will be fetched from DB
 
 const experienceLevels = ["All Experience Levels", "1-3 years", "4-7 years", "8-12 years", "13+ years"];
 const sortOptions = [
@@ -54,9 +53,7 @@ const FindMentor: React.FC = () => {
 	const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
 	const [connectionStatuses, setConnectionStatuses] = useState<Map<string, string>>(new Map());
 	
-	// New state for database data
 	const [mentors, setMentors] = useState<MentorData[]>([]);
-	// Filter options loaded from database instead of hardcoded defaults
 	const [domains, setDomains] = useState<string[]>([]);
 	const [skills, setSkills] = useState<string[]>([]);
 	const [interests, setInterests] = useState<string[]>([]);
@@ -67,7 +64,6 @@ const FindMentor: React.FC = () => {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	// Load filter state from URL on component mount
 	useEffect(() => {
 		if (!searchParams) return;
 		
@@ -102,7 +98,6 @@ const FindMentor: React.FC = () => {
 		}
 	}, [searchParams]);
 
-	// Update URL when filters change
 	useEffect(() => {
 		if (!isLoaded) return;
 		
@@ -127,7 +122,6 @@ const FindMentor: React.FC = () => {
 		selectedUniversities, selectedCompanies, selectedLocations, selectedLanguages, 
 		availabilityFilter, minRating, sortBy, isLoaded]);
 
-	// Load user's favorite mentors on component mount
 	useEffect(() => {
 		const loadFavorites = async () => {
 			if (!isSignedIn || !isLoaded) return;
@@ -139,17 +133,15 @@ const FindMentor: React.FC = () => {
 				}
 			} catch (error) {
 				console.error("Error loading favorites:", error);
-				// Don't throw error, just log it - favorites are not critical
+
 			}
 		};
 
-		// Only load if user is fully authenticated
 		if (isLoaded && isSignedIn) {
 			loadFavorites();
 		}
 	}, [isLoaded, isSignedIn]);
 
-	// Load connection statuses for mentors
 	useEffect(() => {
 		const loadConnectionStatuses = async () => {
 			if (!isSignedIn || !isLoaded || mentors.length === 0) return;
@@ -157,7 +149,6 @@ const FindMentor: React.FC = () => {
 			try {
 				const statusMap = new Map<string, string>();
 				
-				// Load connection status for each mentor
 				for (const mentor of mentors) {
 					try {
 						const result = await GetMentorConnectionStatusAction(mentor.id);
@@ -165,7 +156,6 @@ const FindMentor: React.FC = () => {
 							statusMap.set(mentor.id, result.data.status);
 						}
 					} catch (error) {
-						// Skip individual mentor status errors - they might not be connected
 						console.warn(`Failed to load connection status for mentor ${mentor.id}:`, error);
 					}
 				}
@@ -176,38 +166,30 @@ const FindMentor: React.FC = () => {
 			}
 		};
 
-		// Only load if user is fully authenticated and mentors are loaded
 		if (isLoaded && isSignedIn && mentors.length > 0) {
 			loadConnectionStatuses();
 		}
 	}, [isLoaded, isSignedIn, mentors]);
 
-	// Fetch mentors and filter data on component mount
 	useEffect(() => {
 		const fetchData = async () => {
 			setLoading(true);
 			setError(null);
 			
 			try {
-				// Fetch mentors
 				const mentorsResult = await GetAllMentorsAction();
-				console.log('[FindMentor] mentorsResult:', mentorsResult);
 				if (mentorsResult.success && mentorsResult.data) {
-					console.log('[FindMentor] mentors data:', mentorsResult.data);
-					mentorsResult.data.forEach((m) => console.log(`Mentor: ${m.name}`, 'Skills:', m.skills, 'Interests:', m.interests));
 					setMentors(mentorsResult.data);
 				} else {
 					setError(mentorsResult.error || "Failed to fetch mentors");
 				}
 
-				// Fetch filter data
 				const filtersResult = await GetMentorFiltersDataAction();
 				if (filtersResult.success && filtersResult.data) {
 					setDomains(filtersResult.data.domains);
 					setSkills(filtersResult.data.skills);
 					setInterests(filtersResult.data.interests);
 					
-					// Extract unique values from mentors for additional filters
 					if (mentorsResult.success && mentorsResult.data) {
 						const mentorData = mentorsResult.data;
 						const uniqueUniversities = [...new Set(mentorData.map(m => m.university))].sort();
@@ -376,7 +358,6 @@ const FindMentor: React.FC = () => {
 
 	const toggleFavorite = async (mentorId: string) => {
 		if (!isSignedIn) {
-			alert("Please sign in to favorite mentors");
 			return;
 		}
 
@@ -392,65 +373,47 @@ const FindMentor: React.FC = () => {
 					}
 					return newSet;
 				});
-			} else {
-				alert(result.error || "Failed to update favorite");
 			}
 		} catch (error) {
 			console.error("Error toggling favorite:", error);
-			alert("An error occurred while updating favorites");
 		}
 	};
 
 	const handleConnect = async (mentorId: string, available: boolean) => {
 		if (!isSignedIn) {
-			alert("Please sign in to connect with mentors");
 			return;
 		}
 
 		try {
-			// Check current connection status first
 			const statusResult = await GetMentorConnectionStatusAction(mentorId);
 			if (statusResult.success && statusResult.data) {
 				const status = statusResult.data.status;
-				if (status === 'pending') {
-					alert("Connection request already sent");
-					return;
-				} else if (status === 'accepted') {
-					alert("Already connected to this mentor");
+				if (status === 'pending' || status === 'accepted') {
 					return;
 				}
 			}
 
 			if (available) {
-				const message = prompt("Enter a message for the mentor (optional):");
 				const result = await CreateMentorConnectionAction({ 
-					mentorId, 
-					message: message || undefined 
+					mentorId,
+					message: undefined
 				});
 				
 				if (result.success) {
-					alert("Connection request sent successfully!");
 					setConnectionStatuses(prev => new Map(prev).set(mentorId, 'pending'));
-				} else {
-					alert(result.error || "Failed to send connection request");
 				}
 			} else {
-				// For unavailable mentors, add to waitlist
 				const result = await CreateMentorConnectionAction({ 
-					mentorId, 
-					message: "Joined waitlist" 
+					mentorId,
+					message: "Joined waitlist"
 				});
 				
 				if (result.success) {
-					alert("Added to waitlist successfully!");
 					setConnectionStatuses(prev => new Map(prev).set(mentorId, 'pending'));
-				} else {
-					alert(result.error || "Failed to join waitlist");
 				}
 			}
 		} catch (error) {
 			console.error("Error handling connection:", error);
-			alert("An error occurred while processing your request");
 		}
 	};
 
@@ -458,10 +421,8 @@ const FindMentor: React.FC = () => {
 		setOpenFilters((prev) => ({ ...prev, [key]: !prev[key] }));
 	};
 
-	// Check if all filters are expanded
 	const areAllFiltersExpanded = Object.values(openFilters).every(value => value);
 
-	// Function to toggle all filters
 	const toggleAllFilters = () => {
 		const newState = !areAllFiltersExpanded;
 		setOpenFilters({
@@ -477,7 +438,6 @@ const FindMentor: React.FC = () => {
 		});
 	};
 
-	// Multi-select dropdown component
 	const MultiSelectDropdown: React.FC<{
 		title: string;
 		options: string[];
@@ -819,17 +779,17 @@ const FindMentor: React.FC = () => {
 					{/* Search and Sort */}
 					<div className="flex flex-col sm:flex-row items-center gap-2 mb-3">
 						<div className="relative w-full sm:flex-1">
-							<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+							<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/70" />
 							<input
 								type="text"
 								placeholder="Search by name, email, skills, interests, university, or company…"
 								value={search}
 								onChange={(e) => setSearch(e.target.value)}
-								className="w-full pl-10 pr-3 py-2 rounded border border-input focus:outline-none focus:ring-2 focus:ring-ring text-lg bg-background text-foreground placeholder-muted-foreground"
+								className="w-full pl-9 pr-3 py-2 rounded border border-input focus:outline-none focus:ring-2 focus:ring-ring text-sm bg-background text-white placeholder:text-white/70"
 							/>
 						</div>
 						<select
-							className="w-full sm:w-auto px-3 py-2 rounded border border-input text-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+							className="w-full sm:w-auto px-3 py-2 rounded border border-input text-sm bg-background text-white focus:outline-none focus:ring-2 focus:ring-ring"
 							value={sortBy}
 							onChange={e => setSortBy(e.target.value as 'rating' | 'reviews' | 'experience' | 'name')}
 						>
@@ -880,13 +840,13 @@ const FindMentor: React.FC = () => {
 									<div className="flex-1 min-w-0">
 										<div className="flex items-start justify-between">
 											<div className="flex-1 min-w-0">
-												<h3 className="text-xl font-bold text-foreground truncate">
+												<h3 className="text-xl font-bold text-white truncate">
 													{mentor.name}
 												</h3>
-												<p className="text-muted-foreground text-lg truncate">
+												<p className="text-white/80 text-lg truncate">
 													{mentor.title}
 												</p>
-												<div className="flex items-center gap-1 text-muted-foreground text-sm">
+												<div className="flex items-center gap-1 text-white/70 text-sm">
 													<Building className="w-4 h-4" />
 													<span className="truncate">{mentor.company}</span>
 												</div>
@@ -903,7 +863,7 @@ const FindMentor: React.FC = () => {
 
 								{/* University and Domain */}
 								<div className="flex flex-wrap items-center gap-2 text-sm mb-3">
-									<div className="flex items-center gap-1 text-muted-foreground">
+									<div className="flex items-center gap-1 text-white/70">
 										<BookOpen className="w-4 h-4" />
 										<span>{mentor.university}</span>
 									</div>
@@ -914,30 +874,30 @@ const FindMentor: React.FC = () => {
 
 								{/* Location and Rating */}
 								<div className="flex items-center justify-between mb-3">
-									<div className="flex items-center gap-1 text-muted-foreground text-sm">
+									<div className="flex items-center gap-1 text-white/70 text-sm">
 										<MapPin className="w-4 h-4" />
 										<span>{mentor.location}</span>
 									</div>
 									<div className="flex items-center gap-1">
 										<Star className="w-4 h-4 text-yellow-500 fill-current" />
-										<span className="font-semibold text-foreground">{mentor.rating}</span>
-										<span className="text-muted-foreground text-sm">({mentor.ratingCount})</span>
+										<span className="font-semibold text-white">{mentor.rating}</span>
+										<span className="text-white/70 text-sm">({mentor.ratingCount})</span>
 									</div>
 								</div>
 
 								{/* Bio */}
-								<p className="text-muted-foreground text-sm mb-4 line-clamp-3">
+								<p className="text-white/70 text-sm mb-4 line-clamp-3">
 									{mentor.description}
 								</p>
 
 								{/* Skills */}
 								<div className="mb-4">
-									<h4 className="font-medium text-foreground text-sm mb-2">Skills</h4>
+									<h4 className="font-medium text-white text-sm mb-2">Skills</h4>
 									<div className="flex flex-wrap gap-1">
 										{mentor.skills.map((skill, index) => (
 											<span
 												key={`${mentor.id}-skill-${index}`}
-												className="bg-muted text-foreground px-2 py-1 rounded-full text-xs border border-border"
+												className="bg-muted text-white px-2 py-1 rounded-full text-xs border border-border"
 											>
 												{skill}
 											</span>
@@ -947,12 +907,12 @@ const FindMentor: React.FC = () => {
 
 								{/* Interests */}
 								<div className="mb-4">
-									<h4 className="font-medium text-foreground text-sm mb-2">Interests</h4>
+									<h4 className="font-medium text-white text-sm mb-2">Interests</h4>
 									<div className="flex flex-wrap gap-1">
 										{mentor.interests.map((interest, index) => (
 											<span
 												key={`${mentor.id}-interest-${index}`}
-												className="border border-border text-muted-foreground px-2 py-1 rounded-full text-xs bg-background"
+												className="border border-border text-white/70 px-2 py-1 rounded-full text-xs bg-background"
 											>
 												{interest}
 											</span>
@@ -963,15 +923,15 @@ const FindMentor: React.FC = () => {
 								{/* Stats */}
 								<div className="flex justify-between items-center mb-4 py-3 bg-muted rounded-lg px-4">
 									<div className="text-center">
-										<div className="font-bold text-lg text-foreground">{mentor.mentees}</div>
-										<div className="text-xs text-muted-foreground">Mentees</div>
+										<div className="font-bold text-lg text-white">{mentor.mentees}</div>
+										<div className="text-xs text-white/70">Mentees</div>
 									</div>
 									<div className="text-center">
-										<div className="font-bold text-lg text-foreground">{mentor.experience}+</div>
-										<div className="text-xs text-muted-foreground">Years Exp</div>
+										<div className="font-bold text-lg text-white">{mentor.experience}+</div>
+										<div className="text-xs text-white/70">Years Exp</div>
 									</div>
 									<div className="text-center">
-										<div className="flex items-center gap-1 text-muted-foreground">
+										<div className="flex items-center gap-1 text-white/70">
 											<Clock className="w-4 h-4" />
 											<span className="text-xs">{mentor.responseTime}</span>
 										</div>
@@ -984,7 +944,7 @@ const FindMentor: React.FC = () => {
 										{mentor.languages.map((lang, index) => (
 											<span
 												key={`${mentor.id}-language-${index}`}
-												className="bg-secondary text-secondary-foreground px-2 py-1 rounded-full text-xs"
+												className="bg-secondary text-white px-2 py-1 rounded-full text-xs"
 											>
 												{lang}
 											</span>
