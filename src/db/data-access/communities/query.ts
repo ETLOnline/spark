@@ -52,16 +52,19 @@ export type CommunityWithRelations = SelectCommunity & {
  * Includes related data like member count and channel count.
  */
 export async function GetCommunities(
+  authUser: SelectUser,
   filters?: CommunityQueryFilters,
   page: number = 1,
-  limit: number = 6
+  limit: number = 6,
+  activeTab: "all" | "my" = "all"
 ): Promise<{
   communities: CommunityWithRelations[]
   pagination: { total: number; page: number; limit: number; totalPages: number }
+  joinedCount: number
 }> {
   const {
     searchTerm,
-    communityCategory, // this will be the category id
+    communityCategory,
     sortBy = "newest",
     createdByUserId
   } = filters || {}
@@ -75,6 +78,14 @@ export async function GetCommunities(
   }
   if (createdByUserId) {
     whereClause.push(eq(communitiesTable.created_by, createdByUserId))
+  }
+
+  if (activeTab === "my" && authUser?.unique_id) {
+    whereClause.push(
+      sql`${communitiesTable.id} IN (
+        SELECT community_id FROM community_users WHERE user_id = ${authUser.unique_id}
+      )`
+    )
   }
   let orderByClause: SQL<unknown>
   switch (sortBy) {
@@ -112,13 +123,20 @@ export async function GetCommunities(
       .from(communitiesTable)
       .where(and(...whereClause))
 
-    const [communities, totalResult] = await Promise.all([
+    const joinedCountPromise = db
+      .select({ count: count() })
+      .from(communityUsersTable)
+      .where(eq(communityUsersTable.user_id, authUser.unique_id))
+
+    const [communities, totalResult, joinedCountResult] = await Promise.all([
       communitiesPromise,
-      totalCountPromise
+      totalCountPromise,
+      joinedCountPromise
     ])
 
     const total = totalResult[0].count
     const totalPages = Math.ceil(total / limit)
+    const joinedCount = joinedCountResult[0].count
 
     return {
       communities,
@@ -127,124 +145,12 @@ export async function GetCommunities(
         page,
         limit,
         totalPages
-      }
+      },
+      joinedCount
     }
   } catch (e: any) {
     console.error("Error fetching communities:", e)
     throw new Error(`Failed to retrieve communities: ${e.message}`)
-  }
-}
-
-/**
- * Retrieves communities that a specific user has joined, with optional filters and pagination.
- */
-export async function GetJoinedCommunities(
-  userId: string,
-  filters?: CommunityQueryFilters,
-  page: number = 1,
-  limit: number = 6
-): Promise<{
-  communities: SelectCommunity[]
-  pagination: { total: number; page: number; limit: number; totalPages: number }
-}> {
-  const { sortBy = "newest", searchTerm, communityCategory } = filters || {}
-  const offset = (page - 1) * limit
-
-  const whereClause: (SQLWrapper | SQL)[] = [
-    eq(communityUsersTable.user_id, userId)
-  ]
-
-  if (searchTerm) {
-    whereClause.push(sql`(${ilike(communitiesTable.title, `%${searchTerm}%`)})`)
-  }
-
-  if (communityCategory && communityCategory !== "all") {
-    whereClause.push(eq(communitiesTable.category_id, communityCategory))
-  }
-
-  let orderByClause: SQL<unknown> | undefined
-  switch (sortBy) {
-    case "newest":
-      orderByClause = sql`${communitiesTable.created_at} desc`
-      break
-    case "oldest":
-      orderByClause = sql`${communitiesTable.created_at} asc`
-      break
-    case "titleAsc":
-      orderByClause = sql`${communitiesTable.title} asc`
-      break
-    case "titleDesc":
-      orderByClause = sql`${communitiesTable.title} desc`
-      break
-    default:
-      orderByClause = sql`${communitiesTable.created_at} desc`
-  }
-
-  try {
-    const joinedCommunitiesPromise = db
-      .select({
-        community: communitiesTable,
-        category: communityCategoriesTable
-      })
-      .from(communityUsersTable)
-      .leftJoin(
-        communitiesTable,
-        eq(communityUsersTable.community_id, communitiesTable.id)
-      )
-      .leftJoin(
-        communityCategoriesTable,
-        eq(communitiesTable.category_id, communityCategoriesTable.id)
-      )
-      .where(and(...whereClause))
-      .limit(limit)
-      .offset(offset)
-      .orderBy(orderByClause)
-      .then((rows) => {
-        return rows
-          .map((row) => {
-            if (!row.community) return null
-            const communityData: SelectCommunity = {
-              ...row.community,
-              category: row.category || undefined
-            }
-            return communityData
-          })
-          .filter((comm): comm is SelectCommunity => comm !== null)
-      }) as Promise<SelectCommunity[]>
-
-    const totalCountPromise = db
-      .select({ count: sql`count(distinct ${communitiesTable.id})` })
-      .from(communityUsersTable)
-      .leftJoin(
-        communitiesTable,
-        eq(communityUsersTable.community_id, communitiesTable.id)
-      )
-      .leftJoin(
-        communityCategoriesTable,
-        eq(communitiesTable.category_id, communityCategoriesTable.id)
-      )
-      .where(and(...whereClause))
-
-    const [communities, totalResult] = await Promise.all([
-      joinedCommunitiesPromise,
-      totalCountPromise
-    ])
-
-    const total = totalResult[0].count as number
-    const totalPages = Math.ceil(total / limit)
-
-    return {
-      communities,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages
-      }
-    }
-  } catch (e: any) {
-    console.error("Error fetching joined communities:", e)
-    throw new Error(`Failed to retrieve joined communities: ${e.message}`)
   }
 }
 

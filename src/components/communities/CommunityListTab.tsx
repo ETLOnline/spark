@@ -35,8 +35,7 @@ export default function CommunityListTabs({
 }: CommunityListTabsProps) {
   const allCommunities = communitiesList?.communities || []
   const joinedCommunities = communitiesList?.joinedCommunities || []
-  const totalMyCommunities =
-    communitiesList?.joinedCommunitiesPagination?.total || 0
+  const totalMyCommunities = communitiesList?.joinedCount || 0
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
       <TabsList>

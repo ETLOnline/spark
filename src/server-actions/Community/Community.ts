@@ -5,7 +5,6 @@ import {
   GetCommunities,
   IsCommunitySlugAvailable,
   CommunityQueryFilters,
-  GetJoinedCommunities,
   UpdateCommunity,
   DeleteCommunity,
   CommunityDetailData,
@@ -55,6 +54,7 @@ export interface GetCommunitiesActionResponse {
   allCommunitiesPagination: PaginationType
   joinedCommunities: SelectCommunity[]
   joinedCommunitiesPagination: PaginationType
+  joinedCount: number
 }
 
 export interface GetCommunitiesResponseType {
@@ -80,16 +80,18 @@ export const GetCommunitiesAction = CreateServerAction(
         throw new Error("Authentication required to fetch communities.")
       }
       const allCommunitiesResult = await GetCommunities(
+        authUser,
         { ...filters },
         page,
-        limit
+        limit,
+        activeTab
       )
 
-      const joinedCommunitiesResult = await GetJoinedCommunities(
-        authUser.unique_id,
-        { ...filters },
-        page,
-        limit
+      const joinedCommunitiesResult = allCommunitiesResult.communities.filter(
+        (community) =>
+          community.communityMembers?.some(
+            (member) => member.user_id === authUser.unique_id
+          )
       )
 
       return {
@@ -97,8 +99,9 @@ export const GetCommunitiesAction = CreateServerAction(
         data: {
           communities: allCommunitiesResult.communities,
           allCommunitiesPagination: allCommunitiesResult.pagination,
-          joinedCommunities: joinedCommunitiesResult.communities,
-          joinedCommunitiesPagination: joinedCommunitiesResult.pagination
+          joinedCommunities: joinedCommunitiesResult,
+          joinedCommunitiesPagination: allCommunitiesResult.pagination,
+          joinedCount: allCommunitiesResult.joinedCount
         }
       }
     } catch (error: any) {
@@ -115,45 +118,6 @@ export interface GetJoinedCommunitiesResponseType {
   communities: SelectCommunity[]
   pagination: PaginationType
 }
-
-export const GetJoinedCommunitiesAction = CreateServerAction(
-  true,
-
-  async (
-    filters?: Omit<CommunityQueryFilters, "createdByUserId">,
-    page: number = 1,
-    limit: number = 10
-  ): Promise<
-    | { success: true; data: GetJoinedCommunitiesResponseType }
-    | { success: false; error: any }
-  > => {
-    try {
-      const authUser = await AuthUserAction()
-
-      if (!authUser?.unique_id) {
-        throw new Error("User not authenticated.")
-      }
-
-      const combinedFilters = {
-        ...filters,
-        page,
-        limit
-      }
-
-      const result = await GetJoinedCommunities(
-        authUser.unique_id,
-        combinedFilters
-      )
-      return { success: true, data: result }
-    } catch (error: any) {
-      console.error("Error in GetJoinedCommunitiesAction:", error)
-      return {
-        success: false,
-        error: error.message || "Failed to retrieve joined communities."
-      }
-    }
-  }
-)
 
 export const UpdateCommunityAction = CreateServerAction(
   true,
