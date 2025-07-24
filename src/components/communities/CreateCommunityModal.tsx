@@ -238,7 +238,13 @@ export default function CreateCommunityModal({
 
       if (createdCommunity?.success && createdCommunity?.data) {
         onCommunityCreated?.(createdCommunity.data)
-
+        form.reset({
+          title: "",
+          slug: "",
+          description: "",
+          category: "",
+          type: "public"
+        })
         setCommunities((prevCommunities) => {
           if (!prevCommunities) return null
           return {

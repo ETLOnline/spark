@@ -19,12 +19,11 @@ const defaultPagination: PaginationType = {
 
 const initialCommunityState: CommunityStoreType = {
   communities: {
-    // This object now conforms to GetCommunitiesActionResponse
     communities: [],
     joinedCommunities: [],
-    // MODIFIED: Replaced 'pagination' with the two new pagination properties
     allCommunitiesPagination: defaultPagination,
-    joinedCommunitiesPagination: defaultPagination
+    joinedCommunitiesPagination: defaultPagination,
+    joinedCount: 0
   },
   communityFormModalVisibility: false,
   selectedCommunity: null,
