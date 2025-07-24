@@ -18,10 +18,10 @@ const PostComments: React.FC<Props> = (props) => {
         />
         <AvatarFallback>{name}</AvatarFallback>
       </Avatar>
-      <div className="rounded-[15px] bg-secondary p-3 pt-2">
-        <p className="font-semibold">{name}</p>
+      <div className="rounded-[15px] bg-card p-3 pt-2">
+        <p className="font-bold text-sm">{name}</p>
         <p className="text-sm">{props.comment.content}</p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-muted-foreground/75">
           {formatRelativeTime(props.comment.created_at || "")}
         </p>
       </div>

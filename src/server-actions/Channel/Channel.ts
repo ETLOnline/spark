@@ -22,13 +22,15 @@ import {
 } from "@/src/db/schema"
 import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 import { AuthUserAction } from "../User/AuthUserAction"
-import { isUserAdmin } from "@/src/utils/helpers"
+import { isSuperAdmin } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import {
   createScopedChannelRolesAndAssignAdmin,
   deleteUserRole,
   getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
+import { GetUserPermissionsParsedAction } from "../UserRoles/UserRole"
+import { PermissionChecker } from "@/src/lib/PermissionCheker"
 
 export const CreateChannelAction = CreateServerAction(
   true,
@@ -66,9 +68,26 @@ export const GetChannelsAction = CreateServerAction(
   async (filters?: channelQueryFilters) => {
     try {
       const authUser = await AuthUserAction()
+      const isAdmin = await isSuperAdmin(authUser)
+
+      const response = await GetUserPermissionsParsedAction(authUser.unique_id)
+
+      if (!response.success) {
+        return { error: response.error }
+      }
+
+      const permissionChecker = new PermissionChecker(
+        "scoped",
+        response.data,
+        isAdmin,
+        "COMMUNITY",
+        filters?.communityId
+      )
+
       let channels: GetChannelsResponseType
       let joinedChannels: SelectChannel[] = []
-      if (isUserAdmin(authUser)) {
+
+      if (isAdmin || permissionChecker.canAccess("channel.create")) {
         channels = await GetChannels({ ...filters })
       } else {
         channels = await GetChannels({

@@ -24,7 +24,7 @@ import {
 } from "@/src/db/schema"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import { AuthUserAction } from "../User/AuthUserAction"
-import { isUserAdmin } from "@/src/utils/helpers"
+import { isSuperAdmin } from "@/src/utils/helpers"
 import {
   attachChannelUser,
   GetChannelById,
@@ -38,6 +38,8 @@ import {
   getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
 import { defaultSpaceOverviewTemplate } from "@/src/app/(dashboard)/channels/[channel_slug]/spaces/[space_slug]/(space-layout)/components/constants"
+import { PermissionChecker } from "@/src/lib/PermissionCheker"
+import { GetUserPermissionsParsedAction } from "../UserRoles/UserRole"
 
 export const CreateSpaceAction = CreateServerAction(
   true,
@@ -82,6 +84,15 @@ export const GetSpacesAction = CreateServerAction(
 
       const authUser = await AuthUserAction()
       const authUserId = authUser?.unique_id
+
+      const isAdmin = await isSuperAdmin(authUser)
+
+      const response = await GetUserPermissionsParsedAction(authUserId)
+
+      if (!response.success) {
+        return { error: response.error }
+      }
+
       if (filters?.channel_slug) {
         channel = await GetChannelBySlug(filters?.channel_slug || "")
       } else if (filters?.channel_id) {
@@ -95,7 +106,15 @@ export const GetSpacesAction = CreateServerAction(
         }
       }
 
-      if (isUserAdmin(authUser)) {
+      const permissionChecker = new PermissionChecker(
+        "scoped",
+        response.data,
+        isAdmin,
+        "CHANNEL",
+        channel?.id
+      )
+
+      if (isAdmin || permissionChecker.canAccess("space.update")) {
         spaces = await GetSpaces({ ...filters })
       } else {
         const spacesResponse = await GetSpaces({
