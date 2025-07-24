@@ -99,6 +99,13 @@
       "when": 1753188586377,
       "tag": "0013_2025_07_22_174945__mentorfunctionality",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1753192713722,
+      "tag": "0014_2025_07_22_185827__add_table_for_comments_task",
+      "breakpoints": true
     }
   ]
 }

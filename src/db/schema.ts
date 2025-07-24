@@ -98,6 +98,9 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
   certificates: many(certificatesTable, {
     relationName: "userToCertificate"
+  }),
+  taskComments: many(taskCommentsTable, {
+    relationName: "taskCommentToUser"
   })
 }))
 
@@ -121,6 +124,7 @@ export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> & {
   profile?: SelectProfile | null
   joinedCommunities?: SelectCommunityUser[]
   certificates?: SelectCertificate[]
+  taskComments?: SelectTaskComment[]
 }
 
 export const profileTable = pgTable("profile", {
@@ -1300,9 +1304,6 @@ export const shortcutsTable = pgTable("shortcuts", {
 export type SelectShortcut = typeof shortcutsTable.$inferSelect
 export type InsertShortcut = typeof shortcutsTable.$inferInsert
 
-
-
-// Mentor Ratings Table
 export const mentorRatingsTable = pgTable("mentor_ratings", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   mentor_id: varchar("mentor_id")
@@ -1338,7 +1339,6 @@ export type SelectMentorRating = typeof mentorRatingsTable.$inferSelect & {
   reviewer?: SelectUser
 }
 
-// Mentor Relationships Table
 export const mentorRelationshipsTable = pgTable("mentor_relationships", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   mentor_id: varchar("mentor_id")
@@ -1375,7 +1375,6 @@ export type SelectMentorRelationship = typeof mentorRelationshipsTable.$inferSel
   mentee?: SelectUser
 }
 
-// Mentor Favorites Table
 export const mentorFavoritesTable = pgTable("mentor_favorites", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   user_id: varchar("user_id")
@@ -1409,3 +1408,26 @@ export type SelectMentorFavorite = typeof mentorFavoritesTable.$inferSelect & {
   user?: SelectUser
   mentor?: SelectUser
 }
+export const taskCommentsTable = pgTable("task_comments", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  content: varchar().notNull(),
+  user_id: varchar().notNull(),
+  task_id: varchar().notNull(),
+  ...timestamps
+})
+
+export const taskCommentsRelations = relations(
+  taskCommentsTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [taskCommentsTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "taskCommentToUser"
+    })
+  })
+)
+
+export type SelectTaskComment = InferSelectModel<typeof taskCommentsTable> & {
+  user?: SelectUser
+}
+export type InsertTaskComment = typeof taskCommentsTable.$inferInsert

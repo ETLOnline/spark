@@ -1,6 +1,12 @@
-import { eq, ilike, like } from "drizzle-orm"
+import { and, eq, ilike, inArray, like, not, sql } from "drizzle-orm"
 import { db } from "../.."
-import { InsertUser, userContactsTable, usersTable } from "../../schema"
+import {
+  InsertUser,
+  rolesTable,
+  userContactsTable,
+  userRolesTable,
+  usersTable
+} from "../../schema"
 
 export async function CreateUser(data: InsertUser) {
   await db.insert(usersTable).values(data)
@@ -152,10 +158,7 @@ export async function getUserContacts(currentUserId: string) {
     .where(eq(userContactsTable.user_id, currentUserId))
 }
 
-
-// Mentor-specific queries
 export async function GetAllMentors() {
-  // Retrieve all users with profile, roles, and tags; filtering by role occurs at application level
   return await db.query.usersTable.findMany({
     with: {
       profile: true,
@@ -174,4 +177,37 @@ export async function GetMentorById(mentorId: string) {
       userTags: { with: { tag: true } }
     }
   })
+
+export async function GetRandomUsers() {
+  try {
+    const roles = await db.query.rolesTable.findMany({
+      where: eq(rolesTable.role_type, "GLOBAL")
+    })
+
+    const usersRole = await db.query.userRolesTable.findMany({
+      where: inArray(
+        userRolesTable.role_id,
+        roles.map((r) => r.id)
+      ),
+      limit: 3,
+      orderBy: sql`RANDOM()`
+    })
+
+    const user_ids = usersRole.map((ur) => ur.user_id)
+
+    const users = await db.query.usersTable.findMany({
+      where: inArray(usersTable.unique_id, user_ids),
+      with: {
+        roles: {
+          with: {
+            role: true
+          }
+        }
+      }
+    })
+
+    return users
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
 }

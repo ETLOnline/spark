@@ -13,11 +13,9 @@ import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDat
 import CreateSpaceModal from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/CreateSpaceModal"
 import { Button } from "@/src/components/ui/button"
 import { CirclePlus } from "lucide-react"
-import { canControlChannel } from "@/src/utils/channelRoleHelper"
 import { GetSpacesAction } from "@/src/server-actions/Space/Space"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { SelectChannel, SelectSpace } from "@/src/db/schema"
-import { isUserAdmin } from "@/src/utils/helpers"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import Overlay from "@/src/components/common/Overlay/OverLay"
 import { communityStore } from "@/src/store/community/communityStore"
@@ -40,7 +38,6 @@ export default function ChannelPage() {
   const [spaceFormModelVisibility, setSpaceFormModelVisibility] =
     useState(false)
   const authUser = useAtomValue(userStore.AuthUser)
-  const isAdmin = authUser ? isUserAdmin(authUser) : false
   const channelSlug = useParams().channel_slug
 
   const [spacesLoading, spacesData, spacesError, getSpaces] =
@@ -174,10 +171,7 @@ export default function ChannelPage() {
                     </Button>
                   )}
 
-                {(selectedChannel?.id &&
-                  user &&
-                  canControlChannel(selectedChannel.id, user)) ||
-                canCreateSpace ? (
+                {selectedChannel?.id && user && canCreateSpace ? (
                   <>
                     <CreateSpaceModal
                       spaceFormModelVisibility={spaceFormModelVisibility}
@@ -205,7 +199,7 @@ export default function ChannelPage() {
               </div>
             ) : (
               <>
-                {!isAdmin &&
+                {!isSuperAdmin &&
                   (joinedSpaces && joinedSpaces.length > 0 ? (
                     <>
                       <h2 className="text-xl font-bold sm:text-2xl">

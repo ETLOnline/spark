@@ -1,9 +1,22 @@
-import { and, asc, eq, isNull, like, or, sql, SQLWrapper } from "drizzle-orm"
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  isNull,
+  like,
+  or,
+  sql,
+  SQLWrapper
+} from "drizzle-orm"
 import { db } from "../.."
 import {
   InsertTask,
+  InsertTaskComment,
   InsertTaskStatus,
   SelectTask,
+  SelectTaskComment,
+  taskCommentsTable,
   TaskStatusTable,
   taskTable
 } from "../../schema"
@@ -237,5 +250,42 @@ export async function DeleteTaskStatus(statusId: string) {
     await db.delete(TaskStatusTable).where(eq(TaskStatusTable.id, statusId))
   } catch (e: any) {
     throw new Error(e.message)
+  }
+}
+
+export async function createTaskComment(
+  commentData: InsertTaskComment
+): Promise<SelectTaskComment | null> {
+  try {
+    const [newComment] = await db
+      .insert(taskCommentsTable)
+      .values(commentData)
+      .returning()
+    return newComment || null
+  } catch (error) {
+    console.error("Error creating task comment:", error)
+    return null
+  }
+}
+
+export async function getTaskCommentsByTaskId(
+  taskId: string,
+  limit: number,
+  offset: number
+): Promise<SelectTaskComment[]> {
+  try {
+    const comments = await db.query.taskCommentsTable.findMany({
+      where: eq(taskCommentsTable.task_id, taskId),
+      with: {
+        user: true
+      },
+      orderBy: desc(taskCommentsTable.id),
+      limit: limit,
+      offset: offset
+    })
+    return comments
+  } catch (error) {
+    console.error(`Error fetching comments for task ${taskId}:`, error)
+    return []
   }
 }

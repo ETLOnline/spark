@@ -11,10 +11,17 @@ import {
   GetTaskStatusList,
   taskQueryFilters,
   UpdateTask,
-  UpdateTaskStatus
+  UpdateTaskStatus,
+  createTaskComment,
+  getTaskCommentsByTaskId
 } from "@/src/db/data-access/tasks/query"
 import { CreateServerAction } from ".."
-import { InsertTask, InsertTaskStatus, SelectTask } from "@/src/db/schema"
+import {
+  InsertTask,
+  InsertTaskComment,
+  InsertTaskStatus,
+  SelectTask
+} from "@/src/db/schema"
 import { getProjectById } from "@/src/db/data-access/project-management/query"
 import { getInitials } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
@@ -175,6 +182,52 @@ export const DeleteTaskStatusAction = CreateServerAction(
       return { success: true }
     } catch (error) {
       return { error: error }
+    }
+  }
+)
+
+export const CreateTaskCommentAction = CreateServerAction(
+  true,
+  async (input) => {
+    try {
+      const { task_id, user_id, content } = input
+
+      const commentData: InsertTaskComment = {
+        task_id: task_id,
+        user_id: user_id,
+        content: content
+      }
+
+      const newComment = await createTaskComment(commentData)
+
+      if (newComment) {
+        return { success: true, data: newComment }
+      } else {
+        return { success: false, error: "Failed to create comment." }
+      }
+    } catch (e: any) {
+      console.error("Server action error creating task comment:", e)
+      return {
+        success: false,
+        error: e.message || "An unexpected error occurred."
+      }
+    }
+  }
+)
+
+export const GetTaskCommentsAction = CreateServerAction(
+  true,
+  async (filter) => {
+    try {
+      const { taskId, limit, offset } = filter
+      const comments = await getTaskCommentsByTaskId(taskId, limit, offset)
+      return { success: true, data: comments }
+    } catch (e: any) {
+      console.error("Server action error fetching task comments:", e)
+      return {
+        success: false,
+        error: e.message || "An unexpected error occurred."
+      }
     }
   }
 )
