@@ -32,37 +32,30 @@ interface Props {
   selectedSprint?: SelectSprint | null
 }
 
-const projectSchema = z
+const sprintSchema = z
   .object({
     title: z.string().min(1, "Required").max(50, "Title is too long"),
-    start_date: z.string().refine(
-      (value) => {
-        const inputValue = moment(value)
-        const today = moment().startOf("day")
-        return inputValue.isSameOrAfter(today)
-      },
-      {
-        message: "Date must not be in the past"
-      }
-    ),
-    end_date: z.string().refine(
-      (value) => {
-        const inputValue = moment(value)
-        const today = moment().startOf("day")
-        return inputValue.isSameOrAfter(today)
-      },
-      {
-        message: "End date must not be in the past"
-      }
-    )
+    start_date: z
+      .string()
+      .min(1, "Required")
+      .refine(
+        (value) =>
+          !value || moment(value).isSameOrAfter(moment().startOf("day")),
+        { message: "Date must not be in the past" }
+      ),
+    end_date: z
+      .string()
+      .min(1, "Required")
+      .refine(
+        (value) =>
+          !value || moment(value).isSameOrAfter(moment().startOf("day")),
+        { message: "End date must not be in the past" }
+      )
   })
   .refine(
     (data) => {
-      const start = moment(data.start_date)
-
-      const end = moment(data.end_date)
-
-      return end.isSameOrAfter(start)
+      if (!data.start_date || !data.end_date) return true
+      return moment(data.end_date).isSameOrAfter(moment(data.start_date))
     },
     {
       message: "End date must be after start date",
@@ -85,7 +78,7 @@ function CreateSprintModal({
   const projectId = useParams().id as string
 
   const form = useForm({
-    resolver: zodResolver(projectSchema)
+    resolver: zodResolver(sprintSchema)
   })
 
   const formError = form.formState.errors
