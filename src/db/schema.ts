@@ -95,6 +95,9 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
   certificates: many(certificatesTable, {
     relationName: "userToCertificate"
+  }),
+  taskComments: many(taskCommentsTable, {
+    relationName: "taskCommentToUser"
   })
 }))
 
@@ -118,6 +121,7 @@ export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> & {
   profile?: SelectProfile | null
   joinedCommunities?: SelectCommunityUser[]
   certificates?: SelectCertificate[]
+  taskComments?: SelectTaskComment[]
 }
 
 export const profileTable = pgTable("profile", {
@@ -1296,3 +1300,27 @@ export const shortcutsTable = pgTable("shortcuts", {
 
 export type SelectShortcut = typeof shortcutsTable.$inferSelect
 export type InsertShortcut = typeof shortcutsTable.$inferInsert
+
+export const taskCommentsTable = pgTable("task_comments", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  content: varchar().notNull(),
+  user_id: varchar().notNull(),
+  task_id: varchar().notNull(),
+  ...timestamps
+})
+
+export const taskCommentsRelations = relations(
+  taskCommentsTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [taskCommentsTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "taskCommentToUser"
+    })
+  })
+)
+
+export type SelectTaskComment = InferSelectModel<typeof taskCommentsTable> & {
+  user?: SelectUser
+}
+export type InsertTaskComment = typeof taskCommentsTable.$inferInsert

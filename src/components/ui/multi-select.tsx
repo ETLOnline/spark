@@ -28,6 +28,7 @@ interface MultiSelectProps {
   placeholder?: string
   className?: string
   loading?: boolean
+  shouldFilter?: boolean
 }
 
 export default function MultiSelect({
@@ -37,7 +38,8 @@ export default function MultiSelect({
   onQueryChange,
   placeholder = "Select options",
   className,
-  loading = false
+  loading = false,
+  shouldFilter = true
 }: MultiSelectProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
@@ -99,7 +101,7 @@ export default function MultiSelect({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[250px] p-0">
-          <Command>
+          <Command shouldFilter={shouldFilter}>
             <CommandInput
               placeholder="Search..."
               value={query}

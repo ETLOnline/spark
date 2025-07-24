@@ -154,13 +154,13 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
 
             crumbs.push({
               label: "Project",
-              href: `/project/${project.id}`
+              href: `/project/${project.id}/board`
             })
 
             if (project) {
               crumbs.push({
                 label: project.project_name,
-                href: `/project/${project.id}`
+                href: `/project/${project.id}/board`
               })
             }
 
@@ -179,20 +179,24 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
             label: "Board"
           },
           {
-            path: "/list",
-            label: "List"
+            path: "/sprint",
+            label: "Sprint"
           },
           {
-            path: "/calendar",
-            label: "Calendar"
+            path: "/backlog",
+            label: "Backlog"
           },
           {
-            path: "/files",
-            label: "Files"
+            path: "/teams",
+            label: "Teams"
           },
           {
-            path: "/chat",
-            label: "Chat"
+            path: "/settings",
+            label: "Settings"
+          },
+          {
+            path: "/task",
+            label: "Task"
           }
         ]
       }

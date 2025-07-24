@@ -67,6 +67,7 @@ export default function CommunityCard({
   const isCurrentUserMember = community?.communityMembers?.some(
     (member) => member.user_id === currentUserId
   )
+  console.log("isCurrentUserMember", isCurrentUserMember)
   const [joinLoading, joinResult, joinError, attachCommunityUser] =
     useServerAction(AttachCommunityUserAction)
 
