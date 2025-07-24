@@ -19,7 +19,7 @@ interface CommunityListTabsProps {
   onEditCommunity: (community: SelectCommunity) => void
   onDeleteCommunity: (community: SelectCommunity) => void
   onJoinCommunity: () => void
-  activeTab: "all" | "my"
+  activeTab: "all" | "joined"
   onTabChange: (tabValue: string) => void
 }
 
@@ -40,7 +40,7 @@ export default function CommunityListTabs({
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
       <TabsList>
         <TabsTrigger value="all">All Communities</TabsTrigger>
-        <TabsTrigger value="my">
+        <TabsTrigger value="joined">
           My Communities
           <Badge variant="secondary" className="ml-2">
             {totalMyCommunities || 0}
@@ -81,7 +81,7 @@ export default function CommunityListTabs({
       </TabsContent>
 
       {/* My Communities Tab Content */}
-      <TabsContent value="my" className="space-y-6">
+      <TabsContent value="joined" className="space-y-6">
         {loading ? (
           <CommunitySkeletonCards count={6} />
         ) : error ? (

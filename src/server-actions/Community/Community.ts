@@ -67,8 +67,7 @@ export const GetCommunitiesAction = CreateServerAction(
   async (
     filters?: CommunityQueryFilters,
     page: number = 1,
-    limit: number = 6,
-    activeTab: "all" | "my" = "all"
+    limit: number = 6
   ): Promise<
     | { success: true; data: GetCommunitiesActionResponse }
     | { success: false; error: any }
@@ -83,8 +82,56 @@ export const GetCommunitiesAction = CreateServerAction(
         authUser,
         { ...filters },
         page,
-        limit,
-        activeTab
+        limit
+      )
+
+      const joinedCommunitiesResult = allCommunitiesResult.communities.filter(
+        (community) =>
+          community.communityMembers?.some(
+            (member) => member.user_id === authUser.unique_id
+          )
+      )
+
+      return {
+        success: true,
+        data: {
+          communities: allCommunitiesResult.communities,
+          allCommunitiesPagination: allCommunitiesResult.pagination,
+          joinedCommunities: joinedCommunitiesResult,
+          joinedCommunitiesPagination: allCommunitiesResult.pagination,
+          joinedCount: allCommunitiesResult.joinedCount
+        }
+      }
+    } catch (error: any) {
+      console.error("Error in GetCommunitiesAction:", error)
+      return {
+        success: false,
+        error: error.message || "Failed to retrieve communities."
+      }
+    }
+  }
+)
+export const GetJoinedCommunitiesAction = CreateServerAction(
+  true,
+  async (
+    filters?: CommunityQueryFilters,
+    page: number = 1,
+    limit: number = 6
+  ): Promise<
+    | { success: true; data: GetCommunitiesActionResponse }
+    | { success: false; error: any }
+  > => {
+    try {
+      const authUser = await AuthUserAction()
+
+      if (!authUser?.unique_id) {
+        throw new Error("Authentication required to fetch communities.")
+      }
+      const allCommunitiesResult = await GetCommunities(
+        authUser,
+        { ...filters },
+        page,
+        limit
       )
 
       const joinedCommunitiesResult = allCommunitiesResult.communities.filter(

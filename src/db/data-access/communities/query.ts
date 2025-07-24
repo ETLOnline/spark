@@ -21,7 +21,8 @@ import {
   SQL,
   and,
   ilike,
-  ne
+  ne,
+  inArray
 } from "drizzle-orm"
 
 export type CommunityType = "public" | "private" | "restricted"
@@ -39,6 +40,7 @@ export interface CommunityQueryFilters {
   communityCategory?: string
   sortBy?: SortByOptions
   createdByUserId?: string
+  type?: "all" | "joined"
 }
 
 export type CommunityWithRelations = SelectCommunity & {
@@ -55,8 +57,7 @@ export async function GetCommunities(
   authUser: SelectUser,
   filters?: CommunityQueryFilters,
   page: number = 1,
-  limit: number = 6,
-  activeTab: "all" | "my" = "all"
+  limit: number = 6
 ): Promise<{
   communities: CommunityWithRelations[]
   pagination: { total: number; page: number; limit: number; totalPages: number }
@@ -66,7 +67,8 @@ export async function GetCommunities(
     searchTerm,
     communityCategory,
     sortBy = "newest",
-    createdByUserId
+    createdByUserId,
+    type
   } = filters || {}
   const offset = (page - 1) * limit
   const whereClause: (SQLWrapper | SQL)[] = []
@@ -80,12 +82,24 @@ export async function GetCommunities(
     whereClause.push(eq(communitiesTable.created_by, createdByUserId))
   }
 
-  if (activeTab === "my" && authUser?.unique_id) {
-    whereClause.push(
-      sql`${communitiesTable.id} IN (
-        SELECT community_id FROM community_users WHERE user_id = ${authUser.unique_id}
-      )`
-    )
+  if (type === "joined" && authUser?.unique_id) {
+    const joinedCommunityIds = await db
+      .select({ community_id: communityUsersTable.community_id })
+      .from(communityUsersTable)
+      .where(eq(communityUsersTable.user_id, authUser.unique_id))
+
+    const ids = joinedCommunityIds.map((row) => row.community_id)
+
+    if (ids.length === 0) {
+      const joinedCount = 0
+      return {
+        communities: [],
+        pagination: { total: 0, page, limit, totalPages: 0 },
+        joinedCount
+      }
+    } else {
+      whereClause.push(inArray(communitiesTable.id, ids))
+    }
   }
   let orderByClause: SQL<unknown>
   switch (sortBy) {
