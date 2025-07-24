@@ -34,7 +34,8 @@ import {
   SelectCommunityUser,
   SelectRole,
   SelectSpace,
-  SelectSpaceUser
+  SelectSpaceUser,
+  SelectUser
 } from "@/src/db/schema"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
@@ -110,6 +111,8 @@ export default function ChannelUserList({
   >(null)
   const [selectedRoleName, setSelectedRoleName] = useState("")
   const authUser = useAtomValue(userStore.AuthUser)
+  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
+
   const [
     dettachChannelUserLoading,
     dettachChannelUserData,
@@ -358,6 +361,33 @@ export default function ChannelUserList({
     }
   }
 
+  const isScopedAdminFn = (user?: SelectUser) => {
+    console.log("user", user)
+    if (user?.roles) {
+      return user.roles.some(
+        (role) =>
+          role.role?.slug?.includes("admin") &&
+          role.role.entity_id === entity?.id
+      )
+    }
+    return false
+  }
+
+  const canChangeUserAminRole = (targetUser: SelectUser | undefined) => {
+    if (!targetUser) return false
+
+    if (targetUser.unique_id === authUser?.unique_id) return false
+
+    const isTargetScopedAdmin = isScopedAdminFn(targetUser)
+    const isAuthScopedAdmin = isScopedAdminFn(authUser || undefined)
+
+    if (isTargetScopedAdmin) {
+      return isSuperAdmin || isAuthScopedAdmin
+    }
+
+    return true
+  }
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -398,9 +428,8 @@ export default function ChannelUserList({
             </div>
           </div>
           <CardDescription>
-            Manage all users across your{" "}
-            {entityType === "channel" ? "channel" : "space"}. {usersList.length}{" "}
-            users total.
+            Manage all users across your {entityType}. {usersList.length} users
+            total.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -460,7 +489,7 @@ export default function ChannelUserList({
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            {canUpdateUser && (
+                            {canUpdateUser && canChangeUserAminRole(user) && (
                               <DropdownMenuItem
                                 onClick={() => {
                                   setSelectedUser(cu)
