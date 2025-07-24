@@ -58,13 +58,30 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
 
   {
     path: "/channels",
-    label: "Channels",
     children: [
       {
         path: "/[channel_slug]",
         dynamicLabelFetcher: async (channelSlug: string) => {
-          const channel = await GetChannelBySlugAction(channelSlug)
-          return channel?.data?.channel_name || channelSlug
+          const channelResult = await GetChannelBySlugAction(channelSlug)
+          if (!channelResult || !channelResult.data) {
+            return null
+          }
+          const community = channelResult.data.community
+          const channel = channelResult.data
+          if (!community || !channel) {
+            return null
+          }
+          const crumbs: Array<{ label: string; href?: string }> = []
+          crumbs.push({
+            label: "Channels",
+            href: `/communities/${community.slug}`
+          })
+          crumbs.push({
+            label: channel.channel_name,
+            href: `/channels/${channel.channel_slug}/spaces/`
+          })
+
+          return crumbs
         },
         children: [
           {
@@ -137,13 +154,13 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
 
             crumbs.push({
               label: "Project",
-              href: `/project/${project.id}`
+              href: `/project/${project.id}/board`
             })
 
             if (project) {
               crumbs.push({
                 label: project.project_name,
-                href: `/project/${project.id}`
+                href: `/project/${project.id}/board`
               })
             }
 
@@ -162,20 +179,24 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
             label: "Board"
           },
           {
-            path: "/list",
-            label: "List"
+            path: "/sprint",
+            label: "Sprint"
           },
           {
-            path: "/calendar",
-            label: "Calendar"
+            path: "/backlog",
+            label: "Backlog"
           },
           {
-            path: "/files",
-            label: "Files"
+            path: "/teams",
+            label: "Teams"
           },
           {
-            path: "/chat",
-            label: "Chat"
+            path: "/settings",
+            label: "Settings"
+          },
+          {
+            path: "/task",
+            label: "Task"
           }
         ]
       }

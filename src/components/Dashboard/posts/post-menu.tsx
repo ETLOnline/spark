@@ -13,8 +13,6 @@ import { useToast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { userStore } from "@/src/store/user/userStore"
 import { SelectPost } from "@/src/db/schema"
-import { isUserAdmin } from "@/src/utils/helpers"
-import { spaceStore } from "@/src/store/space/spaceStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface PostMenuProps {

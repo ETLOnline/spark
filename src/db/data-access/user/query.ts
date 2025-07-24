@@ -1,6 +1,10 @@
-import { eq, ilike, like, inArray, sql } from "drizzle-orm"
+import { and, eq, ilike, like, inArray, sql, not } from "drizzle-orm"
 import { db } from "../.."
-import { InsertUser, userContactsTable, usersTable, rolesTable, userRolesTable } from "../../schema"
+import {
+  InsertUser,
+  userContactsTable,
+  usersTable, rolesTable, userRolesTable
+} from "../../schema"
 
 export async function CreateUser(data: InsertUser) {
   await db.insert(usersTable).values(data)

@@ -101,22 +101,6 @@ export const joinChannelsAndSpacesChannel = (
   }
 }
 
-export const getUserRoles = (user: SelectUser): string[] => {
-  const roles = (user?.role || "").split(",")
-  return roles || []
-}
-
-export const isUserAdmin = (user: SelectUser): boolean => {
-  return getUserRoles(user).includes("admin")
-}
-
-export const canUserIntract = (
-  user: SelectUser,
-  ownerId?: string | null
-): boolean => {
-  return isUserAdmin(user) || user.unique_id === ownerId ? true : false
-}
-
 export const generateUrl = (path: string) => {
   if (typeof window !== "undefined") {
     return `${window.location.origin}${path}`
@@ -180,7 +164,7 @@ export function ToUpperCase(string: string) {
 }
 
 export const checkUserPersonaCompletion = async (user: SelectUser) => {
-  if (isUserAdmin(user)) {
+  if (await isSuperAdmin(user)) {
     return true
   }
   if (!user.roles || user.roles.length === 0) {
@@ -327,4 +311,10 @@ export const formatRelativeTime = (
     .utc(dateString || "")
     .local()
     .fromNow()
+}
+
+export const GetUserRole = (user: SelectUser) => {
+  if (user.roles && user.roles.length > 0) {
+    return user.roles.flatMap((ur) => ur.role?.name)
+  }
 }

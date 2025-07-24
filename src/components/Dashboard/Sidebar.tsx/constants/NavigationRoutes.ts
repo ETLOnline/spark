@@ -17,33 +17,35 @@ import {
 
 export const siteRoutes: SiteRoutes = {
   navMain: [
-    {
-      title: "Analytics Dashboard",
-      url: "/dashboard",
-      icon: LayoutDashboard
-    },
+    // For future use
+    // {
+    //   title: "Analytics Dashboard",
+    //   url: "/dashboard",
+    //   icon: LayoutDashboard
+    // },
     {
       title: "Profile",
       url: "/profile",
-      icon: User,
-      items: [
-        {
-          title: "Bio",
-          url: "/profile/?tab=basic"
-        },
-        {
-          title: "Rewards",
-          url: "/profile/?tab=rewards"
-        },
-        {
-          title: "Activity",
-          url: "/profile/?tab=activity"
-        },
-        {
-          title: "Schedule",
-          url: "/profile/?tab=calendar"
-        }
-      ]
+      icon: User
+      // For future use
+      // items: [
+      //   {
+      //     title: "Bio",
+      //     url: "/profile/?tab=basic"
+      //   },
+      //   {
+      //     title: "Rewards",
+      //     url: "/profile/?tab=rewards"
+      //   },
+      //   {
+      //     title: "Activity",
+      //     url: "/profile/?tab=activity"
+      //   },
+      //   {
+      //     title: "Schedule",
+      //     url: "/profile/?tab=calendar"
+      //   }
+      // ]
     },
     {
       title: "Connections",

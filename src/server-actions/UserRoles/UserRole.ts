@@ -46,6 +46,23 @@ export const getUserPermissionRowsAction = CreateServerAction(
   }
 )
 
+export const GetUserPermissionsParsedAction = CreateServerAction(
+  true,
+  async (userId: string) => {
+    try {
+      const permissionRows = await getUserPermissionRows(userId)
+      let permissions = null
+      if (permissionRows.length > 0) {
+        permissions = buildUserPerms(permissionRows)
+      }
+      return { success: true, data: permissions }
+    } catch (error) {
+      console.error("Error :", error)
+      return { success: false, error: "Failed to get permissions" }
+    }
+  }
+)
+
 export const savePersonaAction = CreateServerAction(
   true,
   async (personaID: number, userId: string, externalAuthId) => {

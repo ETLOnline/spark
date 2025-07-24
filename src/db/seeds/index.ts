@@ -8,6 +8,9 @@ import { CommunityCategorySeed } from "./CommunityCategories"
 import { MentorSeed } from "./MentorSeed"
 import { NewRolePermissions } from "./NewRolePermissions"
 import { CommunityUserListRolePermission } from "./CommunityUserListRolePermission"
+import { NewTagsSeed } from "./NewTagsSeeder"
+import { CheckRolePermissionMismatch } from "./CheckRolePermissionMismatch"
+import { SyncRolePermissionsSeeder } from "./SyncScopedPermissions"
 
 const SEEDERS: Record<string, () => Promise<void>> = {
   FeatureSeed,
@@ -19,7 +22,10 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   MentorSeed,
   CommunityCategorySeed,
   NewRolePermissions,
-  CommunityUserListRolePermission
+  CommunityUserListRolePermission,
+  NewTagsSeed,
+  CheckRolePermissionMismatch,
+  SyncRolePermissionsSeeder
 }
 
 async function runSeeders() {
@@ -28,7 +34,10 @@ async function runSeeders() {
     const excludedSeeders = [
       "UserSeed",
       "NewRolePermissions",
-      "CommunityUserListRolePermission"
+      "CommunityUserListRolePermission",
+      "NewTagsSeed",
+      "CheckRolePermissionMismatch",
+      "SyncRolePermissionsSeeder"
     ]
 
     const seederNames =
