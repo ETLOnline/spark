@@ -140,7 +140,7 @@ export default function CommunityCard({
                       <DropdownMenuItem asChild>
                         <Link href={`/communities/${community.slug}/users`}>
                           <User className="mr-2 h-4 w-4" />
-                          User
+                          Users
                         </Link>
                       </DropdownMenuItem>
                       {canView && (
