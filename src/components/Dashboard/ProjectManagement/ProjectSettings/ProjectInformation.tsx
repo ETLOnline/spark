@@ -142,7 +142,7 @@ function ProjectInformation({ currProjectData }: Props) {
               name="project_startDate"
               control={control}
               render={({ field }) => (
-                <Input id="project_startDate" type="date" {...field} />
+                <Input id="project_startDate" type="date" {...field} disabled />
               )}
             />
             {errors.project_startDate && (

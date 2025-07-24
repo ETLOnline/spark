@@ -295,6 +295,8 @@ function ProjectFormModal({
                         id="project_startDate"
                         {...field}
                         type="date"
+                        min={moment().format("YYYY-MM-DD")}
+                        disabled={isEditing}
                         className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       />
                     )}
@@ -314,6 +316,9 @@ function ProjectFormModal({
                         id="project_targetDate"
                         {...field}
                         type="date"
+                        min={
+                          !isEditing ? moment().format("YYYY-MM-DD") : undefined
+                        }
                         className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       />
                     )}
