@@ -405,7 +405,15 @@ export async function getCommunityUsers(communityId: string) {
     const communityUsers = await db.query.communityUsersTable.findMany({
       where: eq(communityUsersTable.community_id, communityId),
       with: {
-        user: true
+        user: {
+          with: {
+            roles: {
+              with: {
+                role: true
+              }
+            }
+          }
+        }
       }
     })
     return communityUsers

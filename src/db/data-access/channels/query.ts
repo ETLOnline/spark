@@ -274,7 +274,15 @@ export async function getChannelUsers(channelId: string) {
     const channelUsers = await db.query.ChannelUsersTable.findMany({
       where: eq(ChannelUsersTable.channel_id, channelId),
       with: {
-        user: true
+        user: {
+          with: {
+            roles: {
+              with: {
+                role: true
+              }
+            }
+          }
+        }
       }
     })
     return channelUsers
