@@ -260,6 +260,12 @@ function ProjectFormModal({
                       />
                     )}
                   />
+                  {form.formState.errors.project_name &&
+                    form.formState.submitCount > 0 && (
+                      <span className="text-red-500 text-sm">
+                        {String(form.formState.errors.project_name.message)}
+                      </span>
+                    )}
                 </div>
               </div>
 
@@ -301,6 +307,14 @@ function ProjectFormModal({
                       />
                     )}
                   />
+                  {form.formState.errors.project_startDate &&
+                    form.formState.submitCount > 0 && (
+                      <span className="text-red-500 text-sm">
+                        {String(
+                          form.formState.errors.project_startDate.message
+                        )}
+                      </span>
+                    )}
                 </div>
               </div>
 
@@ -323,11 +337,14 @@ function ProjectFormModal({
                       />
                     )}
                   />
-                  {form.formState.errors.project_targetDate && (
-                    <span className="text-red-500 text-sm">
-                      {String(form.formState.errors.project_targetDate.message)}
-                    </span>
-                  )}
+                  {form.formState.errors.project_targetDate &&
+                    form.formState.submitCount > 0 && (
+                      <span className="text-red-500 text-sm">
+                        {String(
+                          form.formState.errors.project_targetDate.message
+                        )}
+                      </span>
+                    )}
                 </div>
               </div>
 
@@ -342,6 +359,12 @@ function ProjectFormModal({
                       <Tiptap value={field.value} onChange={field.onChange} />
                     )}
                   />
+                  {form.formState.errors.description &&
+                    form.formState.submitCount > 0 && (
+                      <span className="text-red-500 text-sm">
+                        {String(form.formState.errors.description.message)}
+                      </span>
+                    )}
                 </div>
               </div>
             </div>

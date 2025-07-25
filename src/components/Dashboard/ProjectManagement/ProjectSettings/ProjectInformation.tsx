@@ -35,7 +35,7 @@ function ProjectInformation({ currProjectData }: Props) {
   const {
     control,
     handleSubmit,
-    formState: { errors, isValid }
+    formState: { errors, isValid, submitCount }
   } = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
@@ -106,6 +106,11 @@ function ProjectInformation({ currProjectData }: Props) {
               control={control}
               render={({ field }) => <Input id="project-name" {...field} />}
             />
+            {errors.project_name && submitCount > 0 && (
+              <span className="text-red-500 text-sm">
+                {String(errors.project_name.message)}
+              </span>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="project-description">Description</Label>
@@ -116,6 +121,11 @@ function ProjectInformation({ currProjectData }: Props) {
                 <Tiptap value={field.value} onChange={field.onChange} />
               )}
             />
+            {errors.description && submitCount > 0 && (
+              <span className="text-red-500 text-sm">
+                {String(errors.description.message)}
+              </span>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="project-visibility">Active / Draft</Label>
@@ -145,7 +155,7 @@ function ProjectInformation({ currProjectData }: Props) {
                 <Input id="project_startDate" type="date" {...field} disabled />
               )}
             />
-            {errors.project_startDate && (
+            {errors.project_startDate && submitCount > 0 && (
               <span className="text-red-500 text-sm">
                 {String(errors.project_startDate.message)}
               </span>
@@ -160,7 +170,7 @@ function ProjectInformation({ currProjectData }: Props) {
                 <Input id="project_targetDate" type="date" {...field} />
               )}
             />
-            {errors.project_targetDate && (
+            {errors.project_targetDate && submitCount > 0 && (
               <span className="text-red-500 text-sm">
                 {String(errors.project_targetDate.message)}
               </span>
