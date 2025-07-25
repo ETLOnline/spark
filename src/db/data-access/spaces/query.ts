@@ -313,7 +313,15 @@ export async function getSpaceUsers(spaceId: string) {
     const spaceUsers = await db.query.SpaceUsersTable.findMany({
       where: eq(SpaceUsersTable.space_id, spaceId),
       with: {
-        user: true
+        user: {
+          with: {
+            roles: {
+              with: {
+                role: true
+              }
+            }
+          }
+        }
       }
     })
     return spaceUsers

@@ -101,7 +101,7 @@ export default function CommunityCard({
   }
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="flex flex-col justify-between hover:shadow-md transition-shadow overflow-hidden">
       <CardHeader className="pb-3">
         <div className="flex items-start gap-4">
           <Avatar className="h-16 w-16 flex-shrink-0 border-2 border-gray-200 dark:border-gray-700">
@@ -110,23 +110,18 @@ export default function CommunityCard({
               {getInitials(community.title)}
             </AvatarFallback>
           </Avatar>
-          <div className="flex-1 space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              {" "}
-              {/* Added justify-between for spacing */}
-              <CardTitle className="text-xl font-bold">
+          <div className="flex-1 space-y-3 min-w-0 max-w-full overflow-hidden">
+            <div className="flex items-center justify-between gap-2 min-w-0">
+              <CardTitle className="text-xl font-bold truncate max-w-[calc(100%-40px)]">
                 {community.title}
               </CardTitle>
-              {/* Right-aligned content in the header */}
+
               {(allowAction || community.type === "public") && (
-                <div className="flex items-center gap-2">
-                  {/* Only show if canManage is true AND relevant callbacks are provided */}
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      {/* Use shadcn/ui Button as trigger for consistent styling and accessibility */}
                       <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreVertical className="h-4 w-4" />{" "}
-                        {/* Changed from MoreHorizontal to MoreVertical */}
+                        <MoreVertical className="h-4 w-4" />
                         <span className="sr-only">Community actions</span>
                       </Button>
                     </DropdownMenuTrigger>
@@ -140,7 +135,7 @@ export default function CommunityCard({
                       <DropdownMenuItem asChild>
                         <Link href={`/communities/${community.slug}/users`}>
                           <User className="mr-2 h-4 w-4" />
-                          User
+                          Users
                         </Link>
                       </DropdownMenuItem>
                       {canView && (
@@ -172,7 +167,7 @@ export default function CommunityCard({
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
               <Badge variant="outline">{community?.category?.name}</Badge>
               {community.type === "public" ? (
                 <Globe className="h-4 w-4 text-green-500" />
@@ -187,39 +182,44 @@ export default function CommunityCard({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <CardDescription className="text-sm leading-relaxed">
-          {community.description}
-        </CardDescription>
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
+
+      <CardContent className="flex flex-col justify-between flex-grow space-y-4">
+        {/* Upper: Description + Channels */}
+        <div>
+          <CardDescription className="text-sm leading-relaxed line-clamp-3">
+            {community.description}
+          </CardDescription>
+          <div className="flex items-center gap-1 mt-3 text-muted-foreground text-sm">
             <Hash className="h-4 w-4" />
             <span>{community.channels?.length || 0} channels</span>
           </div>
-          <div className="flex items-center gap-1">
-            {!superAdmin && (
-              <Button
-                variant="outline"
-                onClick={handleJoinCommunity}
-                disabled={isCurrentUserMember || joinLoading}
-                className={
-                  isCurrentUserMember ? "text-gray-500 cursor-not-allowed" : ""
-                }
-              >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                {joinLoading
-                  ? "Joining..."
-                  : isCurrentUserMember
-                    ? "Joined"
-                    : "Join"}
-              </Button>
-            )}
-            <Link href={`/communities/${community.slug}`}>
-              <Button variant="outline">
-                View <ArrowRight />
-              </Button>
-            </Link>
-          </div>
+        </div>
+
+        {/* Bottom: Buttons */}
+        <div className="flex justify-end flex-wrap items-center gap-2 mt-auto">
+          {((!superAdmin && community.type === "public") ||
+            (!superAdmin && isCurrentUserMember)) && (
+            <Button
+              variant="outline"
+              onClick={handleJoinCommunity}
+              disabled={isCurrentUserMember || joinLoading}
+              className={
+                isCurrentUserMember ? "text-gray-500 cursor-not-allowed" : ""
+              }
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              {joinLoading
+                ? "Joining..."
+                : isCurrentUserMember
+                  ? "Joined"
+                  : "Join"}
+            </Button>
+          )}
+          <Link href={`/communities/${community.slug}`}>
+            <Button variant="outline">
+              View <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
         </div>
       </CardContent>
     </Card>
