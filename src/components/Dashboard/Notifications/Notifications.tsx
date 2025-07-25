@@ -20,6 +20,8 @@ const Notifications: React.FC = () => {
     notificationStore.notifications
   )
 
+  const hasUnread = notifications?.some((n) => n.is_read === 0)
+
   const [
     notificationsLoading,
     notificationsData,
@@ -65,7 +67,9 @@ const Notifications: React.FC = () => {
       <PopoverTrigger asChild>
         <Button variant="outline" size="icon" className="relative rounded-full">
           <Bell className="h-5 w-5" />
-          <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500" />
+          {hasUnread && (
+            <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500" />
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end" sideOffset={5}>
