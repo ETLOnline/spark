@@ -68,6 +68,23 @@ export default function CommunityDetailsClient({
   const { toast } = useToast()
   const setCurrentCommunity = useSetAtom(communityStore.selectedCommunity)
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
+  const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
+  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
+  const [joinLoading, joinResult, joinError, attachCommunityUser] =
+    useServerAction(AttachCommunityUserAction)
+  const [loadingChannels, setLoadingChannels] = useState(true)
+  const [channels, setChannels] = useAtom(channelStore.channels)
+  const [pagination, setPagination] = useState<PaginationType | null>(null)
+  const searchParams = useSearchParams()
+  const page = Number(searchParams.get("page")) || 1
+  const [isCommunityMember, setIsCommunityMember] = useState<boolean | null>(
+    null
+  )
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "COMMUNITY",
+    community?.id
+  )
 
   useEffect(() => {
     if (community) {
@@ -90,28 +107,16 @@ export default function CommunityDetailsClient({
     }
   }, [community])
 
-  const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
-  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
-  const communityInitial = community?.title
-    ? community.title.charAt(0).toUpperCase()
-    : "C"
-  const [joinLoading, joinResult, joinError, attachCommunityUser] =
-    useServerAction(AttachCommunityUserAction)
+  useEffect(() => {
+    if (currentUserId) {
+      const isMember = isEntityUser(community, currentUserId)
+      setIsCommunityMember(isMember)
+    }
+  }, [community, currentUserId])
 
-  const [loadingChannels, setLoadingChannels] = useState(true)
-
-  const [channels, setChannels] = useAtom(channelStore.channels)
-  const [pagination, setPagination] = useState<PaginationType | null>(null)
-
-  const searchParams = useSearchParams()
-  const page = Number(searchParams.get("page")) || 1
-
-  const isUserMember =
-    community.type === "private"
-      ? isEntityUser(community, currentUserId as string)
-      : true
   const showAccessDeniedOverlay =
-    community.type === "private" && !isUserMember && !isSuperAdmin
+    community.type === "private" && isCommunityMember === false && !isSuperAdmin
+
   useEffect(() => {
     const fetchCommunityChannels = async () => {
       // If access is denied, don't fetch channels
@@ -144,8 +149,32 @@ export default function CommunityDetailsClient({
       }
     }
 
-    fetchCommunityChannels()
-  }, [community?.id, page, setChannels, showAccessDeniedOverlay])
+    if (isCommunityMember !== null) {
+      fetchCommunityChannels()
+    }
+  }, [
+    community?.id,
+    page,
+    setChannels,
+    showAccessDeniedOverlay,
+    isCommunityMember
+  ])
+
+  if (
+    isCommunityMember === null &&
+    community.type === "private" &&
+    !isSuperAdmin
+  ) {
+    return (
+      <div className="flex justify-center h-full w-full">
+        <Loader size={LoaderSizes.xl} />
+      </div>
+    )
+  }
+
+  const communityInitial = community?.title
+    ? community.title.charAt(0).toUpperCase()
+    : "C"
 
   const onActionComplete = (
     actionType: "create" | "updated" | "deleted",
@@ -182,26 +211,9 @@ export default function CommunityDetailsClient({
   const currentChannels = channels || []
   const channelsCount = currentChannels.length
 
-  const { permissionChecker } = usePermissionChecker(
-    "scoped",
-    "COMMUNITY",
-    community?.id
-  )
-
   const canInviteUser = permissionChecker
     ? permissionChecker?.canAccess("community.user.invite")
     : false
-
-  const [isCommunityMember, setIsCommunityMember] = useState<boolean>(false)
-
-  useEffect(() => {
-    const isMember = isEntityUser(community, currentUserId as string)
-
-    if (isMember) setIsCommunityMember(true)
-    else {
-      setIsCommunityMember(false)
-    }
-  }, [community, currentUserId])
 
   const handleJoinCommunity = async () => {
     if (community.id && currentUserId) {
