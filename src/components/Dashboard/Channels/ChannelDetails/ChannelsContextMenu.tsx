@@ -38,11 +38,13 @@ interface ChannelProps {
     actionType: "deleted" | "updated",
     channel: SelectChannel
   ) => void
+  setIsCommunityMember?: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 const ChannelsContextMenu: React.FC<ChannelProps> = ({
   channel,
-  onActionComplete
+  onActionComplete,
+  setIsCommunityMember
 }) => {
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const superAdmin = useAtomValue(userStore.SuperAdmin)
@@ -66,6 +68,7 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
       const res = await joinChannel(channel.id, currentUserId)
       if (res?.success) {
         setIsChannelMember(true)
+        setIsCommunityMember?.(true)
         toast({
           title: "Channel Joined",
           description: "You have successfully joined the channel!",

@@ -31,6 +31,10 @@ import {
 } from "@/src/db/data-access/roles/query"
 import { GetUserPermissionsParsedAction } from "../UserRoles/UserRole"
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
+import {
+  attachCommunityUser,
+  getCommunityUsers
+} from "@/src/db/data-access/communities/query"
 
 export const CreateChannelAction = CreateServerAction(
   true,
@@ -178,6 +182,12 @@ export const AttachChannelUserAction = CreateServerAction(
   true,
   async (channelId: string, userId: string) => {
     try {
+      // get channel by id and attach user
+      const channel = await GetChannelById(channelId)
+
+      if (!channel) {
+        return { success: false, error: "Channel not found" }
+      }
       const attachUserRole = await getAndAssignViewerRoles(
         userId,
         "channel_viewer",
@@ -188,6 +198,25 @@ export const AttachChannelUserAction = CreateServerAction(
         userId,
         attachUserRole?.viewerRole?.name
       )
+      if (channel?.community_id) {
+        const communityMembers = await getCommunityUsers(channel?.community_id)
+        const communityUserIds = communityMembers.map((cu) => cu.user_id)
+
+        const isMemberCommunity = communityUserIds.includes(userId)
+
+        if (!isMemberCommunity) {
+          const attachCommunityUserRole = await getAndAssignViewerRoles(
+            userId,
+            "community_viewer",
+            channel.community_id
+          )
+          await attachCommunityUser(
+            channel.community_id,
+            userId,
+            attachCommunityUserRole?.viewerRole?.name
+          )
+        }
+      }
       return { success: true, data: channelUser }
     } catch (error) {
       return { error: error }
