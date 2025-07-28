@@ -81,6 +81,7 @@ import { SpaceUserRole } from "../common/types/spaceuser.role"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { updateUserRoleForEntityAction } from "@/src/server-actions/UserRoles/UserRole"
 import { CommunityDetailData } from "@/src/db/data-access/communities/query"
+import { DetachCommunityUserAction } from "@/src/server-actions/Community/Community"
 
 interface Props {
   entityType: "channel" | "space" | "community"
@@ -125,6 +126,12 @@ export default function ChannelUserList({
     errorDettachSpaceUser,
     DettachSpaceUser
   ] = useServerAction(DetachSpaceUserAction)
+  const [
+    detachCommunityUserLoading,
+    detachCommunityUserData,
+    errorDetachCommunityUser,
+    DetachCommunityUser
+  ] = useServerAction(DetachCommunityUserAction)
   const [
     updateEntityUserRoleLoading,
     updateEntityUserRoleData,
@@ -321,8 +328,10 @@ export default function ChannelUserList({
       let delUser
       if (entityType === "channel") {
         delUser = await DettachChannelUser(entityId, userId, roleToRemove.id)
-      } else {
+      } else if (entityType === "space") {
         delUser = await DettachSpaceUser(entityId, userId, roleToRemove.id)
+      } else if (entityType === "community") {
+        delUser = await DetachCommunityUser(entityId, userId)
       }
       if (delUser?.success) {
         setUsersList((prevUsersList) => {
