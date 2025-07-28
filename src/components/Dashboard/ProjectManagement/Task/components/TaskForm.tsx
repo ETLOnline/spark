@@ -39,6 +39,7 @@ import { useParams } from "next/navigation"
 import { GetProjectUsersAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
 import { TaskComment } from "./task-comment"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 interface Props {
   onSubmit: (task: any) => void
   statuses?: InsertTaskStatus[]
@@ -225,6 +226,31 @@ export default function TaskForm({
     )
   }
 
+  // PERMISSIONS INITATE
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "PROJECT",
+    projectId
+  )
+  const canCreateTaskBacklog = permissionChecker
+    ? permissionChecker?.canAccess("project.backlog.task.create")
+    : false
+  const canUpdateTaskBackLog = permissionChecker
+    ? permissionChecker?.canAccess("project.backlog.task.udpate")
+    : false
+  const canCreateTask = permissionChecker
+    ? permissionChecker?.canAccess("project.task.create")
+    : false
+  const canUpdateTask = permissionChecker
+    ? permissionChecker?.canAccess("project.task.udpate")
+    : false
+
+  const isAllowedAction =
+    canCreateTaskBacklog ||
+    canUpdateTaskBackLog ||
+    canCreateTask ||
+    canUpdateTask
+
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
       <div className="flex flex-col md:flex-row gap-2 ">
@@ -315,13 +341,15 @@ export default function TaskForm({
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-end gap-4 mb-2">
-                <Button
-                  loading={loading}
-                  variant={"outline"}
-                  className="w-full"
-                >
-                  {selectedTask ? "Update Task" : "Create Task"}
-                </Button>
+                {isAllowedAction && (
+                  <Button
+                    loading={loading}
+                    variant={"outline"}
+                    className="w-full"
+                  >
+                    {selectedTask ? "Update Task" : "Create Task"}
+                  </Button>
+                )}
               </div>
 
               {/* status */}

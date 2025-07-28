@@ -168,10 +168,8 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
     <>
       <Card
         key={task.id}
-        className={`p-3 transition-colors ${
-          canUpdate ? "hover:cursor-pointer hover:bg-muted" : "cursor-default"
-        }`}
-        onClick={canUpdate ? () => onClick(task) : undefined}
+        className={`p-3 transition-colors hover:cursor-pointer hover:bg-muted`}
+        onClick={() => onClick(task)}
       >
         <div className="flex justify-between items-start">
           <div>
