@@ -20,30 +20,49 @@ interface StepTwoProps {
   setUser: Dispatch<SetStateAction<SelectUser | undefined>>
 }
 
+const currentYear = moment().year()
 const userQualificationSchema = z
   .object({
     degree: z.string().min(1, "Required"),
     institute: z.string().min(1, "Required"),
     duration_from: z
       .string()
-      .refine((val) => moment(val, "YYYY", true).isValid(), {
-        message: "Invalid start year"
-      }),
+      .min(1, "Required")
+      .refine(
+        (val) => {
+          const year = parseInt(val, 10)
+          return (
+            moment(val, "YYYY", true).isValid() &&
+            year >= 1900 &&
+            year <= currentYear
+          )
+        },
+        {
+          message: `Start year must be between 1900 and ${currentYear}`
+        }
+      ),
     duration_to: z
       .string()
-      .refine((val) => moment(val, "YYYY", true).isValid(), {
-        message: "Invalid end year"
-      })
+      .min(1, "Required")
+      .refine(
+        (val) => {
+          const year = parseInt(val, 10)
+          return moment(val, "YYYY", true).isValid() && year < currentYear + 10
+        },
+        {
+          message: `End year must be less than ${currentYear + 10}`
+        }
+      )
   })
   .refine(
     (data) => {
       const start = moment(data.duration_from)
       const end = moment(data.duration_to)
-      return start.isBefore(end)
+      return end.isAfter(start)
     },
     {
-      message: "Start year must be before end year",
-      path: ["duration_from"]
+      message: "End year must be after start year",
+      path: ["duration_to"]
     }
   )
 
@@ -110,7 +129,7 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold">Education & Qualifications</h3>
+        <h3 className="text-lg font-semibold">Education</h3>
         <p className="text-sm text-muted-foreground">
           Add your educational background
         </p>
@@ -121,7 +140,7 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
           <div className="grid gap-4">
             <div className="space-y-2">
               <Label htmlFor={`degree`} className="font-semibold">
-                Degree/Qualification
+                Degree
               </Label>
               <Controller
                 name="degree"

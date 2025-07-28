@@ -21,9 +21,14 @@ export default async function DashboardLayout({
   if (!superAdmin) {
     if (!hasPersona) {
       redirect("/personas")
+    } else if (
+      !authUser.profile ||
+      !authUser.profile.bio ||
+      !authUser.profile.degree
+    ) {
+      redirect("/profile-complition")
     }
   }
-
   return (
     <SidebarProvider>
       <AppSidebar collapsible="icon" />
