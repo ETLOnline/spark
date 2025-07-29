@@ -442,7 +442,7 @@ export default function CommunityDetailsClient({
                               </div>
                             </Link>
                             {/* Action Menu Area */}
-                            <div className="flex items-center ml-4">
+                            <div className="flex items-center ml-4 w-8 justify-end">
                               <ChannelsContextMenu
                                 channel={channel}
                                 onActionComplete={onActionComplete}
