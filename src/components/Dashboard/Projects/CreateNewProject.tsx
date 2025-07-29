@@ -32,26 +32,7 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { useAuthUser } from "@/src/hooks/useAuthUser"
 import Tiptap from "@/src/components/common/TiptapRichEditor"
 import { ScrollArea } from "@radix-ui/react-scroll-area"
-
-const projectSchema = z.object({
-  project_name: z
-    .string()
-    .min(1, "Title required")
-    .max(50, "Title is too long"),
-  project_startDate: z
-    .string()
-    .min(1, "Title required")
-    .max(50, "Title is too long"),
-  project_targetDate: z
-    .string()
-    .min(1, "Title required")
-    .max(50, "Title is too long"),
-  description: z
-    .string()
-    .min(1, "description required")
-    .max(150, "Description is too long"),
-  project_type: z.boolean().optional()
-})
+import { projectSchema } from "./utils/projectSchema"
 
 type ProjectFormData = z.infer<typeof projectSchema>
 
@@ -279,6 +260,12 @@ function ProjectFormModal({
                       />
                     )}
                   />
+                  {form.formState.errors.project_name &&
+                    form.formState.submitCount > 0 && (
+                      <span className="text-red-500 text-sm">
+                        {String(form.formState.errors.project_name.message)}
+                      </span>
+                    )}
                 </div>
               </div>
 
@@ -314,10 +301,20 @@ function ProjectFormModal({
                         id="project_startDate"
                         {...field}
                         type="date"
+                        min={moment().format("YYYY-MM-DD")}
+                        disabled={isEditing}
                         className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       />
                     )}
                   />
+                  {form.formState.errors.project_startDate &&
+                    form.formState.submitCount > 0 && (
+                      <span className="text-red-500 text-sm">
+                        {String(
+                          form.formState.errors.project_startDate.message
+                        )}
+                      </span>
+                    )}
                 </div>
               </div>
 
@@ -333,10 +330,21 @@ function ProjectFormModal({
                         id="project_targetDate"
                         {...field}
                         type="date"
+                        min={
+                          !isEditing ? moment().format("YYYY-MM-DD") : undefined
+                        }
                         className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       />
                     )}
                   />
+                  {form.formState.errors.project_targetDate &&
+                    form.formState.submitCount > 0 && (
+                      <span className="text-red-500 text-sm">
+                        {String(
+                          form.formState.errors.project_targetDate.message
+                        )}
+                      </span>
+                    )}
                 </div>
               </div>
 
@@ -351,6 +359,12 @@ function ProjectFormModal({
                       <Tiptap value={field.value} onChange={field.onChange} />
                     )}
                   />
+                  {form.formState.errors.description &&
+                    form.formState.submitCount > 0 && (
+                      <span className="text-red-500 text-sm">
+                        {String(form.formState.errors.description.message)}
+                      </span>
+                    )}
                 </div>
               </div>
             </div>
