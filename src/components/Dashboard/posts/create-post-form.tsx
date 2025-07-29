@@ -103,8 +103,10 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     "SPACE",
     currentSpace?.id
   )
+  const permissionNamespace =
+    variant == "spaces" ? "space.posting.create" : "posting.create"
   const canCreate = permissionChecker
-    ? permissionChecker?.canAccess("posting.create")
+    ? permissionChecker?.canAccess(permissionNamespace)
     : false
 
   const handleCreatePost = async (e: React.FormEvent<HTMLFormElement>) => {

@@ -224,7 +224,7 @@ function ProjectFormModal({
     space?.id
   )
   const canCreate = permissionChecker
-    ? permissionChecker?.canAccess("project.create")
+    ? permissionChecker?.canAccess("space.project.create")
     : false
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

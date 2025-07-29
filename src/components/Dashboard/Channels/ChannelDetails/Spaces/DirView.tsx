@@ -133,9 +133,9 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
       >
         <div>Type</div>
         <div>Name</div>
-        <div>Size</div>
-        <div>Updated</div>
-        {hasActions && <div>Actions</div>}
+        <div className="text-center w-20">Size</div>
+        <div className="text-center w-24">Updated</div>
+        {hasActions && <div className="text-center w-16">Actions</div>}
       </div>
       <div className="divide-y">
         {getItemsAtCurrPath().length === 0 ? (
@@ -177,16 +177,16 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
                   item.name
                 )}
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground text-center w-20">
                 {item.size || "-"}
               </div>
-              <div>
+              <div className="text-center w-24">
                 <span className="text-sm text-muted-foreground">
                   {item.updatedAt}
                 </span>
               </div>
               {hasActions && (
-                <div className="flex items-center justify-end">
+                <div className="flex items-center justify-center w-16">
                   {item.type === "file" && canDeleteFile(item) && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>

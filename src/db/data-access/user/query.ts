@@ -191,3 +191,24 @@ export async function GetRandomUsers() {
     throw new Error(error.message)
   }
 }
+
+export async function UpdateUserName(
+  user_id: string,
+  firstName: string,
+  lastName: string
+) {
+  try {
+    const result = await db
+      .update(usersTable)
+      .set({
+        first_name: firstName,
+        last_name: lastName
+      })
+      .where(eq(usersTable.unique_id, user_id))
+      .returning()
+
+    return result[0]
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}

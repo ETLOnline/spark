@@ -305,7 +305,7 @@ function CreateChannels({
     community?.id
   )
   const canCreteChannel = permissionChecker
-    ? permissionChecker.canAccess("channel.create")
+    ? permissionChecker.canAccess("community.channel.create")
     : false
   return (
     <Dialog

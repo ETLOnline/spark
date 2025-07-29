@@ -18,25 +18,24 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { CreatePrivateChatAction } from "@/src/server-actions/Chat/Chat"
 import { CreateContactAction } from "@/src/server-actions/Contact/Contact"
 import { GetRandomUsersAction } from "@/src/server-actions/User/User"
-import { Users } from "lucide-react"
+import { Eye, Users } from "lucide-react"
 import { useEffect, useState } from "react"
 import Loader from "../../common/Loader/Loader"
 import { GetUserRole } from "@/src/utils/helpers"
-
+import { useRouter } from "next/navigation"
+import Link from "next/link"
 interface Props {
   authUser: SelectUser
 }
 
 export function PlatformSuggestionCard({ authUser }: Props) {
   const [suggestedUsers, setSuggestedUsers] = useState<SelectUser[]>([])
-  const [userRole, setUserRole] = useState<SelectRole[]>([])
   const [requestedUserId, setRequestedUserId] = useState<string | null>(null)
-  const [loadingUserId, setLoadingUserId] = useState<string | null>(null)
 
   const [getUsersLoading, , , GetRandomUsers] =
     useServerAction(GetRandomUsersAction)
-  const [connectLoading, follow, connectError, createContact] =
-    useServerAction(CreateContactAction)
+
+  const router = useRouter()
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -49,40 +48,6 @@ export function PlatformSuggestionCard({ authUser }: Props) {
 
     fetchUsers()
   }, [])
-
-  const handleConnect = async (user: SelectUser) => {
-    if (!authUser?.unique_id || !user.unique_id) return
-    setLoadingUserId(user.unique_id)
-    try {
-      const res = await createContact(user.unique_id)
-      if (res?.success) {
-        setRequestedUserId(user.unique_id)
-        toast({
-          title: "Connection Request Sent!",
-          duration: 3000
-        })
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Unable to Connect!",
-          description:
-            "There was an issue performing the action please try again.",
-          duration: 3000
-        })
-      }
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Unable to Connect!",
-        description:
-          "There was an issue performing the action please try again.",
-        duration: 3000
-      })
-      console.error("Error creating contact", error)
-    } finally {
-      setLoadingUserId(null)
-    }
-  }
 
   return (
     <Card>
@@ -123,22 +88,13 @@ export function PlatformSuggestionCard({ authUser }: Props) {
                     </p>
                   </div>
                 </div>
-                {requestedUserId === suggestion.unique_id ? (
-                  <>
-                    <Button disabled variant="outline" size="sm">
-                      Requested
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleConnect(suggestion)}
-                    loading={loadingUserId === suggestion.unique_id}
-                  >
-                    Connect
+
+                <Link href={`/profile/${suggestion.unique_id}`}>
+                  <Button variant="outline" size="sm">
+                    <Eye className=" h-4 w-4" />
+                    View
                   </Button>
-                )}
+                </Link>
               </div>
             ))
           )}

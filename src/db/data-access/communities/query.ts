@@ -405,7 +405,15 @@ export async function getCommunityUsers(communityId: string) {
     const communityUsers = await db.query.communityUsersTable.findMany({
       where: eq(communityUsersTable.community_id, communityId),
       with: {
-        user: true
+        user: {
+          with: {
+            roles: {
+              with: {
+                role: true
+              }
+            }
+          }
+        }
       }
     })
     return communityUsers
@@ -499,6 +507,22 @@ export async function updateCommunityUser(
       )
       .returning()
     return communityUser[0]
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+export async function detachCommunityUser(communityId: string, userId: string) {
+  try {
+    const deleted = await db
+      .delete(communityUsersTable)
+      .where(
+        and(
+          eq(communityUsersTable.community_id, communityId),
+          eq(communityUsersTable.user_id, userId)
+        )
+      )
+      .returning()
+    return deleted[0]
   } catch (e: any) {
     throw new Error(e.message)
   }

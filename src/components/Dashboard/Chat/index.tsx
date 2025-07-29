@@ -124,11 +124,16 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     "SPACE",
     currentSpace?.id
   )
+  const permissionNamespaceCreate = currentSpace
+    ? "space.chat.create"
+    : "chat.create"
+  const permissionNamespaceView = currentSpace ? "space.chat.view" : "chat.view"
+
   const canCreate = permissionChecker
-    ? permissionChecker?.canAccess("chat.create")
+    ? permissionChecker?.canAccess(permissionNamespaceCreate)
     : false
   const canView = permissionChecker
-    ? permissionChecker?.canAccess("chat.view")
+    ? permissionChecker?.canAccess(permissionNamespaceView)
     : false
 
   const [messages, setMessages] = useState<SelectMessage[]>([])

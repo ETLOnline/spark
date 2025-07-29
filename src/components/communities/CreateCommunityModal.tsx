@@ -238,6 +238,8 @@ export default function CreateCommunityModal({
 
       if (createdCommunity?.success && createdCommunity?.data) {
         onCommunityCreated?.(createdCommunity.data)
+        setSlugAvailableMessage("")
+        setCurrentTitle("")
         form.reset({
           title: "",
           slug: "",

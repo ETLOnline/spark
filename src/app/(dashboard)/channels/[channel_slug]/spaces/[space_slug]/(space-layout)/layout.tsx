@@ -40,19 +40,19 @@ async function Layout({ params, children }: Props) {
     currentSpace.data?.space_type === "private" && !isUserMember && !superAdmin
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-[83vh] bg-background relative">
       {/* Added relative for the overlay positioning */}
       {showAccessDeniedOverlay && (
         <Overlay page="space" pageHref={`/channels/${channel_slug}/spaces`} />
       )}
-      <div className="grid grid-cols-12 w-full h-[80vh] overflow-hidden mt-0">
+      <div className="grid grid-cols-12 w-full h-[83vh] overflow-hidden mt-0">
         <div className="col-span-2 border-r p-2 pl-0 overflow-y-auto">
           <SpaceSidebar space={currentSpace.data} />
         </div>
 
         <div className="col-span-10 overflow-hidden">
           <div className="grid grid-cols-1 h-full">
-            <ScrollArea className="min-h-[80vh] p-4">{children}</ScrollArea>
+            <ScrollArea className="min-h-[83vh] p-4 ">{children}</ScrollArea>
           </div>
         </div>
       </div>
