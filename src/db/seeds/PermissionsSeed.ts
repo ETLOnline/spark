@@ -21,12 +21,25 @@ const permissionSeedList = [
   { namespace: "events", action: "delete" },
   { namespace: "events", action: "view" },
 
+  // community
+  { namespace: "community", action: "create" },
+  { namespace: "community", action: "view" },
+  { namespace: "community", action: "update" },
+  { namespace: "community", action: "delete" },
+  { namespace: "community", action: "allow.action" },
+  { namespace: "community", action: "user.invite" },
+  { namespace: "community", action: "user.update" },
+  { namespace: "community", action: "user.remove" },
+  { namespace: "community", action: "user.view" },
+  { namespace: "community", action: "channel.create" },
+
   // channel
   { namespace: "channel", action: "create" },
   { namespace: "channel", action: "update" },
   { namespace: "channel", action: "delete" },
   { namespace: "channel", action: "view" },
   { namespace: "channel", action: "allow.action" },
+  { namespace: "channel", action: "space.create" },
 
   // Channel Users
   { namespace: "channel", action: "user.view" },
@@ -40,6 +53,7 @@ const permissionSeedList = [
   { namespace: "space", action: "update" },
   { namespace: "space", action: "delete" },
   { namespace: "space", action: "allow.action" },
+  { namespace: "space", action: "project.create" },
 
   // Space Settings
   { namespace: "space", action: "setting.update" },
@@ -50,12 +64,25 @@ const permissionSeedList = [
   { namespace: "space", action: "user.update" },
   { namespace: "space", action: "user.remove" },
 
-  // File Sharing
-  { namespace: "file_sharing", action: "create" },
-  { namespace: "file_sharing", action: "view" },
-  { namespace: "file_sharing", action: "update" },
-  { namespace: "file_sharing", action: "delete" },
-  { namespace: "file_sharing", action: "allow.action" },
+  // Space File Sharing
+  { namespace: "space", action: "file_sharing.create" },
+  { namespace: "space", action: "file_sharing.view" },
+  { namespace: "space", action: "file_sharing.update" },
+  { namespace: "space", action: "file_sharing.delete" },
+  { namespace: "space", action: "file_sharing.allow.action" },
+
+  // Posting
+  { namespace: "space", action: "posting.create" },
+  { namespace: "space", action: "posting.view" },
+  { namespace: "space", action: "posting.update" },
+  { namespace: "space", action: "posting.delete" },
+
+  // Chat
+  { namespace: "space", action: "chat.create" },
+  { namespace: "space", action: "chat.view" },
+  { namespace: "space", action: "chat.delete" },
+  { namespace: "space", action: "chat.update" },
+  { namespace: "space", action: "project.view" },
 
   // Project
   { namespace: "project", action: "create" },
@@ -91,17 +118,7 @@ const permissionSeedList = [
   { namespace: "project", action: "teams.update" },
   { namespace: "project", action: "teams.delete" },
 
-  { namespace: "project", action: "settings.view" },
-
-  // community
-  { namespace: "community", action: "create" },
-  { namespace: "community", action: "view" },
-  { namespace: "community", action: "update" },
-  { namespace: "community", action: "delete" },
-  { namespace: "community", action: "allow.action" },
-  { namespace: "community", action: "user.invite" },
-  { namespace: "community", action: "user.update" },
-  { namespace: "community", action: "user.remove" }
+  { namespace: "project", action: "settings.view" }
 ]
 
 export const PermissionsSeed = async () => {

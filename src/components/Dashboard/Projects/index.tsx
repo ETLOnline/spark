@@ -97,7 +97,7 @@ export function ProjectScreen({ space }: Props) {
     currSpace?.id
   )
   const canView = permissionChecker
-    ? permissionChecker.canAccess("project.view")
+    ? permissionChecker.canAccess("space.project.view")
     : false
 
   return (
