@@ -511,3 +511,19 @@ export async function updateCommunityUser(
     throw new Error(e.message)
   }
 }
+export async function detachCommunityUser(communityId: string, userId: string) {
+  try {
+    const deleted = await db
+      .delete(communityUsersTable)
+      .where(
+        and(
+          eq(communityUsersTable.community_id, communityId),
+          eq(communityUsersTable.user_id, userId)
+        )
+      )
+      .returning()
+    return deleted[0]
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
