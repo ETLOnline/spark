@@ -13,6 +13,7 @@ import { SelectTaskComment, SelectUser } from "@/src/db/schema"
 import { Card, CardContent } from "@/src/components/ui/card"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
+import { formatRelativeTime } from "@/src/utils/helpers"
 
 interface TaskCommentFormProps {
   taskId: string
@@ -93,21 +94,6 @@ export function TaskComment({ taskId }: TaskCommentFormProps) {
     setOffset((prevOffset) => prevOffset + COMMENTS_PER_LOAD)
   }
 
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffInMs = now.getTime() - date.getTime()
-    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
-
-    if (diffInDays === 0) {
-      return "Today"
-    } else if (diffInDays === 1) {
-      return "1 day ago"
-    } else {
-      return `${diffInDays} days ago`
-    }
-  }
-
   return (
     <>
       <div className="grid gap-4">
@@ -151,7 +137,7 @@ export function TaskComment({ taskId }: TaskCommentFormProps) {
           comments.map((comment) => (
             <Card
               key={`${comment.id}-${comment.created_at}`}
-              className="bg-card border-gray-700 text-gray-50"
+              className="bg-card text-foreground border border-border"
             >
               <CardContent className="p-4 flex items-start gap-3">
                 <Avatar className="h-8 w-8">
@@ -165,17 +151,17 @@ export function TaskComment({ taskId }: TaskCommentFormProps) {
                 </Avatar>
                 <div className="grid gap-1 flex-1">
                   <div className="flex items-center gap-2">
-                    <div className="font-semibold text-gray-100">
+                    <div className="font-semibold">
                       {comment?.user?.first_name} {comment?.user?.last_name}
                     </div>
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-muted-foreground">
                       {comment?.created_at
-                        ? formatTimeAgo(comment?.created_at)
+                        ? formatRelativeTime(comment?.created_at)
                         : ""}
                     </div>
                   </div>
                   <div
-                    className="text-sm text-gray-300"
+                    className="text-sm"
                     dangerouslySetInnerHTML={{ __html: comment.content }}
                   />
                 </div>

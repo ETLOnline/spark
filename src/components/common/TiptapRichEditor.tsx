@@ -30,12 +30,14 @@ import {
 import { useState } from "react"
 import Heading from "@tiptap/extension-heading"
 import "./RichEditorFormat.css"
+import CharacterCount from "@tiptap/extension-character-count"
 
 interface RichTextEditorProps {
   value?: string
   onChange?: (content: string) => void
 }
 
+const limit = 1000
 export default function RichTextEditor({
   value,
   onChange
@@ -55,6 +57,9 @@ export default function RichTextEditor({
       }),
       Heading.configure({
         levels: [1, 2, 3]
+      }),
+      CharacterCount.configure({
+        limit
       })
     ],
     content: value,
@@ -331,7 +336,7 @@ export default function RichTextEditor({
       <div className="border-t p-2 text-xs text-gray-500 flex justify-between">
         <span>Rich Text Editor powered by Tiptap</span>
         <span>
-          {editor.storage.characterCount?.characters() || 0} characters
+          {editor.storage.characterCount.characters()} / {limit} characters
         </span>
       </div>
     </div>
