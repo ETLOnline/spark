@@ -12,6 +12,7 @@ import { Label } from "@/src/components/ui/label"
 import { Switch } from "@/src/components/ui/switch"
 import React from "react"
 import { SelectProject } from "@/src/db/schema"
+import { projectSchema } from "../../Projects/utils/projectSchema"
 import { z } from "zod"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -19,18 +20,7 @@ import { toast } from "@/src/hooks/use-toast"
 import { UpdateProjectAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import Tiptap from "@/src/components/common/TiptapRichEditor"
-
-const projectSchema = z.object({
-  project_name: z
-    .string()
-    .min(1, "Title required")
-    .max(50, "Title is too long"),
-  description: z
-    .string()
-    .min(1, "Description required")
-    .max(150, "Description is too long"),
-  project_type: z.boolean().optional()
-})
+import moment from "moment"
 
 type ProjectFormData = z.infer<typeof projectSchema>
 
@@ -45,13 +35,23 @@ function ProjectInformation({ currProjectData }: Props) {
   const {
     control,
     handleSubmit,
-    formState: { errors, isValid }
+    formState: { errors, isValid, submitCount }
   } = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
       project_name: currProjectData.project_name || "",
       description: currProjectData.description || "",
-      project_type: currProjectData.project_type === "active"
+      project_type: currProjectData.project_type === "active",
+      project_startDate: currProjectData.project_startDate
+        ? moment(currProjectData.project_startDate, "DD-MM-YYYY").format(
+            "YYYY-MM-DD"
+          )
+        : "",
+      project_targetDate: currProjectData.project_targetDate
+        ? moment(currProjectData.project_targetDate, "DD-MM-YYYY").format(
+            "YYYY-MM-DD"
+          )
+        : ""
     }
   })
 
@@ -65,7 +65,13 @@ function ProjectInformation({ currProjectData }: Props) {
         ...data,
         id: currProjectData?.id,
         project_slug: data.project_name,
-        project_type: projectType
+        project_type: projectType,
+        project_startDate: data.project_startDate
+          ? moment(data.project_startDate, "YYYY-MM-DD").format("DD-MM-YYYY")
+          : "",
+        project_targetDate: data.project_targetDate
+          ? moment(data.project_targetDate, "YYYY-MM-DD").format("DD-MM-YYYY")
+          : ""
       }
 
       const updatedProject = await updateProject(payload)
@@ -100,6 +106,11 @@ function ProjectInformation({ currProjectData }: Props) {
               control={control}
               render={({ field }) => <Input id="project-name" {...field} />}
             />
+            {errors.project_name && submitCount > 0 && (
+              <span className="text-red-500 text-sm">
+                {String(errors.project_name.message)}
+              </span>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="project-description">Description</Label>
@@ -110,6 +121,11 @@ function ProjectInformation({ currProjectData }: Props) {
                 <Tiptap value={field.value} onChange={field.onChange} />
               )}
             />
+            {errors.description && submitCount > 0 && (
+              <span className="text-red-500 text-sm">
+                {String(errors.description.message)}
+              </span>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="project-visibility">Active / Draft</Label>
@@ -129,6 +145,36 @@ function ProjectInformation({ currProjectData }: Props) {
                 {currProjectData.project_type === "active" ? "Active" : "Draft"}
               </span>
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="project_startDate">Start Date</Label>
+            <Controller
+              name="project_startDate"
+              control={control}
+              render={({ field }) => (
+                <Input id="project_startDate" type="date" {...field} disabled />
+              )}
+            />
+            {errors.project_startDate && submitCount > 0 && (
+              <span className="text-red-500 text-sm">
+                {String(errors.project_startDate.message)}
+              </span>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="project_targetDate">Target Date</Label>
+            <Controller
+              name="project_targetDate"
+              control={control}
+              render={({ field }) => (
+                <Input id="project_targetDate" type="date" {...field} />
+              )}
+            />
+            {errors.project_targetDate && submitCount > 0 && (
+              <span className="text-red-500 text-sm">
+                {String(errors.project_targetDate.message)}
+              </span>
+            )}
           </div>
           {/* <div className="space-y-2">
           <Label htmlFor="project-category">Category</Label>

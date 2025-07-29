@@ -12,7 +12,8 @@ import {
   getCategories,
   getCommunityUsers,
   attachCommunityUser,
-  GetCommunityById
+  GetCommunityById,
+  detachCommunityUser
 } from "@/src/db/data-access/communities/query"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import { InsertCommunity, SelectCommunity } from "@/src/db/schema"
@@ -283,6 +284,18 @@ export const AttachCommunityUserAction = CreateServerAction(
       return { success: true, data: channelUser }
     } catch (error) {
       return { error: error }
+    }
+  }
+)
+
+export const DetachCommunityUserAction = CreateServerAction(
+  true,
+  async (communityId: string, userId: string) => {
+    try {
+      const deleted = await detachCommunityUser(communityId, userId)
+      return { success: true, data: deleted }
+    } catch (error: any) {
+      return { success: false, error: error.message }
     }
   }
 )

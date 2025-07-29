@@ -1,18 +1,17 @@
-import { rolesTable } from './../schema';
+import { rolesTable } from "./../schema"
 import { and, eq, inArray, isNull, sql } from "drizzle-orm"
 import { db } from "../index"
 
 export const CheckRolePermissionMismatch = async () => {
-
   const defaultRoles = await db.query.rolesTable.findMany({
     where: and(
       eq(rolesTable.role_type, "DEFAULT"),
       isNull(rolesTable.entity_id),
-      isNull(rolesTable.entity_type),
+      isNull(rolesTable.entity_type)
     )
   })
 
-  const defaultRoleSlugs = defaultRoles.map(role => role.slug)
+  const defaultRoleSlugs = defaultRoles.map((role) => role.slug)
 
   const arrayLiteral = `'{${defaultRoleSlugs.join(",")}}'`
 

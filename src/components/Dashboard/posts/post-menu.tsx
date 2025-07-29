@@ -29,8 +29,12 @@ const PostMenu = ({ post, spaceId }: PostMenuProps) => {
     spaceId
   )
 
+  const permissionNamespaceCreate = spaceId
+    ? "space.posting.delete"
+    : "posting.delete"
+
   const canDelete = permissionChecker
-    ? permissionChecker?.canAccess("posting.delete")
+    ? permissionChecker?.canAccess(permissionNamespaceCreate)
     : false
 
   const isPostOwner = user?.unique_id === post.user_id
