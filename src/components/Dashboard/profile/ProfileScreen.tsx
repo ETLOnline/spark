@@ -299,10 +299,14 @@ export default function ProfileScreen({
                 <div className="flex items-center gap-2">
                   Recommendations
                   <p className="flex items-center gap-1 text-muted-foreground">
-                    {averageRating ? parseFloat(averageRating).toFixed(1) : ""}
                     {user?.profile?.number_of_ratings &&
                     user?.profile?.number_of_ratings > 0 ? (
-                      <FlameKindling className="h-6 w-6 text-[#92400e] fill-[#fde68a]" />
+                      <>
+                        {averageRating
+                          ? parseFloat(averageRating).toFixed(1)
+                          : ""}
+                        <FlameKindling className="h-6 w-6 text-[#92400e] fill-[#fde68a]" />
+                      </>
                     ) : null}
                   </p>
                 </div>

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { Dispatch, SetStateAction, useEffect, useState } from "react"
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
@@ -16,14 +16,13 @@ import { ProfileData } from "../Dashboard/profile/types/profile-types"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   GetUserProfileAction,
-  SaveUserProfileAction
+  SaveUserProfileAction,
+  UpdateUserProfilePictureAction
 } from "@/src/server-actions/User/User"
 import { useToast } from "@/src/hooks/use-toast"
-import { useAtomValue } from "jotai"
-import { profileStore } from "@/src/store/profile/profileStore"
-import TagsInput from "../TagsInput/TagsInput"
 import { MultiSelectOption } from "../ui/multi-select"
 import TagSelect from "../TagsInput/tags"
+import { useUser } from "@clerk/nextjs"
 
 interface StepOneProps {
   step: number
@@ -46,6 +45,8 @@ const profileSchema = z.object({
 
 export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
   const { toast } = useToast()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { user: clerkUser } = useUser()
 
   const [selectedSkillTags, setSelectedSkillTags] = useState<
     MultiSelectOption[]
@@ -53,6 +54,7 @@ export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
   const [selectedInterestTags, setSelectedInterestTags] = useState<
     MultiSelectOption[]
   >([])
+  const [currentImageUrl, setCurrentImageUrl] = useState(user?.profile_url) // State to manage current profile image URL
 
   const [
     updateProfileLoading,
@@ -60,6 +62,10 @@ export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
     updateProfileError,
     updateProfile
   ] = useServerAction(SaveUserProfileAction)
+
+  const [loading, userData, error, updateUserProfile] = useServerAction(
+    UpdateUserProfilePictureAction
+  )
 
   type ProfileFormValues = z.infer<typeof profileSchema>
 
@@ -139,6 +145,7 @@ export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
         interests: data.interest
       }
       const res = await updateProfile(payload)
+      await clerkUser?.reload()
       if (res?.success) {
         toast({
           title: "Profile Updated",
@@ -159,6 +166,42 @@ export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
     }
   }
 
+  const handleUploadProfile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onloadend = async () => {
+      const base64 = reader.result as string
+      try {
+        const res = await updateUserProfile(file.name, base64, file.type)
+        if (res?.success && res.data) {
+          setCurrentImageUrl(res.data.profile_picture_url)
+          toast({
+            title: "Profile picture updated!",
+            description: "Your profile picture has been successfully updated.",
+            duration: 3000
+          })
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: res?.error || "Failed to update profile picture",
+            duration: 3000
+          })
+        }
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Something went wrong",
+          duration: 3000
+        })
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -172,11 +215,27 @@ export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
           <Label>Profile Picture</Label>
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={user?.profile_url as string} />
+              <AvatarImage src={currentImageUrl || ""} />
               <AvatarFallback>
                 <User className="h-8 w-8" />
               </AvatarFallback>
             </Avatar>
+            <Button
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              loading={loading}
+              disabled={loading}
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Upload Picture
+            </Button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              className="hidden"
+              onChange={handleUploadProfile}
+            />
           </div>
         </div>
 
