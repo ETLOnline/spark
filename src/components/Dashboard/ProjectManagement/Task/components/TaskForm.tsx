@@ -85,10 +85,16 @@ export default function TaskForm({
   const params = useParams<{ id: string }>()
   const projectId = params?.id
 
-  const options: MultiSelectOption[] = usersList.map((user) => ({
-    label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
-    value: user?.unique_id ?? ""
-  }))
+  const options: MultiSelectOption[] = [
+    {
+      label: "Unassigned",
+      value: ""
+    },
+    ...usersList.map((user) => ({
+      label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
+      value: user?.unique_id ?? ""
+    }))
+  ]
 
   useEffect(() => {
     const fetchProjectUsers = async () => {
@@ -139,12 +145,19 @@ export default function TaskForm({
         (u) => u?.unique_id === selectedAssignor?.[0]?.value
       )
 
-      if (assign_to) {
+      if (selectedAssignee?.[0]?.value === "") {
+        setAssignee(null)
+        form.setValue("assign_to", "")
+      } else if (assign_to) {
         setAssignee(assign_to)
         form.setValue("assign_to", assign_to.unique_id)
       }
 
-      if (assign_by) {
+      if (selectedAssignor?.[0]?.value === "") {
+        // Unassigned selected
+        setAssignor(null)
+        form.setValue("assign_by", "")
+      } else if (assign_by) {
         setAssignor(assign_by)
         form.setValue("assign_by", assign_by.unique_id)
       }
@@ -171,6 +184,15 @@ export default function TaskForm({
           }
         ])
         form.setValue("assign_to", taskAssignee.unique_id)
+      } else {
+        setAssignee(null)
+        setSelectedAssignee([
+          {
+            label: "Unassigned",
+            value: ""
+          }
+        ])
+        form.setValue("assign_to", "")
       }
 
       if (taskAssignor) {
@@ -182,6 +204,15 @@ export default function TaskForm({
           }
         ])
         form.setValue("assign_by", taskAssignor.unique_id)
+      } else {
+        setAssignor(null)
+        setSelectedAssignor([
+          {
+            label: "Unassigned",
+            value: ""
+          }
+        ])
+        form.setValue("assign_by", "")
       }
     }
 
@@ -423,11 +454,22 @@ export default function TaskForm({
                           options={options}
                           selected={selectedAssignee}
                           onChange={(newselected) => {
-                            const latestSelected =
-                              newselected?.[newselected.length - 1]
-                            setSelectedAssignee(
-                              latestSelected ? [latestSelected] : []
-                            )
+                            // If newselected is empty, it means the CircleMinus was clicked to unassign
+                            if (newselected.length === 0) {
+                              setSelectedAssignee([
+                                {
+                                  label: "Unassigned",
+                                  value: ""
+                                }
+                              ])
+                            } else {
+                              // Get the latest selected item
+                              const latestSelected =
+                                newselected?.[newselected.length - 1]
+                              setSelectedAssignee(
+                                latestSelected ? [latestSelected] : []
+                              )
+                            }
                           }}
                           placeholder="Select Assignee"
                         />
