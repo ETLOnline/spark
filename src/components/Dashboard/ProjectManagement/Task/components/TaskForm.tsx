@@ -154,7 +154,6 @@ export default function TaskForm({
       }
 
       if (selectedAssignor?.[0]?.value === "") {
-        // Unassigned selected
         setAssignor(null)
         form.setValue("assign_by", "")
       } else if (assign_by) {
@@ -454,7 +453,6 @@ export default function TaskForm({
                           options={options}
                           selected={selectedAssignee}
                           onChange={(newselected) => {
-                            // If newselected is empty, it means the CircleMinus was clicked to unassign
                             if (newselected.length === 0) {
                               setSelectedAssignee([
                                 {
@@ -463,7 +461,6 @@ export default function TaskForm({
                                 }
                               ])
                             } else {
-                              // Get the latest selected item
                               const latestSelected =
                                 newselected?.[newselected.length - 1]
                               setSelectedAssignee(
