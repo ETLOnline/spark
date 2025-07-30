@@ -481,11 +481,13 @@ export default function HomePage() {
       )?.value as string[]) || []
 
     const GetData = async () => {
-      const Mentors = await GetMentors({
-        userIds: MentorIds
-      })
-      if (Mentors?.success && Mentors.data) {
-        setFeaturedMentors(Mentors.data)
+      if (MentorIds.length > 0) {
+        const Mentors = await GetMentors({
+          userIds: MentorIds
+        })
+        if (Mentors?.success && Mentors.data) {
+          setFeaturedMentors(Mentors.data)
+        }
       }
 
       const communities = await GetCommunities(communityIds)
@@ -860,12 +862,17 @@ export default function HomePage() {
                             </div>
                           </div>
                           <span className="flex gap-1 text-muted-foreground ">
-                            <FlameKindling className="h-6 w-6 text-[#92400e] fill-[#fde68a]" />
-                            {mentor.profile?.total_average_rating
-                              ? parseFloat(
-                                  mentor.profile?.total_average_rating
-                                ).toFixed(1)
-                              : ""}
+                            {mentor.profile?.number_of_ratings &&
+                            mentor.profile?.number_of_ratings > 0 ? (
+                              <>
+                                <FlameKindling className="h-6 w-6 text-[#92400e] fill-[#fde68a]" />
+                                {mentor.profile?.total_average_rating
+                                  ? parseFloat(
+                                      mentor.profile?.total_average_rating
+                                    ).toFixed(1)
+                                  : ""}
+                              </>
+                            ) : null}
                           </span>
                         </div>
                         <CardDescription>
