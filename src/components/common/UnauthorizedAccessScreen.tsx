@@ -2,7 +2,7 @@ import React from "react"
 
 import { motion, AnimatePresence } from "framer-motion"
 import { CanvasRevealEffect } from "@/src/components/ui/canvas-reveal-effect"
-import { IconShield } from "@tabler/icons-react"
+import { ShieldOff } from "lucide-react"
 
 const MotionDiv = motion.div
 const UnauthorizedAccessScreen = () => {
@@ -22,7 +22,7 @@ const UnauthorizedAccessScreen = () => {
         </div>
       </AnimatePresence>
       <div className="absolute text:white text-4xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-        <IconShield size={120} className="text-center w-full" />
+        <ShieldOff size={120} className="text-center w-full" />
         <div>Unauthorized Access</div>
       </div>
     </>

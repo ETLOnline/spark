@@ -527,3 +527,20 @@ export async function detachCommunityUser(communityId: string, userId: string) {
     throw new Error(e.message)
   }
 }
+
+export const getCommunitiesByIds = async function (communityIds: string[]) {
+  try {
+    const communities = await db.query.communitiesTable.findMany({
+      where: inArray(communitiesTable.id, communityIds),
+      with: {
+        category: true,
+        communityMembers: true,
+        channels: true
+      }
+    })
+    return communities
+  } catch (error) {
+    console.error("Error fetching communities:", error)
+    throw new Error("Failed to fetch communities")
+  }
+}
