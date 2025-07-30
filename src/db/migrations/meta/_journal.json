@@ -99,6 +99,13 @@
       "when": 1753192713722,
       "tag": "0013_2025_07_22_185827__add_table_for_comments_task",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1753885886387,
+      "tag": "0014_2025_07_30_193123__create_site_settings_table",
+      "breakpoints": true
     }
   ]
 }

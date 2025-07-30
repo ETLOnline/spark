@@ -1,9 +1,12 @@
 "use server"
 
 import {
+  GetMentors,
   GetRandomUsers,
   getUserContacts,
+  GetUserFilters,
   GetUserProfileData,
+  GetFeaturedUsers,
   UpdateUserName,
   UpdateUserProfilePicture
 } from "@/src/db/data-access/user/query"
@@ -170,3 +173,38 @@ export const GetRandomUsersAction = CreateServerAction(true, async () => {
     }
   }
 })
+
+export const GetMentorsAction = CreateServerAction(true, async () => {
+  try {
+    const mentors = await GetMentors()
+
+    return {
+      success: true,
+      data: mentors
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error
+    }
+  }
+})
+
+export const GetFeaturedUsersAction = CreateServerAction(
+  false,
+  async (filters: GetUserFilters) => {
+    try {
+      const users = await GetFeaturedUsers(filters)
+
+      return {
+        success: true,
+        data: users
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error
+      }
+    }
+  }
+)

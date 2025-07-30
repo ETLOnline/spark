@@ -10,6 +10,7 @@ import { CommunityUserListRolePermission } from "./CommunityUserListRolePermissi
 import { NewTagsSeed } from "./NewTagsSeeder"
 import { CheckRolePermissionMismatch } from "./CheckRolePermissionMismatch"
 import { SyncRolePermissionsSeeder } from "./SyncScopedPermissions"
+import { siteSettingsSeed } from "./SiteSettingsSeed"
 
 const SEEDERS: Record<string, () => Promise<void>> = {
   FeatureSeed,
@@ -23,7 +24,8 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   CommunityUserListRolePermission,
   NewTagsSeed,
   CheckRolePermissionMismatch,
-  SyncRolePermissionsSeeder
+  SyncRolePermissionsSeeder,
+  siteSettingsSeed
 }
 
 async function runSeeders() {

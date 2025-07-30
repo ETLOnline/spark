@@ -348,7 +348,10 @@ export const userTagsRelations = relations(userTagsTable, ({ one }) => ({
 }))
 
 export type InsertUserTag = typeof userTagsTable.$inferInsert
-export type SelectUserTag = typeof userTagsTable.$inferSelect
+export type SelectUserTag = typeof userTagsTable.$inferSelect & {
+  tag?: SelectTag
+  user?: SelectUser
+}
 
 export const rewardsTable = pgTable("rewards", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -1324,3 +1327,14 @@ export type SelectTaskComment = InferSelectModel<typeof taskCommentsTable> & {
   user?: SelectUser
 }
 export type InsertTaskComment = typeof taskCommentsTable.$inferInsert
+
+export const siteSettingsTable = pgTable("site_settings", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  key: varchar().notNull(),
+  value: json().notNull(),
+  page: varchar().notNull(),
+  ...timestamps
+})
+
+export type SelectSiteSetting = typeof siteSettingsTable.$inferSelect
+export type InsertSiteSetting = typeof siteSettingsTable.$inferInsert
