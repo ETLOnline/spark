@@ -12,6 +12,9 @@ import SpaceChat from "./spaceChat"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import SpaceOverview from "./SpaceOverview"
 import { ProjectScreen } from "@/src/components/Dashboard/Projects"
+import Loader from "@/src/components/common/Loader/Loader"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
+
 interface Props {
   features: SelectSpaceFeature[]
   space: SelectSpace
@@ -24,19 +27,6 @@ function SpaceFeatures({ features, space }: Props) {
     space?.id
   )
 
-  const canViewChat = permissionChecker
-    ? permissionChecker.canAccess("space.chat.view")
-    : false
-  const canViewPost = permissionChecker
-    ? permissionChecker.canAccess("space.posting.view")
-    : false
-  const canViewFileSharing = permissionChecker
-    ? permissionChecker.canAccess("space.file_sharing.create")
-    : false
-  const canViewProject = permissionChecker
-    ? permissionChecker.canAccess("space.project.view")
-    : false
-
   const params = useSearchParams()
   const pageType = params.get("page-type") || null
   const setLayoutStatsVisibility = useSetAtom(spaceStore.layoutStatsVisibility)
@@ -47,7 +37,29 @@ function SpaceFeatures({ features, space }: Props) {
     }
   }, [])
 
+  // Show loading state while permission checker is not ready
+  if (!permissionChecker) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader size={LoaderSizes.lg} />
+      </div>
+    )
+  }
+
+  const canViewChat = permissionChecker
+  ? permissionChecker.canAccess("space.chat.view")
+  : false
+const canViewPost = permissionChecker
+  ? permissionChecker.canAccess("space.posting.view")
+  : false
+const canViewFileSharing = permissionChecker
+  ? permissionChecker.canAccess("space.file_sharing.create")
+  : false
+const canViewProject = permissionChecker
+  ? permissionChecker.canAccess("space.project.view")
+  : false
   // Function to check if user has permission for a specific feature
+
   const hasFeaturePermission = (featureSlug: string): boolean => {
     switch (featureSlug) {
       case "posts":
