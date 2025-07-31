@@ -234,7 +234,7 @@ function SpaceSidebar({ space }: Props) {
 
           <SidebarGroupLabel>Other</SidebarGroupLabel>
           {spaceStaticFeatures.map((feature) => {
-            if (feature.name === "settings" && !canViewSetting) {
+            if (feature.name === "Settings" && !canViewSetting) {
               return null
             }
             return (
