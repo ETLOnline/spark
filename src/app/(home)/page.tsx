@@ -32,17 +32,36 @@ import {
   Cloud,
   Monitor,
   Server,
-  Shield
+  Shield,
+  BookOpenText,
+  FlameKindling,
+  ListX
 } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { Button } from "@/src/components/ui/button"
-import { Card, CardContent } from "@/src/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/src/components/ui/card"
 import { Badge } from "@/src/components/ui/badge"
 import Image from "next/image"
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
 import { LinkAsButton } from "@/src/components/LinkAsButton/LinkAsButton"
-import ModeToggle from "@/src/components/ThemeProvider/ThemeToggle"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { GetSitSettingsAction } from "@/src/server-actions/Site-Settings/site-settings"
+import { SelectCommunity, SelectSiteSetting, SelectUser } from "@/src/db/schema"
+import { GetFeaturedUsersAction } from "@/src/server-actions/User/User"
+import { GetFeaturedCommunitiesAction } from "@/src/server-actions/Community/Community"
+import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
+import Link from "next/link"
+import { getInitials } from "@/src/utils/helpers"
+import Loader from "@/src/components/common/Loader/Loader"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
 
 const fadeInUp = {
   initial: { opacity: 0, y: 60 },
@@ -429,6 +448,57 @@ export default function HomePage() {
   const y1 = useTransform(scrollY, [0, 300], [0, 50])
   const y2 = useTransform(scrollY, [0, 300], [0, -50])
 
+  const [featuredMentors, setFeaturedMentors] = useState<SelectUser[]>([])
+  const [featuredCommunities, setFeaturedCommunities] = useState<
+    SelectCommunity[]
+  >([])
+
+  const [GetSiteSettingsLoading, siteSettings, , GetSiteSettings] =
+    useServerAction(GetSitSettingsAction)
+  const [getMentorsLoading, getMenotrs, , GetMentors] = useServerAction(
+    GetFeaturedUsersAction
+  )
+  const [getCommunitiesLoading, communities, , GetCommunities] =
+    useServerAction(GetFeaturedCommunitiesAction)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await GetSiteSettings({
+        page: "home"
+      })
+    }
+    fetchData()
+  }, [])
+
+  useEffect(() => {
+    const MentorIds =
+      (siteSettings?.data?.find(
+        (setting: SelectSiteSetting) => setting.key === "featured_mentors"
+      )?.value as string[]) || []
+    const communityIds =
+      (siteSettings?.data?.find(
+        (setting: SelectSiteSetting) => setting.key === "featured_communities"
+      )?.value as string[]) || []
+
+    const GetData = async () => {
+      if (MentorIds.length > 0) {
+        const Mentors = await GetMentors({
+          userIds: MentorIds
+        })
+        if (Mentors?.success && Mentors.data) {
+          setFeaturedMentors(Mentors.data)
+        }
+      }
+
+      const communities = await GetCommunities(communityIds)
+      if (communities?.success && communities.data) {
+        setFeaturedCommunities(communities.data)
+      }
+    }
+
+    GetData()
+  }, [siteSettings])
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -609,12 +679,12 @@ export default function HomePage() {
         <div className="container mx-auto relative z-10">
           <motion.div
             className="text-center mb-20"
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 1, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <Badge className="mb-6 bg-primary/10 text-primary-foreground border-primary/20">
+            <Badge className="mb-6 bg-primary/10 text-secondary-foreground border-primary/20">
               <Users className="w-4 h-4 mr-2" />
               Community Insights
             </Badge>
@@ -638,49 +708,293 @@ export default function HomePage() {
             whileInView="animate"
             viewport={{ once: true }}
           >
-            {communityStats.map((stat, index) => (
-              <motion.div key={index} variants={fadeInUp}>
-                <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl group bg-card">
-                  <CardContent className="p-8">
-                    <div
-                      className={`w-16 h-16 bg-gradient-to-r ${stat.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg`}
-                    >
-                      <stat.icon className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-2xl font-bold mb-2 text-foreground">
-                      {stat.category}
-                    </h3>
-                    <div className="text-4xl font-bold text-primary mb-6">
-                      {stat.total}
-                    </div>
-                    <div className="space-y-3">
-                      {stat.breakdown.map((item, itemIndex) => (
-                        <div
-                          key={itemIndex}
-                          className="flex justify-between items-center"
-                        >
-                          <span className="text-sm text-muted-foreground">
-                            {item.label}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-foreground">
-                              {item.count}
-                            </span>
-                            <div className="w-12 h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className={`h-full bg-gradient-to-r ${stat.color} transition-all duration-500`}
-                                style={{ width: `${item.percentage}%` }}
+            {getCommunitiesLoading ? (
+              <div className="col-span-4 flex justify-center">
+                <Loader size={LoaderSizes.lg} />
+              </div>
+            ) : (
+              featuredCommunities.map((commnity) => (
+                <motion.div key={commnity.id}>
+                  <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl group bg-card">
+                    <CardHeader>
+                      <CardTitle>
+                        <Link href={`/communities/${commnity.slug}`}>
+                          <div className="flex flex-row gap-4 items-center mb-6">
+                            <Avatar className="w-12 h-12  group-hover:scale-110 transition-transform duration-300">
+                              <AvatarImage
+                                src={"/images/default-avatar.png"}
+                                alt={commnity.title}
                               />
+                              <AvatarFallback>
+                                {getInitials(commnity.title)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <h3 className="text-xl font-semibold mb-1 text-foreground">
+                                {commnity.title}
+                              </h3>
+                              <div className="text-sm font-normal text-muted-foreground">
+                                {commnity.communityMembers?.length} Members
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                        </Link>
+                      </CardTitle>
+                      <CardDescription>{commnity.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {/* <div className="text-4xl font-bold text-primary mb-6">
+                        {stat.total}
+                      </div> */}
+                      <div className="mb-2">Featured Channels</div>
+                      <div className="space-y-3">
+                        {commnity.channels && commnity.channels?.length > 0 ? (
+                          commnity.channels?.map((channel) => (
+                            <div
+                              key={channel.id}
+                              className="flex justify-between items-center"
+                            >
+                              <span className="text-sm text-muted-foreground">
+                                {channel.channel_name}
+                              </span>
+                              <Link
+                                href={`channels/${channel.channel_slug}/spaces`}
+                              >
+                                <Button variant={"outline"} size="sm">
+                                  <ArrowRight className="w-2 h-2" />
+                                </Button>
+                              </Link>
+                            </div>
+                          ))
+                        ) : (
+                          <NoDataCard
+                            title="No Channels Found"
+                            icon={<ListX className="h-8 w-8" />}
+                          />
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))
+            )}
           </motion.div>
+        </div>
+      </section>
+
+      {/* Featured Mentors Section */}
+
+      <section id="enterprise" className="py-24 px-6  relative overflow-hidden">
+        <div className="absolute inset-0 bg-secondary/10 dark:bg-secondary/20" />
+        <div className="container mx-auto relative z-10">
+          <motion.div
+            className="text-center mb-20"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <Badge className="mb-6 bg-secondary/10 text-secondary-foreground border-secondary/20">
+              <BookOpenText className="w-4 h-4 mr-2" />
+              Featured Mentors
+            </Badge>
+            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-foreground">
+              Learn From Industry
+              <span className="bg-gradient-to-r from-primary via-primary-hover to-foreground bg-clip-text text-transparent">
+                {" "}
+                Experts
+              </span>
+            </h2>
+            <p className="text-2xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
+              Connect with experienced professionals who are passionate about
+              helping you grow in your tech career
+            </p>
+          </motion.div>
+
+          <div
+            className={`grid gap-16 mb-20
+            ${
+              featuredMentors.length === 1
+                ? "lg:grid-cols-1"
+                : featuredMentors.length === 2
+                  ? "lg:grid-cols-2"
+                  : "lg:grid-cols-3"
+            }
+            `}
+          >
+            {/* Featured Mentor Cards */}
+            {getMentorsLoading ? (
+              <div className="col-span-4 flex justify-center">
+                <Loader size={LoaderSizes.lg} />
+              </div>
+            ) : (
+              featuredMentors.map((mentor) => {
+                const skills = mentor.userTags?.map((t) => t.tag)
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, x: -50 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6 }}
+                    viewport={{ once: true }}
+                    key={mentor.unique_id}
+                  >
+                    <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl bg-card">
+                      <CardHeader>
+                        <div className="flex flex-row justify-between ">
+                          <div className="flex items-center gap-4 mb-4">
+                            <div>
+                              <Avatar className="w-14 h-14">
+                                <AvatarImage
+                                  src={mentor.profile_url ?? ""}
+                                  alt={
+                                    mentor.first_name + " " + mentor.last_name
+                                  }
+                                />
+                                <AvatarFallback>
+                                  {mentor.first_name + " " + mentor.last_name}
+                                </AvatarFallback>
+                              </Avatar>
+                            </div>
+                            <div>
+                              <h3 className="text-2xl font-bold text-foreground">
+                                {mentor.first_name + " " + mentor.last_name}
+                              </h3>
+                            </div>
+                          </div>
+                          <span className="flex gap-1 text-muted-foreground ">
+                            {mentor.profile?.number_of_ratings &&
+                            mentor.profile?.number_of_ratings > 0 ? (
+                              <>
+                                <FlameKindling className="h-6 w-6 text-[#92400e] fill-[#fde68a]" />
+                                {mentor.profile?.total_average_rating
+                                  ? parseFloat(
+                                      mentor.profile?.total_average_rating
+                                    ).toFixed(1)
+                                  : ""}
+                              </>
+                            ) : null}
+                          </span>
+                        </div>
+                        <CardDescription>
+                          {mentor.profile?.bio ||
+                            "No bio available for this mentor."}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                          {skills?.slice(0, 3).map((skill) => (
+                            <Badge key={skill?.id} variant="outline">
+                              {skill?.name}
+                            </Badge>
+                          ))}
+                          {skills && skills.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{skills.length - 3} more
+                            </Badge>
+                          )}
+                        </div>
+                      </CardContent>
+                      <CardFooter className="flex justify-between items-center">
+                        <span className="flex flex-row items-center gap-1 text-muted-foreground">
+                          <BookOpenText className="w-4 h-4" />
+                          Mentor
+                        </span>
+                        <Link href={`/profile/${mentor.unique_id}`}>
+                          <Button>View Profile</Button>
+                        </Link>
+                      </CardFooter>
+                    </Card>
+                  </motion.div>
+                )
+              })
+            )}
+
+            {/* Industry Experts */}
+            {/* <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl bg-card">
+                <CardContent className="p-10">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div
+                      className={`w-16 h-16 bg-gradient-to-r ${getGradient(1)} rounded-2xl flex items-center justify-center shadow-lg`}
+                    >
+                      <Briefcase className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-3xl font-bold text-foreground">
+                        Industry Experts
+                      </h3>
+                      <p className="text-muted-foreground">
+                        Professional Networks
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-xl font-semibold text-foreground mb-4">
+                        Build Your Expert Community
+                      </h4>
+                      <ul className="space-y-3">
+                        <li className="flex items-start gap-3">
+                          <CheckCircle className="w-5 h-5 text-primary-hover mt-0.5 flex-shrink-0" />
+                          <span className="text-muted-foreground">
+                            Company-branded mentorship spaces
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <CheckCircle className="w-5 h-5 text-primary-hover mt-0.5 flex-shrink-0" />
+                          <span className="text-muted-foreground">
+                            Talent pipeline development
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <CheckCircle className="w-5 h-5 text-primary-hover mt-0.5 flex-shrink-0" />
+                          <span className="text-muted-foreground">
+                            Technical interview preparation
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <CheckCircle className="w-5 h-5 text-primary-hover mt-0.5 flex-shrink-0" />
+                          <span className="text-muted-foreground">
+                            Industry project collaboration
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-muted p-6 rounded-xl">
+                      <h5 className="font-semibold text-foreground mb-3">
+                        Impact Numbers
+                      </h5>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-secondary-foreground">
+                            800+
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Expert Mentors
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-secondary-foreground">
+                            450+
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Partner Companies
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div> */}
+          </div>
         </div>
       </section>
 
