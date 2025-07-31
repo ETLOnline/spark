@@ -147,6 +147,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
   const authUser = useAtomValue(userStore.AuthUser)
   const [chatRealTime, setChatRealtime] = useState<any>(null)
+  const [searchQuery, setSearchQuery] = useState<string>("")
+
   const [chatContact, setChatContact] = useState<SelectUser | null>(null)
   const [
     fetchingChatMessages,
@@ -256,11 +258,16 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           </CardTitle>
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search chats..." className="pl-8" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search chats..."
+              className="pl-8"
+            />
           </div>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden p-0">
-          {canView && <ChatsList />}
+          {canView && <ChatsList searchQuery={searchQuery} />}
         </CardContent>
       </Card>
 
