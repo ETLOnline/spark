@@ -114,7 +114,9 @@ export const TaskModal = ({
       !taskIdFromUrl &&
       !hasModifiedUrl
     ) {
-      router.push(pathName + "?" + new URLSearchParams({ task_id: internalTask.id }))
+      router.push(
+        pathName + "?" + new URLSearchParams({ task_id: internalTask.id })
+      )
       setHasModifiedUrl(true)
     }
   }, [isTaskModelOpen, internalTask?.id, taskIdFromUrl, hasModifiedUrl])

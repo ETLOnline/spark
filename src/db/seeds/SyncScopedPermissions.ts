@@ -9,11 +9,13 @@ export const SyncRolePermissionsSeeder = async () => {
     where: and(
       eq(rolesTable.role_type, "DEFAULT"),
       isNull(rolesTable.entity_id),
-      isNull(rolesTable.entity_type),
+      isNull(rolesTable.entity_type)
     )
   })
 
-  const defaultRoleSlugs = defaultRoles.map(role => role.slug).filter(r=> r !== null)
+  const defaultRoleSlugs = defaultRoles
+    .map((role) => role.slug)
+    .filter((r) => r !== null)
 
   for (const slug of defaultRoleSlugs) {
     console.log(`🔄 Syncing permissions for slug: ${slug}`)
@@ -54,10 +56,10 @@ export const SyncRolePermissionsSeeder = async () => {
         );
     `)
 
-    if(result.length === 0) {
+    if (result.length === 0) {
       console.log(`✅ No conflict found for slug: ${slug}`)
       continue
-    }else{
+    } else {
       console.log(`⚠️ ${result.length} Conflict found for slug: ${slug}`)
     }
 

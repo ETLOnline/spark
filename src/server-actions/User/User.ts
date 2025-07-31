@@ -1,9 +1,13 @@
 "use server"
 
 import {
+  GetMentors,
   GetRandomUsers,
   getUserContacts,
+  GetUserFilters,
   GetUserProfileData,
+  GetFeaturedUsers,
+  UpdateUserName,
   UpdateUserProfilePicture
 } from "@/src/db/data-access/user/query"
 import { CreateServerAction } from ".."
@@ -26,7 +30,23 @@ export const SaveUserProfileAction = CreateServerAction(
   true,
   async (profileData: ProfileData) => {
     try {
+      const clerk = await clerkClient()
+      const { unique_id, external_auth_id } = await AuthUserAction()
+
       const userProfile = await SearchUserProfile(profileData.userId)
+
+      if (profileData.first_name && profileData.last_name) {
+        const UpdateUserData = await UpdateUserName(
+          profileData.userId,
+          profileData.first_name,
+          profileData.last_name
+        )
+
+        await clerk.users.updateUser(external_auth_id, {
+          firstName: profileData.first_name,
+          lastName: profileData.last_name
+        })
+      }
 
       // Check if user profile already exist the update it otherwise create new profile
       if (userProfile) {
@@ -153,3 +173,38 @@ export const GetRandomUsersAction = CreateServerAction(true, async () => {
     }
   }
 })
+
+export const GetMentorsAction = CreateServerAction(true, async () => {
+  try {
+    const mentors = await GetMentors()
+
+    return {
+      success: true,
+      data: mentors
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error
+    }
+  }
+})
+
+export const GetFeaturedUsersAction = CreateServerAction(
+  false,
+  async (filters: GetUserFilters) => {
+    try {
+      const users = await GetFeaturedUsers(filters)
+
+      return {
+        success: true,
+        data: users
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error
+      }
+    }
+  }
+)

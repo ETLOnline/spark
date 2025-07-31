@@ -79,7 +79,7 @@ const SpacePostComponent: React.FC = () => {
     space?.id
   )
   const canViewPost = permissionChecker
-    ? permissionChecker.canAccess("posting.view")
+    ? permissionChecker.canAccess("space.posting.view")
     : false
 
   const handleBackToFeed = () => {

@@ -92,7 +92,7 @@ export const GetChannelsAction = CreateServerAction(
       let channels: GetChannelsResponseType
       let joinedChannels: SelectChannel[] = []
 
-      if (isAdmin || permissionChecker.canAccess("channel.create")) {
+      if (isAdmin || permissionChecker.canAccess("community.channel.create")) {
         channels = await GetChannels({ ...filters })
       } else {
         channels = await GetChannels({

@@ -87,16 +87,16 @@ function SpaceSidebar({ space }: Props) {
   )
 
   const canViewChat = permissionChecker
-    ? permissionChecker.canAccess("chat.view")
+    ? permissionChecker.canAccess("space.chat.view")
     : false
   const canViewPost = permissionChecker
-    ? permissionChecker.canAccess("posting.view")
+    ? permissionChecker.canAccess("space.posting.view")
     : false
   const canViewFileSharing = permissionChecker
-    ? permissionChecker.canAccess("file_sharing.create")
+    ? permissionChecker.canAccess("space.file_sharing.create")
     : false
   const canViewProject = permissionChecker
-    ? permissionChecker.canAccess("project.view")
+    ? permissionChecker.canAccess("space.project.view")
     : false
   const canViewSetting = permissionChecker
     ? permissionChecker.canAccess("space.setting.update")

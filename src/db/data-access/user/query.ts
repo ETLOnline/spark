@@ -1,4 +1,4 @@
-import { and, eq, ilike, inArray, like, not, sql } from "drizzle-orm"
+import { and, eq, ilike, inArray, SQL, sql, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
 import {
   InsertUser,
@@ -7,6 +7,12 @@ import {
   userRolesTable,
   usersTable
 } from "../../schema"
+
+export interface GetUserFilters {
+  userId?: string
+  userIds?: string[]
+  email?: string
+}
 
 export async function CreateUser(data: InsertUser) {
   await db.insert(usersTable).values(data)
@@ -189,5 +195,95 @@ export async function GetRandomUsers() {
     return users
   } catch (error: any) {
     throw new Error(error.message)
+  }
+}
+
+export async function UpdateUserName(
+  user_id: string,
+  firstName: string,
+  lastName: string
+) {
+  try {
+    const result = await db
+      .update(usersTable)
+      .set({
+        first_name: firstName,
+        last_name: lastName
+      })
+      .where(eq(usersTable.unique_id, user_id))
+      .returning()
+
+    return result[0]
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
+
+export async function GetMentors() {
+  try {
+    const result = await db.query.rolesTable.findFirst({
+      where: eq(rolesTable.name, "Mentor"),
+      with: {
+        users: {
+          with: {
+            user: {
+              with: {
+                profile: true,
+                userTags: {
+                  with: {
+                    tag: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    })
+
+    return result?.users.map((u) => u.user) || []
+  } catch (error: any) {
+    console.error("Error fetching mentors:", error)
+    throw new Error("Failed to fetch mentors")
+  }
+}
+
+export async function GetFeaturedUsers(filters: GetUserFilters) {
+  try {
+    const whereClause: (SQLWrapper | SQL)[] = []
+
+    if (filters.userId) {
+      whereClause.push(eq(usersTable.unique_id, filters.userId))
+    }
+
+    if (filters.userIds && filters.userIds.length > 0) {
+      whereClause.push(inArray(usersTable.unique_id, filters.userIds))
+    }
+
+    if (filters.email) {
+      whereClause.push(ilike(usersTable.email, `%${filters.email}%`))
+    }
+
+    const users = await db.query.usersTable.findMany({
+      where: and(...whereClause),
+      with: {
+        roles: {
+          with: {
+            role: true
+          }
+        },
+        profile: true,
+        userTags: {
+          with: {
+            tag: true
+          }
+        }
+      }
+    })
+
+    return users
+  } catch (error: any) {
+    console.error("Error fetching user:", error)
+    throw new Error("Failed to fetch user")
   }
 }
