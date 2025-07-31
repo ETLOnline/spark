@@ -42,6 +42,7 @@ import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import { GetUserPermissionsParsedAction } from "../UserRoles/UserRole"
 import {
   attachCommunityUser,
+  ensureCommunityMembership,
   getCommunityUsers
 } from "@/src/db/data-access/communities/query"
 
@@ -267,23 +268,7 @@ export const AttachSpaceUserAction = CreateServerAction(
       }
 
       if (channel?.community_id) {
-        const communityMembers = await getCommunityUsers(channel?.community_id)
-        const communityUserIds = communityMembers.map((cu) => cu.user_id)
-
-        const isMemberCommunity = communityUserIds.includes(userId)
-
-        if (!isMemberCommunity) {
-          const attachCommunityUserRole = await getAndAssignViewerRoles(
-            userId,
-            "community_viewer",
-            channel.community_id
-          )
-          await attachCommunityUser(
-            channel.community_id,
-            userId,
-            attachCommunityUserRole?.viewerRole?.name
-          )
-        }
+        await ensureCommunityMembership(channel.community_id, userId)
       }
 
       const attachSpaceUserRole = await getAndAssignViewerRoles(

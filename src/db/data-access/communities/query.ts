@@ -24,6 +24,7 @@ import {
   ne,
   inArray
 } from "drizzle-orm"
+import { getAndAssignViewerRoles } from "../roles/query"
 
 export type CommunityType = "public" | "private" | "restricted"
 export type SortByOptions =
@@ -509,5 +510,29 @@ export async function updateCommunityUser(
     return communityUser[0]
   } catch (e: any) {
     throw new Error(e.message)
+  }
+}
+
+export const ensureCommunityMembership = async (
+  communityId: string,
+  userId: string
+): Promise<void> => {
+  const communityMembers = await getCommunityUsers(communityId)
+  const communityUserIds = communityMembers.map((cu) => cu.user_id)
+
+  const isMember = communityUserIds.includes(userId)
+
+  if (!isMember) {
+    const attachCommunityUserRole = await getAndAssignViewerRoles(
+      userId,
+      "community_viewer",
+      communityId
+    )
+
+    await attachCommunityUser(
+      communityId,
+      userId,
+      attachCommunityUserRole?.viewerRole?.name
+    )
   }
 }
