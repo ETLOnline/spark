@@ -40,6 +40,8 @@ import { GetProjectUsersAction } from "@/src/server-actions/ProjectManagement/pr
 import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
 import { TaskComment } from "./task-comment"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { userStore } from "@/src/store/user/userStore"
+import { useAtomValue } from "jotai"
 interface Props {
   onSubmit: (task: any) => void
   statuses?: InsertTaskStatus[]
@@ -76,6 +78,7 @@ export default function TaskForm({
   )
   const [assignee, setAssignee] = useState<SelectUser | null>(null)
   const [assignor, setAssignor] = useState<SelectUser | null>(null)
+  const authUser = useAtomValue(userStore.AuthUser)
   const form = useForm({
     resolver: zodResolver(projectSchema)
   })
@@ -85,7 +88,18 @@ export default function TaskForm({
   const params = useParams<{ id: string }>()
   const projectId = params?.id
 
-  const options: MultiSelectOption[] = usersList.map((user) => ({
+  const assigneeOptions: MultiSelectOption[] = [
+    {
+      label: "Unassigned",
+      value: ""
+    },
+    ...usersList.map((user) => ({
+      label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
+      value: user?.unique_id ?? ""
+    }))
+  ]
+
+  const assignorOptions: MultiSelectOption[] = usersList.map((user) => ({
     label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
     value: user?.unique_id ?? ""
   }))
@@ -139,12 +153,18 @@ export default function TaskForm({
         (u) => u?.unique_id === selectedAssignor?.[0]?.value
       )
 
-      if (assign_to) {
+      if (selectedAssignee?.[0]?.value === "") {
+        setAssignee(null)
+        form.setValue("assign_to", "")
+      } else if (assign_to) {
         setAssignee(assign_to)
         form.setValue("assign_to", assign_to.unique_id)
       }
 
-      if (assign_by) {
+      if (selectedAssignor?.[0]?.value === "") {
+        setAssignor(null)
+        form.setValue("assign_by", "")
+      } else if (assign_by) {
         setAssignor(assign_by)
         form.setValue("assign_by", assign_by.unique_id)
       }
@@ -171,6 +191,15 @@ export default function TaskForm({
           }
         ])
         form.setValue("assign_to", taskAssignee.unique_id)
+      } else {
+        setAssignee(null)
+        setSelectedAssignee([
+          {
+            label: "Unassigned",
+            value: ""
+          }
+        ])
+        form.setValue("assign_to", "")
       }
 
       if (taskAssignor) {
@@ -182,6 +211,21 @@ export default function TaskForm({
           }
         ])
         form.setValue("assign_by", taskAssignor.unique_id)
+      } else {
+        // If no assignor, default to current user
+        const currentUser = usersList.find(
+          (u) => u?.unique_id === authUser?.unique_id
+        )
+        if (currentUser) {
+          setAssignor(currentUser)
+          setSelectedAssignor([
+            {
+              label: `${currentUser.first_name} ${currentUser.last_name}`,
+              value: currentUser.unique_id
+            }
+          ])
+          form.setValue("assign_by", currentUser.unique_id)
+        }
       }
     }
 
@@ -420,14 +464,23 @@ export default function TaskForm({
                     render={({ field }) =>
                       activeField === "assignTo" ? (
                         <MultiSelect
-                          options={options}
+                          options={assigneeOptions}
                           selected={selectedAssignee}
                           onChange={(newselected) => {
-                            const latestSelected =
-                              newselected?.[newselected.length - 1]
-                            setSelectedAssignee(
-                              latestSelected ? [latestSelected] : []
-                            )
+                            if (newselected.length === 0) {
+                              setSelectedAssignee([
+                                {
+                                  label: "Unassigned",
+                                  value: ""
+                                }
+                              ])
+                            } else {
+                              const latestSelected =
+                                newselected?.[newselected.length - 1]
+                              setSelectedAssignee(
+                                latestSelected ? [latestSelected] : []
+                              )
+                            }
                           }}
                           placeholder="Select Assignee"
                         />
@@ -472,7 +525,7 @@ export default function TaskForm({
                     render={({ field }) =>
                       activeField === "assignBy" ? (
                         <MultiSelect
-                          options={options}
+                          options={assignorOptions}
                           selected={selectedAssignor}
                           onChange={(newselected) => {
                             const latestSelected =
@@ -507,7 +560,7 @@ export default function TaskForm({
                           <span>
                             {assignor
                               ? assignor.first_name + " " + assignor.last_name
-                              : "Unassigned"}
+                              : "Select Assignor"}
                           </span>
                         </div>
                       )
