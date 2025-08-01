@@ -21,7 +21,8 @@ import { TaskModal } from "../Task/components/TaskModal"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { ToUpperCase } from "@/src/utils/helpers"
-import TaskFilters from "../BacklogManagement/TaskFilters"
+import { TaskFiltersType } from "../types/taskFilters.type"
+import TaskFilters from "../TaskFilter/TaskFilters"
 
 interface Props {
   sprint: SelectSprint
@@ -33,12 +34,7 @@ export default function SprintCardPage({ sprint }: Props) {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState<SelectTask | null>(null)
   const [getTaskLoading, , , GetTasks] = useServerAction(GetSprintTasksAction)
-  const [filters, setFilters] = useState<{
-    assignee?: string | null
-    priority?: string
-    type?: string
-    status?: string
-  }>({})
+  const [filters, setFilters] = useState<TaskFiltersType>({})
 
   const projectId = useParams().id as string
 
@@ -84,12 +80,7 @@ export default function SprintCardPage({ sprint }: Props) {
     ? permissionChecker?.canAccess("project.task.view")
     : false
 
-  function HandleTaskFilters(filters: {
-    assignee?: string | null
-    priority?: string
-    type?: string
-    status?: string
-  }) {
+  function HandleTaskFilters(filters: TaskFiltersType) {
     setFilters(filters)
   }
 

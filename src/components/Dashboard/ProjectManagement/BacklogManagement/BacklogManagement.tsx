@@ -20,7 +20,8 @@ import { taskStore } from "@/src/store/tasks/taskStore"
 import StatusRequiredDialog from "../StatusRequiredDialog"
 import { TaskModal } from "../Task/components/TaskModal"
 import { SelectTask } from "@/src/db/schema"
-import TaskFilters from "./TaskFilters"
+import { TaskFiltersType } from "../types/taskFilters.type"
+import TaskFilters from "../TaskFilter/TaskFilters"
 
 export function BacklogManagement() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -32,12 +33,7 @@ export function BacklogManagement() {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
   const [tasks, setTasks] = useAtom(taskStore.BackLogTasks)
-  const [appliedFilters, setAppliedFilters] = useState<{
-    assignee?: string | null
-    priority?: string
-    type?: string
-    status?: string
-  }>({})
+  const [appliedFilters, setAppliedFilters] = useState<TaskFiltersType>({})
 
   const params = useParams()
   const projectId = params.id as string
@@ -76,12 +72,7 @@ export function BacklogManagement() {
     }
   }, [selectedTask])
 
-  function handleFilters(filters: {
-    assignee: string | null | undefined
-    priority: string | undefined
-    type: string | undefined
-    status: string | undefined
-  }) {
+  function handleFilters(filters: TaskFiltersType) {
     setAppliedFilters(filters)
   }
 
