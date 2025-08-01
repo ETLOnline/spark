@@ -41,23 +41,23 @@ function SpaceFeatures({ features, space }: Props) {
   if (!permissionChecker) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader size={LoaderSizes.lg} />
+        <Loader size={LoaderSizes.xl} />
       </div>
     )
   }
 
   const canViewChat = permissionChecker
-  ? permissionChecker.canAccess("space.chat.view")
-  : false
-const canViewPost = permissionChecker
-  ? permissionChecker.canAccess("space.posting.view")
-  : false
-const canViewFileSharing = permissionChecker
-  ? permissionChecker.canAccess("space.file_sharing.create")
-  : false
-const canViewProject = permissionChecker
-  ? permissionChecker.canAccess("space.project.view")
-  : false
+    ? permissionChecker.canAccess("space.chat.view")
+    : false
+  const canViewPost = permissionChecker
+    ? permissionChecker.canAccess("space.posting.view")
+    : false
+  const canViewFileSharing = permissionChecker
+    ? permissionChecker.canAccess("space.file_sharing.create")
+    : false
+  const canViewProject = permissionChecker
+    ? permissionChecker.canAccess("space.project.view")
+    : false
   // Function to check if user has permission for a specific feature
 
   const hasFeaturePermission = (featureSlug: string): boolean => {
