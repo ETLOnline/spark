@@ -24,7 +24,6 @@ import {
   ne,
   inArray
 } from "drizzle-orm"
-import { getAndAssignViewerRoles } from "../roles/query"
 
 export type CommunityType = "public" | "private" | "restricted"
 export type SortByOptions =
