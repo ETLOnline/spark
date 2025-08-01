@@ -10,22 +10,14 @@ import {
   DrawerTrigger
 } from "@/src/components/ui/drawer"
 import { Label } from "@/src/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/src/components/ui/select"
 import { Filter } from "lucide-react"
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import {
   projectTaskPriority,
   projectTaskTypes
 } from "../constants/projectManagment"
-import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import { GetProjectUsersAction } from "@/src/server-actions/ProjectManagement/projectManagement"
-import { SelectTask, SelectTaskStatus, SelectUser } from "@/src/db/schema"
+import { SelectUser } from "@/src/db/schema"
 import MultiSelect, {
   MultiSelectOption
 } from "@/src/components/ui/multi-select"
@@ -37,23 +29,19 @@ import { projectStore } from "@/src/store/project/projectStore"
 interface Props {
   projectId: string
   onApplyFilters: (filters: {
-    assignee: string | null | undefined
-    priority: string | undefined
-    type: string | undefined
-    status: string | undefined
+    assignee: string[]
+    priority: string[]
+    type: string[]
+    status: string[]
   }) => void
 }
 
 function TaskFilters({ projectId, onApplyFilters }: Props) {
-  const [selectedPriority, setSelectedPriority] = useState<string | undefined>(
-    undefined
+  const [selectedPriority, setSelectedPriority] = useState<MultiSelectOption[]>(
+    []
   )
-  const [selectedType, setSelectedType] = useState<string | undefined>(
-    undefined
-  )
-  const [selectedStatus, setSelectedStatus] = useState<string | undefined>(
-    undefined
-  )
+  const [selectedType, setSelectedType] = useState<MultiSelectOption[]>([])
+  const [selectedStatus, setSelectedStatus] = useState<MultiSelectOption[]>([])
   const [selectedAssignee, setSelectedAssignee] = useState<MultiSelectOption[]>(
     []
   )
@@ -78,31 +66,31 @@ function TaskFilters({ projectId, onApplyFilters }: Props) {
 
   async function applyFilters() {
     const assigneeValue =
-      selectedAssignee?.[0]?.value === "" ? null : selectedAssignee?.[0]?.value
+      selectedAssignee?.[0]?.value === "" ? null : selectedAssignee
 
     onApplyFilters({
-      assignee: assigneeValue,
-      priority: selectedPriority,
-      type: selectedType,
-      status: selectedStatus
+      assignee: selectedAssignee.map((a) => a.value),
+      priority: selectedPriority.map((p) => p.value),
+      type: selectedType.map((t) => t.value),
+      status: selectedStatus.map((s) => s.value)
     })
   }
 
   async function clearFilters() {
-    setSelectedPriority(undefined)
-    setSelectedType(undefined)
+    setSelectedPriority([])
+    setSelectedType([])
     setSelectedAssignee([])
-    setSelectedStatus(undefined)
+    setSelectedStatus([])
 
     onApplyFilters({
-      assignee: undefined,
-      priority: undefined,
-      type: undefined,
-      status: undefined
+      assignee: [],
+      priority: [],
+      type: [],
+      status: []
     })
   }
 
-  const options: MultiSelectOption[] = [
+  const AssigneeOptions: MultiSelectOption[] = [
     {
       label: "Unassigned",
       value: ""
@@ -112,6 +100,22 @@ function TaskFilters({ projectId, onApplyFilters }: Props) {
       value: user?.unique_id ?? ""
     }))
   ]
+
+  const PriorityOptions = projectTaskPriority.map((priority) => ({
+    label: priority.title,
+    value: priority.key
+  }))
+
+  const TypeOptions = projectTaskTypes.map((type) => ({
+    label: type.title,
+    value: type.key
+  }))
+
+  const StatusOptions = statusList.map((status) => ({
+    label: status.name,
+    value: status.id as string
+  }))
+
   return (
     <Drawer>
       <DrawerTrigger asChild>
@@ -134,12 +138,9 @@ function TaskFilters({ projectId, onApplyFilters }: Props) {
             <div className="space-y-2">
               <Label>Assignee</Label>
               <MultiSelect
-                options={options}
+                options={AssigneeOptions}
                 selected={selectedAssignee}
-                onChange={(newselected) => {
-                  const latestSelected = newselected?.[newselected.length - 1]
-                  setSelectedAssignee(latestSelected ? [latestSelected] : [])
-                }}
+                onChange={setSelectedAssignee}
                 placeholder="Select Assignee"
               />
             </div>
@@ -147,73 +148,35 @@ function TaskFilters({ projectId, onApplyFilters }: Props) {
             {/* Priority Filter */}
             <div className="space-y-2">
               <Label>Priority</Label>
-              <Select
-                value={selectedPriority}
-                onValueChange={setSelectedPriority}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  {projectTaskPriority.map((priority, index) => (
-                    <SelectItem key={index} value={priority.key}>
-                      <div className="flex flex-row items-center gap-2">
-                        <DynamicIcon
-                          name={priority.icon as IconName}
-                          className="h-5 w-5"
-                          style={{ color: priority.iconColor }}
-                        />
-                        {priority.title}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+              <MultiSelect
+                options={PriorityOptions}
+                selected={selectedPriority}
+                onChange={setSelectedPriority}
+              />
             </div>
 
             {/* Type Filter */}
             <div className="space-y-2">
               <Label>Type</Label>
-              <Select value={selectedType} onValueChange={setSelectedType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {projectTaskTypes.map((type, index) => (
-                    <SelectItem key={index} value={type.key}>
-                      <div className="flex flex-row items-center gap-2">
-                        <DynamicIcon
-                          name={type.icon as IconName}
-                          className="h-5 w-5"
-                          style={{ color: type.iconColor }}
-                        />
-                        {type.title}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+              <MultiSelect
+                options={TypeOptions}
+                selected={selectedType}
+                onChange={setSelectedType}
+              />
             </div>
 
             {/* Status Filter */}
 
             <div className="space-y-2">
               <Label>Status</Label>
-              <Select onValueChange={setSelectedStatus} value={selectedStatus}>
-                <SelectTrigger id="status_id" className="col-span-3">
-                  <SelectValue placeholder={"Select status"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusList?.map(
-                    (s) =>
-                      s.id && (
-                        <SelectItem key={s.id} value={s.id}>
-                          {s.name}
-                        </SelectItem>
-                      )
-                  )}
-                </SelectContent>
-              </Select>
+
+              <MultiSelect
+                options={StatusOptions}
+                selected={selectedStatus}
+                onChange={setSelectedStatus}
+              />
             </div>
           </div>
 

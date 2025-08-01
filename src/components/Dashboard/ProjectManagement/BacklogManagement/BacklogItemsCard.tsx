@@ -17,10 +17,10 @@ interface Props {
   orderList: string
   limit: number
   filters: {
-    assignee?: string | null
-    priority?: string
-    type?: string
-    status?: string
+    assignee?: string[]
+    priority?: string[]
+    type?: string[]
+    status?: string[]
   }
 }
 

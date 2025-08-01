@@ -29,10 +29,10 @@ function SprintBoardCard({ sprint }: Props) {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState<SelectTask | null>()
   const [filters, setFilters] = useState<{
-    assignee?: string | null
-    priority?: string
-    type?: string
-    status?: string
+    assignee?: string[]
+    priority?: string[]
+    type?: string[]
+    status?: string[]
   }>({})
 
   const [getTaskLoading, , , GetSPrintTask] =
@@ -74,10 +74,10 @@ function SprintBoardCard({ sprint }: Props) {
   }, [selectedTask])
 
   function HandleTaskFilters(filters: {
-    assignee?: string | null
-    priority?: string
-    type?: string
-    status?: string
+    assignee?: string[]
+    priority?: string[]
+    type?: string[]
+    status?: string[]
   }) {
     setFilters(filters)
   }

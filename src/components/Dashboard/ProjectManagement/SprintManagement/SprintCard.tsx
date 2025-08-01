@@ -34,10 +34,10 @@ export default function SprintCardPage({ sprint }: Props) {
   const [selectedTask, setSelectedTask] = useState<SelectTask | null>(null)
   const [getTaskLoading, , , GetTasks] = useServerAction(GetSprintTasksAction)
   const [filters, setFilters] = useState<{
-    assignee?: string | null
-    priority?: string
-    type?: string
-    status?: string
+    assignee?: string[]
+    priority?: string[]
+    type?: string[]
+    status?: string[]
   }>({})
 
   const projectId = useParams().id as string
@@ -85,10 +85,10 @@ export default function SprintCardPage({ sprint }: Props) {
     : false
 
   function HandleTaskFilters(filters: {
-    assignee?: string | null
-    priority?: string
-    type?: string
-    status?: string
+    assignee?: string[]
+    priority?: string[]
+    type?: string[]
+    status?: string[]
   }) {
     setFilters(filters)
   }

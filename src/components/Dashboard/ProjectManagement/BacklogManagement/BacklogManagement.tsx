@@ -33,10 +33,10 @@ export function BacklogManagement() {
   const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
   const [tasks, setTasks] = useAtom(taskStore.BackLogTasks)
   const [appliedFilters, setAppliedFilters] = useState<{
-    assignee?: string | null
-    priority?: string
-    type?: string
-    status?: string
+    assignee?: string[]
+    priority?: string[]
+    type?: string[]
+    status?: string[]
   }>({})
 
   const params = useParams()
@@ -77,10 +77,10 @@ export function BacklogManagement() {
   }, [selectedTask])
 
   function handleFilters(filters: {
-    assignee: string | null | undefined
-    priority: string | undefined
-    type: string | undefined
-    status: string | undefined
+    assignee: string[]
+    priority: string[]
+    type: string[]
+    status: string[]
   }) {
     setAppliedFilters(filters)
   }
