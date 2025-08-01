@@ -40,11 +40,7 @@ import {
 import { defaultSpaceOverviewTemplate } from "@/src/app/(dashboard)/channels/[channel_slug]/spaces/[space_slug]/(space-layout)/components/constants"
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import { GetUserPermissionsParsedAction } from "../UserRoles/UserRole"
-import {
-  attachCommunityUser,
-  ensureCommunityMembership,
-  getCommunityUsers
-} from "@/src/db/data-access/communities/query"
+import { ensureCommunityMembership } from "../Community/Community"
 
 export const CreateSpaceAction = CreateServerAction(
   true,
