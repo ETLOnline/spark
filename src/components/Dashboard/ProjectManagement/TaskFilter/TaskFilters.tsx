@@ -25,15 +25,11 @@ import { GetBacklogTasksAction } from "@/src/server-actions/Tasks/Task"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useAtomValue, useSetAtom } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
+import { TaskFiltersType } from "../types/taskFilters.type"
 
 interface Props {
   projectId: string
-  onApplyFilters: (filters: {
-    assignee: string[]
-    priority: string[]
-    type: string[]
-    status: string[]
-  }) => void
+  onApplyFilters: (filters: TaskFiltersType) => void
 }
 
 function TaskFilters({ projectId, onApplyFilters }: Props) {
