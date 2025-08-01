@@ -1,5 +1,5 @@
 import { ScrollArea } from "@radix-ui/react-scroll-area"
-import React, { useEffect, useState } from "react"
+import React, { useMemo } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar"
 import { Badge } from "../../../ui/badge"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
@@ -13,34 +13,36 @@ const ChatsList = ({ searchQuery = "" }) => {
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
   const authUser = useAtomValue(userStore.AuthUser)
 
-  const filteredChats = myChats.filter((chat) => {
-    if (!searchQuery.trim()) return true
-    const query = searchQuery.toLowerCase().replace(/\s+/g, "")
-    if (
-      chat.is_group &&
-      chat.name?.toLowerCase().replace(/\s+/g, "").includes(query)
-    )
-      return true
+  const filteredChats = useMemo(() => {
+    return myChats.filter((chat) => {
+      if (!searchQuery.trim()) return true
+      const query = searchQuery.toLowerCase().replace(/\s+/g, "")
+      if (
+        chat.is_group &&
+        chat.name?.toLowerCase().replace(/\s+/g, "").includes(query)
+      )
+        return true
 
-    if (!chat.is_group && chat.users) {
-      const contact = chat.users.find(
-        (u) => u.user?.unique_id !== authUser?.unique_id
-      )?.user
-      if (contact) {
-        const fullName = `${contact.first_name} ${contact.last_name}`
-          .toLowerCase()
-          .replace(/\s+/g, "")
-        const email = contact.email?.toLowerCase() || ""
-        if (
-          fullName.includes(query) ||
-          email.replace(/\s+/g, "").includes(query)
-        ) {
-          return true
+      if (!chat.is_group && chat.users) {
+        const contact = chat.users.find(
+          (u) => u.user?.unique_id !== authUser?.unique_id
+        )?.user
+        if (contact) {
+          const fullName = `${contact.first_name} ${contact.last_name}`
+            .toLowerCase()
+            .replace(/\s+/g, "")
+          const email = contact.email?.toLowerCase() || ""
+          if (
+            fullName.includes(query) ||
+            email.replace(/\s+/g, "").includes(query)
+          ) {
+            return true
+          }
         }
       }
-    }
-    return false
-  })
+      return false
+    })
+  }, [myChats, searchQuery])
 
   return (
     <ScrollArea className="h-[calc(100vh-15rem)] px-2  pb-5">
