@@ -375,11 +375,11 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
             <>
               <CardContent className="flex-1 overflow-hidden p-4">
                 {authUser && currentChat && !fetchingChatMessages ? (
-                  <ScrollArea className="h-[calc(100svh-17rem)] pr-4">
+                  <ScrollArea className="h-[calc(100svh-17rem)] pr-4  pt-4 ">
                     {messages.map((message) => (
                       <div
                         key={message.id}
-                        className={` group mb-4 flex items-center ${
+                        className={` group mb-4  flex items-center ${
                           message.sender_id === authUser?.unique_id
                             ? "justify-end"
                             : "justify-start"
