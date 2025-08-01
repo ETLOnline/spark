@@ -12,6 +12,9 @@ import SpaceChat from "./spaceChat"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import SpaceOverview from "./SpaceOverview"
 import { ProjectScreen } from "@/src/components/Dashboard/Projects"
+import Loader from "@/src/components/common/Loader/Loader"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
+
 interface Props {
   features: SelectSpaceFeature[]
   space: SelectSpace
@@ -23,6 +26,25 @@ function SpaceFeatures({ features, space }: Props) {
     "SPACE",
     space?.id
   )
+
+  const params = useSearchParams()
+  const pageType = params.get("page-type") || null
+  const setLayoutStatsVisibility = useSetAtom(spaceStore.layoutStatsVisibility)
+
+  useLayoutEffect(() => {
+    if (!pageType) {
+      setLayoutStatsVisibility(true)
+    }
+  }, [])
+
+  // Show loading state while permission checker is not ready
+  if (!permissionChecker) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader size={LoaderSizes.xl} />
+      </div>
+    )
+  }
 
   const canViewChat = permissionChecker
     ? permissionChecker.canAccess("space.chat.view")
@@ -36,18 +58,8 @@ function SpaceFeatures({ features, space }: Props) {
   const canViewProject = permissionChecker
     ? permissionChecker.canAccess("space.project.view")
     : false
-
-  const params = useSearchParams()
-  const pageType = params.get("page-type") || null
-  const setLayoutStatsVisibility = useSetAtom(spaceStore.layoutStatsVisibility)
-
-  useLayoutEffect(() => {
-    if (!pageType) {
-      setLayoutStatsVisibility(true)
-    }
-  }, [])
-
   // Function to check if user has permission for a specific feature
+
   const hasFeaturePermission = (featureSlug: string): boolean => {
     switch (featureSlug) {
       case "posts":
