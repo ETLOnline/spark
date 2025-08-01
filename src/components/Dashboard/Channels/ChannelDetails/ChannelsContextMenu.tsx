@@ -38,7 +38,7 @@ interface ChannelProps {
     actionType: "deleted" | "updated",
     channel: SelectChannel
   ) => void
-  setIsCommunityMember?: React.Dispatch<React.SetStateAction<boolean>>
+  setIsCommunityMember?: React.Dispatch<React.SetStateAction<boolean | null>>
 }
 
 const ChannelsContextMenu: React.FC<ChannelProps> = ({
