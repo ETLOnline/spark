@@ -24,9 +24,10 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   space: SelectSpace
+  setIsChannelMember?: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-function SpacesCard({ space }: Props) {
+function SpacesCard({ space, setIsChannelMember }: Props) {
   const user = useAtomValue(userStore.AuthUser)
 
   const { permissionChecker } = usePermissionChecker(
@@ -85,7 +86,10 @@ function SpacesCard({ space }: Props) {
             )}
           </CardTitle>
           {canSpaceAllowAction || space.space_type === "public" ? (
-            <SpacesActionButtons space={space} />
+            <SpacesActionButtons
+              space={space}
+              setIsChannelMember={setIsChannelMember}
+            />
           ) : null}
         </div>
         <CardDescription>{space.description}</CardDescription>

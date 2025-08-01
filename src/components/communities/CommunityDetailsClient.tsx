@@ -458,6 +458,7 @@ export default function CommunityDetailsClient({
                               <ChannelsContextMenu
                                 channel={channel}
                                 onActionComplete={onActionComplete}
+                                setIsCommunityMember={setIsCommunityMember}
                               />
                             </div>
                           </div>
