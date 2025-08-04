@@ -40,6 +40,7 @@ import {
 import { defaultSpaceOverviewTemplate } from "@/src/app/(dashboard)/channels/[channel_slug]/spaces/[space_slug]/(space-layout)/components/constants"
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import { GetUserPermissionsParsedAction } from "../UserRoles/UserRole"
+import { ensureCommunityMembership } from "../Community/Community"
 
 export const CreateSpaceAction = CreateServerAction(
   true,
@@ -223,6 +224,11 @@ export const AttachSpaceUserAction = CreateServerAction(
   async (spaceId: string, userId: string) => {
     try {
       const space = await GetSpaceById(spaceId, true)
+
+      if (!space) {
+        return { success: false, error: "Space not found" }
+      }
+
       const spaceUserIds = space?.users.map((su) => su.user_id) || []
 
       const isUserSpaceMember = spaceUserIds.includes(userId)
@@ -230,7 +236,7 @@ export const AttachSpaceUserAction = CreateServerAction(
       if (isUserSpaceMember) {
         return { success: true, data: null }
       }
-
+      // this check is to make sure the user is a member of the channel
       if (space?.channel_id) {
         const channelUsers = await getChannelUsers(space?.channel_id)
         const channelUserIds = channelUsers.map((cu) => cu.user_id)
@@ -250,6 +256,17 @@ export const AttachSpaceUserAction = CreateServerAction(
           )
         }
       }
+      // get channel by id and attach user
+      const channel = await GetChannelById(space?.channel_id)
+
+      if (!channel) {
+        return { success: false, error: "Channel not found" }
+      }
+
+      if (channel?.community_id) {
+        await ensureCommunityMembership(channel.community_id, userId)
+      }
+
       const attachSpaceUserRole = await getAndAssignViewerRoles(
         userId,
         "space_viewer",

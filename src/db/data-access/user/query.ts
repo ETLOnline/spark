@@ -75,8 +75,10 @@ export async function FindUserWildCard(wildcard: string) {
       },
       where: (usersTable, { or }) =>
         or(
-          ilike(usersTable.first_name, `%${wildcard}%`),
-          ilike(usersTable.last_name, `%${wildcard}%`)
+          ilike(
+            sql`${usersTable.first_name} || ' ' || ${usersTable.last_name}`,
+            `%${wildcard}%`
+          )
         )
     })
     return users

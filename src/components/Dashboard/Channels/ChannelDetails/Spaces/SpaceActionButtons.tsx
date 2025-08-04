@@ -35,9 +35,10 @@ import CreateShortcut from "@/src/components/common/Shortcut/components/CreateSh
 
 interface Props {
   space: SelectSpace
+  setIsChannelMember?: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-function SpacesActionButtons({ space }: Props) {
+function SpacesActionButtons({ space, setIsChannelMember }: Props) {
   const [joinLoading, joinResult, joinError, joinSpace] = useServerAction(
     AttachSpaceUserAction
   )
@@ -54,11 +55,12 @@ function SpacesActionButtons({ space }: Props) {
     }
   }, [space, currentUserId])
 
-  const handleJoinChannel = async () => {
+  const handleJoinSpace = async () => {
     if (space.id && currentUserId) {
       const res = await joinSpace(space.id, currentUserId)
       if (res?.success) {
         setIsSpaceMember(true)
+        setIsChannelMember?.(true)
         toast({
           title: "Space Joined",
           description: "You have successfully joined the Space!",
@@ -147,7 +149,7 @@ function SpacesActionButtons({ space }: Props) {
           )}
           {!superAdmin && (
             <DropdownMenuItem
-              onClick={handleJoinChannel}
+              onClick={handleJoinSpace}
               disabled={isSpaceMember || joinLoading}
               className={
                 isSpaceMember ? "text-gray-500 cursor-not-allowed" : ""

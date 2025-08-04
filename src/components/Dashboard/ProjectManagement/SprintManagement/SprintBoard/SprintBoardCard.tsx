@@ -17,7 +17,8 @@ import { useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import { TaskModal } from "../../Task/components/TaskModal"
-import TaskFilters from "../../BacklogManagement/TaskFilters"
+import { TaskFiltersType } from "../../types/taskFilters.type"
+import TaskFilters from "../../TaskFilter/TaskFilters"
 
 interface Props {
   sprint: SelectSprint
@@ -28,12 +29,7 @@ function SprintBoardCard({ sprint }: Props) {
   const [tasks, setTasks] = useState<SelectTask[]>([])
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState<SelectTask | null>()
-  const [filters, setFilters] = useState<{
-    assignee?: string | null
-    priority?: string
-    type?: string
-    status?: string
-  }>({})
+  const [filters, setFilters] = useState<TaskFiltersType>({})
 
   const [getTaskLoading, , , GetSPrintTask] =
     useServerAction(GetSprintTasksAction)
@@ -73,12 +69,7 @@ function SprintBoardCard({ sprint }: Props) {
     }
   }, [selectedTask])
 
-  function HandleTaskFilters(filters: {
-    assignee?: string | null
-    priority?: string
-    type?: string
-    status?: string
-  }) {
+  function HandleTaskFilters(filters: TaskFiltersType) {
     setFilters(filters)
   }
 

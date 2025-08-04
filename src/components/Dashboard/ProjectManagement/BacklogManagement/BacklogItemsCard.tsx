@@ -11,17 +11,13 @@ import PaginationComponent from "@/src/components/common/Pagination"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { GetBacklogTasksAction } from "@/src/server-actions/Tasks/Task"
+import { TaskFiltersType } from "../types/taskFilters.type"
 
 interface Props {
   searchedItem: string
   orderList: string
   limit: number
-  filters: {
-    assignee?: string | null
-    priority?: string
-    type?: string
-    status?: string
-  }
+  filters: TaskFiltersType
 }
 
 function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
