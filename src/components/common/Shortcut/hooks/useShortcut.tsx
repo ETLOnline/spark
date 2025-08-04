@@ -106,7 +106,7 @@ const useShortcut = () => {
       const encodedUrl = encodeURIComponent(shortcut.url)
       switch (shortcut.type) {
         case "space":
-          shortcut.url = `/channels/${encodedUrl}`
+          shortcut.url = `/channels/${shortcut.url}`
           break
         case "channel":
           shortcut.url = `/channels/${encodedUrl}/spaces`

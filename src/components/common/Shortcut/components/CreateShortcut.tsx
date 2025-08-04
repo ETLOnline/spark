@@ -31,6 +31,7 @@ const CreateShortcut = ({
     null
   )
 
+  console.log(entity.slug, "entity")
   const handleCreateShortcut = async () => {
     const newShortcut: Partial<InsertShortcut> = {
       type,

@@ -135,14 +135,16 @@ export default function CommunityCard({
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuItem asChild>
-                        <Link href={`/communities/${community.slug}/users`}>
+                        <Link
+                          href={`/communities/${encodedCommunitySlug}/users`}
+                        >
                           <User className="mr-2 h-4 w-4" />
                           Users
                         </Link>
                       </DropdownMenuItem>
                       {canView && (
                         <DropdownMenuItem asChild>
-                          <Link href={`/communities/${community.slug}`}>
+                          <Link href={`/communities/${encodedCommunitySlug}`}>
                             <Eye className="mr-2 h-4 w-4" />
                             Detail
                           </Link>
