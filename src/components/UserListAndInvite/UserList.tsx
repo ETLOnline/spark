@@ -82,6 +82,12 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { updateUserRoleForEntityAction } from "@/src/server-actions/UserRoles/UserRole"
 import { CommunityDetailData } from "@/src/db/data-access/communities/query"
 import { DetachCommunityUserAction } from "@/src/server-actions/Community/Community"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "../ui/tooltip"
 
 interface Props {
   entityType: "channel" | "space" | "community"
@@ -474,17 +480,31 @@ export default function ChannelUserList({
                     <div className="col-span-4 text-sm text-muted-foreground">
                       {user.email}
                     </div>
+
                     <div className="col-span-3 flex items-center gap-1">
-                      <Badge
-                        className="capitalize"
-                        variant={
-                          cu.role === SpaceUserRole.Admin
-                            ? "default"
-                            : "outline"
-                        }
-                      >
-                        {cu.role}
-                      </Badge>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <Badge
+                                className="capitalize"
+                                variant={
+                                  cu.role === SpaceUserRole.Admin
+                                    ? "default"
+                                    : "outline"
+                                }
+                              >
+                                {cu.role && cu.role.length > 30
+                                  ? cu.role.slice(0, 30) + "..."
+                                  : cu.role}
+                              </Badge>
+                            </span>
+                          </TooltipTrigger>
+                          {cu.role && cu.role.length > 30 && (
+                            <TooltipContent>{cu.role}</TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                     <div className="col-span-1 text-center">
                       {(canUpdateUser || canDeleteUser) && (
