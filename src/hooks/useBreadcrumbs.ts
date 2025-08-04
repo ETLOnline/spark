@@ -51,7 +51,8 @@ const buildBreadcrumbsFromConfig = async (
     }
   }
 
-  const segmentHref = `${accumulatedHref}${matchedConfigItem && !matchedConfigItem.path.includes("[") ? matchedConfigItem.path : `/${currentSegment}`}`
+  const encodedSegment = encodeURIComponent(currentSegment)
+  const segmentHref = `${accumulatedHref}${matchedConfigItem && !matchedConfigItem.path.includes("[") ? matchedConfigItem.path : `/${encodedSegment}`}`
 
   if (matchedConfigItem) {
     let displayLabelOrLabels:
@@ -113,7 +114,8 @@ const buildBreadcrumbsFromConfig = async (
       crumbs.push(...childCrumbs)
     }
   } else {
-    const genericSegmentHref = `${accumulatedHref}/${currentSegment}`
+    const encodedSegment = encodeURIComponent(currentSegment)
+    const genericSegmentHref = `${accumulatedHref}/${encodedSegment}`
     crumbs.push({
       label: currentSegment.charAt(0).toUpperCase() + currentSegment.slice(1),
       href: genericSegmentHref,
@@ -149,6 +151,7 @@ export const useBreadcrumbs = (): BreadcrumbItem[] => {
       const pathSegments = cleanPath
         .split("/")
         .filter((s) => s !== "" && !s.startsWith("("))
+        .map((s) => decodeURIComponent(s))
 
       const finalBreadcrumbs: BreadcrumbItem[] = []
 

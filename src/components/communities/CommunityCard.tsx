@@ -61,6 +61,8 @@ export default function CommunityCard({
     "COMMUNITY",
     community.id
   )
+
+  const encodedCommunitySlug = encodeURIComponent(community.slug)
   const { toast } = useToast()
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const superAdmin = useAtomValue(userStore.SuperAdmin)
@@ -215,7 +217,7 @@ export default function CommunityCard({
                   : "Join"}
             </Button>
           )}
-          <Link href={`/communities/${community.slug}`}>
+          <Link href={`/communities/${encodedCommunitySlug}`}>
             <Button variant="outline">
               View <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
