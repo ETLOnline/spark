@@ -1,13 +1,13 @@
 "use server"
 
-import { emailQueue } from "@/src/app/api/queues/email/route"
+import { POST } from "@/src/app/api/queues/email/route"
 import { CreateServerAction } from ".."
 
 export const enqueueTaskUpdateEmailAction = CreateServerAction(
   true,
   async (to: string, task: any) => {
     try {
-      await emailQueue.enqueue({ to, task }, { delay: "1m" })
+      await POST.enqueue({ to, task }, { delay: "1m" })
       console.log(`update task ${to}`)
       return {
         success: true,

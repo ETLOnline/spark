@@ -2,7 +2,7 @@ import { sendEmail } from "@/src/services/mail/sendMail"
 import { generateTaskUpdateEmailHtml } from "@/src/utils/emailTemplates"
 import { Queue } from "quirrel/next-app"
 
-export const emailQueue = Queue(
+export const POST = Queue(
   "api/queues/email",
   async (job: { to: string; task: any }) => {
     const subject = `Update to Task: ${job.task.title || "Untitled Task"}`
@@ -11,5 +11,3 @@ export const emailQueue = Queue(
     await sendEmail({ to: job.to, subject, html })
   }
 )
-
-export const POST = emailQueue
