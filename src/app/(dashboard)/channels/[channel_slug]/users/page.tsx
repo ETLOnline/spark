@@ -19,8 +19,9 @@ interface Props {
 
 const ChannelUsersPage = async ({ params }: Props) => {
   const { channel_slug } = await params
+  const decodedChannelSlug = decodeURIComponent(channel_slug)
 
-  const currentChannel = await GetChannelBySlugAction(channel_slug)
+  const currentChannel = await GetChannelBySlugAction(decodedChannelSlug)
 
   if (!currentChannel.success || !currentChannel.data) {
     return <NotFound />

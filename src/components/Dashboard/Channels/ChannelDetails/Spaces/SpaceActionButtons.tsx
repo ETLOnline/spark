@@ -72,6 +72,10 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
     }
   }
 
+  const encodedSpaceSlug = encodeURIComponent(space.space_slug)
+  const encodeChannelSlug = encodeURIComponent(
+    space.channel?.channel_slug ?? ""
+  )
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "SPACE",
@@ -136,7 +140,7 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem
-            onClick={() => router.push(`./spaces/${space.space_slug}`)}
+            onClick={() => router.push(`./spaces/${encodedSpaceSlug}`)}
           >
             <ExternalLink className="mr-2 h-4 w-4" />
             Open Space
@@ -161,7 +165,7 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
           )}
           {canViewSpaceUsers && (
             <DropdownMenuItem
-              onClick={() => router.push(`./spaces/${space.space_slug}/users`)}
+              onClick={() => router.push(`./spaces/${encodedSpaceSlug}/users`)}
             >
               <User className="mr-2 h-4 w-4" />
               Users
@@ -170,7 +174,7 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
           {canSetSpaceSetting && (
             <DropdownMenuItem
               onClick={() =>
-                router.push(`./spaces/${space.space_slug}/settings`)
+                router.push(`./spaces/${encodedSpaceSlug}/settings`)
               }
             >
               <Settings className="mr-2 h-4 w-4" />
@@ -181,7 +185,7 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
           <CreateShortcut
             type="space"
             entity={{
-              slug: `${space.channel?.channel_slug}/spaces/${space?.space_slug}`,
+              slug: `${encodeChannelSlug}/spaces/${encodedSpaceSlug}`,
               title: `${space?.channel?.channel_name} - ${space?.space_name}`
             }}
             ctaType="menuItem"
