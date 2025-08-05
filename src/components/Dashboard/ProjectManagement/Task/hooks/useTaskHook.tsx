@@ -1,6 +1,7 @@
 import { InsertTask, SelectTask } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
+import { enqueueTaskUpdateEmailAction } from "@/src/server-actions/Email/Email"
 import {
   CreateTaskAction,
   UpdateTaskAction
@@ -92,6 +93,10 @@ const useTaskHook = ({
         }
         const updatedTask = await UpdateTask(selectedTask?.id, payload)
         if (updatedTask?.success && updatedTask.data) {
+          await enqueueTaskUpdateEmailAction(
+            "virkusama3@gmail.com",
+            updatedTask.data
+          )
           if (onUpdateComplete) {
             onUpdateComplete(updatedTask?.data)
           }

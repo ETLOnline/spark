@@ -1,0 +1,26 @@
+"use server"
+
+import { emailQueue } from "@/src/app/api/queues/email/route"
+import { CreateServerAction } from ".."
+
+export const enqueueTaskUpdateEmailAction = CreateServerAction(
+  true,
+  async (to: string, task: any) => {
+    try {
+      await emailQueue.enqueue({ to, task }, { delay: "1m" })
+      console.log(`update task ${to}`)
+      return {
+        success: true,
+        message: "Update Task email enqueued successfully!"
+      }
+    } catch (error) {
+      console.error(`Error enqueuing Update Task email for ${to}:`, error)
+      return {
+        success: false,
+        message: `Failed to enqueue Update Task email: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      }
+    }
+  }
+)
