@@ -36,6 +36,9 @@ const SpacePostComponent: React.FC = () => {
   const spaceSlug = params.space_slug as string
   const channelSlug = params.channel_slug as string
 
+  const decodedChannelSlug = decodeURIComponent(channelSlug)
+  const decodedSpaceSlug = decodeURIComponent(spaceSlug)
+
   const activeCategory = useAtomValue(spaceStore.activeCategory)
   const [space, setSpace] = useAtom(spaceStore.selectedSpace)
   const setLayoutStatsVisibility = useSetAtom(spaceStore.layoutStatsVisibility)
@@ -58,7 +61,7 @@ const SpacePostComponent: React.FC = () => {
     useServerAction(GetPostByIdAction)
 
   useEffect(() => {
-    GetSpaceBySlugAction(spaceSlug, channelSlug).then((space) => {
+    GetSpaceBySlugAction(decodedSpaceSlug, decodedChannelSlug).then((space) => {
       if (space.success && space.data) {
         setSpace(space.data)
         if (isPostDetail && postId) {
@@ -71,7 +74,13 @@ const SpacePostComponent: React.FC = () => {
         }
       }
     })
-  }, [spaceSlug, channelSlug, isPostDetail, postId, activeCategory])
+  }, [
+    decodedSpaceSlug,
+    decodedChannelSlug,
+    isPostDetail,
+    postId,
+    activeCategory
+  ])
 
   const { permissionChecker } = usePermissionChecker(
     "scoped",

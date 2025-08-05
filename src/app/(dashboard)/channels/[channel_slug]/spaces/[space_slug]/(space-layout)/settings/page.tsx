@@ -14,7 +14,13 @@ interface Props {
 async function settingsPage({ params }: Props) {
   const { channel_slug, space_slug } = await params
 
-  const currentSpace = await GetSpaceBySlugAction(space_slug, channel_slug)
+  const decodedChannelSlug = decodeURIComponent(channel_slug)
+  const decodedSpaceSlug = decodeURIComponent(space_slug)
+
+  const currentSpace = await GetSpaceBySlugAction(
+    decodedSpaceSlug,
+    decodedChannelSlug
+  )
 
   if (!currentSpace.success || !currentSpace.data) {
     return <NotFound />
