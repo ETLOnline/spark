@@ -44,6 +44,7 @@ import { AttachCommunityUserAction } from "@/src/server-actions/Community/Commun
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
 import { isEntityUser } from "@/src/utils/clientHelper"
+import { getInitials } from "@/src/utils/helpers"
 import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
 
 interface CommunityDetailsClientProps {
@@ -173,7 +174,7 @@ export default function CommunityDetailsClient({
   }
 
   const communityInitial = community?.title
-    ? community.title.charAt(0).toUpperCase()
+    ? getInitials(community.title)
     : "C"
 
   const onActionComplete = (
