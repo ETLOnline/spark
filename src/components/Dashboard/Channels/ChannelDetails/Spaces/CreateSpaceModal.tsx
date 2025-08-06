@@ -371,14 +371,24 @@ function CreateSpaceModal({
                     <Controller
                       name="description"
                       control={form.control}
-                      render={({ field }) => (
-                        <Textarea
-                          id="description"
-                          placeholder="Description"
-                          {...field}
-                          className="col-span-3"
-                        />
-                      )}
+                      render={({ field }) => {
+                        const charCount = field.value?.length || 0
+                        const maxChars = 150
+                        return (
+                          <>
+                            <Textarea
+                              id="description"
+                              placeholder="Description"
+                              {...field}
+                              className="col-span-3"
+                              maxLength={maxChars}
+                            />
+                            <div className="text-sm text-muted-foreground text-right mt-1">
+                              {charCount}/{maxChars} Characters
+                            </div>
+                          </>
+                        )
+                      }}
                     />
                   </div>
                 </div>
