@@ -46,7 +46,7 @@ const communitySchema = z.object({
   description: z
     .string()
     .min(1, "Description required")
-    .max(250, "Description is too long"),
+    .max(150, "Description is too long"),
   category: z.string().min(1, "Category required"),
   slug: z.string().max(50, "Slug is too long"),
   type: z.enum(["public", "private"], {
@@ -458,9 +458,24 @@ export default function CreateCommunityModal({
                   <Controller
                     name="description"
                     control={form.control}
-                    render={({ field }) => (
-                      <Textarea id="description" {...field} placeholder="Description" />
-                    )}
+                    render={({ field }) => {
+                      const charCount = field.value?.length || 0
+                      const maxChars = 150
+                      return (
+                        <>
+                          <Textarea
+                            id="description"
+                            {...field}
+                            maxLength={maxChars}
+                            placeholder="Description"
+                          />
+                          <div className="text-sm text-muted-foreground text-right mt-1">
+                            {charCount}/{maxChars} characters
+                          </div>
+                        </>
+                      )
+                    }}
+
                   />
                 </div>
               </div>

@@ -410,9 +410,24 @@ function CreateChannels({
                   <Controller
                     name="description"
                     control={form.control}
-                    render={({ field }) => (
-                      <Textarea id="description" {...field} placeholder="Description" />
-                    )}
+                    render={({ field }) => {
+                      const charCount = field.value?.length || 0
+                      const maxChars = 150
+                      return (
+                        <>
+                          <Textarea
+                            id="description"
+                            {...field}
+                            maxLength={maxChars}
+                            placeholder="Description"
+                          />
+                          <div className="text-sm text-muted-foreground text-right mt-1">
+                            {charCount}/{maxChars} characters
+                          </div>
+                        </>
+                      )
+                    }}
+
                   />
                 </div>
               </div>

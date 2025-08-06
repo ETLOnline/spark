@@ -30,6 +30,11 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
   const [overviewLoading, , , updatespaceDetails] =
     useServerAction(UpdateSpaceAction)
 
+  const encodedChannelSlug = encodeURIComponent(
+    space.channel?.channel_slug ?? ""
+  )
+  const encodedSpaceSlug = encodeURIComponent(space.space_slug)
+
   useEffect(() => {
     if (space.overview) {
       setContent(space.overview)
@@ -80,7 +85,7 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
         <CreateShortcut
           type="space"
           entity={{
-            slug: `${space.channel?.channel_slug}/spaces/${space?.space_slug}`,
+            slug: `${encodedChannelSlug}/spaces/${encodedSpaceSlug}`,
             title: `${space?.channel?.channel_name} - ${space?.space_name}`
           }}
         />

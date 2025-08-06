@@ -86,6 +86,11 @@ function SpaceSidebar({ space }: Props) {
     space?.id
   )
 
+  const encodedSpaceSlug = encodeURIComponent(space.space_slug)
+  const encodedChannelSlug = encodeURIComponent(
+    space.channel?.channel_slug ?? ""
+  )
+
   const canViewChat = permissionChecker
     ? permissionChecker.canAccess("space.chat.view")
     : false
@@ -123,7 +128,7 @@ function SpaceSidebar({ space }: Props) {
   })
 
   function getFeatureUrl(feature_slug: string) {
-    return `/channels/${space.channel?.channel_slug}/spaces/${space.space_slug}?page-type=${feature_slug}`
+    return `/channels/${encodedChannelSlug}/spaces/${encodedSpaceSlug}?page-type=${feature_slug}`
   }
   // /channels/etl-online/spaces/test
 
@@ -179,14 +184,14 @@ function SpaceSidebar({ space }: Props) {
 
           {/* space overview */}
           <Link
-            href={`/channels/${space.channel?.channel_slug}/spaces/${space.space_slug}`}
+            href={`/channels/${encodedChannelSlug}/spaces/${encodedSpaceSlug}`}
           >
             <SidebarMenuItem
               className={`flex flex-row items-center gap-2 p-2 rounded
                ${
                  !pageType.get("page-type") &&
                  pathname ===
-                   `/channels/${space.channel?.channel_slug}/spaces/${space.space_slug}`
+                   `/channels/${encodedChannelSlug}/spaces/${encodedSpaceSlug}`
                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
                    : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                }`}
@@ -234,7 +239,7 @@ function SpaceSidebar({ space }: Props) {
 
           <SidebarGroupLabel>Other</SidebarGroupLabel>
           {spaceStaticFeatures.map((feature) => {
-            if (feature.name === "settings" && !canViewSetting) {
+            if (feature.name === "Settings" && !canViewSetting) {
               return null
             }
             return (

@@ -38,11 +38,13 @@ interface ChannelProps {
     actionType: "deleted" | "updated",
     channel: SelectChannel
   ) => void
+  setIsCommunityMember?: React.Dispatch<React.SetStateAction<boolean | null>>
 }
 
 const ChannelsContextMenu: React.FC<ChannelProps> = ({
   channel,
-  onActionComplete
+  onActionComplete,
+  setIsCommunityMember
 }) => {
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const superAdmin = useAtomValue(userStore.SuperAdmin)
@@ -66,6 +68,7 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
       const res = await joinChannel(channel.id, currentUserId)
       if (res?.success) {
         setIsChannelMember(true)
+        setIsCommunityMember?.(true)
         toast({
           title: "Channel Joined",
           description: "You have successfully joined the channel!",
@@ -76,6 +79,7 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
       }
     }
   }
+  const encodedChannelSlug = encodeURIComponent(channel.channel_slug)
 
   const { permissionChecker } = usePermissionChecker(
     "scoped",
@@ -150,7 +154,7 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
           {(canViewSpace || channel.channel_type === "public") && (
             <DropdownMenuItem
               onClick={() =>
-                router.push(`/channels/${channel.channel_slug}/spaces`)
+                router.push(`/channels/${encodedChannelSlug}/spaces`)
               }
             >
               <Layout className="mr-2 h-4 w-4" />
@@ -178,7 +182,7 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
           {canViewUser && (
             <DropdownMenuItem
               onClick={() =>
-                router.push(`/channels/${channel.channel_slug}/users`)
+                router.push(`/channels/${encodedChannelSlug}/users`)
               }
             >
               <User className="mr-2 h-4 w-4" />

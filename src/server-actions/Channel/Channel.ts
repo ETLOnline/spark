@@ -31,6 +31,7 @@ import {
 } from "@/src/db/data-access/roles/query"
 import { GetUserPermissionsParsedAction } from "../UserRoles/UserRole"
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
+import { ensureCommunityMembership } from "../Community/Community"
 
 export const CreateChannelAction = CreateServerAction(
   true,
@@ -178,6 +179,12 @@ export const AttachChannelUserAction = CreateServerAction(
   true,
   async (channelId: string, userId: string) => {
     try {
+      // get channel by id and attach user
+      const channel = await GetChannelById(channelId)
+
+      if (!channel) {
+        return { success: false, error: "Channel not found" }
+      }
       const attachUserRole = await getAndAssignViewerRoles(
         userId,
         "channel_viewer",
@@ -188,6 +195,9 @@ export const AttachChannelUserAction = CreateServerAction(
         userId,
         attachUserRole?.viewerRole?.name
       )
+      if (channel?.community_id) {
+        await ensureCommunityMembership(channel.community_id, userId)
+      }
       return { success: true, data: channelUser }
     } catch (error) {
       return { error: error }

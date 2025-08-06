@@ -141,20 +141,21 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
 
             const crumbs: Array<{ label: string; href?: string }> = []
 
-            if (channel && space) {
-              crumbs.push({
-                label: "Space",
-                href: `/channels/${channel.channel_slug || channel.id}/spaces`
-              })
-              crumbs.push({
-                label: space.space_name,
-                href: `/channels/${channel.channel_slug || channel.id}/spaces/${space.space_slug || space.id}`
-              })
+            if (!channel || !space) {
+              return null
             }
+            crumbs.push({
+              label: "Spaces",
+              href: `/channels/${channel.channel_slug}/spaces`
+            })
+            crumbs.push({
+              label: space.space_name,
+              href: `/channels/${channel.channel_slug}/spaces/${space.space_slug}`
+            })
 
             crumbs.push({
-              label: "Project",
-              href: `/project/${project.id}/board`
+              label: "Projects",
+              href: `/channels/${channel.channel_slug}/spaces/${space.space_slug}?page-type=project-management`
             })
 
             if (project) {

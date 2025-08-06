@@ -15,7 +15,8 @@ interface CommunityPageProps {
 export default async function CommunityPage({ params }: CommunityPageProps) {
   const communitySlug = await params
   const communitySlugValue = communitySlug["community-slug"]
-  const community = await GetCommunityDetailsAction(communitySlugValue)
+  const DecodedCommunitySlug = decodeURIComponent(communitySlugValue)
+  const community = await GetCommunityDetailsAction(DecodedCommunitySlug)
 
   if (!community) {
     return (
