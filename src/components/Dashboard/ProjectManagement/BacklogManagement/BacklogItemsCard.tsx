@@ -1,4 +1,4 @@
-import { Checkbox } from "@/src/components/ui/checkbox"
+
 import React, { useEffect, useState } from "react"
 import BacklogItems from "./BacklogItems"
 import { useAtom, useAtomValue } from "jotai"
@@ -25,7 +25,6 @@ interface Props {
 }
 
 function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
-  const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [tasks, setTasks] = useAtom(taskStore.BackLogTasks)
   const [Pagination, setPagination] = useState<PaginationType>()
   const [tasksLoading, tasksData, tasksError, GetTasks] = useServerAction(
@@ -88,22 +87,15 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
       </p>
       <div className="w-full overflow-x-auto">
         <div className="rounded-md border">
-          <div className="grid grid-cols-12 gap-2 p-4 bg-muted/50 text-sm font-medium">
-            <div className="col-span-1">
-              <Checkbox
-              // checked={false}
-              />
-            </div>
-            <div className="col-span-1">ID</div>
-            <div className="col-span-3">Title</div>
-            <div className="col-span-1">Type</div>
-            <div className="col-span-3 flex justify-around items-center">
-              status
-              <div>Priority</div>
-            </div>
-            <div className="col-span-1">Points</div>
-            <div className="col-span-1">Assignee</div>
-            <div className="col-span-1"></div>
+          <div className="grid grid-cols-12 gap-3 p-4 bg-muted/50 text-sm font-medium">
+            <div className="col-span-1 text-left">ID</div>
+            <div className="col-span-4 text-left">Title</div>
+            <div className="col-span-1 text-center">Type</div>
+            <div className="col-span-2 text-center">Status</div>
+            <div className="col-span-1 text-center">Priority</div>
+            <div className="col-span-1 text-center">Points</div>
+            <div className="col-span-1 text-center">Assignee</div>
+            <div className="col-span-1 text-center">Option</div>
           </div>
           {tasksLoading ? (
             <div className="flex justify-center h-full w-full my-4">
@@ -123,8 +115,6 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
                       <BacklogItems
                         key={task.id}
                         task={task}
-                        selectedItems={selectedItems}
-                        setSelectedItems={setSelectedItems}
                       />
                     )
                 )}
@@ -140,3 +130,4 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
 }
 
 export default BacklogItemsCard
+
