@@ -5,9 +5,9 @@ import { CreateServerAction } from ".."
 
 export const enqueueTaskUpdateEmailAction = CreateServerAction(
   true,
-  async (to: string, task: any) => {
+  async (to: string, dynamicTemplateData: any) => {
     try {
-      await POST.enqueue({ to, task }, { delay: "1m" })
+      await POST.enqueue({ to, dynamicTemplateData }, { delay: "1m" })
       console.log(`update task ${to}`)
       return {
         success: true,

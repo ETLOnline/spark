@@ -1,34 +1,34 @@
-import nodemailer from "nodemailer"
+import sgMail from "@sendgrid/mail"
 
-interface EmailJobPayload {
+interface SendGridEmailPayload {
   to: string
-  subject: string
-  html: string
+  templateId: string
+  dynamicTemplateData: any
 }
 
-export async function sendEmail(job: EmailJobPayload) {
-  const transporter = nodemailer.createTransport({
-    host: process.env.SENDGRID_SMTP_HOST || "smtp.sendgrid.net",
-    port: parseInt(process.env.SENDGRID_SMTP_PORT || "587"),
-    secure: false,
-    auth: {
-      user: process.env.SENDGRID_SMTP_USER || "apikey",
-      pass: process.env.SENDGRID_SMTP_PASS
-    }
-  })
+export async function sendEmail(job: SendGridEmailPayload) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY as string)
 
   try {
-    await transporter.sendMail({
-      from: process.env.SENDGRID_FROM_EMAIL,
+    const msg = {
       to: job.to,
-      subject: job.subject,
-      html: job.html
-    })
+      from: process.env.SENDGRID_FROM_EMAIL as string,
+      templateId: job.templateId,
+      dynamicTemplateData: job.dynamicTemplateData,
+      subject: "Task Update"
+    }
+
+    await sgMail.send(msg)
+
     console.log(
-      `Email successfully sent to ${job.to}: ${job.subject} via SendGrid`
+      `Email successfully sent to ${job.to} via SendGrid Dynamic Template`
     )
-  } catch (error) {
-    console.error(`Failed to send email to ${job.to} via SendGrid:`, error)
+  } catch (error: any) {
+    console.error(`Failed to send dynamic email to ${job.to}:`, error)
+
+    if (error.response) {
+      console.error(error.response.body)
+    }
     throw error
   }
 }

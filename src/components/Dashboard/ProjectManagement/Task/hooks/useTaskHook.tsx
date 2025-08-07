@@ -8,6 +8,7 @@ import {
 } from "@/src/server-actions/Tasks/Task"
 import { projectStore } from "@/src/store/project/projectStore"
 import { userStore } from "@/src/store/user/userStore"
+import { prepareTaskEmailData } from "@/src/utils/clientHelper"
 import { useAtom, useAtomValue } from "jotai"
 import { useParams } from "next/navigation"
 
@@ -93,10 +94,22 @@ const useTaskHook = ({
         }
         const updatedTask = await UpdateTask(selectedTask?.id, payload)
         if (updatedTask?.success && updatedTask.data) {
-          await enqueueTaskUpdateEmailAction(
-            "virkusama3@gmail.com",
-            updatedTask.data
-          )
+          const currentUserId = authUser?.unique_id
+
+          let mailSendTo: string | undefined
+
+          if (updatedTask.data?.assignee?.unique_id === currentUserId) {
+            mailSendTo = updatedTask.data?.assignor?.email
+          } else {
+            mailSendTo = updatedTask.data?.assignee?.email
+          }
+
+          console.log(mailSendTo, "mailSendTo")
+
+          if (mailSendTo) {
+            const dynamicTemplateData = prepareTaskEmailData(updatedTask.data)
+            await enqueueTaskUpdateEmailAction(mailSendTo, dynamicTemplateData)
+          }
           if (onUpdateComplete) {
             onUpdateComplete(updatedTask?.data)
           }

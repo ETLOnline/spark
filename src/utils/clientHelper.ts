@@ -90,3 +90,27 @@ export function isEntityUser(
     ) ?? false
   )
 }
+
+export function prepareTaskEmailData(task: any) {
+  const assigneeName = task.assignee
+    ? `${task.assignee.first_name} ${task.assignee.last_name}`.trim()
+    : "Unassigned"
+
+  const assignorName = task.assignor
+    ? `${task.assignor.first_name} ${task.assignor.last_name}`.trim()
+    : "System"
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+
+  return {
+    task_title: task.task_title || "N/A",
+    task_id: task.task_num || "N/A",
+    project_name: task.project_name || "N/A",
+    priority: task.task_priority || "N/A",
+    assignee_name: assigneeName,
+    assignor_name: assignorName,
+    issue_type: task.task_type || "N/A",
+    description: task.description || "No description provided.",
+    task_url: `${baseUrl}/project/${task.project_id}/task/${task.id}`
+  }
+}

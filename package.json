@@ -41,6 +41,7 @@
     "@radix-ui/react-toast": "^1.2.4",
     "@radix-ui/react-tooltip": "^1.1.4",
     "@react-three/fiber": "^9.0.0-alpha.8",
+    "@sendgrid/mail": "^8.1.5",
     "@tiptap/extension-bold": "^2.24.1",
     "@tiptap/extension-bullet-list": "^2.24.1",
     "@tiptap/extension-character-count": "^2.0.0",
