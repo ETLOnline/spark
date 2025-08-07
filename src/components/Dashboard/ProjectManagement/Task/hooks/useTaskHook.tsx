@@ -104,8 +104,6 @@ const useTaskHook = ({
             mailSendTo = updatedTask.data?.assignee?.email
           }
 
-          console.log(mailSendTo, "mailSendTo")
-
           if (mailSendTo) {
             const dynamicTemplateData = prepareTaskEmailData(updatedTask.data)
             await enqueueTaskUpdateEmailAction(mailSendTo, dynamicTemplateData)
