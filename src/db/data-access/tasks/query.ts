@@ -4,6 +4,7 @@ import {
   desc,
   eq,
   inArray,
+  isNotNull,
   isNull,
   like,
   or,
@@ -33,6 +34,7 @@ export type taskQueryFilters = {
   type?: string[]
   assignee?: string[]
   status?: string[]
+  isSprint?: boolean
 }
 
 export async function CreateTask(taskData: InsertTask) {
@@ -77,7 +79,9 @@ export async function GetTasks(filters?: taskQueryFilters) {
         whereClauses.push(eq(taskTable.project_id, filters.project_id))
       }
 
-      if (filters.sprint_id) {
+      if (filters.isSprint) {
+        whereClauses.push(isNotNull(taskTable.sprint_id))
+      } else if (filters.sprint_id) {
         whereClauses.push(eq(taskTable.sprint_id, filters.sprint_id))
       } else {
         whereClauses.push(isNull(taskTable.sprint_id))

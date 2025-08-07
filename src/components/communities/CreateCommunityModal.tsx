@@ -118,7 +118,6 @@ export default function CreateCommunityModal({
         form.clearErrors("slug")
         return
       }
-      console.log(communityId, "communityIdcommunityIdcommunityId")
 
       try {
         const result = await isCommunitySlugAvailable(slug, communityId)

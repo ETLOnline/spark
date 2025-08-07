@@ -92,7 +92,6 @@ const CreateNewChat = () => {
 
   useEffect(() => {
     if (contactFilter) {
-      console.log("filter => ", contactFilter)
       getUserList(contactFilter)
     }
   }, [contactFilter])

@@ -16,12 +16,26 @@ import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import StatusRequiredDialog from "../StatusRequiredDialog"
 import { projectStore } from "@/src/store/project/projectStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { TaskModal } from "../Task/components/TaskModal"
+import { SelectTask } from "@/src/db/schema"
+import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
+import { TaskFiltersType } from "../types/taskFilters.type"
+import { taskStore } from "@/src/store/tasks/taskStore"
 
 export function SprintManagement() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false)
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
   const [openDialog, setOpenDialog] = useState(false)
+
+  const [tasks, setTasks] = useState<SelectTask[]>([])
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<SelectTask | null>(null)
+  const [getTaskLoading, , , GetTasks] = useServerAction(GetSprintTasksAction)
+  const [sprintID, setSprintID] = useState<string>("")
+  const [shouldRefetchTasks, setShouldRefetchTasks] = useAtom(
+    taskStore.shouldRefetchTasks
+  )
 
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
 
@@ -42,6 +56,21 @@ export function SprintManagement() {
     }
     fetchSprints()
   }, [projectId])
+
+  useEffect(() => {
+    if (!shouldRefetchTasks) return
+    const fetchTasks = async () => {
+      const tasks = await GetTasks({
+        project_id: projectId,
+        isSprint: true
+      })
+      if (tasks?.success && tasks.data) {
+        setTasks(tasks.data.tasks)
+      }
+      setShouldRefetchTasks(false)
+    }
+    fetchTasks()
+  }, [projectId, shouldRefetchTasks])
 
   // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(
@@ -73,7 +102,18 @@ export function SprintManagement() {
         ) : sprintList.length > 0 ? (
           sprintList
             .filter((s) => s.sprint_status !== "closed")
-            .map((sprint) => <SprintCardPage key={sprint.id} sprint={sprint} />)
+            .map((sprint) => (
+              <SprintCardPage
+                key={sprint.id}
+                sprint={sprint}
+                tasks={tasks}
+                setSelectedTask={setSelectedTask}
+                isTaskModalOpen={isTaskModalOpen}
+                setIsTaskModalOpen={setIsTaskModalOpen}
+                setTasks={setTasks}
+                setSprintId={setSprintID}
+              />
+            ))
         ) : (
           <NoDataCard
             title="No Sprints Found"
@@ -86,6 +126,28 @@ export function SprintManagement() {
       <CreateSprintModal
         isCreateSprintOpen={isCreateSprintOpen}
         setIsCreateSprintOpen={setIsCreateSprintOpen}
+      />
+
+      <TaskModal
+        isTaskModelOpen={isTaskModalOpen}
+        setIsTaskModelOpen={setIsTaskModalOpen}
+        sprintId={sprintID}
+        selectedTask={selectedTask ?? undefined}
+        onCreateComplete={(task) => {
+          setSelectedTask(task)
+          setTasks((prevTasks) => [...prevTasks, task])
+        }}
+        onUpdateComplete={(task) => {
+          setSelectedTask(task)
+          setTasks((prevTasks) =>
+            prevTasks.map((t) => {
+              if (t.id === task.id) {
+                return task
+              }
+              return t
+            })
+          )
+        }}
       />
     </div>
   ) : (
