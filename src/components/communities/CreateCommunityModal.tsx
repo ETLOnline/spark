@@ -40,6 +40,7 @@ import {
 } from "@/src/server-actions/Community/Community"
 import { communityStore } from "@/src/store/community/communityStore"
 import { CommunityCategory } from "@/src/db/data-access/communities/query"
+import { slugify } from "@/src/utils/helpers"
 
 const communitySchema = z.object({
   title: z.string().min(1, "Title required").max(50, "Title is too long"),
@@ -142,9 +143,9 @@ export default function CreateCommunityModal({
   const handleTitleChange = (titleValue: string) => {
     setCurrentTitle(titleValue)
 
-    const generatedSlug = (titleValue?.trim() || "")
-      .replaceAll(" ", "-")
-      .toLowerCase()
+    const slug = (titleValue?.trim() || "").replaceAll(" ", "-").toLowerCase()
+
+    const generatedSlug = slugify(slug)
 
     form.setValue("slug", generatedSlug)
 
