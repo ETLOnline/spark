@@ -82,6 +82,12 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { updateUserRoleForEntityAction } from "@/src/server-actions/UserRoles/UserRole"
 import { CommunityDetailData } from "@/src/db/data-access/communities/query"
 import { DetachCommunityUserAction } from "@/src/server-actions/Community/Community"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "../ui/tooltip"
 
 interface Props {
   entityType: "channel" | "space" | "community"
@@ -443,12 +449,13 @@ export default function ChannelUserList({
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
-            <div className="grid grid-cols-12 p-4 bg-muted font-medium">
-              <div className="col-span-4">User</div>
-              <div className="col-span-4">Email</div>
-              <div className="col-span-3">Role</div>
+            <div className="grid grid-cols-12 px-2 py-4 bg-muted font-medium">
+              <div className="col-span-4 lg:col-span-3">User</div>
+              <div className="col-span-4 lg:col-span-4">Email</div>
+              <div className="col-span-3 lg:col-span-4">Role</div>
               <div className="col-span-1">Actions</div>
             </div>
+
             <div className="divide-y">
               {filteredUsers.map((cu) => {
                 const user = cu.user
@@ -456,9 +463,9 @@ export default function ChannelUserList({
                 return (
                   <div
                     key={user.unique_id}
-                    className="grid grid-cols-12 p-4 items-center"
+                    className="grid grid-cols-12 px-2  py-4 items-center"
                   >
-                    <div className="col-span-4 flex items-center gap-3">
+                    <div className="col-span-3  lg:col-span-3 flex items-center gap-2">
                       <Avatar>
                         <AvatarImage
                           src={user.profile_url || undefined}
@@ -469,28 +476,49 @@ export default function ChannelUserList({
                           {user.first_name.split(" ")[1]?.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="font-medium">{user.first_name}</div>
+                      <div className="font-medium text-sm lg:text-base">
+                        {user.first_name}
+                      </div>
                     </div>
-                    <div className="col-span-4 text-sm text-muted-foreground">
+                    <div className="col-span-3 lg:col-span-4 text-xs lg:text-sm text-muted-foreground">
                       {user.email}
                     </div>
-                    <div className="col-span-3 flex items-center gap-1">
-                      <Badge
-                        className="capitalize"
-                        variant={
-                          cu.role === SpaceUserRole.Admin
-                            ? "default"
-                            : "outline"
-                        }
-                      >
-                        {cu.role}
-                      </Badge>
+
+                    <div className="col-span-3 lg:col-span-4 flex items-center">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="flex-grow">
+                              <Badge
+                                className="capitalize text-xs lg:text-sm whitespace-nowrap overflow-hidden text-ellipsis"
+                                variant={
+                                  cu.role === SpaceUserRole.Admin
+                                    ? "default"
+                                    : "outline"
+                                }
+                              >
+                                {cu.role && cu.role.length > 25
+                                  ? cu.role.slice(0, 25) + "..."
+                                  : cu.role}
+                              </Badge>
+                            </span>
+                          </TooltipTrigger>
+                          {cu.role && cu.role.length > 25 && (
+                            <TooltipContent>{cu.role}</TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
-                    <div className="col-span-1 text-center">
+                    {/* Actions */}
+                    <div className="col-span-1 flex justify-center">
                       {(canUpdateUser || canDeleteUser) && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                            >
                               <MoreHorizontal className="h-4 w-4" />
                               <span className="sr-only">More options</span>
                             </Button>
