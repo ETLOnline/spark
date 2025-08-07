@@ -43,6 +43,7 @@ import { useDebouncedCallback } from "use-debounce"
 import { useAuthUser } from "@/src/hooks/useAuthUser"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { CommunityDetailData } from "@/src/db/data-access/communities/query"
+import { slugify } from "@/src/utils/helpers"
 
 const channelSchema = z.object({
   channel_name: z
@@ -208,7 +209,9 @@ function CreateChannels({
 
     const channelSlug = channelName.trim().replaceAll(" ", "-").toLowerCase()
 
-    const generatedSlug = `${community?.slug}-${channelSlug}`.trim()
+    const slug = `${community?.slug}-${channelSlug}`.trim()
+
+    const generatedSlug = slugify(slug)
 
     form.setValue("channel_slug", generatedSlug, { shouldValidate: true })
 

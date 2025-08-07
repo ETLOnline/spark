@@ -34,6 +34,7 @@ import {
 import { channelStore } from "@/src/store/channel/channelStore"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
+import { slugify } from "@/src/utils/helpers"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { CircleCheck, CircleXIcon } from "lucide-react"
@@ -123,18 +124,19 @@ function CreateSpaceModal({
   useEffect(() => {
     const value = form.getValues("space_name")?.trim() || ""
     const slug = value.replaceAll(" ", "-").toLowerCase()
+    const generatedSlug = slugify(slug)
 
-    if (value && selectedSpace?.space_slug !== slug) {
+    if (value && selectedSpace?.space_slug !== generatedSlug) {
       debouncedCheckSlugAvailability(
-        slug,
+        generatedSlug,
         () => {
           form.clearErrors("space_slug")
-          setslugAvailableMessage(`${slug} is available`)
+          setslugAvailableMessage(`${generatedSlug} is available`)
         },
         () => {
           form.setError("space_slug", {
             type: "manual",
-            message: `${slug} is already taken`
+            message: `${generatedSlug} is already taken`
           })
           setslugAvailableMessage("")
         }
@@ -142,7 +144,7 @@ function CreateSpaceModal({
     } else {
       setslugAvailableMessage("")
     }
-    form.setValue("space_slug", slug)
+    form.setValue("space_slug", generatedSlug)
   }, [form.watch("space_name")])
 
   useEffect(() => {
