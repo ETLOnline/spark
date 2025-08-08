@@ -350,6 +350,7 @@ function CreateChannels({
                         onChange={(e) => {
                           handleChannelNameChange(e)
                         }}
+                        placeholder="Enter channel name"
                       />
                     )}
                   />
@@ -372,7 +373,7 @@ function CreateChannels({
                     defaultValue=""
                     control={form.control}
                     render={({ field }) => (
-                      <Input id="channel_slug" {...field} disabled={true} />
+                      <Input id="channel_slug" {...field} disabled={true} placeholder="channel_slug"/>
                     )}
                   />
                 </div>
@@ -410,7 +411,7 @@ function CreateChannels({
                     name="description"
                     control={form.control}
                     render={({ field }) => (
-                      <Textarea id="description" {...field} />
+                      <Textarea id="description" {...field} placeholder="Description" />
                     )}
                   />
                 </div>

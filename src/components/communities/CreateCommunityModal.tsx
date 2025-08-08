@@ -392,6 +392,7 @@ export default function CreateCommunityModal({
                           field.onChange(e)
                           handleTitleChange(e.target.value)
                         }}
+                        placeholder="Enter community name"
                       />
                     )}
                   />
@@ -416,7 +417,7 @@ export default function CreateCommunityModal({
                     defaultValue=""
                     control={form.control}
                     render={({ field }) => (
-                      <Input id="slug" {...field} disabled={true} />
+                      <Input id="slug" {...field} disabled={true} placeholder="community-slug"/>
                     )}
                   />
                 </div>
@@ -458,7 +459,7 @@ export default function CreateCommunityModal({
                     name="description"
                     control={form.control}
                     render={({ field }) => (
-                      <Textarea id="description" {...field} />
+                      <Textarea id="description" {...field} placeholder="Description" />
                     )}
                   />
                 </div>
