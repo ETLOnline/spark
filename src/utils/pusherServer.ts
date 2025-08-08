@@ -1,6 +1,6 @@
 import Pusher from "pusher"
 
-const pusher = new Pusher({
+const pusherServer = new Pusher({
   appId: process.env.PUSHER_APP_ID!,
   key: process.env.NEXT_PUBLIC_PUSHER_KEY!,
   secret: process.env.PUSHER_SECRET!,
@@ -8,4 +8,4 @@ const pusher = new Pusher({
   useTLS: true
 })
 
-export default pusher
+export default pusherServer
