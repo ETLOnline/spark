@@ -62,7 +62,7 @@ export function SprintManagement() {
     const fetchTasks = async () => {
       const tasks = await GetTasks({
         project_id: projectId,
-        isSprint: true
+        sprint_ids: sprintList.map((s) => s.id)
       })
       if (tasks?.success && tasks.data) {
         setTasks(tasks.data.tasks)

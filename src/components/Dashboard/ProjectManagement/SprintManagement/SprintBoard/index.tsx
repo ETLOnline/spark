@@ -54,7 +54,7 @@ function SprintBoard() {
     const getTask = async () => {
       const tasks = await GetSPrintTask({
         project_id: projectId,
-        isSprint: true
+        sprint_ids: sprintList.map((s) => s.id)
       })
       if (tasks?.success && tasks.data) {
         setTasks(tasks.data.tasks)
