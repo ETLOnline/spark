@@ -1,6 +1,6 @@
 "use client"
 import type React from "react"
-import { useEffect, useState } from "react"
+import { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import { Card, CardContent } from "@/src/components/ui/card"
 import { Input } from "@/src/components/ui/input"
@@ -14,12 +14,7 @@ import {
 } from "@/src/components/ui/select"
 import { AlertCircle, BarChart2, CircleAlert, Flag } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
-import {
-  InsertTaskStatus,
-  SelectProjectUser,
-  SelectTask,
-  SelectUser
-} from "@/src/db/schema"
+import { InsertTaskStatus, SelectTask, SelectUser } from "@/src/db/schema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { ToUpperCase } from "@/src/utils/helpers"
@@ -38,10 +33,10 @@ import MultiSelect, {
 import { useParams } from "next/navigation"
 import { GetProjectUsersAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
-import { TaskComment } from "./task-comment"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { userStore } from "@/src/store/user/userStore"
 import { useAtomValue } from "jotai"
+import { TaskComment } from "./task-comment"
 interface Props {
   onSubmit: (task: any) => void
   statuses?: InsertTaskStatus[]
