@@ -377,7 +377,6 @@ export default function ChannelUserList({
   }
 
   const isScopedAdminFn = (user?: SelectUser) => {
-    console.log("user", user)
     if (user?.roles) {
       return user.roles.some(
         (role) =>

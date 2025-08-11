@@ -158,6 +158,7 @@ export const TaskModal = ({
             onSubmit={handleSubmit}
             selectedTask={internalTask}
             loading={isLoading}
+            isTaskModelOpen={isTaskModelOpen}
           />
         </ScrollArea>
       </DialogContent>

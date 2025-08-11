@@ -173,9 +173,7 @@ export default function CommunityDetailsClient({
     )
   }
 
-  const communityInitial = community?.title
-    ? getInitials(community.title)
-    : "C"
+  const communityInitial = community?.title ? getInitials(community.title) : "C"
 
   const onActionComplete = (
     actionType: "create" | "updated" | "deleted",
@@ -191,7 +189,6 @@ export default function CommunityDetailsClient({
         }))
       }
     } else if (actionType === "updated") {
-      console.log("Channel updated:", channel)
       setChannels((prevChannels) =>
         prevChannels.map((c) => (c.id === channel.id ? channel : c))
       )
