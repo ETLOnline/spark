@@ -46,6 +46,7 @@ import {
 } from "../../ui/emoji-picker"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import pusherClient from "@/src/services/realtime/PusherClient"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -62,26 +63,22 @@ interface ChatScreenProps {
  */
 function joinChannel(
   channelName: string,
-  onMessageReceived: (message: SelectMessage) => void
+  onMessageReceived: (message: any) => void
 ) {
-  const channel = AblyClient.channels.get(channelName)
+  const safeChannelname = channelName.replace(/:/g, "-")
 
-  // Subscribe to messages
-  channel.subscribe((message) => {
-    onMessageReceived(message.data)
+  const channel = pusherClient.subscribe(safeChannelname)
+
+  channel.bind("new-message", (data: any) => {
+    onMessageReceived(data.newMessage)
   })
 
-  // Send a message
-  function sendMessage(content: any) {
-    channel.publish("message", content)
-  }
-
   function unsubscribe() {
-    channel.unsubscribe()
-    channel.detach()
+    pusherClient.unsubscribe(safeChannelname)
   }
 
-  return { sendMessage, unsubscribe }
+  // We are not using a client-side sendMessage function, as messages are sent via a server action.
+  return { unsubscribe }
 }
 
 /**
@@ -182,20 +179,26 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   useEffect(() => {
     if (!currentChat || !authUser) return
 
-    const { sendMessage, unsubscribe } = joinChannel(
-      currentChat.channel_id,
-      (message) => {
-        setMessages((prev) => [...prev, message])
-      }
-    )
+    const { unsubscribe } = joinChannel(currentChat.channel_id, (message) => {
+      setMessages((prev) => {
+        if (prev.some((msg) => msg.id === message.id)) {
+          return prev
+        }
+        return [...prev, message]
+      })
+    })
 
-    setChatRealtime({ sendMessage, unsubscribe })
+    setChatRealtime({ unsubscribe })
 
     if (!currentChat.is_group) {
       const chatContact = currentChat.users?.find(
         (user) => user.user_id !== authUser?.unique_id
       )?.user
       setChatContact(chatContact || null)
+    }
+
+    return () => {
+      unsubscribe()
     }
   }, [currentChat?.channel_id, authUser])
 

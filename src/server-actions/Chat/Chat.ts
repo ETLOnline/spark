@@ -16,6 +16,7 @@ import { AuthUserAction } from "../User/AuthUserAction"
 import { createChatMessage } from "@/src/db/data-access/chat/message/query"
 import ChatChannelHash from "@/src/components/Dashboard/Chat/helper"
 import { AblyClientRest } from "@/src/services/realtime/AblyClient"
+import pusherServer from "@/src/utils/pusherServer"
 
 export const CreatePrivateChatAction = CreateServerAction(
   true,
@@ -112,15 +113,12 @@ export const AddMessageToChatAction = CreateServerAction(
             newMessage.chat_id,
             newMessage.message
           )
-
-          // const channelHash = ChatChannelHash(updatedChat.channel_id)
-
-          // send message to channel
-
-          const realtimeChannel = AblyClientRest.channels.get(
-            updatedChat.channel_id
+          // Broadcast the message using Pusher
+          await pusherServer.trigger(
+            updatedChat.channel_id.replace(/:/g, "-"),
+            "new-message",
+            { newMessage }
           )
-          await realtimeChannel.publish("message", newMessage)
 
           return { success: true, data: newMessage }
         } else {
@@ -128,6 +126,7 @@ export const AddMessageToChatAction = CreateServerAction(
         }
       }
     } catch (error) {
+      console.log("Error in AddMessageToChatAction:", error)
       return { error: error }
     }
   }
