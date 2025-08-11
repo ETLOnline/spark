@@ -265,6 +265,7 @@ function SprintTasks({
         setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
         task_id={task.id}
         currSprintId={currSprint.id}
+        setTasks={setTasks}
       />
     </>
   )

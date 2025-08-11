@@ -4,6 +4,7 @@ import {
   desc,
   eq,
   inArray,
+  isNotNull,
   isNull,
   like,
   or,
@@ -29,6 +30,7 @@ export type taskQueryFilters = {
   searchedItem?: string
   orderList?: string
   sprint_id?: string
+  sprint_ids?: string[]
   priority?: string[]
   type?: string[]
   assignee?: string[]
@@ -77,7 +79,9 @@ export async function GetTasks(filters?: taskQueryFilters) {
         whereClauses.push(eq(taskTable.project_id, filters.project_id))
       }
 
-      if (filters.sprint_id) {
+      if (filters.sprint_ids) {
+        whereClauses.push(inArray(taskTable.sprint_id, filters.sprint_ids))
+      } else if (filters.sprint_id) {
         whereClauses.push(eq(taskTable.sprint_id, filters.sprint_id))
       } else {
         whereClauses.push(isNull(taskTable.sprint_id))

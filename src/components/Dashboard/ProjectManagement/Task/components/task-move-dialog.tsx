@@ -14,7 +14,7 @@ import {
 import { Label } from "@/src/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/src/components/ui/radio-group"
 import { useParams } from "next/navigation"
-import { SelectSprint } from "@/src/db/schema"
+import { SelectTask } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetSprintAction } from "@/src/server-actions/Sprint/sprint"
 import Loader from "@/src/components/common/Loader/Loader"
@@ -29,19 +29,21 @@ interface Props {
   setIsTaskMoveDialogOpen: Dispatch<SetStateAction<boolean>>
   task_id: string
   currSprintId?: string
+  setTasks?: Dispatch<SetStateAction<SelectTask[]>>
 }
 
 export default function TaskMoveDialog({
   isTaskMoveDialogOpen,
   setIsTaskMoveDialogOpen,
   task_id,
-  currSprintId
+  currSprintId,
+  setTasks
 }: Props) {
   const [selectedSprint, setSelectedSprint] = useState("")
-  const setTasks = useSetAtom(taskStore.BackLogTasks)
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
   const [updateTaskloading, , , UpdateTask] = useServerAction(UpdateTaskAction)
+  const setShouldRefetchTasks = useSetAtom(taskStore.shouldRefetchTasks)
 
   const projectId = useParams().id as string
 
@@ -63,10 +65,12 @@ export default function TaskMoveDialog({
         sprint_id: selectedSprint
       })
       if (updatedTask?.success && updatedTask.data) {
-        setTasks((prevTask) =>
-          prevTask.filter((task) => task.id !== updatedTask?.data?.id)
-        )
-
+        if (setTasks) {
+          setTasks((prevTask) =>
+            prevTask.filter((task) => task.id !== updatedTask?.data?.id)
+          )
+        }
+        setShouldRefetchTasks(true)
         toast({
           title: `Task successfully moved to ${sprintList.find((s) => s.id === selectedSprint)?.title}`,
           duration: 2000
