@@ -44,7 +44,12 @@ export async function UpdateSprint(
 
 export async function DeleteSprint(sprintId: string) {
   try {
-    await db.delete(SprintTable).where(eq(SprintTable.id, sprintId))
+    const deletedSprint = await db
+      .delete(SprintTable)
+      .where(eq(SprintTable.id, sprintId))
+      .returning()
+
+    return deletedSprint[0]
   } catch (e: any) {
     throw new Error(e.message)
   }

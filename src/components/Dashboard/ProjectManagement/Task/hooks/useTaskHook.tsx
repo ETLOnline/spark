@@ -15,13 +15,15 @@ interface TaskHookProps {
   sprintId?: string
   onCreateComplete?: (task: SelectTask) => void
   onUpdateComplete?: (task: SelectTask) => void
+  pageName?: string
 }
 
 const useTaskHook = ({
   selectedTask,
   sprintId,
   onCreateComplete,
-  onUpdateComplete
+  onUpdateComplete,
+  pageName
 }: TaskHookProps) => {
   const [statuses, setStatuses] = useAtom(projectStore.projectStatusList)
 
@@ -59,7 +61,7 @@ const useTaskHook = ({
           assign_to: data.assign_to || null,
           assign_by: data.assign_by || authUser?.unique_id
         }
-        const task = await CreateTask(payload)
+        const task = await CreateTask(payload, pageName)
         if (task?.success && task.data) {
           if (onCreateComplete) {
             onCreateComplete(task.data)
@@ -90,7 +92,11 @@ const useTaskHook = ({
           assign_to: data.assign_to || null,
           assign_by: data.assign_by || authUser?.unique_id
         }
-        const updatedTask = await UpdateTask(selectedTask?.id, payload)
+        const updatedTask = await UpdateTask(
+          selectedTask?.id,
+          payload,
+          pageName
+        )
         if (updatedTask?.success && updatedTask.data) {
           if (onUpdateComplete) {
             onUpdateComplete(updatedTask?.data)

@@ -30,6 +30,7 @@ interface TaskModalProps {
   sprintId?: string
   onCreateComplete?: (task: SelectTask) => void
   onUpdateComplete?: (task: SelectTask) => void
+  pageName?: string
 }
 
 export const TaskModal = ({
@@ -38,14 +39,16 @@ export const TaskModal = ({
   selectedTask,
   onCreateComplete,
   onUpdateComplete,
-  sprintId
+  sprintId,
+  pageName
 }: TaskModalProps) => {
   const [statuses] = useAtom(projectStore.projectStatusList)
   const { createTaskLoading, updateTaskLoading, handleSubmit } = useTaskHook({
     selectedTask,
     sprintId,
     onCreateComplete,
-    onUpdateComplete
+    onUpdateComplete,
+    pageName
   })
 
   const searchParams = useSearchParams()
@@ -142,7 +145,10 @@ export const TaskModal = ({
 
   return (
     <Dialog open={isTaskModelOpen} onOpenChange={handleModalClose}>
-      <DialogContent className="sm:max-w-5xl [&>button]:w-6 [&>button]:h-6 [&>button>svg]:w-6 [&>button>svg]:h-6">
+      <DialogContent
+        className="sm:max-w-5xl [&>button]:w-6 [&>button]:h-6 [&>button>svg]:w-6 [&>button>svg]:h-6"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <TaskFormHeader selectedTask={internalTask} />
           <DialogTitle className="sr-only">

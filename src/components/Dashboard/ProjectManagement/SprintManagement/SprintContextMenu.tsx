@@ -30,6 +30,7 @@ import {
 } from "@/src/components/ui/alert-dialog"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { useParams } from "next/navigation"
+import usePageName from "@/src/hooks/usePageName"
 
 interface Props {
   isSprintContextMenuOpen: boolean
@@ -65,6 +66,8 @@ function SprintContextMenu({
     setIsCreateSprintOpen(true)
     setIsSprintContextMenuOpen(false)
   }
+  const { GetPageName } = usePageName()
+  const pageName = GetPageName()
 
   async function handleDeleteSprint(sprintId: string) {
     try {
@@ -78,7 +81,7 @@ function SprintContextMenu({
           duration: 2000
         })
       } else {
-        const deletedSprint = await DeleteSprint(sprintId)
+        const deletedSprint = await DeleteSprint(sprintId, pageName ?? "")
 
         if (deletedSprint?.success) {
           setSprintList((prevSprints) =>

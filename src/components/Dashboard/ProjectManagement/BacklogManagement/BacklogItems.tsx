@@ -42,6 +42,7 @@ import {
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
 import { getInitials } from "@/src/utils/helpers"
+import usePageName from "@/src/hooks/usePageName"
 
 interface Props {
   task: SelectTask
@@ -59,8 +60,9 @@ function BacklogItems({ task }: Props) {
 
   const [deleteTaskLoading, deleteTaskData, deleteTaskError, DeleteTask] =
     useServerAction(DeleteTaskAction)
+  const { GetPageName } = usePageName()
 
-
+  const pageName = GetPageName()
 
   function EditTask(task: SelectTask) {
     setSelectedTask(task)
@@ -69,7 +71,7 @@ function BacklogItems({ task }: Props) {
 
   async function handleDeleteTask(selectedTask: SelectTask) {
     try {
-      const deletedTask = await DeleteTask(selectedTask)
+      const deletedTask = await DeleteTask(selectedTask, pageName ?? "")
       if (deletedTask?.success) {
         SetTasks((prev) => prev.filter((t) => t.id !== selectedTask.id))
         toast({
@@ -164,13 +166,17 @@ function BacklogItems({ task }: Props) {
             {task.task_title}
           </div>
         </div>
-        <div className="col-span-1 text-center">{getTypeLabel(task.task_type)}</div>
+        <div className="col-span-1 text-center">
+          {getTypeLabel(task.task_type)}
+        </div>
         <div className="col-span-2 text-center">
           <Badge variant={"outline"}>
             {status.find((s) => s.id === task.status_id)?.name}
           </Badge>
         </div>
-        <div className="col-span-1 text-center">{getPriorityLabel(task.task_priority)}</div>
+        <div className="col-span-1 text-center">
+          {getPriorityLabel(task.task_priority)}
+        </div>
         <div className="col-span-1 text-center">{task.story_points}</div>
         <div className="col-span-1 text-center">
           {task.assign_to ? (
