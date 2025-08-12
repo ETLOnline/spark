@@ -22,9 +22,12 @@ async function Layout({ params, children }: Props) {
 
   const { channel_slug, space_slug } = await params
 
+  const decodedChannelSlug = decodeURIComponent(channel_slug)
+  const decodedSpaceSlug = decodeURIComponent(space_slug)
+
   const currentSpace = await GetSpaceBySlugAction(
-    space_slug,
-    channel_slug,
+    decodedSpaceSlug,
+    decodedChannelSlug,
     true
   )
 

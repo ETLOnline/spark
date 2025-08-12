@@ -1,11 +1,11 @@
 export const spaceStaticFeatures = [
   {
-    name: "settings",
+    name: "Settings",
     icon: "settings",
     slug: "settings"
   },
   {
-    name: "users",
+    name: "Users",
     icon: "users",
     slug: "users"
   }

@@ -221,7 +221,11 @@ export default function ChannelPage() {
                     ) : null}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3  2xl:grid-cols-5   gap-6">
                       {spaces?.map((space) => (
-                        <SpacesCard space={space} key={space.id} />
+                        <SpacesCard
+                          space={space}
+                          key={space.id}
+                          setIsChannelMember={setIsChannelMember}
+                        />
                       ))}
                     </div>
                   </>

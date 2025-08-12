@@ -14,9 +14,12 @@ interface Props {
 async function SpacePage({ params }: Props) {
   const { channel_slug, space_slug } = await params
 
+  const decodedChannelSlug = decodeURIComponent(channel_slug)
+  const decodedSpaceSlug = decodeURIComponent(space_slug)
+
   const currentSpace = await GetSpaceBySlugAction(
-    space_slug,
-    channel_slug,
+    decodedSpaceSlug,
+    decodedChannelSlug,
     true
   )
 

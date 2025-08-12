@@ -43,6 +43,7 @@ import { useDebouncedCallback } from "use-debounce"
 import { useAuthUser } from "@/src/hooks/useAuthUser"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { CommunityDetailData } from "@/src/db/data-access/communities/query"
+import { slugify } from "@/src/utils/helpers"
 
 const channelSchema = z.object({
   channel_name: z
@@ -208,7 +209,9 @@ function CreateChannels({
 
     const channelSlug = channelName.trim().replaceAll(" ", "-").toLowerCase()
 
-    const generatedSlug = `${community?.slug}-${channelSlug}`.trim()
+    const slug = `${community?.slug}-${channelSlug}`.trim()
+
+    const generatedSlug = slugify(slug)
 
     form.setValue("channel_slug", generatedSlug, { shouldValidate: true })
 
@@ -410,9 +413,23 @@ function CreateChannels({
                   <Controller
                     name="description"
                     control={form.control}
-                    render={({ field }) => (
-                      <Textarea id="description" {...field} placeholder="Description" />
-                    )}
+                    render={({ field }) => {
+                      const charCount = field.value?.length || 0
+                      const maxChars = 150
+                      return (
+                        <>
+                          <Textarea
+                            id="description"
+                            {...field}
+                            maxLength={maxChars}
+                            placeholder="Description"
+                          />
+                          <div className="text-sm text-muted-foreground text-right mt-1">
+                            {charCount}/{maxChars} characters
+                          </div>
+                        </>
+                      )
+                    }}
                   />
                 </div>
               </div>

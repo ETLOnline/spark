@@ -103,18 +103,19 @@ const useShortcut = () => {
   const generateFullUrl = (list: SelectShortcut[]) => {
     const updatedShortcuts = list.map((s) => {
       const shortcut = { ...s }
+      const encodedUrl = encodeURIComponent(shortcut.url)
       switch (shortcut.type) {
         case "space":
           shortcut.url = `/channels/${shortcut.url}`
           break
         case "channel":
-          shortcut.url = `/channels/${shortcut.url}/spaces`
+          shortcut.url = `/channels/${encodedUrl}/spaces`
           break
         case "community":
-          shortcut.url = `/communities/${shortcut.url}`
+          shortcut.url = `/communities/${encodedUrl}`
           break
         case "project":
-          shortcut.url = `/project/${shortcut.url}/board`
+          shortcut.url = `/project/${encodedUrl}/board`
           break
         default:
           break

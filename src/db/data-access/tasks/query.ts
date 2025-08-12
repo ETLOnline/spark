@@ -3,6 +3,8 @@ import {
   asc,
   desc,
   eq,
+  inArray,
+  isNotNull,
   isNull,
   like,
   or,
@@ -28,10 +30,11 @@ export type taskQueryFilters = {
   searchedItem?: string
   orderList?: string
   sprint_id?: string
-  priority?: string
-  type?: string
-  assignee?: string | null
-  status?: string
+  sprint_ids?: string[]
+  priority?: string[]
+  type?: string[]
+  assignee?: string[]
+  status?: string[]
 }
 
 export async function CreateTask(taskData: InsertTask) {
@@ -76,7 +79,9 @@ export async function GetTasks(filters?: taskQueryFilters) {
         whereClauses.push(eq(taskTable.project_id, filters.project_id))
       }
 
-      if (filters.sprint_id) {
+      if (filters.sprint_ids) {
+        whereClauses.push(inArray(taskTable.sprint_id, filters.sprint_ids))
+      } else if (filters.sprint_id) {
         whereClauses.push(eq(taskTable.sprint_id, filters.sprint_id))
       } else {
         whereClauses.push(isNull(taskTable.sprint_id))
@@ -92,22 +97,35 @@ export async function GetTasks(filters?: taskQueryFilters) {
         )
       }
 
-      if (filters.priority) {
-        whereClauses.push(eq(taskTable.task_priority, filters.priority))
+      if (filters.priority && filters.priority.length > 0) {
+        whereClauses.push(inArray(taskTable.task_priority, filters.priority))
       }
 
-      if (filters.type) {
-        whereClauses.push(eq(taskTable.task_type, filters.type))
+      if (filters.type && filters.type.length > 0) {
+        whereClauses.push(inArray(taskTable.task_type, filters.type))
       }
 
       if (filters.assignee) {
-        whereClauses.push(eq(taskTable.assign_to, filters.assignee))
-      } else if (filters.assignee === null) {
-        whereClauses.push(isNull(taskTable.assign_to))
+        const assigneeList = filters.assignee.filter((a) => a !== "")
+
+        const hasEmptyString = filters.assignee.includes("")
+
+        if (assigneeList.length > 0 && hasEmptyString) {
+          whereClauses.push(
+            or(
+              inArray(taskTable.assign_to, assigneeList),
+              isNull(taskTable.assign_to)
+            )
+          )
+        } else if (assigneeList.length > 0) {
+          whereClauses.push(inArray(taskTable.assign_to, assigneeList))
+        } else if (hasEmptyString) {
+          whereClauses.push(isNull(taskTable.assign_to))
+        }
       }
 
-      if (filters.status) {
-        whereClauses.push(eq(taskTable.status_id, filters.status))
+      if (filters.status && filters.status.length > 0) {
+        whereClauses.push(inArray(taskTable.status_id, filters.status))
       }
     }
 

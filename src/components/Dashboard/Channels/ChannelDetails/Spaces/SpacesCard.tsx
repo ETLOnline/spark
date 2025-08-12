@@ -24,10 +24,12 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   space: SelectSpace
+  setIsChannelMember?: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-function SpacesCard({ space }: Props) {
+function SpacesCard({ space, setIsChannelMember }: Props) {
   const user = useAtomValue(userStore.AuthUser)
+  const encodedSpaceSlug = encodeURIComponent(space.space_slug)
 
   const { permissionChecker } = usePermissionChecker(
     "scoped",
@@ -85,7 +87,10 @@ function SpacesCard({ space }: Props) {
             )}
           </CardTitle>
           {canSpaceAllowAction || space.space_type === "public" ? (
-            <SpacesActionButtons space={space} />
+            <SpacesActionButtons
+              space={space}
+              setIsChannelMember={setIsChannelMember}
+            />
           ) : null}
         </div>
         <CardDescription>{space.description}</CardDescription>
@@ -95,7 +100,7 @@ function SpacesCard({ space }: Props) {
           {space.membersCount} {space.membersCount === 1 ? 'Member' : 'Members'}
           0 Members
         </Badge> */}
-        <Link href={`./spaces/${space.space_slug}`}>
+        <Link href={`./spaces/${encodedSpaceSlug}`}>
           <Button>
             Launch Space <ArrowRight />
           </Button>

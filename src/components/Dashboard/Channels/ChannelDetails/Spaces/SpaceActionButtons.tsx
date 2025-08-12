@@ -35,9 +35,10 @@ import CreateShortcut from "@/src/components/common/Shortcut/components/CreateSh
 
 interface Props {
   space: SelectSpace
+  setIsChannelMember?: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-function SpacesActionButtons({ space }: Props) {
+function SpacesActionButtons({ space, setIsChannelMember }: Props) {
   const [joinLoading, joinResult, joinError, joinSpace] = useServerAction(
     AttachSpaceUserAction
   )
@@ -54,11 +55,12 @@ function SpacesActionButtons({ space }: Props) {
     }
   }, [space, currentUserId])
 
-  const handleJoinChannel = async () => {
+  const handleJoinSpace = async () => {
     if (space.id && currentUserId) {
       const res = await joinSpace(space.id, currentUserId)
       if (res?.success) {
         setIsSpaceMember(true)
+        setIsChannelMember?.(true)
         toast({
           title: "Space Joined",
           description: "You have successfully joined the Space!",
@@ -70,6 +72,10 @@ function SpacesActionButtons({ space }: Props) {
     }
   }
 
+  const encodedSpaceSlug = encodeURIComponent(space.space_slug)
+  const encodeChannelSlug = encodeURIComponent(
+    space.channel?.channel_slug ?? ""
+  )
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "SPACE",
@@ -134,7 +140,7 @@ function SpacesActionButtons({ space }: Props) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem
-            onClick={() => router.push(`./spaces/${space.space_slug}`)}
+            onClick={() => router.push(`./spaces/${encodedSpaceSlug}`)}
           >
             <ExternalLink className="mr-2 h-4 w-4" />
             Open Space
@@ -147,7 +153,7 @@ function SpacesActionButtons({ space }: Props) {
           )}
           {!superAdmin && (
             <DropdownMenuItem
-              onClick={handleJoinChannel}
+              onClick={handleJoinSpace}
               disabled={isSpaceMember || joinLoading}
               className={
                 isSpaceMember ? "text-gray-500 cursor-not-allowed" : ""
@@ -159,7 +165,7 @@ function SpacesActionButtons({ space }: Props) {
           )}
           {canViewSpaceUsers && (
             <DropdownMenuItem
-              onClick={() => router.push(`./spaces/${space.space_slug}/users`)}
+              onClick={() => router.push(`./spaces/${encodedSpaceSlug}/users`)}
             >
               <User className="mr-2 h-4 w-4" />
               Users
@@ -168,7 +174,7 @@ function SpacesActionButtons({ space }: Props) {
           {canSetSpaceSetting && (
             <DropdownMenuItem
               onClick={() =>
-                router.push(`./spaces/${space.space_slug}/settings`)
+                router.push(`./spaces/${encodedSpaceSlug}/settings`)
               }
             >
               <Settings className="mr-2 h-4 w-4" />
@@ -179,7 +185,7 @@ function SpacesActionButtons({ space }: Props) {
           <CreateShortcut
             type="space"
             entity={{
-              slug: `${space.channel?.channel_slug}/spaces/${space?.space_slug}`,
+              slug: `${encodeChannelSlug}/spaces/${encodedSpaceSlug}`,
               title: `${space?.channel?.channel_name} - ${space?.space_name}`
             }}
             ctaType="menuItem"

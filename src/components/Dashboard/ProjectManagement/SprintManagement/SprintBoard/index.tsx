@@ -13,10 +13,21 @@ import StatusRequiredDialog from "../../StatusRequiredDialog"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import NoDataCard from "../../../Channels/ChannelDetails/NoDataCard"
 import { Kanban } from "lucide-react"
+import { TaskModal } from "../../Task/components/TaskModal"
+import { SelectTask } from "@/src/db/schema"
+import { TaskFiltersType } from "../../types/taskFilters.type"
+import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 
 function SprintBoard() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
+
+  const [tasks, setTasks] = useState<SelectTask[]>([])
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<SelectTask | null>()
+
+  const [getTaskLoading, , , GetSPrintTask] =
+    useServerAction(GetSprintTasksAction)
 
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
   const [openDialog, setOpenDialog] = useState(false)
@@ -39,6 +50,19 @@ function SprintBoard() {
     fetchSprints()
   }, [projectId])
 
+  useEffect(() => {
+    const getTask = async () => {
+      const tasks = await GetSPrintTask({
+        project_id: projectId,
+        sprint_ids: sprintList.map((s) => s.id)
+      })
+      if (tasks?.success && tasks.data) {
+        setTasks(tasks.data.tasks)
+      }
+    }
+    getTask()
+  }, [projectId])
+
   return projectStatusList.length > 0 ? (
     <>
       {getSprintLoading ? (
@@ -55,8 +79,28 @@ function SprintBoard() {
       ) : (
         sprintList
           .filter((s) => s.sprint_status === "active")
-          .map((sprint) => <SprintBoardCard sprint={sprint} key={sprint.id} />)
+          .map((sprint) => (
+            <SprintBoardCard
+              sprint={sprint}
+              key={sprint.id}
+              tasks={tasks}
+              isTaskModalOpen={isTaskModalOpen}
+              setIsTaskModalOpen={setIsTaskModalOpen}
+              selectedTask={selectedTask}
+              setSelectedTask={setSelectedTask}
+            />
+          ))
       )}
+
+      <TaskModal
+        isTaskModelOpen={isTaskModalOpen}
+        setIsTaskModelOpen={setIsTaskModalOpen}
+        selectedTask={selectedTask || undefined}
+        onUpdateComplete={(task: SelectTask) => {
+          setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
+          setSelectedTask(task)
+        }}
+      />
     </>
   ) : (
     <StatusRequiredDialog openDialog={openDialog} />

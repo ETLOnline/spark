@@ -201,7 +201,9 @@ function BacklogItems({ task }: Props) {
               </TooltipProvider>
             </div>
           ) : (
-            <CircleHelp />
+            <div className="flex justify-center items-center">
+              <CircleHelp />
+            </div>
           )}
         </div>
         <div className="col-span-1 text-center">
