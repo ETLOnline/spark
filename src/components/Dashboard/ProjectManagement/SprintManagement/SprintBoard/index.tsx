@@ -14,7 +14,7 @@ import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import NoDataCard from "../../../Channels/ChannelDetails/NoDataCard"
 import { Kanban } from "lucide-react"
 import { TaskModal } from "../../Task/components/TaskModal"
-import { SelectTask } from "@/src/db/schema"
+import { SelectSprint, SelectTask } from "@/src/db/schema"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import pusherClient from "@/src/services/realtime/PusherClient"
 import usePageName from "@/src/hooks/usePageName"
@@ -36,6 +36,7 @@ function SprintBoard() {
   const [openDialog, setOpenDialog] = useState(false)
   const { SetPageName, GetPageName } = usePageName()
   const authUser = useAtomValue(userStore.AuthUser)
+  const pusherChannel = useAtomValue(projectStore.pusherChannel)
 
   const projectId = useParams().id as string
   const pageName = GetPageName()
@@ -45,38 +46,70 @@ function SprintBoard() {
   }, [])
 
   useEffect(() => {
-    if (!projectId || !pageName) return
+    if (!pusherChannel || !pageName) return
 
-    const channel = pusherClient.subscribe(`project-${projectId}-${pageName}`)
-
-    channel.bind("task-add", (newTask: SelectTask) => {
+    pusherChannel.bind("task-add", (newTask: SelectTask) => {
       if (authUser?.unique_id === newTask.created_by) return
       setTasks((tasks) => [...tasks, newTask])
     })
 
-    channel.bind("task-update", (updatedTask: SelectTask) => {
+    pusherChannel.bind("task-update", (updatedTask: SelectTask) => {
       if (authUser?.unique_id === updatedTask.created_by) return
       setTasks((tasks) =>
         tasks.map((t) => (t.id === updatedTask.id ? updatedTask : t))
       )
     })
 
-    channel.bind("task-delete", (deletedTask: SelectTask) => {
+    pusherChannel.bind("task-delete", (deletedTask: SelectTask) => {
       if (authUser?.unique_id === deletedTask.created_by) return
       setTasks((tasks) => tasks.filter((t) => t.id !== deletedTask.id))
     })
 
     return () => {
-      channel.unbind_all()
-      pusherClient.unsubscribe(`project-${projectId}-${pageName}`)
+      pusherChannel.unbind_all()
     }
-  }, [pageName, projectId])
+  }, [pusherChannel])
 
   useEffect(() => {
     if (projectStatusList.length === 0) {
       setOpenDialog(true)
     }
   }, [projectStatusList])
+
+  useEffect(() => {
+    if (!projectId) return
+
+    const channelName = `project-${projectId}-sprints`
+
+    const channel = pusherClient.subscribe(channelName)
+
+    channel.bind("sprint-add", (newSprint: SelectSprint) => {
+      setSprintList((sprints) => {
+        const sprintExists = sprints.some((s) => s.id === newSprint.id)
+
+        return sprintExists ? sprints : [...sprints, newSprint]
+      })
+    })
+
+    channel.bind("sprint-edit", (updatedSprint: SelectSprint) => {
+      setSprintList((sprints) =>
+        sprints.map((sprint) =>
+          sprint.id === updatedSprint.id ? updatedSprint : sprint
+        )
+      )
+    })
+
+    channel.bind("sprint-delete", (deletedSprint: SelectSprint) => {
+      setSprintList((sprints) =>
+        sprints.filter((sprint) => sprint.id !== deletedSprint.id)
+      )
+    })
+
+    return () => {
+      channel.unbind_all()
+      pusherClient.unsubscribe(channelName)
+    }
+  }, [projectId])
 
   useEffect(() => {
     const fetchSprints = async () => {

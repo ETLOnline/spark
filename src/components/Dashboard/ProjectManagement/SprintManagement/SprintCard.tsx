@@ -23,9 +23,6 @@ import { ToUpperCase } from "@/src/utils/helpers"
 import { TaskFiltersType } from "../types/taskFilters.type"
 import TaskFilters from "../TaskFilter/TaskFilters"
 import usePageName from "@/src/hooks/usePageName"
-import { useAtom, useAtomValue } from "jotai"
-import { sprintStore } from "@/src/store/sprint/sprintsStore"
-import { userStore } from "@/src/store/user/userStore"
 
 interface Props {
   sprint: SelectSprint
@@ -35,6 +32,8 @@ interface Props {
   isTaskModalOpen: boolean
   setIsTaskModalOpen: Dispatch<SetStateAction<boolean>>
   setSprintId: Dispatch<SetStateAction<string>>
+  getTaskLoading: boolean
+  selectedTask?: SelectTask
 }
 
 export default function SprintCardPage({
@@ -42,80 +41,53 @@ export default function SprintCardPage({
   setSprintId,
   tasks,
   setSelectedTask,
+
   isTaskModalOpen,
   setIsTaskModalOpen,
-  setTasks
+  setTasks,
+  getTaskLoading
 }: Props) {
   const [filteredTasks, setFilteredTasks] = useState<SelectTask[]>([])
   const [isSprintContextMenuOpen, setIsSprintContextMenuOpen] = useState(false)
-  const [getTaskLoading, , , GetTasks] = useServerAction(GetSprintTasksAction)
-  const [filters, setFilters] = useState<TaskFiltersType>({})
+  const [getFilteredTaskLoading, , , GetTasks] =
+    useServerAction(GetSprintTasksAction)
+  const [filters, setFilters] = useState<TaskFiltersType | null>(null)
   const { GetPageName } = usePageName()
-  const [pusherChannel, setPusherChannel] = useAtom(sprintStore.pusherChannel)
-  const authUser = useAtomValue(userStore.AuthUser)
 
   const projectId = useParams().id as string
-  const pageName = GetPageName()
+
+  const fetchTasks = async () => {
+    if (filters === null) return
+    const tasks = await GetTasks({
+      project_id: projectId,
+      sprint_id: sprint.id,
+      priority: filters?.priority,
+      type: filters?.type,
+      status: filters?.status,
+      assignee: filters?.assignee
+    })
+    if (tasks?.success && tasks.data) {
+      setFilteredTasks(tasks.data.tasks)
+    }
+  }
 
   useEffect(() => {
-    pusherChannel?.bind("task-add", (newTask: SelectTask) => {
-      if (authUser?.unique_id === newTask.created_by) return
-      setFilteredTasks((tasks) =>
-        newTask.sprint_id === sprint.id ? [...tasks, newTask] : tasks
-      )
-    })
-
-    pusherChannel?.bind("task-update", (updatedTask: SelectTask) => {
-      if (authUser?.unique_id === updatedTask.created_by) return
-      setFilteredTasks((tasks) =>
-        tasks.map((t) => (t.id === updatedTask.id ? updatedTask : t))
-      )
-    })
-
-    pusherChannel?.bind("task-delete", (deletedTask: SelectTask) => {
-      if (authUser?.unique_id === deletedTask.created_by) return
-      setFilteredTasks((tasks) => tasks.filter((t) => t.id !== deletedTask.id))
-    })
-
-    return () => {
-      pusherChannel?.unbind_all()
-    }
-  }, [])
-
-  useEffect(() => {
-    const fetchTasks = async () => {
-      const tasks = await GetTasks({
-        project_id: projectId,
-        sprint_id: sprint.id,
-        priority: filters.priority,
-        type: filters.type,
-        status: filters.status,
-        assignee: filters.assignee
-      })
-      if (tasks?.success && tasks.data) {
-        setFilteredTasks(tasks.data.tasks)
-      }
-    }
     if (filters) {
       fetchTasks()
     }
   }, [
     projectId,
-    filters.assignee,
-    filters.priority,
-    filters.type,
-    filters.status
+    filters?.assignee,
+    filters?.priority,
+    filters?.type,
+    filters?.status
   ])
 
   useEffect(() => {
-    if (!isTaskModalOpen) {
-      setSelectedTask(null)
-    }
-  }, [isTaskModalOpen])
-
-  useEffect(() => {
     if (tasks.length > 0 && sprint.id) {
-      setFilteredTasks(tasks.filter((t) => t.sprint_id === sprint.id))
+      setFilteredTasks(
+        tasks.filter((t) => t?.sprint_id && t.sprint_id === sprint.id)
+      )
     }
   }, [tasks, sprint.id])
 
@@ -196,7 +168,7 @@ export default function SprintCardPage({
               <div className="col-span-1 text-center">Assignee</div>
               <div className="col-span-1 text-center">Actions</div>
             </div>
-            {getTaskLoading ? (
+            {getTaskLoading || getFilteredTaskLoading ? (
               <div className="flex justify-center h-full w-full my-4">
                 <Loader size={LoaderSizes.lg} />
               </div>
@@ -209,7 +181,6 @@ export default function SprintCardPage({
                   currSprint={sprint}
                   setIsTaskModelOpen={setIsTaskModalOpen}
                   setTasks={setTasks}
-                  setSelectedTask={setSelectedTask}
                 />
               ))
             ) : (

@@ -23,6 +23,7 @@ import { useAtom, useSetAtom } from "jotai"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import { toast } from "@/src/hooks/use-toast"
 import { sprintStore } from "@/src/store/sprint/sprintsStore"
+import usePageName from "@/src/hooks/usePageName"
 
 interface Props {
   isTaskMoveDialogOpen: boolean
@@ -44,6 +45,9 @@ export default function TaskMoveDialog({
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
   const [updateTaskloading, , , UpdateTask] = useServerAction(UpdateTaskAction)
   const setShouldRefetchTasks = useSetAtom(taskStore.shouldRefetchTasks)
+  const { GetPageName } = usePageName()
+
+  const pageName = GetPageName()
 
   const projectId = useParams().id as string
 
@@ -61,15 +65,24 @@ export default function TaskMoveDialog({
 
   const handleMoveTask = async () => {
     if (selectedSprint) {
-      const updatedTask = await UpdateTask(task_id, {
-        sprint_id: selectedSprint
-      })
+      const updatedTask = await UpdateTask(
+        task_id,
+        {
+          sprint_id: selectedSprint
+        },
+        pageName ?? ""
+      )
       if (updatedTask?.success && updatedTask.data) {
         if (setTasks) {
           setTasks((prevTask) =>
-            prevTask.filter((task) => task.id !== updatedTask?.data?.id)
+            prevTask.map((t) =>
+              updatedTask.data && t.id === updatedTask.data.id
+                ? updatedTask.data
+                : t
+            )
           )
         }
+        setIsTaskMoveDialogOpen(false)
         setShouldRefetchTasks(true)
         toast({
           title: `Task successfully moved to ${sprintList.find((s) => s.id === selectedSprint)?.title}`,

@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation"
 import CreateSprintModal from "./CreateSprintModal"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useAtom, useAtomValue } from "jotai"
 import { sprintStore } from "@/src/store/sprint/sprintsStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
@@ -17,7 +17,7 @@ import StatusRequiredDialog from "../StatusRequiredDialog"
 import { projectStore } from "@/src/store/project/projectStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { TaskModal } from "../Task/components/TaskModal"
-import { SelectTask } from "@/src/db/schema"
+import { SelectTask, SelectUser } from "@/src/db/schema"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import { TaskFiltersType } from "../types/taskFilters.type"
 import { taskStore } from "@/src/store/tasks/taskStore"
@@ -26,40 +26,85 @@ import { SelectSprint } from "@/src/db/schema"
 import usePageName from "@/src/hooks/usePageName"
 import { SitePageName } from "@/src/types/pageName"
 import { userStore } from "@/src/store/user/userStore"
+import { set } from "zod"
+import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
+import TaskMoveDialog from "../Task/components/task-move-dialog"
 
 export function SprintManagement() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false)
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
   const [openDialog, setOpenDialog] = useState(false)
+  const authUser = useAtomValue(userStore.AuthUser)
 
   const [tasks, setTasks] = useState<SelectTask[]>([])
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
-  const [selectedTask, setSelectedTask] = useState<SelectTask | null>(null)
+  const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
   const [getTaskLoading, , , GetTasks] = useServerAction(GetSprintTasksAction)
   const [sprintID, setSprintID] = useState<string>("")
-  const [shouldRefetchTasks, setShouldRefetchTasks] = useAtom(
-    taskStore.shouldRefetchTasks
+  const pusherChannel = useAtomValue(projectStore.pusherChannel)
+  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useAtom(
+    taskStore.isTaskMoveDialogOpen
+  )
+  const [selectedSprint, setSelectedSprint] = useAtom(
+    sprintStore.selectedSprint
   )
 
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
   const { SetPageName, GetPageName } = usePageName()
-  const [pusherChannel, setPusherChannel] = useAtom(sprintStore.pusherChannel)
 
   const projectId = useParams().id as string
   const pageName = GetPageName()
-
   useEffect(() => {
     SetPageName(SitePageName.Project_Sprint)
   }, [])
 
+  // Get Sprints
   useEffect(() => {
-    if (!projectId || !pageName) return
+    const fetchSprints = async () => {
+      const Sprints = await GetSprints(projectId)
+      if (Sprints?.success && Sprints.data) {
+        setSprintList(Sprints.data)
+      }
+    }
+    fetchSprints()
+  }, [projectId])
 
-    const channelName = `project-${projectId}-${pageName}`
+  // Get Sprint's Tasks
+  const fetchTasks = async () => {
+    const tasksResponse = await GetTasks({
+      project_id: projectId,
+      sprint_ids: sprintList.map((s) => s.id)
+    })
+    if (tasksResponse?.success && tasksResponse.data.tasks) {
+      setTasks(tasksResponse.data.tasks)
+    }
+  }
+
+  useEffect(() => {
+    if (projectId && sprintList.length > 0) {
+      fetchTasks()
+    }
+  }, [projectId, sprintList])
+
+  // Handle RealTime Updates
+  const handleRealTimeTaskUpdate = useCallback(
+    (newTask: SelectTask) => {
+      if (authUser?.unique_id === newTask.created_by) {
+        return
+      }
+
+      setTasks((prevTasks) => [...prevTasks, newTask])
+    },
+    [authUser]
+  )
+
+  useEffect(() => {
+    if (!pusherChannel || !projectId || !pageName || !authUser) return
+
+    const channelName = `project-${projectId}-sprints`
 
     const channel = pusherClient.subscribe(channelName)
-    setPusherChannel(channel)
 
     channel.bind("sprint-add", (newSprint: SelectSprint) => {
       setSprintList((sprints) => {
@@ -83,13 +128,30 @@ export function SprintManagement() {
       )
     })
 
-    return () => {
-      pusherClient.unsubscribe(`project-${projectId}-${pageName}`)
-      channel.unbind_all()
-      setPusherChannel(null)
-    }
-  }, [projectId, pageName])
+    pusherChannel.bind("task-add", (newTask: SelectTask) => {
+      handleRealTimeTaskUpdate(newTask)
+    })
 
+    pusherChannel.bind("task-update", (updatedTask: SelectTask) => {
+      if (authUser?.unique_id === updatedTask.created_by) return
+      setTasks((tasks) =>
+        tasks.map((t) => (t.id === updatedTask.id ? updatedTask : t))
+      )
+    })
+
+    pusherChannel.bind("task-delete", (deletedTask: SelectTask) => {
+      if (authUser?.unique_id === deletedTask.created_by) return
+      setTasks((tasks) => tasks.filter((t) => t.id !== deletedTask.id))
+    })
+
+    return () => {
+      pusherClient.unsubscribe(`project-${projectId}-sprints`)
+      channel.unbind_all()
+      pusherChannel.unbind_all()
+    }
+  }, [projectId, pageName, authUser, pusherChannel])
+
+  // Check if projectStatusList is empty
   useEffect(() => {
     if (projectStatusList.length === 0) {
       setOpenDialog(true)
@@ -97,29 +159,22 @@ export function SprintManagement() {
   }, [projectStatusList])
 
   useEffect(() => {
-    const fetchSprints = async () => {
-      const Sprints = await GetSprints(projectId)
-      if (Sprints?.success && Sprints.data) {
-        setSprintList(Sprints.data)
-      }
+    if (!isTaskModalOpen) {
+      setSelectedTask(null)
     }
-    fetchSprints()
-  }, [projectId])
+  }, [isTaskModalOpen])
 
   useEffect(() => {
-    if (!shouldRefetchTasks) return
-    const fetchTasks = async () => {
-      const tasks = await GetTasks({
-        project_id: projectId,
-        sprint_ids: sprintList.map((s) => s.id)
-      })
-      if (tasks?.success && tasks.data) {
-        setTasks(tasks.data.tasks)
-      }
-      setShouldRefetchTasks(false)
+    if (!isTaskMoveDialogOpen) {
+      setSelectedTask(null)
+      setSelectedSprint(null)
     }
-    fetchTasks()
-  }, [projectId, shouldRefetchTasks])
+  }, [isTaskMoveDialogOpen])
+
+  function handleSetNewTasks(newTasks: SelectTask) {
+    setSelectedTask(newTasks)
+    setTasks((preTasks) => [...preTasks, newTasks])
+  }
 
   // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(
@@ -161,6 +216,7 @@ export function SprintManagement() {
                 setIsTaskModalOpen={setIsTaskModalOpen}
                 setTasks={setTasks}
                 setSprintId={setSprintID}
+                getTaskLoading={getTaskLoading}
               />
             ))
         ) : (
@@ -183,9 +239,8 @@ export function SprintManagement() {
         sprintId={sprintID}
         pageName={pageName ?? ""}
         selectedTask={selectedTask ?? undefined}
-        onCreateComplete={(task) => {
-          setSelectedTask(task)
-          setTasks((prevTasks) => [...prevTasks, task])
+        onCreateComplete={(newTask) => {
+          handleSetNewTasks(newTask)
         }}
         onUpdateComplete={(task) => {
           setSelectedTask(task)
@@ -198,6 +253,14 @@ export function SprintManagement() {
             })
           )
         }}
+      />
+
+      <TaskMoveDialog
+        isTaskMoveDialogOpen={isTaskMoveDialogOpen}
+        setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
+        task_id={selectedTask?.id || ""}
+        currSprintId={selectedSprint?.id}
+        setTasks={setTasks}
       />
     </div>
   ) : (

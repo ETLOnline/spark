@@ -54,9 +54,10 @@ function BacklogItems({ task }: Props) {
   const [isDropdownOpen, setIsDropDownOpen] = useState(false)
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
-  const SetTasks = useSetAtom(taskStore.BackLogTasks)
+  const setTasks = useSetAtom(taskStore.BackLogTasks)
   const [status, setStatus] = useAtom(projectStore.projectStatusList)
   const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useState(false)
+  const setIsTaskModalOpen = useSetAtom(taskStore.isTaskModalOpen)
 
   const [deleteTaskLoading, deleteTaskData, deleteTaskError, DeleteTask] =
     useServerAction(DeleteTaskAction)
@@ -67,13 +68,14 @@ function BacklogItems({ task }: Props) {
   function EditTask(task: SelectTask) {
     setSelectedTask(task)
     setIsDropDownOpen(false)
+    setIsTaskModalOpen(true)
   }
 
   async function handleDeleteTask(selectedTask: SelectTask) {
     try {
       const deletedTask = await DeleteTask(selectedTask, pageName ?? "")
       if (deletedTask?.success) {
-        SetTasks((prev) => prev.filter((t) => t.id !== selectedTask.id))
+        setTasks((prev) => prev.filter((t) => t.id !== selectedTask.id))
         toast({
           title: "Task Deleted successfully"
         })
@@ -135,12 +137,12 @@ function BacklogItems({ task }: Props) {
     ? permissionChecker?.canAccess("project.backlog.task.delete")
     : false
   const onTaskCreated = (task: SelectTask) => {
-    SetTasks((prev) => [...prev, task])
+    setTasks((prev) => [...prev, task])
     setSelectedTask(task)
   }
 
   const onTaskUpdated = (task: SelectTask) => {
-    SetTasks((prev) =>
+    setTasks((prev) =>
       prev.map((t) => (t.id === task.id ? { ...t, ...task } : t))
     )
     setSelectedTask(task)
@@ -282,6 +284,7 @@ function BacklogItems({ task }: Props) {
         isTaskMoveDialogOpen={isTaskMoveDialogOpen}
         setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
         task_id={task.id}
+        setTasks={setTasks}
       />
     </>
   )

@@ -1,7 +1,7 @@
 import { Badge } from "@/src/components/ui/badge"
 import { SelectSprint, SelectTask, SelectUser } from "@/src/db/schema"
 import { projectStore } from "@/src/store/project/projectStore"
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { CircleHelp, MoreHorizontal } from "lucide-react"
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import {
@@ -39,28 +39,36 @@ import {
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
 import { getInitials } from "@/src/utils/helpers"
+import usePageName from "@/src/hooks/usePageName"
+import { taskStore } from "@/src/store/tasks/taskStore"
+import { sprintStore } from "@/src/store/sprint/sprintsStore"
 
 interface Props {
   task: SelectTask
   currSprint: SelectSprint
   setIsTaskModelOpen: Dispatch<SetStateAction<boolean>>
   setTasks: Dispatch<SetStateAction<SelectTask[]>>
-  setSelectedTask: Dispatch<SetStateAction<SelectTask | null>>
 }
 
 function SprintTasks({
   task,
   currSprint,
   setIsTaskModelOpen,
-  setTasks,
-  setSelectedTask
+  setTasks
 }: Props) {
   const [status, setStatus] = useAtom(projectStore.projectStatusList)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
   const [isTaskDropDownOpen, setIsTaskDropDownOpen] = useState(false)
-  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useState(false)
+  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useAtom(
+    taskStore.isTaskMoveDialogOpen
+  )
+  const setSelectedSprint = useSetAtom(sprintStore.selectedSprint)
+  const setSelectedTask = useSetAtom(taskStore.selectedTask)
 
   const [removeTaskLoading, , , RemoveTask] = useServerAction(UpdateTaskAction)
+  const { GetPageName } = usePageName()
+
+  const pageName = GetPageName()
 
   function EditTask(task: SelectTask) {
     setSelectedTask(task)
@@ -69,7 +77,11 @@ function SprintTasks({
 
   async function handleRemoveTask(task: SelectTask) {
     try {
-      const updatedTask = await RemoveTask(task.id, { sprint_id: null })
+      const updatedTask = await RemoveTask(
+        task.id,
+        { sprint_id: null },
+        pageName ?? ""
+      )
       if (updatedTask?.success && updatedTask.data) {
         setTasks((prevTasks) => prevTasks.filter((t) => t.id !== task.id))
 
@@ -88,6 +100,8 @@ function SprintTasks({
   }
 
   function moveTask(taskId: string) {
+    setSelectedTask(task)
+    setSelectedSprint(currSprint)
     setIsTaskMoveDialogOpen(true)
     setIsTaskDropDownOpen(false)
   }
@@ -259,14 +273,6 @@ function SprintTasks({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <TaskMoveDialog
-        isTaskMoveDialogOpen={isTaskMoveDialogOpen}
-        setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
-        task_id={task.id}
-        currSprintId={currSprint.id}
-        setTasks={setTasks}
-      />
     </>
   )
 }

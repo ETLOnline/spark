@@ -45,7 +45,7 @@ export const CreateTaskAction = CreateServerAction(
       const task = await CreateTask({ ...taskData, task_num: task_num })
 
       pusherServer.trigger(
-        `project-${taskData.project_id}-${page_name}`,
+        `project-${taskData.project_id}-tasks`,
         "task-add",
         task
       )
@@ -125,7 +125,7 @@ export const UpdateTaskAction = CreateServerAction(
       const UpdatedTask = await UpdateTask(taskId, updatedData)
 
       pusherServer.trigger(
-        `project-${UpdatedTask?.project_id}-${page_name}`,
+        `project-${UpdatedTask?.project_id}-tasks`,
         "task-update",
         UpdatedTask
       )
@@ -144,7 +144,7 @@ export const DeleteTaskAction = CreateServerAction(
       await DeleteTask(task)
 
       pusherServer.trigger(
-        `project-${task.project_id}-${page_name}`,
+        `project-${task.project_id}-tasks`,
         "task-delete",
         task
       )

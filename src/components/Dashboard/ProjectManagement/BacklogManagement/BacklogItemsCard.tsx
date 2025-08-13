@@ -11,16 +11,15 @@ import { taskStore } from "@/src/store/tasks/taskStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { GetBacklogTasksAction } from "@/src/server-actions/Tasks/Task"
 import { TaskFiltersType } from "../types/taskFilters.type"
-import pusherClient from "@/src/services/realtime/PusherClient"
 import { SelectTask } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
-import usePageName from "@/src/hooks/usePageName"
+import { projectStore } from "@/src/store/project/projectStore"
 
 interface Props {
   searchedItem: string
   orderList: string
   limit: number
-  filters: TaskFiltersType
+  filters: TaskFiltersType | null
 }
 
 function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
@@ -29,73 +28,63 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
   const [tasksLoading, tasksData, tasksError, GetTasks] = useServerAction(
     GetBacklogTasksAction
   )
+  const pusherChannel = useAtomValue(projectStore.pusherChannel)
   const authUser = useAtomValue(userStore.AuthUser)
-  const { GetPageName } = usePageName()
-
-  const pageName = GetPageName()
 
   const projectId = useParams().id as string
   const searchParams = useSearchParams()
 
-  useEffect(() => {
-    const fatchTasks = async () => {
-      const page = parseInt(searchParams.get("page") || "1", 10)
-      const res = await GetTasks({
-        project_id: projectId,
-        page: page ? page : 1,
-        limit: limit,
-        searchedItem,
-        orderList,
-        assignee: filters.assignee,
-        priority: filters.priority,
-        type: filters.type,
-        status: filters.status
-      })
-      if (res?.success && res.data) {
-        const tasks = res?.data
-        setTasks(tasks?.tasks)
-        setPagination(tasks.pagination)
-      }
+  const fatchTasks = async () => {
+    const page = parseInt(searchParams.get("page") || "1", 10)
+    const res = await GetTasks({
+      project_id: projectId,
+      page: page ? page : 1,
+      limit: limit,
+      searchedItem,
+      orderList,
+      assignee: filters?.assignee,
+      priority: filters?.priority,
+      type: filters?.type,
+      status: filters?.status
+    })
+    if (res?.success && res.data) {
+      const tasks = res?.data
+      setTasks(tasks?.tasks)
+      setPagination(tasks.pagination)
     }
-    fatchTasks()
-  }, [
-    projectId,
-    searchParams,
-    searchedItem,
-    orderList,
-    limit,
-    filters.assignee,
-    filters.priority,
-    filters.type,
-    filters.status
-  ])
+  }
+
   useEffect(() => {
-    if (!projectId || !pageName) return
+    if (searchedItem || orderList) fatchTasks()
+  }, [searchedItem, orderList, searchParams])
 
-    const channel = pusherClient.subscribe(`project-${projectId}-${pageName}`)
+  useEffect(() => {
+    if (filters) fatchTasks()
+  }, [filters?.assignee, filters?.priority, filters?.type, filters?.status])
+  useEffect(() => {
+    if (!pusherChannel || !authUser) return
 
-    channel.bind("task-add", (task: SelectTask) => {
+    pusherChannel.bind("task-add", (task: SelectTask) => {
       if (authUser?.unique_id === task.created_by) return
       setTasks((prev) => [...prev, task])
     })
 
-    channel.bind("task-update", (updatedTask: SelectTask) => {
+    pusherChannel.bind("task-update", (updatedTask: SelectTask) => {
       if (authUser?.unique_id === updatedTask.assign_by) return
       setTasks((prev) =>
         prev.map((t) => (t.id === updatedTask.id ? updatedTask : t))
       )
     })
 
-    channel.bind("task-delete", (deletedTask: SelectTask) => {
+    pusherChannel.bind("task-delete", (deletedTask: SelectTask) => {
       if (authUser?.unique_id === deletedTask.assign_by) return
       setTasks((prev) => prev.filter((t) => t.id !== deletedTask.id))
     })
 
     return () => {
-      channel.unbind_all()
-      pusherClient.unsubscribe(`project-${projectId}-${pageName}`)
+      pusherChannel.unbind_all()
     }
-  }, [projectId, pageName])
+  }, [pusherChannel, authUser?.unique_id])
 
   // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(

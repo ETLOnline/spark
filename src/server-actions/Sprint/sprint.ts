@@ -16,7 +16,7 @@ export const CreateSprintAction = CreateServerAction(
       const sprint = await CreateSprint(sprintData)
 
       pusherServer.trigger(
-        `project-${sprint.projectId}-${page_name}`,
+        `project-${sprint.projectId}-sprints`,
         "sprint-add",
         sprint
       )
@@ -52,7 +52,7 @@ export const UpdateSprintAction = CreateServerAction(
       const updatedSprint = await UpdateSprint(SprintId, sprintData)
 
       pusherServer.trigger(
-        `project-${updatedSprint.projectId}-${page_name}`,
+        `project-${updatedSprint.projectId}-sprints`,
         "sprint-edit",
         updatedSprint
       )
@@ -71,7 +71,7 @@ export const DeleteSprintAction = CreateServerAction(
       const deletedSprint = await DeleteSprint(sprintId)
 
       pusherServer.trigger(
-        `project-${deletedSprint.projectId}-${page_name}`,
+        `project-${deletedSprint.projectId}-sprints`,
         "sprint-delete",
         deletedSprint
       )
