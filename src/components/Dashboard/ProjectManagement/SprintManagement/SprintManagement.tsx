@@ -21,6 +21,11 @@ import { SelectTask } from "@/src/db/schema"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import { TaskFiltersType } from "../types/taskFilters.type"
 import { taskStore } from "@/src/store/tasks/taskStore"
+import pusherClient from "@/src/services/realtime/PusherClient"
+import { SelectSprint } from "@/src/db/schema"
+import usePageName from "@/src/hooks/usePageName"
+import { SitePageName } from "@/src/types/pageName"
+import { userStore } from "@/src/store/user/userStore"
 
 export function SprintManagement() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
@@ -38,8 +43,52 @@ export function SprintManagement() {
   )
 
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
+  const { SetPageName, GetPageName } = usePageName()
+  const [pusherChannel, setPusherChannel] = useAtom(sprintStore.pusherChannel)
 
   const projectId = useParams().id as string
+  const pageName = GetPageName()
+
+  useEffect(() => {
+    SetPageName(SitePageName.Project_Sprint)
+  }, [])
+
+  useEffect(() => {
+    if (!projectId || !pageName) return
+
+    const channelName = `project-${projectId}-${pageName}`
+
+    const channel = pusherClient.subscribe(channelName)
+    setPusherChannel(channel)
+
+    channel.bind("sprint-add", (newSprint: SelectSprint) => {
+      setSprintList((sprints) => {
+        const sprintExists = sprints.some((s) => s.id === newSprint.id)
+
+        return sprintExists ? sprints : [...sprints, newSprint]
+      })
+    })
+
+    channel.bind("sprint-edit", (updatedSprint: SelectSprint) => {
+      setSprintList((sprints) =>
+        sprints.map((sprint) =>
+          sprint.id === updatedSprint.id ? updatedSprint : sprint
+        )
+      )
+    })
+
+    channel.bind("sprint-delete", (deletedSprint: SelectSprint) => {
+      setSprintList((sprints) =>
+        sprints.filter((sprint) => sprint.id !== deletedSprint.id)
+      )
+    })
+
+    return () => {
+      pusherClient.unsubscribe(`project-${projectId}-${pageName}`)
+      channel.unbind_all()
+      setPusherChannel(null)
+    }
+  }, [projectId, pageName])
 
   useEffect(() => {
     if (projectStatusList.length === 0) {
@@ -132,6 +181,7 @@ export function SprintManagement() {
         isTaskModelOpen={isTaskModalOpen}
         setIsTaskModelOpen={setIsTaskModalOpen}
         sprintId={sprintID}
+        pageName={pageName ?? ""}
         selectedTask={selectedTask ?? undefined}
         onCreateComplete={(task) => {
           setSelectedTask(task)

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react"
 import BacklogItems from "./BacklogItems"
 import { useAtom, useAtomValue } from "jotai"
@@ -12,6 +11,10 @@ import { taskStore } from "@/src/store/tasks/taskStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { GetBacklogTasksAction } from "@/src/server-actions/Tasks/Task"
 import { TaskFiltersType } from "../types/taskFilters.type"
+import pusherClient from "@/src/services/realtime/PusherClient"
+import { SelectTask } from "@/src/db/schema"
+import { userStore } from "@/src/store/user/userStore"
+import usePageName from "@/src/hooks/usePageName"
 
 interface Props {
   searchedItem: string
@@ -26,6 +29,10 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
   const [tasksLoading, tasksData, tasksError, GetTasks] = useServerAction(
     GetBacklogTasksAction
   )
+  const authUser = useAtomValue(userStore.AuthUser)
+  const { GetPageName } = usePageName()
+
+  const pageName = GetPageName()
 
   const projectId = useParams().id as string
   const searchParams = useSearchParams()
@@ -62,6 +69,33 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
     filters.type,
     filters.status
   ])
+  useEffect(() => {
+    if (!projectId || !pageName) return
+
+    const channel = pusherClient.subscribe(`project-${projectId}-${pageName}`)
+
+    channel.bind("task-add", (task: SelectTask) => {
+      if (authUser?.unique_id === task.created_by) return
+      setTasks((prev) => [...prev, task])
+    })
+
+    channel.bind("task-update", (updatedTask: SelectTask) => {
+      if (authUser?.unique_id === updatedTask.assign_by) return
+      setTasks((prev) =>
+        prev.map((t) => (t.id === updatedTask.id ? updatedTask : t))
+      )
+    })
+
+    channel.bind("task-delete", (deletedTask: SelectTask) => {
+      if (authUser?.unique_id === deletedTask.assign_by) return
+      setTasks((prev) => prev.filter((t) => t.id !== deletedTask.id))
+    })
+
+    return () => {
+      channel.unbind_all()
+      pusherClient.unsubscribe(`project-${projectId}-${pageName}`)
+    }
+  }, [projectId, pageName])
 
   // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(
@@ -108,10 +142,7 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
                 tasks.map(
                   (task) =>
                     task.sprint_id === null && (
-                      <BacklogItems
-                        key={task.id}
-                        task={task}
-                      />
+                      <BacklogItems key={task.id} task={task} />
                     )
                 )}
               {Pagination && canView && (
@@ -126,4 +157,3 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
 }
 
 export default BacklogItemsCard
-

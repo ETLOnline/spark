@@ -25,10 +25,11 @@ import {
 import { getProjectById } from "@/src/db/data-access/project-management/query"
 import { getInitials } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
+import pusherServer from "@/src/services/realtime/pusherServer"
 
 export const CreateTaskAction = CreateServerAction(
   true,
-  async (taskData: InsertTask) => {
+  async (taskData: InsertTask, page_name?: string) => {
     try {
       const existingTaskCountResult = await GetTaskCount(taskData.project_id)
       const taskCount = existingTaskCountResult + 1
@@ -42,6 +43,13 @@ export const CreateTaskAction = CreateServerAction(
       const task_num = `${titleInitials}-${taskCount}`
 
       const task = await CreateTask({ ...taskData, task_num: task_num })
+
+      pusherServer.trigger(
+        `project-${taskData.project_id}-${page_name}`,
+        "task-add",
+        task
+      )
+
       return { success: true, data: task }
     } catch (error) {
       return { error: error }
@@ -108,9 +116,20 @@ export const GetTasksByStatusIdAction = CreateServerAction(
 
 export const UpdateTaskAction = CreateServerAction(
   true,
-  async (taskId: string, updatedData: Partial<SelectTask>) => {
+  async (
+    taskId: string,
+    updatedData: Partial<SelectTask>,
+    page_name?: string
+  ) => {
     try {
       const UpdatedTask = await UpdateTask(taskId, updatedData)
+
+      pusherServer.trigger(
+        `project-${UpdatedTask?.project_id}-${page_name}`,
+        "task-update",
+        UpdatedTask
+      )
+
       return { success: true, data: UpdatedTask }
     } catch (error) {
       return { error: error }
@@ -120,9 +139,16 @@ export const UpdateTaskAction = CreateServerAction(
 
 export const DeleteTaskAction = CreateServerAction(
   true,
-  async (task: SelectTask) => {
+  async (task: SelectTask, page_name?: string) => {
     try {
       await DeleteTask(task)
+
+      pusherServer.trigger(
+        `project-${task.project_id}-${page_name}`,
+        "task-delete",
+        task
+      )
+
       return { success: true }
     } catch (error) {
       return { error: error }

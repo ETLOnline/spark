@@ -15,8 +15,11 @@ import NoDataCard from "../../../Channels/ChannelDetails/NoDataCard"
 import { Kanban } from "lucide-react"
 import { TaskModal } from "../../Task/components/TaskModal"
 import { SelectTask } from "@/src/db/schema"
-import { TaskFiltersType } from "../../types/taskFilters.type"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
+import pusherClient from "@/src/services/realtime/PusherClient"
+import usePageName from "@/src/hooks/usePageName"
+import { SitePageName } from "@/src/types/pageName"
+import { userStore } from "@/src/store/user/userStore"
 
 function SprintBoard() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
@@ -31,8 +34,43 @@ function SprintBoard() {
 
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
   const [openDialog, setOpenDialog] = useState(false)
+  const { SetPageName, GetPageName } = usePageName()
+  const authUser = useAtomValue(userStore.AuthUser)
 
   const projectId = useParams().id as string
+  const pageName = GetPageName()
+
+  useEffect(() => {
+    SetPageName(SitePageName.Project_Board)
+  }, [])
+
+  useEffect(() => {
+    if (!projectId || !pageName) return
+
+    const channel = pusherClient.subscribe(`project-${projectId}-${pageName}`)
+
+    channel.bind("task-add", (newTask: SelectTask) => {
+      if (authUser?.unique_id === newTask.created_by) return
+      setTasks((tasks) => [...tasks, newTask])
+    })
+
+    channel.bind("task-update", (updatedTask: SelectTask) => {
+      if (authUser?.unique_id === updatedTask.created_by) return
+      setTasks((tasks) =>
+        tasks.map((t) => (t.id === updatedTask.id ? updatedTask : t))
+      )
+    })
+
+    channel.bind("task-delete", (deletedTask: SelectTask) => {
+      if (authUser?.unique_id === deletedTask.created_by) return
+      setTasks((tasks) => tasks.filter((t) => t.id !== deletedTask.id))
+    })
+
+    return () => {
+      channel.unbind_all()
+      pusherClient.unsubscribe(`project-${projectId}-${pageName}`)
+    }
+  }, [pageName, projectId])
 
   useEffect(() => {
     if (projectStatusList.length === 0) {
@@ -96,6 +134,7 @@ function SprintBoard() {
         isTaskModelOpen={isTaskModalOpen}
         setIsTaskModelOpen={setIsTaskModalOpen}
         selectedTask={selectedTask || undefined}
+        pageName={pageName ?? ""}
         onUpdateComplete={(task: SelectTask) => {
           setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
           setSelectedTask(task)

@@ -22,6 +22,10 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { ToUpperCase } from "@/src/utils/helpers"
 import { TaskFiltersType } from "../types/taskFilters.type"
 import TaskFilters from "../TaskFilter/TaskFilters"
+import usePageName from "@/src/hooks/usePageName"
+import { useAtom, useAtomValue } from "jotai"
+import { sprintStore } from "@/src/store/sprint/sprintsStore"
+import { userStore } from "@/src/store/user/userStore"
 
 interface Props {
   sprint: SelectSprint
@@ -46,8 +50,37 @@ export default function SprintCardPage({
   const [isSprintContextMenuOpen, setIsSprintContextMenuOpen] = useState(false)
   const [getTaskLoading, , , GetTasks] = useServerAction(GetSprintTasksAction)
   const [filters, setFilters] = useState<TaskFiltersType>({})
+  const { GetPageName } = usePageName()
+  const [pusherChannel, setPusherChannel] = useAtom(sprintStore.pusherChannel)
+  const authUser = useAtomValue(userStore.AuthUser)
 
   const projectId = useParams().id as string
+  const pageName = GetPageName()
+
+  useEffect(() => {
+    pusherChannel?.bind("task-add", (newTask: SelectTask) => {
+      if (authUser?.unique_id === newTask.created_by) return
+      setFilteredTasks((tasks) =>
+        newTask.sprint_id === sprint.id ? [...tasks, newTask] : tasks
+      )
+    })
+
+    pusherChannel?.bind("task-update", (updatedTask: SelectTask) => {
+      if (authUser?.unique_id === updatedTask.created_by) return
+      setFilteredTasks((tasks) =>
+        tasks.map((t) => (t.id === updatedTask.id ? updatedTask : t))
+      )
+    })
+
+    pusherChannel?.bind("task-delete", (deletedTask: SelectTask) => {
+      if (authUser?.unique_id === deletedTask.created_by) return
+      setFilteredTasks((tasks) => tasks.filter((t) => t.id !== deletedTask.id))
+    })
+
+    return () => {
+      pusherChannel?.unbind_all()
+    }
+  }, [])
 
   useEffect(() => {
     const fetchTasks = async () => {
