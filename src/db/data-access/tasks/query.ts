@@ -206,9 +206,27 @@ export async function UpdateTask(
       .where(eq(taskTable.id, taskId))
       .returning()
 
-    const updatedTaskWithUsers = await GetTaskById(UpdatedTask.id)
+    const updatedTasksWithUsers = GetTaskById(UpdatedTask.id)
 
-    return updatedTaskWithUsers
+    return updatedTasksWithUsers
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function UpdateTasksSprint(task_ids: string[], sprint_id: string) {
+  try {
+    const updatedTasks = await db
+      .update(taskTable)
+      .set({ sprint_id: sprint_id })
+      .where(inArray(taskTable.id, task_ids))
+      .returning()
+
+    const updatedTasksWithUsers = await Promise.all(
+      updatedTasks.map((t) => GetTaskById(t.id))
+    )
+
+    return updatedTasksWithUsers
   } catch (e: any) {
     throw new Error(e.message)
   }
