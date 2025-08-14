@@ -29,6 +29,7 @@ import { Input } from "@/src/components/ui/input"
 import Avvvatars from "avvvatars-react"
 import Image from "next/image"
 import { chatStore } from "@/src/store/chat/chatStore"
+import { toast } from "@/src/hooks/use-toast"
 
 const CreateNewChat = () => {
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -132,6 +133,14 @@ const CreateNewChat = () => {
         const newChat = response.data
         setMyChats((pre) => [...pre, newChat])
         switchChat(newChat)
+      }
+      if (response.success == false && response.existingChat) {
+        switchChat(response.data)
+        toast({
+          title: "Chat already exists",
+          variant: "destructive",
+          duration: 3000
+        })
       }
     }
 
