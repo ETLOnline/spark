@@ -143,9 +143,9 @@ export function SprintManagement() {
     })
 
     return () => {
-      pusherClient.unsubscribe(`project-${projectId}-sprints`)
       channel.unbind_all()
       pusherChannel.unbind_all()
+      pusherClient.unsubscribe(`project-${projectId}-sprints`)
     }
   }, [projectId, authUser, pusherChannel])
 

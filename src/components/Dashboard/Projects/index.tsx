@@ -25,6 +25,7 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import NoDataCard from "../Channels/ChannelDetails/NoDataCard"
 import { ListX } from "lucide-react"
 import pusherClient from "@/src/services/realtime/PusherClient"
+import { userStore } from "@/src/store/user/userStore"
 
 interface Props {
   space: SelectSpace
@@ -57,6 +58,7 @@ export function ProjectScreen({ space }: Props) {
     setSelectedProject(project)
     setIsModalOpen(true)
   }
+  const authUser = useAtomValue(userStore.AuthUser)
 
   const [getProjectLoading, getProjectData, getProjectError, getProjects] =
     useServerAction(GetProjectsAction)
@@ -69,9 +71,11 @@ export function ProjectScreen({ space }: Props) {
   const channel_slug = searchParam.get("channel")
 
   useEffect(() => {
+    if (!authUser || !space) return
     const channel = pusherClient.subscribe(`space-${space.id}-project`)
 
     channel.bind("project-add", (newProject: SelectProject) => {
+      if (newProject.created_by === authUser.unique_id) return
       setProjects((prevProjects) => [...prevProjects, newProject])
     })
 

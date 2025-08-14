@@ -39,7 +39,7 @@ export const CreateProjectAction = CreateServerAction(
       )
 
       pusherServer.trigger(
-        `broadcast-${newProject.space_id}-projects-update`,
+        `space-${newProject.space_id}-project`,
         "project-add",
         newProject
       )

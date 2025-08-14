@@ -38,7 +38,7 @@ function SprintBoard() {
   const projectId = useParams().id as string
 
   useEffect(() => {
-    if (!pusherChannel) return
+    if (!pusherChannel || !authUser) return
 
     pusherChannel.bind("task-add", (newTask: SelectTask) => {
       if (authUser?.unique_id === newTask.created_by) return
@@ -58,9 +58,11 @@ function SprintBoard() {
     })
 
     return () => {
-      pusherChannel.unbind_all()
+      pusherChannel.unbind("task-add")
+      pusherChannel.unbind("task-update")
+      pusherChannel.unbind("task-delete")
     }
-  }, [pusherChannel])
+  }, [pusherChannel, authUser])
 
   useEffect(() => {
     if (projectStatusList.length === 0) {
@@ -114,6 +116,7 @@ function SprintBoard() {
   }, [projectId])
 
   useEffect(() => {
+    if (!projectId || sprintList.length === 0) return
     const getTask = async () => {
       const tasks = await GetSPrintTask({
         project_id: projectId,
@@ -124,7 +127,7 @@ function SprintBoard() {
       }
     }
     getTask()
-  }, [projectId])
+  }, [projectId, sprintList])
 
   useEffect(() => {
     if (!isTaskModalOpen) {
