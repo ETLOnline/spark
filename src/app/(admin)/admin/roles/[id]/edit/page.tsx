@@ -16,6 +16,8 @@ import {
 import { useToast } from "@/src/hooks/use-toast"
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
 import { RoleWithPermissions } from "@/src/utils/helpers"
+import Loader from "@/src/components/common/Loader/Loader"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
 
 export default function EditRolePage({
   params
@@ -89,6 +91,14 @@ export default function EditRolePage({
     } else {
       console.error("❌ Failed to update role", res?.error)
     }
+  }
+
+  if (roleLoading || loading) {
+    return (
+      <div className="flex justify-center h-full w-full">
+        <Loader size={LoaderSizes.xl} />
+      </div>
+    )
   }
 
   if (!role) {

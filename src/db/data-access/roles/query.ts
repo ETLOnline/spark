@@ -55,7 +55,7 @@ export const saveUserGlobalRole = async (personaID: number, userId: string) => {
 export const getAllGlobalRolesWithUserCount = async () => {
   try {
     const roles = await db.query.rolesTable.findMany({
-      // where: (rolesTable, { eq }) => eq(rolesTable.role_type, "GLOBAL"),
+      where: (rolesTable, { eq }) => eq(rolesTable.role_type, "GLOBAL"),
       with: {
         permissions: {
           with: {
@@ -180,7 +180,7 @@ export async function createScopedRole(params: {
         .insert(rolesTable)
         .values({
           name,
-          role_type: "SCOPED",
+          role_type: "GLOBAL",
           slug: roleSlug,
           entity_type: entityType,
           entity_id: entityId
