@@ -19,8 +19,6 @@ import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import { TaskModal } from "../../Task/components/TaskModal"
 import { TaskFiltersType } from "../../types/taskFilters.type"
 import TaskFilters from "../../TaskFilter/TaskFilters"
-import usePageName from "@/src/hooks/usePageName"
-import { SitePageName } from "@/src/types/pageName"
 
 interface Props {
   sprint: SelectSprint
@@ -45,13 +43,6 @@ function SprintBoardCard({
 
   const [getTaskLoading, , , GetSPrintTask] =
     useServerAction(GetSprintTasksAction)
-
-  const { SetPageName, GetPageName } = usePageName()
-  const pageName = GetPageName()
-
-  useEffect(() => {
-    SetPageName(SitePageName.Project_Board)
-  }, [])
 
   useEffect(() => {
     if (tasks.length > 0) {
@@ -153,7 +144,6 @@ function SprintBoardCard({
         isTaskModelOpen={isTaskModalOpen}
         setIsTaskModelOpen={setIsTaskModalOpen}
         selectedTask={selectedTask || undefined}
-        pageName={pageName ?? ""}
         onUpdateComplete={(task: SelectTask) => {
           setFilteredTasks((prev) =>
             prev.map((t) => (t.id === task.id ? task : t))

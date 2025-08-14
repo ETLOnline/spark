@@ -22,8 +22,6 @@ import { TaskModal } from "../Task/components/TaskModal"
 import { SelectTask } from "@/src/db/schema"
 import { TaskFiltersType } from "../types/taskFilters.type"
 import TaskFilters from "../TaskFilter/TaskFilters"
-import usePageName from "@/src/hooks/usePageName"
-import { SitePageName } from "@/src/types/pageName"
 import TaskMoveDialog from "../Task/components/task-move-dialog"
 
 export function BacklogManagement() {
@@ -46,11 +44,8 @@ export function BacklogManagement() {
   )
   const taskMoveDialogAction = useAtomValue(taskStore.taskMoveDialogAction)
 
-  const { SetPageName, GetPageName } = usePageName()
-
   const params = useParams()
   const projectId = params.id as string
-  const pageName = GetPageName()
 
   function handleSearch() {
     if (searchQuery) {
@@ -67,10 +62,6 @@ export function BacklogManagement() {
   const canCreateTask = permissionChecker
     ? permissionChecker?.canAccess("project.backlog.task.create")
     : false
-
-  useEffect(() => {
-    SetPageName(SitePageName.Project_Backlog)
-  }, [])
 
   useEffect(() => {
     if (projectStatusList.length === 0) {
@@ -100,7 +91,6 @@ export function BacklogManagement() {
         isTaskModelOpen={isTaskModalOpen}
         setIsTaskModelOpen={setIsTaskModalOpen}
         selectedTask={selectedTask || undefined}
-        pageName={pageName || ""}
         onCreateComplete={(task: SelectTask) => {
           setTasks((prev) => [...prev, task])
           setSelectedTask(task)

@@ -17,8 +17,6 @@ import { TaskModal } from "../../Task/components/TaskModal"
 import { SelectSprint, SelectTask } from "@/src/db/schema"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import pusherClient from "@/src/services/realtime/PusherClient"
-import usePageName from "@/src/hooks/usePageName"
-import { SitePageName } from "@/src/types/pageName"
 import { userStore } from "@/src/store/user/userStore"
 
 function SprintBoard() {
@@ -34,19 +32,13 @@ function SprintBoard() {
 
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
   const [openDialog, setOpenDialog] = useState(false)
-  const { SetPageName, GetPageName } = usePageName()
   const authUser = useAtomValue(userStore.AuthUser)
   const pusherChannel = useAtomValue(projectStore.pusherChannel)
 
   const projectId = useParams().id as string
-  const pageName = GetPageName()
 
   useEffect(() => {
-    SetPageName(SitePageName.Project_Board)
-  }, [])
-
-  useEffect(() => {
-    if (!pusherChannel || !pageName) return
+    if (!pusherChannel) return
 
     pusherChannel.bind("task-add", (newTask: SelectTask) => {
       if (authUser?.unique_id === newTask.created_by) return
@@ -173,7 +165,6 @@ function SprintBoard() {
         isTaskModelOpen={isTaskModalOpen}
         setIsTaskModelOpen={setIsTaskModalOpen}
         selectedTask={selectedTask || undefined}
-        pageName={pageName ?? ""}
         onUpdateComplete={(task: SelectTask) => {
           setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
           setSelectedTask(task)

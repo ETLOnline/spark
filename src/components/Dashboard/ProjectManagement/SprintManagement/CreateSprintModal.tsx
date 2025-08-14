@@ -12,7 +12,6 @@ import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import { SelectSprint } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
-import usePageName from "@/src/hooks/usePageName"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateSprintAction,
@@ -83,10 +82,8 @@ function CreateSprintModal({
   const form = useForm({
     resolver: zodResolver(sprintSchema)
   })
-  const { GetPageName } = usePageName()
 
   const formError = form.formState.errors
-  const pageName = GetPageName()
 
   const GetSprintCount = async (projectId: string) => {
     const sprintsCount = await GetSprintCountAction(projectId)
@@ -129,7 +126,7 @@ function CreateSprintModal({
         projectId: projectId,
         sprint_status: "upcoming"
       }
-      const sprint = await CreateSprint(payload, pageName ?? "")
+      const sprint = await CreateSprint(payload)
       if (sprint?.success && sprint.data) {
         setSprints((prev) => {
           const sprinExists = prev.some((s) => s.id === sprint.data.id)
@@ -156,11 +153,7 @@ function CreateSprintModal({
           ...data,
           sprint_status: selectedSprint.sprint_status
         }
-        const UpdatedSprint = await UpdateSprint(
-          selectedSprint.id,
-          finalData,
-          pageName ?? ""
-        )
+        const UpdatedSprint = await UpdateSprint(selectedSprint.id, finalData)
         if (UpdatedSprint?.success && UpdatedSprint.data) {
           setSprints((prev) =>
             prev.map((s) =>

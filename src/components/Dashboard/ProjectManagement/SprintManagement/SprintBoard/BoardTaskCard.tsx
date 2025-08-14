@@ -42,7 +42,6 @@ import {
 import { projectTaskTypes } from "../../constants/projectManagment"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import usePageName from "@/src/hooks/usePageName"
 
 interface Props {
   task: SelectTask
@@ -54,9 +53,6 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
   const [isAlertOpen, setIsAlertOpen] = useState(false)
 
   const [removeTaskLoading, , , RemoveTask] = useServerAction(UpdateTaskAction)
-  const { GetPageName } = usePageName()
-
-  const pageName = GetPageName()
 
   const { permissionChecker } = usePermissionChecker(
     "scoped",
@@ -137,11 +133,7 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
 
   async function handleRemoveTask(task: SelectTask) {
     try {
-      const updatedTask = await RemoveTask(
-        task.id,
-        { sprint_id: null },
-        pageName ?? ""
-      )
+      const updatedTask = await RemoveTask(task.id, { sprint_id: null })
       if (updatedTask?.success && updatedTask.data) {
         setTasks((prevTasks) => prevTasks.filter((t) => t.id !== task.id))
 

@@ -30,7 +30,6 @@ import { useAtom, useSetAtom } from "jotai"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import { toast } from "@/src/hooks/use-toast"
 import { sprintStore } from "@/src/store/sprint/sprintsStore"
-import usePageName from "@/src/hooks/usePageName"
 
 interface Props {
   isTaskMoveDialogOpen: boolean
@@ -61,9 +60,6 @@ export default function TaskMoveDialog({
     useServerAction(DeleteSprintAction)
 
   const setShouldRefetchTasks = useSetAtom(taskStore.shouldRefetchTasks)
-  const { GetPageName } = usePageName()
-
-  const pageName = GetPageName()
 
   const projectId = useParams().id as string
 
@@ -154,7 +150,7 @@ export default function TaskMoveDialog({
       duration: 2000
     })
 
-    const deletedSprint = await DeleteSprint(currSprintId, pageName ?? "")
+    const deletedSprint = await DeleteSprint(currSprintId)
 
     if (deletedSprint?.success) {
       setSprintList((prev) => prev.filter((s) => s.id !== currSprintId))

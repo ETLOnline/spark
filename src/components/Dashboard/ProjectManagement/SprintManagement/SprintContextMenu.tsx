@@ -30,7 +30,6 @@ import {
 } from "@/src/components/ui/alert-dialog"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { useParams } from "next/navigation"
-import usePageName from "@/src/hooks/usePageName"
 import { projectStore } from "@/src/store/project/projectStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
 
@@ -74,14 +73,12 @@ function SprintContextMenu({
     setIsCreateSprintOpen(true)
     setIsSprintContextMenuOpen(false)
   }
-  const { GetPageName } = usePageName()
-  const pageName = GetPageName()
 
   const DoneStatusId = projectStatusList.find((s) => s.name === "Done")?.id
 
   async function handleDeleteSprint(sprintId: string) {
     try {
-      const deletedSprint = await DeleteSprint(sprintId, pageName ?? "")
+      const deletedSprint = await DeleteSprint(sprintId)
 
       if (deletedSprint?.success) {
         setSprintList((prevSprints) =>

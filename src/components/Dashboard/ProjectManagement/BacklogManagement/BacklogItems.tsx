@@ -41,7 +41,6 @@ import {
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
 import { getInitials } from "@/src/utils/helpers"
-import usePageName from "@/src/hooks/usePageName"
 
 interface Props {
   task: SelectTask
@@ -63,9 +62,6 @@ function BacklogItems({ task }: Props) {
 
   const [deleteTaskLoading, deleteTaskData, deleteTaskError, DeleteTask] =
     useServerAction(DeleteTaskAction)
-  const { GetPageName } = usePageName()
-
-  const pageName = GetPageName()
 
   function EditTask(task: SelectTask) {
     setSelectedTask(task)
@@ -75,7 +71,7 @@ function BacklogItems({ task }: Props) {
 
   async function handleDeleteTask(selectedTask: SelectTask) {
     try {
-      const deletedTask = await DeleteTask(selectedTask, pageName ?? "")
+      const deletedTask = await DeleteTask(selectedTask)
       if (deletedTask?.success) {
         setTasks((prev) => prev.filter((t) => t.id !== selectedTask.id))
         toast({

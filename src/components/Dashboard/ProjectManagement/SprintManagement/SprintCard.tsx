@@ -22,7 +22,6 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { ToUpperCase } from "@/src/utils/helpers"
 import { TaskFiltersType } from "../types/taskFilters.type"
 import TaskFilters from "../TaskFilter/TaskFilters"
-import usePageName from "@/src/hooks/usePageName"
 
 interface Props {
   sprint: SelectSprint
@@ -52,7 +51,6 @@ export default function SprintCardPage({
   const [getFilteredTaskLoading, , , GetTasks] =
     useServerAction(GetSprintTasksAction)
   const [filters, setFilters] = useState<TaskFiltersType | null>(null)
-  const { GetPageName } = usePageName()
 
   const projectId = useParams().id as string
 

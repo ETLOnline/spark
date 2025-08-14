@@ -23,8 +23,6 @@ import { TaskFiltersType } from "../types/taskFilters.type"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import pusherClient from "@/src/services/realtime/PusherClient"
 import { SelectSprint } from "@/src/db/schema"
-import usePageName from "@/src/hooks/usePageName"
-import { SitePageName } from "@/src/types/pageName"
 import { userStore } from "@/src/store/user/userStore"
 import { set } from "zod"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
@@ -56,13 +54,8 @@ export function SprintManagement() {
   const taskMoveDialogAction = useAtomValue(taskStore.taskMoveDialogAction)
 
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
-  const { SetPageName, GetPageName } = usePageName()
 
   const projectId = useParams().id as string
-  const pageName = GetPageName()
-  useEffect(() => {
-    SetPageName(SitePageName.Project_Sprint)
-  }, [])
 
   // Get Sprints
   useEffect(() => {
@@ -105,7 +98,7 @@ export function SprintManagement() {
   )
 
   useEffect(() => {
-    if (!pusherChannel || !projectId || !pageName || !authUser) return
+    if (!pusherChannel || !projectId || !authUser) return
 
     const channelName = `project-${projectId}-sprints`
 
@@ -154,7 +147,7 @@ export function SprintManagement() {
       channel.unbind_all()
       pusherChannel.unbind_all()
     }
-  }, [projectId, pageName, authUser, pusherChannel])
+  }, [projectId, authUser, pusherChannel])
 
   // Check if projectStatusList is empty
   useEffect(() => {
@@ -242,7 +235,6 @@ export function SprintManagement() {
         isTaskModelOpen={isTaskModalOpen}
         setIsTaskModelOpen={setIsTaskModalOpen}
         sprintId={sprintID}
-        pageName={pageName ?? ""}
         selectedTask={selectedTask ?? undefined}
         onCreateComplete={(newTask) => {
           handleSetNewTasks(newTask)

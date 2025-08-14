@@ -38,7 +38,6 @@ import {
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
 import { getInitials } from "@/src/utils/helpers"
-import usePageName from "@/src/hooks/usePageName"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import { sprintStore } from "@/src/store/sprint/sprintsStore"
 
@@ -67,9 +66,6 @@ function SprintTasks({
   const setTaskMoveDialogAction = useSetAtom(taskStore.taskMoveDialogAction)
 
   const [removeTaskLoading, , , RemoveTask] = useServerAction(UpdateTaskAction)
-  const { GetPageName } = usePageName()
-
-  const pageName = GetPageName()
 
   function EditTask(task: SelectTask) {
     setSelectedTaskForEdit(task)
@@ -78,11 +74,7 @@ function SprintTasks({
 
   async function handleRemoveTask(task: SelectTask) {
     try {
-      const updatedTask = await RemoveTask(
-        task.id,
-        { sprint_id: null },
-        pageName ?? ""
-      )
+      const updatedTask = await RemoveTask(task.id, { sprint_id: null })
       if (updatedTask?.success && updatedTask.data) {
         setTasks((prevTasks) => prevTasks.filter((t) => t.id !== task.id))
 

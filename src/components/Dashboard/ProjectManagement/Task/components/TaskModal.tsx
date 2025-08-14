@@ -31,7 +31,6 @@ interface TaskModalProps {
   sprintId?: string
   onCreateComplete?: (task: SelectTask) => void
   onUpdateComplete?: (task: SelectTask) => void
-  pageName?: string
 }
 
 export const TaskModal = ({
@@ -40,16 +39,14 @@ export const TaskModal = ({
   selectedTask,
   onCreateComplete,
   onUpdateComplete,
-  sprintId,
-  pageName
+  sprintId
 }: TaskModalProps) => {
   const [statuses] = useAtom(projectStore.projectStatusList)
   const { createTaskLoading, updateTaskLoading, handleSubmit } = useTaskHook({
     selectedTask,
     sprintId,
     onCreateComplete,
-    onUpdateComplete,
-    pageName
+    onUpdateComplete
   })
 
   const searchParams = useSearchParams()
