@@ -186,6 +186,20 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       currentChat.channel_id,
       (message) => {
         setMessages((prev) => [...prev, message])
+
+        setMyChats((prevChats) => {
+          const updatedChats = prevChats.map((chat) => {
+            if (chat.id === message.chat_id) {
+              return {
+                ...chat,
+                last_message: message.message,
+                last_message_at: message.created_at
+              }
+            }
+            return chat
+          })
+          return updatedChats
+        })
       }
     )
 
@@ -236,13 +250,37 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
    * @returns {Promise<void>} A promise that resolves when the message has been added to the chat.
    */
   const handleSendMessage = async () => {
-    if (newMessage.trim() === "") return
+    if (newMessage.trim() === "" || !currentChat || !authUser) return
     const newMsg: InsertMessage = {
       sender_id: authUser?.unique_id || "",
       chat_id: currentChat?.id || 0,
       message: newMessage,
       type: "text"
     }
+
+    const tempMessage: SelectMessage = {
+      id: Date.now(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      deleted_at: null,
+      sender: authUser,
+      type: newMsg.type,
+      chat_id: newMsg.chat_id,
+      sender_id: newMsg.sender_id,
+      message: newMsg.message
+    }
+
+    setMyChats((prevChats) =>
+      prevChats.map((chat) =>
+        chat.id === currentChat.id
+          ? {
+              ...chat,
+              last_message: newMsg.message,
+              last_message_at: new Date().toISOString()
+            }
+          : chat
+      )
+    )
     setNewMessage("")
     await addMessageToChat(newMsg)
   }
@@ -382,7 +420,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
             <>
               <CardContent className="flex-1 overflow-hidden p-4">
                 {authUser && currentChat && !fetchingChatMessages ? (
-                  <ScrollArea className="h-[calc(100svh-17rem)] pr-4  pt-4 ">
+                  <ScrollArea className="h-[calc(100svh-17rem)] pr-4  pt-10 ">
                     {messages.map((message) => (
                       <div
                         key={message.id}
