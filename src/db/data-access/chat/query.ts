@@ -130,7 +130,11 @@ export const CreateGroupChat = async (
 //     }
 // }
 
-export const GetChats = async (user_id: string, space_id?: string) => {
+export const GetChats = async (
+  user_id: string,
+  space_id?: string,
+  is_group?: boolean
+) => {
   try {
     let chatIds: number[] = []
 
@@ -155,7 +159,10 @@ export const GetChats = async (user_id: string, space_id?: string) => {
       where: (chatsTable) =>
         and(
           inArray(chatsTable.id, chatIds),
-          eq(chatsTable.type, space_id ? "space" : "open")
+          eq(chatsTable.type, space_id ? "space" : "open"),
+          is_group !== undefined && is_group === false
+            ? eq(chatsTable.is_group, 0)
+            : undefined
         ),
       orderBy: (chatsTable) => desc(chatsTable.created_at),
       with: {
@@ -190,7 +197,11 @@ export const GetMutualChatb = async (user_id: string, contact_id: string) => {
   }
 }
 
-export const GetMutualChat = async (user_id: string, contact_id: string) => {
+export const GetMutualChat = async (
+  user_id: string,
+  contact_id: string,
+  type?: "open" | "space"
+) => {
   try {
     const chatId = await db
       .select({ chat_id: userChatsTable.chat_id })
@@ -205,7 +216,11 @@ export const GetMutualChat = async (user_id: string, contact_id: string) => {
       .having(eq(count(userChatsTable.chat_id), 2))
     if (chatId.length === 0) return null
     return await db.query.chatsTable.findFirst({
-      where: eq(chatsTable.id, chatId[0].chat_id)
+      where: and(
+        eq(chatsTable.id, chatId[0].chat_id),
+        type ? eq(chatsTable.type, type) : undefined,
+        type ? eq(chatsTable.is_group, 0) : undefined
+      )
     })
   } catch (error: any) {
     throw new Error(error.message)
