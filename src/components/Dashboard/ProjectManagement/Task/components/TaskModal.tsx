@@ -5,7 +5,7 @@ import {
   DialogTitle
 } from "@/src/components/ui/dialog"
 import { projectStore } from "@/src/store/project/projectStore"
-import { useAtom } from "jotai"
+import { useAtom, useSetAtom } from "jotai"
 import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import React, {
   Dispatch,
@@ -22,6 +22,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetTaskByIdAction } from "@/src/server-actions/Tasks/Task"
 import { toast } from "@/src/hooks/use-toast"
 import useTaskHook from "../hooks/useTaskHook"
+import { taskStore } from "@/src/store/tasks/taskStore"
 
 interface TaskModalProps {
   isTaskModelOpen: boolean

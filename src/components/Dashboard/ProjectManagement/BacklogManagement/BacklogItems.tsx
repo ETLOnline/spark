@@ -33,7 +33,6 @@ import {
 } from "../constants/projectManagment"
 import { useParams } from "next/navigation"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import TaskMoveDialog from "../Task/components/task-move-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   Tooltip,
@@ -56,8 +55,11 @@ function BacklogItems({ task }: Props) {
   const [isAlertOpen, setIsAlertOpen] = useState(false)
   const setTasks = useSetAtom(taskStore.BackLogTasks)
   const [status, setStatus] = useAtom(projectStore.projectStatusList)
-  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useState(false)
+  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useAtom(
+    taskStore.isTaskMoveDialogOpen
+  )
   const setIsTaskModalOpen = useSetAtom(taskStore.isTaskModalOpen)
+  const setTaskMoveDialogAction = useSetAtom(taskStore.taskMoveDialogAction)
 
   const [deleteTaskLoading, deleteTaskData, deleteTaskError, DeleteTask] =
     useServerAction(DeleteTaskAction)
@@ -124,6 +126,13 @@ function BacklogItems({ task }: Props) {
     )
   }
 
+  const HandleMoveTask = (task: SelectTask) => {
+    setSelectedTask(task)
+    setIsTaskMoveDialogOpen(true)
+    setIsDropDownOpen(false)
+    setTaskMoveDialogAction("moveTask")
+  }
+
   // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(
     "scoped",
@@ -136,17 +145,6 @@ function BacklogItems({ task }: Props) {
   const canDelete = permissionChecker
     ? permissionChecker?.canAccess("project.backlog.task.delete")
     : false
-  const onTaskCreated = (task: SelectTask) => {
-    setTasks((prev) => [...prev, task])
-    setSelectedTask(task)
-  }
-
-  const onTaskUpdated = (task: SelectTask) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, ...task } : t))
-    )
-    setSelectedTask(task)
-  }
 
   return (
     <>
@@ -233,8 +231,7 @@ function BacklogItems({ task }: Props) {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
-                        setIsTaskMoveDialogOpen(true)
-                        setIsDropDownOpen(false)
+                        HandleMoveTask(task)
                       }}
                     >
                       Add to Sprint
@@ -279,13 +276,6 @@ function BacklogItems({ task }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <TaskMoveDialog
-        isTaskMoveDialogOpen={isTaskMoveDialogOpen}
-        setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
-        task_id={task.id}
-        setTasks={setTasks}
-      />
     </>
   )
 }

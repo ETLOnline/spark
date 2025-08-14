@@ -40,6 +40,10 @@ export function SprintManagement() {
   const [tasks, setTasks] = useState<SelectTask[]>([])
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
+  const [selectedTasksForMove, setSelectedTasksForMove] = useAtom(
+    taskStore.selectedSprintTask
+  )
+
   const [getTaskLoading, , , GetTasks] = useServerAction(GetSprintTasksAction)
   const [sprintID, setSprintID] = useState<string>("")
   const pusherChannel = useAtomValue(projectStore.pusherChannel)
@@ -49,6 +53,7 @@ export function SprintManagement() {
   const [selectedSprint, setSelectedSprint] = useAtom(
     sprintStore.selectedSprint
   )
+  const taskMoveDialogAction = useAtomValue(taskStore.taskMoveDialogAction)
 
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
   const { SetPageName, GetPageName } = usePageName()
@@ -166,7 +171,7 @@ export function SprintManagement() {
 
   useEffect(() => {
     if (!isTaskMoveDialogOpen) {
-      setSelectedTask(null)
+      setSelectedTasksForMove([])
       setSelectedSprint(null)
     }
   }, [isTaskMoveDialogOpen])
@@ -258,9 +263,10 @@ export function SprintManagement() {
       <TaskMoveDialog
         isTaskMoveDialogOpen={isTaskMoveDialogOpen}
         setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
-        task_id={selectedTask?.id || ""}
+        task_ids={selectedTasksForMove.map((t) => t.id)}
         currSprintId={selectedSprint?.id}
         setTasks={setTasks}
+        dialogAction={taskMoveDialogAction}
       />
     </div>
   ) : (

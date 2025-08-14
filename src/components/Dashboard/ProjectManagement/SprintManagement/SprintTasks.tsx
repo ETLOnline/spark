@@ -30,7 +30,6 @@ import { toast } from "@/src/hooks/use-toast"
 import { UpdateTaskAction } from "@/src/server-actions/Tasks/Task"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import TaskMoveDialog from "../Task/components/task-move-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   Tooltip,
@@ -63,7 +62,9 @@ function SprintTasks({
     taskStore.isTaskMoveDialogOpen
   )
   const setSelectedSprint = useSetAtom(sprintStore.selectedSprint)
-  const setSelectedTask = useSetAtom(taskStore.selectedTask)
+  const setSelectedTaskForEdit = useSetAtom(taskStore.selectedTask)
+  const setSelectedTasksForMoveTasks = useSetAtom(taskStore.selectedSprintTask)
+  const setTaskMoveDialogAction = useSetAtom(taskStore.taskMoveDialogAction)
 
   const [removeTaskLoading, , , RemoveTask] = useServerAction(UpdateTaskAction)
   const { GetPageName } = usePageName()
@@ -71,7 +72,7 @@ function SprintTasks({
   const pageName = GetPageName()
 
   function EditTask(task: SelectTask) {
-    setSelectedTask(task)
+    setSelectedTaskForEdit(task)
     setIsTaskModelOpen(true)
   }
 
@@ -100,10 +101,11 @@ function SprintTasks({
   }
 
   function moveTask(taskId: string) {
-    setSelectedTask(task)
+    setSelectedTasksForMoveTasks([task])
     setSelectedSprint(currSprint)
     setIsTaskMoveDialogOpen(true)
     setIsTaskDropDownOpen(false)
+    setTaskMoveDialogAction("moveTask")
   }
 
   const getTypeLabel = (type: string) => {

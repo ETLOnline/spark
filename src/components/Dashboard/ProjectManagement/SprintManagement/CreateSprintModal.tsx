@@ -16,6 +16,7 @@ import usePageName from "@/src/hooks/usePageName"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateSprintAction,
+  GetSprintCountAction,
   UpdateSprintAction
 } from "@/src/server-actions/Sprint/sprint"
 import { sprintStore } from "@/src/store/sprint/sprintsStore"
@@ -70,6 +71,7 @@ function CreateSprintModal({
   selectedSprint
 }: Props) {
   const [sprints, setSprints] = useAtom(sprintStore.sprints)
+  const [sprintsCount, setSprintsCount] = useState(0)
 
   const [createSprintLoading, , , CreateSprint] =
     useServerAction(CreateSprintAction)
@@ -86,13 +88,29 @@ function CreateSprintModal({
   const formError = form.formState.errors
   const pageName = GetPageName()
 
+  const GetSprintCount = async (projectId: string) => {
+    const sprintsCount = await GetSprintCountAction(projectId)
+    if (sprintsCount.data && sprintsCount.success) {
+      setSprintsCount(sprintsCount.data)
+    }
+  }
+
+  useEffect(() => {
+    if (!projectId) return
+    if (!selectedSprint) {
+      GetSprintCount(projectId)
+    }
+  }, [projectId, isCreateSprintOpen])
+
   useEffect(() => {
     if (selectedSprint) {
       form.setValue("title", selectedSprint.title)
       form.setValue("start_date", selectedSprint.start_date)
       form.setValue("end_date", selectedSprint.end_date)
-    } else {
-      form.reset()
+    } else if (isCreateSprintOpen && sprintsCount) {
+      form.setValue("title", `Sprint ${sprintsCount + 1}`)
+      form.setValue("start_date", "")
+      form.setValue("end_date", "")
     }
   }, [selectedSprint, isCreateSprintOpen])
 

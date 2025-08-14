@@ -134,6 +134,12 @@ function SprintBoard() {
     getTask()
   }, [projectId])
 
+  useEffect(() => {
+    if (!isTaskModalOpen) {
+      setSelectedTask(null)
+    }
+  }, [isTaskModalOpen])
+
   return projectStatusList.length > 0 ? (
     <>
       {getSprintLoading ? (

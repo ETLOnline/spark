@@ -16,7 +16,7 @@ import {
   UpdateSprintAction
 } from "@/src/server-actions/Sprint/sprint"
 import { toast } from "@/src/hooks/use-toast"
-import { useSetAtom } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { sprintStore } from "@/src/store/sprint/sprintsStore"
 import {
   AlertDialog,
@@ -31,6 +31,8 @@ import {
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { useParams } from "next/navigation"
 import usePageName from "@/src/hooks/usePageName"
+import { projectStore } from "@/src/store/project/projectStore"
+import { taskStore } from "@/src/store/tasks/taskStore"
 
 interface Props {
   isSprintContextMenuOpen: boolean
@@ -54,6 +56,12 @@ function SprintContextMenu({
   )
   const setSprintList = useSetAtom(sprintStore.sprints)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
+  const projectStatusList = useAtomValue(projectStore.projectStatusList)
+  const setIsTaskMoveDialogOpen = useSetAtom(taskStore.isTaskMoveDialogOpen)
+  const setCurrSprint = useSetAtom(sprintStore.selectedSprint)
+  const setSelectedTask = useSetAtom(taskStore.selectedSprintTask)
+
+  const setTaskMoveDilaogAction = useSetAtom(taskStore.taskMoveDialogAction)
 
   const [deleteSprintLoading, , , DeleteSprint] =
     useServerAction(DeleteSprintAction)
@@ -69,29 +77,20 @@ function SprintContextMenu({
   const { GetPageName } = usePageName()
   const pageName = GetPageName()
 
+  const DoneStatusId = projectStatusList.find((s) => s.name === "Done")?.id
+
   async function handleDeleteSprint(sprintId: string) {
     try {
-      const SprintTasks = sprintTasks.filter((t) => t.sprint_id === sprintId)
-      if (SprintTasks.length > 0) {
+      const deletedSprint = await DeleteSprint(sprintId, pageName ?? "")
+
+      if (deletedSprint?.success) {
+        setSprintList((prevSprints) =>
+          prevSprints.filter((s) => s.id !== sprintId)
+        )
         toast({
-          title: "Unable to delete sprint",
-          description:
-            "This sprint has tasks assigned to it. Please remove the tasks before deleting the sprint.",
-          variant: "destructive",
+          title: "Sprint delted succesfuully",
           duration: 2000
         })
-      } else {
-        const deletedSprint = await DeleteSprint(sprintId, pageName ?? "")
-
-        if (deletedSprint?.success) {
-          setSprintList((prevSprints) =>
-            prevSprints.filter((s) => s.id !== sprintId)
-          )
-          toast({
-            title: "Sprint delted succesfuully",
-            duration: 2000
-          })
-        }
       }
     } catch {
       toast({
@@ -127,13 +126,40 @@ function SprintContextMenu({
   }
 
   async function HandleEndSprint(sprint: SelectSprint) {
-    if (sprint) {
+    if (!sprint) return
+
+    const incompleteTasks = sprintTasks.filter(
+      (t) => t.status_id !== DoneStatusId
+    )
+
+    if (incompleteTasks.length > 0) {
+      setIsTaskMoveDialogOpen(true)
+      setCurrSprint(sprint)
+      setSelectedTask(incompleteTasks)
+      setIsSprintContextMenuOpen(false)
+      setTaskMoveDilaogAction("endSprint")
+    } else {
       const res = await UpdateSprint(sprint.id, { sprint_status: "closed" })
       if (res?.success && res.data) {
         setSprintList((prev) =>
           prev.map((s) => (s.id === res.data.id ? res.data : s))
         )
       }
+    }
+  }
+
+  const canDeleteSprint = (sprintId: string) => {
+    const isTasksInSprint = sprintTasks.filter((t) => t.sprint_id === sprintId)
+
+    if (isTasksInSprint.length > 0) {
+      setIsTaskMoveDialogOpen(true)
+      setCurrSprint(sprint)
+      setSelectedTask(isTasksInSprint)
+      setIsSprintContextMenuOpen(false)
+      setTaskMoveDilaogAction("deleteSprint")
+    } else {
+      setIsSprintContextMenuOpen(false)
+      setIsAlertOpen(true)
     }
   }
 
@@ -172,8 +198,7 @@ function SprintContextMenu({
               <DropdownMenuItem
                 className="text-red-500 "
                 onClick={() => {
-                  setIsSprintContextMenuOpen(false)
-                  setIsAlertOpen(true)
+                  canDeleteSprint(sprint.id)
                 }}
               >
                 Delete Sprint

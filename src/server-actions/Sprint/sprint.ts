@@ -3,6 +3,7 @@ import {
   CreateSprint,
   DeleteSprint,
   getSprints,
+  sprintCount,
   UpdateSprint
 } from "@/src/db/data-access/sprints/query"
 import { CreateServerAction } from ".."
@@ -77,6 +78,18 @@ export const DeleteSprintAction = CreateServerAction(
       )
 
       return { success: true }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetSprintCountAction = CreateServerAction(
+  true,
+  async (projectId: string) => {
+    try {
+      const sprints = await sprintCount(projectId)
+      return { success: true, data: sprints }
     } catch (error) {
       return { error: error }
     }

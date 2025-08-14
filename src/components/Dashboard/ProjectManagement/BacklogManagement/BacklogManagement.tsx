@@ -44,6 +44,7 @@ export function BacklogManagement() {
   const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useAtom(
     taskStore.isTaskMoveDialogOpen
   )
+  const taskMoveDialogAction = useAtomValue(taskStore.taskMoveDialogAction)
 
   const { SetPageName, GetPageName } = usePageName()
 
@@ -113,8 +114,9 @@ export function BacklogManagement() {
       <TaskMoveDialog
         isTaskMoveDialogOpen={isTaskMoveDialogOpen}
         setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
-        task_id={selectedTask?.id || ""}
+        task_ids={selectedTask?.id ? [selectedTask.id] : []}
         setTasks={setTasks}
+        dialogAction={taskMoveDialogAction}
       />
 
       <div className="space-y-6">

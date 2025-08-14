@@ -13,7 +13,8 @@ import {
   UpdateTask,
   UpdateTaskStatus,
   createTaskComment,
-  getTaskCommentsByTaskId
+  getTaskCommentsByTaskId,
+  UpdateTasksSprint
 } from "@/src/db/data-access/tasks/query"
 import { CreateServerAction } from ".."
 import {
@@ -131,6 +132,19 @@ export const UpdateTaskAction = CreateServerAction(
       )
 
       return { success: true, data: UpdatedTask }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const UpdateTasksSprintAction = CreateServerAction(
+  true,
+  async (task_ids: string[], sprint_id: string) => {
+    try {
+      const updatedTasks = await UpdateTasksSprint(task_ids, sprint_id)
+
+      return { success: true, data: updatedTasks }
     } catch (error) {
       return { error: error }
     }
