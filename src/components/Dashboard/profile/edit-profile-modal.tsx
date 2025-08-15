@@ -24,14 +24,19 @@ import { MultiSelectOption } from "../../ui/multi-select"
 import useUserProfile from "./hooks/useUserProfile"
 import TagSelect from "../../TagsInput/tags"
 import { ScrollArea } from "../../ui/scroll-area"
+import { useAuthUser } from "@/src/hooks/useAuthUser"
+import { useUser } from "@clerk/nextjs"
 
 const EditProfileModal: React.FC = () => {
   const bio = useAtomValue(profileStore.bio)
   const user = useAtomValue(userStore.AuthUser)
   const setBio = useSetAtom(profileStore.bio)
+  const setUser = useSetAtom(userStore.AuthUser)
   const [firstName, setFirstName] = useState<string>(user?.first_name || "")
   const [lastName, setLastName] = useState<string>(user?.last_name || "")
   const { toast } = useToast()
+  const { refreshAuthUser } = useAuthUser()
+  const { user: clerkUser } = useUser()
 
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const [editedBio, setEditedBio] = useState<string | undefined>(bio)
@@ -69,6 +74,16 @@ const EditProfileModal: React.FC = () => {
       setEditedBio(bio)
     }
   }, [bio])
+
+  // Update first and last name state when user changes
+  useEffect(() => {
+    if (user?.first_name) {
+      setFirstName(user.first_name)
+    }
+    if (user?.last_name) {
+      setLastName(user.last_name)
+    }
+  }, [user?.first_name, user?.last_name])
 
   // set user skills in tagsInput
   useEffect(() => {
@@ -131,6 +146,21 @@ const EditProfileModal: React.FC = () => {
         })
         setIsOpen(false)
         setBio(editedBio ?? "")
+
+        // Update the user state with new first and last name
+        if (user) {
+          setUser({
+            ...user,
+            first_name: firstName,
+            last_name: lastName
+          })
+        }
+
+        // Reload Clerk user to sync the updated names
+        await clerkUser?.reload()
+        
+        // Refresh auth user to get latest data from database
+        await refreshAuthUser()
 
         setUserInterests(
           selectedInterestTags.map((tag) => ({
