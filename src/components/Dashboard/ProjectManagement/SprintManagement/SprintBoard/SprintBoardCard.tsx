@@ -39,7 +39,7 @@ function SprintBoardCard({
 }: Props) {
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
   const [filteredTasks, setFilteredTasks] = useState<SelectTask[]>([])
-  const [filters, setFilters] = useState<TaskFiltersType>({})
+  const [filters, setFilters] = useState<TaskFiltersType | null>(null)
 
   const [getTaskLoading, , , GetSPrintTask] =
     useServerAction(GetSprintTasksAction)
@@ -56,10 +56,10 @@ function SprintBoardCard({
         const tasks = await GetSPrintTask({
           project_id: sprint.projectId,
           sprint_id: sprint.id,
-          priority: filters.priority,
-          type: filters.type,
-          status: filters.status,
-          assignee: filters.assignee
+          priority: filters?.priority,
+          type: filters?.type,
+          status: filters?.status,
+          assignee: filters?.assignee
         })
         if (tasks?.success && tasks.data) {
           setFilteredTasks(tasks.data.tasks)
@@ -70,7 +70,13 @@ function SprintBoardCard({
     if (filters) {
       getTask()
     }
-  }, [sprint, filters.assignee, filters.priority, filters.type, filters.status])
+  }, [
+    sprint,
+    filters?.assignee,
+    filters?.priority,
+    filters?.type,
+    filters?.status
+  ])
 
   function handleOnTaskClick(task: SelectTask) {
     setSelectedTask(task)
