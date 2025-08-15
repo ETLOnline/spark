@@ -107,7 +107,7 @@ const CreateNewChat = () => {
 
   const handleCreateNewChat = async () => {
     if (!authUser) return
-    const spaceId = currentSpace ? currentSpace.id : undefined
+    const spaceId = currentSpace && isSpacePage ? currentSpace.id : undefined
     const userIds = selectedContacts.map((contact) => contact.value)
 
     if (isGroupChat) {
