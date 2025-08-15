@@ -33,7 +33,6 @@ import {
 } from "../constants/projectManagment"
 import { useParams } from "next/navigation"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import TaskMoveDialog from "../Task/components/task-move-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   Tooltip,
@@ -53,25 +52,28 @@ function BacklogItems({ task }: Props) {
   const [isDropdownOpen, setIsDropDownOpen] = useState(false)
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
-  const SetTasks = useSetAtom(taskStore.BackLogTasks)
+  const setTasks = useSetAtom(taskStore.BackLogTasks)
   const [status, setStatus] = useAtom(projectStore.projectStatusList)
-  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useState(false)
+  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useAtom(
+    taskStore.isTaskMoveDialogOpen
+  )
+  const setIsTaskModalOpen = useSetAtom(taskStore.isTaskModalOpen)
+  const setTaskMoveDialogAction = useSetAtom(taskStore.taskMoveDialogAction)
 
   const [deleteTaskLoading, deleteTaskData, deleteTaskError, DeleteTask] =
     useServerAction(DeleteTaskAction)
 
-
-
   function EditTask(task: SelectTask) {
     setSelectedTask(task)
     setIsDropDownOpen(false)
+    setIsTaskModalOpen(true)
   }
 
   async function handleDeleteTask(selectedTask: SelectTask) {
     try {
       const deletedTask = await DeleteTask(selectedTask)
       if (deletedTask?.success) {
-        SetTasks((prev) => prev.filter((t) => t.id !== selectedTask.id))
+        setTasks((prev) => prev.filter((t) => t.id !== selectedTask.id))
         toast({
           title: "Task Deleted successfully"
         })
@@ -120,6 +122,13 @@ function BacklogItems({ task }: Props) {
     )
   }
 
+  const HandleMoveTask = (task: SelectTask) => {
+    setSelectedTask(task)
+    setIsTaskMoveDialogOpen(true)
+    setIsDropDownOpen(false)
+    setTaskMoveDialogAction("moveTask")
+  }
+
   // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(
     "scoped",
@@ -132,17 +141,6 @@ function BacklogItems({ task }: Props) {
   const canDelete = permissionChecker
     ? permissionChecker?.canAccess("project.backlog.task.delete")
     : false
-  const onTaskCreated = (task: SelectTask) => {
-    SetTasks((prev) => [...prev, task])
-    setSelectedTask(task)
-  }
-
-  const onTaskUpdated = (task: SelectTask) => {
-    SetTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, ...task } : t))
-    )
-    setSelectedTask(task)
-  }
 
   return (
     <>
@@ -164,13 +162,17 @@ function BacklogItems({ task }: Props) {
             {task.task_title}
           </div>
         </div>
-        <div className="col-span-1 text-center">{getTypeLabel(task.task_type)}</div>
+        <div className="col-span-1 text-center">
+          {getTypeLabel(task.task_type)}
+        </div>
         <div className="col-span-2 text-center">
           <Badge variant={"outline"}>
             {status.find((s) => s.id === task.status_id)?.name}
           </Badge>
         </div>
-        <div className="col-span-1 text-center">{getPriorityLabel(task.task_priority)}</div>
+        <div className="col-span-1 text-center">
+          {getPriorityLabel(task.task_priority)}
+        </div>
         <div className="col-span-1 text-center">{task.story_points}</div>
         <div className="col-span-1 text-center">
           {task.assign_to ? (
@@ -225,8 +227,7 @@ function BacklogItems({ task }: Props) {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
-                        setIsTaskMoveDialogOpen(true)
-                        setIsDropDownOpen(false)
+                        HandleMoveTask(task)
                       }}
                     >
                       Add to Sprint
@@ -271,12 +272,6 @@ function BacklogItems({ task }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <TaskMoveDialog
-        isTaskMoveDialogOpen={isTaskMoveDialogOpen}
-        setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
-        task_id={task.id}
-      />
     </>
   )
 }

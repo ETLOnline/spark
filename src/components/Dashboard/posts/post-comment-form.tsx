@@ -38,6 +38,16 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
 
   const handleAddComment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    
+    if (!commentText.current.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please write something in the comment box before posting."
+      })
+      return
+    }
+    
     try {
       const response = await createComment(
         postId,

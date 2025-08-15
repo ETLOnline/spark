@@ -21,6 +21,24 @@ export const CreatePrivateChatAction = CreateServerAction(
   true,
   async (user_id: string, contact_id: string, space_id?: string) => {
     try {
+      let existingChat
+
+      if (space_id) {
+        // Check for existing space chat
+        const userChatsInSpace = await GetChats(user_id, space_id, false)
+        existingChat = userChatsInSpace.find(
+          (chat) =>
+            chat.users.some((u) => u.user_id === contact_id) &&
+            chat.users.some((u) => u.user_id === user_id)
+        )
+      } else {
+        // Check for existing open chat
+        existingChat = await GetMutualChat(user_id, contact_id, "open")
+      }
+
+      if (existingChat) {
+        return { success: false, data: existingChat, existingChat: true }
+      }
       const chat = await CreatePrivateChat(user_id, contact_id, space_id)
       return { success: true, data: chat }
     } catch (error) {
@@ -58,11 +76,11 @@ export const GetChatsAction = CreateServerAction(
 
 export const GetMutualChatAction = CreateServerAction(
   true,
-  async (contact_id: string) => {
+  async (contact_id: string, type?: "open" | "space") => {
     try {
       const authUser = await AuthUserAction()
       if (authUser) {
-        const chat = await GetMutualChat(authUser.unique_id, contact_id)
+        const chat = await GetMutualChat(authUser.unique_id, contact_id, type)
         return { success: true, data: chat }
       }
     } catch (error) {

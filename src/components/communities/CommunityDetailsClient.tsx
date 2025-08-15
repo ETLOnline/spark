@@ -19,7 +19,9 @@ import {
   UserPlus,
   Lock,
   Globe,
-  PlusCircle
+  PlusCircle,
+  PencilRuler,
+  Check
 } from "lucide-react"
 import { CommunityDetailData } from "@/src/db/data-access/communities/query"
 import CreateChannels from "@/src/components/Dashboard/Channels/CreateChannels"
@@ -46,6 +48,12 @@ import { useToast } from "@/src/hooks/use-toast"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import { getInitials } from "@/src/utils/helpers"
 import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/src/components/ui/tooltip"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -424,6 +432,36 @@ export default function CommunityDetailsClient({
                                       <span className="truncate">
                                         {channel.channel_name}
                                       </span>
+                                      {/* for not publish or published */}
+                                      {channel.publish_channel ? (
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Check
+                                                className="text-muted-foreground"
+                                                height={14}
+                                              />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>Published</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      ) : (
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <PencilRuler
+                                                className="text-muted-foreground"
+                                                height={14}
+                                              />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>Darft</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      )}
                                       {channel.channel_type === "public" ? (
                                         <Globe className="h-4 w-4 text-green-500 shrink-0" />
                                       ) : channel.channel_type === "private" ? (

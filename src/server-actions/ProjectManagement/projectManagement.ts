@@ -20,6 +20,7 @@ import {
   deleteUserRole,
   getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
+import pusherServer from "@/src/services/realtime/pusherServer"
 
 export const CreateProjectAction = CreateServerAction(
   true,
@@ -36,6 +37,13 @@ export const CreateProjectAction = CreateServerAction(
         newProject.created_by,
         result?.adminRole?.name
       )
+
+      pusherServer.trigger(
+        `space-${newProject.space_id}-project`,
+        "project-add",
+        newProject
+      )
+
       return { success: true, data: newProject }
     } catch (error) {
       return { error }
@@ -48,6 +56,13 @@ export const UpdateProjectAction = CreateServerAction(
   async (project_data: Partial<InsertProject>) => {
     try {
       const updatedProject = await updateProject(project_data)
+
+      pusherServer.trigger(
+        `space-${updatedProject.space_id}-project`,
+        "project-edit",
+        updatedProject
+      )
+
       return { success: true, data: updatedProject }
     } catch (error) {
       return { error }

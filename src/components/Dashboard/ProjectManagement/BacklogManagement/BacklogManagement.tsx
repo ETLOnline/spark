@@ -22,6 +22,7 @@ import { TaskModal } from "../Task/components/TaskModal"
 import { SelectTask } from "@/src/db/schema"
 import { TaskFiltersType } from "../types/taskFilters.type"
 import TaskFilters from "../TaskFilter/TaskFilters"
+import TaskMoveDialog from "../Task/components/task-move-dialog"
 
 export function BacklogManagement() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -30,10 +31,18 @@ export function BacklogManagement() {
   const [limit, setLimit] = useState(10)
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
   const [openDialog, setOpenDialog] = useState(false)
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
+  const [isTaskModalOpen, setIsTaskModalOpen] = useAtom(
+    taskStore.isTaskModalOpen
+  )
   const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
   const [tasks, setTasks] = useAtom(taskStore.BackLogTasks)
-  const [appliedFilters, setAppliedFilters] = useState<TaskFiltersType>({})
+  const [appliedFilters, setAppliedFilters] = useState<TaskFiltersType | null>(
+    null
+  )
+  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useAtom(
+    taskStore.isTaskMoveDialogOpen
+  )
+  const taskMoveDialogAction = useAtomValue(taskStore.taskMoveDialogAction)
 
   const params = useParams()
   const projectId = params.id as string
@@ -67,10 +76,10 @@ export function BacklogManagement() {
   }, [isTaskModalOpen])
 
   useEffect(() => {
-    if (selectedTask) {
-      setIsTaskModalOpen(true)
+    if (!isTaskMoveDialogOpen) {
+      setSelectedTask(null)
     }
-  }, [selectedTask])
+  }, [isTaskMoveDialogOpen])
 
   function handleFilters(filters: TaskFiltersType) {
     setAppliedFilters(filters)
@@ -90,6 +99,14 @@ export function BacklogManagement() {
           setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
           setSelectedTask(task)
         }}
+      />
+
+      <TaskMoveDialog
+        isTaskMoveDialogOpen={isTaskMoveDialogOpen}
+        setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
+        task_ids={selectedTask?.id ? [selectedTask.id] : []}
+        setTasks={setTasks}
+        dialogAction={taskMoveDialogAction}
       />
 
       <div className="space-y-6">

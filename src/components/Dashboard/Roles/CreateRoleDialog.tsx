@@ -41,7 +41,7 @@ export function CreateRoleDialog({
     if (result?.success) {
       onOpenChange(false)
       setFormData({ name: "" })
-      router.push(`/roles/${result.data.id}/edit`)
+      router.push(`/admin/roles/${result.data.id}/edit`)
     } else {
       // handle error (show toast, etc.)
       console.error("Failed to create role:", result?.error)

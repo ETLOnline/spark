@@ -392,6 +392,7 @@ export default function CreateCommunityModal({
                           field.onChange(e)
                           handleTitleChange(e.target.value)
                         }}
+                        placeholder="Enter community name"
                       />
                     )}
                   />
@@ -416,7 +417,7 @@ export default function CreateCommunityModal({
                     defaultValue=""
                     control={form.control}
                     render={({ field }) => (
-                      <Input id="slug" {...field} disabled={true} />
+                      <Input id="slug" {...field} disabled={true} placeholder="community-slug"/>
                     )}
                   />
                 </div>
@@ -466,6 +467,7 @@ export default function CreateCommunityModal({
                             id="description"
                             {...field}
                             maxLength={maxChars}
+                            placeholder="Description"
                           />
                           <div className="text-sm text-muted-foreground text-right mt-1">
                             {charCount}/{maxChars} characters
