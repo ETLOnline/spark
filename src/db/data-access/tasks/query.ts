@@ -3,6 +3,7 @@ import {
   asc,
   desc,
   eq,
+  ilike,
   inArray,
   isNotNull,
   isNull,
@@ -90,9 +91,9 @@ export async function GetTasks(filters?: taskQueryFilters) {
       if (filters.searchedItem) {
         whereClauses.push(
           or(
-            like(taskTable.task_title, `%${filters.searchedItem}%`),
-            like(taskTable.description, `%${filters.searchedItem}%`),
-            like(taskTable.task_num, `%${filters.searchedItem}%`)
+            ilike(taskTable.task_title, `%${filters.searchedItem}%`),
+            ilike(taskTable.description, `%${filters.searchedItem}%`),
+            ilike(taskTable.task_num, `%${filters.searchedItem}%`)
           )
         )
       }
