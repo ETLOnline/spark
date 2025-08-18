@@ -48,9 +48,7 @@ export function BacklogManagement() {
   const projectId = params.id as string
 
   function handleSearch() {
-    if (searchQuery) {
-      setSearchedItem(searchQuery)
-    }
+    setSearchedItem(searchQuery)
   }
 
   // PERMISSIONS INITATE
@@ -83,6 +81,12 @@ export function BacklogManagement() {
 
   function handleFilters(filters: TaskFiltersType) {
     setAppliedFilters(filters)
+    setSearchedItem(searchQuery)
+  }
+  const handleKeyDown = (e: any) => {
+    if (e.key === "Enter") {
+      handleSearch()
+    }
   }
 
   return projectStatusList.length > 0 ? (
@@ -124,9 +128,10 @@ export function BacklogManagement() {
           <div className="relative w-full sm:w-64 flex">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search backlog..."
+              placeholder="Search by title or ticket ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="pl-8 rounded-r-none"
             />
             <Button
