@@ -171,8 +171,15 @@ export async function createScopedRole(params: {
   roleSlug?: string | null
   entityType?: string | null
   entityId?: string | null
+  roleType?: string | null
 }) {
-  const { name, roleSlug = null, entityType = null, entityId = null } = params
+  const {
+    name,
+    roleSlug = null,
+    entityType = null,
+    entityId = null,
+    roleType = null
+  } = params
   try {
     const result = await db.transaction(async (trx) => {
       // Internal transaction
@@ -180,7 +187,7 @@ export async function createScopedRole(params: {
         .insert(rolesTable)
         .values({
           name,
-          role_type: "GLOBAL",
+          role_type: roleType ? roleType : "SCOPED",
           slug: roleSlug,
           entity_type: entityType,
           entity_id: entityId
