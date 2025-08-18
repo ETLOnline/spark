@@ -123,7 +123,9 @@ export const AddMessageToChatAction = CreateServerAction(
             newMessage.chat_id,
             newMessage.message
           )
-
+          if (!updatedChat) {
+            return { success: false }
+          }
           // const channelHash = ChatChannelHash(updatedChat.channel_id)
 
           // send message to channel
@@ -132,6 +134,22 @@ export const AddMessageToChatAction = CreateServerAction(
             updatedChat.channel_id
           )
           await realtimeChannel.publish("message", newMessage)
+
+          const chatUsers = updatedChat.users
+
+          for (const userChat of chatUsers) {
+            const userId = userChat.user_id
+
+            if (userId !== authUser.unique_id) {
+              const userNotificationChannel = AblyClientRest.channels.get(
+                `user:${userId}`
+              )
+              await userNotificationChannel.publish("chat-update", {
+                chatId: updatedChat.id,
+                lastMessage: newMessage.message
+              })
+            }
+          }
 
           return { success: true, data: newMessage }
         } else {

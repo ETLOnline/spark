@@ -305,15 +305,33 @@ export const updateLastChatMessage = async (
   message: string
 ) => {
   try {
-    const updatedChat = await db
+    const [updatedChatResult] = await db
       .update(chatsTable)
       .set({
-        last_message: message
+        last_message: message,
+        updated_at: new Date().toISOString()
       })
       .where(eq(chatsTable.id, chatId))
-      .returning()
-    return updatedChat[0]
+      .returning({ id: chatsTable.id })
+
+    if (!updatedChatResult) {
+      return null
+    }
+
+    const fullChatWithUsers = await db.query.chatsTable.findFirst({
+      where: eq(chatsTable.id, chatId),
+      with: {
+        users: {
+          with: {
+            user: true
+          }
+        }
+      }
+    })
+
+    return fullChatWithUsers
   } catch (error: any) {
+    console.error("Failed to update chat and fetch users:", error)
     throw new Error(error.message)
   }
 }
