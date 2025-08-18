@@ -92,7 +92,6 @@ export async function GetTasks(filters?: taskQueryFilters) {
         whereClauses.push(
           or(
             ilike(taskTable.task_title, `%${filters.searchedItem}%`),
-            ilike(taskTable.description, `%${filters.searchedItem}%`),
             ilike(taskTable.task_num, `%${filters.searchedItem}%`)
           )
         )

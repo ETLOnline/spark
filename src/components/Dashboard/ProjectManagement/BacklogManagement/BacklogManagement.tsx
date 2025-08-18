@@ -81,9 +81,9 @@ export function BacklogManagement() {
 
   function handleFilters(filters: TaskFiltersType) {
     setAppliedFilters(filters)
+    setSearchedItem(searchQuery)
   }
   const handleKeyDown = (e: any) => {
-    console.log(e.key)
     if (e.key === "Enter") {
       handleSearch()
     }
@@ -128,7 +128,7 @@ export function BacklogManagement() {
           <div className="relative w-full sm:w-64 flex">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search backlog..."
+              placeholder="Search by title or ticket ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleKeyDown}
