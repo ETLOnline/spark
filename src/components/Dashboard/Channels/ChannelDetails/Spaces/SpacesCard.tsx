@@ -42,7 +42,7 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
   const canViewSpace = permissionChecker
     ? permissionChecker?.canAccess("space.view")
     : false
-
+  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
   return (
     <Card key={space.id} className="overflow-hidden">
       {/* <div className="aspect-video w-full overflow-hidden">
@@ -59,7 +59,7 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
             {space.space_type === "private" && (
               <Lock className="text-muted-foreground" height={14} />
             )}
-            {space.publish_space ? (
+            {space.publish_space && (canSpaceAllowAction || isSuperAdmin) ? (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -71,19 +71,21 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
                 </Tooltip>
               </TooltipProvider>
             ) : (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <PencilRuler
-                      className="text-muted-foreground"
-                      height={14}
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Darft</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              (canSpaceAllowAction || isSuperAdmin) && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <PencilRuler
+                        className="text-muted-foreground"
+                        height={14}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Draft</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )
             )}
           </CardTitle>
           {canSpaceAllowAction || space.space_type === "public" ? (
