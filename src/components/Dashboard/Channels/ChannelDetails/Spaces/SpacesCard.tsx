@@ -29,7 +29,6 @@ interface Props {
 
 function SpacesCard({ space, setIsChannelMember }: Props) {
   const user = useAtomValue(userStore.AuthUser)
-  const encodedSpaceSlug = encodeURIComponent(space.space_slug)
 
   const { permissionChecker } = usePermissionChecker(
     "scoped",
@@ -42,7 +41,16 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
   const canViewSpace = permissionChecker
     ? permissionChecker?.canAccess("space.view")
     : false
-  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
+  const canUpdateSpace = permissionChecker
+    ? permissionChecker?.canAccess("space.update")
+    : false
+
+  useEffect(() => {
+    console.log("canspace", canSpaceAllowAction)
+    console.log("canViww", canViewSpace)
+    console.log("canUpdae", canUpdateSpace)
+  }, [canViewSpace, canSpaceAllowAction, canUpdateSpace])
+
   return (
     <Card key={space.id} className="overflow-hidden">
       {/* <div className="aspect-video w-full overflow-hidden">
@@ -59,19 +67,20 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
             {space.space_type === "private" && (
               <Lock className="text-muted-foreground" height={14} />
             )}
-            {space.publish_space && (canSpaceAllowAction || isSuperAdmin) ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Check className="text-muted-foreground" height={14} />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Published</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
-              (canSpaceAllowAction || isSuperAdmin) && (
+
+            {canUpdateSpace &&
+              (space.publish_space ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Check className="text-muted-foreground" height={14} />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Published</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -85,8 +94,7 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-              )
-            )}
+              ))}
           </CardTitle>
           {canSpaceAllowAction || space.space_type === "public" ? (
             <SpacesActionButtons
@@ -102,7 +110,7 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
           {space.membersCount} {space.membersCount === 1 ? 'Member' : 'Members'}
           0 Members
         </Badge> */}
-        <Link href={`./spaces/${encodedSpaceSlug}`}>
+        <Link href={`./spaces/${space.space_slug}`}>
           <Button>
             Launch Space <ArrowRight />
           </Button>
