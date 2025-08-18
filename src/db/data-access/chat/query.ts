@@ -408,3 +408,36 @@ export const getChatContacts = async ({
     throw new Error(error.message)
   }
 }
+
+export const getExistingSingleChat = async (
+  user_id: string,
+  contact_id: string,
+  type?: "open" | "space"
+) => {
+  try {
+    const chatId = await db
+      .select({ chat_id: userChatsTable.chat_id })
+      .from(userChatsTable)
+      .where(
+        or(
+          eq(userChatsTable.user_id, user_id),
+          eq(userChatsTable.user_id, contact_id)
+        )
+      )
+      .groupBy(userChatsTable.chat_id)
+      .having(eq(count(userChatsTable.chat_id), 2))
+    if (chatId.length === 0) return null
+    const chatIds = chatId.map((c) => c.chat_id)
+    console.log(chatIds)
+    return await db.query.chatsTable.findFirst({
+      where: and(
+        inArray(chatsTable.id, chatIds),
+        type ? eq(chatsTable.type, type) : undefined,
+        type ? eq(chatsTable.is_group, 0) : undefined
+      )
+    })
+  } catch (error: any) {
+    console.log(error.message, "error")
+    throw new Error(error.message)
+  }
+}

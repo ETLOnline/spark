@@ -44,6 +44,7 @@ const CreateNewChat = () => {
   )
   const [isGroupChat, setIsGroupChat] = useState(false)
   const [groupName, setGroupName] = useState<string>("")
+  const [groupNameError, setGroupNameError] = useState<string>("")
   const [options, setOptions] = useState<MultiSelectOption[]>([])
   const { space_slug, channel_slug } = useParams()
   const currentSpace = useAtomValue(spaceStore.currentSpace)
@@ -112,6 +113,12 @@ const CreateNewChat = () => {
 
     if (isGroupChat) {
       // Create Group Chat
+      if (groupName.trim() === "") {
+        setGroupNameError("Group name is required.")
+        return
+      } else {
+        setGroupNameError("")
+      }
       const response = await CreateGroupChatAction(
         [...userIds, authUser?.unique_id],
         groupName,
@@ -121,6 +128,7 @@ const CreateNewChat = () => {
         const newChat = response.data
         setMyChats((pre) => [...pre, newChat])
         switchChat(newChat)
+        setGroupName("")
       }
     } else {
       // Create Direct Chat
@@ -176,6 +184,9 @@ const CreateNewChat = () => {
                   placeholder="Type Group Name"
                   onChange={(e) => setGroupName(e.target.value)}
                 />
+                {groupNameError && (
+                  <p className="text-sm text-red-500 mt-1">{groupNameError}</p>
+                )}
                 <div className="flex items-center justify-center mt-6">
                   <Avvvatars value={groupName} style="shape" size={100} />
                 </div>
