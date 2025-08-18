@@ -276,7 +276,10 @@ export const GetChatBySlugWithMessages = async (slug: string) => {
       with: {
         messages: {
           limit: 50,
-          orderBy: (messagesTable) => desc(messagesTable.id)
+          orderBy: (messagesTable) => desc(messagesTable.id),
+          with: {
+            sender: true
+          }
         },
         users: {
           with: {
