@@ -165,9 +165,9 @@ export const GetChannelBySlugAction = CreateServerAction(
 
 export const GetChannelByIdAction = CreateServerAction(
   true,
-  async (id: string) => {
+  async (id: string, withChannelUsers?: boolean) => {
     try {
-      const channel = await GetChannelById(id)
+      const channel = await GetChannelById(id, withChannelUsers)
       return { success: true, data: channel }
     } catch (error) {
       return { error: error }
