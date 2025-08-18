@@ -44,10 +44,16 @@ const InviteScreen = ({ entityType, entity }: Props) => {
       : entity.space_name
   const entityDescription = entity.description
   const entityTypeValue = isEntityCommunity(entity)
-    ? entity.slug
+    ? entity.type
     : isEntityChannel(entity)
       ? entity.channel_type
       : entity.space_type
+
+  const entityUserCount = isEntityCommunity(entity)
+    ? (entity?.communityMembers?.length ?? 0)
+    : isEntityChannel(entity)
+      ? (entity?.users?.length ?? 0)
+      : (entity?.users?.length ?? 0)
 
   const title = `Join ${entityName} ${entityType}`
   const description = `You have been invited to Join the ${entityType} to start collaborating.`
@@ -146,7 +152,8 @@ const InviteScreen = ({ entityType, entity }: Props) => {
 
                 <div className="flex items-center gap-3 mt-2">
                   <div className="flex items-center text-sm text-muted-foreground">
-                    <Users className="h-4 w-4 mr-1" />0 members
+                    <Users className="h-4 w-4 mr-1" />
+                    {entityUserCount} members
                   </div>
 
                   <Badge variant="secondary" className="text-xs">
