@@ -40,21 +40,21 @@ export default async function InvitePage({ params, searchParams }: Props) {
   let entity: SelectChannel | SelectSpace | SelectCommunity | null = null
 
   if (type === "channel") {
-    const currentChannel = await GetChannelByIdAction(id)
+    const currentChannel = await GetChannelByIdAction(id, true)
     if (currentChannel.success && currentChannel.data) {
       entity = currentChannel.data as SelectChannel
     }
   }
 
   if (type === "space") {
-    const currentSpace = await GetSpaceByIdAction(id)
+    const currentSpace = await GetSpaceByIdAction(id, true)
     if (currentSpace.success && currentSpace.data) {
       entity = currentSpace.data
     }
   }
 
   if (type === "community") {
-    const currentSpace = await GetCommunityByIdAction(id)
+    const currentSpace = await GetCommunityByIdAction(id, true)
     if (currentSpace.success && currentSpace.data) {
       entity = currentSpace.data
     }

@@ -8,7 +8,8 @@ import {
   getChatContacts,
   GetMutualChat,
   GetChats,
-  updateLastChatMessage
+  updateLastChatMessage,
+  getExistingSingleChat
 } from "@/src/db/data-access/chat/query"
 import { CreateServerAction } from ".."
 import { InsertMessage, SelectUser } from "@/src/db/schema"
@@ -21,20 +22,12 @@ export const CreatePrivateChatAction = CreateServerAction(
   true,
   async (user_id: string, contact_id: string, space_id?: string) => {
     try {
-      let existingChat
-
-      if (space_id) {
-        // Check for existing space chat
-        const userChatsInSpace = await GetChats(user_id, space_id, false)
-        existingChat = userChatsInSpace.find(
-          (chat) =>
-            chat.users.some((u) => u.user_id === contact_id) &&
-            chat.users.some((u) => u.user_id === user_id)
-        )
-      } else {
-        // Check for existing open chat
-        existingChat = await GetMutualChat(user_id, contact_id, "open")
-      }
+      const chatType = space_id ? "space" : "open"
+      const existingChat = await getExistingSingleChat(
+        user_id,
+        contact_id,
+        chatType
+      )
 
       if (existingChat) {
         return { success: false, data: existingChat, existingChat: true }
