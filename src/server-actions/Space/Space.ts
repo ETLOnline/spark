@@ -115,7 +115,7 @@ export const GetSpacesAction = CreateServerAction(
         channel?.id
       )
 
-      if (isAdmin || permissionChecker.canAccess("space.update")) {
+      if (isAdmin || permissionChecker.canAccess("channel.space.create")) {
         spaces = await GetSpaces({ ...filters })
       } else {
         const spacesResponse = await GetSpaces({

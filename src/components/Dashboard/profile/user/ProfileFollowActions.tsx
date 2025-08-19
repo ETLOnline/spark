@@ -64,7 +64,7 @@ const ProfileFollowActions = ({ user }: Props) => {
   useEffect(() => {
     if (authUser && authUser?.unique_id && user && user.unique_id) {
       getContact(authUser.unique_id, user.unique_id)
-      getMutualChat(user.unique_id)
+      getMutualChat(user.unique_id, "open")
       const { unsubscribe } = joinRequestChannel(
         authUser.unique_id,
         (request, activity) => {

@@ -12,7 +12,7 @@ export const projectSchema = z
     description: z
       .string()
       .min(1, "Description required")
-      .max(150, "Description is too long"),
+      .max(1000, "Description is too long"),
     project_type: z.boolean().optional()
   })
   .refine(

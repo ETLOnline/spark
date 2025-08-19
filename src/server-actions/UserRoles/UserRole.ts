@@ -132,7 +132,7 @@ export const SaveRoleWithPermissionsAction = CreateServerAction(
 
 export const CreateRoleAction = CreateServerAction(
   true,
-  async (formData: { name: string }) => {
+  async (formData: { name: string; roleType?: string }) => {
     try {
       const newRole = await createScopedRole(formData)
       return { success: true, data: newRole }

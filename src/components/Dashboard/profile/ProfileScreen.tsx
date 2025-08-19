@@ -55,6 +55,8 @@ import CertificateModal from "./CertificateModal"
 import RecommendationsModal from "./RecommendationsModal"
 import { GetRecommendationAction } from "@/src/server-actions/Recommendation/recommendation"
 import moment from "moment"
+import { useAtomValue } from "jotai"
+import { userStore } from "@/src/store/user/userStore"
 
 type ProfileScreenProps = {
   tab?: string
@@ -89,6 +91,13 @@ export default function ProfileScreen({
   const [averageRating, setAverageRating] = useState(
     user.profile?.total_average_rating
   )
+
+  // Get the updated user from atom store to handle dynamic name updates
+  const updatedUser = useAtomValue(userStore.AuthUser)
+
+  // Use updated user data if this is the current user's profile, otherwise use prop
+  const displayUser =
+    authUser?.unique_id === user?.unique_id ? updatedUser || user : user
 
   const [recommendationLoading, , , GetRecommendations] = useServerAction(
     GetRecommendationAction
@@ -230,7 +239,7 @@ export default function ProfileScreen({
         <div className="flex flex-col items-start">
           <div className="flex items-center">
             <h2 className="text-xl sm:text-2xl font-bold inline-flex items-center">
-              {user.first_name} {user.last_name}
+              {displayUser.first_name} {displayUser.last_name}
             </h2>
             <TooltipProvider>
               <Tooltip>

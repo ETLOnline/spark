@@ -22,6 +22,7 @@ import { TaskModal } from "../Task/components/TaskModal"
 import { SelectTask } from "@/src/db/schema"
 import { TaskFiltersType } from "../types/taskFilters.type"
 import TaskFilters from "../TaskFilter/TaskFilters"
+import TaskMoveDialog from "../Task/components/task-move-dialog"
 
 export function BacklogManagement() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -30,18 +31,24 @@ export function BacklogManagement() {
   const [limit, setLimit] = useState(10)
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
   const [openDialog, setOpenDialog] = useState(false)
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
+  const [isTaskModalOpen, setIsTaskModalOpen] = useAtom(
+    taskStore.isTaskModalOpen
+  )
   const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
   const [tasks, setTasks] = useAtom(taskStore.BackLogTasks)
-  const [appliedFilters, setAppliedFilters] = useState<TaskFiltersType>({})
+  const [appliedFilters, setAppliedFilters] = useState<TaskFiltersType | null>(
+    null
+  )
+  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useAtom(
+    taskStore.isTaskMoveDialogOpen
+  )
+  const taskMoveDialogAction = useAtomValue(taskStore.taskMoveDialogAction)
 
   const params = useParams()
   const projectId = params.id as string
 
   function handleSearch() {
-    if (searchQuery) {
-      setSearchedItem(searchQuery)
-    }
+    setSearchedItem(searchQuery)
   }
 
   // PERMISSIONS INITATE
@@ -67,13 +74,19 @@ export function BacklogManagement() {
   }, [isTaskModalOpen])
 
   useEffect(() => {
-    if (selectedTask) {
-      setIsTaskModalOpen(true)
+    if (!isTaskMoveDialogOpen) {
+      setSelectedTask(null)
     }
-  }, [selectedTask])
+  }, [isTaskMoveDialogOpen])
 
   function handleFilters(filters: TaskFiltersType) {
     setAppliedFilters(filters)
+    setSearchedItem(searchQuery)
+  }
+  const handleKeyDown = (e: any) => {
+    if (e.key === "Enter") {
+      handleSearch()
+    }
   }
 
   return projectStatusList.length > 0 ? (
@@ -92,6 +105,14 @@ export function BacklogManagement() {
         }}
       />
 
+      <TaskMoveDialog
+        isTaskMoveDialogOpen={isTaskMoveDialogOpen}
+        setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
+        task_ids={selectedTask?.id ? [selectedTask.id] : []}
+        setTasks={setTasks}
+        dialogAction={taskMoveDialogAction}
+      />
+
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h2 className="text-xl font-bold">Backlog</h2>
@@ -107,9 +128,10 @@ export function BacklogManagement() {
           <div className="relative w-full sm:w-64 flex">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search backlog..."
+              placeholder="Search by title or ticket ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="pl-8 rounded-r-none"
             />
             <Button

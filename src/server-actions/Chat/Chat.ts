@@ -8,7 +8,8 @@ import {
   getChatContacts,
   GetMutualChat,
   GetChats,
-  updateLastChatMessage
+  updateLastChatMessage,
+  getExistingSingleChat
 } from "@/src/db/data-access/chat/query"
 import { CreateServerAction } from ".."
 import { InsertMessage, SelectUser } from "@/src/db/schema"
@@ -21,6 +22,16 @@ export const CreatePrivateChatAction = CreateServerAction(
   true,
   async (user_id: string, contact_id: string, space_id?: string) => {
     try {
+      const chatType = space_id ? "space" : "open"
+      const existingChat = await getExistingSingleChat(
+        user_id,
+        contact_id,
+        chatType
+      )
+
+      if (existingChat) {
+        return { success: false, data: existingChat, existingChat: true }
+      }
       const chat = await CreatePrivateChat(user_id, contact_id, space_id)
       return { success: true, data: chat }
     } catch (error) {
@@ -58,11 +69,11 @@ export const GetChatsAction = CreateServerAction(
 
 export const GetMutualChatAction = CreateServerAction(
   true,
-  async (contact_id: string) => {
+  async (contact_id: string, type?: "open" | "space") => {
     try {
       const authUser = await AuthUserAction()
       if (authUser) {
-        const chat = await GetMutualChat(authUser.unique_id, contact_id)
+        const chat = await GetMutualChat(authUser.unique_id, contact_id, type)
         return { success: true, data: chat }
       }
     } catch (error) {

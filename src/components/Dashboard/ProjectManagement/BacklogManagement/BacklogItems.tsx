@@ -10,7 +10,7 @@ import {
 } from "@/src/components/ui/alert-dialog"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
-import { Checkbox } from "@/src/components/ui/checkbox"
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,7 +33,6 @@ import {
 } from "../constants/projectManagment"
 import { useParams } from "next/navigation"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import TaskMoveDialog from "../Task/components/task-move-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   Tooltip,
@@ -44,42 +43,37 @@ import {
 import { getInitials } from "@/src/utils/helpers"
 
 interface Props {
-  selectedItems: string[]
-  setSelectedItems: Dispatch<SetStateAction<string[]>>
   task: SelectTask
 }
 
-function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
+function BacklogItems({ task }: Props) {
   const params = useParams()
   const projectId = params.id as string
   const [isDropdownOpen, setIsDropDownOpen] = useState(false)
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
-  const SetTasks = useSetAtom(taskStore.BackLogTasks)
+  const setTasks = useSetAtom(taskStore.BackLogTasks)
   const [status, setStatus] = useAtom(projectStore.projectStatusList)
-  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useState(false)
+  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useAtom(
+    taskStore.isTaskMoveDialogOpen
+  )
+  const setIsTaskModalOpen = useSetAtom(taskStore.isTaskModalOpen)
+  const setTaskMoveDialogAction = useSetAtom(taskStore.taskMoveDialogAction)
 
   const [deleteTaskLoading, deleteTaskData, deleteTaskError, DeleteTask] =
     useServerAction(DeleteTaskAction)
 
-  const handleSelectItem = (id: string) => {
-    setSelectedItems(
-      selectedItems.includes(id)
-        ? selectedItems.filter((itemId) => itemId !== id)
-        : [...selectedItems, id]
-    )
-  }
-
   function EditTask(task: SelectTask) {
     setSelectedTask(task)
     setIsDropDownOpen(false)
+    setIsTaskModalOpen(true)
   }
 
   async function handleDeleteTask(selectedTask: SelectTask) {
     try {
       const deletedTask = await DeleteTask(selectedTask)
       if (deletedTask?.success) {
-        SetTasks((prev) => prev.filter((t) => t.id !== selectedTask.id))
+        setTasks((prev) => prev.filter((t) => t.id !== selectedTask.id))
         toast({
           title: "Task Deleted successfully"
         })
@@ -128,6 +122,13 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
     )
   }
 
+  const HandleMoveTask = (task: SelectTask) => {
+    setSelectedTask(task)
+    setIsTaskMoveDialogOpen(true)
+    setIsDropDownOpen(false)
+    setTaskMoveDialogAction("moveTask")
+  }
+
   // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(
     "scoped",
@@ -140,59 +141,42 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
   const canDelete = permissionChecker
     ? permissionChecker?.canAccess("project.backlog.task.delete")
     : false
-  const onTaskCreated = (task: SelectTask) => {
-    SetTasks((prev) => [...prev, task])
-    setSelectedTask(task)
-  }
-
-  const onTaskUpdated = (task: SelectTask) => {
-    SetTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, ...task } : t))
-    )
-    setSelectedTask(task)
-  }
 
   return (
     <>
       <div
         key={task.id}
-        className="grid grid-cols-12 gap-2 p-4 border-t items-center hover:bg-muted/50  transition delay-150 duration-300"
+        className="grid grid-cols-12 gap-3 p-4 border-t items-center hover:bg-muted/50  transition delay-150 duration-300"
       >
-        <div className="col-span-1">
-          <Checkbox
-            checked={
-              task.task_num ? selectedItems.includes(task.task_num) : false
-            }
-            onCheckedChange={() =>
-              task.task_num && handleSelectItem(task.task_num)
-            }
-          />
-        </div>
         <div
-          className={`col-span-1 text-sm font-medium cursor-pointer`}
+          className={`col-span-1 text-sm font-medium cursor-pointer text-left`}
           onClick={() => EditTask(task)}
         >
           {task.task_num}
         </div>
-        <div className="col-span-3">
+        <div className="col-span-4">
           <div
-            className={`font-medium break-words whitespace-normal line-clamp-2 cursor-pointer`}
+            className={`font-medium break-words whitespace-normal line-clamp-2 cursor-pointer text-left`}
             onClick={() => EditTask(task)}
           >
             {task.task_title}
           </div>
         </div>
-        <div className="col-span-1">{getTypeLabel(task.task_type)}</div>
-        <div className="col-span-3 flex justify-around items-center">
+        <div className="col-span-1 text-center">
+          {getTypeLabel(task.task_type)}
+        </div>
+        <div className="col-span-2 text-center">
           <Badge variant={"outline"}>
             {status.find((s) => s.id === task.status_id)?.name}
           </Badge>
-          <div>{getPriorityLabel(task.task_priority)}</div>
         </div>
-        <div className="col-span-1">{task.story_points}</div>
-        <div className="col-span-1">
+        <div className="col-span-1 text-center">
+          {getPriorityLabel(task.task_priority)}
+        </div>
+        <div className="col-span-1 text-center">{task.story_points}</div>
+        <div className="col-span-1 text-center">
           {task.assign_to ? (
-            <div>
+            <div className="flex justify-center items-center">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -219,10 +203,12 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
               </TooltipProvider>
             </div>
           ) : (
-            <CircleHelp />
+            <div className="flex justify-center items-center">
+              <CircleHelp />
+            </div>
           )}
         </div>
-        <div className="col-span-1 text-right">
+        <div className="col-span-1 text-center">
           {(canUpdate || canDelete) && (
             <DropdownMenu
               open={isDropdownOpen}
@@ -241,8 +227,7 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
-                        setIsTaskMoveDialogOpen(true)
-                        setIsDropDownOpen(false)
+                        HandleMoveTask(task)
                       }}
                     >
                       Add to Sprint
@@ -287,12 +272,6 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <TaskMoveDialog
-        isTaskMoveDialogOpen={isTaskMoveDialogOpen}
-        setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
-        task_id={task.id}
-      />
     </>
   )
 }

@@ -8,6 +8,8 @@ import {
 } from "@/src/server-actions/Chat/Chat"
 import { Suspense, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import Loader from "@/src/components/common/Loader/Loader"
 
 export default function ChatPage() {
   const searchParams = useSearchParams()
@@ -62,7 +64,11 @@ export default function ChatPage() {
   }, [searchParams])
 
   if (loading) {
-    return <div>Loading chats...</div>
+    return (
+      <div className="flex justify-center h-full w-full">
+        <Loader size={LoaderSizes.xl} />
+      </div>
+    )
   }
 
   return (

@@ -29,6 +29,7 @@ import { Input } from "@/src/components/ui/input"
 import Avvvatars from "avvvatars-react"
 import Image from "next/image"
 import { chatStore } from "@/src/store/chat/chatStore"
+import { toast } from "@/src/hooks/use-toast"
 
 const CreateNewChat = () => {
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -43,6 +44,7 @@ const CreateNewChat = () => {
   )
   const [isGroupChat, setIsGroupChat] = useState(false)
   const [groupName, setGroupName] = useState<string>("")
+  const [groupNameError, setGroupNameError] = useState<string>("")
   const [options, setOptions] = useState<MultiSelectOption[]>([])
   const { space_slug, channel_slug } = useParams()
   const currentSpace = useAtomValue(spaceStore.currentSpace)
@@ -92,7 +94,6 @@ const CreateNewChat = () => {
 
   useEffect(() => {
     if (contactFilter) {
-      console.log("filter => ", contactFilter)
       getUserList(contactFilter)
     }
   }, [contactFilter])
@@ -107,11 +108,17 @@ const CreateNewChat = () => {
 
   const handleCreateNewChat = async () => {
     if (!authUser) return
-    const spaceId = currentSpace ? currentSpace.id : undefined
+    const spaceId = currentSpace && isSpacePage ? currentSpace.id : undefined
     const userIds = selectedContacts.map((contact) => contact.value)
 
     if (isGroupChat) {
       // Create Group Chat
+      if (groupName.trim() === "") {
+        setGroupNameError("Group name is required.")
+        return
+      } else {
+        setGroupNameError("")
+      }
       const response = await CreateGroupChatAction(
         [...userIds, authUser?.unique_id],
         groupName,
@@ -121,6 +128,7 @@ const CreateNewChat = () => {
         const newChat = response.data
         setMyChats((pre) => [...pre, newChat])
         switchChat(newChat)
+        setGroupName("")
       }
     } else {
       // Create Direct Chat
@@ -133,6 +141,14 @@ const CreateNewChat = () => {
         const newChat = response.data
         setMyChats((pre) => [...pre, newChat])
         switchChat(newChat)
+      }
+      if (response.success == false && response.existingChat) {
+        switchChat(response.data)
+        toast({
+          title: "Chat already exists",
+          variant: "destructive",
+          duration: 3000
+        })
       }
     }
 
@@ -168,6 +184,9 @@ const CreateNewChat = () => {
                   placeholder="Type Group Name"
                   onChange={(e) => setGroupName(e.target.value)}
                 />
+                {groupNameError && (
+                  <p className="text-sm text-red-500 mt-1">{groupNameError}</p>
+                )}
                 <div className="flex items-center justify-center mt-6">
                   <Avvvatars value={groupName} style="shape" size={100} />
                 </div>
