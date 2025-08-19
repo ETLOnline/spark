@@ -106,6 +106,13 @@
       "when": 1753885886387,
       "tag": "0014_2025_07_30_193123__create_site_settings_table",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1755591102610,
+      "tag": "0015_2025_08_19_131140__update_users_and_communities_table",
+      "breakpoints": true
     }
   ]
 }

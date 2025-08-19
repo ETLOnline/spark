@@ -24,6 +24,10 @@ import {
   createScopedCommunityRolesAndAssignAdmin,
   getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
+import {
+  base64ToBuffer,
+  uploadFileAndSaveMetadata
+} from "@/src/services/storage/utils/fileUtils"
 
 export const CreateCommunityAction = CreateServerAction(
   true,
@@ -337,3 +341,33 @@ export const ensureCommunityMembership = async (
     )
   }
 }
+
+export const communityCoverImageAction = CreateServerAction(
+  true,
+  async (fileName: string, fileB64string: string, fileType: string) => {
+    try {
+      const fileBuffer = base64ToBuffer(fileB64string)
+
+      const { fileUrl } = await uploadFileAndSaveMetadata(
+        fileBuffer,
+        fileName,
+        fileType,
+        "communities"
+      )
+
+      if (!fileUrl) {
+        throw new Error("Upload failed: missing fileUrl or file metadata.")
+      }
+
+      return {
+        success: true,
+        data: fileUrl
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error
+      }
+    }
+  }
+)
