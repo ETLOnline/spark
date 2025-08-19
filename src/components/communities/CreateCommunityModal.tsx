@@ -43,16 +43,17 @@ import { CommunityCategory } from "@/src/db/data-access/communities/query"
 import { slugify } from "@/src/utils/helpers"
 
 const communitySchema = z.object({
-  title: z.string().min(1, "Title required").max(50, "Title is too long"),
+  title: z
+    .string()
+    .min(1, "Community name required")
+    .max(50, "Community name is too long"),
   description: z
     .string()
     .min(1, "Description required")
     .max(150, "Description is too long"),
   category: z.string().min(1, "Category required"),
   slug: z.string().max(50, "Slug is too long"),
-  type: z.enum(["public", "private"], {
-    message: "Community type must be 'public' or 'private'"
-  })
+  type: z.string().min(1, "Community type required")
 })
 
 type CommunityFormData = z.infer<typeof communitySchema>
@@ -101,7 +102,7 @@ export default function CreateCommunityModal({
       description: "",
       category: "",
       slug: "",
-      type: "public"
+      type: undefined
     }
   })
 
@@ -202,7 +203,7 @@ export default function CreateCommunityModal({
         slug: "",
         description: "",
         category: "",
-        type: "public"
+        type: ""
       })
       form.clearErrors()
       setSlugAvailableMessage("")
@@ -417,7 +418,12 @@ export default function CreateCommunityModal({
                     defaultValue=""
                     control={form.control}
                     render={({ field }) => (
-                      <Input id="slug" {...field} disabled={true} placeholder="community-slug"/>
+                      <Input
+                        id="slug"
+                        {...field}
+                        disabled={true}
+                        placeholder="community-slug"
+                      />
                     )}
                   />
                 </div>
@@ -469,21 +475,21 @@ export default function CreateCommunityModal({
                             maxLength={maxChars}
                             placeholder="Description"
                           />
-                          <div className="text-sm text-muted-foreground text-right mt-1">
-                            {charCount}/{maxChars} characters
+                          <div className="flex justify-between items-center text-sm text-muted-foreground mt-1">
+                            {error.description && (
+                              <span className="text-red-500 text-sm">
+                                {String(error.description.message)}
+                              </span>
+                            )}
+                            <span className="ml-auto">
+                              {charCount}/{maxChars} characters
+                            </span>
                           </div>
                         </>
                       )
                     }}
                   />
                 </div>
-              </div>
-              <div className="text-left flex items-center gap-x-2 pt-1 pl-[30%]">
-                {error.description && (
-                  <span className="text-red-500 text-sm">
-                    {String(error.description.message)}
-                  </span>
-                )}
               </div>
             </div>
 
