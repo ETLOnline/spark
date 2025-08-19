@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
 import {
@@ -43,7 +43,7 @@ export function BacklogManagement() {
     taskStore.isTaskMoveDialogOpen
   )
   const taskMoveDialogAction = useAtomValue(taskStore.taskMoveDialogAction)
-
+  const isInitialRender = useRef(true)
   const params = useParams()
   const projectId = params.id as string
 
@@ -88,6 +88,16 @@ export function BacklogManagement() {
       handleSearch()
     }
   }
+  useEffect(() => {
+    if (isInitialRender.current) {
+      isInitialRender.current = false
+      return
+    }
+
+    if (searchQuery === "") {
+      handleSearch()
+    }
+  }, [searchQuery])
 
   return projectStatusList.length > 0 ? (
     <>
