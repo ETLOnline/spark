@@ -262,9 +262,9 @@ export const GetCommunityUsersAction = CreateServerAction(
 
 export const GetCommunityByIdAction = CreateServerAction(
   true,
-  async (spaceId: string, withSpaceUsers?: boolean) => {
+  async (communityId: string, withCommunityUsers?: boolean) => {
     try {
-      const space = await GetCommunityById(spaceId, withSpaceUsers)
+      const space = await GetCommunityById(communityId, withCommunityUsers)
       return { success: true, data: space }
     } catch (error) {
       return { error: error }
