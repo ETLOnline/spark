@@ -152,6 +152,9 @@ const CreateNewChat = () => {
       }
     }
 
+    setSelectedContacts([])
+    setGroupName("")
+    setIsGroupChat(false)
     setDialogOpen(false)
   }
 

@@ -284,10 +284,27 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       })
     })
 
+    userChannel.subscribe("chat-created", (message) => {
+      const { newChat, initiatorId, spaceId } = message.data as {
+        newChat: SelectChat
+        initiatorId: string
+        spaceId: string
+      }
+      if (initiatorId === authUser?.unique_id) {
+        return
+      }
+      const currentSpaceId = currentSpace?.id
+
+      if (currentSpaceId === spaceId) {
+        setMyChats((prevChats) => [newChat, ...prevChats])
+        setSwitchedChat(newChat)
+      }
+    })
+
     return () => {
       userChannel.unsubscribe()
     }
-  }, [authUser, setMyChats])
+  }, [authUser, setMyChats, currentChat])
 
   /**
    * Handles the sending of a new message in the chat.
@@ -468,18 +485,17 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           </CardHeader>
           {currentChat ? (
             <>
-              <CardContent className="flex-1 overflow-hidden p-4">
+              <CardContent className="flex-1 overflow-hidden p-4 flex flex-col">
                 {authUser && currentChat && !fetchingChatMessages ? (
-                  <ScrollArea className="h-[calc(100svh-17rem)] pr-4  pt-10 ">
+                  <ScrollArea className="flex-1 pr-4 mt-2">
                     {messages.map((message) => (
                       <div
                         key={message.id}
-                        className={` group mb-4  flex items-center ${
+                        className={`group mb-4 flex items-center ${
                           message.sender_id === authUser?.unique_id
                             ? "justify-end"
                             : "justify-start"
-                        }
-                            `}
+                        }`}
                       >
                         {isOnlyEmoji(message.message) ? (
                           <div className="">
