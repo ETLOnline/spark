@@ -296,7 +296,7 @@ function CreateSpaceModal({
             <div className="grid gap-4 py-4">
               <div className="flex flex-col">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="space_name">Title</Label>
+                  <Label htmlFor="space_name">Space Name</Label>
                   <div className="w-[70%]">
                     <Controller
                       name="space_name"
@@ -405,7 +405,7 @@ function CreateSpaceModal({
 
               <div className="flex flex-col">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="space_type">Space type</Label>
+                  <Label htmlFor="space_type">Space Type</Label>
                   <div className="w-[70%]">
                     <Controller
                       name="space_type"

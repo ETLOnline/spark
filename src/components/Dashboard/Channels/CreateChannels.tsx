@@ -376,7 +376,12 @@ function CreateChannels({
                     defaultValue=""
                     control={form.control}
                     render={({ field }) => (
-                      <Input id="channel_slug" {...field} disabled={true} placeholder="channel_slug"/>
+                      <Input
+                        id="channel_slug"
+                        {...field}
+                        disabled={true}
+                        placeholder="channel_slug"
+                      />
                     )}
                   />
                 </div>
@@ -443,7 +448,7 @@ function CreateChannels({
             </div>
             <div className="flex flex-col">
               <div className="flex items-center justify-between">
-                <Label htmlFor="channel_type">Channel type</Label>
+                <Label htmlFor="channel_type">Channel Type</Label>
                 <div className="w-[70%]">
                   <Controller
                     name="channel_type"
