@@ -305,15 +305,33 @@ export const updateLastChatMessage = async (
   message: string
 ) => {
   try {
-    const updatedChat = await db
+    const [updatedChatResult] = await db
       .update(chatsTable)
       .set({
-        last_message: message
+        last_message: message,
+        updated_at: new Date().toISOString()
       })
       .where(eq(chatsTable.id, chatId))
-      .returning()
-    return updatedChat[0]
+      .returning({ id: chatsTable.id })
+
+    if (!updatedChatResult) {
+      return null
+    }
+
+    const fullChatWithUsers = await db.query.chatsTable.findFirst({
+      where: eq(chatsTable.id, chatId),
+      with: {
+        users: {
+          with: {
+            user: true
+          }
+        }
+      }
+    })
+
+    return fullChatWithUsers
   } catch (error: any) {
+    console.error("Failed to update chat and fetch users:", error)
     throw new Error(error.message)
   }
 }
@@ -412,9 +430,11 @@ export const getChatContacts = async ({
 export const getExistingSingleChat = async (
   user_id: string,
   contact_id: string,
-  type?: "open" | "space"
+  type?: "open" | "space",
+  space_id?: string
 ) => {
   try {
+    // Find all chat IDs where both users are participants
     const chatId = await db
       .select({ chat_id: userChatsTable.chat_id })
       .from(userChatsTable)
@@ -426,14 +446,33 @@ export const getExistingSingleChat = async (
       )
       .groupBy(userChatsTable.chat_id)
       .having(eq(count(userChatsTable.chat_id), 2))
+
     if (chatId.length === 0) return null
-    const chatIds = chatId.map((c) => c.chat_id)
-    console.log(chatIds)
+
+    let chatIds = chatId.map((c) => c.chat_id)
+
+    // If space_id is provided, filter chats that belong to that space
+    if (space_id) {
+      const spaceChats = await db
+        .select({ chat_id: SpaceChatsTable.chat_id })
+        .from(SpaceChatsTable)
+        .where(
+          and(
+            inArray(SpaceChatsTable.chat_id, chatIds),
+            eq(SpaceChatsTable.space_id, space_id)
+          )
+        )
+
+      if (spaceChats.length === 0) return null
+      chatIds = spaceChats.map((c) => c.chat_id)
+    }
+
+    // Find the chat from the filtered chat IDs
     return await db.query.chatsTable.findFirst({
       where: and(
         inArray(chatsTable.id, chatIds),
         type ? eq(chatsTable.type, type) : undefined,
-        type ? eq(chatsTable.is_group, 0) : undefined
+        eq(chatsTable.is_group, 0)
       )
     })
   } catch (error: any) {
