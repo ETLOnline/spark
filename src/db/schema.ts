@@ -24,6 +24,7 @@ export const usersTable = pgTable("users", {
   email: varchar().notNull().unique(),
   external_auth_id: varchar().notNull().unique(),
   profile_url: varchar(),
+  cover_image: varchar(),
   meta: varchar(),
   role: varchar().notNull().default("user"),
   meta_profile: json("meta_profile").default({
@@ -1207,6 +1208,7 @@ export const communitiesTable = pgTable("communities", {
   slug: varchar().notNull().unique(),
   type: varchar().notNull().default("public"),
   created_by: varchar().notNull(),
+  cover_image: varchar(),
   ...timestamps
 })
 
