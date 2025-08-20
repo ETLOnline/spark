@@ -106,6 +106,20 @@
       "when": 1753885886387,
       "tag": "0014_2025_07_30_193123__create_site_settings_table",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1755258358032,
+      "tag": "0015_2025_08_15_164554__update_event_table_and_create_event_users_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1755689200421,
+      "tag": "0016_2025_08_20_162631__add_onDelete_field_in_eventRegistraion_tabl",
+      "breakpoints": true
     }
   ]
 }
