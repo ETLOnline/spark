@@ -45,7 +45,6 @@ export function BacklogManagement() {
   const taskMoveDialogAction = useAtomValue(taskStore.taskMoveDialogAction)
 
   const params = useParams()
-  const projectId = params.id as string
 
   function handleSearch() {
     setSearchedItem(searchQuery)
@@ -55,7 +54,7 @@ export function BacklogManagement() {
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "PROJECT",
-    projectId
+    params.id as string
   )
   const canCreateTask = permissionChecker
     ? permissionChecker?.canAccess("project.backlog.task.create")
@@ -66,12 +65,6 @@ export function BacklogManagement() {
       setOpenDialog(true)
     }
   }, [projectStatusList])
-
-  useEffect(() => {
-    if (!isTaskModalOpen) {
-      setSelectedTask(null)
-    }
-  }, [isTaskModalOpen])
 
   useEffect(() => {
     if (!isTaskMoveDialogOpen) {
@@ -87,6 +80,10 @@ export function BacklogManagement() {
     if (e.key === "Enter") {
       handleSearch()
     }
+  }
+
+  if (!params.id) {
+    return null
   }
 
   return projectStatusList.length > 0 ? (
@@ -143,7 +140,10 @@ export function BacklogManagement() {
             </Button>
           </div>
           <div className="flex items-center space-x-2">
-            <TaskFilters projectId={projectId} onApplyFilters={handleFilters} />
+            <TaskFilters
+              projectId={params.id as string}
+              onApplyFilters={handleFilters}
+            />
 
             <Button
               variant="outline"

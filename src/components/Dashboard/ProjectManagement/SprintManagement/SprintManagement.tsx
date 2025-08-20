@@ -157,12 +157,6 @@ export function SprintManagement() {
   }, [projectStatusList])
 
   useEffect(() => {
-    if (!isTaskModalOpen) {
-      setSelectedTask(null)
-    }
-  }, [isTaskModalOpen])
-
-  useEffect(() => {
     if (!isTaskMoveDialogOpen) {
       setSelectedTasksForMove([])
       setSelectedSprint(null)

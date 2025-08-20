@@ -41,6 +41,8 @@ export const TaskModal = ({
   onUpdateComplete,
   sprintId
 }: TaskModalProps) => {
+  const setSelectedTask = useSetAtom(taskStore.selectedTask)
+  const [taskIdFromUrl, setTaskIdFromUrl] = useState<string | null>(null)
   const [statuses] = useAtom(projectStore.projectStatusList)
   const { createTaskLoading, updateTaskLoading, handleSubmit } = useTaskHook({
     selectedTask,
@@ -48,96 +50,77 @@ export const TaskModal = ({
     onCreateComplete,
     onUpdateComplete
   })
-
+  const [isClosing, setIsClosing] = useState(false)
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathName = usePathname()
-  const taskIdFromUrl = searchParams.get("task_id")
 
   const [internalTask, setInternalTask] = useState<SelectTask | undefined>(
     selectedTask
   )
-  const [hasFetchedFromUrl, setHasFetchedFromUrl] = useState(false)
-  const [hasModifiedUrl, setHasModifiedUrl] = useState(false)
 
   const [loading, taskData, error, fetchTaskById] =
     useServerAction(GetTaskByIdAction)
 
   useEffect(() => {
-    const fetchTask = async () => {
-      if (
-        !taskIdFromUrl ||
-        hasFetchedFromUrl ||
-        internalTask?.id === taskIdFromUrl ||
-        isTaskModelOpen
-      )
-        return
+    if (searchParams.get("task_id")) {
+      setTaskIdFromUrl(searchParams.get("task_id"))
+    }
+  }, [searchParams])
 
-      setHasFetchedFromUrl(true)
-      try {
-        const res = await fetchTaskById(taskIdFromUrl)
-        if (res?.data) {
-          setInternalTask(res.data)
-          setIsTaskModelOpen(true)
-        } else {
-          toast({ title: "Task not found" })
-          router.replace(pathName)
-        }
-      } catch (err) {
-        console.error("Error fetching task:", err)
-        toast({ title: "Failed to fetch task" })
+  const fetchTask = async (taskId: string) => {
+    try {
+      const res = await fetchTaskById(taskId)
+      if (res?.data) {
+        setInternalTask(res.data)
+        setSelectedTask(res.data)
+        setIsTaskModelOpen(true)
+      } else {
+        toast({ title: "Task not found" })
         router.replace(pathName)
       }
+    } catch (err) {
+      console.error("Error fetching task:", err)
+      toast({ title: "Failed to fetch task" })
+      router.replace(pathName)
     }
-
-    fetchTask()
-  }, [
-    taskIdFromUrl,
-    hasFetchedFromUrl,
-    internalTask?.id,
-    fetchTaskById,
-    setIsTaskModelOpen,
-    isTaskModelOpen,
-    router
-  ])
+  }
 
   useEffect(() => {
-    if (selectedTask && selectedTask.id !== internalTask?.id) {
+    if (!taskIdFromUrl || internalTask?.id === taskIdFromUrl || isTaskModelOpen)
+      return
+
+    fetchTask(taskIdFromUrl)
+  }, [taskIdFromUrl])
+
+  useEffect(() => {
+    if (selectedTask) {
       setInternalTask(selectedTask)
-      setHasFetchedFromUrl(false)
     }
-  }, [selectedTask, internalTask?.id])
+  }, [selectedTask])
 
   useEffect(() => {
-    if (
-      isTaskModelOpen &&
-      internalTask?.id &&
-      !taskIdFromUrl &&
-      !hasModifiedUrl
-    ) {
+    if (isTaskModelOpen && internalTask?.id) {
       router.push(
         pathName + "?" + new URLSearchParams({ task_id: internalTask.id })
       )
-      setHasModifiedUrl(true)
     }
-  }, [isTaskModelOpen, internalTask?.id, taskIdFromUrl, hasModifiedUrl])
+  }, [isTaskModelOpen, internalTask?.id])
 
-  const handleModalClose = useCallback(
-    (open: boolean) => {
-      if (!open) {
-        if (typeof window !== "undefined") {
-          router.replace(pathName)
-        }
+  const handleModalClose = (open: boolean) => {
+    if (!open) {
+      setIsTaskModelOpen(false)
+      setInternalTask(undefined)
+      setSelectedTask(null)
 
-        setInternalTask(undefined)
-        setHasFetchedFromUrl(true)
-        setHasModifiedUrl(false)
-      }
+      const newSearchParams = new URLSearchParams(searchParams.toString())
+      newSearchParams.delete("task_id")
 
-      setIsTaskModelOpen(open)
-    },
-    [setIsTaskModelOpen]
-  )
+      setTimeout(() => {
+        router.push(`${pathName}?${newSearchParams.toString()}`)
+      }, 0)
+    }
+  }
 
   const isLoading = createTaskLoading || updateTaskLoading || loading
 

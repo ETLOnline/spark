@@ -18,6 +18,7 @@ import { SelectSprint, SelectTask } from "@/src/db/schema"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import pusherClient from "@/src/services/realtime/PusherClient"
 import { userStore } from "@/src/store/user/userStore"
+import { taskStore } from "@/src/store/tasks/taskStore"
 
 function SprintBoard() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
@@ -25,7 +26,7 @@ function SprintBoard() {
 
   const [tasks, setTasks] = useState<SelectTask[]>([])
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
-  const [selectedTask, setSelectedTask] = useState<SelectTask | null>()
+  const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
 
   const [getTaskLoading, , , GetSPrintTask] =
     useServerAction(GetSprintTasksAction)
@@ -128,12 +129,6 @@ function SprintBoard() {
     }
     getTask()
   }, [projectId, sprintList])
-
-  useEffect(() => {
-    if (!isTaskModalOpen) {
-      setSelectedTask(null)
-    }
-  }, [isTaskModalOpen])
 
   return projectStatusList.length > 0 ? (
     <>
