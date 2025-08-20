@@ -29,7 +29,7 @@ interface Props {
 
 function SpacesCard({ space, setIsChannelMember }: Props) {
   const user = useAtomValue(userStore.AuthUser)
-
+  const encodedSpaceSlug = encodeURIComponent(space.space_slug)
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "SPACE",
@@ -44,12 +44,6 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
   const canUpdateSpace = permissionChecker
     ? permissionChecker?.canAccess("space.update")
     : false
-
-  useEffect(() => {
-    console.log("canspace", canSpaceAllowAction)
-    console.log("canViww", canViewSpace)
-    console.log("canUpdae", canUpdateSpace)
-  }, [canViewSpace, canSpaceAllowAction, canUpdateSpace])
 
   return (
     <Card key={space.id} className="overflow-hidden">
