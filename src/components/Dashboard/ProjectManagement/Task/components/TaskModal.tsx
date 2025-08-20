@@ -31,6 +31,7 @@ interface TaskModalProps {
   sprintId?: string
   onCreateComplete?: (task: SelectTask) => void
   onUpdateComplete?: (task: SelectTask) => void
+  isReady?: boolean
 }
 
 export const TaskModal = ({
@@ -39,7 +40,8 @@ export const TaskModal = ({
   selectedTask,
   onCreateComplete,
   onUpdateComplete,
-  sprintId
+  sprintId,
+  isReady
 }: TaskModalProps) => {
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [taskIdFromUrl, setTaskIdFromUrl] = useState<string | null>(null)
@@ -87,11 +89,13 @@ export const TaskModal = ({
   }
 
   useEffect(() => {
+    if (!isReady) return
+
     if (!taskIdFromUrl || internalTask?.id === taskIdFromUrl || isTaskModelOpen)
       return
 
     fetchTask(taskIdFromUrl)
-  }, [taskIdFromUrl])
+  }, [taskIdFromUrl, isReady])
 
   useEffect(() => {
     if (selectedTask) {

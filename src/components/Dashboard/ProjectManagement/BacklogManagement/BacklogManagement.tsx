@@ -43,6 +43,7 @@ export function BacklogManagement() {
     taskStore.isTaskMoveDialogOpen
   )
   const taskMoveDialogAction = useAtomValue(taskStore.taskMoveDialogAction)
+  const [isInitailDataLoad, setIsInitailDataLoad] = useState(false)
 
   const params = useParams()
 
@@ -72,6 +73,12 @@ export function BacklogManagement() {
     }
   }, [isTaskMoveDialogOpen])
 
+  useEffect(() => {
+    if (tasks.length > 0) {
+      setIsInitailDataLoad(true)
+    }
+  }, [tasks])
+
   function handleFilters(filters: TaskFiltersType) {
     setAppliedFilters(filters)
     setSearchedItem(searchQuery)
@@ -89,6 +96,7 @@ export function BacklogManagement() {
   return projectStatusList.length > 0 ? (
     <>
       <TaskModal
+        isReady={isInitailDataLoad}
         isTaskModelOpen={isTaskModalOpen}
         setIsTaskModelOpen={setIsTaskModalOpen}
         selectedTask={selectedTask || undefined}

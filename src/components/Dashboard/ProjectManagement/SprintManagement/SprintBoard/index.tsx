@@ -35,6 +35,7 @@ function SprintBoard() {
   const [openDialog, setOpenDialog] = useState(false)
   const authUser = useAtomValue(userStore.AuthUser)
   const pusherChannel = useAtomValue(projectStore.pusherChannel)
+  const [isInitailDataLoad, setIsInitailDataLoad] = useState(false)
 
   const projectId = useParams().id as string
 
@@ -70,6 +71,12 @@ function SprintBoard() {
       setOpenDialog(true)
     }
   }, [projectStatusList])
+
+  useEffect(() => {
+    if (tasks.length > 0) {
+      setIsInitailDataLoad(true)
+    }
+  }, [tasks])
 
   useEffect(() => {
     if (!projectId) return
@@ -160,6 +167,7 @@ function SprintBoard() {
       )}
 
       <TaskModal
+        isReady={isInitailDataLoad}
         isTaskModelOpen={isTaskModalOpen}
         setIsTaskModelOpen={setIsTaskModalOpen}
         selectedTask={selectedTask || undefined}
