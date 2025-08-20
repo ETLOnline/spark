@@ -30,9 +30,16 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
   )
   const pusherChannel = useAtomValue(projectStore.pusherChannel)
   const authUser = useAtomValue(userStore.AuthUser)
+  const [searchParamsPage, setSearchParamsPage] = useState<string | null>(null)
 
   const projectId = useParams().id as string
   const searchParams = useSearchParams()
+
+  useEffect(() => {
+    if (searchParams.get("page")) {
+      setSearchParamsPage(searchParams.get("page"))
+    }
+  }, [searchParams])
 
   const fatchTasks = async () => {
     const page = parseInt(searchParams.get("page") || "1", 10)
@@ -56,11 +63,12 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
 
   useEffect(() => {
     if (searchedItem || orderList) fatchTasks()
-  }, [searchedItem, orderList, searchParams])
+  }, [searchedItem, orderList, searchParamsPage])
 
   useEffect(() => {
     if (filters) fatchTasks()
   }, [filters?.assignee, filters?.priority, filters?.type, filters?.status])
+
   useEffect(() => {
     if (!pusherChannel || !authUser) return
 

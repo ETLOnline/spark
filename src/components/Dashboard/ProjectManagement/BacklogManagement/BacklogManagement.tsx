@@ -43,9 +43,9 @@ export function BacklogManagement() {
     taskStore.isTaskMoveDialogOpen
   )
   const taskMoveDialogAction = useAtomValue(taskStore.taskMoveDialogAction)
+  const [isInitailDataLoad, setIsInitailDataLoad] = useState(false)
 
   const params = useParams()
-  const projectId = params.id as string
 
   function handleSearch() {
     setSearchedItem(searchQuery)
@@ -55,7 +55,7 @@ export function BacklogManagement() {
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "PROJECT",
-    projectId
+    params.id as string
   )
   const canCreateTask = permissionChecker
     ? permissionChecker?.canAccess("project.backlog.task.create")
@@ -68,16 +68,16 @@ export function BacklogManagement() {
   }, [projectStatusList])
 
   useEffect(() => {
-    if (!isTaskModalOpen) {
-      setSelectedTask(null)
-    }
-  }, [isTaskModalOpen])
-
-  useEffect(() => {
     if (!isTaskMoveDialogOpen) {
       setSelectedTask(null)
     }
   }, [isTaskMoveDialogOpen])
+
+  useEffect(() => {
+    if (tasks.length > 0) {
+      setIsInitailDataLoad(true)
+    }
+  }, [tasks])
 
   function handleFilters(filters: TaskFiltersType) {
     setAppliedFilters(filters)
@@ -89,9 +89,14 @@ export function BacklogManagement() {
     }
   }
 
+  if (!params.id) {
+    return null
+  }
+
   return projectStatusList.length > 0 ? (
     <>
       <TaskModal
+        isReady={isInitailDataLoad}
         isTaskModelOpen={isTaskModalOpen}
         setIsTaskModelOpen={setIsTaskModalOpen}
         selectedTask={selectedTask || undefined}
@@ -143,7 +148,10 @@ export function BacklogManagement() {
             </Button>
           </div>
           <div className="flex items-center space-x-2">
-            <TaskFilters projectId={projectId} onApplyFilters={handleFilters} />
+            <TaskFilters
+              projectId={params.id as string}
+              onApplyFilters={handleFilters}
+            />
 
             <Button
               variant="outline"
