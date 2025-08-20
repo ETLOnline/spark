@@ -150,8 +150,18 @@ const CreateNewChat = () => {
           duration: 3000
         })
       }
+      if (response.success == false && response.error) {
+        toast({
+          title: response.error,
+          variant: "destructive",
+          duration: 3000
+        })
+      }
     }
 
+    setSelectedContacts([])
+    setGroupName("")
+    setIsGroupChat(false)
     setDialogOpen(false)
   }
 

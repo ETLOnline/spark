@@ -52,6 +52,11 @@ interface ChatScreenProps {
   allChatsSSR: SelectChat[]
 }
 
+type ChatUpdatePayload = {
+  chatId: number
+  lastMessage: string
+}
+
 // Function to join a channel (for group or one-to-one chat)
 /**
  * Joins a specified channel and sets up message subscription and sending functionality.
@@ -193,7 +198,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
               return {
                 ...chat,
                 last_message: message.message,
-                last_message_at: message.created_at
+                last_message_at: message.created_at,
+                unread_count: 0
               }
             }
             return chat
@@ -210,6 +216,10 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         (user) => user.user_id !== authUser?.unique_id
       )?.user
       setChatContact(chatContact || null)
+    }
+
+    return () => {
+      unsubscribe()
     }
   }, [currentChat?.channel_id, authUser])
 
@@ -233,11 +243,68 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       setCurrentChat(newSwitchedChat.data)
       setMessages(newSwitchedChat.data.messages)
     }
+    setMyChats((prevChats) =>
+      prevChats.map((chat) =>
+        chat.id === chatId ? { ...chat, unread_count: 0 } : chat
+      )
+    )
   }
 
   useEffect(() => {
     scrollToBottom()
   }, [messages, authUser])
+
+  useEffect(() => {
+    if (!authUser) return
+
+    const userChannel = AblyClient.channels.get(`user:${authUser.unique_id}`)
+
+    userChannel.subscribe("chat-update", (message) => {
+      const update = message.data as ChatUpdatePayload
+
+      setMyChats((prevChats) => {
+        const updatedChat = prevChats.find((chat) => chat.id === update.chatId)
+
+        if (updatedChat && update.lastMessage) {
+          const newChats = prevChats.map((chat) => {
+            if (chat.id === update.chatId) {
+              const isActiveChat = currentChat?.id === update.chatId
+              return {
+                ...chat,
+                last_message: update.lastMessage,
+                updated_at: new Date().toISOString(),
+                unread_count: isActiveChat ? 0 : (chat.unread_count || 0) + 1
+              }
+            }
+            return chat
+          })
+          return newChats
+        }
+        return prevChats
+      })
+    })
+
+    userChannel.subscribe("chat-created", (message) => {
+      const { newChat, initiatorId, spaceId } = message.data as {
+        newChat: SelectChat
+        initiatorId: string
+        spaceId: string
+      }
+      if (initiatorId === authUser?.unique_id) {
+        return
+      }
+      const currentSpaceId = currentSpace?.id
+
+      if (currentSpaceId === spaceId) {
+        setMyChats((prevChats) => [newChat, ...prevChats])
+        setSwitchedChat(newChat)
+      }
+    })
+
+    return () => {
+      userChannel.unsubscribe()
+    }
+  }, [authUser, setMyChats, currentChat])
 
   /**
    * Handles the sending of a new message in the chat.
@@ -418,18 +485,17 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           </CardHeader>
           {currentChat ? (
             <>
-              <CardContent className="flex-1 overflow-hidden p-4">
+              <CardContent className="flex-1 overflow-hidden p-4 flex flex-col">
                 {authUser && currentChat && !fetchingChatMessages ? (
-                  <ScrollArea className="h-[calc(100svh-17rem)] pr-4  pt-10 ">
+                  <ScrollArea className="flex-1 pr-4 mt-2">
                     {messages.map((message) => (
                       <div
                         key={message.id}
-                        className={` group mb-4  flex items-center ${
+                        className={`group mb-4 flex items-center ${
                           message.sender_id === authUser?.unique_id
                             ? "justify-end"
                             : "justify-start"
-                        }
-                            `}
+                        }`}
                       >
                         {isOnlyEmoji(message.message) ? (
                           <div className="">
