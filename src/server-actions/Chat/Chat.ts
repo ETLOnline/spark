@@ -22,6 +22,12 @@ export const CreatePrivateChatAction = CreateServerAction(
   true,
   async (user_id: string, contact_id: string, space_id?: string) => {
     try {
+      if (user_id == contact_id) {
+        return {
+          success: false,
+          error: "You cannot start a chat with yourself"
+        }
+      }
       const chatType = space_id ? "space" : "open"
       const existingChat = await getExistingSingleChat(
         user_id,
@@ -39,7 +45,6 @@ export const CreatePrivateChatAction = CreateServerAction(
       }
 
       const chatMembers = newChat.users
-      console.log(space_id, "space_id")
 
       for (const member of chatMembers) {
         const userChannel = AblyClientRest.channels.get(
