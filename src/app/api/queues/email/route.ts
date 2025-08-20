@@ -1,4 +1,5 @@
 import { sendEmail } from "@/src/services/mail/sendMail"
+import { Sendgrid } from "@/src/utils/constants"
 import { Queue } from "quirrel/next-app"
 
 export const POST = Queue(
@@ -8,7 +9,7 @@ export const POST = Queue(
     try {
       await sendEmail({
         to: job.to,
-        templateId: process.env.SENDGRID_TASK_UPDATE_TEMPLATE_ID as string,
+        templateId: Sendgrid.SENDGRID_TASK_UPDATE_TEMPLATE_ID as string,
         dynamicTemplateData: job.dynamicTemplateData
       })
     } catch (error) {
