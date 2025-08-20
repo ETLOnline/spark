@@ -54,6 +54,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
+import Image from "next/image"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -103,6 +104,7 @@ export default function CommunityDetailsClient({
         description: community.description,
         slug: community.slug,
         type: community.type,
+        cover_image: community.cover_image,
 
         category_id: community.category,
         created_by: "unknown",
@@ -245,8 +247,19 @@ export default function CommunityDetailsClient({
       )}
       <div className="flex flex-col min-h-screen">
         {/* Community Header Banner */}
-        <div className="relative sm:h-44 h-36 shadow-sm shadow-secondary rounded-lg overflow-hidden">
-          <div className="absolute inset-0 w-full h-full object-cover cover-pattern" />
+        <div className="relative sm:h-44 h-36 shadow-sm rounded-lg overflow-hidden">
+          {community.cover_image ? (
+            <Image
+              src={community.cover_image}
+              alt={community.title}
+              width={1000}
+              height={1000}
+              objectFit="cover"
+              className="w-full h-36 sm:h-44 rounded-lg"
+            />
+          ) : (
+            <div className="absolute inset-0 w-full h-full object-cover cover-pattern" />
+          )}
           <div className="absolute inset-0 bg-black/50"></div>
           <div className="absolute inset-0 px-4 py-4 sm:py-6 sm:px-6 flex flex-col gap-4 justify-center h-full">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 h-full">

@@ -158,7 +158,7 @@ const EditProfileModal: React.FC = () => {
 
         // Reload Clerk user to sync the updated names
         await clerkUser?.reload()
-        
+
         // Refresh auth user to get latest data from database
         await refreshAuthUser()
 
@@ -214,28 +214,32 @@ const EditProfileModal: React.FC = () => {
           <form onSubmit={saveProfileChanges} className="edit-profile-form p-2">
             <div className="grid gap-4 py-4">
               <div className="flex flex-col gap-y-7">
-                  <div className="edit-names w-full flex gap-4">
-                    <div className="w-1/2">
-                      <Label htmlFor="firstName" className="edit-label">First Name</Label>
-                      <Input
-                        id="firstName"
-                        type="text"
-                        value={firstName}
-                        onChange={e => setFirstName(e.target.value)}
-                        placeholder="Enter first name"
-                      />
-                    </div>
-                    <div className="w-1/2">
-                      <Label htmlFor="lastName" className="edit-label">Last Name</Label>
-                      <Input
-                        id="lastName"
-                        type="text"
-                        value={lastName}
-                        onChange={e => setLastName(e.target.value)}
-                        placeholder="Enter last name"
-                      />
-                    </div>
+                <div className="edit-names w-full flex gap-4">
+                  <div className="w-1/2">
+                    <Label htmlFor="firstName" className="edit-label">
+                      First Name
+                    </Label>
+                    <Input
+                      id="firstName"
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="Enter first name"
+                    />
                   </div>
+                  <div className="w-1/2">
+                    <Label htmlFor="lastName" className="edit-label">
+                      Last Name
+                    </Label>
+                    <Input
+                      id="lastName"
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Enter last name"
+                    />
+                  </div>
+                </div>
                 <div className="edit-bio w-full">
                   <Label htmlFor="bio" className="edit-label">
                     Bio

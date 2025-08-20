@@ -386,6 +386,7 @@ export const getChatContacts = async ({
         email: true,
         external_auth_id: true,
         profile_url: true,
+        cover_image: true,
         unique_id: true,
         role: true,
         meta_profile: true
