@@ -24,7 +24,6 @@ import CreateNewProject from "./CreateNewProject"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import NoDataCard from "../Channels/ChannelDetails/NoDataCard"
 import { ListX } from "lucide-react"
-import pusherClient from "@/src/services/realtime/PusherClient"
 
 interface Props {
   space: SelectSpace
@@ -67,27 +66,6 @@ export function ProjectScreen({ space }: Props) {
   const searchParam = useSearchParams()
   const spaceSlug = searchParam.get("space")
   const channel_slug = searchParam.get("channel")
-
-  useEffect(() => {
-    const channel = pusherClient.subscribe(`space-${space.id}-project`)
-
-    channel.bind("project-add", (newProject: SelectProject) => {
-      setProjects((prevProjects) => [...prevProjects, newProject])
-    })
-
-    channel.bind("project-edit", (updatedProject: SelectProject) => {
-      setProjects((prevProjects) =>
-        prevProjects.map((project) =>
-          project.id === updatedProject.id ? updatedProject : project
-        )
-      )
-    })
-
-    return () => {
-      channel.unbind_all()
-      pusherClient.unsubscribe(`space-${space.id}-project`)
-    }
-  }, [])
 
   useEffect(() => {
     setCurrSpace(space)

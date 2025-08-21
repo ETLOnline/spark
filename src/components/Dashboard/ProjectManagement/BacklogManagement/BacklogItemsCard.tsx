@@ -11,15 +11,12 @@ import { taskStore } from "@/src/store/tasks/taskStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { GetBacklogTasksAction } from "@/src/server-actions/Tasks/Task"
 import { TaskFiltersType } from "../types/taskFilters.type"
-import { SelectTask } from "@/src/db/schema"
-import { userStore } from "@/src/store/user/userStore"
-import { projectStore } from "@/src/store/project/projectStore"
 
 interface Props {
   searchedItem: string
   orderList: string
   limit: number
-  filters: TaskFiltersType | null
+  filters: TaskFiltersType
 }
 
 function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
@@ -28,63 +25,42 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
   const [tasksLoading, tasksData, tasksError, GetTasks] = useServerAction(
     GetBacklogTasksAction
   )
-  const pusherChannel = useAtomValue(projectStore.pusherChannel)
-  const authUser = useAtomValue(userStore.AuthUser)
 
   const projectId = useParams().id as string
   const searchParams = useSearchParams()
 
-  const fatchTasks = async () => {
-    const page = parseInt(searchParams.get("page") || "1", 10)
-    const res = await GetTasks({
-      project_id: projectId,
-      page: page ? page : 1,
-      limit: limit,
-      searchedItem,
-      orderList,
-      assignee: filters?.assignee,
-      priority: filters?.priority,
-      type: filters?.type,
-      status: filters?.status
-    })
-    if (res?.success && res.data) {
-      const tasks = res?.data
-      setTasks(tasks?.tasks)
-      setPagination(tasks.pagination)
+  useEffect(() => {
+    const fatchTasks = async () => {
+      const page = parseInt(searchParams.get("page") || "1", 10)
+      const res = await GetTasks({
+        project_id: projectId,
+        page: page ? page : 1,
+        limit: limit,
+        searchedItem,
+        orderList,
+        assignee: filters.assignee,
+        priority: filters.priority,
+        type: filters.type,
+        status: filters.status
+      })
+      if (res?.success && res.data) {
+        const tasks = res?.data
+        setTasks(tasks?.tasks)
+        setPagination(tasks.pagination)
+      }
     }
-  }
-
-  useEffect(() => {
-    if (searchedItem || orderList) fatchTasks()
-  }, [searchedItem, orderList, searchParams])
-
-  useEffect(() => {
-    if (filters) fatchTasks()
-  }, [filters?.assignee, filters?.priority, filters?.type, filters?.status])
-  useEffect(() => {
-    if (!pusherChannel || !authUser) return
-
-    pusherChannel.bind("task-add", (task: SelectTask) => {
-      if (authUser?.unique_id === task.created_by) return
-      setTasks((prev) => [...prev, task])
-    })
-
-    pusherChannel.bind("task-update", (updatedTask: SelectTask) => {
-      if (authUser?.unique_id === updatedTask.assign_by) return
-      setTasks((prev) =>
-        prev.map((t) => (t.id === updatedTask.id ? updatedTask : t))
-      )
-    })
-
-    pusherChannel.bind("task-delete", (deletedTask: SelectTask) => {
-      if (authUser?.unique_id === deletedTask.assign_by) return
-      setTasks((prev) => prev.filter((t) => t.id !== deletedTask.id))
-    })
-
-    return () => {
-      pusherChannel.unbind_all()
-    }
-  }, [pusherChannel, authUser?.unique_id])
+    fatchTasks()
+  }, [
+    projectId,
+    searchParams,
+    searchedItem,
+    orderList,
+    limit,
+    filters.assignee,
+    filters.priority,
+    filters.type,
+    filters.status
+  ])
 
   // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(

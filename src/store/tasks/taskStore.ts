@@ -3,20 +3,12 @@ import { atom } from "jotai"
 
 const BackLogTasks = atom<SelectTask[]>([])
 const selectedTask = atom<SelectTask | null>(null)
-const selectedSprintTask = atom<SelectTask[]>([])
-const shouldRefetchTasks = atom<boolean>(false)
-const isTaskModalOpen = atom<boolean>(false)
-const isTaskMoveDialogOpen = atom<boolean>(false)
-const taskMoveDialogAction = atom<"moveTask" | "endSprint" | "deleteSprint">(
-  "moveTask"
-)
+const SprintTask = atom<SelectTask[]>([])
+const shouldRefetchTasks = atom<boolean>(true)
 
 export const taskStore = {
   BackLogTasks,
   selectedTask,
-  selectedSprintTask,
-  shouldRefetchTasks,
-  isTaskModalOpen,
-  isTaskMoveDialogOpen,
-  taskMoveDialogAction
+  SprintTask,
+  shouldRefetchTasks
 }

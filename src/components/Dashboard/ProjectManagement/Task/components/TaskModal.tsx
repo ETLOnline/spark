@@ -5,7 +5,7 @@ import {
   DialogTitle
 } from "@/src/components/ui/dialog"
 import { projectStore } from "@/src/store/project/projectStore"
-import { useAtom, useSetAtom } from "jotai"
+import { useAtom } from "jotai"
 import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import React, {
   Dispatch,
@@ -22,7 +22,6 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetTaskByIdAction } from "@/src/server-actions/Tasks/Task"
 import { toast } from "@/src/hooks/use-toast"
 import useTaskHook from "../hooks/useTaskHook"
-import { taskStore } from "@/src/store/tasks/taskStore"
 
 interface TaskModalProps {
   isTaskModelOpen: boolean
@@ -143,10 +142,7 @@ export const TaskModal = ({
 
   return (
     <Dialog open={isTaskModelOpen} onOpenChange={handleModalClose}>
-      <DialogContent
-        className="sm:max-w-5xl [&>button]:w-6 [&>button]:h-6 [&>button>svg]:w-6 [&>button>svg]:h-6"
-        onInteractOutside={(e) => e.preventDefault()}
-      >
+      <DialogContent className="sm:max-w-5xl [&>button]:w-6 [&>button]:h-6 [&>button>svg]:w-6 [&>button>svg]:h-6">
         <DialogHeader>
           <TaskFormHeader selectedTask={internalTask} />
           <DialogTitle className="sr-only">

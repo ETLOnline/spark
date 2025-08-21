@@ -33,6 +33,7 @@ import {
 } from "../constants/projectManagment"
 import { useParams } from "next/navigation"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import TaskMoveDialog from "../Task/components/task-move-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   Tooltip,
@@ -52,13 +53,9 @@ function BacklogItems({ task }: Props) {
   const [isDropdownOpen, setIsDropDownOpen] = useState(false)
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
-  const setTasks = useSetAtom(taskStore.BackLogTasks)
+  const SetTasks = useSetAtom(taskStore.BackLogTasks)
   const [status, setStatus] = useAtom(projectStore.projectStatusList)
-  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useAtom(
-    taskStore.isTaskMoveDialogOpen
-  )
-  const setIsTaskModalOpen = useSetAtom(taskStore.isTaskModalOpen)
-  const setTaskMoveDialogAction = useSetAtom(taskStore.taskMoveDialogAction)
+  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useState(false)
 
   const [deleteTaskLoading, deleteTaskData, deleteTaskError, DeleteTask] =
     useServerAction(DeleteTaskAction)
@@ -66,14 +63,13 @@ function BacklogItems({ task }: Props) {
   function EditTask(task: SelectTask) {
     setSelectedTask(task)
     setIsDropDownOpen(false)
-    setIsTaskModalOpen(true)
   }
 
   async function handleDeleteTask(selectedTask: SelectTask) {
     try {
       const deletedTask = await DeleteTask(selectedTask)
       if (deletedTask?.success) {
-        setTasks((prev) => prev.filter((t) => t.id !== selectedTask.id))
+        SetTasks((prev) => prev.filter((t) => t.id !== selectedTask.id))
         toast({
           title: "Task Deleted successfully"
         })
@@ -122,13 +118,6 @@ function BacklogItems({ task }: Props) {
     )
   }
 
-  const HandleMoveTask = (task: SelectTask) => {
-    setSelectedTask(task)
-    setIsTaskMoveDialogOpen(true)
-    setIsDropDownOpen(false)
-    setTaskMoveDialogAction("moveTask")
-  }
-
   // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(
     "scoped",
@@ -141,6 +130,17 @@ function BacklogItems({ task }: Props) {
   const canDelete = permissionChecker
     ? permissionChecker?.canAccess("project.backlog.task.delete")
     : false
+  const onTaskCreated = (task: SelectTask) => {
+    SetTasks((prev) => [...prev, task])
+    setSelectedTask(task)
+  }
+
+  const onTaskUpdated = (task: SelectTask) => {
+    SetTasks((prev) =>
+      prev.map((t) => (t.id === task.id ? { ...t, ...task } : t))
+    )
+    setSelectedTask(task)
+  }
 
   return (
     <>
@@ -227,7 +227,8 @@ function BacklogItems({ task }: Props) {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
-                        HandleMoveTask(task)
+                        setIsTaskMoveDialogOpen(true)
+                        setIsDropDownOpen(false)
                       }}
                     >
                       Add to Sprint
@@ -272,6 +273,12 @@ function BacklogItems({ task }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <TaskMoveDialog
+        isTaskMoveDialogOpen={isTaskMoveDialogOpen}
+        setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
+        task_id={task.id}
+      />
     </>
   )
 }

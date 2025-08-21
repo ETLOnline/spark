@@ -44,24 +44,7 @@ export async function UpdateSprint(
 
 export async function DeleteSprint(sprintId: string) {
   try {
-    const deletedSprint = await db
-      .delete(SprintTable)
-      .where(eq(SprintTable.id, sprintId))
-      .returning()
-
-    return deletedSprint[0]
-  } catch (e: any) {
-    throw new Error(e.message)
-  }
-}
-
-export async function sprintCount(projectId: string) {
-  try {
-    const sprints = await db.$count(
-      SprintTable,
-      eq(SprintTable.projectId, projectId)
-    )
-    return sprints
+    await db.delete(SprintTable).where(eq(SprintTable.id, sprintId))
   } catch (e: any) {
     throw new Error(e.message)
   }

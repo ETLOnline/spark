@@ -31,8 +31,6 @@ interface Props {
   isTaskModalOpen: boolean
   setIsTaskModalOpen: Dispatch<SetStateAction<boolean>>
   setSprintId: Dispatch<SetStateAction<string>>
-  getTaskLoading: boolean
-  selectedTask?: SelectTask
 }
 
 export default function SprintCardPage({
@@ -40,52 +38,51 @@ export default function SprintCardPage({
   setSprintId,
   tasks,
   setSelectedTask,
-
   isTaskModalOpen,
   setIsTaskModalOpen,
-  setTasks,
-  getTaskLoading
+  setTasks
 }: Props) {
   const [filteredTasks, setFilteredTasks] = useState<SelectTask[]>([])
   const [isSprintContextMenuOpen, setIsSprintContextMenuOpen] = useState(false)
-  const [getFilteredTaskLoading, , , GetTasks] =
-    useServerAction(GetSprintTasksAction)
-  const [filters, setFilters] = useState<TaskFiltersType | null>(null)
+  const [getTaskLoading, , , GetTasks] = useServerAction(GetSprintTasksAction)
+  const [filters, setFilters] = useState<TaskFiltersType>({})
 
   const projectId = useParams().id as string
 
-  const fetchTasks = async () => {
-    if (filters === null) return
-    const tasks = await GetTasks({
-      project_id: projectId,
-      sprint_id: sprint.id,
-      priority: filters?.priority,
-      type: filters?.type,
-      status: filters?.status,
-      assignee: filters?.assignee
-    })
-    if (tasks?.success && tasks.data) {
-      setFilteredTasks(tasks.data.tasks)
-    }
-  }
-
   useEffect(() => {
+    const fetchTasks = async () => {
+      const tasks = await GetTasks({
+        project_id: projectId,
+        sprint_id: sprint.id,
+        priority: filters.priority,
+        type: filters.type,
+        status: filters.status,
+        assignee: filters.assignee
+      })
+      if (tasks?.success && tasks.data) {
+        setFilteredTasks(tasks.data.tasks)
+      }
+    }
     if (filters) {
       fetchTasks()
     }
   }, [
     projectId,
-    filters?.assignee,
-    filters?.priority,
-    filters?.type,
-    filters?.status
+    filters.assignee,
+    filters.priority,
+    filters.type,
+    filters.status
   ])
 
   useEffect(() => {
+    if (!isTaskModalOpen) {
+      setSelectedTask(null)
+    }
+  }, [isTaskModalOpen])
+
+  useEffect(() => {
     if (tasks.length > 0 && sprint.id) {
-      setFilteredTasks(
-        tasks.filter((t) => t?.sprint_id && t.sprint_id === sprint.id)
-      )
+      setFilteredTasks(tasks.filter((t) => t.sprint_id === sprint.id))
     }
   }, [tasks, sprint.id])
 
@@ -166,7 +163,7 @@ export default function SprintCardPage({
               <div className="col-span-1 text-center">Assignee</div>
               <div className="col-span-1 text-center">Actions</div>
             </div>
-            {getTaskLoading || getFilteredTaskLoading ? (
+            {getTaskLoading ? (
               <div className="flex justify-center h-full w-full my-4">
                 <Loader size={LoaderSizes.lg} />
               </div>
@@ -179,6 +176,7 @@ export default function SprintCardPage({
                   currSprint={sprint}
                   setIsTaskModelOpen={setIsTaskModalOpen}
                   setTasks={setTasks}
+                  setSelectedTask={setSelectedTask}
                 />
               ))
             ) : (

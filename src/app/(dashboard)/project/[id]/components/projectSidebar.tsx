@@ -22,7 +22,6 @@ import { getProjectCrumbsMapped } from "@/src/components/Dashboard/Sidebar.tsx/u
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 import Loader from "@/src/components/common/Loader/Loader"
-import pusherClient from "@/src/services/realtime/PusherClient"
 
 interface Props {
   statusList: InsertTaskStatus[]
@@ -35,7 +34,6 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
     projectStore.projectStatusList
   )
   const setCrumbRoutes = useSetAtom(navStore.crumbRoutes)
-  const setPusherChannel = useSetAtom(projectStore.pusherChannel)
 
   const { setOpen: setSideBarCollapse } = useSidebar()
   const pathName = usePathname()
@@ -50,18 +48,6 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
     "PROJECT",
     currProject?.id
   )
-
-  useEffect(() => {
-    const channel = pusherClient.subscribe(`project-${currProject?.id}-tasks`)
-
-    if (channel) {
-      setPusherChannel(channel)
-    }
-
-    return () => {
-      pusherClient.unsubscribe(`project-${currProject?.id}-tasks`)
-    }
-  }, [])
 
   useEffect(() => {
     setSideBarCollapse(false)
