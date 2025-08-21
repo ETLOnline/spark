@@ -3,12 +3,17 @@
 import {
   CreateEvent,
   DeleteEvent,
+  GetEventById,
   GetEvents,
   UpdateEvents
 } from "@/src/db/data-access/events/query"
 import { CreateServerAction } from ".."
 import { InsertEvent, SelectEvent } from "@/src/db/schema"
 import { start } from "repl"
+import {
+  base64ToBuffer,
+  uploadFileAndSaveMetadata
+} from "@/src/services/storage/utils/fileUtils"
 
 export const CreateEventAction = CreateServerAction(
   true,
@@ -34,6 +39,18 @@ export const GetEventsAction = CreateServerAction(
   }
 )
 
+export const GetEventByIdAction = CreateServerAction(
+  true,
+  async (eventId: number) => {
+    try {
+      const event = await GetEventById(eventId)
+      return { success: true, data: event }
+    } catch (error) {
+      return { error }
+    }
+  }
+)
+
 export const UpdateEventsAction = CreateServerAction(
   true,
   async (eventId: number, updatedEventsData: Partial<SelectEvent>) => {
@@ -54,6 +71,36 @@ export const DeleteEventAction = CreateServerAction(
       return { success: true }
     } catch (error) {
       return { error: error }
+    }
+  }
+)
+export const UploadEventImageAction = CreateServerAction(
+  true,
+  async (fileName: string, fileB64string: string, fileType: string) => {
+    try {
+      const fileBuffer = base64ToBuffer(fileB64string)
+
+      const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(
+        fileBuffer,
+        fileName,
+        fileType,
+        "events"
+      )
+
+      if (!fileUrl || !fileRecord) {
+        throw new Error("Upload failed: missing fileUrl or file metadata.")
+      }
+
+      return {
+        success: true,
+        data: fileUrl
+      }
+    } catch (error: any) {
+      console.error("Error uploading event image:", error)
+      return {
+        success: false,
+        error: error.message || "Failed to upload event image"
+      }
     }
   }
 )

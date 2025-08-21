@@ -1,6 +1,12 @@
 import { and, desc, eq, gte, lt, lte } from "drizzle-orm"
 import { db } from "../.."
-import { eventsTable, InsertEvent, SelectEvent } from "../../schema"
+import {
+  eventRegistrationsTable,
+  eventsTable,
+  InsertEvent,
+  SelectEvent
+} from "../../schema"
+import { usersTable } from "../../schema"
 
 export async function CreateEvent(eventData: InsertEvent) {
   try {
@@ -13,17 +19,28 @@ export async function CreateEvent(eventData: InsertEvent) {
 
 export async function GetEvents(startDate: string, endDate: string) {
   try {
-    const events = await db
+    const events = await db.query.eventsTable.findMany({
+      with: {
+        host: true
+      },
+      where: and(
+        gte(eventsTable.end_date_time, startDate),
+        lte(eventsTable.end_date_time, endDate)
+      ),
+      orderBy: desc(eventsTable.start_date_time)
+    })
+    return events
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+export async function GetEventById(eventId: number) {
+  try {
+    const event = await db
       .select()
       .from(eventsTable)
-      .where(
-        and(
-          gte(eventsTable.end_date_time, startDate),
-          lte(eventsTable.end_date_time, endDate)
-        )
-      )
-      .orderBy(desc(eventsTable.start_date_time))
-    return events
+      .where(and(eq(eventsTable.id, eventId)))
+    return event
   } catch (e: any) {
     throw new Error(e.message)
   }
@@ -44,14 +61,13 @@ export async function UpdateEvents(
     throw new Error(e.message)
   }
 }
-
 export async function DeleteEvent(deleteEventsData: SelectEvent) {
   try {
-    const DeletedEvent = await db
+    return await db
       .delete(eventsTable)
       .where(eq(eventsTable.id, deleteEventsData.id))
-    return deleteEventsData
+      .returning()
   } catch (e: any) {
-    throw new Error(e.message)
+    throw new Error(`Failed to delete event: ${e.message}`)
   }
 }

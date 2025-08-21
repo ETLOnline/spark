@@ -1,25 +1,27 @@
-import React, { useEffect, useState } from "react"
+"use client"
+
+import type React from "react"
+import { useEffect, useState } from "react"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger
+  DialogTitle
 } from "../../ui/dialog"
 import { Label } from "../../ui/label"
 import { Input } from "../../ui/input"
 import { Textarea } from "../../ui/textarea"
 import { Button } from "../../ui/button"
-import { InsertEvent, SelectEvent } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateEventAction,
   DeleteEventAction,
-  UpdateEventsAction
+  UpdateEventsAction,
+  UploadEventImageAction
 } from "@/src/server-actions/events/event"
-import { useAtom, useAtomValue, useSetAtom } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import {
   AlertDialog,
@@ -45,7 +47,10 @@ import {
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { eventStore } from "@/src/store/event/eventStore"
+import TagSelect from "../../TagsInput/tags"
+import { InsertEvent, SelectEvent } from "@/src/db/schema"
 import { EventType } from "../../common/types/event.types"
+import { MultiSelectOption } from "../../ui/multi-select"
 
 interface Props {
   events: SelectEvent[]
@@ -60,6 +65,10 @@ const eventSchema = z
       .string()
       .min(1, "Description required")
       .max(50, "Description is too long"),
+    image: z
+      .instanceof(File, { message: "Image is required" })
+      .refine((file) => file.size > 0, { message: "Image cannot be empty" }),
+
     start_date_time: z.string().min(1, "Start date and time required"),
     end_date_time: z.string().min(1, "End date and time required"),
     event_type: z.string().min(1, "Type required"),
@@ -96,7 +105,7 @@ const eventSchema = z
         message: "Meeting Link  required"
       })
     }
-    if (data.event_type === EventType.Both) {
+    if (data.event_type === EventType.Hybrid) {
       if (!data.location) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -104,7 +113,7 @@ const eventSchema = z
           message: "location required"
         })
       }
-      if (!data.meeting_link && z.string().url()) {
+      if (!data.meeting_link) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["meeting_link"],
@@ -127,8 +136,20 @@ const eventSchema = z
 export const CreateEvent = ({ events, setEvents }: Props) => {
   const [editEvent, setEditEvent] = useState(false)
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
+  const [selectedTags, setSelectedTags] = useState<MultiSelectOption[]>([])
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const form = useForm({
     resolver: zodResolver(eventSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      start_date_time: moment().format("YYYY-MM-DDTHH:mm"),
+      end_date_time: moment().add(1, "hours").format("YYYY-MM-DDTHH:mm"),
+      event_type: "Hybrid",
+      location: "",
+      meeting_link: "",
+      image: undefined
+    },
     shouldUnregister: true
   })
   const selectedEvent = useAtomValue(eventStore.selectedEvent)
@@ -150,6 +171,8 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
     addDeleteEventError,
     DeleteEvent
   ] = useServerAction(DeleteEventAction)
+  const [eventImageLoading, eventImageData, eventImageError, uploadCoverImage] =
+    useServerAction(UploadEventImageAction)
   const authUser = useAtomValue(userStore.AuthUser)
   const { toast } = useToast()
 
@@ -182,15 +205,17 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
       form.setValue("description", selesctedEventCopy?.description || "")
       form.setValue("start_date_time", selesctedEventCopy.start_date_time)
       form.setValue("end_date_time", selesctedEventCopy.end_date_time)
-      form.setValue("event_type", selesctedEventCopy?.type || EventType.Both)
+      form.setValue("event_type", selesctedEventCopy?.type || EventType.Hybrid)
       form.setValue("location", metadata.location)
       form.setValue("meeting_link", metadata.meeting_link)
+      setImageFile(null) // Clear image file on event selection change
     }
   }, [selectedEvent])
 
   useEffect(() => {
     if (!formModalVisibility) {
       setSelectedEvent(null)
+      setImageFile(null) // Clear image file when modal is closed
     }
   }, [formModalVisibility])
 
@@ -210,21 +235,71 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
       meeting_link: data.meeting_link
     })
 
+    const tags = selectedTags.map((tag) => tag.label)
+
+    let coverImageUrl = ""
+    if (imageFile instanceof File) {
+      try {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onloadend = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(imageFile)
+        })
+
+        // Upload the image
+        const uploadResult = await uploadCoverImage(
+          imageFile.name,
+          base64,
+          imageFile.type
+        )
+
+        if (uploadResult?.success && uploadResult.data) {
+          coverImageUrl = uploadResult.data
+          toast({
+            title: "Event cover image uploaded!",
+            description:
+              "Your event cover image has been successfully uploaded.",
+            duration: 3000
+          })
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description:
+              uploadResult?.error || "Failed to upload event cover image",
+            duration: 3000
+          })
+          return
+        }
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Something went wrong while uploading cover image",
+          duration: 3000
+        })
+        return
+      }
+    }
+
     const finalEventData: Partial<SelectEvent> = {
       title: data.title,
       description: data.description,
       start_date_time: data.start_date_time,
       end_date_time: data.end_date_time,
       type: data.event_type,
-      metadata: metadata
+      tags: tags,
+      metadata: metadata,
+      coverImage: coverImageUrl || undefined
     }
 
     if (!selectedEvent) {
-      handleCreateEvent(finalEventData)
+      await handleCreateEvent(finalEventData)
     }
 
     if (selectedEvent) {
-      handleUpdateEvent(finalEventData)
+      await handleUpdateEvent(finalEventData)
     }
   }
 
@@ -241,9 +316,11 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
       if (createdEvent?.success && createdEvent.data) {
         setEvents([...events, createdEvent.data])
         setFormModalVisibility(false)
+        setSelectedTags([])
+        setImageFile(null)
         toast({
           title: "Event created",
-          description: "Your evnet has been created successfully.",
+          description: "Your event has been created successfully.",
           duration: 3000
         })
       }
@@ -259,35 +336,35 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
   }
 
   async function handleUpdateEvent(finalEventData: Partial<SelectEvent>) {
-    {
-      const updateEvent = { ...finalEventData }
-      updateEvent.start_date_time = moment(finalEventData.start_date_time)
-        .utc()
-        .toISOString()
-      updateEvent.end_date_time = moment(finalEventData.end_date_time)
-        .utc()
-        .toISOString()
-      if (!selectedEvent?.id) return
-      const updatedEvent = await UpdateEvents(selectedEvent?.id, updateEvent)
-      if (updatedEvent?.success && updatedEvent.data) {
-        setEvents((Events) =>
-          Events.map((event) =>
-            event.id === selectedEvent.id ? updatedEvent.data : event
-          )
+    const updateEvent = { ...finalEventData }
+    updateEvent.start_date_time = moment(finalEventData.start_date_time)
+      .utc()
+      .toISOString()
+    updateEvent.end_date_time = moment(finalEventData.end_date_time)
+      .utc()
+      .toISOString()
+    if (!selectedEvent?.id) return
+    const updatedEvent = await UpdateEvents(selectedEvent?.id, updateEvent)
+    if (updatedEvent?.success && updatedEvent.data) {
+      setEvents((Events) =>
+        Events.map((event) =>
+          event.id === selectedEvent.id ? updatedEvent.data : event
         )
-        setFormModalVisibility(false)
-        toast({
-          title: "Event updated",
-          description: "Your changes have been saved successfully.",
-          duration: 3000
-        })
-      } else {
-        toast({
-          title: "Unable to update event",
-          variant: "destructive",
-          duration: 3000
-        })
-      }
+      )
+      setFormModalVisibility(false)
+      setSelectedTags([])
+      setImageFile(null) // Clear image file after event update
+      toast({
+        title: "Event updated",
+        description: "Your changes have been saved successfully.",
+        duration: 3000
+      })
+    } else {
+      toast({
+        title: "Unable to update event",
+        variant: "destructive",
+        duration: 3000
+      })
     }
   }
 
@@ -311,14 +388,6 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
         setFormModalVisibility(open)
       }}
     >
-      <DialogTrigger asChild>
-        <button className="p-1 relative w-max mb-2">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg" />
-          <div className="px-8 py-2  bg-primary rounded-[6px]  relative group transition duration-200 text-primary-foreground hover:bg-transparent">
-            Add Event
-          </div>
-        </button>
-      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
@@ -331,7 +400,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(eventSubmit)}>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-1 ">
             <div className="flex flex-col">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="title" className="text-right">
@@ -393,8 +462,42 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
 
             <div className="flex flex-col">
               <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="image" className="text-right">
+                  Event Image
+                </Label>
+                <Controller
+                  name="image"
+                  control={form.control}
+                  render={({ field: { onChange, value, ...field } }) => (
+                    <Input
+                      id="image"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null
+                        setImageFile(file)
+                        onChange(file)
+                      }}
+                      className="col-span-3"
+                      {...field}
+                      value={undefined} // File inputs don't use value prop
+                    />
+                  )}
+                />
+              </div>
+              <div className="text-right">
+                {error.image && (
+                  <span className="text-red-500 text-sm">
+                    {String(error.image.message)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-col">
+              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="start_date_time" className="text-right">
-                  start Date and Time
+                  Start Date and Time
                 </Label>
                 <Controller
                   name="start_date_time"
@@ -465,7 +568,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                         <SelectItem value={EventType.Virtual}>
                           Virtual
                         </SelectItem>
-                        <SelectItem value={EventType.Both}>Both</SelectItem>
+                        <SelectItem value={EventType.Hybrid}>Hybrid</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -480,8 +583,25 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
               </div>
             </div>
 
+            {/* select tags */}
+
+            <div className="flex flex-col">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="tags" className="text-right">
+                  Tags
+                </Label>
+                <div className="col-span-3">
+                  <TagSelect
+                    type="interest"
+                    selected={selectedTags}
+                    setSelected={setSelectedTags}
+                  />
+                </div>
+              </div>
+            </div>
+
             {(EventTypeSelection === EventType.Physical ||
-              EventTypeSelection === EventType.Both) && (
+              EventTypeSelection === EventType.Hybrid) && (
               <div className="flex flex-col">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="location" className="text-right">
@@ -516,7 +636,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
             )}
 
             {(EventTypeSelection === EventType.Virtual ||
-              EventTypeSelection === EventType.Both) && (
+              EventTypeSelection === EventType.Hybrid) && (
               <div className="flex flex-col">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="meeting_link" className="text-right">
