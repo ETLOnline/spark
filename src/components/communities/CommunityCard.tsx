@@ -194,10 +194,11 @@ export default function CommunityCard({
           </CardDescription>
           <div className="flex items-center gap-1 mt-3 text-muted-foreground text-sm">
             <Hash className="h-4 w-4" />
-            <span>{community.channels?.length || 0} channels</span>
+            <span>
+              {community.channels?.length || 0} {(community.channels?.length || 0) === 1 ? 'channel' : 'channels'}
+            </span>
           </div>
         </div>
-
         {/* Bottom: Buttons */}
         <div className="flex justify-end flex-wrap items-center gap-2 mt-auto">
           {((!superAdmin && community.type === "public") ||
