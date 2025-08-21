@@ -128,10 +128,6 @@ export default function CommandCenter() {
               <MessageSquare />
               <span>Chat</span>
             </CommandItem>
-            <CommandItem>
-              <Settings />
-              <span>Settings</span>
-            </CommandItem>
           </CommandGroup>
         </CommandList>
       </CommandDialog>
