@@ -80,7 +80,7 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
                     />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Darft</p>
+                    <p>Draft</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

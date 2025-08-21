@@ -470,7 +470,7 @@ export default function CommunityDetailsClient({
                                               />
                                             </TooltipTrigger>
                                             <TooltipContent>
-                                              <p>Darft</p>
+                                              <p>Draft</p>
                                             </TooltipContent>
                                           </Tooltip>
                                         </TooltipProvider>
