@@ -9,7 +9,7 @@ import {
 import { Badge } from "@/src/components/ui/badge"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useParams } from "next/navigation"
-import { useEffect, useState } from "react"
+import { Dispatch, SetStateAction, useEffect, useState } from "react"
 import moment from "moment"
 import Loader from "@/src/components/common/Loader/Loader"
 import { SelectSprint, SelectTask } from "@/src/db/schema"
@@ -17,7 +17,6 @@ import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { Button } from "@/src/components/ui/button"
 import SprintTasks from "./SprintTasks"
 import SprintContextMenu from "./SprintContextMenu"
-import { TaskModal } from "../Task/components/TaskModal"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { ToUpperCase } from "@/src/utils/helpers"
@@ -26,46 +25,69 @@ import TaskFilters from "../TaskFilter/TaskFilters"
 
 interface Props {
   sprint: SelectSprint
+  tasks: SelectTask[]
+  setTasks: Dispatch<SetStateAction<SelectTask[]>>
+  setSelectedTask: Dispatch<SetStateAction<SelectTask | null>>
+  isTaskModalOpen: boolean
+  setIsTaskModalOpen: Dispatch<SetStateAction<boolean>>
+  setSprintId: Dispatch<SetStateAction<string>>
+  getTaskLoading: boolean
+  selectedTask?: SelectTask
 }
 
-export default function SprintCardPage({ sprint }: Props) {
-  const [tasks, setTasks] = useState<SelectTask[]>([])
+export default function SprintCardPage({
+  sprint,
+  setSprintId,
+  tasks,
+  setSelectedTask,
+
+  isTaskModalOpen,
+  setIsTaskModalOpen,
+  setTasks,
+  getTaskLoading
+}: Props) {
+  const [filteredTasks, setFilteredTasks] = useState<SelectTask[]>([])
   const [isSprintContextMenuOpen, setIsSprintContextMenuOpen] = useState(false)
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
-  const [selectedTask, setSelectedTask] = useState<SelectTask | null>(null)
-  const [getTaskLoading, , , GetTasks] = useServerAction(GetSprintTasksAction)
-  const [filters, setFilters] = useState<TaskFiltersType>({})
+  const [getFilteredTaskLoading, , , GetTasks] =
+    useServerAction(GetSprintTasksAction)
+  const [filters, setFilters] = useState<TaskFiltersType | null>(null)
 
   const projectId = useParams().id as string
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      const tasks = await GetTasks({
-        project_id: projectId,
-        sprint_id: sprint.id,
-        priority: filters.priority,
-        type: filters.type,
-        status: filters.status,
-        assignee: filters.assignee
-      })
-      if (tasks?.success && tasks.data) {
-        setTasks(tasks.data.tasks)
-      }
+  const fetchTasks = async () => {
+    if (filters === null) return
+    const tasks = await GetTasks({
+      project_id: projectId,
+      sprint_id: sprint.id,
+      priority: filters?.priority,
+      type: filters?.type,
+      status: filters?.status,
+      assignee: filters?.assignee
+    })
+    if (tasks?.success && tasks.data) {
+      setFilteredTasks(tasks.data.tasks)
     }
-    fetchTasks()
+  }
+
+  useEffect(() => {
+    if (filters) {
+      fetchTasks()
+    }
   }, [
     projectId,
-    filters.assignee,
-    filters.priority,
-    filters.type,
-    filters.status
+    filters?.assignee,
+    filters?.priority,
+    filters?.type,
+    filters?.status
   ])
 
   useEffect(() => {
-    if (!isTaskModalOpen) {
-      setSelectedTask(null)
+    if (tasks.length > 0 && sprint.id) {
+      setFilteredTasks(
+        tasks.filter((t) => t?.sprint_id && t.sprint_id === sprint.id)
+      )
     }
-  }, [isTaskModalOpen])
+  }, [tasks, sprint.id])
 
   // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(
@@ -111,36 +133,15 @@ export default function SprintCardPage({ sprint }: Props) {
                   variant={"outline"}
                   onClick={() => {
                     setIsTaskModalOpen(true)
+                    setSprintId(sprint.id ?? "")
                   }}
                 >
                   Add Task
                 </Button>
               )}
 
-              <TaskModal
-                isTaskModelOpen={isTaskModalOpen}
-                setIsTaskModelOpen={setIsTaskModalOpen}
-                sprintId={sprint.id ?? undefined}
-                selectedTask={selectedTask ?? undefined}
-                onCreateComplete={(task) => {
-                  setSelectedTask(task)
-                  setTasks((prevTasks) => [...prevTasks, task])
-                }}
-                onUpdateComplete={(task) => {
-                  setSelectedTask(task)
-                  setTasks((prevTasks) =>
-                    prevTasks.map((t) => {
-                      if (t.id === task.id) {
-                        return task
-                      }
-                      return t
-                    })
-                  )
-                }}
-              />
-
               <SprintContextMenu
-                sprintTasks={tasks}
+                sprintTasks={filteredTasks}
                 sprint={sprint}
                 isSprintContextMenuOpen={isSprintContextMenuOpen}
                 setIsSprintContextMenuOpen={setIsSprintContextMenuOpen}
@@ -153,20 +154,31 @@ export default function SprintCardPage({ sprint }: Props) {
           {/* Simple Task List */}
 
           <div className="grid grid-cols-1 ">
-            {getTaskLoading ? (
+            <div className="grid grid-cols-12 p-4  border-t text-sm font-medium bg-muted/50">
+              <div className="col-span-2">ID</div>
+              <div className="col-span-3">Title</div>
+              <div className="col-span-1 text-center">Type</div>
+              <div className="col-span-3 flex justify-around text-center">
+                <span>Status</span>
+                <span>Priority</span>
+              </div>
+              <div className="col-span-1 text-center">Points</div>
+              <div className="col-span-1 text-center">Assignee</div>
+              <div className="col-span-1 text-center">Actions</div>
+            </div>
+            {getTaskLoading || getFilteredTaskLoading ? (
               <div className="flex justify-center h-full w-full my-4">
                 <Loader size={LoaderSizes.lg} />
               </div>
-            ) : tasks.length > 0 ? (
+            ) : filteredTasks.length > 0 ? (
               canViewTask &&
-              tasks.map((task) => (
+              filteredTasks.map((task) => (
                 <SprintTasks
                   key={task.id}
                   task={task}
                   currSprint={sprint}
                   setIsTaskModelOpen={setIsTaskModalOpen}
                   setTasks={setTasks}
-                  setSelectedTask={setSelectedTask}
                 />
               ))
             ) : (

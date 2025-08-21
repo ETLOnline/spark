@@ -110,15 +110,15 @@
     {
       "idx": 15,
       "version": "7",
-      "when": 1755258358032,
-      "tag": "0015_2025_08_15_164554__update_event_table_and_create_event_users_table",
+      "when": 1755591102610,
+      "tag": "0015_2025_08_19_131140__update_users_and_communities_table",
       "breakpoints": true
     },
     {
       "idx": 16,
       "version": "7",
-      "when": 1755689200421,
-      "tag": "0016_2025_08_20_162631__add_onDelete_field_in_eventRegistraion_tabl",
+      "when": 1755762281813,
+      "tag": "0016_2025_08_21_124439__update_events_table_and_create_event_users_table",
       "breakpoints": true
     }
   ]

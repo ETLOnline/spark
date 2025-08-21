@@ -31,6 +31,11 @@ function SpaceFeatures({ features, space }: Props) {
   const pageType = params.get("page-type") || null
   const setLayoutStatsVisibility = useSetAtom(spaceStore.layoutStatsVisibility)
 
+  const encodedChannelSlug = encodeURIComponent(
+    space.channel?.channel_slug ?? ""
+  )
+  const encodedSpaceSlug = encodeURIComponent(space.space_slug)
+
   useLayoutEffect(() => {
     if (!pageType) {
       setLayoutStatsVisibility(true)
@@ -83,9 +88,9 @@ function SpaceFeatures({ features, space }: Props) {
 
   const renderFeatureModule = (featureSlug: string) => {
     if (featureSlug === "settings") {
-      redirect(`./${space.space_slug}/settings`)
+      redirect(`./${encodedSpaceSlug}/settings`)
     } else if (featureSlug === "users") {
-      redirect(`./${space.space_slug}/users`)
+      redirect(`./${encodedSpaceSlug}/users`)
     }
 
     const feature = features.find(

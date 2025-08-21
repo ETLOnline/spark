@@ -14,11 +14,18 @@ import {
 import { Label } from "@/src/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/src/components/ui/radio-group"
 import { useParams } from "next/navigation"
-import { SelectSprint } from "@/src/db/schema"
+import { SelectTask } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { GetSprintAction } from "@/src/server-actions/Sprint/sprint"
+import {
+  DeleteSprintAction,
+  GetSprintAction,
+  UpdateSprintAction
+} from "@/src/server-actions/Sprint/sprint"
 import Loader from "@/src/components/common/Loader/Loader"
-import { UpdateTaskAction } from "@/src/server-actions/Tasks/Task"
+import {
+  UpdateTaskAction,
+  UpdateTasksSprintAction
+} from "@/src/server-actions/Tasks/Task"
 import { useAtom, useSetAtom } from "jotai"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import { toast } from "@/src/hooks/use-toast"
@@ -27,25 +34,38 @@ import { sprintStore } from "@/src/store/sprint/sprintsStore"
 interface Props {
   isTaskMoveDialogOpen: boolean
   setIsTaskMoveDialogOpen: Dispatch<SetStateAction<boolean>>
-  task_id: string
+  task_ids: string[]
   currSprintId?: string
+  setTasks?: Dispatch<SetStateAction<SelectTask[]>>
+  dialogAction: string
 }
 
 export default function TaskMoveDialog({
   isTaskMoveDialogOpen,
   setIsTaskMoveDialogOpen,
-  task_id,
-  currSprintId
+  task_ids,
+  currSprintId,
+  setTasks,
+  dialogAction
 }: Props) {
   const [selectedSprint, setSelectedSprint] = useState("")
-  const setTasks = useSetAtom(taskStore.BackLogTasks)
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
-  const [updateTaskloading, , , UpdateTask] = useServerAction(UpdateTaskAction)
+  const [updateTaskloading, , , UpdateTask] = useServerAction(
+    UpdateTasksSprintAction
+  )
+  const [updateSprintLoading, , , UpdateSprint] =
+    useServerAction(UpdateSprintAction)
+  const [deleteSprintLoading, , , DeleteSprint] =
+    useServerAction(DeleteSprintAction)
+
+  const setShouldRefetchTasks = useSetAtom(taskStore.shouldRefetchTasks)
 
   const projectId = useParams().id as string
 
-  const filteredSprints = sprintList.filter((s) => s.id !== currSprintId)
+  const filteredSprints = sprintList.filter(
+    (s) => s.id !== currSprintId && s.sprint_status !== "closed"
+  )
 
   useEffect(() => {
     const fetchSprints = async () => {
@@ -59,19 +79,82 @@ export default function TaskMoveDialog({
 
   const handleMoveTask = async () => {
     if (selectedSprint) {
-      const updatedTask = await UpdateTask(task_id, {
-        sprint_id: selectedSprint
-      })
+      const updatedTask = await UpdateTask(task_ids, selectedSprint)
       if (updatedTask?.success && updatedTask.data) {
-        setTasks((prevTask) =>
-          prevTask.filter((task) => task.id !== updatedTask?.data?.id)
-        )
-
+        if (setTasks) {
+          setTasks((prevTasks) =>
+            prevTasks.map((t) => {
+              const updated = updatedTask.data.find((ut) => ut?.id === t.id)
+              return updated ? updated : t
+            })
+          )
+        }
+        setIsTaskMoveDialogOpen(false)
+        setShouldRefetchTasks(true)
         toast({
           title: `Task successfully moved to ${sprintList.find((s) => s.id === selectedSprint)?.title}`,
           duration: 2000
         })
       }
+    }
+  }
+
+  const handleEndSprint = async () => {
+    if (!selectedSprint || !currSprintId) return
+
+    const updatedTask = await UpdateTask(task_ids, selectedSprint)
+    if (!updatedTask?.success || !updatedTask.data) return
+
+    if (setTasks) {
+      console.log(updatedTask.data)
+      setTasks((prevTasks) =>
+        prevTasks.map((t) => {
+          const updated = updatedTask.data.find((ut) => ut?.id === t.id)
+          return updated ? updated : t
+        })
+      )
+    }
+
+    toast({
+      title: `Tasks successfully moved to ${sprintList.find((s) => s.id === selectedSprint)?.title}`,
+      duration: 2000
+    })
+
+    const res = await UpdateSprint(currSprintId, { sprint_status: "closed" })
+    if (res?.success && res.data) {
+      setSprintList((prev) =>
+        prev.map((s) => (s.id === res.data.id ? res.data : s))
+      )
+      setIsTaskMoveDialogOpen(false)
+    }
+  }
+
+  const handleDeleteSprint = async () => {
+    if (!selectedSprint || !currSprintId) return
+
+    const updatedTask = await UpdateTask(task_ids, selectedSprint)
+    if (!updatedTask?.success || !updatedTask.data) return
+
+    if (setTasks) {
+      console.log(updatedTask.data)
+      setTasks((prevTasks) =>
+        prevTasks.map((t) => {
+          const updated = updatedTask.data.find((ut) => ut?.id === t.id)
+          return updated ? updated : t
+        })
+      )
+    }
+
+    toast({
+      title: `Tasks successfully moved to ${sprintList.find((s) => s.id === selectedSprint)?.title}`,
+      duration: 2000
+    })
+
+    const deletedSprint = await DeleteSprint(currSprintId)
+
+    if (deletedSprint?.success) {
+      setSprintList((prev) => prev.filter((s) => s.id !== currSprintId))
+      setIsTaskMoveDialogOpen(false)
     }
   }
 
@@ -82,9 +165,19 @@ export default function TaskMoveDialog({
     >
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Move Task to Sprint</DialogTitle>
+          <DialogTitle>
+            {dialogAction === "moveTask"
+              ? "Move Task to Sprint"
+              : dialogAction === "endSprint"
+                ? "Move Incomplete Tasks Before Ending Sprint"
+                : "Move Tasks Before Deleting Sprint"}
+          </DialogTitle>
           <DialogDescription>
-            Select the sprint where you want to move this task.
+            {dialogAction === "moveTask"
+              ? " Select the sprint where you want to move this task."
+              : dialogAction === "endSprint"
+                ? "Some tasks in this sprint are not yet completed. To close the sprint, move these tasks to another sprint."
+                : "This sprint contains tasks. To delete it, first move these tasks to another sprint."}
           </DialogDescription>
         </DialogHeader>
 
@@ -137,13 +230,29 @@ export default function TaskMoveDialog({
           >
             Cancel
           </Button>
+
           <Button
             onClick={handleMoveTask}
             loading={updateTaskloading}
             disabled={!selectedSprint}
           >
-            Move Task
+            {dialogAction === "moveTask" ? "Move Task" : "Move Only"}
           </Button>
+
+          {dialogAction === "endSprint" || dialogAction === "deleteSprint" ? (
+            <Button
+              onClick={
+                dialogAction === "endSprint"
+                  ? handleEndSprint
+                  : handleDeleteSprint
+              }
+              loading={updateSprintLoading || deleteSprintLoading}
+              disabled={!selectedSprint}
+            >
+              Move Task &{" "}
+              {dialogAction === "endSprint" ? "End Sprint" : "Delete Sprint"}
+            </Button>
+          ) : null}
         </DialogFooter>
       </DialogContent>
     </Dialog>

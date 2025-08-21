@@ -22,6 +22,7 @@ import { TaskModal } from "../Task/components/TaskModal"
 import { SelectTask } from "@/src/db/schema"
 import { TaskFiltersType } from "../types/taskFilters.type"
 import TaskFilters from "../TaskFilter/TaskFilters"
+import TaskMoveDialog from "../Task/components/task-move-dialog"
 
 export function BacklogManagement() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -30,25 +31,31 @@ export function BacklogManagement() {
   const [limit, setLimit] = useState(10)
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
   const [openDialog, setOpenDialog] = useState(false)
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
+  const [isTaskModalOpen, setIsTaskModalOpen] = useAtom(
+    taskStore.isTaskModalOpen
+  )
   const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
   const [tasks, setTasks] = useAtom(taskStore.BackLogTasks)
-  const [appliedFilters, setAppliedFilters] = useState<TaskFiltersType>({})
+  const [appliedFilters, setAppliedFilters] = useState<TaskFiltersType | null>(
+    null
+  )
+  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useAtom(
+    taskStore.isTaskMoveDialogOpen
+  )
+  const taskMoveDialogAction = useAtomValue(taskStore.taskMoveDialogAction)
+  const [isInitailDataLoad, setIsInitailDataLoad] = useState(false)
 
   const params = useParams()
-  const projectId = params.id as string
 
   function handleSearch() {
-    if (searchQuery) {
-      setSearchedItem(searchQuery)
-    }
+    setSearchedItem(searchQuery)
   }
 
   // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "PROJECT",
-    projectId
+    params.id as string
   )
   const canCreateTask = permissionChecker
     ? permissionChecker?.canAccess("project.backlog.task.create")
@@ -61,24 +68,35 @@ export function BacklogManagement() {
   }, [projectStatusList])
 
   useEffect(() => {
-    if (!isTaskModalOpen) {
+    if (!isTaskMoveDialogOpen) {
       setSelectedTask(null)
     }
-  }, [isTaskModalOpen])
+  }, [isTaskMoveDialogOpen])
 
   useEffect(() => {
-    if (selectedTask) {
-      setIsTaskModalOpen(true)
+    if (tasks.length > 0) {
+      setIsInitailDataLoad(true)
     }
-  }, [selectedTask])
+  }, [tasks])
 
   function handleFilters(filters: TaskFiltersType) {
     setAppliedFilters(filters)
+    setSearchedItem(searchQuery)
+  }
+  const handleKeyDown = (e: any) => {
+    if (e.key === "Enter") {
+      handleSearch()
+    }
+  }
+
+  if (!params.id) {
+    return null
   }
 
   return projectStatusList.length > 0 ? (
     <>
       <TaskModal
+        isReady={isInitailDataLoad}
         isTaskModelOpen={isTaskModalOpen}
         setIsTaskModelOpen={setIsTaskModalOpen}
         selectedTask={selectedTask || undefined}
@@ -90,6 +108,14 @@ export function BacklogManagement() {
           setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
           setSelectedTask(task)
         }}
+      />
+
+      <TaskMoveDialog
+        isTaskMoveDialogOpen={isTaskMoveDialogOpen}
+        setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
+        task_ids={selectedTask?.id ? [selectedTask.id] : []}
+        setTasks={setTasks}
+        dialogAction={taskMoveDialogAction}
       />
 
       <div className="space-y-6">
@@ -107,9 +133,10 @@ export function BacklogManagement() {
           <div className="relative w-full sm:w-64 flex">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search backlog..."
+              placeholder="Search by title or ticket ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="pl-8 rounded-r-none"
             />
             <Button
@@ -121,7 +148,10 @@ export function BacklogManagement() {
             </Button>
           </div>
           <div className="flex items-center space-x-2">
-            <TaskFilters projectId={projectId} onApplyFilters={handleFilters} />
+            <TaskFilters
+              projectId={params.id as string}
+              onApplyFilters={handleFilters}
+            />
 
             <Button
               variant="outline"

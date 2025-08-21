@@ -19,7 +19,9 @@ import {
   UserPlus,
   Lock,
   Globe,
-  PlusCircle
+  PlusCircle,
+  PencilRuler,
+  Check
 } from "lucide-react"
 import { CommunityDetailData } from "@/src/db/data-access/communities/query"
 import CreateChannels from "@/src/components/Dashboard/Channels/CreateChannels"
@@ -44,7 +46,15 @@ import { AttachCommunityUserAction } from "@/src/server-actions/Community/Commun
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
 import { isEntityUser } from "@/src/utils/clientHelper"
+import { getInitials } from "@/src/utils/helpers"
 import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/src/components/ui/tooltip"
+import Image from "next/image"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -94,6 +104,7 @@ export default function CommunityDetailsClient({
         description: community.description,
         slug: community.slug,
         type: community.type,
+        cover_image: community.cover_image,
 
         category_id: community.category,
         created_by: "unknown",
@@ -172,9 +183,7 @@ export default function CommunityDetailsClient({
     )
   }
 
-  const communityInitial = community?.title
-    ? community.title.charAt(0).toUpperCase()
-    : "C"
+  const communityInitial = community?.title ? getInitials(community.title) : "C"
 
   const onActionComplete = (
     actionType: "create" | "updated" | "deleted",
@@ -190,7 +199,6 @@ export default function CommunityDetailsClient({
         }))
       }
     } else if (actionType === "updated") {
-      console.log("Channel updated:", channel)
       setChannels((prevChannels) =>
         prevChannels.map((c) => (c.id === channel.id ? channel : c))
       )
@@ -239,8 +247,19 @@ export default function CommunityDetailsClient({
       )}
       <div className="flex flex-col min-h-screen">
         {/* Community Header Banner */}
-        <div className="relative sm:h-44 h-36 shadow-sm shadow-secondary rounded-lg overflow-hidden">
-          <div className="absolute inset-0 w-full h-full object-cover cover-pattern" />
+        <div className="relative sm:h-44 h-36 shadow-sm rounded-lg overflow-hidden">
+          {community.cover_image ? (
+            <Image
+              src={community.cover_image}
+              alt={community.title}
+              width={1000}
+              height={1000}
+              objectFit="cover"
+              className="w-full h-36 sm:h-44 rounded-lg"
+            />
+          ) : (
+            <div className="absolute inset-0 w-full h-full object-cover cover-pattern" />
+          )}
           <div className="absolute inset-0 bg-black/50"></div>
           <div className="absolute inset-0 px-4 py-4 sm:py-6 sm:px-6 flex flex-col gap-4 justify-center h-full">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 h-full">
@@ -405,64 +424,100 @@ export default function CommunityDetailsClient({
                     </p>
                     <div className="space-y-2">
                       {currentChannels.length > 0 ? (
-                        currentChannels.map((channel) => (
-                          <div
-                            key={channel.id}
-                            className="flex items-center justify-between p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
-                          >
-                            {/* Main Content Area */}
-                            <Link
-                              className="flex items-center gap-3 flex-grow min-w-0"
-                              href={`/channels/${channel.channel_slug}/spaces`}
+                        currentChannels.map((channel) => {
+                          const encodedChannelSlug = encodeURIComponent(
+                            channel.channel_slug
+                          )
+                          return (
+                            <div
+                              key={channel.id}
+                              className="flex items-center justify-between p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
                             >
-                              <div className="flex items-center gap-3 flex-grow min-w-0">
-                                <Hash className="h-5 w-5 text-muted-foreground shrink-0" />
-                                <div className="flex flex-col min-w-0 flex-grow">
-                                  <span className="flex items-center gap-2 font-medium min-w-0">
-                                    <span className="truncate">
-                                      {channel.channel_name}
+                              {/* Main Content Area */}
+                              <Link
+                                className="flex items-center gap-3 flex-grow min-w-0"
+                                href={`/channels/${encodedChannelSlug}/spaces`}
+                              >
+                                <div className="flex items-center gap-3 flex-grow min-w-0">
+                                  <Hash className="h-5 w-5 text-muted-foreground shrink-0" />
+                                  <div className="flex flex-col min-w-0 flex-grow">
+                                    <span className="flex items-center gap-2 font-medium min-w-0">
+                                      <span className="truncate">
+                                        {channel.channel_name}
+                                      </span>
+                                      {/* for not publish or published */}
+                                      {channel.publish_channel ? (
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Check
+                                                className="text-muted-foreground"
+                                                height={14}
+                                              />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>Published</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      ) : (
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <PencilRuler
+                                                className="text-muted-foreground"
+                                                height={14}
+                                              />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>Darft</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      )}
+                                      {channel.channel_type === "public" ? (
+                                        <Globe className="h-4 w-4 text-green-500 shrink-0" />
+                                      ) : channel.channel_type === "private" ? (
+                                        <Lock className="h-4 w-4 text-yellow-500 shrink-0" />
+                                      ) : null}
                                     </span>
-                                    {channel.channel_type === "public" ? (
-                                      <Globe className="h-4 w-4 text-green-500 shrink-0" />
-                                    ) : channel.channel_type === "private" ? (
-                                      <Lock className="h-4 w-4 text-yellow-500 shrink-0" />
-                                    ) : null}
-                                  </span>
-                                  <span className="text-xs text-muted-foreground mt-0.5">
-                                    {channel.description ||
-                                      "No description available"}
-                                  </span>
-                                </div>
-                                {/* Channel Stats (still part of the content, but aligned to the right within this section) */}
-                                <div className="flex flex-col items-end whitespace-nowrap text-right text-sm text-muted-foreground ml-4">
-                                  <div className="text-xs">
-                                    {channel.created_at
-                                      ? new Date(
-                                          channel.created_at
-                                        ).toLocaleString("default", {
-                                          month: "long",
-                                          day: "numeric",
-                                          year: "numeric"
-                                        })
-                                      : "N/A"}
+                                    <span className="text-xs text-muted-foreground mt-0.5">
+                                      {channel.description ||
+                                        "No description available"}
+                                    </span>
                                   </div>
-                                  <div className="text-xs mt-0.5">
-                                    {(channel.users as Array<any>)?.length ?? 0}{" "}
-                                    members
+                                  {/* Channel Stats (still part of the content, but aligned to the right within this section) */}
+                                  <div className="flex flex-col items-end whitespace-nowrap text-right text-sm text-muted-foreground ml-4">
+                                    <div className="text-xs">
+                                      {channel.created_at
+                                        ? new Date(
+                                            channel.created_at
+                                          ).toLocaleString("default", {
+                                            month: "long",
+                                            day: "numeric",
+                                            year: "numeric"
+                                          })
+                                        : "N/A"}
+                                    </div>
+                                    <div className="text-xs mt-0.5">
+                                      {(channel.users as Array<any>)?.length ??
+                                        0}{" "}
+                                      members
+                                    </div>
                                   </div>
                                 </div>
+                              </Link>
+                              {/* Action Menu Area */}
+                              <div className="flex items-center ml-4 w-8 justify-end">
+                                <ChannelsContextMenu
+                                  channel={channel}
+                                  onActionComplete={onActionComplete}
+                                  setIsCommunityMember={setIsCommunityMember}
+                                />
                               </div>
-                            </Link>
-                            {/* Action Menu Area */}
-                            <div className="flex items-center ml-4 w-8 justify-end">
-                              <ChannelsContextMenu
-                                channel={channel}
-                                onActionComplete={onActionComplete}
-                                setIsCommunityMember={setIsCommunityMember}
-                              />
                             </div>
-                          </div>
-                        ))
+                          )
+                        })
                       ) : (
                         <p className="text-center text-muted-foreground py-4">
                           No channels found in this community.

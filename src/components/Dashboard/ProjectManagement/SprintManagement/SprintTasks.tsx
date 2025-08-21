@@ -1,7 +1,7 @@
 import { Badge } from "@/src/components/ui/badge"
 import { SelectSprint, SelectTask, SelectUser } from "@/src/db/schema"
 import { projectStore } from "@/src/store/project/projectStore"
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { CircleHelp, MoreHorizontal } from "lucide-react"
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import {
@@ -30,7 +30,6 @@ import { toast } from "@/src/hooks/use-toast"
 import { UpdateTaskAction } from "@/src/server-actions/Tasks/Task"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import TaskMoveDialog from "../Task/components/task-move-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   Tooltip,
@@ -39,31 +38,37 @@ import {
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
 import { getInitials } from "@/src/utils/helpers"
+import { taskStore } from "@/src/store/tasks/taskStore"
+import { sprintStore } from "@/src/store/sprint/sprintsStore"
 
 interface Props {
   task: SelectTask
   currSprint: SelectSprint
   setIsTaskModelOpen: Dispatch<SetStateAction<boolean>>
   setTasks: Dispatch<SetStateAction<SelectTask[]>>
-  setSelectedTask: Dispatch<SetStateAction<SelectTask | null>>
 }
 
 function SprintTasks({
   task,
   currSprint,
   setIsTaskModelOpen,
-  setTasks,
-  setSelectedTask
+  setTasks
 }: Props) {
   const [status, setStatus] = useAtom(projectStore.projectStatusList)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
   const [isTaskDropDownOpen, setIsTaskDropDownOpen] = useState(false)
-  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useState(false)
+  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useAtom(
+    taskStore.isTaskMoveDialogOpen
+  )
+  const setSelectedSprint = useSetAtom(sprintStore.selectedSprint)
+  const setSelectedTaskForEdit = useSetAtom(taskStore.selectedTask)
+  const setSelectedTasksForMoveTasks = useSetAtom(taskStore.selectedSprintTask)
+  const setTaskMoveDialogAction = useSetAtom(taskStore.taskMoveDialogAction)
 
   const [removeTaskLoading, , , RemoveTask] = useServerAction(UpdateTaskAction)
 
   function EditTask(task: SelectTask) {
-    setSelectedTask(task)
+    setSelectedTaskForEdit(task)
     setIsTaskModelOpen(true)
   }
 
@@ -88,8 +93,11 @@ function SprintTasks({
   }
 
   function moveTask(taskId: string) {
+    setSelectedTasksForMoveTasks([task])
+    setSelectedSprint(currSprint)
     setIsTaskMoveDialogOpen(true)
     setIsTaskDropDownOpen(false)
+    setTaskMoveDialogAction("moveTask")
   }
 
   const getTypeLabel = (type: string) => {
@@ -259,13 +267,6 @@ function SprintTasks({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <TaskMoveDialog
-        isTaskMoveDialogOpen={isTaskMoveDialogOpen}
-        setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
-        task_id={task.id}
-        currSprintId={currSprint.id}
-      />
     </>
   )
 }

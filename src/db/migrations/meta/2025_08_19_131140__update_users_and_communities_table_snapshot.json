@@ -1,5 +1,5 @@
 {
-  "id": "74c752b1-b671-4d9d-b6d6-7b7c33150e0c",
+  "id": "a642c4f2-7bc4-4704-89ad-c0447ddca76a",
   "prevId": "bedff746-d669-4ba1-803b-3a3d43143993",
   "version": "7",
   "dialect": "postgresql",
@@ -837,6 +837,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "cover_image": {
+          "name": "cover_image",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "varchar",
@@ -991,75 +997,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.event_users": {
-      "name": "event_users",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(36)",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "event_id": {
-          "name": "event_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "event_users_event_id_events_id_fk": {
-          "name": "event_users_event_id_events_id_fk",
-          "tableFrom": "event_users",
-          "tableTo": "events",
-          "columnsFrom": ["event_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "event_users_user_id_users_unique_id_fk": {
-          "name": "event_users_user_id_users_unique_id_fk",
-          "tableFrom": "event_users",
-          "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["unique_id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.events": {
       "name": "events",
       "schema": "",
@@ -1093,12 +1030,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "coverImage": {
-          "name": "coverImage",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
         "start_date_time": {
           "name": "start_date_time",
           "type": "varchar",
@@ -1120,12 +1051,6 @@
         "metadata": {
           "name": "metadata",
           "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "tags": {
-          "name": "tags",
-          "type": "varchar[]",
           "primaryKey": false,
           "notNull": false
         },
@@ -3245,6 +3170,12 @@
         },
         "profile_url": {
           "name": "profile_url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cover_image": {
+          "name": "cover_image",
           "type": "varchar",
           "primaryKey": false,
           "notNull": false

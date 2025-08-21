@@ -13,7 +13,7 @@ import BoardColumn from "./BoardColumn"
 import { SelectSprint, SelectTask } from "@/src/db/schema"
 import { useAtomValue } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
-import { useEffect, useState } from "react"
+import { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import { TaskModal } from "../../Task/components/TaskModal"
@@ -22,17 +22,33 @@ import TaskFilters from "../../TaskFilter/TaskFilters"
 
 interface Props {
   sprint: SelectSprint
+  tasks: SelectTask[]
+  isTaskModalOpen: boolean
+  setIsTaskModalOpen: Dispatch<SetStateAction<boolean>>
+  selectedTask: SelectTask | null
+  setSelectedTask: Dispatch<SetStateAction<SelectTask | null>>
 }
 
-function SprintBoardCard({ sprint }: Props) {
+function SprintBoardCard({
+  sprint,
+  tasks,
+  isTaskModalOpen,
+  setIsTaskModalOpen,
+  selectedTask,
+  setSelectedTask
+}: Props) {
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
-  const [tasks, setTasks] = useState<SelectTask[]>([])
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
-  const [selectedTask, setSelectedTask] = useState<SelectTask | null>()
-  const [filters, setFilters] = useState<TaskFiltersType>({})
+  const [filteredTasks, setFilteredTasks] = useState<SelectTask[]>([])
+  const [filters, setFilters] = useState<TaskFiltersType | null>(null)
 
   const [getTaskLoading, , , GetSPrintTask] =
     useServerAction(GetSprintTasksAction)
+
+  useEffect(() => {
+    if (tasks.length > 0) {
+      setFilteredTasks(tasks.filter((task) => task.sprint_id === sprint.id))
+    }
+  }, [tasks])
 
   useEffect(() => {
     const getTask = async () => {
@@ -40,34 +56,32 @@ function SprintBoardCard({ sprint }: Props) {
         const tasks = await GetSPrintTask({
           project_id: sprint.projectId,
           sprint_id: sprint.id,
-          priority: filters.priority,
-          type: filters.type,
-          status: filters.status,
-          assignee: filters.assignee
+          priority: filters?.priority,
+          type: filters?.type,
+          status: filters?.status,
+          assignee: filters?.assignee
         })
         if (tasks?.success && tasks.data) {
-          setTasks(tasks.data.tasks)
+          setFilteredTasks(tasks.data.tasks)
         }
       }
     }
-    getTask()
-  }, [sprint, filters.assignee, filters.priority, filters.type, filters.status])
+
+    if (filters) {
+      getTask()
+    }
+  }, [
+    sprint,
+    filters?.assignee,
+    filters?.priority,
+    filters?.type,
+    filters?.status
+  ])
 
   function handleOnTaskClick(task: SelectTask) {
     setSelectedTask(task)
+    setIsTaskModalOpen(true)
   }
-
-  useEffect(() => {
-    if (!isTaskModalOpen) {
-      setSelectedTask(null)
-    }
-  }, [isTaskModalOpen])
-
-  useEffect(() => {
-    if (selectedTask) {
-      setIsTaskModalOpen(true)
-    }
-  }, [selectedTask])
 
   function HandleTaskFilters(filters: TaskFiltersType) {
     setFilters(filters)
@@ -95,7 +109,10 @@ function SprintBoardCard({ sprint }: Props) {
             </div>
           </div>
 
-          <SprintProgressBar tasks={tasks} statuses={projectStatusList} />
+          <SprintProgressBar
+            tasks={filteredTasks}
+            statuses={projectStatusList}
+          />
         </CardHeader>
         <CardContent>
           <div className="flex overflow-x-auto  ">
@@ -105,9 +122,9 @@ function SprintBoardCard({ sprint }: Props) {
                   key={status.id}
                   sprint={sprint}
                   status={status}
-                  tasks={tasks}
+                  tasks={filteredTasks}
                   onTaskClick={handleOnTaskClick}
-                  setTasks={setTasks}
+                  setTasks={setFilteredTasks}
                 />
               ))}
             </div>
@@ -117,16 +134,6 @@ function SprintBoardCard({ sprint }: Props) {
           <SprintStatus />
         </CardFooter>
       </Card>
-
-      <TaskModal
-        isTaskModelOpen={isTaskModalOpen}
-        setIsTaskModelOpen={setIsTaskModalOpen}
-        selectedTask={selectedTask || undefined}
-        onUpdateComplete={(task: SelectTask) => {
-          setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
-          setSelectedTask(task)
-        }}
-      />
     </>
   )
 }

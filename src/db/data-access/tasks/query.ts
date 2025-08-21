@@ -3,7 +3,9 @@ import {
   asc,
   desc,
   eq,
+  ilike,
   inArray,
+  isNotNull,
   isNull,
   like,
   or,
@@ -29,6 +31,7 @@ export type taskQueryFilters = {
   searchedItem?: string
   orderList?: string
   sprint_id?: string
+  sprint_ids?: string[]
   priority?: string[]
   type?: string[]
   assignee?: string[]
@@ -77,7 +80,9 @@ export async function GetTasks(filters?: taskQueryFilters) {
         whereClauses.push(eq(taskTable.project_id, filters.project_id))
       }
 
-      if (filters.sprint_id) {
+      if (filters.sprint_ids) {
+        whereClauses.push(inArray(taskTable.sprint_id, filters.sprint_ids))
+      } else if (filters.sprint_id) {
         whereClauses.push(eq(taskTable.sprint_id, filters.sprint_id))
       } else {
         whereClauses.push(isNull(taskTable.sprint_id))
@@ -86,9 +91,8 @@ export async function GetTasks(filters?: taskQueryFilters) {
       if (filters.searchedItem) {
         whereClauses.push(
           or(
-            like(taskTable.task_title, `%${filters.searchedItem}%`),
-            like(taskTable.description, `%${filters.searchedItem}%`),
-            like(taskTable.task_num, `%${filters.searchedItem}%`)
+            ilike(taskTable.task_title, `%${filters.searchedItem}%`),
+            ilike(taskTable.task_num, `%${filters.searchedItem}%`)
           )
         )
       }
@@ -202,9 +206,27 @@ export async function UpdateTask(
       .where(eq(taskTable.id, taskId))
       .returning()
 
-    const updatedTaskWithUsers = await GetTaskById(UpdatedTask.id)
+    const updatedTasksWithUsers = GetTaskById(UpdatedTask.id)
 
-    return updatedTaskWithUsers
+    return updatedTasksWithUsers
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function UpdateTasksSprint(task_ids: string[], sprint_id: string) {
+  try {
+    const updatedTasks = await db
+      .update(taskTable)
+      .set({ sprint_id: sprint_id })
+      .where(inArray(taskTable.id, task_ids))
+      .returning()
+
+    const updatedTasksWithUsers = await Promise.all(
+      updatedTasks.map((t) => GetTaskById(t.id))
+    )
+
+    return updatedTasksWithUsers
   } catch (e: any) {
     throw new Error(e.message)
   }

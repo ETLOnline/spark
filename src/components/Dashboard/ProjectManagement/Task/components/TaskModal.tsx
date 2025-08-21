@@ -5,7 +5,7 @@ import {
   DialogTitle
 } from "@/src/components/ui/dialog"
 import { projectStore } from "@/src/store/project/projectStore"
-import { useAtom } from "jotai"
+import { useAtom, useSetAtom } from "jotai"
 import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import React, {
   Dispatch,
@@ -22,6 +22,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetTaskByIdAction } from "@/src/server-actions/Tasks/Task"
 import { toast } from "@/src/hooks/use-toast"
 import useTaskHook from "../hooks/useTaskHook"
+import { taskStore } from "@/src/store/tasks/taskStore"
 
 interface TaskModalProps {
   isTaskModelOpen: boolean
@@ -30,6 +31,7 @@ interface TaskModalProps {
   sprintId?: string
   onCreateComplete?: (task: SelectTask) => void
   onUpdateComplete?: (task: SelectTask) => void
+  isReady?: boolean
 }
 
 export const TaskModal = ({
@@ -38,8 +40,11 @@ export const TaskModal = ({
   selectedTask,
   onCreateComplete,
   onUpdateComplete,
-  sprintId
+  sprintId,
+  isReady
 }: TaskModalProps) => {
+  const setSelectedTask = useSetAtom(taskStore.selectedTask)
+  const [taskIdFromUrl, setTaskIdFromUrl] = useState<string | null>(null)
   const [statuses] = useAtom(projectStore.projectStatusList)
   const { createTaskLoading, updateTaskLoading, handleSubmit } = useTaskHook({
     selectedTask,
@@ -47,102 +52,88 @@ export const TaskModal = ({
     onCreateComplete,
     onUpdateComplete
   })
-
+  const [isClosing, setIsClosing] = useState(false)
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathName = usePathname()
-  const taskIdFromUrl = searchParams.get("task_id")
 
   const [internalTask, setInternalTask] = useState<SelectTask | undefined>(
     selectedTask
   )
-  const [hasFetchedFromUrl, setHasFetchedFromUrl] = useState(false)
-  const [hasModifiedUrl, setHasModifiedUrl] = useState(false)
 
   const [loading, taskData, error, fetchTaskById] =
     useServerAction(GetTaskByIdAction)
 
   useEffect(() => {
-    const fetchTask = async () => {
-      if (
-        !taskIdFromUrl ||
-        hasFetchedFromUrl ||
-        internalTask?.id === taskIdFromUrl ||
-        isTaskModelOpen
-      )
-        return
+    if (searchParams.get("task_id")) {
+      setTaskIdFromUrl(searchParams.get("task_id"))
+    }
+  }, [searchParams])
 
-      setHasFetchedFromUrl(true)
-      try {
-        const res = await fetchTaskById(taskIdFromUrl)
-        if (res?.data) {
-          setInternalTask(res.data)
-          setIsTaskModelOpen(true)
-        } else {
-          toast({ title: "Task not found" })
-          router.replace(pathName)
-        }
-      } catch (err) {
-        console.error("Error fetching task:", err)
-        toast({ title: "Failed to fetch task" })
+  const fetchTask = async (taskId: string) => {
+    try {
+      const res = await fetchTaskById(taskId)
+      if (res?.data) {
+        setInternalTask(res.data)
+        setSelectedTask(res.data)
+        setIsTaskModelOpen(true)
+      } else {
+        toast({ title: "Task not found" })
         router.replace(pathName)
       }
+    } catch (err) {
+      console.error("Error fetching task:", err)
+      toast({ title: "Failed to fetch task" })
+      router.replace(pathName)
     }
-
-    fetchTask()
-  }, [
-    taskIdFromUrl,
-    hasFetchedFromUrl,
-    internalTask?.id,
-    fetchTaskById,
-    setIsTaskModelOpen,
-    isTaskModelOpen,
-    router
-  ])
+  }
 
   useEffect(() => {
-    if (selectedTask && selectedTask.id !== internalTask?.id) {
+    if (!isReady) return
+
+    if (!taskIdFromUrl || internalTask?.id === taskIdFromUrl || isTaskModelOpen)
+      return
+
+    fetchTask(taskIdFromUrl)
+  }, [taskIdFromUrl, isReady])
+
+  useEffect(() => {
+    if (selectedTask) {
       setInternalTask(selectedTask)
-      setHasFetchedFromUrl(false)
     }
-  }, [selectedTask, internalTask?.id])
+  }, [selectedTask])
 
   useEffect(() => {
-    if (
-      isTaskModelOpen &&
-      internalTask?.id &&
-      !taskIdFromUrl &&
-      !hasModifiedUrl
-    ) {
+    if (isTaskModelOpen && internalTask?.id) {
       router.push(
         pathName + "?" + new URLSearchParams({ task_id: internalTask.id })
       )
-      setHasModifiedUrl(true)
     }
-  }, [isTaskModelOpen, internalTask?.id, taskIdFromUrl, hasModifiedUrl])
+  }, [isTaskModelOpen, internalTask?.id])
 
-  const handleModalClose = useCallback(
-    (open: boolean) => {
-      if (!open) {
-        if (typeof window !== "undefined") {
-          router.replace(pathName)
-        }
+  const handleModalClose = (open: boolean) => {
+    if (!open) {
+      setIsTaskModelOpen(false)
+      setInternalTask(undefined)
+      setSelectedTask(null)
 
-        setInternalTask(undefined)
-        setHasFetchedFromUrl(true)
-        setHasModifiedUrl(false)
-      }
+      const newSearchParams = new URLSearchParams(searchParams.toString())
+      newSearchParams.delete("task_id")
 
-      setIsTaskModelOpen(open)
-    },
-    [setIsTaskModelOpen]
-  )
+      setTimeout(() => {
+        router.push(`${pathName}?${newSearchParams.toString()}`)
+      }, 0)
+    }
+  }
 
   const isLoading = createTaskLoading || updateTaskLoading || loading
 
   return (
     <Dialog open={isTaskModelOpen} onOpenChange={handleModalClose}>
-      <DialogContent className="sm:max-w-5xl [&>button]:w-6 [&>button]:h-6 [&>button>svg]:w-6 [&>button>svg]:h-6">
+      <DialogContent
+        className="sm:max-w-5xl [&>button]:w-6 [&>button]:h-6 [&>button>svg]:w-6 [&>button>svg]:h-6"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <TaskFormHeader selectedTask={internalTask} />
           <DialogTitle className="sr-only">
@@ -158,6 +149,7 @@ export const TaskModal = ({
             onSubmit={handleSubmit}
             selectedTask={internalTask}
             loading={isLoading}
+            isTaskModelOpen={isTaskModelOpen}
           />
         </ScrollArea>
       </DialogContent>

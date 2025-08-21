@@ -1,6 +1,6 @@
 {
-  "id": "ea7a7a5b-6a45-4e48-b640-c7be57fd0deb",
-  "prevId": "74c752b1-b671-4d9d-b6d6-7b7c33150e0c",
+  "id": "3aafb24a-b6e8-4371-91d0-fba6c5251ae5",
+  "prevId": "a642c4f2-7bc4-4704-89ad-c0447ddca76a",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -836,6 +836,12 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
+        },
+        "cover_image": {
+          "name": "cover_image",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
         },
         "updated_at": {
           "name": "updated_at",
@@ -3255,6 +3261,12 @@
         },
         "profile_url": {
           "name": "profile_url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cover_image": {
+          "name": "cover_image",
           "type": "varchar",
           "primaryKey": false,
           "notNull": false
