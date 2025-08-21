@@ -22,18 +22,41 @@ export const CreatePrivateChatAction = CreateServerAction(
   true,
   async (user_id: string, contact_id: string, space_id?: string) => {
     try {
+      if (user_id == contact_id) {
+        return {
+          success: false,
+          error: "You cannot start a chat with yourself"
+        }
+      }
       const chatType = space_id ? "space" : "open"
       const existingChat = await getExistingSingleChat(
         user_id,
         contact_id,
-        chatType
+        chatType,
+        space_id
       )
 
       if (existingChat) {
         return { success: false, data: existingChat, existingChat: true }
       }
-      const chat = await CreatePrivateChat(user_id, contact_id, space_id)
-      return { success: true, data: chat }
+      const newChat = await CreatePrivateChat(user_id, contact_id, space_id)
+      if (!newChat) {
+        return { success: false, data: null }
+      }
+
+      const chatMembers = newChat.users
+
+      for (const member of chatMembers) {
+        const userChannel = AblyClientRest.channels.get(
+          `user:${member.user_id}`
+        )
+        await userChannel.publish("chat-created", {
+          newChat,
+          initiatorId: user_id,
+          spaceId: space_id
+        })
+      }
+      return { success: true, data: newChat }
     } catch (error) {
       return { error: error }
     }
@@ -44,7 +67,29 @@ export const CreateGroupChatAction = CreateServerAction(
   true,
   async (userIds: string[], chatName: string, space_id?: string) => {
     try {
+      const authUser = await AuthUserAction()
       const chat = await CreateGroupChat(userIds, chatName, space_id)
+
+      if (!chat) {
+        return { success: false, data: null }
+      }
+
+      // Get the list of users in the newly created chat
+      const chatUsers = chat.users?.map((userChat) => userChat.user) || []
+
+      // Loop through each user and publish the "chat-created" event to their channel
+      for (const user of chatUsers) {
+        if (!user?.unique_id) continue
+        const userChannel = AblyClientRest.channels.get(
+          `user:${user.unique_id}`
+        )
+
+        await userChannel.publish("chat-created", {
+          newChat: chat,
+          initiatorId: authUser.unique_id,
+          spaceId: space_id
+        })
+      }
       return { success: true, data: chat }
     } catch (error) {
       return { error: error }
@@ -123,7 +168,9 @@ export const AddMessageToChatAction = CreateServerAction(
             newMessage.chat_id,
             newMessage.message
           )
-
+          if (!updatedChat) {
+            return { success: false }
+          }
           // const channelHash = ChatChannelHash(updatedChat.channel_id)
 
           // send message to channel
@@ -132,6 +179,22 @@ export const AddMessageToChatAction = CreateServerAction(
             updatedChat.channel_id
           )
           await realtimeChannel.publish("message", newMessage)
+
+          const chatUsers = updatedChat.users
+
+          for (const userChat of chatUsers) {
+            const userId = userChat.user_id
+
+            if (userId !== authUser.unique_id) {
+              const userNotificationChannel = AblyClientRest.channels.get(
+                `user:${userId}`
+              )
+              await userNotificationChannel.publish("chat-update", {
+                chatId: updatedChat.id,
+                lastMessage: newMessage.message
+              })
+            }
+          }
 
           return { success: true, data: newMessage }
         } else {

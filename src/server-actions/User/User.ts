@@ -8,7 +8,8 @@ import {
   GetUserProfileData,
   GetFeaturedUsers,
   UpdateUserName,
-  UpdateUserProfilePicture
+  UpdateUserProfilePicture,
+  UpdateCoverImage
 } from "@/src/db/data-access/user/query"
 import { CreateServerAction } from ".."
 import { AddUserTag } from "@/src/db/data-access/tag/query"
@@ -136,7 +137,9 @@ export const UpdateUserProfilePictureAction = CreateServerAction(
       const clerkUserId = external_auth_id
       const dbUserId = unique_id
 
-      const fileBlob = new Blob([fileBuffer], { type: fileType })
+      const fileBlob = new Blob([Uint8Array.from(fileBuffer)], {
+        type: fileType
+      })
       const clerk = await clerkClient()
       await clerk.users.updateUserProfileImage(clerkUserId, {
         file: fileBlob
@@ -201,6 +204,63 @@ export const GetFeaturedUsersAction = CreateServerAction(
         data: users
       }
     } catch (error) {
+      return {
+        success: false,
+        error: error
+      }
+    }
+  }
+)
+
+export const UpdateCoverImageAction = CreateServerAction(
+  true,
+  async (
+    userID: string,
+    fileName: string,
+    fileB64string: string,
+    fileType: string
+  ) => {
+    try {
+      const fileBuffer = base64ToBuffer(fileB64string)
+
+      const { fileUrl } = await uploadFileAndSaveMetadata(
+        fileBuffer,
+        fileName,
+        fileType,
+        "profiles"
+      )
+
+      if (!fileUrl) {
+        throw new Error("Upload failed: missing fileUrl or file metadata.")
+      }
+
+      const userCoverImage = await UpdateCoverImage(userID, fileUrl)
+
+      return {
+        success: true,
+        data: userCoverImage
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error
+      }
+    }
+  }
+)
+
+export const RemoveCoverImageAction = CreateServerAction(
+  true,
+  async (userID: string) => {
+    try {
+      const removeUserCoverImage = await UpdateCoverImage(userID, null)
+
+      return {
+        success: true,
+        data: removeUserCoverImage
+      }
+    } catch (error) {
+      console.error("Error removing cover image:", error)
       return {
         success: false,
         error: error

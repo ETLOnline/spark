@@ -24,6 +24,7 @@ export const usersTable = pgTable("users", {
   email: varchar().notNull().unique(),
   external_auth_id: varchar().notNull().unique(),
   profile_url: varchar(),
+  cover_image: varchar(),
   meta: varchar(),
   role: varchar().notNull().default("user"),
   meta_profile: json("meta_profile").default({
@@ -98,6 +99,9 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
   taskComments: many(taskCommentsTable, {
     relationName: "taskCommentToUser"
+  }),
+  hostedEvents: many(eventsTable, {
+    relationName: "userToHostedEvents" // User can host many events
   })
 }))
 
@@ -499,14 +503,24 @@ export const eventsTable = pgTable("events", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   title: varchar().notNull(),
   description: varchar(),
+  coverImage: varchar().notNull(),
   start_date_time: varchar(),
   end_date_time: varchar(),
   type: varchar(),
   metadata: varchar(),
-  host_id: varchar().notNull(),
+  tags: varchar("tags").array(),
+  host_id: varchar()
+    .notNull()
+    .references(() => usersTable.unique_id),
   ...timestamps
 })
-
+export const eventsRelations = relations(eventsTable, ({ one }) => ({
+  host: one(usersTable, {
+    fields: [eventsTable.host_id],
+    references: [usersTable.unique_id],
+    relationName: "eventToHost"
+  })
+}))
 export type InsertEvent = typeof eventsTable.$inferInsert
 export type SelectEvent = typeof eventsTable.$inferSelect
 
@@ -1207,6 +1221,7 @@ export const communitiesTable = pgTable("communities", {
   slug: varchar().notNull().unique(),
   type: varchar().notNull().default("public"),
   created_by: varchar().notNull(),
+  cover_image: varchar(),
   ...timestamps
 })
 
@@ -1338,3 +1353,41 @@ export const siteSettingsTable = pgTable("site_settings", {
 
 export type SelectSiteSetting = typeof siteSettingsTable.$inferSelect
 export type InsertSiteSetting = typeof siteSettingsTable.$inferInsert
+
+export const eventRegistrationsTable = pgTable("event_users", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  event_id: integer("event_id")
+    .notNull()
+    .references(() => eventsTable.id, { onDelete: "cascade" }),
+  user_id: varchar("user_id", { length: 36 })
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  ...timestamps
+})
+
+export const eventRegistrationsRelations = relations(
+  eventRegistrationsTable,
+  ({ one }) => ({
+    event: one(eventsTable, {
+      fields: [eventRegistrationsTable.event_id],
+      references: [eventsTable.id],
+      relationName: "eventToRegistration"
+    }),
+    user: one(usersTable, {
+      fields: [eventRegistrationsTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "userToEventRegistration"
+    })
+  })
+)
+
+export type InsertEventRegistration =
+  typeof eventRegistrationsTable.$inferInsert
+
+export type SelectEventRegistration =
+  typeof eventRegistrationsTable.$inferSelect & {
+    event?: SelectEvent
+    user?: SelectUser
+  }
