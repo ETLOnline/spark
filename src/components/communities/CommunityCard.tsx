@@ -195,8 +195,7 @@ export default function CommunityCard({
           <div className="flex items-center gap-1 mt-3 text-muted-foreground text-sm">
             <Hash className="h-4 w-4" />
             <span>
-              {community.channels?.length || 0}{" "}
-              {(community.channels?.length || 0) === 1 ? "channel" : "channels"}
+              {`${community.channels?.length || 0} ${(community.channels?.length || 0) === 1 ? "channel" : "channels"}`}
             </span>
           </div>
         </div>
