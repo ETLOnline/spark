@@ -104,7 +104,7 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
           {space.membersCount} {space.membersCount === 1 ? 'Member' : 'Members'}
           0 Members
         </Badge> */}
-        <Link href={`./spaces/${space.space_slug}`}>
+        <Link href={`./spaces/${encodedSpaceSlug}`}>
           <Button>
             Launch Space <ArrowRight />
           </Button>
