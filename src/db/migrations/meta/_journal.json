@@ -117,15 +117,8 @@
     {
       "idx": 16,
       "version": "7",
-      "when": 1755789537760,
-      "tag": "0016_2025_08_21_201855__update_events_table_and_create_event_users_table",
-      "breakpoints": true
-    },
-    {
-      "idx": 17,
-      "version": "7",
-      "when": 1755790712748,
-      "tag": "0017_2025_08_21_203829__events_table_update_and_create_event_users_table",
+      "when": 1755790952025,
+      "tag": "0016_2025_08_21_204229__events_table_update_and_create_event_users_table",
       "breakpoints": true
     }
   ]
