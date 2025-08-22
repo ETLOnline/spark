@@ -367,8 +367,8 @@ export default function TaskForm({
               />
             </div>
             {selectedTask && (
-              <div className="space-y-4">
-                <h2 className="text-lg pl-2 font-semibold">Comments</h2>
+              <div className="space-y-4 pl-2">
+                <h2 className="text-lg  font-semibold">Comments</h2>
                 <TaskComment taskId={selectedTask.id} />
               </div>
             )}
