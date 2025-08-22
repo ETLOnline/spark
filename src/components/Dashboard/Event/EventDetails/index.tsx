@@ -44,7 +44,9 @@ export default function EventsDetailsClient({ event_id }: Props) {
     <div className="min-h-screen p-4">
       <div className="max-w-4xl mx-auto">
         <EventHeader
-          coverImage={isEventData?.coverImage}
+          coverImage={
+            isEventData?.coverImage ?? "/images/profile/background.svg"
+          }
           eventType={isEventData?.type ?? "Event Type"}
         />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS "event_users" (
 	"deleted_at" varchar
 );
 --> statement-breakpoint
-ALTER TABLE "events" ADD COLUMN "coverImage" varchar NOT NULL;--> statement-breakpoint
+ALTER TABLE "events" ADD COLUMN "coverImage" varchar;--> statement-breakpoint
 ALTER TABLE "events" ADD COLUMN "tags" varchar[];--> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "event_users" ADD CONSTRAINT "event_users_event_id_events_id_fk" FOREIGN KEY ("event_id") REFERENCES "public"."events"("id") ON DELETE cascade ON UPDATE no action;
