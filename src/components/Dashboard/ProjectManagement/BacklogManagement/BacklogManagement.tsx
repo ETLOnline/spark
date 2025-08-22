@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
 import {
@@ -44,6 +44,7 @@ export function BacklogManagement() {
   )
   const taskMoveDialogAction = useAtomValue(taskStore.taskMoveDialogAction)
   const [isInitailDataLoad, setIsInitailDataLoad] = useState(false)
+  const isInitialRender = useRef(true)
 
   const params = useParams()
 
@@ -88,6 +89,16 @@ export function BacklogManagement() {
       handleSearch()
     }
   }
+  useEffect(() => {
+    if (isInitialRender.current) {
+      isInitialRender.current = false
+      return
+    }
+
+    if (searchQuery === "") {
+      handleSearch()
+    }
+  }, [searchQuery])
 
   if (!params.id) {
     return null
