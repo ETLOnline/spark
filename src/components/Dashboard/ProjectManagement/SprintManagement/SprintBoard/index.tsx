@@ -51,6 +51,7 @@ function SprintBoard() {
   }, [projectId])
 
   useEffect(() => {
+    if (!projectId || sprintList.length === 0) return
     const getTask = async () => {
       const tasks = await GetSPrintTask({
         project_id: projectId,
@@ -61,7 +62,7 @@ function SprintBoard() {
       }
     }
     getTask()
-  }, [projectId])
+  }, [projectId, sprintList])
 
   return projectStatusList.length > 0 ? (
     <>

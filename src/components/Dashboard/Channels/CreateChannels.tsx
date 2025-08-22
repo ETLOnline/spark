@@ -48,8 +48,8 @@ import { slugify } from "@/src/utils/helpers"
 const channelSchema = z.object({
   channel_name: z
     .string()
-    .min(1, "Title required")
-    .max(50, "Title is too long"),
+    .min(1, "Channel name required")
+    .max(50, "Channel name is too long"),
   description: z
     .string()
     .min(1, "Description required")
@@ -325,7 +325,7 @@ function CreateChannels({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-[95vw] sm:max-w-[425px]">
+      <DialogContent className="max-w-[95vw] max-h-[98vh]  sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
             {editChannel === true ? "Edit Channel" : "Create Channel"}
@@ -338,155 +338,142 @@ function CreateChannels({
         </DialogHeader>
         <form onSubmit={form.handleSubmit(channelSubmit)}>
           <div className="grid gap-4 py-4">
-            <div className="flex flex-col">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="channel_name">Channel Name</Label>
-                <div className="w-[70%]">
-                  <Controller
-                    name="channel_name"
-                    defaultValue=""
-                    control={form.control}
-                    render={({ field }) => (
-                      <Input
-                        id="channel_name"
-                        {...field}
-                        onChange={(e) => {
-                          handleChannelNameChange(e)
-                        }}
-                        placeholder="Enter channel name"
-                      />
-                    )}
-                  />
-                </div>
-              </div>
-              <div className="text-left flex items-center gap-x-2 pt-1 pl-[30%]">
-                {error.channel_name && (
-                  <span className="text-red-500 text-sm">
-                    {String(error.channel_name.message)}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="channel_slug">Channel Slug</Label>
-                <div className="w-[70%]">
-                  <Controller
-                    name="channel_slug"
-                    defaultValue=""
-                    control={form.control}
-                    render={({ field }) => (
-                      <Input id="channel_slug" {...field} disabled={true} placeholder="channel_slug"/>
-                    )}
-                  />
-                </div>
-              </div>
-              <div className="text-left flex items-center gap-x-2 pt-1 pl-[30%]">
-                {error.channel_slug && !isSlugAvailableLoading && (
-                  <div className="flex items-center text-red-500">
-                    <CircleXIcon className="mr-2 h-4 w-4" />
-                    <span className="text-sm">
-                      {String(error.channel_slug.message)}
-                    </span>
-                  </div>
-                )}
-                {isSlugAvailableLoading && (
-                  <>
-                    <Loader size={LoaderSizes.sm} />
-                    <span className="text-gray-500 text-sm">
-                      checking slug availability
-                    </span>
-                  </>
-                )}
-                {slugAvailableMessage && !isSlugAvailableLoading && (
-                  <div className="flex items-center gap-x-1 text-green-500">
-                    <CircleCheck className="mr-2 h-4 w-4" />
-                    <span className="text-sm">{slugAvailableMessage}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="description">Description</Label>
-                <div className="w-[70%]">
-                  <Controller
-                    name="description"
-                    control={form.control}
-                    render={({ field }) => {
-                      const charCount = field.value?.length || 0
-                      const maxChars = 150
-                      return (
-                        <>
-                          <Textarea
-                            id="description"
-                            {...field}
-                            maxLength={maxChars}
-                            placeholder="Description"
-                          />
-                          <div className="text-sm text-muted-foreground text-right mt-1">
-                            {charCount}/{maxChars} characters
-                          </div>
-                        </>
-                      )
+            {/* Channel Name */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="channel_name">Channel Name</Label>
+              <Controller
+                name="channel_name"
+                defaultValue=""
+                control={form.control}
+                render={({ field }) => (
+                  <Input
+                    id="channel_name"
+                    {...field}
+                    onChange={(e) => {
+                      handleChannelNameChange(e)
                     }}
+                    placeholder="Enter channel name"
                   />
-                </div>
-              </div>
-              <div className="text-left flex items-center gap-x-2 pt-1 pl-[30%]">
-                {error.description && (
-                  <span className="text-red-500 text-sm">
-                    {String(error.description.message)}
-                  </span>
                 )}
-              </div>
+              />
+              {error.channel_name && (
+                <span className="text-red-500 text-sm">
+                  {String(error.channel_name.message)}
+                </span>
+              )}
             </div>
-            <div className="flex flex-col">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="channel_type">Channel type</Label>
-                <div className="w-[70%]">
-                  <Controller
-                    name="channel_type"
-                    control={form.control}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="public">Public</SelectItem>
-                          <SelectItem value="private">Private</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
+
+            {/* Channel Slug */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="channel_slug">Channel Slug</Label>
+              <Controller
+                name="channel_slug"
+                defaultValue=""
+                control={form.control}
+                render={({ field }) => (
+                  <Input
+                    id="channel_slug"
+                    {...field}
+                    disabled={true}
+                    placeholder="channel_slug"
                   />
-                </div>
-              </div>
-              <div className="text-left flex items-center gap-x-2 pt-1 pl-[30%]">
-                {error.channel_type && (
-                  <span className="text-red-500 text-sm">
-                    {String(error.channel_type.message)}
-                  </span>
                 )}
-              </div>
+              />
+              {error.channel_slug && !isSlugAvailableLoading && (
+                <div className="flex items-center text-red-500 gap-x-2 pt-1">
+                  <CircleXIcon className="mr-2 h-4 w-4" />
+                  <span className="text-sm">
+                    {String(error.channel_slug.message)}
+                  </span>
+                </div>
+              )}
+              {isSlugAvailableLoading && (
+                <div className="flex items-center gap-x-2 pt-1">
+                  <Loader size={LoaderSizes.sm} />
+                  <span className="text-gray-500 text-sm">
+                    Checking slug availability
+                  </span>
+                </div>
+              )}
+              {slugAvailableMessage && !isSlugAvailableLoading && (
+                <div className="flex items-center gap-x-2 pt-1 text-green-500">
+                  <CircleCheck className="mr-2 h-4 w-4" />
+                  <span className="text-sm">{slugAvailableMessage}</span>
+                </div>
+              )}
             </div>
+
+            {/* Description */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="description">Description</Label>
+              <Controller
+                name="description"
+                control={form.control}
+                render={({ field }) => {
+                  const charCount = field.value?.length || 0
+                  const maxChars = 150
+                  return (
+                    <>
+                      <Textarea
+                        id="description"
+                        {...field}
+                        maxLength={maxChars}
+                        placeholder="Description"
+                      />
+                      <div className="text-sm flex justify-between items-center text-muted-foreground mt-1">
+                        {error.description && (
+                          <span className="text-red-500 text-sm">
+                            {String(error.description.message)}
+                          </span>
+                        )}
+                        <span className="ml-auto">
+                          {charCount}/{maxChars} characters
+                        </span>
+                      </div>
+                    </>
+                  )
+                }}
+              />
+            </div>
+
+            {/* Channel Type */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="channel_type">Channel Type</Label>
+              <Controller
+                name="channel_type"
+                control={form.control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="public">Public</SelectItem>
+                      <SelectItem value="private">Private</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {error.channel_type && (
+                <span className="text-red-500 text-sm">
+                  {String(error.channel_type.message)}
+                </span>
+              )}
+            </div>
+
+            {/* Publish Channel */}
             <div className="flex items-center justify-between">
               <Label htmlFor="publish_channel">Publish Channel</Label>
-              <div className="w-[70%]">
-                <Controller
-                  name="publish_channel"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  )}
-                />
-              </div>
+              <Controller
+                name="publish_channel"
+                control={form.control}
+                render={({ field }) => (
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
+              />
             </div>
 
             {/* HIDDEN COMMUNITY_ID FIELD */}

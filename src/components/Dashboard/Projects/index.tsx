@@ -24,6 +24,7 @@ import CreateNewProject from "./CreateNewProject"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import NoDataCard from "../Channels/ChannelDetails/NoDataCard"
 import { ListX } from "lucide-react"
+import { userStore } from "@/src/store/user/userStore"
 
 interface Props {
   space: SelectSpace
@@ -56,6 +57,7 @@ export function ProjectScreen({ space }: Props) {
     setSelectedProject(project)
     setIsModalOpen(true)
   }
+  const authUser = useAtomValue(userStore.AuthUser)
 
   const [getProjectLoading, getProjectData, getProjectError, getProjects] =
     useServerAction(GetProjectsAction)
