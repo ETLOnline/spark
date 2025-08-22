@@ -52,6 +52,7 @@ export function SprintManagement() {
     sprintStore.selectedSprint
   )
   const taskMoveDialogAction = useAtomValue(taskStore.taskMoveDialogAction)
+  const [isInitailDataLoad, setIsInitailDataLoad] = useState(false)
 
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
 
@@ -80,10 +81,16 @@ export function SprintManagement() {
   }
 
   useEffect(() => {
-    if (projectId && sprintList.length > 0) {
+    if (projectId && sprintList.length > 0 && tasks.length === 0) {
       fetchTasks()
     }
   }, [projectId, sprintList])
+
+  useEffect(() => {
+    if (tasks.length > 0) {
+      setIsInitailDataLoad(true)
+    }
+  }, [tasks])
 
   // Handle RealTime Updates
   const handleRealTimeTaskUpdate = useCallback(
@@ -157,12 +164,6 @@ export function SprintManagement() {
   }, [projectStatusList])
 
   useEffect(() => {
-    if (!isTaskModalOpen) {
-      setSelectedTask(null)
-    }
-  }, [isTaskModalOpen])
-
-  useEffect(() => {
     if (!isTaskMoveDialogOpen) {
       setSelectedTasksForMove([])
       setSelectedSprint(null)
@@ -232,6 +233,7 @@ export function SprintManagement() {
       />
 
       <TaskModal
+        isReady={isInitailDataLoad}
         isTaskModelOpen={isTaskModalOpen}
         setIsTaskModelOpen={setIsTaskModalOpen}
         sprintId={sprintID}

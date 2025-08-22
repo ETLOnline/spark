@@ -25,8 +25,8 @@ interface Props {
   tasks: SelectTask[]
   isTaskModalOpen: boolean
   setIsTaskModalOpen: Dispatch<SetStateAction<boolean>>
-  selectedTask: SelectTask | null | undefined
-  setSelectedTask: Dispatch<SetStateAction<SelectTask | null | undefined>>
+  selectedTask: SelectTask | null
+  setSelectedTask: Dispatch<SetStateAction<SelectTask | null>>
 }
 
 function SprintBoardCard({
@@ -80,19 +80,8 @@ function SprintBoardCard({
 
   function handleOnTaskClick(task: SelectTask) {
     setSelectedTask(task)
+    setIsTaskModalOpen(true)
   }
-
-  useEffect(() => {
-    if (!isTaskModalOpen) {
-      setSelectedTask(null)
-    }
-  }, [isTaskModalOpen])
-
-  useEffect(() => {
-    if (selectedTask) {
-      setIsTaskModalOpen(true)
-    }
-  }, [selectedTask])
 
   function HandleTaskFilters(filters: TaskFiltersType) {
     setFilters(filters)
@@ -145,18 +134,6 @@ function SprintBoardCard({
           <SprintStatus />
         </CardFooter>
       </Card>
-
-      <TaskModal
-        isTaskModelOpen={isTaskModalOpen}
-        setIsTaskModelOpen={setIsTaskModalOpen}
-        selectedTask={selectedTask || undefined}
-        onUpdateComplete={(task: SelectTask) => {
-          setFilteredTasks((prev) =>
-            prev.map((t) => (t.id === task.id ? task : t))
-          )
-          setSelectedTask(task)
-        }}
-      />
     </>
   )
 }
