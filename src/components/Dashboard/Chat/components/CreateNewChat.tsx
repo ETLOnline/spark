@@ -36,6 +36,7 @@ const CreateNewChat = () => {
   const [selectedContacts, setSelectedContacts] = useState<MultiSelectOption[]>(
     []
   )
+  const [isCreatingChat, setIsCreatingChat] = useState(false)
   const authUser = useAtomValue(userStore.AuthUser)
   const setMyChats = useSetAtom(chatStore.myChats)
   const switchChat = useSetAtom(chatStore.switchedChat)
@@ -108,51 +109,64 @@ const CreateNewChat = () => {
 
   const handleCreateNewChat = async () => {
     if (!authUser) return
+    setIsCreatingChat(true)
     const spaceId = currentSpace && isSpacePage ? currentSpace.id : undefined
     const userIds = selectedContacts.map((contact) => contact.value)
-
-    if (isGroupChat) {
-      // Create Group Chat
-      if (groupName.trim() === "") {
-        setGroupNameError("Group name is required.")
-        return
+    try {
+      if (isGroupChat) {
+        // Create Group Chat
+        if (groupName.trim() === "") {
+          setGroupNameError("Group name is required.")
+          return
+        } else {
+          setGroupNameError("")
+        }
+        const response = await CreateGroupChatAction(
+          [...userIds, authUser?.unique_id],
+          groupName,
+          spaceId
+        )
+        if (response.success && response.data) {
+          const newChat = response.data
+          setMyChats((pre) => [...pre, newChat])
+          switchChat(newChat)
+          setGroupName("")
+        }
       } else {
-        setGroupNameError("")
+        // Create Direct Chat
+        const response = await CreatePrivateChatAction(
+          authUser?.unique_id,
+          userIds[0],
+          spaceId
+        )
+        if (response.success && response.data) {
+          const newChat = response.data
+          setMyChats((pre) => [...pre, newChat])
+          switchChat(newChat)
+        }
+        if (response.success == false && response.existingChat) {
+          switchChat(response.data)
+          toast({
+            title: "Chat already exists",
+            variant: "destructive",
+            duration: 3000
+          })
+        }
+        if (response.success == false && response.error) {
+          toast({
+            title: response.error,
+            variant: "destructive",
+            duration: 3000
+          })
+        }
       }
-      const response = await CreateGroupChatAction(
-        [...userIds, authUser?.unique_id],
-        groupName,
-        spaceId
-      )
-      if (response.success && response.data) {
-        const newChat = response.data
-        setMyChats((pre) => [...pre, newChat])
-        switchChat(newChat)
-        setGroupName("")
-      }
-    } else {
-      // Create Direct Chat
-      const response = await CreatePrivateChatAction(
-        authUser?.unique_id,
-        userIds[0],
-        spaceId
-      )
-      if (response.success && response.data) {
-        const newChat = response.data
-        setMyChats((pre) => [...pre, newChat])
-        switchChat(newChat)
-      }
-      if (response.success == false && response.existingChat) {
-        switchChat(response.data)
-        toast({
-          title: "Chat already exists",
-          variant: "destructive",
-          duration: 3000
-        })
-      }
+    } finally {
+      setSelectedContacts([])
+      setGroupName("")
+      setIsGroupChat(false)
+      setDialogOpen(false)
+      setIsCreatingChat(false)
     }
-
-    setDialogOpen(false)
   }
 
   return (
@@ -207,7 +221,8 @@ const CreateNewChat = () => {
 
           <Button
             onClick={handleCreateNewChat}
-            disabled={selectedContacts.length === 0}
+            disabled={selectedContacts.length === 0 || isCreatingChat}
+            loading={isCreatingChat}
           >
             Start {isGroupChat ? "Group" : "Direct"} Chat
           </Button>

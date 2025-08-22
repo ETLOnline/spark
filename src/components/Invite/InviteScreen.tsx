@@ -143,7 +143,9 @@ const InviteScreen = ({ entityType, entity }: Props) => {
         <CardContent>
           <div className="bg-muted p-4 rounded-lg mb-6">
             <div className="flex items-start gap-3">
-              <Info className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div className="flex-shrink-0">
+                <Info className="h-5 w-5 text-muted-foreground mt-0.5" />
+              </div>
               <div>
                 <p className="text-sm font-medium">About this {entityType}</p>
                 <p className="text-sm text-muted-foreground mt-1">

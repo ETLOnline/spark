@@ -38,7 +38,7 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
 
   const handleAddComment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    
+
     if (!commentText.current.trim()) {
       toast({
         variant: "destructive",
@@ -47,7 +47,7 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
       })
       return
     }
-    
+
     try {
       const response = await createComment(
         postId,

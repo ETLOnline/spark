@@ -3,8 +3,10 @@ import { atom } from "jotai"
 
 const selectedEvent = atom<SelectEvent | null>(null)
 const formModalVisibility = atom<boolean>(false)
+const refreshEventsTriggerAtom = atom<boolean>(false)
 
 export const eventStore = {
   selectedEvent,
-  formModalVisibility
+  formModalVisibility,
+  refreshEventsTriggerAtom
 }

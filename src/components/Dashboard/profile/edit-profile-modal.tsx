@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { Input } from "../../ui/input"
 import { Button } from "../../ui/button"
 import {
   Dialog,
@@ -23,12 +24,19 @@ import { MultiSelectOption } from "../../ui/multi-select"
 import useUserProfile from "./hooks/useUserProfile"
 import TagSelect from "../../TagsInput/tags"
 import { ScrollArea } from "../../ui/scroll-area"
+import { useAuthUser } from "@/src/hooks/useAuthUser"
+import { useUser } from "@clerk/nextjs"
 
 const EditProfileModal: React.FC = () => {
   const bio = useAtomValue(profileStore.bio)
   const user = useAtomValue(userStore.AuthUser)
   const setBio = useSetAtom(profileStore.bio)
+  const setUser = useSetAtom(userStore.AuthUser)
+  const [firstName, setFirstName] = useState<string>(user?.first_name || "")
+  const [lastName, setLastName] = useState<string>(user?.last_name || "")
   const { toast } = useToast()
+  const { refreshAuthUser } = useAuthUser()
+  const { user: clerkUser } = useUser()
 
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const [editedBio, setEditedBio] = useState<string | undefined>(bio)
@@ -66,6 +74,16 @@ const EditProfileModal: React.FC = () => {
       setEditedBio(bio)
     }
   }, [bio])
+
+  // Update first and last name state when user changes
+  useEffect(() => {
+    if (user?.first_name) {
+      setFirstName(user.first_name)
+    }
+    if (user?.last_name) {
+      setLastName(user.last_name)
+    }
+  }, [user?.first_name, user?.last_name])
 
   // set user skills in tagsInput
   useEffect(() => {
@@ -113,8 +131,8 @@ const EditProfileModal: React.FC = () => {
     try {
       const payload: ProfileData = {
         userId: user?.unique_id || "",
-        first_name: user?.first_name,
-        last_name: user?.last_name,
+        first_name: firstName,
+        last_name: lastName,
         bio: editedBio || "",
         skills: selectedSkillTags.map((s) => Number(s.value)),
         interests: selectedInterestTags.map((i) => Number(i.value))
@@ -128,6 +146,21 @@ const EditProfileModal: React.FC = () => {
         })
         setIsOpen(false)
         setBio(editedBio ?? "")
+
+        // Update the user state with new first and last name
+        if (user) {
+          setUser({
+            ...user,
+            first_name: firstName,
+            last_name: lastName
+          })
+        }
+
+        // Reload Clerk user to sync the updated names
+        await clerkUser?.reload()
+
+        // Refresh auth user to get latest data from database
+        await refreshAuthUser()
 
         setUserInterests(
           selectedInterestTags.map((tag) => ({
@@ -181,6 +214,32 @@ const EditProfileModal: React.FC = () => {
           <form onSubmit={saveProfileChanges} className="edit-profile-form p-2">
             <div className="grid gap-4 py-4">
               <div className="flex flex-col gap-y-7">
+                <div className="edit-names w-full flex gap-4">
+                  <div className="w-1/2">
+                    <Label htmlFor="firstName" className="edit-label">
+                      First Name
+                    </Label>
+                    <Input
+                      id="firstName"
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="Enter first name"
+                    />
+                  </div>
+                  <div className="w-1/2">
+                    <Label htmlFor="lastName" className="edit-label">
+                      Last Name
+                    </Label>
+                    <Input
+                      id="lastName"
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Enter last name"
+                    />
+                  </div>
+                </div>
                 <div className="edit-bio w-full">
                   <Label htmlFor="bio" className="edit-label">
                     Bio
