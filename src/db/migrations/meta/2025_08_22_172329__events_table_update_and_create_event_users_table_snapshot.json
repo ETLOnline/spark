@@ -1,5 +1,5 @@
 {
-  "id": "67ce6205-266a-4607-ae35-a42b1571552a",
+  "id": "9dcaf7dc-9af6-4916-83f8-0e4be4cbfbe1",
   "prevId": "a642c4f2-7bc4-4704-89ad-c0447ddca76a",
   "version": "7",
   "dialect": "postgresql",
@@ -1103,8 +1103,7 @@
           "name": "coverImage",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": true,
-          "default": "'/images/profile/background.svg'"
+          "notNull": false
         },
         "start_date_time": {
           "name": "start_date_time",

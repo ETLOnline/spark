@@ -503,7 +503,7 @@ export const eventsTable = pgTable("events", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   title: varchar().notNull(),
   description: varchar(),
-  coverImage: varchar().notNull().default("/images/profile/background.svg"),
+  coverImage: varchar(),
   start_date_time: varchar(),
   end_date_time: varchar(),
   type: varchar(),
