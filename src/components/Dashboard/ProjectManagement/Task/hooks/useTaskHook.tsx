@@ -4,6 +4,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { enqueueTaskUpdateEmailAction } from "@/src/server-actions/Email/Email"
 import {
   CreateTaskAction,
+  GetTaskByIdAction,
   UpdateTaskAction
 } from "@/src/server-actions/Tasks/Task"
 import { projectStore } from "@/src/store/project/projectStore"
@@ -89,6 +90,7 @@ const useTaskHook = ({
   async function handleUpdateTask(data: SelectTask) {
     try {
       if (selectedTask?.id) {
+        const oldTask = await GetTaskByIdAction(selectedTask?.id)
         const payload = {
           ...data,
           assign_to: data.assign_to || null,
@@ -111,7 +113,10 @@ const useTaskHook = ({
           }
 
           if (mailSendTo) {
-            const dynamicTemplateData = prepareTaskEmailData(updatedTask.data)
+            const dynamicTemplateData = prepareTaskEmailData(
+              updatedTask.data,
+              oldTask.data
+            )
             await enqueueTaskUpdateEmailAction(mailSendTo, dynamicTemplateData)
           }
           if (onUpdateComplete) {

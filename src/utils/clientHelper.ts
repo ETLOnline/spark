@@ -91,9 +91,13 @@ export function isEntityUser(
   )
 }
 
-export function prepareTaskEmailData(task: any) {
+export function prepareTaskEmailData(task: any, oldTask: any) {
   const assigneeName = task.assignee
     ? `${task.assignee.first_name} ${task.assignee.last_name}`.trim()
+    : "Unassigned"
+
+  const oldAssigneeName = oldTask.assignee
+    ? `${oldTask.assignee.first_name} ${oldTask.assignee.last_name}`.trim()
     : "Unassigned"
 
   const assignorName = task.assignor
@@ -102,7 +106,38 @@ export function prepareTaskEmailData(task: any) {
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
 
+  const changes: { [key: string]: { oldValue: any; newValue: any } } = {}
+
+  // Compare fields and log changes
+  if (oldTask.task_title !== task.task_title) {
+    changes.task_title = {
+      oldValue: oldTask.task_title,
+      newValue: task.task_title
+    }
+  }
+  if (oldTask.task_priority !== task.task_priority) {
+    changes.priority = {
+      oldValue: oldTask.task_priority,
+      newValue: task.task_priority
+    }
+  }
+  if (oldTask.assignee?.id !== task.assignee?.id) {
+    changes.assignee = { oldValue: oldAssigneeName, newValue: assigneeName }
+  }
+  if (oldTask.task_type !== task.task_type) {
+    changes.issue_type = {
+      oldValue: oldTask.task_type,
+      newValue: task.task_type
+    }
+  }
+  if (oldTask.status?.id !== task.status?.id) {
+    const oldStatus = oldTask.status ? oldTask.status.name : "N/A"
+    const newStatus = task.status ? task.status.name : "N/A"
+    changes.status = { oldValue: oldStatus, newValue: newStatus }
+  }
+
   return {
+    logo_url: `${baseUrl}/logo/spark-logo-animated-themed.gif`,
     task_title: task.task_title || "N/A",
     task_id: task.task_num || "N/A",
     project_name: task.project_name || "N/A",
@@ -111,6 +146,7 @@ export function prepareTaskEmailData(task: any) {
     assignor_name: assignorName,
     issue_type: task.task_type || "N/A",
     description: task.description || "No description provided.",
-    task_url: `${baseUrl}/project/${task.project_id}/task/${task.id}`
+    task_url: `${baseUrl}/project/${task.project_id}/task/${task.id}`,
+    changes: changes
   }
 }
