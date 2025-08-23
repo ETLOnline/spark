@@ -2,6 +2,7 @@
 import { useEffect, useCallback } from "react"
 import { useAtom, useSetAtom } from "jotai"
 import { useAuth, useUser } from "@clerk/nextjs"
+import pusherClient from "../services/realtime/PusherClient"
 
 import { userStore } from "@/src/store/user/userStore"
 
@@ -12,7 +13,7 @@ import { SelectUser } from "@/src/db/schema"
 
 /**
  * Custom hook to manage user authentication state, fetch user data from the database,
- * and handle permissions using Jotai.
+ * handle permissions using Jotai, and listen for real-time role updates via Pusher.
  * It replaces the need for a dedicated ClerkAuthListener component.
  */
 export const useAuthUser = () => {
@@ -131,6 +132,44 @@ export const useAuthUser = () => {
     setLoadingUser,
     setIsReloadingPermissions
   ])
+
+  // Pusher effect to listen for role updates
+  useEffect(() => {
+    if (!isSignedIn || !clerkUser) return
+
+    const fetchUserAndSetupPusher = async () => {
+      try {
+        const userRes = await AuthUserAction()
+        if (!userRes?.unique_id) {
+          console.warn(
+            "No unique_id found for user, cannot setup Pusher subscription"
+          )
+          return
+        }
+        const channel = pusherClient.subscribe(`user-${userRes.unique_id}`)
+        channel.bind("update-role", (data: any) => {
+          console.log("Role update received:", data)
+
+          fetchAndSetUserData(clerkUser)
+        })
+        return channel
+      } catch (error) {
+        console.error("Failed to setup Pusher subscription:", error)
+      }
+    }
+
+    let channel: any = null
+    fetchUserAndSetupPusher().then((channelRef) => {
+      channel = channelRef
+    })
+
+    return () => {
+      if (channel) {
+        channel.unbind("update-role")
+        pusherClient.unsubscribe(channel.name)
+      }
+    }
+  }, [isSignedIn, clerkUser, fetchAndSetUserData])
 
   const refreshAuthUser = useCallback(async () => {
     if (isSignedIn && clerkUser) {
