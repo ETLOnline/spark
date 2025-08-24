@@ -45,11 +45,6 @@ export const CreateCommunityAction = CreateServerAction(
         newCommunity.created_by,
         result.adminRole?.name
       )
-      pusherServer.trigger(
-        `user-${newCommunity.created_by}`,
-        "update-role",
-        result
-      )
       return { success: true, data: newCommunity }
     } catch (error: any) {
       console.error("Error in CreateCommunityAction:", error)
