@@ -291,6 +291,7 @@ export type CommunityDetailData = {
   id: string
   title: string
   description: string
+  cover_image: string
   category: string
   slug: string
   type: "public" | "private"
@@ -351,6 +352,7 @@ export async function GetCommunityBySlug(
       id: communityDetails.id,
       title: communityDetails.title,
       description: communityDetails.description || "",
+      cover_image: communityDetails.cover_image || "",
       category: categoryName,
       slug: communityDetails.slug,
       type:

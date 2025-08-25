@@ -36,6 +36,7 @@ const CreateNewChat = () => {
   const [selectedContacts, setSelectedContacts] = useState<MultiSelectOption[]>(
     []
   )
+  const [isCreatingChat, setIsCreatingChat] = useState(false)
   const authUser = useAtomValue(userStore.AuthUser)
   const setMyChats = useSetAtom(chatStore.myChats)
   const switchChat = useSetAtom(chatStore.switchedChat)
@@ -44,6 +45,7 @@ const CreateNewChat = () => {
   )
   const [isGroupChat, setIsGroupChat] = useState(false)
   const [groupName, setGroupName] = useState<string>("")
+  const [groupNameError, setGroupNameError] = useState<string>("")
   const [options, setOptions] = useState<MultiSelectOption[]>([])
   const { space_slug, channel_slug } = useParams()
   const currentSpace = useAtomValue(spaceStore.currentSpace)
@@ -107,44 +109,64 @@ const CreateNewChat = () => {
 
   const handleCreateNewChat = async () => {
     if (!authUser) return
-    const spaceId = currentSpace ? currentSpace.id : undefined
+    setIsCreatingChat(true)
+    const spaceId = currentSpace && isSpacePage ? currentSpace.id : undefined
     const userIds = selectedContacts.map((contact) => contact.value)
-
-    if (isGroupChat) {
-      // Create Group Chat
-      const response = await CreateGroupChatAction(
-        [...userIds, authUser?.unique_id],
-        groupName,
-        spaceId
-      )
-      if (response.success && response.data) {
-        const newChat = response.data
-        setMyChats((pre) => [...pre, newChat])
-        switchChat(newChat)
+    try {
+      if (isGroupChat) {
+        // Create Group Chat
+        if (groupName.trim() === "") {
+          setGroupNameError("Group name is required.")
+          return
+        } else {
+          setGroupNameError("")
+        }
+        const response = await CreateGroupChatAction(
+          [...userIds, authUser?.unique_id],
+          groupName,
+          spaceId
+        )
+        if (response.success && response.data) {
+          const newChat = response.data
+          setMyChats((pre) => [...pre, newChat])
+          switchChat(newChat)
+          setGroupName("")
+        }
+      } else {
+        // Create Direct Chat
+        const response = await CreatePrivateChatAction(
+          authUser?.unique_id,
+          userIds[0],
+          spaceId
+        )
+        if (response.success && response.data) {
+          const newChat = response.data
+          setMyChats((pre) => [...pre, newChat])
+          switchChat(newChat)
+        }
+        if (response.success == false && response.existingChat) {
+          switchChat(response.data)
+          toast({
+            title: "Chat already exists",
+            variant: "destructive",
+            duration: 3000
+          })
+        }
+        if (response.success == false && response.error) {
+          toast({
+            title: response.error,
+            variant: "destructive",
+            duration: 3000
+          })
+        }
       }
-    } else {
-      // Create Direct Chat
-      const response = await CreatePrivateChatAction(
-        authUser?.unique_id,
-        userIds[0],
-        spaceId
-      )
-      if (response.success && response.data) {
-        const newChat = response.data
-        setMyChats((pre) => [...pre, newChat])
-        switchChat(newChat)
-      }
-      if (response.success == false && response.existingChat) {
-        switchChat(response.data)
-        toast({
-          title: "Chat already exists",
-          variant: "destructive",
-          duration: 3000
-        })
-      }
+    } finally {
+      setSelectedContacts([])
+      setGroupName("")
+      setIsGroupChat(false)
+      setDialogOpen(false)
+      setIsCreatingChat(false)
     }
-
-    setDialogOpen(false)
   }
 
   return (
@@ -176,6 +198,9 @@ const CreateNewChat = () => {
                   placeholder="Type Group Name"
                   onChange={(e) => setGroupName(e.target.value)}
                 />
+                {groupNameError && (
+                  <p className="text-sm text-red-500 mt-1">{groupNameError}</p>
+                )}
                 <div className="flex items-center justify-center mt-6">
                   <Avvvatars value={groupName} style="shape" size={100} />
                 </div>
@@ -196,7 +221,8 @@ const CreateNewChat = () => {
 
           <Button
             onClick={handleCreateNewChat}
-            disabled={selectedContacts.length === 0}
+            disabled={selectedContacts.length === 0 || isCreatingChat}
+            loading={isCreatingChat}
           >
             Start {isGroupChat ? "Group" : "Direct"} Chat
           </Button>

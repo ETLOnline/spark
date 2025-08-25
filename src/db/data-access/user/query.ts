@@ -26,6 +26,7 @@ export async function SelectUserByExternalId(id: string) {
       email: true,
       external_auth_id: true,
       profile_url: true,
+      cover_image: true,
       unique_id: true,
       role: true,
       meta_profile: true
@@ -69,6 +70,7 @@ export async function FindUserWildCard(wildcard: string) {
         email: true,
         external_auth_id: true,
         profile_url: true,
+        cover_image: true,
         unique_id: true,
         role: true,
         meta_profile: true
@@ -287,5 +289,25 @@ export async function GetFeaturedUsers(filters: GetUserFilters) {
   } catch (error: any) {
     console.error("Error fetching user:", error)
     throw new Error("Failed to fetch user")
+  }
+}
+
+export async function UpdateCoverImage(
+  userId: string,
+  coverUrl: string | null
+) {
+  try {
+    const updatedUser = await db
+      .update(usersTable)
+      .set({
+        cover_image: coverUrl
+      })
+      .where(eq(usersTable.unique_id, userId))
+      .returning()
+
+    return updatedUser[0]
+  } catch (error: any) {
+    console.error("Error updating user profile picture:", error)
+    throw new Error(error.message || "Failed to update user profile picture")
   }
 }

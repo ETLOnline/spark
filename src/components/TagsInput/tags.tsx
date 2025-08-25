@@ -58,8 +58,6 @@ function TagSelect({ type, control, selected, setSelected }: Props) {
     }
   }, 1000)
 
-  useEffect(() => {}, [options])
-
   return (
     <div>
       <MultiSelect

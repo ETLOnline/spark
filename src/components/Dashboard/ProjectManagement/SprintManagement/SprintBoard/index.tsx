@@ -18,6 +18,7 @@ import { SelectSprint, SelectTask } from "@/src/db/schema"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import pusherClient from "@/src/services/realtime/PusherClient"
 import { userStore } from "@/src/store/user/userStore"
+import { taskStore } from "@/src/store/tasks/taskStore"
 
 function SprintBoard() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
@@ -25,7 +26,7 @@ function SprintBoard() {
 
   const [tasks, setTasks] = useState<SelectTask[]>([])
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
-  const [selectedTask, setSelectedTask] = useState<SelectTask | null>()
+  const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
 
   const [getTaskLoading, , , GetSPrintTask] =
     useServerAction(GetSprintTasksAction)
@@ -34,6 +35,7 @@ function SprintBoard() {
   const [openDialog, setOpenDialog] = useState(false)
   const authUser = useAtomValue(userStore.AuthUser)
   const pusherChannel = useAtomValue(projectStore.pusherChannel)
+  const [isInitailDataLoad, setIsInitailDataLoad] = useState(false)
 
   const projectId = useParams().id as string
 
@@ -69,6 +71,12 @@ function SprintBoard() {
       setOpenDialog(true)
     }
   }, [projectStatusList])
+
+  useEffect(() => {
+    if (tasks.length > 0) {
+      setIsInitailDataLoad(true)
+    }
+  }, [tasks])
 
   useEffect(() => {
     if (!projectId) return
@@ -129,12 +137,6 @@ function SprintBoard() {
     getTask()
   }, [projectId, sprintList])
 
-  useEffect(() => {
-    if (!isTaskModalOpen) {
-      setSelectedTask(null)
-    }
-  }, [isTaskModalOpen])
-
   return projectStatusList.length > 0 ? (
     <>
       {getSprintLoading ? (
@@ -165,6 +167,7 @@ function SprintBoard() {
       )}
 
       <TaskModal
+        isReady={isInitailDataLoad}
         isTaskModelOpen={isTaskModalOpen}
         setIsTaskModelOpen={setIsTaskModalOpen}
         selectedTask={selectedTask || undefined}

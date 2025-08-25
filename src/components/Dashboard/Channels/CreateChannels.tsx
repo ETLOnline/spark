@@ -376,7 +376,12 @@ function CreateChannels({
                     defaultValue=""
                     control={form.control}
                     render={({ field }) => (
-                      <Input id="channel_slug" {...field} disabled={true} placeholder="channel_slug"/>
+                      <Input
+                        id="channel_slug"
+                        {...field}
+                        disabled={true}
+                        placeholder="channel_slug"
+                      />
                     )}
                   />
                 </div>
