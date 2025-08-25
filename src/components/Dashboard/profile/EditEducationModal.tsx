@@ -29,26 +29,46 @@ const userQualificationSchema = z
   .object({
     degree: z.string().min(1, "Required"),
     institute: z.string().min(1, "Required"),
+
     duration_from: z
       .string()
       .refine((val) => moment(val, "YYYY", true).isValid(), {
         message: "Invalid start year"
+      })
+      .refine((val) => parseInt(val, 10) >= 1990, {
+        message: "Start year must be 1990 or later"
       }),
+
     duration_to: z
       .string()
       .refine((val) => moment(val, "YYYY", true).isValid(), {
         message: "Invalid end year"
       })
+      .refine((val) => parseInt(val, 10) <= 2034, {
+        message: "End year must be 2034 or earlier"
+      })
   })
   .refine(
     (data) => {
-      const start = moment(data.duration_from)
-      const end = moment(data.duration_to)
-      return start.isBefore(end)
+      const start = parseInt(data.duration_from, 10)
+      const end = parseInt(data.duration_to, 10)
+      return start < end // must be before
     },
     {
       message: "Start year must be before end year",
       path: ["duration_from"]
+    }
+  )
+  .refine(
+    (data) => {
+      const start = parseInt(data.duration_from, 10)
+      const end = parseInt(data.duration_to, 10)
+      const diff = end - start
+      return diff >= 1 && diff <= 10
+    },
+    {
+      message: "Degree duration must be between 1 and 10 years",
+      path: ["duration_to"]
     }
   )
 
