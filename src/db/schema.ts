@@ -503,7 +503,7 @@ export const eventsTable = pgTable("events", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   title: varchar().notNull(),
   description: varchar(),
-  coverImage: varchar().notNull(),
+  coverImage: varchar(),
   start_date_time: varchar(),
   end_date_time: varchar(),
   type: varchar(),
@@ -518,7 +518,7 @@ export const eventsRelations = relations(eventsTable, ({ one }) => ({
   host: one(usersTable, {
     fields: [eventsTable.host_id],
     references: [usersTable.unique_id],
-    relationName: "eventToHost"
+    relationName: "userToHostedEvents"
   })
 }))
 export type InsertEvent = typeof eventsTable.$inferInsert
