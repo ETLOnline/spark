@@ -42,7 +42,10 @@ import { communityStore } from "@/src/store/community/communityStore"
 import { useSetAtom } from "jotai"
 import { InviteUserDialog } from "../UserListAndInvite/UserInviteDialog"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import { AttachCommunityUserAction } from "@/src/server-actions/Community/Community"
+import {
+  AttachCommunityUserAction,
+  LeaveCommunityAction
+} from "@/src/server-actions/Community/Community"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
 import { isEntityUser } from "@/src/utils/clientHelper"
@@ -82,6 +85,8 @@ export default function CommunityDetailsClient({
   const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
   const [joinLoading, joinResult, joinError, attachCommunityUser] =
     useServerAction(AttachCommunityUserAction)
+  const [leaveLoading, leaveResult, leaveError, leaveCommunity] =
+    useServerAction(LeaveCommunityAction)
   const [loadingChannels, setLoadingChannels] = useState(true)
   const [channels, setChannels] = useAtom(channelStore.channels)
   const [pagination, setPagination] = useState<PaginationType | null>(null)
@@ -331,23 +336,43 @@ export default function CommunityDetailsClient({
                   </Button>
                 )}
                 {!isSuperAdmin && (
-                  <Button
-                    variant="outline"
-                    onClick={handleJoinCommunity}
-                    disabled={isCommunityMember || joinLoading}
-                    className={
-                      isCommunityMember
-                        ? "text-gray-500 cursor-not-allowed"
-                        : ""
-                    }
-                  >
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    {joinLoading
-                      ? "Joining..."
-                      : isCommunityMember
-                        ? "Joined"
-                        : "Join"}
-                  </Button>
+                  <>
+                    {!isCommunityMember ? (
+                      <Button
+                        variant="outline"
+                        onClick={handleJoinCommunity}
+                        disabled={joinLoading}
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        {joinLoading ? "Joining..." : "Join"}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="destructive"
+                        onClick={async () => {
+                          if (community.id) {
+                            const res = await leaveCommunity(community.id)
+                            if (res?.success) {
+                              setIsCommunityMember(false)
+                              toast({
+                                title: "Left community",
+                                description: "You have left the community.",
+                                duration: 3000
+                              })
+                            } else {
+                              console.error(
+                                "Failed to leave community:",
+                                res?.error
+                              )
+                            }
+                          }
+                        }}
+                        disabled={leaveLoading}
+                      >
+                        Leave
+                      </Button>
+                    )}
+                  </>
                 )}
                 <CreateShortcut
                   type="community"

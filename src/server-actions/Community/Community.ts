@@ -305,6 +305,36 @@ export const DetachCommunityUserAction = CreateServerAction(
   }
 )
 
+// Allows the authenticated user to leave a community (self-remove).
+export const LeaveCommunityAction = CreateServerAction(
+  true,
+  async (communityId: string) => {
+    try {
+      const authUser = await AuthUserAction()
+
+      if (!authUser?.unique_id) {
+        return {
+          success: false,
+          error: "Authentication required to leave community."
+        }
+      }
+
+      const deleted = await detachCommunityUser(communityId, authUser.unique_id)
+
+      if (!deleted) {
+        return {
+          success: false,
+          error: "You are not a member of this community."
+        }
+      }
+
+      return { success: true, data: deleted }
+    } catch (error: any) {
+      return { success: false, error: error.message || error }
+    }
+  }
+)
+
 export const GetFeaturedCommunitiesAction = CreateServerAction(
   false,
   async (communityIds: string[]) => {
