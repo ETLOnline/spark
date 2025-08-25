@@ -10,6 +10,7 @@ import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { getUserPermissionRowsAction } from "@/src/server-actions/UserRoles/UserRole"
 import { buildUserPerms } from "@/src/utils/clientHelper"
 import { SelectUser } from "@/src/db/schema"
+import type { Channel } from "pusher-js"
 
 /**
  * Custom hook to manage user authentication state, fetch user data from the database,
@@ -137,6 +138,13 @@ export const useAuthUser = () => {
   useEffect(() => {
     if (!isSignedIn || !clerkUser) return
 
+    let channel: Channel | null = null
+
+    const handleRoleUpdate = (data: any) => {
+      console.log("Role update received:", data)
+      fetchAndSetUserData(clerkUser)
+    }
+
     const fetchUserAndSetupPusher = async () => {
       try {
         const userRes = await AuthUserAction()
@@ -146,30 +154,30 @@ export const useAuthUser = () => {
           )
           return
         }
-        const channel = pusherClient.subscribe(`user-${userRes.unique_id}`)
-        channel.bind("update-role", (data: any) => {
-          console.log("Role update received:", data)
 
-          fetchAndSetUserData(clerkUser)
-        })
-        return channel
+        const channelName = `user-${userRes.unique_id}`
+
+        channel = pusherClient.channel(channelName) as Channel | null
+        if (!channel) {
+          channel = pusherClient.subscribe(channelName)
+        }
+
+        channel.unbind("update-role", handleRoleUpdate)
+        channel.bind("update-role", handleRoleUpdate)
       } catch (error) {
         console.error("Failed to setup Pusher subscription:", error)
       }
     }
 
-    let channel: any = null
-    fetchUserAndSetupPusher().then((channelRef) => {
-      channel = channelRef
-    })
+    fetchUserAndSetupPusher()
 
     return () => {
       if (channel) {
-        channel.unbind("update-role")
+        channel.unbind("update-role", handleRoleUpdate)
         pusherClient.unsubscribe(channel.name)
       }
     }
-  }, [isSignedIn, clerkUser, fetchAndSetUserData])
+  }, [isSignedIn, clerkUser, fetchAndSetUserData, AuthUserAction])
 
   const refreshAuthUser = useCallback(async () => {
     if (isSignedIn && clerkUser) {
