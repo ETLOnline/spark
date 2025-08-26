@@ -60,7 +60,7 @@ const spaceSchema = z.object({
     .string()
     .min(1, "Description required")
     .max(150, "Description is too long"),
-  space_type: z.string().min(1, "Space type requied"),
+  space_type: z.string().min(1, "Space type required"),
   publish_space: z.boolean().optional()
 })
 
@@ -282,7 +282,7 @@ function CreateSpaceModal({
           setSpaceFormModelVisibility(open)
         }}
       >
-        <DialogContent className="max-h-[98vh]">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>
               {editSpace === true ? "Edit Space" : "Create Space"}
