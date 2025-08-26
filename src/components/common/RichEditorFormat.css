@@ -46,3 +46,17 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+.tiptap-image-wrapper {
+  width: fit-content;
+}
+
+.tiptap-image-wrapper img {
+  width: auto;
+  height: 200px;
+}
+
+.tiptap-image-wrapper img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
