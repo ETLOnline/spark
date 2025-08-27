@@ -102,25 +102,25 @@ const getGradient = (index: number) =>
 
 const stats = [
   {
-    number: "15,000+",
+    number: "2400+",
     label: "Active Students",
     icon: Users,
     color: getGradient(0)
   },
   {
-    number: "800+",
+    number: "55+",
     label: "Industry Mentors",
     icon: Briefcase,
     color: getGradient(0)
   },
   {
-    number: "75+",
+    number: "18+",
     label: "Universities",
     icon: GraduationCap,
     color: getGradient(0)
   },
   {
-    number: "2,500+",
+    number: "16+",
     label: "Projects Launched",
     icon: Target,
     color: getGradient(0)
@@ -209,10 +209,9 @@ const architectureTiers = [
     title: "Business Logic",
     description:
       "Scalable APIs and microservices handling complex business logic and data processing",
-    technologies: ["Node.js", "Python", "PostgreSQL", "Redis", "GraphQL"],
+    technologies: ["TypeScript", "Next.js", "PostgreSQL"],
     features: [
       "RESTful APIs",
-      "GraphQL Endpoints",
       "Real-time WebSockets",
       "Microservices Architecture",
       "Event-Driven Design"
@@ -225,7 +224,7 @@ const architectureTiers = [
     title: "Cloud & DevOps",
     description:
       "Robust cloud infrastructure ensuring scalability, security, and high availability",
-    technologies: ["AWS", "Docker", "Kubernetes", "CI/CD", "Monitoring"],
+    technologies: ["Azure", "Docker", "CI/CD", "Monitoring"],
     features: [
       "Auto-scaling",
       "Load Balancing",
@@ -243,10 +242,10 @@ const communityValues = [
     icon: Network,
     title: "Build Your Professional Network",
     description:
-      "Connect with 15,000+ students, 800+ mentors, and faculty from top universities across Pakistan",
+      "Connect with students, mentors, and faculty from top universities across Pakistan",
     benefit: "Expand your circle",
     color: getGradient(0),
-    stats: "15,000+ connections made"
+    stats: "1000+ connections made"
   },
   {
     icon: Brain,
@@ -255,7 +254,7 @@ const communityValues = [
       "Get mentored by professionals from Google, Microsoft, Meta, and leading Pakistani tech companies",
     benefit: "Accelerate growth",
     color: getGradient(0),
-    stats: "800+ expert mentors"
+    stats: "55+ expert mentors"
   },
   {
     icon: Code,
@@ -264,7 +263,7 @@ const communityValues = [
       "Collaborate on industry-sponsored projects and build a portfolio that gets you hired",
     benefit: "Gain experience",
     color: getGradient(0),
-    stats: "2,500+ projects completed"
+    stats: "16+ projects completed"
   },
   {
     icon: Trophy,
@@ -273,7 +272,7 @@ const communityValues = [
       "Get certified skills, badges, and recommendations that boost your career prospects",
     benefit: "Stand out",
     color: getGradient(0),
-    stats: "5,000+ skills validated"
+    stats: "35+ skills validated"
   }
 ]
 
@@ -281,14 +280,13 @@ const features = [
   {
     icon: MessageCircle,
     title: "Smart Communities",
-    description:
-      "Join university-specific or topic-based communities with AI-powered content recommendations",
-    stats: "50+ Active Communities",
+    description: "Join university-specific or topic-based communities",
+    stats: "Active Communities",
     color: getGradient(0),
     details: [
       "University-specific channels",
       "Topic-based discussions",
-      "AI content curation",
+      // "AI content curation",
       "Expert moderation",
       "Real-time notifications"
     ]
@@ -298,7 +296,7 @@ const features = [
     title: "Mentorship Sessions",
     description:
       "Book 1-on-1 or group sessions with industry experts. Open sessions and private mentoring available",
-    stats: "1000+ Sessions Monthly",
+    stats: "Sessions Monthly",
     color: getGradient(0),
     details: [
       "1-on-1 mentoring",
@@ -313,7 +311,7 @@ const features = [
     title: "Project Spaces",
     description:
       "Collaborative workspaces with task management, file sharing, and real-time collaboration tools",
-    stats: "500+ Active Projects",
+    stats: "Active Projects",
     color: getGradient(0),
     details: [
       "Team collaboration",
@@ -324,26 +322,11 @@ const features = [
     ]
   },
   {
-    icon: Brain,
-    title: "AI Learning Paths",
-    description:
-      "Personalized skill development recommendations based on your goals and industry trends",
-    stats: "10,000+ Paths Created",
-    color: getGradient(0),
-    details: [
-      "Personalized recommendations",
-      "Skill assessments",
-      "Learning analytics",
-      "Progress tracking",
-      "Industry alignment"
-    ]
-  },
-  {
     icon: Award,
     title: "Skill Validation",
     description:
       "Peer endorsements, project reviews, and industry-recognized certifications",
-    stats: "5,000+ Skills Validated",
+    stats: "Skills Validated",
     color: getGradient(0), // Cycle back to first gradient
     details: [
       "Peer endorsements",
@@ -352,28 +335,13 @@ const features = [
       "Industry recognition",
       "Career advancement"
     ]
-  },
-  {
-    icon: Briefcase,
-    title: "Career Hub",
-    description:
-      "Job board, internship opportunities, and direct connections with hiring companies",
-    stats: "200+ Job Placements",
-    color: getGradient(0), // Cycle back to second gradient
-    details: [
-      "Job opportunities",
-      "Internship programs",
-      "Company connections",
-      "Interview preparation",
-      "Career counseling"
-    ]
   }
 ]
 
 const roadmapPhases = [
   {
     phase: "Phase 1",
-    title: "Foundation (Q1 2024)",
+    title: "Foundation (Q3 2025)",
     status: "completed",
     items: [
       "Community & Channel Creation",
@@ -385,24 +353,24 @@ const roadmapPhases = [
   },
   {
     phase: "Phase 2",
-    title: "Enhancement (Q2-Q3 2024)",
+    title: "Enhancement (Q4 2025)",
     status: "current",
     items: [
-      "AI-Powered Recommendations",
+      // "AI-Powered Recommendations",
       "Advanced Event Management",
       "Skill Validation System",
-      "Career Enablement Tools",
-      "Mobile App Launch"
+      "Career Enablement Tools"
+      // "Mobile App Launch"
     ]
   },
   {
     phase: "Phase 3",
-    title: "Scale (Q4 2024 - Q1 2025)",
+    title: "Scale (Q1 2026 - Q4 2026)",
     status: "upcoming",
     items: [
       "Industry Partner Integration",
       "Advanced Analytics Dashboard",
-      "Global University Expansion",
+      "Universities Expansion",
       "Marketplace for Services",
       "Enterprise Solutions"
     ]
@@ -583,12 +551,11 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.4 }}
           >
             Join Pakistan's largest tech community where
-            <span className="text-primary font-bold"> 15,000+ students</span>,
-            <span className="text-primary-hover font-bold"> 800+ mentors</span>,
-            and
+            <span className="text-primary font-bold"> students</span>,
+            <span className="text-primary-hover font-bold"> mentors</span>, and
             <span className="text-secondary-foreground font-bold">
               {" "}
-              75+ universities
+              universities
             </span>
             <br />
             collaborate to build the future
@@ -608,14 +575,14 @@ export default function HomePage() {
               Start Your Journey
               <ArrowRight className="ml-3 w-6 h-6" />
             </LinkAsButton>
-            <Button
+            {/* <Button
               size="lg"
               variant="outline"
               className="text-xl px-12 py-6 border-2 border-border hover:bg-muted dark:hover:bg-muted-hover shadow-lg transform hover:scale-105 transition-all duration-300"
             >
               <Play className="mr-3 w-6 h-6" />
               Watch Success Stories
-            </Button>
+            </Button> */}
           </motion.div>
 
           {/* Animated Stats */}
@@ -1102,7 +1069,7 @@ export default function HomePage() {
                         </div>
                         <div className="text-center">
                           <div className="text-2xl font-bold text-primary">
-                            75+
+                            18+
                           </div>
                           <div className="text-sm text-muted-foreground">
                             Partner Universities
@@ -1180,7 +1147,7 @@ export default function HomePage() {
                       <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
                           <div className="text-2xl font-bold text-secondary-foreground">
-                            800+
+                            55+
                           </div>
                           <div className="text-sm text-muted-foreground">
                             Expert Mentors
@@ -1188,7 +1155,7 @@ export default function HomePage() {
                         </div>
                         <div className="text-center">
                           <div className="text-2xl font-bold text-secondary-foreground">
-                            450+
+                            10+
                           </div>
                           <div className="text-sm text-muted-foreground">
                             Partner Companies
@@ -1230,10 +1197,10 @@ export default function HomePage() {
                       icon: MessageCircle,
                       title: "Smart Chat",
                       description:
-                        "Real-time messaging with AI moderation, thread management, and file sharing",
+                        "Real-time messaging, thread management, and file sharing",
                       features: [
                         "Real-time messaging",
-                        "AI moderation",
+                        // "AI moderation",
                         "Thread management",
                         "Rich media support"
                       ],
@@ -1243,14 +1210,14 @@ export default function HomePage() {
                       icon: BookOpen,
                       title: "File Sharing",
                       description:
-                        "Secure document management with version control and collaborative editing",
+                        "Secure document management with version control",
                       features: [
                         "Version control",
-                        "Collaborative editing",
+                        // "Collaborative editing",
                         "Access permissions",
                         "Cloud storage"
                       ],
-                      color: getGradient(1)
+                      color: getGradient(0)
                     },
                     {
                       icon: Network,
@@ -1263,7 +1230,7 @@ export default function HomePage() {
                         "Peer endorsements",
                         "Content curation"
                       ],
-                      color: getGradient(2)
+                      color: getGradient(0)
                     },
                     {
                       icon: Target,
@@ -1276,7 +1243,7 @@ export default function HomePage() {
                         "Task tracking",
                         "Team analytics"
                       ],
-                      color: getGradient(3)
+                      color: getGradient(0)
                     }
                   ].map((feature, index) => (
                     <motion.div
@@ -1367,24 +1334,6 @@ export default function HomePage() {
                       </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
-                  <Button
-                    size="lg"
-                    className="bg-gradient-to-r from-primary to-accent hover:from-primary-hover hover:to-accent-hover text-primary-foreground text-lg px-10 py-4 shadow-xl transform hover:scale-105 transition-all duration-300"
-                  >
-                    <Building className="mr-3 w-5 h-5" />
-                    Create University Community
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="text-lg px-10 py-4 border-2 border-border hover:bg-muted dark:hover:bg-muted-hover shadow-lg transform hover:scale-105 transition-all duration-300"
-                  >
-                    <Briefcase className="mr-3 w-5 h-5" />
-                    Partner with Industry
-                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -1775,108 +1724,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Success Stories */}
-      <section
-        id="testimonials"
-        className="py-24 px-6 bg-background dark:bg-background"
-      >
-        <div className="container mx-auto">
-          <motion.div
-            className="text-center mb-20"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <Badge className="mb-6 bg-muted text-muted-foreground border-border">
-              <Star className="w-4 h-4 mr-2" />
-              Success Stories
-            </Badge>
-            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-foreground">
-              Real Impact,
-              <span className="bg-gradient-to-r from-primary via-primary-hover to-foreground bg-clip-text text-transparent">
-                {" "}
-                Real Results
-              </span>
-            </h2>
-            <p className="text-2xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
-              Hear from the community members whose careers were transformed
-              through SPARK
-            </p>
-          </motion.div>
-
-          <motion.div
-            className="max-w-5xl mx-auto"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <Card className="p-12 shadow-2xl border-0 bg-card/80 backdrop-blur-sm">
-              <CardContent className="text-center">
-                <div className="flex justify-center mb-8">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className="w-8 h-8 text-yellow-400 fill-current"
-                    />
-                  ))}
-                </div>
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentTestimonial}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <p className="text-2xl text-foreground mb-10 italic leading-relaxed font-medium">
-                      "{testimonials[currentTestimonial].content}"
-                    </p>
-                    <div className="flex items-center justify-center space-x-6">
-                      <img
-                        src={
-                          testimonials[currentTestimonial].avatar ||
-                          "/placeholder.svg"
-                        }
-                        alt={testimonials[currentTestimonial].name}
-                        className="w-16 h-16 rounded-full shadow-lg"
-                      />
-                      <div className="text-left">
-                        <div className="font-bold text-xl text-foreground">
-                          {testimonials[currentTestimonial].name}
-                        </div>
-                        <div className="text-muted-foreground mb-2">
-                          {testimonials[currentTestimonial].role}
-                        </div>
-                        <Badge className="bg-secondary/10 text-secondary-foreground border-secondary/20">
-                          {testimonials[currentTestimonial].achievement}
-                        </Badge>
-                      </div>
-                    </div>
-                  </motion.div>
-                </AnimatePresence>
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-center mt-10 space-x-3">
-              {testimonials.map((_, index) => (
-                <button
-                  key={index}
-                  className={`w-4 h-4 rounded-full transition-all duration-300 ${
-                    index === currentTestimonial
-                      ? "bg-gradient-to-r from-primary to-accent scale-125"
-                      : "bg-muted-foreground hover:bg-muted-foreground"
-                  }`}
-                  onClick={() => setCurrentTestimonial(index)}
-                />
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="py-24 px-6 bg-gradient-to-r from-primary via-secondary to-primary-hover relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10" />
@@ -1891,25 +1738,18 @@ export default function HomePage() {
               Ready to Spark Your Future?
             </h2>
             <p className="text-2xl text-primary-foreground/80 mb-12 max-w-4xl mx-auto leading-relaxed">
-              Join 15,000+ students, 800+ mentors, and 75+ universities building
-              Pakistan's tech future together
+              Join students, mentors, and universities building Pakistan's tech
+              future together
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Button
+              <LinkAsButton
+                href="/profile"
                 size="lg"
-                className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 text-xl px-12 py-6 shadow-2xl transform hover:scale-105 transition-all duration-300"
+                className="bg-gradient-to-r from-primary to-accent hover:from-primary-hover hover:to-accent-hover text-primary-foreground text-xl px-12 py-6 shadow-2xl transform hover:scale-105 transition-all duration-300"
               >
-                Join as Student
-                <GraduationCap className="ml-3 w-6 h-6" />
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-2 border-primary-foreground text-foreground hover:bg-primary-foreground hover:text-primary text-xl px-12 py-6 shadow-2xl transform hover:scale-105 transition-all duration-300"
-              >
-                Become a Mentor
-                <Briefcase className="ml-3 w-6 h-6" />
-              </Button>
+                Start Your Journey
+                <ArrowRight className="ml-3 w-6 h-6" />
+              </LinkAsButton>
             </div>
           </motion.div>
         </div>

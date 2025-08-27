@@ -112,7 +112,11 @@ function Footer() {
         <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
           <p>
             &copy; 2024 SPARK Platform. All rights reserved. Built with ❤️ for
-            Pakistan's tech community.
+            Pakistan's tech community by{" "}
+            <Link href="https://www.etlonline.org/" className="font-bold">
+              ETLOnline.org
+            </Link>{" "}
+            .
           </p>
         </div>
       </div>
