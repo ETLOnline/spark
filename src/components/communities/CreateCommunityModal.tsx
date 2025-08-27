@@ -596,6 +596,9 @@ export default function CreateCommunityModal({
                               setCoverImgPreview(null)
                               form.setValue("cover_image", "")
                             }}
+                            disabled={
+                              addUpdateCommunityLoading || coverImageLoading
+                            }
                           >
                             Remove Image
                           </Button>
@@ -689,7 +692,12 @@ export default function CreateCommunityModal({
                 <Button
                   type="submit"
                   loading={addUpdateCommunityLoading}
-                  disabled={!!error.slug?.message || isSlugAvailableLoading}
+                  disabled={
+                    !!error.slug?.message ||
+                    isSlugAvailableLoading ||
+                    addUpdateCommunityLoading ||
+                    coverImageLoading
+                  }
                 >
                   Save Changes
                 </Button>
@@ -697,7 +705,12 @@ export default function CreateCommunityModal({
                 <Button
                   type="submit"
                   loading={addCommunityLoading || coverImageLoading}
-                  disabled={!!error.slug?.message || isSlugAvailableLoading}
+                  disabled={
+                    !!error.slug?.message ||
+                    isSlugAvailableLoading ||
+                    coverImageLoading ||
+                    addCommunityLoading
+                  }
                 >
                   Create Community
                 </Button>

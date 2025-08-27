@@ -282,7 +282,10 @@ function CreateSprintModal({
           </div>
 
           <DialogFooter>
-            <Button loading={createSprintLoading || updateSprintLoading}>
+            <Button
+              loading={createSprintLoading || updateSprintLoading}
+              disabled={createSprintLoading || updateSprintLoading}
+            >
               {selectedSprint ? "Save Changes" : "Create Sprint"}
             </Button>
           </DialogFooter>

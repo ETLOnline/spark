@@ -457,6 +457,11 @@ function CreateSpaceModal({
                 <Button
                   onClick={() => form.handleSubmit(submitData)}
                   loading={addUpdateSpaceLoading}
+                  disabled={
+                    error.space_name?.message
+                      ? true
+                      : false || addUpdateSpaceLoading || isReloadingPermissions
+                  }
                 >
                   Save
                 </Button>
@@ -464,7 +469,11 @@ function CreateSpaceModal({
                 <Button
                   type="submit"
                   loading={addSpaceLoading}
-                  disabled={error.space_name?.message ? true : false}
+                  disabled={
+                    error.space_name?.message
+                      ? true
+                      : false || addSpaceLoading || isSlugAvailableLoading
+                  }
                 >
                   Create
                 </Button>
