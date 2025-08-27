@@ -44,9 +44,6 @@ const userQualificationSchema = z
       .refine((val) => moment(val, "YYYY", true).isValid(), {
         message: "Invalid end year"
       })
-      .refine((val) => parseInt(val, 10) <= 2034, {
-        message: "End year must be 2034 or earlier"
-      })
   })
   .refine(
     (data) => {

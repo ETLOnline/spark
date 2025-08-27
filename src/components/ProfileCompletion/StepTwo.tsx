@@ -20,7 +20,6 @@ interface StepTwoProps {
   setUser: Dispatch<SetStateAction<SelectUser | undefined>>
 }
 
-const currentYear = moment().year()
 const userQualificationSchema = z
   .object({
     degree: z.string().min(1, "Required"),
@@ -40,15 +39,12 @@ const userQualificationSchema = z
       .refine((val) => moment(val, "YYYY", true).isValid(), {
         message: "Invalid end year"
       })
-      .refine((val) => parseInt(val, 10) <= 2034, {
-        message: "End year must be 2034 or earlier"
-      })
   })
   .refine(
     (data) => {
       const start = parseInt(data.duration_from, 10)
       const end = parseInt(data.duration_to, 10)
-      return start < end // must be before
+      return start < end
     },
     {
       message: "Start year must be before end year",
