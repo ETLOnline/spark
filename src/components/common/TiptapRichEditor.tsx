@@ -105,7 +105,14 @@ export default function RichTextEditor({
                   file.type
                 )
                 if (res.success && res.data) {
-                  editor?.chain().focus().setImage({ src: res.data }).run()
+                  editor
+                    ?.chain()
+                    .focus()
+                    .insertContentAt(editor.state.selection.head, {
+                      type: "image",
+                      attrs: { src: res.data }
+                    })
+                    .run()
 
                   setLoading(false)
                 }
@@ -149,6 +156,47 @@ export default function RichTextEditor({
 
   const removeLink = () => {
     editor.chain().focus().extendMarkRange("link").unsetLink().run()
+  }
+
+  const handleUploadImage = () => {
+    const fileInput = document.createElement("input")
+    fileInput.type = "file"
+    fileInput.accept = "image/*"
+    fileInput.onchange = () => {
+      setLoading(true)
+
+      const file = fileInput.files?.[0]
+      if (!file) return
+
+      const reader = new FileReader()
+      reader.onload = async () => {
+        const base64String = reader.result as string
+
+        try {
+          const res = await AddImageToTaskAction(
+            file.name,
+            base64String,
+            file.type
+          )
+
+          if (res.success && res.data) {
+            editor
+              ?.chain()
+              .focus()
+              .insertContentAt(editor.state.selection.head, {
+                type: "image",
+                attrs: { src: res.data }
+              })
+              .run()
+            setLoading(false)
+          }
+        } catch {
+          console.error("Failed to upload image")
+        }
+      }
+      reader.readAsDataURL(file)
+    }
+    fileInput.click()
   }
 
   return (
@@ -316,37 +364,7 @@ export default function RichTextEditor({
               variant="ghost"
               size="sm"
               onClick={() => {
-                const fileInput = document.createElement("input")
-                fileInput.type = "file"
-                fileInput.accept = "image/*"
-                fileInput.onchange = () => {
-                  setLoading(true)
-
-                  const file = fileInput.files?.[0]
-                  if (!file) return
-
-                  const reader = new FileReader()
-                  reader.onload = async () => {
-                    const base64String = reader.result as string
-
-                    try {
-                      const res = await AddImageToTaskAction(
-                        file.name,
-                        base64String,
-                        file.type
-                      )
-
-                      if (res.success && res.data) {
-                        editor.chain().focus().setImage({ src: res.data }).run()
-                        setLoading(false)
-                      }
-                    } catch {
-                      console.error("Failed to upload image")
-                    }
-                  }
-                  reader.readAsDataURL(file)
-                }
-                fileInput.click()
+                handleUploadImage()
               }}
             >
               <ImageIcon className="h-4 w-4" />
