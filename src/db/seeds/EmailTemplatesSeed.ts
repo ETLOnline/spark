@@ -1,0 +1,769 @@
+import { emailTemplatesTable } from "../schema"
+import { db } from "../index"
+import { InferInsertModel } from "drizzle-orm"
+
+type NewEmailTemplate = InferInsertModel<typeof emailTemplatesTable>
+
+// The data you want to insert
+const templatesToSeed: NewEmailTemplate[] = [
+  {
+    name: "update_task",
+    subject: "Task has been updated",
+    body: `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Update Notification</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f8fafc;
+        line-height: 1.6;
+        color: #1e293b;
+      }
+
+      .email-wrapper {
+        padding: 32px 16px;
+        min-height: 100vh;
+      }
+
+      .email-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 24px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+      }
+
+      .header {
+        background: linear-gradient(
+          135deg,
+          hsl(174, 78%, 62%) 0%,
+          hsl(174, 78%, 45%) 100%
+        );
+        color: hsl(0, 0%, 10%);
+        padding: 48px 32px;
+        text-align: center;
+        position: relative;
+      }
+
+      /* Geometric pattern overlay inspired by your cover-pattern */
+      .header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        opacity: 0.2;
+        background-image: linear-gradient(
+            30deg,
+            rgba(255, 255, 255, 0.3) 12%,
+            transparent 12.5%,
+            transparent 87%,
+            rgba(255, 255, 255, 0.3) 87.5%
+          ),
+          linear-gradient(
+            150deg,
+            rgba(255, 255, 255, 0.3) 12%,
+            transparent 12.5%,
+            transparent 87%,
+            rgba(255, 255, 255, 0.3) 87.5%
+          );
+        background-size: 26px 46px;
+        background-position: 0 0, 13px 23px;
+        pointer-events: none;
+      }
+
+      .logo-container {
+        margin-bottom: 24px;
+        position: relative;
+        z-index: 1;
+        text-align: center;
+      }
+
+      .logo {
+        width: 64px;
+        height: 64px;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 16px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: 700;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 32px;
+        font-weight: 800;
+        position: relative;
+        z-index: 1;
+        letter-spacing: -0.025em;
+        color: hsl(0, 0%, 10%);
+      }
+
+      .header p {
+        margin: 8px 0 0 0;
+        opacity: 0.8;
+        font-size: 16px;
+        position: relative;
+        z-index: 1;
+        font-weight: 500;
+        color: hsl(0, 0%, 10%);
+      }
+
+      .content {
+        padding: 40px 32px;
+      }
+
+      .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: hsl(174, 78%, 92%);
+        color: hsl(174, 78%, 25%);
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 24px;
+        border: 1px solid hsl(174, 78%, 85%);
+      }
+
+      .status-indicator::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        background: hsl(174, 78%, 62%);
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .task-card {
+        background: #ffffff;
+        border: 1px solid hsl(210, 16%, 90%);
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 32px;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+      }
+
+      .task-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        gap: 16px;
+      }
+
+      .task-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: hsl(220, 10%, 10%);
+        margin: 0;
+        line-height: 1.3;
+        flex: 1;
+      }
+
+      .task-id {
+        background: hsl(210, 16%, 95%);
+        color: hsl(220, 10%, 40%);
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+      }
+
+      /* Changes Section */
+      .changes-section {
+        background: linear-gradient(
+          135deg,
+          hsl(174, 78%, 95%) 0%,
+          hsl(174, 78%, 88%) 100%
+        );
+        border: 2px solid hsl(174, 78%, 62%);
+        border-radius: 16px;
+        padding: 24px;
+        margin: 24px 0;
+        position: relative;
+      }
+
+      .changes-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .changes-header h4 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: hsl(174, 78%, 25%);
+      }
+
+      .changes-icon {
+        width: 20px;
+        height: 20px;
+        color: hsl(174, 78%, 35%);
+      }
+
+      .changes-list {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .changes-list li {
+        font-size: 15px;
+        line-height: 1.6;
+        margin-bottom: 8px;
+        color: hsl(220, 10%, 15%);
+      }
+
+      .changes-list li:last-child {
+        margin-bottom: 0;
+      }
+
+      .change-field {
+        font-weight: 600;
+        color: hsl(174, 78%, 25%);
+      }
+
+      .old-value {
+        text-decoration: line-through;
+        color: #ef4444;
+        font-style: italic;
+        margin-left: 4px;
+      }
+
+      .new-value {
+        color: hsl(174, 78%, 35%);
+        font-weight: 600;
+        margin-left: 4px;
+      }
+
+      .arrow {
+        color: hsl(220, 10%, 40%);
+        font-weight: bold;
+        margin: 0 8px;
+      }
+
+      .task-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin: 24px 0;
+      }
+
+      .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        background: hsl(210, 16%, 98%);
+        border-radius: 12px;
+        border: 1px solid hsl(210, 16%, 90%);
+      }
+
+      .meta-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+      }
+
+      .priority-icon {
+        background: #fef2f2;
+        color: #dc2626;
+      }
+
+      .type-icon {
+        background: hsl(174, 78%, 95%);
+        color: hsl(174, 78%, 35%);
+      }
+
+      .assignee-icon {
+        background: hsl(174, 78%, 95%);
+        color: hsl(174, 78%, 35%);
+      }
+
+      .assignor-icon {
+        background: hsl(174, 78%, 95%);
+        color: hsl(174, 78%, 35%);
+      }
+
+      .meta-content {
+        flex: 1;
+      }
+
+      .meta-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: hsl(220, 10%, 40%);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 4px;
+      }
+
+      .meta-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: hsl(220, 10%, 10%);
+      }
+
+      .priority-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .priority-high {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+      }
+
+      .priority-medium {
+        background: hsl(174, 78%, 95%);
+        color: hsl(174, 78%, 25%);
+        border: 1px solid hsl(174, 78%, 82%);
+      }
+
+      .priority-low {
+        background: #f0fdf4;
+        color: #16a34a;
+        border: 1px solid #bbf7d0;
+      }
+
+      .priority-badge::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .description-section {
+        background: hsl(210, 16%, 98%);
+        border: 1px solid hsl(210, 16%, 90%);
+        border-radius: 16px;
+        padding: 24px;
+        margin: 32px 0;
+      }
+
+      .description-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .description-header h4 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: hsl(220, 10%, 10%);
+      }
+
+      .description-icon {
+        width: 20px;
+        height: 20px;
+        color: hsl(220, 10%, 40%);
+      }
+
+      .description-text {
+        margin: 0;
+        color: hsl(220, 10%, 30%);
+        line-height: 1.7;
+        font-size: 15px;
+      }
+
+      .cta-section {
+        text-align: center;
+        margin: 40px 0;
+      }
+
+      .cta-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(
+          135deg,
+          hsl(174, 78%, 62%) 0%,
+          hsl(174, 78%, 45%) 100%
+        );
+        color: hsl(0, 0%, 10%);
+        text-decoration: none;
+        padding: 16px 32px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 16px;
+        box-shadow: 0 4px 6px -1px rgba(81, 236, 220, 0.5);
+        transition: all 0.2s ease;
+        border: none;
+      }
+
+      .cta-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 15px -3px rgba(81, 236, 220, 0.5);
+        background: linear-gradient(
+          135deg,
+          hsl(174, 78%, 54%) 0%,
+          hsl(174, 78%, 38%) 100%
+        );
+      }
+
+      .cta-button::after {
+        content: "→";
+        font-size: 16px;
+        font-weight: 700;
+        transition: transform 0.2s ease;
+      }
+
+      .cta-button:hover::after {
+        transform: translateX(2px);
+      }
+
+      .footer {
+        background: hsl(210, 16%, 98%);
+        padding: 32px;
+        text-align: center;
+        border-top: 1px solid hsl(210, 16%, 90%);
+      }
+
+      .footer-content {
+        max-width: 400px;
+        margin: 0 auto;
+      }
+
+      .footer p {
+        margin: 0 0 12px 0;
+        color: hsl(220, 10%, 40%);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .footer p:last-child {
+        margin-bottom: 0;
+        font-weight: 500;
+      }
+
+      .footer a {
+        color: hsl(174, 78%, 35%);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .footer a:hover {
+        text-decoration: underline;
+        color: hsl(174, 78%, 25%);
+      }
+      .logo-image {
+        height: 70px;
+      }
+
+      /* Dark mode support - matches your theme */
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: hsl(220, 50%, 7%);
+          color: hsl(0, 0%, 96%);
+        }
+
+        .email-container {
+          background: hsl(220, 50%, 10%);
+          border-color: hsl(220, 30%, 25%);
+        }
+
+        .task-card {
+          background: hsl(220, 50%, 12%);
+          border-color: hsl(220, 30%, 25%);
+        }
+
+        .task-title {
+          color: hsl(0, 0%, 96%);
+        }
+
+        .task-id {
+          background: hsl(220, 30%, 20%);
+          color: hsl(174, 60%, 72%);
+        }
+
+        .meta-item {
+          background: hsl(220, 30%, 20%);
+          border-color: hsl(220, 30%, 25%);
+        }
+
+        .meta-value {
+          color: hsl(0, 0%, 96%);
+        }
+
+        .description-section {
+          background: hsl(220, 30%, 20%);
+          border-color: hsl(220, 30%, 25%);
+        }
+
+        .description-header h4 {
+          color: hsl(0, 0%, 96%);
+        }
+
+        .description-text {
+          color: hsl(0, 0%, 90%);
+        }
+
+        .footer {
+          background: hsl(220, 50%, 7%);
+          border-color: hsl(220, 30%, 25%);
+        }
+      }
+
+      /* Responsive Design */
+      @media only screen and (max-width: 640px) {
+        .email-wrapper {
+          padding: 16px 8px;
+        }
+
+        .email-container {
+          border-radius: 16px;
+        }
+
+        .header {
+          padding: 32px 24px;
+        }
+
+        .header h1 {
+          font-size: 28px;
+        }
+
+        .content,
+        .footer {
+          padding: 32px 24px;
+        }
+
+        .task-card {
+          padding: 24px;
+        }
+
+        .task-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+
+        .task-title {
+          font-size: 20px;
+        }
+
+        .task-meta {
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+
+        .changes-section {
+          padding: 20px;
+        }
+
+        .change-item {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+
+        .change-field {
+          min-width: auto;
+        }
+
+        .description-section {
+          padding: 20px;
+        }
+
+        .cta-button {
+          padding: 14px 28px;
+          font-size: 15px;
+        }
+      }
+
+      @media only screen and (max-width: 480px) {
+        .header {
+          padding: 24px 16px;
+        }
+
+        .header h1 {
+          font-size: 24px;
+        }
+
+        .content,
+        .footer {
+          padding: 24px 16px;
+        }
+
+        .task-card {
+          padding: 20px;
+        }
+
+        .logo {
+          width: 56px;
+          height: 56px;
+          font-size: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-wrapper">
+      <div class="email-container">
+        <div class="header">
+          <div class="logo-container">
+            <img src="{{logo_url}}" alt="spark Logo" class="logo-image" />
+          </div>
+          <h1>Task Updated</h1>
+          <p>Your task has been modified</p>
+        </div>
+
+        <div class="content">
+          <div class="status-indicator">Task Updated</div>
+
+          <div class="task-card">
+            <div class="task-header">
+              <h2 class="task-title">{{task_title}}</h2>
+              <span class="task-id">{{task_id}}</span>
+            </div>
+
+            {{#if changes}}
+            <div class="changes-section">
+              <div class="changes-header">
+                <div class="changes-icon">🔄</div>
+                <h4>What Changed</h4>
+              </div>
+              <ul class="changes-list">
+                {{#each changes}}
+                <li>
+                  <span class="change-field">{{field}}:</span>
+                  <span class="old-value">{{oldValue}}</span>
+                  <span class="arrow">→</span>
+                  <span class="new-value">{{newValue}}</span>
+                </li>
+                {{/each}}
+              </ul>
+            </div>
+            {{/if}}
+
+            <div class="task-meta">
+              <div class="meta-item">
+                <div class="meta-icon priority-icon">🔥</div>
+                <div class="meta-content">
+                  <div class="meta-label">Priority</div>
+                  <div class="meta-value">
+                    <span class="priority-badge priority-{{priority_class}}"
+                      >{{priority}}</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div class="meta-item">
+                <div class="meta-icon type-icon">📋</div>
+                <div class="meta-content">
+                  <div class="meta-label">Issue Type</div>
+                  <div class="meta-value">{{issue_type}}</div>
+                </div>
+              </div>
+
+              <div class="meta-item">
+                <div class="meta-icon assignee-icon">👤</div>
+                <div class="meta-content">
+                  <div class="meta-label">Assigned To</div>
+                  <div class="meta-value">{{assignee_name}}</div>
+                </div>
+              </div>
+
+              <div class="meta-item">
+                <div class="meta-icon assignor-icon">👨‍💼</div>
+                <div class="meta-content">
+                  <div class="meta-label">Assigned By</div>
+                  <div class="meta-value">{{assignor_name}}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="description-section">
+            <div class="description-header">
+              <div class="description-icon">📝</div>
+              <h4>Task Description</h4>
+            </div>
+            <p class="description-text">{{{description}}}</p>
+          </div>
+
+          <div class="cta-section">
+            <a href="{{task_url}}" class="cta-button"> View Task Details </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+`
+  }
+]
+
+export const EmailTemplatesSeed = async () => {
+  return await db.transaction(async (tx) => {
+    try {
+      console.log("🌱 Seeding email templates...")
+
+      // Use the transaction's `insert` method
+      await tx
+        .insert(emailTemplatesTable)
+        .values(templatesToSeed)
+        .onConflictDoNothing({ target: emailTemplatesTable.name })
+
+      console.log("✅ Email template seeding complete.")
+    } catch (error) {
+      console.error("❌ Error seeding email templates:", error)
+      tx.rollback() // Roll back the transaction on failure
+      process.exit(1)
+    }
+  })
+}
+
+// You can call the function directly if you want this file to be executable
+EmailTemplatesSeed()

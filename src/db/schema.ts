@@ -5,7 +5,9 @@ import {
   pgTable,
   primaryKey,
   varchar,
-  json
+  json,
+  boolean,
+  text
 } from "drizzle-orm/pg-core"
 // import { integer, primaryKey, pgTable, varchar } from "drizzle-orm/sqlite-core"
 
@@ -1403,3 +1405,15 @@ export type SelectEventRegistration =
     event?: SelectEvent
     user?: SelectUser
   }
+
+export const emailTemplatesTable = pgTable("email_templates", {
+  unique_id: varchar("unique_id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+
+  subject: varchar("subject", { length: 255 }).notNull(),
+  body: text("body").notNull(),
+  isActive: boolean("is_active").default(true),
+  ...timestamps
+})

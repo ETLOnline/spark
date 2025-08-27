@@ -7,7 +7,10 @@ export const enqueueTaskUpdateEmailAction = CreateServerAction(
   true,
   async (to: string, dynamicTemplateData: any) => {
     try {
-      await POST.enqueue({ to, dynamicTemplateData }, { delay: "1m" })
+      await POST.enqueue(
+        { to, dynamicTemplateData, template_name: "update_task" },
+        { delay: "1m" }
+      )
       return {
         success: true,
         message: "Update Task email enqueued successfully!"
