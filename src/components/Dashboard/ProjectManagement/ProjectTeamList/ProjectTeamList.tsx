@@ -188,9 +188,9 @@ export default function ProjectTeamList({
     }
   }
 
-  const handleRemoveUser = async (userId: string) => {
+  const handleRemoveUser = async (userId: string, roleName: string) => {
     try {
-      if (!selectedUser) {
+      if (!roleName) {
         toast({
           title: "Error",
           description: "No user selected for removal.",
@@ -201,7 +201,7 @@ export default function ProjectTeamList({
 
       // Find the role object based on the selected user's current role name
       const roleToRemove = spaceRolesData?.data?.find(
-        (role) => role.name === selectedUser.role
+        (role) => role.name === roleName
       )
 
       if (!roleToRemove) {
@@ -401,7 +401,7 @@ export default function ProjectTeamList({
                                   className="text-destructive"
                                   onClick={() => {
                                     setSelectedUser(cu)
-                                    handleRemoveUser(cu.user_id)
+                                    handleRemoveUser(cu.user_id, cu.role ?? "")
                                   }}
                                 >
                                   Remove User
