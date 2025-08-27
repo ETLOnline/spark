@@ -7,7 +7,7 @@ export class MailchimpAdapter implements MailAdapter {
   async sendMail(payload: MailPayload): Promise<void> {
     const message = {
       from_email: payload.from,
-      from_name: "ETL Online",
+      from_name: "Spark",
       subject: payload.subject,
       html: payload.body,
       to: [{ email: payload.to, type: "to" }]
