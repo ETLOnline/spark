@@ -61,7 +61,6 @@ const userQualificationSchema = z
       const start = moment(data.duration_from)
       const end = moment(data.duration_to)
       const diff = end.diff(start, "years")
-      console.log("data log", { start, end, diff })
 
       return diff >= 1 && diff <= 10
     },
