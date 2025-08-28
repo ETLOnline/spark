@@ -13,6 +13,7 @@ import {
 } from "@/src/components/ui/dialog"
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
+import { ScrollArea } from "@/src/components/ui/scroll-area"
 import {
   Select,
   SelectContent,
@@ -59,7 +60,7 @@ const spaceSchema = z.object({
     .string()
     .min(1, "Description required")
     .max(150, "Description is too long"),
-  space_type: z.string().optional(),
+  space_type: z.string().min(1, "Space type required"),
   publish_space: z.boolean().optional()
 })
 
@@ -292,153 +293,138 @@ function CreateSpaceModal({
                 : "You can create Spaces."}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={form.handleSubmit(submitData)}>
-            <div className="grid gap-4 py-4">
-              <div className="flex flex-col">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="space_name">Title</Label>
-                  <div className="w-[70%]">
-                    <Controller
-                      name="space_name"
-                      defaultValue=""
-                      control={form.control}
-                      render={({ field }) => (
-                        <Input
-                          id="space_name"
-                          placeholder="Enter space title"
-                          {...field}
-                          className="col-span-3"
-                        />
-                      )}
-                    />
-                  </div>
-                </div>
-                <div className="text-left flex items-center gap-x-2 pt-1 pl-[30%]">
+          <ScrollArea className="h-[80vh] w-full p-3">
+            <form onSubmit={form.handleSubmit(submitData)}>
+              <div className="grid gap-4 py-4">
+                {/* Space Name */}
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="space_name">Space Name</Label>
+                  <Controller
+                    name="space_name"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input
+                        id="space_name"
+                        placeholder="Enter space name"
+                        {...field}
+                        className="col-span-3"
+                      />
+                    )}
+                  />
                   {error.space_name && (
                     <span className="text-red-500 text-sm">
                       {String(error.space_name.message)}
                     </span>
                   )}
                 </div>
-              </div>
-              <div className="flex flex-col">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="space_name">Space Slug</Label>
-                  <div className="w-[70%]">
-                    <Controller
-                      name="space_slug"
-                      defaultValue=""
-                      control={form.control}
-                      render={({ field }) => (
-                        <Input
-                          id="space_slug"
-                          placeholder="Enter space slug"
-                          {...field}
-                          className="col-span-3"
-                          disabled={true}
-                        />
-                      )}
-                    />
-                  </div>
-                </div>
-                <div className="text-left flex items-center gap-x-2 pt-1 pl-[30%]">
+
+                {/* Space Slug */}
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="space_slug">Space Slug</Label>
+                  <Controller
+                    name="space_slug"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input
+                        id="space_slug"
+                        placeholder="Enter space slug"
+                        {...field}
+                        className="col-span-3"
+                        disabled={true}
+                      />
+                    )}
+                  />
                   {error.space_slug && !isSlugAvailableLoading && (
-                    <div className="flex items-center text-red-500">
-                      <CircleXIcon className="mr-2 h-4 w-4" />
+                    <div className="flex items-center text-red-500 gap-x-2 pt-1">
+                      <CircleXIcon className="h-4 w-4" />
                       <span className="text-sm">
                         {String(error.space_slug.message)}
                       </span>
                     </div>
                   )}
                   {isSlugAvailableLoading && (
-                    <>
+                    <div className="flex items-center gap-x-2 pt-1">
                       <Loader size={LoaderSizes.sm} />
                       <span className="text-gray-500 text-sm">
-                        checking slug availibity
+                        Checking slug availability
                       </span>
-                    </>
+                    </div>
                   )}
                   {slugAvailableMessage && !isSlugAvailableLoading && (
-                    <div className="flex items-center gap-x-1 text-green-500">
-                      <CircleCheck className="mr-2 h-4 w-4" />
+                    <div className="flex items-center gap-x-2 pt-1 text-green-500">
+                      <CircleCheck className="h-4 w-4" />
                       <span className="text-sm">{slugAvailableMessage}</span>
                     </div>
                   )}
                 </div>
-              </div>
-              <div className="flex flex-col">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="description">Description</Label>
-                  <div className="w-[70%]">
-                    <Controller
-                      name="description"
-                      control={form.control}
-                      render={({ field }) => {
-                        const charCount = field.value?.length || 0
-                        const maxChars = 150
-                        return (
-                          <>
-                            <Textarea
-                              id="description"
-                              placeholder="Description"
-                              {...field}
-                              className="col-span-3"
-                              maxLength={maxChars}
-                            />
-                            <div className="text-sm text-muted-foreground text-right mt-1">
-                              {charCount}/{maxChars} Characters
-                            </div>
-                          </>
-                        )
-                      }}
-                    />
-                  </div>
-                </div>
-                <div className="text-left flex items-center gap-x-2 pt-1 pl-[30%]">
-                  {error.description && (
-                    <span className="text-red-500 text-sm">
-                      {String(error.description.message)}
-                    </span>
-                  )}
-                </div>
-              </div>
 
-              <div className="flex flex-col">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="space_type">Space type</Label>
-                  <div className="w-[70%]">
-                    <Controller
-                      name="space_type"
-                      control={form.control}
-                      render={({ field }) => (
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="public">Public</SelectItem>
-                            <SelectItem value="private">Private</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                  </div>
+                {/* Description */}
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Controller
+                    name="description"
+                    control={form.control}
+                    render={({ field }) => {
+                      const charCount = field.value?.length || 0
+                      const maxChars = 150
+                      return (
+                        <>
+                          <Textarea
+                            id="description"
+                            placeholder="Description"
+                            {...field}
+                            className="col-span-3"
+                            maxLength={maxChars}
+                          />
+                          <div className="text-sm flex justify-between items-center text-muted-foreground text-right mt-1">
+                            {error.description && (
+                              <span className="text-red-500 text-sm">
+                                {String(error.description.message)}
+                              </span>
+                            )}
+                            <span className="ml-auto">
+                              {charCount}/{maxChars} Characters
+                            </span>
+                          </div>
+                        </>
+                      )
+                    }}
+                  />
                 </div>
-                <div className="text-left flex items-center gap-x-2 pt-1 pl-[30%]">
+
+                {/* Space Type */}
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="space_type">Space Type</Label>
+                  <Controller
+                    name="space_type"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="public">Public</SelectItem>
+                          <SelectItem value="private">Private</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                   {error.space_type && (
                     <span className="text-red-500 text-sm">
                       {String(error.space_type.message)}
                     </span>
                   )}
                 </div>
-              </div>
 
-              <div className="flex items-center justify-between">
-                <Label htmlFor="publish_space">Publish Space</Label>
-                <div className="w-[70%]">
+                {/* Publish Space */}
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="publish_space">Publish Space</Label>
                   <Controller
                     name="publish_space"
                     control={form.control}
@@ -451,35 +437,38 @@ function CreateSpaceModal({
                   />
                 </div>
               </div>
-            </div>
-            <DialogFooter>
-              {editSpace === true ? (
-                <Button
-                  onClick={() => form.handleSubmit(submitData)}
-                  loading={addUpdateSpaceLoading}
-                  disabled={
-                    error.space_name?.message
-                      ? true
-                      : false || addUpdateSpaceLoading || isReloadingPermissions
-                  }
-                >
-                  Save
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  loading={addSpaceLoading}
-                  disabled={
-                    error.space_name?.message
-                      ? true
-                      : false || addSpaceLoading || isSlugAvailableLoading
-                  }
-                >
-                  Create
-                </Button>
-              )}
-            </DialogFooter>
-          </form>
+
+              <DialogFooter>
+                {editSpace === true ? (
+                  <Button
+                    onClick={() => form.handleSubmit(submitData)}
+                    loading={addUpdateSpaceLoading}
+                    disabled={
+                      error.space_name?.message
+                        ? true
+                        : false ||
+                          addUpdateSpaceLoading ||
+                          isReloadingPermissions
+                    }
+                  >
+                    Save
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    loading={addSpaceLoading}
+                    disabled={
+                      error.space_name?.message
+                        ? true
+                        : false || addSpaceLoading || isSlugAvailableLoading
+                    }
+                  >
+                    Create
+                  </Button>
+                )}
+              </DialogFooter>
+            </form>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </div>

@@ -31,45 +31,104 @@ import { useState } from "react"
 import Heading from "@tiptap/extension-heading"
 import "./RichEditorFormat.css"
 import CharacterCount from "@tiptap/extension-character-count"
+import Image from "@tiptap/extension-image"
+import { Image as ImageIcon } from "lucide-react"
+import { AddImageToTaskAction } from "@/src/server-actions/Tasks/Task"
+import Loader from "./Loader/Loader"
+import { LoaderSizes } from "./types/loader-types"
 
 interface RichTextEditorProps {
   value?: string
   onChange?: (content: string) => void
+  image_uploading?: boolean
 }
 
 const limit = 1000
 export default function RichTextEditor({
   value,
-  onChange
+  onChange,
+  image_uploading
 }: RichTextEditorProps) {
   const [linkUrl, setLinkUrl] = useState("")
   const [showLinkInput, setShowLinkInput] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const CustomImage = Image.extend({
+    renderHTML({ HTMLAttributes }) {
+      return ["div", { class: "tiptap-image-wrapper" }, ["img", HTMLAttributes]]
+    }
+  })
 
   const editor = useEditor({
     extensions: [
       StarterKit,
       Underline,
-      Link.configure({
-        openOnClick: false
-      }),
-      TextAlign.configure({
-        types: ["heading", "paragraph"]
-      }),
-      Heading.configure({
-        levels: [1, 2, 3]
-      }),
-      CharacterCount.configure({
-        limit
+      Link.configure({ openOnClick: false }),
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      Heading.configure({ levels: [1, 2, 3] }),
+      CharacterCount.configure({ limit }),
+      CustomImage.extend({
+        inline: false,
+        allowBase64: true,
+        HTMLAttributes: {
+          class: "CustomImage"
+        }
       })
     ],
     content: value,
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none  p-4"
+          "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none p-4"
+      },
+
+      handlePaste(view, event) {
+        if (!image_uploading) return false
+
+        const items = event.clipboardData?.items
+        if (!items) return false
+
+        for (const item of items) {
+          if (item.type.startsWith("image/")) {
+            const file = item.getAsFile()
+            if (!file) return false
+
+            setLoading(true)
+            const reader = new FileReader()
+            reader.onload = async () => {
+              const base64String = reader.result as string
+
+              try {
+                const res = await AddImageToTaskAction(
+                  file.name,
+                  base64String,
+                  file.type
+                )
+                if (res.success && res.data) {
+                  editor
+                    ?.chain()
+                    .focus()
+                    .insertContentAt(editor.state.selection.head, {
+                      type: "image",
+                      attrs: { src: res.data }
+                    })
+                    .run()
+
+                  setLoading(false)
+                }
+              } catch {
+                console.error("Failed to upload pasted image")
+                setLoading(false)
+              }
+            }
+            reader.readAsDataURL(file)
+
+            return true
+          }
+        }
+        return false
       }
     },
-
     onUpdate({ editor }) {
       const html = editor.getHTML()
       if (onChange) {
@@ -97,6 +156,47 @@ export default function RichTextEditor({
 
   const removeLink = () => {
     editor.chain().focus().extendMarkRange("link").unsetLink().run()
+  }
+
+  const handleUploadImage = () => {
+    const fileInput = document.createElement("input")
+    fileInput.type = "file"
+    fileInput.accept = "image/*"
+    fileInput.onchange = () => {
+      setLoading(true)
+
+      const file = fileInput.files?.[0]
+      if (!file) return
+
+      const reader = new FileReader()
+      reader.onload = async () => {
+        const base64String = reader.result as string
+
+        try {
+          const res = await AddImageToTaskAction(
+            file.name,
+            base64String,
+            file.type
+          )
+
+          if (res.success && res.data) {
+            editor
+              ?.chain()
+              .focus()
+              .insertContentAt(editor.state.selection.head, {
+                type: "image",
+                attrs: { src: res.data }
+              })
+              .run()
+            setLoading(false)
+          }
+        } catch {
+          console.error("Failed to upload image")
+        }
+      }
+      reader.readAsDataURL(file)
+    }
+    fileInput.click()
   }
 
   return (
@@ -255,6 +355,23 @@ export default function RichTextEditor({
           <AlignJustify className="h-4 w-4" />
         </Button>
 
+        {image_uploading ? (
+          <>
+            <Separator orientation="vertical" className="h-6" />
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                handleUploadImage()
+              }}
+            >
+              <ImageIcon className="h-4 w-4" />
+            </Button>
+          </>
+        ) : null}
+
         <Separator orientation="vertical" className="h-6" />
 
         {/* Link */}
@@ -328,8 +445,14 @@ export default function RichTextEditor({
       )}
 
       {/* Editor Content */}
-      <div className="min-h-[200px] rich-editor">
-        <EditorContent editor={editor} />
+
+      <div className="relative rich-editor">
+        <EditorContent editor={editor} className="min-h-[200px]" />
+        {loading ? (
+          <div className="absolute inset-0 bg-transparent backdrop-blur-sm z-50 flex flex-col items-center justify-center p-4 text-center">
+            <Loader size={LoaderSizes.md} />
+          </div>
+        ) : null}
       </div>
 
       {/* Footer */}
