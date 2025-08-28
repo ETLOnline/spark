@@ -30,7 +30,6 @@ interface Props {
 function SpacesCard({ space, setIsChannelMember }: Props) {
   const user = useAtomValue(userStore.AuthUser)
   const encodedSpaceSlug = encodeURIComponent(space.space_slug)
-
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "SPACE",
@@ -41,6 +40,9 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
     : false
   const canViewSpace = permissionChecker
     ? permissionChecker?.canAccess("space.view")
+    : false
+  const canUpdateSpace = permissionChecker
+    ? permissionChecker?.canAccess("space.update")
     : false
 
   return (
@@ -59,32 +61,34 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
             {space.space_type === "private" && (
               <Lock className="text-muted-foreground" height={14} />
             )}
-            {space.publish_space ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Check className="text-muted-foreground" height={14} />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Published</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <PencilRuler
-                      className="text-muted-foreground"
-                      height={14}
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Draft</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+
+            {canUpdateSpace &&
+              (space.publish_space ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Check className="text-muted-foreground" height={14} />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Published</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <PencilRuler
+                        className="text-muted-foreground"
+                        height={14}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Draft</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ))}
           </CardTitle>
           {canSpaceAllowAction || space.space_type === "public" ? (
             <SpacesActionButtons
