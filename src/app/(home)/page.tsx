@@ -1305,9 +1305,7 @@ export default function HomePage() {
                         </p>
                       </div>
                       <div className="text-center">
-                        <div
-                          className={`w-12 h-12 bg-gradient-to-r ${getGradient(1)} rounded-xl flex items-center justify-center mx-auto mb-3`}
-                        >
+                        <div className="w-12 h-12 bg-gradient-to-r from-primary to-accent rounded-xl flex items-center justify-center mx-auto mb-3">
                           <TrendingUp className="w-6 h-6 text-white" />
                         </div>
                         <h5 className="font-semibold text-foreground mb-2">
@@ -1319,9 +1317,7 @@ export default function HomePage() {
                         </p>
                       </div>
                       <div className="text-center">
-                        <div
-                          className={`w-12 h-12 bg-gradient-to-r ${getGradient(2)} rounded-xl flex items-center justify-center mx-auto mb-3`}
-                        >
+                        <div className="w-12 h-12 bg-gradient-to-r from-primary to-accent rounded-xl flex items-center justify-center mx-auto mb-3">
                           <Brain className="w-6 h-6 text-white" />
                         </div>
                         <h5 className="font-semibold text-foreground mb-2">

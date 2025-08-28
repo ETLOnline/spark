@@ -225,10 +225,10 @@ export default function PrivacyPolicy() {
                 <p className="text-foreground font-medium flex items-center">
                   <span className="text-primary mr-2">📧</span>
                   <a
-                    href="mailto:info@etlonline.org"
+                    href="mailto:spark-noreply@etlonline.org"
                     className="text-primary hover:text-primary/80 underline decoration-primary/30 hover:decoration-primary/60 transition-colors"
                   >
-                    info@etlonline.org
+                    spark-noreply@etlonline.org
                   </a>
                 </p>
               </div>

@@ -35,7 +35,7 @@ function Footer() {
             <ul className="space-y-3 text-gray-400">
               <li>
                 <Link
-                  href="mailto:info@etlonline.org"
+                  href="mailto:spark-noreply@etlonline.org"
                   className="hover:text-white transition-colors"
                 >
                   Contact Us
