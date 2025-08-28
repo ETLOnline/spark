@@ -59,6 +59,14 @@ function Header() {
                         </Link>
 
                         <Link
+                          href="#mentors"
+                          className="p-2 w-full text-center hover:bg-primary hover:text-primary-foreground rounded-md font-medium"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          Mentors
+                        </Link>
+
+                        <Link
                           href="#enterprise"
                           className="p-2 w-full text-center hover:bg-primary hover:text-primary-foreground rounded-md font-medium"
                           onClick={() => setIsMenuOpen(false)}
@@ -90,13 +98,13 @@ function Header() {
                           Roadmap
                         </Link>
 
-                        <Link
+                        {/* <Link
                           href="#testimonials"
                           className="p-2 w-full text-center hover:bg-primary hover:text-primary-foreground rounded-md font-medium"
                           onClick={() => setIsMenuOpen(false)}
                         >
                           Success Stories
-                        </Link>
+                        </Link> */}
                       </div>
                     </SheetHeader>
                   </SheetContent>
@@ -125,6 +133,12 @@ function Header() {
                 Community
               </Link>
               <Link
+                href="#mentors"
+                className="text-foreground dark:text-foreground hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
+              >
+                Mentors
+              </Link>
+              <Link
                 href="#enterprise"
                 className="text-foreground dark:text-foreground hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
               >
@@ -148,12 +162,12 @@ function Header() {
               >
                 Roadmap
               </Link>
-              <Link
+              {/* <Link
                 href="#testimonials"
                 className="w-full text-foreground dark:text-foreground hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
               >
                 Success Stories
-              </Link>
+              </Link> */}
             </div>
 
             <div className="flex items-center gap-2">

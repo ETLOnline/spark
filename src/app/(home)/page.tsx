@@ -751,7 +751,7 @@ export default function HomePage() {
 
       {/* Featured Mentors Section */}
 
-      <section id="enterprise" className="py-24 px-6  relative overflow-hidden">
+      <section id="mentors" className="py-24 px-6  relative overflow-hidden">
         <div className="absolute inset-0 bg-secondary/10 dark:bg-secondary/20" />
         <div className="container mx-auto relative z-10">
           <motion.div
