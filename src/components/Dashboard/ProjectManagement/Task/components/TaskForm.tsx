@@ -433,6 +433,7 @@ export default function TaskForm({
                       loading={loading}
                       variant={"outline"}
                       className="w-full"
+                      disabled={loading}
                     >
                       {selectedTask ? "Update Task" : "Create Task"}
                     </Button>
