@@ -228,10 +228,10 @@ export default function PrivacyPolicy() {
                     <Mail />{" "}
                   </span>
                   <a
-                    href="mailto:spark-noreply@etlonline.org"
+                    href="mailto:info@etlonline.org"
                     className="text-primary hover:text-primary/80 underline decoration-primary/30 hover:decoration-primary/60 transition-colors"
                   >
-                    spark-noreply@etlonline.org
+                    info@etlonline.org
                   </a>
                 </p>
               </div>
