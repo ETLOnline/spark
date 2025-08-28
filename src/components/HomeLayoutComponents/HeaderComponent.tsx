@@ -65,12 +65,6 @@ function Header() {
               >
                 Roadmap
               </Link>
-              <Link
-                href="#testimonials"
-                className="text-foreground dark:text-foreground hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
-              >
-                Success Stories
-              </Link>
               <div className="flex items-center space-x-4">
                 <ModeToggle />
                 <SignedIn>

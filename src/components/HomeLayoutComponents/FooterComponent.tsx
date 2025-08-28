@@ -31,68 +31,14 @@ function Footer() {
           </div>
 
           <div>
-            <h3 className="font-bold mb-6 text-lg">Platform</h3>
-            <ul className="space-y-3 text-gray-400">
-              <li>
-                <Link href="#" className="hover:text-white transition-colors">
-                  Communities
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-white transition-colors">
-                  Mentorship
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-white transition-colors">
-                  Projects
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-white transition-colors">
-                  Events
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-bold mb-6 text-lg">Resources</h3>
-            <ul className="space-y-3 text-gray-400">
-              <li>
-                <Link href="#" className="hover:text-white transition-colors">
-                  Documentation
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-white transition-colors">
-                  Help Center
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-white transition-colors">
-                  API
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-white transition-colors">
-                  Blog
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
             <h3 className="font-bold mb-6 text-lg">Connect</h3>
             <ul className="space-y-3 text-gray-400">
               <li>
-                <Link href="#" className="hover:text-white transition-colors">
+                <Link
+                  href="mailto:info@etlonline.org"
+                  className="hover:text-white transition-colors"
+                >
                   Contact Us
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-white transition-colors">
-                  Support
                 </Link>
               </li>
               <li>
