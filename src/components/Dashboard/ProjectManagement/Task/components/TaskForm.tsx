@@ -351,6 +351,7 @@ export default function TaskForm({
                           className="col-span-3 !text-lg"
                           autoFocus
                           required
+                          disabled={!isAllowedAction}
                           onBlur={() => setActiveField(null)}
                         />
                       ) : (
@@ -394,6 +395,7 @@ export default function TaskForm({
                         value={field.value}
                         onChange={field.onChange}
                         image_uploading={true}
+                        editable={isAllowedAction}
                       />
                     ) : (
                       <div
@@ -456,6 +458,7 @@ export default function TaskForm({
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
+                            disabled={!isAllowedAction}
                           >
                             <SelectTrigger
                               id="status_id"
@@ -512,6 +515,7 @@ export default function TaskForm({
                           <MultiSelect
                             options={assigneeOptions}
                             selected={selectedAssignee}
+                            disabled={!isAllowedAction}
                             onChange={(newselected) => {
                               if (newselected.length === 0) {
                                 setSelectedAssignee([
@@ -575,6 +579,7 @@ export default function TaskForm({
                           <MultiSelect
                             options={assignorOptions}
                             selected={selectedAssignor}
+                            disabled={!isAllowedAction}
                             onChange={(newselected) => {
                               const latestSelected =
                                 newselected?.[newselected.length - 1]
@@ -631,6 +636,7 @@ export default function TaskForm({
                           <Select
                             value={field.value}
                             onValueChange={field.onChange}
+                            disabled={!isAllowedAction}
                           >
                             <SelectTrigger
                               id="task_priority"
@@ -694,6 +700,7 @@ export default function TaskForm({
                           <Select
                             value={field.value}
                             onValueChange={field.onChange}
+                            disabled={!isAllowedAction}
                           >
                             <SelectTrigger
                               id="task_type"
@@ -752,6 +759,7 @@ export default function TaskForm({
                       render={({ field }) =>
                         activeField === "points" ? (
                           <Input
+                            disabled={!isAllowedAction}
                             id="story_points"
                             type="number"
                             min={0}
