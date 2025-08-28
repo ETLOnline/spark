@@ -680,70 +680,91 @@ export default function HomePage() {
                 <Loader size={LoaderSizes.lg} />
               </div>
             ) : (
-              featuredCommunities.map((commnity) => (
-                <motion.div key={commnity.id}>
-                  <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl group bg-card">
-                    <CardHeader>
-                      <CardTitle>
-                        <Link href={`/communities/${commnity.slug}`}>
-                          <div className="flex flex-row gap-4 items-center mb-6">
-                            <Avatar className="w-12 h-12  group-hover:scale-110 transition-transform duration-300">
-                              <AvatarImage
-                                src={"/images/default-avatar.png"}
-                                alt={commnity.title}
-                              />
-                              <AvatarFallback>
-                                {getInitials(commnity.title)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <h3 className="text-xl font-semibold mb-1 text-foreground">
-                                {commnity.title}
-                              </h3>
-                              <div className="text-sm font-normal text-muted-foreground">
-                                {commnity.communityMembers?.length} Members
+              <>
+                {featuredCommunities.map((commnity) => (
+                  <motion.div key={commnity.id}>
+                    <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl group bg-card">
+                      <CardHeader>
+                        <CardTitle>
+                          <Link href={`/communities/${commnity.slug}`}>
+                            <div className="flex flex-row gap-4 items-center mb-6">
+                              <Avatar className="w-12 h-12  group-hover:scale-110 transition-transform duration-300">
+                                <AvatarImage
+                                  src={"/images/default-avatar.png"}
+                                  alt={commnity.title}
+                                />
+                                <AvatarFallback>
+                                  {getInitials(commnity.title)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <h3 className="text-xl font-semibold mb-1 text-foreground">
+                                  {commnity.title}
+                                </h3>
+                                <div className="text-sm font-normal text-muted-foreground">
+                                  {commnity.communityMembers?.length} Members
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </Link>
-                      </CardTitle>
-                      <CardDescription>{commnity.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {/* <div className="text-4xl font-bold text-primary mb-6">
+                          </Link>
+                        </CardTitle>
+                        <CardDescription>
+                          {commnity.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {/* <div className="text-4xl font-bold text-primary mb-6">
                         {stat.total}
                       </div> */}
-                      <div className="mb-2">Featured Channels</div>
-                      <div className="space-y-3">
-                        {commnity.channels && commnity.channels?.length > 0 ? (
-                          commnity.channels?.map((channel) => (
-                            <div
-                              key={channel.id}
-                              className="flex justify-between items-center"
-                            >
-                              <span className="text-sm text-muted-foreground">
-                                {channel.channel_name}
-                              </span>
-                              <Link
-                                href={`channels/${channel.channel_slug}/spaces`}
+                        <div className="mb-2">Featured Channels</div>
+                        <div className="space-y-3">
+                          {commnity.channels &&
+                          commnity.channels?.length > 0 ? (
+                            commnity.channels?.map((channel) => (
+                              <div
+                                key={channel.id}
+                                className="flex justify-between items-center"
                               >
-                                <Button variant={"outline"} size="sm">
-                                  <ArrowRight className="w-2 h-2" />
-                                </Button>
-                              </Link>
-                            </div>
-                          ))
-                        ) : (
-                          <NoDataCard
-                            title="No Channels Found"
-                            icon={<ListX className="h-8 w-8" />}
-                          />
-                        )}
-                      </div>
+                                <span className="text-sm text-muted-foreground">
+                                  {channel.channel_name}
+                                </span>
+                                <Link
+                                  href={`channels/${channel.channel_slug}/spaces`}
+                                >
+                                  <Button variant={"outline"} size="sm">
+                                    <ArrowRight className="w-2 h-2" />
+                                  </Button>
+                                </Link>
+                              </div>
+                            ))
+                          ) : (
+                            <NoDataCard
+                              title="No Channels Found"
+                              icon={<ListX className="h-8 w-8" />}
+                            />
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+
+                {/* View All Communities Card */}
+                <motion.div>
+                  <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl group bg-card">
+                    <CardTitle className="h-0 absolute" />
+                    <CardContent className="h-full">
+                      <Link
+                        href="/communities"
+                        className="flex flex-col items-center justify-center h-full text-primary font-semibold text-lg hover:underline underline-offset-4"
+                      >
+                        <ArrowRight className="h-10 w-10 transition-transform duration-300 group-hover:translate-x-2 group-hover:scale-110" />
+                        See All Communities
+                      </Link>
                     </CardContent>
                   </Card>
                 </motion.div>
-              ))
+              </>
             )}
           </motion.div>
         </div>
