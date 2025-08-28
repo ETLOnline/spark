@@ -35,7 +35,7 @@ const userQualificationSchema = z
       .refine((val) => moment(val, "YYYY", true).isValid(), {
         message: "Invalid start year"
       })
-      .refine((val) => parseInt(val, 10) >= 1990, {
+      .refine((val) => moment(val, "YYYY", true).year() >= 1990, {
         message: "Start year must be 1990 or later"
       }),
 
@@ -47,9 +47,9 @@ const userQualificationSchema = z
   })
   .refine(
     (data) => {
-      const start = parseInt(data.duration_from, 10)
-      const end = parseInt(data.duration_to, 10)
-      return start < end // must be before
+      const start = moment(data.duration_from)
+      const end = moment(data.duration_to)
+      return start < end
     },
     {
       message: "Start year must be before end year",
@@ -58,9 +58,11 @@ const userQualificationSchema = z
   )
   .refine(
     (data) => {
-      const start = parseInt(data.duration_from, 10)
-      const end = parseInt(data.duration_to, 10)
-      const diff = end - start
+      const start = moment(data.duration_from)
+      const end = moment(data.duration_to)
+      const diff = end.diff(start, "years")
+      console.log("data log", { start, end, diff })
+
       return diff >= 1 && diff <= 10
     },
     {
