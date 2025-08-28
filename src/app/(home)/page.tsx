@@ -667,9 +667,8 @@ export default function HomePage() {
               across Pakistan
             </p>
           </motion.div>
-
           <motion.div
-            className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16"
+            className="flex flex-wrap justify-center gap-8 mb-16"
             variants={staggerContainer}
             initial="initial"
             whileInView="animate"
@@ -681,7 +680,10 @@ export default function HomePage() {
               </div>
             ) : (
               featuredCommunities.map((commnity) => (
-                <motion.div key={commnity.id}>
+                <motion.div
+                  key={commnity.id}
+                  className="w-full sm:w-1/2 md:w-1/2 lg:w-1/4"
+                >
                   <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl group bg-card">
                     <CardHeader>
                       <CardTitle>
@@ -711,8 +713,8 @@ export default function HomePage() {
                     </CardHeader>
                     <CardContent>
                       {/* <div className="text-4xl font-bold text-primary mb-6">
-                        {stat.total}
-                      </div> */}
+                      {stat.total}
+                    </div> */}
                       <div className="mb-2">Featured Channels</div>
                       <div className="space-y-3">
                         {commnity.channels && commnity.channels?.length > 0 ? (
@@ -1093,7 +1095,7 @@ export default function HomePage() {
                 <CardContent className="p-10">
                   <div className="flex items-center gap-4 mb-8">
                     <div
-                      className={`w-16 h-16 bg-gradient-to-r ${getGradient(1)} rounded-2xl flex items-center justify-center shadow-lg`}
+                      className={`w-16 h-16 bg-gradient-to-r ${getGradient(0)} rounded-2xl flex items-center justify-center shadow-lg`}
                     >
                       <Briefcase className="w-8 h-8 text-white" />
                     </div>
@@ -1146,7 +1148,7 @@ export default function HomePage() {
                       </h5>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-secondary-foreground">
+                          <div className="text-2xl font-bold text-primary">
                             55+
                           </div>
                           <div className="text-sm text-muted-foreground">
@@ -1154,7 +1156,7 @@ export default function HomePage() {
                           </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-secondary-foreground">
+                          <div className="text-2xl font-bold text-primary">
                             10+
                           </div>
                           <div className="text-sm text-muted-foreground">
@@ -1640,8 +1642,8 @@ export default function HomePage() {
                         phase.status === "completed"
                           ? `bg-gradient-to-r ${getGradient(0)}`
                           : phase.status === "current"
-                            ? `bg-gradient-to-r ${getGradient(1)}`
-                            : `bg-gradient-to-r ${getGradient(2)}`
+                            ? `bg-gradient-to-r ${getGradient(0)}`
+                            : `bg-gradient-to-r ${getGradient(0)}`
                       }`}
                     >
                       {phase.status === "completed" ? (

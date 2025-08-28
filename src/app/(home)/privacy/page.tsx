@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { Mail } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "Privacy Policy - Spark Platform",
@@ -223,7 +224,9 @@ export default function PrivacyPolicy() {
               </p>
               <div className="bg-muted/50 rounded-xl p-4 border border-border">
                 <p className="text-foreground font-medium flex items-center">
-                  <span className="text-primary mr-2">📧</span>
+                  <span className="text-primary mr-2">
+                    <Mail />{" "}
+                  </span>
                   <a
                     href="mailto:spark-noreply@etlonline.org"
                     className="text-primary hover:text-primary/80 underline decoration-primary/30 hover:decoration-primary/60 transition-colors"

@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { Mail } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "Terms of Use - Spark Platform",
@@ -102,21 +103,21 @@ export default function TermsPage() {
               </p>
               <ul className="space-y-3 text-muted-foreground leading-relaxed">
                 <li className="flex items-start">
-                  <span className="w-2 h-2 bg-destructive rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                  <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></span>
                   Post false, offensive, or harmful content.
                 </li>
                 <li className="flex items-start">
-                  <span className="w-2 h-2 bg-destructive rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                  <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></span>
                   Misuse the platform for spam, commercial advertising, or
                   non-academic purposes.
                 </li>
                 <li className="flex items-start">
-                  <span className="w-2 h-2 bg-destructive rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                  <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></span>
                   Copy, modify, or distribute platform content without
                   permission.
                 </li>
                 <li className="flex items-start">
-                  <span className="w-2 h-2 bg-destructive rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                  <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></span>
                   Violate any applicable laws while using Spark.
                 </li>
               </ul>
@@ -184,8 +185,8 @@ export default function TermsPage() {
                   className="text-primary hover:text-primary/80 font-medium underline decoration-primary/30 hover:decoration-primary/60 transition-colors"
                 >
                   Privacy Policy
-                </Link>{" "}
-                (spark.etlonline.org/privacy).
+                </Link>
+                .
               </p>
             </section>
 
@@ -241,14 +242,16 @@ export default function TermsPage() {
                 <span className="w-8 h-8 bg-gradient-to-r from-teal-400 to-cyan-500 rounded-lg flex items-center justify-center text-white text-sm font-bold mr-3">
                   10
                 </span>
-                Contact
+                Contact Us
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 For questions about these Terms, please contact:
               </p>
               <div className="bg-muted/50 rounded-xl p-4 border border-border">
                 <p className="text-foreground font-medium flex items-center">
-                  <span className="text-primary mr-2">📧</span>
+                  <span className="text-primary mr-2">
+                    <Mail />{" "}
+                  </span>
                   <a
                     href="mailto:spark-noreply@etlonline.org"
                     className="text-primary hover:text-primary/80 underline decoration-primary/30 hover:decoration-primary/60 transition-colors"
