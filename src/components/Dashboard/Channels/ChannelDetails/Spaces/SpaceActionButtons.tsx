@@ -2,6 +2,7 @@ import { Button } from "@/src/components/ui/button"
 import {
   Edit,
   ExternalLink,
+  LogOut,
   MoreHorizontal,
   PlusCircle,
   Settings,
@@ -14,6 +15,7 @@ import {
   AttachSpaceUserAction,
   DeleteSpaceAction
 } from "@/src/server-actions/Space/Space"
+import { LeaveSpaceAction } from "@/src/server-actions/Space/SpaceActions"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { SelectSpace } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
@@ -42,6 +44,8 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
   const [joinLoading, joinResult, joinError, joinSpace] = useServerAction(
     AttachSpaceUserAction
   )
+  const [leaveLoading, leaveResult, leaveError, leaveSpace] =
+    useServerAction(LeaveSpaceAction)
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const superAdmin = useAtomValue(userStore.SuperAdmin)
   const [isSpaceMember, setIsSpaceMember] = useState<boolean>(false)
@@ -67,7 +71,23 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
           duration: 3000
         })
       } else {
-        console.error("Failed to join Channel:", res?.error)
+        console.error("Failed to join Space:", res?.error)
+      }
+    }
+  }
+
+  const handleLeaveSpace = async () => {
+    if (space.id) {
+      const res = await leaveSpace(space.id)
+      if (res?.success) {
+        setIsSpaceMember(false)
+        toast({
+          title: "Space Left",
+          description: "You have successfully left the Space!",
+          duration: 3000
+        })
+      } else {
+        console.error("Failed to leave Space:", res?.error)
       }
     }
   }
@@ -151,16 +171,21 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
               Edit
             </DropdownMenuItem>
           )}
-          {!superAdmin && (
-            <DropdownMenuItem
-              onClick={handleJoinSpace}
-              disabled={isSpaceMember || joinLoading}
-              className={
-                isSpaceMember ? "text-gray-500 cursor-not-allowed" : ""
-              }
-            >
+          {!superAdmin && !isSpaceMember && (
+            <DropdownMenuItem onClick={handleJoinSpace} disabled={joinLoading}>
               <PlusCircle className="mr-2 h-4 w-4" />
-              {joinLoading ? "Joining..." : isSpaceMember ? "Joined" : "Join"}
+              {joinLoading ? "Joining..." : "Join"}
+            </DropdownMenuItem>
+          )}
+
+          {!superAdmin && isSpaceMember && (
+            <DropdownMenuItem
+              onClick={handleLeaveSpace}
+              disabled={leaveLoading}
+              className="text-red-500 focus:text-red-500"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              {leaveLoading ? "Leaving..." : "Leave Space"}
             </DropdownMenuItem>
           )}
           {canViewSpaceUsers && (

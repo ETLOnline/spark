@@ -220,7 +220,7 @@ export default function CommunityCard({
                 </Button>
               ) : (
                 <Button
-                  variant="destructive"
+                  variant="outline"
                   onClick={async () => {
                     if (community.id) {
                       const res = await leaveCommunity(community.id)
@@ -237,6 +237,7 @@ export default function CommunityCard({
                     }
                   }}
                   disabled={leaveLoading}
+                  className="hover:bg-muted hover:text-red-500 focus:bg-muted focus:text-red-500"
                 >
                   Leave
                 </Button>

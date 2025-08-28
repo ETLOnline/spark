@@ -348,7 +348,7 @@ export default function CommunityDetailsClient({
                       </Button>
                     ) : (
                       <Button
-                        variant="destructive"
+                        variant="outline"
                         onClick={async () => {
                           if (community.id) {
                             const res = await leaveCommunity(community.id)
@@ -359,6 +359,8 @@ export default function CommunityDetailsClient({
                                 description: "You have left the community.",
                                 duration: 3000
                               })
+                              // Navigate back to communities list when leaving from community detail view
+                              window.location.href = "/communities"
                             } else {
                               console.error(
                                 "Failed to leave community:",
@@ -368,6 +370,7 @@ export default function CommunityDetailsClient({
                           }
                         }}
                         disabled={leaveLoading}
+                        className="hover:bg-muted hover:text-red-500 focus:bg-muted focus:text-red-500"
                       >
                         Leave
                       </Button>

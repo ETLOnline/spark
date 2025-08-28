@@ -25,7 +25,9 @@ import { userStore } from "@/src/store/user/userStore"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { AttachSpaceUserAction } from "@/src/server-actions/Space/Space"
+import { LeaveSpaceAction } from "@/src/server-actions/Space/SpaceActions"
 import { useToast } from "@/src/hooks/use-toast"
+import { LogOut } from "lucide-react"
 
 interface Props {
   space: SelectSpace
@@ -43,6 +45,8 @@ function SpaceSidebar({ space }: Props) {
   const [joinLoading, joinResult, joinError, joinSpace] = useServerAction(
     AttachSpaceUserAction
   )
+  const [leaveLoading, leaveResult, leaveError, leaveSpace] =
+    useServerAction(LeaveSpaceAction)
 
   const [isSpaceMember, setIsSpaceMember] = useState<boolean>(false)
 
@@ -60,6 +64,24 @@ function SpaceSidebar({ space }: Props) {
       const res = await joinSpace(space.id, currentUserId)
       if (res?.success) {
         setIsSpaceMember(true)
+        // Notify other components about the status change
+        localStorage.setItem(
+          "space_member_status",
+          JSON.stringify({
+            spaceId: space.id,
+            isMember: true
+          })
+        )
+        // Trigger storage event for other tabs/components
+        window.dispatchEvent(
+          new StorageEvent("storage", {
+            key: "space_member_status",
+            newValue: JSON.stringify({
+              spaceId: space.id,
+              isMember: true
+            })
+          })
+        )
         toast({
           title: "Space Joined",
           description: "You have successfully joined the Space!",
@@ -67,6 +89,46 @@ function SpaceSidebar({ space }: Props) {
         })
       } else {
         console.error("Failed to join Space:", res?.error)
+      }
+    }
+  }
+
+  const handleLeaveSpace = async () => {
+    if (space.id) {
+      const res = await leaveSpace(space.id)
+      if (res?.success) {
+        setIsSpaceMember(false)
+        // Notify other components about the status change
+        localStorage.setItem(
+          "space_member_status",
+          JSON.stringify({
+            spaceId: space.id,
+            isMember: false
+          })
+        )
+        // Trigger storage event for other tabs/components
+        window.dispatchEvent(
+          new StorageEvent("storage", {
+            key: "space_member_status",
+            newValue: JSON.stringify({
+              spaceId: space.id,
+              isMember: false
+            })
+          })
+        )
+        toast({
+          title: "Space Left",
+          description: "You have successfully left the Space!",
+          duration: 3000
+        })
+
+        // Navigate back to channel page since we're inside a space
+        const encodedChannelSlug = encodeURIComponent(
+          space.channel?.channel_slug ?? ""
+        )
+        window.location.href = `/channels/${encodedChannelSlug}/spaces`
+      } else {
+        console.error("Failed to leave Space:", res?.error)
       }
     }
   }
@@ -79,6 +141,25 @@ function SpaceSidebar({ space }: Props) {
   useEffect(() => {
     setSpaceFeatures(currentSpace?.features || [])
   }, [currentSpace])
+
+  // Listen for changes in the space context menu to keep the sidebar in sync
+  useEffect(() => {
+    const handleStorageEvent = (e: StorageEvent) => {
+      if (e.key === "space_member_status" && e.newValue) {
+        try {
+          const data = JSON.parse(e.newValue)
+          if (data.spaceId === space.id) {
+            setIsSpaceMember(data.isMember)
+          }
+        } catch (err) {
+          console.error("Error parsing space member status:", err)
+        }
+      }
+    }
+
+    window.addEventListener("storage", handleStorageEvent)
+    return () => window.removeEventListener("storage", handleStorageEvent)
+  }, [space.id])
 
   const { permissionChecker } = usePermissionChecker(
     "scoped",
@@ -138,7 +219,10 @@ function SpaceSidebar({ space }: Props) {
       <SidebarGroupContent>
         <SidebarMenu>
           {/* Space Name */}
-          <SidebarMenuButton size={"lg"}>
+          <SidebarMenuButton
+            size={"lg"}
+            className="hover:bg-transparent hover:text-sidebar-foreground"
+          >
             <div className="flex items-center gap-3 w-full">
               {/* Avatar */}
               <div className="flex aspect-square items-center justify-center rounded-lg text-sidebar-primary-foreground flex-shrink-0">
@@ -151,30 +235,48 @@ function SpaceSidebar({ space }: Props) {
                     {space.space_name}
                   </span>
                   {!isSuperAdmin && (
-                    <span
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        // Only handle click if not disabled
-                        if (!isSpaceMember && !joinLoading) {
-                          handleJoinSpace()
-                        }
-                      }}
-                      className={`inline-flex items-center rounded-md border border-input bg-background px-3 py-1 text-xs font-medium ring-offset-background transition-colors ${
-                        isSpaceMember || joinLoading
-                          ? "text-gray-500 cursor-not-allowed opacity-50"
-                          : "hover:bg-accent hover:text-accent-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      }`}
-                    >
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      {joinLoading
-                        ? "Joining..."
-                        : isSpaceMember
-                          ? "Joined"
-                          : "Join"}
-                    </span>
+                    <>
+                      {isSpaceMember ? (
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            // Only handle click if not disabled
+                            if (!leaveLoading) {
+                              handleLeaveSpace()
+                            }
+                          }}
+                          className={`inline-flex items-center rounded-md border border-input bg-background px-3 py-1 text-xs font-medium ring-offset-background transition-colors ${
+                            leaveLoading
+                              ? "text-gray-500 cursor-not-allowed opacity-50"
+                              : "text-muted-foreground hover:bg-muted hover:text-red-500 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          }`}
+                        >
+                          <LogOut className="mr-2 h-3 w-3" />
+                          {leaveLoading ? "Leaving..." : "Leave"}
+                        </span>
+                      ) : (
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            // Only handle click if not disabled
+                            if (!joinLoading) {
+                              handleJoinSpace()
+                            }
+                          }}
+                          className={`inline-flex items-center rounded-md border border-primary bg-background px-3 py-1 text-xs font-medium ring-offset-background transition-colors ${
+                            joinLoading
+                              ? "text-gray-500 cursor-not-allowed opacity-50"
+                              : "text-primary hover:bg-primary hover:text-primary-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          }`}
+                        >
+                          <PlusCircle className="mr-2 h-3 w-3" />
+                          {joinLoading ? "Joining..." : "Join"}
+                        </span>
+                      )}
+                    </>
                   )}
                 </div>
-                <span className="truncate flex items-center gap-1 text-xs hover:text-sidebar-accent-foreground">
+                <span className="truncate flex items-center gap-1 text-xs">
                   <Users className="h-3 w-3" />
                   {space.users?.length || 0} members
                 </span>

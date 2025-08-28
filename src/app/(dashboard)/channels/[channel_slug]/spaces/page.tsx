@@ -1,6 +1,6 @@
 "use client"
 
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
 import { channelStore } from "@/src/store/channel/channelStore"
@@ -12,7 +12,7 @@ import SpacesCard from "@/src/components/Dashboard/Channels/ChannelDetails/Space
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
 import CreateSpaceModal from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/CreateSpaceModal"
 import { Button } from "@/src/components/ui/button"
-import { CirclePlus } from "lucide-react"
+import { CirclePlus, LogOut } from "lucide-react"
 import { GetSpacesAction } from "@/src/server-actions/Space/Space"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { SelectChannel, SelectSpace } from "@/src/db/schema"
@@ -20,10 +20,14 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import Overlay from "@/src/components/common/Overlay/OverLay"
 import { communityStore } from "@/src/store/community/communityStore"
 import { AttachChannelUserAction } from "@/src/server-actions/Channel/Channel"
+import { LeaveChannelAction } from "@/src/server-actions/Channel/ChannelActions"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
+import { useToast } from "@/src/hooks/use-toast"
 
 export default function ChannelPage() {
+  const router = useRouter()
+  const { toast } = useToast()
   const community = useAtomValue(communityStore.selectedCommunity)
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
@@ -47,6 +51,9 @@ export default function ChannelPage() {
     AttachChannelUserAction
   )
 
+  const [leaveLoading, leaveResult, leaveError, leaveChannel] =
+    useServerAction(LeaveChannelAction)
+
   useEffect(() => {
     const isMember = isEntityUser(
       selectedChannel as SelectChannel,
@@ -67,9 +74,35 @@ export default function ChannelPage() {
       authUser?.unique_id
     ) {
       const res = await joinChannel(selectedChannel.id, authUser.unique_id)
-      if (res?.success) setIsChannelMember(true)
-      else {
+      if (res?.success) {
+        setIsChannelMember(true)
+        toast({
+          title: "Channel Joined",
+          description: "You have successfully joined the channel!",
+          duration: 3000
+        })
+      } else {
         setIsChannelMember(false)
+      }
+    }
+  }
+
+  async function handleLeaveChannel() {
+    if (selectedChannel?.id && isChannelMember) {
+      const res = await leaveChannel(selectedChannel.id)
+      if (res?.success) {
+        setIsChannelMember(false)
+        toast({
+          title: "Channel Left",
+          description: "You have successfully left the channel!",
+          duration: 3000
+        })
+        // If community exists, redirect back to community page
+        if (community?.slug) {
+          router.push(`/communities/${community.slug}`)
+        }
+      } else {
+        console.error("Failed to leave Channel:", res?.error)
       }
     }
   }
@@ -156,20 +189,29 @@ export default function ChannelPage() {
               </h1>
               <div className="flex items-center gap-2 ">
                 {!isSuperAdmin &&
-                  selectedChannel?.channel_type === "public" && (
+                  selectedChannel?.channel_type === "public" &&
+                  !isChannelMember && (
                     <Button
                       variant="outline"
                       onClick={handleJoinChannel}
-                      disabled={isChannelMember || joinLoading}
-                      className={`border-2 border-red-500 font-bold px-6 py-2 ${isChannelMember ? "bg-red-500 text-white" : "text-red-500 hover:bg-red-500 hover:text-white"}`}
+                      disabled={joinLoading}
+                      className="border-primary text-primary font-medium px-6 py-2 hover:bg-primary hover:text-primary-foreground"
                     >
-                      {isChannelMember
-                        ? "Joined"
-                        : joinLoading
-                          ? "Joining..."
-                          : "Join"}
+                      {joinLoading ? "Joining..." : "Join Channel"}
                     </Button>
                   )}
+
+                {!isSuperAdmin && isChannelMember && (
+                  <Button
+                    variant="outline"
+                    onClick={handleLeaveChannel}
+                    disabled={leaveLoading}
+                    className="border-input text-muted-foreground font-medium px-6 py-2 hover:bg-muted hover:text-red-500"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {leaveLoading ? "Leaving..." : "Leave Channel"}
+                  </Button>
+                )}
 
                 {selectedChannel?.id && user && canCreateSpace ? (
                   <>

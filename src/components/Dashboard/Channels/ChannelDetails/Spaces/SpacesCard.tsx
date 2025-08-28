@@ -12,7 +12,19 @@ import { userStore } from "@/src/store/user/userStore"
 import { useAtomValue } from "jotai"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
-import { ArrowRight, Check, Lock, PencilRuler } from "lucide-react"
+import {
+  ArrowRight,
+  Check,
+  Lock,
+  LogOut,
+  PencilRuler,
+  PlusCircle
+} from "lucide-react"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { AttachSpaceUserAction } from "@/src/server-actions/Space/Space"
+import { LeaveSpaceAction } from "@/src/server-actions/Space/SpaceActions"
+import { useToast } from "@/src/hooks/use-toast"
+import { isEntityUser } from "@/src/utils/clientHelper"
 import {
   Tooltip,
   TooltipContent,
@@ -29,7 +41,56 @@ interface Props {
 
 function SpacesCard({ space, setIsChannelMember }: Props) {
   const user = useAtomValue(userStore.AuthUser)
+  const currentUserId = user?.unique_id
+  const { toast } = useToast()
+  const [isSpaceMember, setIsSpaceMember] = useState<boolean>(false)
   const encodedSpaceSlug = encodeURIComponent(space.space_slug)
+
+  const [joinLoading, joinResult, joinError, joinSpace] = useServerAction(
+    AttachSpaceUserAction
+  )
+  const [leaveLoading, leaveResult, leaveError, leaveSpace] =
+    useServerAction(LeaveSpaceAction)
+
+  useEffect(() => {
+    if (space && currentUserId) {
+      const isMember = isEntityUser(space, currentUserId)
+      setIsSpaceMember(isMember)
+    }
+  }, [space, currentUserId])
+
+  const handleJoinSpace = async () => {
+    if (space.id && currentUserId) {
+      const res = await joinSpace(space.id, currentUserId)
+      if (res?.success) {
+        setIsSpaceMember(true)
+        setIsChannelMember?.(true)
+        toast({
+          title: "Space Joined",
+          description: "You have successfully joined the Space!",
+          duration: 3000
+        })
+      } else {
+        console.error("Failed to join Space:", res?.error)
+      }
+    }
+  }
+
+  const handleLeaveSpace = async () => {
+    if (space.id) {
+      const res = await leaveSpace(space.id)
+      if (res?.success) {
+        setIsSpaceMember(false)
+        toast({
+          title: "Space Left",
+          description: "You have successfully left the Space!",
+          duration: 3000
+        })
+      } else {
+        console.error("Failed to leave Space:", res?.error)
+      }
+    }
+  }
 
   const { permissionChecker } = usePermissionChecker(
     "scoped",
@@ -95,16 +156,18 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
         </div>
         <CardDescription>{space.description}</CardDescription>
       </CardHeader>
-      <CardFooter className="flex flex-col items-start gap-2">
+      <CardFooter className="flex flex-col items-start gap-2 w-full">
         {/* <Badge variant="secondary">
           {space.membersCount} {space.membersCount === 1 ? 'Member' : 'Members'}
           0 Members
         </Badge> */}
-        <Link href={`./spaces/${encodedSpaceSlug}`}>
-          <Button>
-            Launch Space <ArrowRight />
-          </Button>
-        </Link>
+        <div className="flex items-center w-full gap-2">
+          <Link href={`./spaces/${encodedSpaceSlug}`}>
+            <Button>
+              Launch Space <ArrowRight />
+            </Button>
+          </Link>
+        </div>
       </CardFooter>
     </Card>
   )
