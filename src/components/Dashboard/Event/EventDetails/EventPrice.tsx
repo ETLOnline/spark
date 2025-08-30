@@ -137,7 +137,7 @@ export function EventPricing({ event_id, eventEndTime }: Props) {
   return (
     <Card className="mb-6">
       <CardContent className="p-4 text-center">
-        {isEventEnded ? (
+        {/* {isEventEnded ? (
           <>
             <div className="text-2xl font-bold text-red-600 mb-1">
               Event Ended
@@ -151,7 +151,7 @@ export function EventPricing({ event_id, eventEndTime }: Props) {
             <div className="text-2xl font-bold text-green-600 mb-1">Free</div>
             <div className="text-sm text-gray-600 mb-4">No cost to attend</div>
           </>
-        )}
+        )} */}
 
         <Button
           onClick={handleRegisterEvent}

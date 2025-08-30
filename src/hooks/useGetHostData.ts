@@ -8,6 +8,7 @@ interface HostUserInfoResult {
   full_name?: string
   email?: string
   host_id?: string
+  profile_url?: string | null
 }
 
 export function useHostUserInfo(host_id?: string): HostUserInfoResult {
@@ -34,6 +35,7 @@ export function useHostUserInfo(host_id?: string): HostUserInfoResult {
     error: null,
     full_name: `${hostData.first_name} ${hostData.last_name}`,
     email: hostData.email,
-    host_id: hostData.unique_id
+    host_id: hostData.unique_id,
+    profile_url: hostData.profile_url
   }
 }

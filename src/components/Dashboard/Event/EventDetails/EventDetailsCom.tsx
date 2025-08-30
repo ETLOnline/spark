@@ -43,7 +43,6 @@ export function EventDetails({
     <Card className="mb-6">
       <CardContent className="p-4">
         <Label className="font-semibold mb-3 flex items-center gap-2">
-          <Calendar className="w-4 h-4" />
           Event Details
         </Label>
         <div className="space-y-3">
@@ -96,8 +95,8 @@ export function EventDetails({
 
           <div className="flex gap-2 text-sm items-center">
             <Users className="w-4 h-4 " />
-            <div className="flex  w-1/2  items-center">
-              <p className=" min-w-28">{`${attendees.length}/100 attending`}</p>
+            <div className="flex gap-1 w-1/2  items-center">
+              <p className=" px-1">{attendees.length}</p>
               <Progress className="h-3" value={attendees?.length} />
             </div>
           </div>

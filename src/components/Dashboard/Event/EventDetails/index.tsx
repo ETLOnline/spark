@@ -35,7 +35,6 @@ export default function EventsDetailsClient({ event_id }: Props) {
     getEventData()
   }, [event_id])
   const hostInfo = useHostUserInfo(isEventData?.host_id)
-
   const { location, meeting_link } = isEventData?.metadata
     ? JSON.parse(isEventData.metadata)
     : { location: "", meeting_link: "" }
@@ -64,7 +63,10 @@ export default function EventsDetailsClient({ event_id }: Props) {
               eventId={isEventData?.id}
             />
             <EventAbout description={isEventData?.description ?? ""} />
-            <EventOrganizer hostName={hostInfo?.full_name || "host"} />
+            <EventOrganizer
+              profile_url={hostInfo?.profile_url || null}
+              hostName={hostInfo?.full_name || "host"}
+            />
           </div>
 
           {/* Sidebar: Spans one column on large screens */}
