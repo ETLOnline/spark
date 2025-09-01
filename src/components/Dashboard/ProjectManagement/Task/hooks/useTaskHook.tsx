@@ -1,7 +1,6 @@
 import { InsertTask, SelectTask } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { enqueueTaskUpdateEmailAction } from "@/src/server-actions/Email/Email"
 import {
   CreateTaskAction,
   GetTaskByIdAction,
@@ -90,7 +89,6 @@ const useTaskHook = ({
   async function handleUpdateTask(data: SelectTask) {
     try {
       if (selectedTask?.id) {
-        const oldTask = await GetTaskByIdAction(selectedTask?.id)
         const payload = {
           ...data,
           assign_to: data.assign_to || null,
@@ -102,23 +100,6 @@ const useTaskHook = ({
           pageName
         )
         if (updatedTask?.success && updatedTask.data) {
-          const currentUserId = authUser?.unique_id
-
-          let mailSendTo: string | undefined
-
-          if (updatedTask.data?.assignee?.unique_id === currentUserId) {
-            mailSendTo = updatedTask.data?.assignor?.email
-          } else {
-            mailSendTo = updatedTask.data?.assignee?.email
-          }
-
-          if (mailSendTo) {
-            const dynamicTemplateData = prepareTaskEmailData(
-              updatedTask.data,
-              oldTask.data
-            )
-            await enqueueTaskUpdateEmailAction(mailSendTo, dynamicTemplateData)
-          }
           if (onUpdateComplete) {
             onUpdateComplete(updatedTask?.data)
           }

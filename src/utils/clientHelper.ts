@@ -137,6 +137,7 @@ export function prepareTaskEmailData(task: any, oldTask: any) {
   }
 
   return {
+    subject: "Task Update",
     logo_url: `${baseUrl}/logo/spark-logo-animated-themed.gif`,
     task_title: task.task_title || "N/A",
     task_id: task.task_num || "N/A",
@@ -144,6 +145,8 @@ export function prepareTaskEmailData(task: any, oldTask: any) {
     priority: task.task_priority || "N/A",
     assignee_name: assigneeName,
     assignor_name: assignorName,
+    assignee_email: assigneeName,
+    assignor_email: assignorName,
     issue_type: task.task_type || "N/A",
     description: task.description || "No description provided.",
     task_url: `${baseUrl}/project/${task.project_id}/task/${task.id}`,
