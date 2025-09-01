@@ -95,7 +95,7 @@ export function EventDetails({
 
           <div className="flex gap-2 text-sm items-center">
             <Users className="w-4 h-4 " />
-            <div className="flex gap-1 w-1/2  items-center">
+            <div className="flex gap-1 w-1/3   items-center">
               <p className=" px-1">{attendees.length}</p>
               <Progress className="h-3" value={attendees?.length} />
             </div>
