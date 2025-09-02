@@ -9,8 +9,8 @@ export async function processTaskUpdateNotification(job: {
   event: string
   payload: any
 }) {
-  const template = await getEmailTemplateByName("update_task")
-  if (!template) throw new Error("Template not found: update_task")
+  const template = await getEmailTemplateByName(job.event)
+  if (!template) throw new Error(`Template not found: ${job.event}`)
 
   const compiled = Handlebars.compile(template.body)
   const renderedBody = compiled(job.payload)
