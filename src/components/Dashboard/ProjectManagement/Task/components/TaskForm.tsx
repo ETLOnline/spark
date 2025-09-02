@@ -43,8 +43,8 @@ interface Props {
   isTaskModelOpen?: boolean
   selectedTask?: SelectTask
   loading?: boolean
-  isChanged: boolean
-  setIsChanged: Dispatch<SetStateAction<boolean>>
+  isChanged?: boolean
+  setIsChanged?: Dispatch<SetStateAction<boolean>>
 }
 
 const projectSchema = z.object({
@@ -106,7 +106,7 @@ export default function TaskForm({
   }))
 
   useEffect(() => {
-    setIsChanged(form.formState.isDirty)
+    if (setIsChanged) setIsChanged(form.formState.isDirty)
   }, [form.formState.isDirty])
 
   useEffect(() => {
