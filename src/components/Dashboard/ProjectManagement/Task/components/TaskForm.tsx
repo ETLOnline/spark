@@ -43,6 +43,8 @@ interface Props {
   isTaskModelOpen?: boolean
   selectedTask?: SelectTask
   loading?: boolean
+  isChanged: boolean
+  setIsChanged: Dispatch<SetStateAction<boolean>>
 }
 
 const projectSchema = z.object({
@@ -61,7 +63,9 @@ export default function TaskForm({
   isTaskModelOpen,
   selectedTask,
   onSubmit,
-  loading = false
+  loading = false,
+  isChanged,
+  setIsChanged
 }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null)
   const [usersList, setUsersList] = useState<(SelectUser | null)[]>([])
@@ -100,6 +104,10 @@ export default function TaskForm({
     label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
     value: user?.unique_id ?? ""
   }))
+
+  useEffect(() => {
+    setIsChanged(form.formState.isDirty)
+  }, [form.formState.isDirty])
 
   useEffect(() => {
     const fetchProjectUsers = async () => {

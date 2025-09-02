@@ -43,6 +43,8 @@ import { communityStore } from "@/src/store/community/communityStore"
 import { CommunityCategory } from "@/src/db/data-access/communities/query"
 import { slugify } from "@/src/utils/helpers"
 import { ScrollArea } from "../ui/scroll-area"
+import { UnsavedChangesDialog } from "../common/unsavedChangesDialog"
+import { useConfirmClose } from "@/src/hooks/useConfirmClose"
 
 const communitySchema = z.object({
   title: z
@@ -117,6 +119,21 @@ export default function CreateCommunityModal({
   })
 
   const error = form.formState.errors
+  const isChanged = form.formState.isDirty
+
+  useEffect(() => {
+    if (!communityFormModalVisibility) {
+      form.reset({
+        title: "",
+        slug: "",
+        description: "",
+        category: "",
+        type: ""
+      })
+      setCommunityCoverImage(null)
+      setCoverImgPreview(null)
+    }
+  }, [communityFormModalVisibility])
 
   const debouncedCheckSlugAvailability = useDebouncedCallback(
     async (
@@ -345,7 +362,6 @@ export default function CreateCommunityModal({
     updatedData: Partial<CommunityFormData>
   ) {
     try {
-      console.log("selectedCommunity", updatedData)
       let coverImageUrl = null
       if (communityCoverImage) {
         coverImageUrl = await handleUploadCoverImage()
@@ -422,304 +438,317 @@ export default function CreateCommunityModal({
     }
   }
 
+  const { showConfirmation, setShowConfirmation, handleClose } =
+    useConfirmClose({
+      isDirty: isChanged,
+      onClose: () => setCommunityFormModalVisibility(false)
+    })
+
   return (
-    <Dialog
-      open={communityFormModalVisibility}
-      onOpenChange={(open) => {
-        setCommunityFormModalVisibility(open)
-      }}
-    >
-      <DialogContent className="max-w-[95vw] sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>
-            {editMode === true ? "Edit Community" : "Create Community"}
-          </DialogTitle>
-          <DialogDescription>
-            {editMode === true
-              ? "You can edit your community details."
-              : "Create a new community for users to join and interact."}
-          </DialogDescription>
-        </DialogHeader>
-        <ScrollArea className="h-[80vh] w-full p-3">
-          <form onSubmit={form.handleSubmit(communitySubmit)}>
-            <div className="grid gap-4 py-4">
-              {/* Community Name (Title) */}
-              <div className="flex flex-col gap-1">
-                <div className="flex flex-col gap-3 justify-between">
-                  <Label htmlFor="title">Community Name</Label>
-                  <div className="w-full">
-                    <Controller
-                      name="title"
-                      defaultValue=""
-                      control={form.control}
-                      render={({ field }) => (
-                        <Input
-                          id="title"
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e)
-                            handleTitleChange(e.target.value)
-                          }}
-                          placeholder="Enter community name"
-                        />
-                      )}
-                    />
-                  </div>
-                </div>
-                <div className="text-left ">
-                  {error.title && (
-                    <span className="text-red-500 text-sm">
-                      {String(error.title.message)}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Community Slug */}
-              <div className="flex flex-col gap-1">
-                <div className="flex flex-col gap-3 justify-between">
-                  <Label htmlFor="slug">Community Slug</Label>
-                  <div className="w-full">
-                    <Controller
-                      name="slug"
-                      defaultValue=""
-                      control={form.control}
-                      render={({ field }) => (
-                        <Input
-                          id="slug"
-                          {...field}
-                          disabled={true}
-                          placeholder="community-slug"
-                        />
-                      )}
-                    />
-                  </div>
-                </div>
-                <div className="text-left">
-                  {error.slug && !isSlugAvailableLoading && (
-                    <div className="flex items-center text-red-500">
-                      <CircleXIcon className="mr-2 h-4 w-4" />
-                      <span className="text-sm">
-                        {String(error.slug.message)}
-                      </span>
-                    </div>
-                  )}
-                  {isSlugAvailableLoading && (
-                    <>
-                      <Loader size={LoaderSizes.sm} />
-                      <span className="text-gray-500 text-sm">
-                        Checking slug availability
-                      </span>
-                    </>
-                  )}
-                  {slugAvailableMessage &&
-                    !isSlugAvailableLoading &&
-                    !error.slug && (
-                      <div className="flex items-center gap-x-1 text-green-500">
-                        <CircleCheck className="mr-2 h-4 w-4" />
-                        <span className="text-sm">{slugAvailableMessage}</span>
-                      </div>
-                    )}
-                </div>
-              </div>
-
-              {/* Description */}
-              <div className="flex flex-col gap-1">
-                <div className="flex flex-col gap-3 justify-between">
-                  <Label htmlFor="description">Description</Label>
-                  <div className="w-full">
-                    <Controller
-                      name="description"
-                      control={form.control}
-                      render={({ field }) => {
-                        const charCount = field.value?.length || 0
-                        const maxChars = 150
-                        return (
-                          <>
-                            <Textarea
-                              id="description"
-                              {...field}
-                              maxLength={maxChars}
-                              placeholder="Description"
-                            />
-                            <div className="flex justify-between items-center text-sm text-muted-foreground mt-1">
-                              {error.description && (
-                                <span className="text-red-500 text-sm">
-                                  {String(error.description.message)}
-                                </span>
-                              )}
-                              <span className="ml-auto">
-                                {charCount}/{maxChars} characters
-                              </span>
-                            </div>
-                          </>
-                        )
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Cover image */}
-              <div className="flex flex-col gap-1">
-                <div className="flex flex-col gap-3 justify-between">
-                  <Label htmlFor="cover_image">{"Cover Image(Optional)"}</Label>
-                  <div className="w-full">
-                    <Controller
-                      name="cover_image"
-                      control={form.control}
-                      render={({ field }) => (
-                        <Input
-                          id="cover_image"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0] || null
-                            setCommunityCoverImage(file)
-                          }}
-                          type="file"
-                          accept="image/*"
-                          placeholder="Upload a cover image"
-                        />
-                      )}
-                    />
-                    {coverImgPreview && (
-                      <div className=" rounded-md overflow-hidden">
-                        <img
-                          src={coverImgPreview}
-                          alt="Cover Preview"
-                          className="object-fill w-full h-auto mt-4"
-                        />
-                        <div className="w-full">
-                          <Button
-                            variant="destructive"
-                            className="float-right mt-2"
-                            onClick={() => {
-                              setCommunityCoverImage(null)
-                              setCoverImgPreview(null)
-                              form.setValue("cover_image", "")
+    <>
+      <Dialog open={communityFormModalVisibility} onOpenChange={handleClose}>
+        <DialogContent
+          className="max-w-[95vw] sm:max-w-[600px]"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle>
+              {editMode === true ? "Edit Community" : "Create Community"}
+            </DialogTitle>
+            <DialogDescription>
+              {editMode === true
+                ? "You can edit your community details."
+                : "Create a new community for users to join and interact."}
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="h-[80vh] w-full p-3">
+            <form onSubmit={form.handleSubmit(communitySubmit)}>
+              <div className="grid gap-4 py-4">
+                {/* Community Name (Title) */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-3 justify-between">
+                    <Label htmlFor="title">Community Name</Label>
+                    <div className="w-full">
+                      <Controller
+                        name="title"
+                        defaultValue=""
+                        control={form.control}
+                        render={({ field }) => (
+                          <Input
+                            id="title"
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e)
+                              handleTitleChange(e.target.value)
                             }}
-                            disabled={
-                              addUpdateCommunityLoading || coverImageLoading
-                            }
-                          >
-                            Remove Image
-                          </Button>
-                        </div>
-                      </div>
+                            placeholder="Enter community name"
+                          />
+                        )}
+                      />
+                    </div>
+                  </div>
+                  <div className="text-left ">
+                    {error.title && (
+                      <span className="text-red-500 text-sm">
+                        {String(error.title.message)}
+                      </span>
                     )}
                   </div>
                 </div>
-                <div className="text-left">
-                  {error.category && (
-                    <span className="text-red-500 text-sm">
-                      {String(error.category.message)}
-                    </span>
-                  )}
-                </div>
-              </div>
 
-              {/* Category */}
-              <div className="flex flex-col gap-1">
-                <div className="flex flex-col gap-3 justify-between">
-                  <Label htmlFor="category">Category</Label>
-                  <div className="w-full">
-                    <Controller
-                      name="category"
-                      control={form.control}
-                      render={({ field }) => (
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableCategories.map((cat) => (
-                              <SelectItem key={cat.id} value={cat.id}>
-                                {cat.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                {/* Community Slug */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-3 justify-between">
+                    <Label htmlFor="slug">Community Slug</Label>
+                    <div className="w-full">
+                      <Controller
+                        name="slug"
+                        defaultValue=""
+                        control={form.control}
+                        render={({ field }) => (
+                          <Input
+                            id="slug"
+                            {...field}
+                            disabled={true}
+                            placeholder="community-slug"
+                          />
+                        )}
+                      />
+                    </div>
+                  </div>
+                  <div className="text-left">
+                    {error.slug && !isSlugAvailableLoading && (
+                      <div className="flex items-center text-red-500">
+                        <CircleXIcon className="mr-2 h-4 w-4" />
+                        <span className="text-sm">
+                          {String(error.slug.message)}
+                        </span>
+                      </div>
+                    )}
+                    {isSlugAvailableLoading && (
+                      <>
+                        <Loader size={LoaderSizes.sm} />
+                        <span className="text-gray-500 text-sm">
+                          Checking slug availability
+                        </span>
+                      </>
+                    )}
+                    {slugAvailableMessage &&
+                      !isSlugAvailableLoading &&
+                      !error.slug && (
+                        <div className="flex items-center gap-x-1 text-green-500">
+                          <CircleCheck className="mr-2 h-4 w-4" />
+                          <span className="text-sm">
+                            {slugAvailableMessage}
+                          </span>
+                        </div>
                       )}
-                    />
                   </div>
                 </div>
-                <div className="text-left">
-                  {error.category && (
-                    <span className="text-red-500 text-sm">
-                      {String(error.category.message)}
-                    </span>
-                  )}
-                </div>
-              </div>
 
-              {/* Community Type (Public/Private) Select */}
-              <div className="flex flex-col gap-1">
-                <div className="flex flex-col gap-3 justify-between">
-                  <Label htmlFor="type">Community Type</Label>
-                  <div className="w-full">
-                    <Controller
-                      name="type"
-                      control={form.control}
-                      render={({ field }) => (
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="public">Public</SelectItem>
-                            <SelectItem value="private">Private</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
+                {/* Description */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-3 justify-between">
+                    <Label htmlFor="description">Description</Label>
+                    <div className="w-full">
+                      <Controller
+                        name="description"
+                        control={form.control}
+                        render={({ field }) => {
+                          const charCount = field.value?.length || 0
+                          const maxChars = 150
+                          return (
+                            <>
+                              <Textarea
+                                id="description"
+                                {...field}
+                                maxLength={maxChars}
+                                placeholder="Description"
+                              />
+                              <div className="flex justify-between items-center text-sm text-muted-foreground mt-1">
+                                {error.description && (
+                                  <span className="text-red-500 text-sm">
+                                    {String(error.description.message)}
+                                  </span>
+                                )}
+                                <span className="ml-auto">
+                                  {charCount}/{maxChars} characters
+                                </span>
+                              </div>
+                            </>
+                          )
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="text-left">
-                  {error.type && (
-                    <span className="text-red-500 text-sm">
-                      {String(error.type.message)}
-                    </span>
-                  )}
+
+                {/* Cover image */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-3 justify-between">
+                    <Label htmlFor="cover_image">
+                      {"Cover Image(Optional)"}
+                    </Label>
+                    <div className="w-full">
+                      <Controller
+                        name="cover_image"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Input
+                            id="cover_image"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0] || null
+                              setCommunityCoverImage(file)
+                            }}
+                            type="file"
+                            accept="image/*"
+                            placeholder="Upload a cover image"
+                          />
+                        )}
+                      />
+                      {coverImgPreview && (
+                        <div className=" rounded-md overflow-hidden">
+                          <img
+                            src={coverImgPreview}
+                            alt="Cover Preview"
+                            className="object-fill w-full h-auto mt-4"
+                          />
+                          <div className="w-full">
+                            <Button
+                              variant="destructive"
+                              className="float-right mt-2"
+                              onClick={() => {
+                                setCommunityCoverImage(null)
+                                setCoverImgPreview(null)
+                                form.setValue("cover_image", "")
+                              }}
+                            >
+                              Remove Image
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-left">
+                    {error.category && (
+                      <span className="text-red-500 text-sm">
+                        {String(error.category.message)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Category */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-3 justify-between">
+                    <Label htmlFor="category">Category</Label>
+                    <div className="w-full">
+                      <Controller
+                        name="category"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableCategories.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.id}>
+                                  {cat.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    </div>
+                  </div>
+                  <div className="text-left">
+                    {error.category && (
+                      <span className="text-red-500 text-sm">
+                        {String(error.category.message)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Community Type (Public/Private) Select */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-3 justify-between">
+                    <Label htmlFor="type">Community Type</Label>
+                    <div className="w-full">
+                      <Controller
+                        name="type"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="public">Public</SelectItem>
+                              <SelectItem value="private">Private</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    </div>
+                  </div>
+                  <div className="text-left">
+                    {error.type && (
+                      <span className="text-red-500 text-sm">
+                        {String(error.type.message)}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-            <DialogFooter>
-              {editMode === true ? (
-                <Button
-                  type="submit"
-                  loading={addUpdateCommunityLoading}
-                  disabled={
-                    !!error.slug?.message ||
-                    isSlugAvailableLoading ||
-                    addUpdateCommunityLoading ||
-                    coverImageLoading
-                  }
-                >
-                  Save Changes
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  loading={addCommunityLoading || coverImageLoading}
-                  disabled={
-                    !!error.slug?.message ||
-                    isSlugAvailableLoading ||
-                    coverImageLoading ||
-                    addCommunityLoading
-                  }
-                >
-                  Create Community
-                </Button>
-              )}
-            </DialogFooter>
-          </form>
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+              <DialogFooter>
+                {editMode === true ? (
+                  <Button
+                    type="submit"
+                    loading={addUpdateCommunityLoading}
+                    disabled={
+                      !!error.slug?.message ||
+                      isSlugAvailableLoading ||
+                      addUpdateCommunityLoading ||
+                      coverImageLoading
+                    }
+                  >
+                    Save Changes
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    loading={addCommunityLoading || coverImageLoading}
+                    disabled={
+                      !!error.slug?.message ||
+                      isSlugAvailableLoading ||
+                      coverImageLoading ||
+                      addCommunityLoading
+                    }
+                  >
+                    Create Community
+                  </Button>
+                )}
+              </DialogFooter>
+            </form>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      <UnsavedChangesDialog
+        showConfirmation={showConfirmation}
+        setShowConfirmation={setShowConfirmation}
+        setIsActualDialogOpen={setCommunityFormModalVisibility}
+      />
+    </>
   )
 }

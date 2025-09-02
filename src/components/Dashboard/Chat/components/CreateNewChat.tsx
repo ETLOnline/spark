@@ -175,7 +175,7 @@ const CreateNewChat = () => {
         <PlusCircle className="h-4 w-4" />
       </Button>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogTitle>Start Chat</DialogTitle>
 
           <div className="min-h-[425px]">
