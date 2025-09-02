@@ -90,19 +90,36 @@ export default function CommunityCard({
     ? permissionChecker?.canAccess("community.view")
     : false
 
-  const handleJoinCommunity = async () => {
+  const handleJoinCommunity = () => {
     if (community.id && currentUserId) {
-      const res = await attachCommunityUser(community.id, currentUserId)
-      if (res?.success) {
-        onJoin()
-        toast({
-          title: "Community Joined",
-          description: "You have successfully joined the community!",
-          duration: 3000
-        })
-      } else {
-        console.error("Failed to join community:", res?.error)
-      }
+      attachCommunityUser(community.id, currentUserId).then((res) => {
+        if (res?.success) {
+          onJoin()
+          toast({
+            title: "Community Joined",
+            description: "You have successfully joined the community!",
+            duration: 3000
+          })
+        } else {
+          console.error("Failed to join community:", res?.error)
+        }
+      })
+    }
+  }
+
+  const handleLeaveCommunity = () => {
+    if (community.id) {
+      leaveCommunity(community.id).then((res) => {
+        if (res?.success) {
+          toast({
+            title: "Left community",
+            description: "You have left the community."
+          })
+          onJoin()
+        } else {
+          console.error("Failed to leave community:", res?.error)
+        }
+      })
     }
   }
 
@@ -221,21 +238,7 @@ export default function CommunityCard({
               ) : (
                 <Button
                   variant="outline"
-                  onClick={async () => {
-                    if (community.id) {
-                      const res = await leaveCommunity(community.id)
-                      if (res?.success) {
-                        toast({
-                          title: "Left community",
-                          description: "You have left the community."
-                        })
-                        // Optionally trigger onJoin to refresh lists or parent state
-                        onJoin()
-                      } else {
-                        console.error("Failed to leave community:", res?.error)
-                      }
-                    }
-                  }}
+                  onClick={handleLeaveCommunity}
                   disabled={leaveLoading}
                   className="hover:bg-muted hover:text-red-500 focus:bg-muted focus:text-red-500"
                 >

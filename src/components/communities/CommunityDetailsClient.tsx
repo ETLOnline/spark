@@ -33,7 +33,7 @@ import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import PaginationComponent from "../common/Pagination"
 import { PaginationType } from "../common/types/pagination.type"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import ChannelsContextMenu from "@/src/components/Dashboard/Channels/ChannelDetails/ChannelsContextMenu"
 import Link from "next/link"
 import { userStore } from "@/src/store/user/userStore"
@@ -78,6 +78,7 @@ const demoRules = [
 export default function CommunityDetailsClient({
   community
 }: CommunityDetailsClientProps) {
+  const router = useRouter()
   const { toast } = useToast()
   const setCurrentCommunity = useSetAtom(communityStore.selectedCommunity)
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
@@ -87,6 +88,7 @@ export default function CommunityDetailsClient({
     useServerAction(AttachCommunityUserAction)
   const [leaveLoading, leaveResult, leaveError, leaveCommunity] =
     useServerAction(LeaveCommunityAction)
+  const [leaveLoadingState, setLeaveLoading] = useState(false)
   const [loadingChannels, setLoadingChannels] = useState(true)
   const [channels, setChannels] = useAtom(channelStore.channels)
   const [pagination, setPagination] = useState<PaginationType | null>(null)
@@ -228,19 +230,43 @@ export default function CommunityDetailsClient({
     ? permissionChecker?.canAccess("community.user.invite")
     : false
 
-  const handleJoinCommunity = async () => {
+  const handleJoinCommunity = () => {
     if (community.id && currentUserId) {
-      const res = await attachCommunityUser(community.id, currentUserId)
-      if (res?.success) {
-        setIsCommunityMember(true)
-        toast({
-          title: "Community Joined",
-          description: "You have successfully joined the community!",
-          duration: 3000
-        })
-      } else {
-        console.error("Failed to join community:", res?.error)
-      }
+      attachCommunityUser(community.id, currentUserId).then((res) => {
+        if (res?.success) {
+          setIsCommunityMember(true)
+          toast({
+            title: "Community Joined",
+            description: "You have successfully joined the community!",
+            duration: 3000
+          })
+        } else {
+          console.error("Failed to join community:", res?.error)
+        }
+      })
+    }
+  }
+
+  const handleLeaveCommunity = () => {
+    if (community.id) {
+      leaveCommunity(community.id).then((res) => {
+        if (res?.success) {
+          toast({
+            title: "Left community",
+            description: "You have left the community.",
+            duration: 3000
+          })
+          router.push("/communities")
+          router.refresh()
+        } else {
+          console.error("Failed to leave community:", res?.error)
+          toast({
+            title: "Failed to leave community",
+            description: res?.error || "An unexpected error occurred.",
+            variant: "destructive"
+          })
+        }
+      })
     }
   }
 
@@ -349,30 +375,11 @@ export default function CommunityDetailsClient({
                     ) : (
                       <Button
                         variant="outline"
-                        onClick={async () => {
-                          if (community.id) {
-                            const res = await leaveCommunity(community.id)
-                            if (res?.success) {
-                              setIsCommunityMember(false)
-                              toast({
-                                title: "Left community",
-                                description: "You have left the community.",
-                                duration: 3000
-                              })
-                              // Navigate back to communities list when leaving from community detail view
-                              window.location.href = "/communities"
-                            } else {
-                              console.error(
-                                "Failed to leave community:",
-                                res?.error
-                              )
-                            }
-                          }
-                        }}
+                        onClick={handleLeaveCommunity}
                         disabled={leaveLoading}
                         className="hover:bg-muted hover:text-red-500 focus:bg-muted focus:text-red-500"
                       >
-                        Leave
+                        {leaveLoading ? "Leaving..." : "Leave"}
                       </Button>
                     )}
                   </>

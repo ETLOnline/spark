@@ -67,102 +67,45 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
     }
   }, [channel, currentUserId])
 
-  // Listen for changes from other components
-  useEffect(() => {
-    const handleStorageEvent = (e: StorageEvent) => {
-      if (e.key === "channel_member_status" && e.newValue) {
-        try {
-          const data = JSON.parse(e.newValue)
-          if (data.channelId === channel.id) {
-            setIsChannelMember(data.isMember)
-          }
-        } catch (err) {
-          console.error("Error parsing channel member status:", err)
-        }
-      }
-    }
-
-    window.addEventListener("storage", handleStorageEvent)
-    return () => window.removeEventListener("storage", handleStorageEvent)
-  }, [channel.id])
-
-  const handleJoinChannel = async () => {
+  const handleJoinChannel = () => {
     if (channel.id && currentUserId) {
-      const res = await joinChannel(channel.id, currentUserId)
-      if (res?.success) {
-        setIsChannelMember(true)
-        setIsCommunityMember?.(true)
-
-        // Notify other components about the status change
-        localStorage.setItem(
-          "channel_member_status",
-          JSON.stringify({
-            channelId: channel.id,
-            isMember: true
+      joinChannel(channel.id, currentUserId).then((res) => {
+        if (res?.success) {
+          setIsChannelMember(true)
+          setIsCommunityMember?.(true)
+          toast({
+            title: "Channel Joined",
+            description: "You have successfully joined the channel!",
+            duration: 3000
           })
-        )
-        // Trigger storage event for other tabs/components
-        window.dispatchEvent(
-          new StorageEvent("storage", {
-            key: "channel_member_status",
-            newValue: JSON.stringify({
-              channelId: channel.id,
-              isMember: true
-            })
-          })
-        )
-
-        toast({
-          title: "Channel Joined",
-          description: "You have successfully joined the channel!",
-          duration: 3000
-        })
-      } else {
-        console.error("Failed to join Channel:", res?.error)
-      }
+          router.refresh()
+        } else {
+          console.error("Failed to join Channel:", res?.error)
+        }
+      })
     }
   }
 
-  const handleLeaveChannel = async () => {
+  const handleLeaveChannel = () => {
     if (channel.id) {
-      const res = await leaveChannel(channel.id)
-      if (res?.success) {
-        setIsChannelMember(false)
-
-        // Notify other components about the status change
-        localStorage.setItem(
-          "channel_member_status",
-          JSON.stringify({
-            channelId: channel.id,
-            isMember: false
+      leaveChannel(channel.id).then((res) => {
+        if (res?.success) {
+          toast({
+            title: "Channel Left",
+            description: "You have successfully left the channel!",
+            duration: 3000
           })
-        )
-        // Trigger storage event for other tabs/components
-        window.dispatchEvent(
-          new StorageEvent("storage", {
-            key: "channel_member_status",
-            newValue: JSON.stringify({
-              channelId: channel.id,
-              isMember: false
-            })
-          })
-        )
 
-        toast({
-          title: "Channel Left",
-          description: "You have successfully left the channel!",
-          duration: 3000
-        })
-
-        // Navigate back to the community page where all channels are listed
-        if (channel.community?.slug) {
-          window.location.href = `/communities/${channel.community.slug}`
+          if (channel.community?.slug) {
+            router.push(`/communities/${channel.community.slug}`)
+          } else {
+            router.push(`/communities`)
+          }
+          router.refresh()
         } else {
-          window.location.href = `/communities`
+          console.error("Failed to leave Channel:", res?.error)
         }
-      } else {
-        console.error("Failed to leave Channel:", res?.error)
-      }
+      })
     }
   }
   const encodedChannelSlug = encodeURIComponent(channel.channel_slug)

@@ -66,44 +66,46 @@ export default function ChannelPage() {
     }
   }, [selectedChannel, authUser])
 
-  async function handleJoinChannel() {
+  const handleJoinChannel = () => {
     if (
       selectedChannel?.channel_type === "public" &&
       !isChannelMember &&
       selectedChannel?.id &&
       authUser?.unique_id
     ) {
-      const res = await joinChannel(selectedChannel.id, authUser.unique_id)
-      if (res?.success) {
-        setIsChannelMember(true)
-        toast({
-          title: "Channel Joined",
-          description: "You have successfully joined the channel!",
-          duration: 3000
-        })
-      } else {
-        setIsChannelMember(false)
-      }
+      joinChannel(selectedChannel.id, authUser.unique_id).then((res) => {
+        if (res?.success) {
+          setIsChannelMember(true)
+          toast({
+            title: "Channel Joined",
+            description: "You have successfully joined the channel!",
+            duration: 3000
+          })
+          router.refresh()
+        } else {
+          setIsChannelMember(false)
+        }
+      })
     }
   }
 
-  async function handleLeaveChannel() {
+  const handleLeaveChannel = () => {
     if (selectedChannel?.id && isChannelMember) {
-      const res = await leaveChannel(selectedChannel.id)
-      if (res?.success) {
-        setIsChannelMember(false)
-        toast({
-          title: "Channel Left",
-          description: "You have successfully left the channel!",
-          duration: 3000
-        })
-        // If community exists, redirect back to community page
-        if (community?.slug) {
-          router.push(`/communities/${community.slug}`)
+      leaveChannel(selectedChannel.id).then((res) => {
+        if (res?.success) {
+          toast({
+            title: "Channel Left",
+            description: "You have successfully left the channel!",
+            duration: 3000
+          })
+          if (community?.slug) {
+            router.push(`/communities/${community.slug}`)
+          }
+          router.refresh()
+        } else {
+          console.error("Failed to leave Channel:", res?.error)
         }
-      } else {
-        console.error("Failed to leave Channel:", res?.error)
-      }
+      })
     }
   }
 

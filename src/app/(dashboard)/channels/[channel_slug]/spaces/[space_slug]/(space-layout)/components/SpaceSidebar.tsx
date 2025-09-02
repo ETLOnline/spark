@@ -13,7 +13,7 @@ import { PlusCircle, Users } from "lucide-react"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import Image from "next/image"
 import Link from "next/link"
-import { usePathname, useSearchParams } from "next/navigation"
+import { usePathname, useSearchParams, useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
 import { spaceStaticFeatures } from "./constants"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
@@ -34,6 +34,7 @@ interface Props {
 }
 
 function SpaceSidebar({ space }: Props) {
+  const router = useRouter()
   const pathname = usePathname()
   const pageType = useSearchParams()
   const { setOpen: setSideBarCollapse } = useSidebar()
@@ -59,77 +60,43 @@ function SpaceSidebar({ space }: Props) {
     }
   }, [space, currentUserId])
 
-  const handleJoinSpace = async () => {
+  const handleJoinSpace = () => {
     if (space.id && currentUserId) {
-      const res = await joinSpace(space.id, currentUserId)
-      if (res?.success) {
-        setIsSpaceMember(true)
-        // Notify other components about the status change
-        localStorage.setItem(
-          "space_member_status",
-          JSON.stringify({
-            spaceId: space.id,
-            isMember: true
+      joinSpace(space.id, currentUserId).then((res) => {
+        if (res?.success) {
+          setIsSpaceMember(true)
+          toast({
+            title: "Space Joined",
+            description: "You have successfully joined the Space!",
+            duration: 3000
           })
-        )
-        // Trigger storage event for other tabs/components
-        window.dispatchEvent(
-          new StorageEvent("storage", {
-            key: "space_member_status",
-            newValue: JSON.stringify({
-              spaceId: space.id,
-              isMember: true
-            })
-          })
-        )
-        toast({
-          title: "Space Joined",
-          description: "You have successfully joined the Space!",
-          duration: 3000
-        })
-      } else {
-        console.error("Failed to join Space:", res?.error)
-      }
+          router.refresh()
+        } else {
+          console.error("Failed to join Space:", res?.error)
+        }
+      })
     }
   }
 
-  const handleLeaveSpace = async () => {
+  const handleLeaveSpace = () => {
     if (space.id) {
-      const res = await leaveSpace(space.id)
-      if (res?.success) {
-        setIsSpaceMember(false)
-        // Notify other components about the status change
-        localStorage.setItem(
-          "space_member_status",
-          JSON.stringify({
-            spaceId: space.id,
-            isMember: false
+      leaveSpace(space.id).then((res) => {
+        if (res?.success) {
+          toast({
+            title: "Space Left",
+            description: "You have successfully left the Space!",
+            duration: 3000
           })
-        )
-        // Trigger storage event for other tabs/components
-        window.dispatchEvent(
-          new StorageEvent("storage", {
-            key: "space_member_status",
-            newValue: JSON.stringify({
-              spaceId: space.id,
-              isMember: false
-            })
-          })
-        )
-        toast({
-          title: "Space Left",
-          description: "You have successfully left the Space!",
-          duration: 3000
-        })
 
-        // Navigate back to channel page since we're inside a space
-        const encodedChannelSlug = encodeURIComponent(
-          space.channel?.channel_slug ?? ""
-        )
-        window.location.href = `/channels/${encodedChannelSlug}/spaces`
-      } else {
-        console.error("Failed to leave Space:", res?.error)
-      }
+          const encodedChannelSlug = encodeURIComponent(
+            space.channel?.channel_slug ?? ""
+          )
+          router.push(`/channels/${encodedChannelSlug}/spaces`)
+          router.refresh()
+        } else {
+          console.error("Failed to leave Space:", res?.error)
+        }
+      })
     }
   }
 
@@ -141,25 +108,6 @@ function SpaceSidebar({ space }: Props) {
   useEffect(() => {
     setSpaceFeatures(currentSpace?.features || [])
   }, [currentSpace])
-
-  // Listen for changes in the space context menu to keep the sidebar in sync
-  useEffect(() => {
-    const handleStorageEvent = (e: StorageEvent) => {
-      if (e.key === "space_member_status" && e.newValue) {
-        try {
-          const data = JSON.parse(e.newValue)
-          if (data.spaceId === space.id) {
-            setIsSpaceMember(data.isMember)
-          }
-        } catch (err) {
-          console.error("Error parsing space member status:", err)
-        }
-      }
-    }
-
-    window.addEventListener("storage", handleStorageEvent)
-    return () => window.removeEventListener("storage", handleStorageEvent)
-  }, [space.id])
 
   const { permissionChecker } = usePermissionChecker(
     "scoped",

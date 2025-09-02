@@ -1,3 +1,4 @@
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
   Card,
@@ -40,6 +41,7 @@ interface Props {
 }
 
 function SpacesCard({ space, setIsChannelMember }: Props) {
+  const router = useRouter()
   const user = useAtomValue(userStore.AuthUser)
   const currentUserId = user?.unique_id
   const { toast } = useToast()
@@ -59,36 +61,40 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
     }
   }, [space, currentUserId])
 
-  const handleJoinSpace = async () => {
+  const handleJoinSpace = () => {
     if (space.id && currentUserId) {
-      const res = await joinSpace(space.id, currentUserId)
-      if (res?.success) {
-        setIsSpaceMember(true)
-        setIsChannelMember?.(true)
-        toast({
-          title: "Space Joined",
-          description: "You have successfully joined the Space!",
-          duration: 3000
-        })
-      } else {
-        console.error("Failed to join Space:", res?.error)
-      }
+      joinSpace(space.id, currentUserId).then((res) => {
+        if (res?.success) {
+          setIsSpaceMember(true)
+          setIsChannelMember?.(true)
+          toast({
+            title: "Space Joined",
+            description: "You have successfully joined the Space!",
+            duration: 3000
+          })
+          router.refresh()
+        } else {
+          console.error("Failed to join Space:", res?.error)
+        }
+      })
     }
   }
 
-  const handleLeaveSpace = async () => {
+  const handleLeaveSpace = () => {
     if (space.id) {
-      const res = await leaveSpace(space.id)
-      if (res?.success) {
-        setIsSpaceMember(false)
-        toast({
-          title: "Space Left",
-          description: "You have successfully left the Space!",
-          duration: 3000
-        })
-      } else {
-        console.error("Failed to leave Space:", res?.error)
-      }
+      leaveSpace(space.id).then((res) => {
+        if (res?.success) {
+          setIsSpaceMember(false)
+          toast({
+            title: "Space Left",
+            description: "You have successfully left the Space!",
+            duration: 3000
+          })
+          router.refresh()
+        } else {
+          console.error("Failed to leave Space:", res?.error)
+        }
+      })
     }
   }
 
