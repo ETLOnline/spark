@@ -1,12 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import Container from "@/src/components/container/Container"
 import { Card, CardContent } from "@/src/components/ui/card"
 import { Check } from "lucide-react"
 import { cn } from "@/src/lib/utils"
-import { savePersonaAction } from "@/src/server-actions/UserRoles/UserRole"
+import {
+  getUserAssignedRoleAction,
+  savePersonaAction
+} from "@/src/server-actions/UserRoles/UserRole"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { SelectRole, SelectUser } from "@/src/db/schema"
 import { useRouter } from "next/navigation"
@@ -34,6 +37,16 @@ export default function SelectPersonaPage({
 
   const handleSelectPersona = (personaId: number) =>
     setSelectedPersona(personaId)
+
+  useEffect(() => {
+    ;(async () => {
+      const result = await getUserAssignedRoleAction(userAuth.unique_id)
+      if (result?.success) {
+        router.push("/profile-completion")
+      }
+    })()
+  }, [userAuth.unique_id, router])
+
   const handleContinue = async () => {
     if (!selectedPersona) return
     setIsLoading(true)
@@ -100,6 +113,7 @@ export default function SelectPersonaPage({
             <div className="pt-8">
               <Button
                 onClick={handleContinue}
+                loading={isLoading}
                 disabled={!selectedPersona || isLoading}
                 size="lg"
                 className="px-8 py-3 text-lg font-medium min-w-[160px]"

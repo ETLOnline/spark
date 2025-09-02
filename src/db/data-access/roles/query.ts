@@ -49,6 +49,17 @@ export const saveUserGlobalRole = async (personaID: number, userId: string) => {
   }
 }
 
+export const getUserRoleByUserId = async (userId: string) => {
+  try {
+    const roles = await db
+      .select()
+      .from(userRolesTable)
+      .where(eq(userRolesTable.user_id, userId))
+    return roles
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
 // we are getting the roles all scope and global
 
 // this query we are using for the superadmin

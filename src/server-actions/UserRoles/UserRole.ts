@@ -13,7 +13,8 @@ import {
   getUsersByRoleID,
   saveUserGlobalRole,
   updateRoleWithPermissions,
-  updateUserRoleForEntity
+  updateUserRoleForEntity,
+  getUserRoleByUserId
 } from "@/src/db/data-access/roles/query"
 import { CreateServerAction } from ".."
 import {
@@ -72,6 +73,20 @@ export const savePersonaAction = CreateServerAction(
     } catch (error) {
       console.error("Error saving persona:", error)
       return { success: false, error: "Failed to save persona" }
+    }
+  }
+)
+export const getUserAssignedRoleAction = CreateServerAction(
+  true,
+  async (userId: string) => {
+    try {
+      const result = await getUserRoleByUserId(userId)
+      if (result && result.length > 0) {
+        return { success: true }
+      }
+      return { success: false }
+    } catch (error) {
+      return { success: false, error: "Failed to fetch user assigned role" }
     }
   }
 )
