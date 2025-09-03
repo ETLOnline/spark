@@ -32,6 +32,7 @@ import {
 import { GetUserPermissionsParsedAction } from "../UserRoles/UserRole"
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import { ensureCommunityMembership } from "../Community/Community"
+import pusherServer from "@/src/services/realtime/pusherServer"
 
 export const CreateChannelAction = CreateServerAction(
   true,
@@ -198,6 +199,7 @@ export const AttachChannelUserAction = CreateServerAction(
       if (channel?.community_id) {
         await ensureCommunityMembership(channel.community_id, userId)
       }
+      pusherServer.trigger(`user-${userId}`, "update-role", attachUserRole)
       return { success: true, data: channelUser }
     } catch (error) {
       return { error: error }
@@ -211,6 +213,7 @@ export const DettachChannelUserAction = CreateServerAction(
     try {
       const channelUser = await dettachChannelUser(channelId, userId)
       const deleteRole = await deleteUserRole(userId, roleId)
+      pusherServer.trigger(`user-${userId}`, "update-role", deleteRole)
       return { success: true }
     } catch (error) {
       return { error: error }

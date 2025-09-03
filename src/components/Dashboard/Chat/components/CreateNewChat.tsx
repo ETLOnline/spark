@@ -118,6 +118,9 @@ const CreateNewChat = () => {
         if (groupName.trim() === "") {
           setGroupNameError("Group name is required.")
           return
+        } else if (groupName.trim().length > 50) {
+          setGroupNameError("Group name must be 50 characters or less.")
+          return
         } else {
           setGroupNameError("")
         }
@@ -160,11 +163,11 @@ const CreateNewChat = () => {
           })
         }
       }
-    } finally {
       setSelectedContacts([])
       setGroupName("")
       setIsGroupChat(false)
       setDialogOpen(false)
+    } finally {
       setIsCreatingChat(false)
     }
   }
