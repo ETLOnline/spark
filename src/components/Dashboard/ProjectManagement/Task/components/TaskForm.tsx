@@ -32,11 +32,11 @@ import MultiSelect, {
 } from "@/src/components/ui/multi-select"
 import { useParams } from "next/navigation"
 import { GetProjectUsersAction } from "@/src/server-actions/ProjectManagement/projectManagement"
-import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { userStore } from "@/src/store/user/userStore"
 import { useAtomValue } from "jotai"
 import { TaskComment } from "./task-comment"
+import { Dialog, DialogContent, DialogTitle } from "@/src/components/ui/dialog"
 interface Props {
   onSubmit: (task: any) => void
   statuses?: InsertTaskStatus[]
@@ -73,6 +73,8 @@ export default function TaskForm({
   )
   const [assignee, setAssignee] = useState<SelectUser | null>(null)
   const [assignor, setAssignor] = useState<SelectUser | null>(null)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false)
   const authUser = useAtomValue(userStore.AuthUser)
   const form = useForm({
     resolver: zodResolver(projectSchema)
@@ -167,6 +169,43 @@ export default function TaskForm({
 
     getSelectedUsers()
   }, [selectedAssignee, selectedAssignor])
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+
+      // find the closest wrapper from the clicked element
+      const wrapper = target.closest(
+        ".tiptap-image-wrapper"
+      ) as HTMLElement | null
+
+      if (wrapper) {
+        const img = wrapper.querySelector("img")
+        if (img) {
+          const src = img.getAttribute("src")
+          if (src) {
+            setPreviewImage(src)
+          }
+        }
+      }
+    }
+
+    document.addEventListener("click", handleClick)
+
+    return () => {
+      document.removeEventListener("click", handleClick)
+    }
+  }, [form.watch("description")])
+
+  useEffect(() => {
+    if (!previewImage) return
+
+    setIsPreviewDialogOpen(true)
+  }, [previewImage])
+
+  useEffect(() => {
+    if (!isPreviewDialogOpen) setPreviewImage(null)
+  }, [isPreviewDialogOpen])
 
   useEffect(() => {
     const LoadUsersFromTask = async () => {
@@ -291,446 +330,486 @@ export default function TaskForm({
     canUpdateTask
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)}>
-      <div className="flex flex-col md:flex-row gap-2 ">
-        {/* Main content area (left side) */}
-        <div className="flex-1 px-2">
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 mb-2">
+    <>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="flex flex-col md:flex-row gap-2 ">
+          {/* Main content area (left side) */}
+          <div className="flex-1 px-2">
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <Controller
+                    name="task_title"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) =>
+                      activeField === "title" ? (
+                        <Input
+                          id="task_title"
+                          {...field}
+                          type="text"
+                          className="col-span-3 !text-lg"
+                          autoFocus
+                          required
+                          disabled={!isAllowedAction}
+                          onBlur={() => setActiveField(null)}
+                        />
+                      ) : (
+                        <div
+                          className="border-b border-dashed border-gray-300 py-2 text-xl cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2"
+                          onClick={() => setActiveField("title")}
+                        >
+                          <div>
+                            {errors.task_title && (
+                              <span className="text-red-500 text-sm flex items-center gap-2 mb-1">
+                                <CircleAlert size={16} />
+                                {String(errors.task_title.message)}
+                              </span>
+                            )}
+                          </div>
+
+                          <span>
+                            {field.value
+                              ? field.value
+                              : " Click to add title..."}
+                          </span>
+                        </div>
+                      )
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="pl-2 text-xl font-semibold">
+                  Description
+                </Label>
+
                 <Controller
-                  name="task_title"
+                  name="description"
                   defaultValue=""
                   control={form.control}
                   render={({ field }) =>
-                    activeField === "title" ? (
-                      <Input
-                        id="task_title"
-                        {...field}
-                        type="text"
-                        className="col-span-3 !text-lg"
-                        autoFocus
-                        required
-                        onBlur={() => setActiveField(null)}
+                    activeField === "description" ? (
+                      <Tiptap
+                        value={field.value}
+                        onChange={field.onChange}
+                        image_uploading={true}
+                        editable={isAllowedAction}
                       />
                     ) : (
                       <div
-                        className="border-b border-dashed border-gray-300 py-2 text-xl cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2"
-                        onClick={() => setActiveField("title")}
+                        className="rich-editor py-2  cursor-pointer w-full hover:bg-card rounded transition delay-150 duration-300 p-4"
+                        onClick={() => setActiveField("description")}
                       >
-                        <div>
-                          {errors.task_title && (
-                            <span className="text-red-500 text-sm flex items-center gap-2 mb-1">
-                              <CircleAlert size={16} />
-                              {String(errors.task_title.message)}
-                            </span>
-                          )}
-                        </div>
-
-                        <span>
-                          {field.value ? field.value : " Click to add title..."}
-                        </span>
+                        {field.value ? (
+                          <div
+                            dangerouslySetInnerHTML={{
+                              __html: field.value ?? ""
+                            }}
+                          />
+                        ) : (
+                          <span>Click to add description...</span>
+                        )}
                       </div>
                     )
                   }
                 />
               </div>
+              {selectedTask && (
+                <div className="space-y-4 pl-2">
+                  <h2 className="text-lg  font-semibold">Comments</h2>
+                  <TaskComment taskId={selectedTask.id} />
+                </div>
+              )}
             </div>
-
-            <div className="space-y-2">
-              <Label className="pl-2 text-xl font-semibold">Description</Label>
-
-              <Controller
-                name="description"
-                defaultValue=""
-                control={form.control}
-                render={({ field }) =>
-                  activeField === "description" ? (
-                    <Tiptap value={field.value} onChange={field.onChange} />
-                  ) : (
-                    <div
-                      className="rich-editor py-2  cursor-pointer w-full hover:bg-card rounded transition delay-150 duration-300 p-4"
-                      onClick={() => setActiveField("description")}
-                    >
-                      {field.value ? (
-                        <div
-                          dangerouslySetInnerHTML={{
-                            __html: field.value ?? ""
-                          }}
-                        />
-                      ) : (
-                        <span>Click to add description...</span>
-                      )}
-                    </div>
-                  )
-                }
-              />
-            </div>
-            {selectedTask && (
-              <div className="space-y-4 pl-2">
-                <h2 className="text-lg  font-semibold">Comments</h2>
-                <TaskComment taskId={selectedTask.id} />
-              </div>
-            )}
           </div>
-        </div>
 
-        {/* Sidebar (right side) */}
-        <div className="w-auto md:w-56">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-end gap-4 mb-2">
-                {isAllowedAction && (
-                  <Button
-                    loading={loading}
-                    variant={"outline"}
-                    className="w-full"
-                  >
-                    {selectedTask ? "Update Task" : "Create Task"}
-                  </Button>
-                )}
-              </div>
-
-              {/* status */}
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <Label>Status</Label>
-
-                  <Controller
-                    name="status_id"
-                    control={form.control}
-                    render={({ field }) => {
-                      const selectedValue = statuses?.find(
-                        (s) => s.id === field.value
-                      )?.name
-
-                      return activeField === "status" ? (
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <SelectTrigger id="status_id" className="col-span-3">
-                            <SelectValue placeholder={"Select status"} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {statuses?.map(
-                              (s) =>
-                                s.id && (
-                                  <SelectItem key={s.id} value={s.id}>
-                                    {s.name}
-                                  </SelectItem>
-                                )
-                            )}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <div
-                          className=" py-2 cursor-pointer flex items-center gap-2"
-                          onClick={() => {
-                            setActiveField("status")
-                            requestAnimationFrame(() => {
-                              document.getElementById("status_id")?.click()
-                            })
-                          }}
-                        >
-                          <div>
-                            {errors.status_id && (
-                              <span className="text-red-500 text-sm flex items-center gap-2">
-                                <CircleAlert size={16} />
-                                {String(errors.status_id.message)}
-                              </span>
-                            )}
-                          </div>
-
-                          <StatusIcon status={selectedValue || ""} />
-                          <span>{selectedValue}</span>
-                        </div>
-                      )
-                    }}
-                  />
+          {/* Sidebar (right side) */}
+          <div className="w-auto md:w-56">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-end gap-4 mb-2">
+                  {isAllowedAction && (
+                    <Button
+                      loading={loading}
+                      variant={"outline"}
+                      className="w-full"
+                      disabled={loading}
+                    >
+                      {selectedTask ? "Update Task" : "Create Task"}
+                    </Button>
+                  )}
                 </div>
 
-                {/* Assign To */}
-                <div className="space-y-2">
-                  <Label>Assign To</Label>
-                  <Controller
-                    name="assign_to"
-                    control={form.control}
-                    render={({ field }) =>
-                      activeField === "assignTo" ? (
-                        <MultiSelect
-                          options={assigneeOptions}
-                          selected={selectedAssignee}
-                          onChange={(newselected) => {
-                            if (newselected.length === 0) {
-                              setSelectedAssignee([
-                                {
-                                  label: "Unassigned",
-                                  value: ""
+                {/* status */}
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label>Status</Label>
+
+                    <Controller
+                      name="status_id"
+                      control={form.control}
+                      render={({ field }) => {
+                        const selectedValue = statuses?.find(
+                          (s) => s.id === field.value
+                        )?.name
+
+                        return activeField === "status" ? (
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            disabled={!isAllowedAction}
+                          >
+                            <SelectTrigger
+                              id="status_id"
+                              className="col-span-3"
+                            >
+                              <SelectValue placeholder={"Select status"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {statuses?.map(
+                                (s) =>
+                                  s.id && (
+                                    <SelectItem key={s.id} value={s.id}>
+                                      {s.name}
+                                    </SelectItem>
+                                  )
+                              )}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <div
+                            className=" py-2 cursor-pointer flex items-center gap-2"
+                            onClick={() => {
+                              setActiveField("status")
+                              requestAnimationFrame(() => {
+                                document.getElementById("status_id")?.click()
+                              })
+                            }}
+                          >
+                            <div>
+                              {errors.status_id && (
+                                <span className="text-red-500 text-sm flex items-center gap-2">
+                                  <CircleAlert size={16} />
+                                  {String(errors.status_id.message)}
+                                </span>
+                              )}
+                            </div>
+
+                            <StatusIcon status={selectedValue || ""} />
+                            <span>{selectedValue}</span>
+                          </div>
+                        )
+                      }}
+                    />
+                  </div>
+
+                  {/* Assign To */}
+                  <div className="space-y-2">
+                    <Label>Assign To</Label>
+                    <Controller
+                      name="assign_to"
+                      control={form.control}
+                      render={({ field }) =>
+                        activeField === "assignTo" ? (
+                          <MultiSelect
+                            options={assigneeOptions}
+                            selected={selectedAssignee}
+                            disabled={!isAllowedAction}
+                            onChange={(newselected) => {
+                              if (newselected.length === 0) {
+                                setSelectedAssignee([
+                                  {
+                                    label: "Unassigned",
+                                    value: ""
+                                  }
+                                ])
+                              } else {
+                                const latestSelected =
+                                  newselected?.[newselected.length - 1]
+                                setSelectedAssignee(
+                                  latestSelected ? [latestSelected] : []
+                                )
+                              }
+                            }}
+                            placeholder="Select Assignee"
+                          />
+                        ) : (
+                          <div
+                            className=" py-2 cursor-pointer flex items-center gap-2"
+                            onClick={() => {
+                              setActiveField("assignTo")
+                              requestAnimationFrame(() => {
+                                document.getElementById("assign_to")?.click()
+                              })
+                            }}
+                          >
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage
+                                src={
+                                  assignee?.profile_url || "/placeholder.svg"
                                 }
-                              ])
-                            } else {
+                                alt={assignee?.first_name}
+                              />
+                              <AvatarFallback className="text-xs">
+                                {assignee?.first_name[0]}
+                                {assignee?.last_name[0]}
+                              </AvatarFallback>
+                            </Avatar>
+
+                            <span>
+                              {assignee
+                                ? assignee.first_name + " " + assignee.last_name
+                                : "Unassigned"}
+                            </span>
+                          </div>
+                        )
+                      }
+                    />
+                  </div>
+
+                  {/* Assign By */}
+                  <div className="space-y-2">
+                    <Label>Assigned By</Label>
+                    <Controller
+                      name="assign_by"
+                      control={form.control}
+                      render={({ field }) =>
+                        activeField === "assignBy" ? (
+                          <MultiSelect
+                            options={assignorOptions}
+                            selected={selectedAssignor}
+                            disabled={!isAllowedAction}
+                            onChange={(newselected) => {
                               const latestSelected =
                                 newselected?.[newselected.length - 1]
-                              setSelectedAssignee(
+                              setSelectedAssignor(
                                 latestSelected ? [latestSelected] : []
                               )
-                            }
-                          }}
-                          placeholder="Select Assignee"
-                        />
-                      ) : (
-                        <div
-                          className=" py-2 cursor-pointer flex items-center gap-2"
-                          onClick={() => {
-                            setActiveField("assignTo")
-                            requestAnimationFrame(() => {
-                              document.getElementById("assign_to")?.click()
-                            })
-                          }}
-                        >
-                          <Avatar className="h-5 w-5">
-                            <AvatarImage
-                              src={assignee?.profile_url || "/placeholder.svg"}
-                              alt={assignee?.first_name}
-                            />
-                            <AvatarFallback className="text-xs">
-                              {assignee?.first_name[0]}
-                              {assignee?.last_name[0]}
-                            </AvatarFallback>
-                          </Avatar>
+                            }}
+                            placeholder="Select Assignor"
+                          />
+                        ) : (
+                          <div
+                            className=" py-2 cursor-pointer flex items-center gap-2"
+                            onClick={() => {
+                              setActiveField("assignBy")
+                              requestAnimationFrame(() => {
+                                document.getElementById("assign_to")?.click()
+                              })
+                            }}
+                          >
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage
+                                src={
+                                  assignor?.profile_url || "/placeholder.svg"
+                                }
+                                alt={assignor?.first_name}
+                              />
+                              <AvatarFallback className="text-xs">
+                                {assignor?.first_name[0]}
+                                {assignor?.last_name[0]}
+                              </AvatarFallback>
+                            </Avatar>
 
-                          <span>
-                            {assignee
-                              ? assignee.first_name + " " + assignee.last_name
-                              : "Unassigned"}
-                          </span>
-                        </div>
-                      )
-                    }
-                  />
-                </div>
+                            <span>
+                              {assignor
+                                ? assignor.first_name + " " + assignor.last_name
+                                : "Select Assignor"}
+                            </span>
+                          </div>
+                        )
+                      }
+                    />
+                  </div>
 
-                {/* Assign By */}
-                <div className="space-y-2">
-                  <Label>Assigned By</Label>
-                  <Controller
-                    name="assign_by"
-                    control={form.control}
-                    render={({ field }) =>
-                      activeField === "assignBy" ? (
-                        <MultiSelect
-                          options={assignorOptions}
-                          selected={selectedAssignor}
-                          onChange={(newselected) => {
-                            const latestSelected =
-                              newselected?.[newselected.length - 1]
-                            setSelectedAssignor(
-                              latestSelected ? [latestSelected] : []
-                            )
-                          }}
-                          placeholder="Select Assignor"
-                        />
-                      ) : (
-                        <div
-                          className=" py-2 cursor-pointer flex items-center gap-2"
-                          onClick={() => {
-                            setActiveField("assignBy")
-                            requestAnimationFrame(() => {
-                              document.getElementById("assign_to")?.click()
-                            })
-                          }}
-                        >
-                          <Avatar className="h-5 w-5">
-                            <AvatarImage
-                              src={assignor?.profile_url || "/placeholder.svg"}
-                              alt={assignor?.first_name}
-                            />
-                            <AvatarFallback className="text-xs">
-                              {assignor?.first_name[0]}
-                              {assignor?.last_name[0]}
-                            </AvatarFallback>
-                          </Avatar>
+                  {/* Priority */}
+                  <div className="space-y-2">
+                    <Label>Priority</Label>
 
-                          <span>
-                            {assignor
-                              ? assignor.first_name + " " + assignor.last_name
-                              : "Select Assignor"}
-                          </span>
-                        </div>
-                      )
-                    }
-                  />
-                </div>
+                    <Controller
+                      name="task_priority"
+                      defaultValue=""
+                      control={form.control}
+                      render={({ field }) =>
+                        activeField === "priority" ? (
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            disabled={!isAllowedAction}
+                          >
+                            <SelectTrigger
+                              id="task_priority"
+                              className="col-span-3"
+                            >
+                              <SelectValue placeholder="Select priority" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {projectTaskPriority.map((priority, index) => (
+                                <SelectItem key={index} value={priority.key}>
+                                  {priority.title}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <>
+                            <div>
+                              {errors.task_priority && (
+                                <span className="text-red-500 text-sm flex items-center gap-2">
+                                  <CircleAlert size={16} />
+                                  {String(errors.task_priority.message)}
+                                </span>
+                              )}
+                            </div>
 
-                {/* Priority */}
-                <div className="space-y-2">
-                  <Label>Priority</Label>
+                            <div
+                              className=" py-2 cursor-pointer flex items-center gap-2"
+                              onClick={() => {
+                                setActiveField("priority")
+                                requestAnimationFrame(() => {
+                                  document
+                                    .getElementById("task_priority")
+                                    ?.click()
+                                })
+                              }}
+                            >
+                              <PriorityIcon priority={field.value} />
+                              <span>
+                                {field.value
+                                  ? ToUpperCase(field.value)
+                                  : "Select Priority"}
+                              </span>
+                            </div>
+                          </>
+                        )
+                      }
+                    />
+                  </div>
 
-                  <Controller
-                    name="task_priority"
-                    defaultValue=""
-                    control={form.control}
-                    render={({ field }) =>
-                      activeField === "priority" ? (
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger
-                            id="task_priority"
+                  {/* Issue Type */}
+                  <div className="space-y-2">
+                    <Label>Issue Type</Label>
+
+                    <Controller
+                      name="task_type"
+                      defaultValue=""
+                      control={form.control}
+                      render={({ field }) =>
+                        activeField === "issueType" ? (
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            disabled={!isAllowedAction}
+                          >
+                            <SelectTrigger
+                              id="task_type"
+                              className="col-span-3"
+                            >
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {projectTaskTypes.map((type, index) => (
+                                <SelectItem key={index} value={type.key}>
+                                  {type.title}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <>
+                            <div>
+                              {errors.task_type && (
+                                <span className="text-red-500 text-sm flex items-center gap-2">
+                                  <CircleAlert size={16} />
+                                  {String(errors.task_type.message)}
+                                </span>
+                              )}
+                            </div>
+
+                            <div
+                              className=" py-2 cursor-pointer flex items-center gap-2"
+                              onClick={() => {
+                                setActiveField("issueType")
+                                requestAnimationFrame(() => {
+                                  document.getElementById("task_type")?.click()
+                                })
+                              }}
+                            >
+                              <IssueTypeIcon type={field.value} />
+                              <span>
+                                {field.value
+                                  ? ToUpperCase(field.value)
+                                  : "Select Type"}
+                              </span>
+                            </div>
+                          </>
+                        )
+                      }
+                    />
+                  </div>
+
+                  {/* Story Points */}
+                  <div className="space-y-2">
+                    <Label>Story Points</Label>
+                    <Controller
+                      name="story_points"
+                      defaultValue=""
+                      control={form.control}
+                      render={({ field }) =>
+                        activeField === "points" ? (
+                          <Input
+                            disabled={!isAllowedAction}
+                            id="story_points"
+                            type="number"
+                            min={0}
+                            placeholder="Select Points"
+                            {...field}
                             className="col-span-3"
-                          >
-                            <SelectValue placeholder="Select priority" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {projectTaskPriority.map((priority, index) => (
-                              <SelectItem key={index} value={priority.key}>
-                                {priority.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <>
-                          <div>
-                            {errors.task_priority && (
-                              <span className="text-red-500 text-sm flex items-center gap-2">
-                                <CircleAlert size={16} />
-                                {String(errors.task_priority.message)}
-                              </span>
-                            )}
-                          </div>
-
+                          />
+                        ) : (
                           <div
                             className=" py-2 cursor-pointer flex items-center gap-2"
                             onClick={() => {
-                              setActiveField("priority")
+                              setActiveField("points")
                               requestAnimationFrame(() => {
-                                document
-                                  .getElementById("task_priority")
-                                  ?.click()
+                                document.getElementById("story_points")?.focus()
                               })
                             }}
                           >
-                            <PriorityIcon priority={field.value} />
-                            <span>
-                              {field.value
-                                ? ToUpperCase(field.value)
-                                : "Select Priority"}
-                            </span>
+                            <div>
+                              {errors.story_points && (
+                                <span className="text-red-500 text-sm flex items-center gap-2">
+                                  <CircleAlert size={16} />
+                                  {String(errors.story_points.message)}
+                                </span>
+                              )}
+                            </div>
+                            <BarChart2 className="h-5 w-5 text-gray-500" />
+                            <span>{field.value || "Select Points"}</span>
                           </div>
-                        </>
-                      )
-                    }
-                  />
+                        )
+                      }
+                    />
+                  </div>
                 </div>
-
-                {/* Issue Type */}
-                <div className="space-y-2">
-                  <Label>Issue Type</Label>
-
-                  <Controller
-                    name="task_type"
-                    defaultValue=""
-                    control={form.control}
-                    render={({ field }) =>
-                      activeField === "issueType" ? (
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger id="task_type" className="col-span-3">
-                            <SelectValue placeholder="Select type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {projectTaskTypes.map((type, index) => (
-                              <SelectItem key={index} value={type.key}>
-                                {type.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <>
-                          <div>
-                            {errors.task_type && (
-                              <span className="text-red-500 text-sm flex items-center gap-2">
-                                <CircleAlert size={16} />
-                                {String(errors.task_type.message)}
-                              </span>
-                            )}
-                          </div>
-
-                          <div
-                            className=" py-2 cursor-pointer flex items-center gap-2"
-                            onClick={() => {
-                              setActiveField("issueType")
-                              requestAnimationFrame(() => {
-                                document.getElementById("task_type")?.click()
-                              })
-                            }}
-                          >
-                            <IssueTypeIcon type={field.value} />
-                            <span>
-                              {field.value
-                                ? ToUpperCase(field.value)
-                                : "Select Type"}
-                            </span>
-                          </div>
-                        </>
-                      )
-                    }
-                  />
-                </div>
-
-                {/* Story Points */}
-                <div className="space-y-2">
-                  <Label>Story Points</Label>
-                  <Controller
-                    name="story_points"
-                    defaultValue=""
-                    control={form.control}
-                    render={({ field }) =>
-                      activeField === "points" ? (
-                        <Input
-                          id="story_points"
-                          type="number"
-                          min={0}
-                          placeholder="Select Points"
-                          {...field}
-                          className="col-span-3"
-                        />
-                      ) : (
-                        <div
-                          className=" py-2 cursor-pointer flex items-center gap-2"
-                          onClick={() => {
-                            setActiveField("points")
-                            requestAnimationFrame(() => {
-                              document.getElementById("story_points")?.focus()
-                            })
-                          }}
-                        >
-                          <div>
-                            {errors.story_points && (
-                              <span className="text-red-500 text-sm flex items-center gap-2">
-                                <CircleAlert size={16} />
-                                {String(errors.story_points.message)}
-                              </span>
-                            )}
-                          </div>
-                          <BarChart2 className="h-5 w-5 text-gray-500" />
-                          <span>{field.value || "Select Points"}</span>
-                        </div>
-                      )
-                    }
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
+
+      <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
+        <DialogContent className="max-w-auto w-full h-auto">
+          <DialogTitle>Preview</DialogTitle>
+          <img
+            src={previewImage || "dummy.png"}
+            alt="Preview Image"
+            className="w-full h-full"
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

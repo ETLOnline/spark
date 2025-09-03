@@ -373,6 +373,7 @@ function ProjectFormModal({
               <Button
                 type="submit"
                 loading={createProjectLoading || updateLoading}
+                disabled={createProjectLoading || updateLoading}
               >
                 Save Project
               </Button>

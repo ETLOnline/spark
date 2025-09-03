@@ -10,8 +10,7 @@ import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   AttachProjectUserAction,
-  RemoveProjectUserAction,
-  UpdateProjectUserRoleAction
+  RemoveProjectUserAction
 } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { GetSpaceUsersAction } from "@/src/server-actions/Space/Space"
 import {
@@ -38,10 +37,8 @@ import {
 } from "@/src/components/ui/dialog"
 import { MoreHorizontal, PlusCircle } from "lucide-react"
 import { Badge } from "@/src/components/ui/badge"
-import { ProjectUserRole } from "@/src/components/common/types/projectuser.role"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
-import { projectStore } from "@/src/store/project/projectStore"
 import { Label } from "@/src/components/ui/label"
 import {
   Select,
@@ -77,6 +74,7 @@ export default function ProjectTeamList({
   const [spaceUsers, setSpaceUsers] = useState<SelectUser[]>([])
   const [selectedUsers, setSelectedUsers] = useState<MultiSelectOption[]>([])
   const [usersList, setUsersList] = useState<ProjectUser[]>(projectUsers)
+  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
 
   const [attachUserLoading, , , AttachUser] = useServerAction(
     AttachProjectUserAction
@@ -94,6 +92,38 @@ export default function ProjectTeamList({
       fetchSpaceRoles("PROJECT", projectId)
     }
   }, [projectId])
+
+  const isScopedAdminFn = (user?: SelectUser) => {
+    if (user?.roles) {
+      return user.roles.some(
+        (role) =>
+          role.role?.slug?.includes("admin") &&
+          role.role.entity_id === projectId
+      )
+    }
+    return false
+  }
+
+  const canChangeUserRole = (targetUser: SelectUser | undefined) => {
+    if (!targetUser) return false
+
+    if (isSuperAdmin) return true
+
+    if (authUser?.unique_id === projectCreatorId) return true
+
+    if (isScopedAdminFn(authUser || undefined)) {
+      if (
+        targetUser.unique_id === projectCreatorId ||
+        targetUser.unique_id === authUser?.unique_id ||
+        isScopedAdminFn(targetUser)
+      ) {
+        return false
+      }
+      return true
+    }
+
+    return false
+  }
 
   const [roleDialogOpen, setRoleDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<ProjectUser | null>(null)
@@ -330,8 +360,18 @@ export default function ProjectTeamList({
             <div className="grid grid-cols-12 p-4 bg-muted font-medium">
               <div className="col-span-4">User</div>
               <div className="col-span-4">Email</div>
-              <div className="col-span-3">Role</div>
-              <div className="col-span-1 text-center">Actions</div>
+              <div
+                className={
+                  isScopedAdminFn(authUser || undefined)
+                    ? "col-span-3"
+                    : "col-span-4 text-center"
+                }
+              >
+                Role
+              </div>
+              {isScopedAdminFn(authUser || undefined) ? (
+                <div className="col-span-1 text-center">Actions</div>
+              ) : null}
             </div>
             <div className="divide-y">
               {usersList.length === 0 ? (
@@ -364,57 +404,75 @@ export default function ProjectTeamList({
                       <div className="col-span-4 text-sm text-muted-foreground">
                         {user.email}
                       </div>
-                      <div className="col-span-3 flex items-center gap-1">
-                        <Badge
-                          className="capitalize"
-                          variant={cu.role === "admin" ? "default" : "outline"}
-                        >
-                          {cu.role}
-                        </Badge>
+                      <div
+                        className={
+                          isScopedAdminFn(authUser || undefined)
+                            ? "col-span-3 flex gap-1"
+                            : "col-span-4  gap-1"
+                        }
+                      >
+                        <div className="flex flex-col items-center">
+                          <Badge
+                            className="capitalize"
+                            variant={
+                              cu.role === "admin" ? "default" : "outline"
+                            }
+                          >
+                            {cu.role}
+                          </Badge>
+                          {user.unique_id === projectCreatorId ? (
+                            <Badge variant="outline">{"(Owner)"}</Badge>
+                          ) : null}
+                        </div>
                       </div>
-                      <div className="col-span-1 text-center">
-                        {isProjectCreator || canUpdate || canDelete ? (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">More options</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              {canUpdate && (
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setSelectedUser(cu)
-                                    setNewRoleName(cu.role ?? "member")
-                                    setRoleDialogOpen(true)
-                                  }}
-                                >
-                                  Change Role
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuSeparator />
-                              {canDelete && (
-                                <DropdownMenuItem
-                                  className="text-destructive"
-                                  onClick={() => {
-                                    setSelectedUser(cu)
-                                    handleRemoveUser(cu.user_id, cu.role ?? "")
-                                  }}
-                                >
-                                  Remove User
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        ) : (
-                          <span className="text-muted-foreground text-xs">
-                            -
-                          </span>
-                        )}
-                      </div>
+                      {isScopedAdminFn(authUser || undefined) ? (
+                        <div className="col-span-1 text-center">
+                          {isProjectCreator || canChangeUserRole(user) ? (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                  <span className="sr-only">More options</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                {canUpdate && (
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedUser(cu)
+                                      setNewRoleName(cu.role ?? "member")
+                                      setRoleDialogOpen(true)
+                                    }}
+                                  >
+                                    Change Role
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuSeparator />
+                                {canDelete && (
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={() => {
+                                      setSelectedUser(cu)
+                                      handleRemoveUser(
+                                        cu.user_id,
+                                        cu.role ?? ""
+                                      )
+                                    }}
+                                  >
+                                    Remove User
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">
+                              -
+                            </span>
+                          )}
+                        </div>
+                      ) : null}
                     </div>
                   )
                 })
@@ -446,7 +504,6 @@ export default function ProjectTeamList({
           </Button>
         </DialogContent>
       </Dialog>
-
       {/* Change Role Dialog */}
       <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
         <DialogContent>
