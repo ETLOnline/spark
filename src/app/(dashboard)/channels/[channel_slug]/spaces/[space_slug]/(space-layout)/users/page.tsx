@@ -39,8 +39,8 @@ async function SpaceUsersPage({ params }: Props) {
 
   const userSpaceRoles = authUser.roles.filter(
     (ur) =>
-      ur.role.entity_type === "SPACE" &&
-      ur.role.entity_id === currentSpace?.data?.id
+      ur?.role?.entity_type === "SPACE" &&
+      ur?.role?.entity_id === currentSpace?.data?.id
   )
 
   if (authUser) {
