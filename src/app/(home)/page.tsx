@@ -681,7 +681,10 @@ export default function HomePage() {
             ) : (
               <>
                 {featuredCommunities.map((community) => (
-                  <motion.div key={community.id}>
+                  <motion.div
+                    key={community.id}
+                    className="w-full md:w-96 lg:w-45 h-100"
+                  >
                     <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl group bg-card">
                       <CardHeader>
                         <CardTitle>
@@ -707,7 +710,7 @@ export default function HomePage() {
                             </div>
                           </Link>
                         </CardTitle>
-                        <CardDescription>
+                        <CardDescription className="w-full">
                           {community.description}
                         </CardDescription>
                       </CardHeader>
@@ -719,53 +722,67 @@ export default function HomePage() {
                         <div className="space-y-3">
                           {community.channels &&
                           community.channels?.length > 0 ? (
-                            community.channels?.map((channel) => (
-                              <div
-                                key={channel.id}
-                                className="flex justify-between items-center"
-                              >
-                                <span className="text-sm text-muted-foreground">
-                                  {channel.channel_name}
-                                </span>
-                                <Link
-                                  href={`channels/${channel.channel_slug}/spaces`}
-                                >
-                                  <Button variant={"outline"} size="sm">
-                                    <ArrowRight className="w-2 h-2" />
-                                  </Button>
-                                </Link>
-                              </div>
-                            ))
+                            <>
+                              {community.channels
+                                ?.slice(0, 2)
+                                .map((channel) => (
+                                  <div
+                                    key={channel.id}
+                                    className="flex justify-between items-center"
+                                  >
+                                    <span className="text-sm text-muted-foreground">
+                                      {channel.channel_name}
+                                    </span>
+                                    <Link
+                                      href={`channels/${channel.channel_slug}/spaces`}
+                                    >
+                                      <Button variant={"outline"} size="sm">
+                                        <ArrowRight className="w-2 h-2" />
+                                      </Button>
+                                    </Link>
+                                  </div>
+                                ))}
+                              {community.channels?.length > 3 && (
+                                <div className="flex justify-center pt-2">
+                                  <Link href={`/communities/${community.slug}`}>
+                                    <Button variant="link" size="sm">
+                                      See all Channels
+                                    </Button>
+                                  </Link>
+                                </div>
+                              )}
+                            </>
                           ) : (
-                            <NoDataCard
-                              title="No Channels Found"
-                              icon={<ListX className="h-8 w-8" />}
-                            />
+                            <div className=" text-center">
+                              <NoDataCard
+                                title="No Channels Found"
+                                icon={<ListX className="h-8 w-8" />}
+                                description="No channels have been created in this community yet."
+                              />
+                            </div>
                           )}
                         </div>
                       </CardContent>
                     </Card>
                   </motion.div>
                 ))}
-
-                {/* View All Communities Card */}
-                <motion.div>
-                  <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl group bg-card">
-                    <CardTitle className="h-0 absolute" />
-                    <CardContent className="h-full">
-                      <Link
-                        href="/communities"
-                        className="flex flex-col items-center justify-center h-full text-primary font-semibold text-lg hover:underline underline-offset-4"
-                      >
-                        <ArrowRight className="h-10 w-10 transition-transform duration-300 group-hover:translate-x-2 group-hover:scale-110" />
-                        See All Communities
-                      </Link>
-                    </CardContent>
-                  </Card>
-                </motion.div>
               </>
             )}
           </motion.div>
+          <div className="flex justify-center">
+            <Card className="h-full w-full md:w-96 lg:w-45 hover:shadow-2xl transition-all duration-500 shadow-xl group bg-transparent p-4">
+              <CardTitle className="h-0 absolute" />
+              <CardContent className="h-full">
+                <Link
+                  href="/communities"
+                  className="flex flex-col items-center justify-center h-full text-primary font-semibold text-lg hover:underline underline-offset-4"
+                >
+                  <ArrowRight className="h-10 w-10 transition-transform duration-300 group-hover:translate-x-2 group-hover:scale-110" />
+                  See All Communities
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
 

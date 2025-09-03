@@ -21,6 +21,15 @@ import { useRouter } from "next/navigation"
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
+  const menuItems = [
+    { title: "Community", href: "#community" },
+    { title: "Mentors", href: "#mentors" },
+    { title: "Enterprise", href: "#enterprise" },
+    { title: "Architecture", href: "#architecture" },
+    { title: "Features", href: "#features" },
+    { title: "Roadmap", href: "#roadmap" }
+  ]
+
   const router = useRouter()
   return (
     <Suspense>
@@ -45,66 +54,16 @@ function Header() {
                     <SheetHeader>
                       <SheetTitle>SPARK</SheetTitle>
                       <div className="flex flex-col space-y-4 mt-4">
-                        <Link
-                          href="#community"
-                          className="p-2 w-full text-center hover:bg-primary hover:text-primary-foreground rounded-md font-medium"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            router.push("#community")
-                            // let the navigation happen, then close
-                            setTimeout(() => setIsMenuOpen(false), 50)
-                          }}
-                        >
-                          Community
-                        </Link>
-
-                        <Link
-                          href="#mentors"
-                          className="p-2 w-full text-center hover:bg-primary hover:text-primary-foreground rounded-md font-medium"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          Mentors
-                        </Link>
-
-                        <Link
-                          href="#enterprise"
-                          className="p-2 w-full text-center hover:bg-primary hover:text-primary-foreground rounded-md font-medium"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          Enterprise
-                        </Link>
-
-                        <Link
-                          href="#architecture"
-                          className="p-2 w-full text-center hover:bg-primary hover:text-primary-foreground rounded-md font-medium"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          Architecture
-                        </Link>
-
-                        <Link
-                          href="#features"
-                          className="p-2 w-full text-center hover:bg-primary hover:text-primary-foreground rounded-md font-medium"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          Features
-                        </Link>
-
-                        <Link
-                          href="#roadmap"
-                          className="p-2 w-full text-center hover:bg-primary hover:text-primary-foreground rounded-md font-medium"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          Roadmap
-                        </Link>
-
-                        {/* <Link
-                          href="#testimonials"
-                          className="p-2 w-full text-center hover:bg-primary hover:text-primary-foreground rounded-md font-medium"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          Success Stories
-                        </Link> */}
+                        {menuItems.map((item) => (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            className="p-2 w-full text-center hover:bg-primary hover:text-primary-foreground rounded-md font-medium"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            {item.title}
+                          </Link>
+                        ))}
                       </div>
                     </SheetHeader>
                   </SheetContent>
@@ -126,48 +85,15 @@ function Header() {
             </div>
 
             <div className="hidden lg:flex items-center gap-6">
-              <Link
-                href="#community"
-                className="text-foreground dark:text-foreground hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
-              >
-                Community
-              </Link>
-              <Link
-                href="#mentors"
-                className="text-foreground dark:text-foreground hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
-              >
-                Mentors
-              </Link>
-              <Link
-                href="#enterprise"
-                className="text-foreground dark:text-foreground hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
-              >
-                Enterprise
-              </Link>
-              <Link
-                href="#architecture"
-                className="text-foreground dark:text-foreground hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
-              >
-                Architecture
-              </Link>
-              <Link
-                href="#features"
-                className="text-foreground dark:text-foreground hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
-              >
-                Features
-              </Link>
-              <Link
-                href="#roadmap"
-                className="text-foreground dark:text-foreground hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
-              >
-                Roadmap
-              </Link>
-              {/* <Link
-                href="#testimonials"
-                className="w-full text-foreground dark:text-foreground hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
-              >
-                Success Stories
-              </Link> */}
+              {menuItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="text-foreground dark:text-foreground hover:text-primary dark:hover:text-primary-hover transition-colors font-medium"
+                >
+                  {item.title}
+                </Link>
+              ))}
             </div>
 
             <div className="flex items-center gap-2">
