@@ -6,10 +6,7 @@ import Container from "@/src/components/container/Container"
 import { Card, CardContent } from "@/src/components/ui/card"
 import { Check } from "lucide-react"
 import { cn } from "@/src/lib/utils"
-import {
-  getUserAssignedRoleAction,
-  savePersonaAction
-} from "@/src/server-actions/UserRoles/UserRole"
+import { savePersonaAction } from "@/src/server-actions/UserRoles/UserRole"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { SelectRole, SelectUser } from "@/src/db/schema"
 import { useRouter } from "next/navigation"
@@ -29,7 +26,9 @@ export default function SelectPersonaPage({
 }: SelectPersonaPageProps) {
   const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
   const [selectedPersona, setSelectedPersona] = useState<number | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isPersonaSaved, setIsPersonaSaved] = useState<boolean>(false) // <-- add this
+
   const router = useRouter()
 
   const [savingPersona, saveResult, saveError, executeSavePersona] =
@@ -37,15 +36,6 @@ export default function SelectPersonaPage({
 
   const handleSelectPersona = (personaId: number) =>
     setSelectedPersona(personaId)
-
-  useEffect(() => {
-    ;(async () => {
-      const result = await getUserAssignedRoleAction(userAuth.unique_id)
-      if (result?.success) {
-        router.push("/profile-completion")
-      }
-    })()
-  }, [userAuth.unique_id, router])
 
   const handleContinue = async () => {
     if (!selectedPersona) return
@@ -58,6 +48,7 @@ export default function SelectPersonaPage({
       )
       if (attachPersona && attachPersona.success) {
         await refreshAuthUser()
+        setIsPersonaSaved(true)
         toast({ title: "Persona saved successfully" })
         router.push("/profile-complition")
       }
@@ -114,7 +105,7 @@ export default function SelectPersonaPage({
               <Button
                 onClick={handleContinue}
                 loading={isLoading}
-                disabled={!selectedPersona || isLoading}
+                disabled={!selectedPersona || isPersonaSaved}
                 size="lg"
                 className="px-8 py-3 text-lg font-medium min-w-[160px]"
               >
@@ -123,6 +114,8 @@ export default function SelectPersonaPage({
                     <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                     <span>Saving...</span>
                   </div>
+                ) : isPersonaSaved ? (
+                  "Saved "
                 ) : (
                   "Continue"
                 )}
