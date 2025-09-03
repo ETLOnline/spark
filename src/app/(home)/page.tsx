@@ -667,9 +667,8 @@ export default function HomePage() {
               across Pakistan
             </p>
           </motion.div>
-
           <motion.div
-            className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16"
+            className="flex flex-wrap justify-center gap-8 mb-16"
             variants={staggerContainer}
             initial="initial"
             whileInView="animate"
@@ -681,35 +680,35 @@ export default function HomePage() {
               </div>
             ) : (
               <>
-                {featuredCommunities.map((commnity) => (
-                  <motion.div key={commnity.id}>
+                {featuredCommunities.map((community) => (
+                  <motion.div key={community.id}>
                     <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-xl group bg-card">
                       <CardHeader>
                         <CardTitle>
-                          <Link href={`/communities/${commnity.slug}`}>
+                          <Link href={`/communities/${community.slug}`}>
                             <div className="flex flex-row gap-4 items-center mb-6">
                               <Avatar className="w-12 h-12  group-hover:scale-110 transition-transform duration-300">
                                 <AvatarImage
                                   src={"/images/default-avatar.png"}
-                                  alt={commnity.title}
+                                  alt={community.title}
                                 />
                                 <AvatarFallback>
-                                  {getInitials(commnity.title)}
+                                  {getInitials(community.title)}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
                                 <h3 className="text-xl font-semibold mb-1 text-foreground">
-                                  {commnity.title}
+                                  {community.title}
                                 </h3>
                                 <div className="text-sm font-normal text-muted-foreground">
-                                  {commnity.communityMembers?.length} Members
+                                  {community.communityMembers?.length} Members
                                 </div>
                               </div>
                             </div>
                           </Link>
                         </CardTitle>
                         <CardDescription>
-                          {commnity.description}
+                          {community.description}
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
@@ -718,9 +717,9 @@ export default function HomePage() {
                       </div> */}
                         <div className="mb-2">Featured Channels</div>
                         <div className="space-y-3">
-                          {commnity.channels &&
-                          commnity.channels?.length > 0 ? (
-                            commnity.channels?.map((channel) => (
+                          {community.channels &&
+                          community.channels?.length > 0 ? (
+                            community.channels?.map((channel) => (
                               <div
                                 key={channel.id}
                                 className="flex justify-between items-center"
@@ -1114,7 +1113,7 @@ export default function HomePage() {
                 <CardContent className="p-10">
                   <div className="flex items-center gap-4 mb-8">
                     <div
-                      className={`w-16 h-16 bg-gradient-to-r ${getGradient(1)} rounded-2xl flex items-center justify-center shadow-lg`}
+                      className={`w-16 h-16 bg-gradient-to-r ${getGradient(0)} rounded-2xl flex items-center justify-center shadow-lg`}
                     >
                       <Briefcase className="w-8 h-8 text-white" />
                     </div>
@@ -1167,7 +1166,7 @@ export default function HomePage() {
                       </h5>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-secondary-foreground">
+                          <div className="text-2xl font-bold text-primary">
                             55+
                           </div>
                           <div className="text-sm text-muted-foreground">
@@ -1175,7 +1174,7 @@ export default function HomePage() {
                           </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-secondary-foreground">
+                          <div className="text-2xl font-bold text-primary">
                             10+
                           </div>
                           <div className="text-sm text-muted-foreground">
@@ -1326,9 +1325,7 @@ export default function HomePage() {
                         </p>
                       </div>
                       <div className="text-center">
-                        <div
-                          className={`w-12 h-12 bg-gradient-to-r ${getGradient(1)} rounded-xl flex items-center justify-center mx-auto mb-3`}
-                        >
+                        <div className="w-12 h-12 bg-gradient-to-r from-primary to-accent rounded-xl flex items-center justify-center mx-auto mb-3">
                           <TrendingUp className="w-6 h-6 text-white" />
                         </div>
                         <h5 className="font-semibold text-foreground mb-2">
@@ -1340,9 +1337,7 @@ export default function HomePage() {
                         </p>
                       </div>
                       <div className="text-center">
-                        <div
-                          className={`w-12 h-12 bg-gradient-to-r ${getGradient(2)} rounded-xl flex items-center justify-center mx-auto mb-3`}
-                        >
+                        <div className="w-12 h-12 bg-gradient-to-r from-primary to-accent rounded-xl flex items-center justify-center mx-auto mb-3">
                           <Brain className="w-6 h-6 text-white" />
                         </div>
                         <h5 className="font-semibold text-foreground mb-2">

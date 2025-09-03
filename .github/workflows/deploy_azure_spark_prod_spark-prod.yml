@@ -99,7 +99,7 @@ jobs:
 
       - name: Unzip artifact for deployment
         run: unzip release.zip
-      
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -107,15 +107,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_185B1C8918AF4FC3AEE46F98F53EF793 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F5BFACB9B403489891108E800E810755 }}
 
-      - name: 'Deploy to Azure Web App'
+      - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'spark-prod'
-          slot-name: 'Production'
+          app-name: "spark-prod"
+          slot-name: "Production"
           package: .
-
-          
-
-
-

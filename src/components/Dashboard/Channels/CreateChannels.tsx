@@ -487,14 +487,28 @@ function CreateChannels({
             </div>
             <DialogFooter>
               {editChannel === true ? (
-                <Button type="submit" loading={addUpdateChannelLoading}>
+                <Button
+                  type="submit"
+                  loading={addUpdateChannelLoading}
+                  disabled={
+                    addUpdateChannelLoading ||
+                    isSlugAvailableLoading ||
+                    error.channel_slug?.message
+                      ? true
+                      : false
+                  }
+                >
                   Save
                 </Button>
               ) : (
                 <Button
                   type="submit"
                   loading={addChannelLoading}
-                  disabled={error.channel_slug?.message ? true : false}
+                  disabled={
+                    error.channel_slug?.message
+                      ? true
+                      : false || addChannelLoading || isSlugAvailableLoading
+                  }
                 >
                   Create
                 </Button>

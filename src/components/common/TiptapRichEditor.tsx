@@ -41,13 +41,15 @@ interface RichTextEditorProps {
   value?: string
   onChange?: (content: string) => void
   image_uploading?: boolean
+  editable?: boolean
 }
 
 const limit = 1000
 export default function RichTextEditor({
   value,
   onChange,
-  image_uploading
+  image_uploading,
+  editable
 }: RichTextEditorProps) {
   const [linkUrl, setLinkUrl] = useState("")
   const [showLinkInput, setShowLinkInput] = useState(false)
@@ -76,6 +78,7 @@ export default function RichTextEditor({
       })
     ],
     content: value,
+    editable,
     editorProps: {
       attributes: {
         class:

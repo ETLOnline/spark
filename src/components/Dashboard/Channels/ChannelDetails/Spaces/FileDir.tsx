@@ -335,7 +335,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
                       />
                       <Button
                         onClick={handleFileUpload}
-                        disabled={!fileData}
+                        disabled={!fileData || createFileLoading}
                         loading={createFileLoading}
                       >
                         <Upload className="mr-2 h-4 w-4" />
@@ -376,7 +376,11 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
                 >
                   Cancel
                 </Button>
-                <Button onClick={createFolder} loading={createFolderLoading}>
+                <Button
+                  onClick={createFolder}
+                  loading={createFolderLoading}
+                  disabled={createFolderLoading}
+                >
                   Create
                 </Button>
               </div>
