@@ -1,7 +1,17 @@
 import { ChannelUsersTable, SelectChannelUser } from "./../../schema"
-import { and, asc, eq, or, sql, SQLWrapper } from "drizzle-orm"
+import { and, asc, eq, or, sql, SQLWrapper, inArray } from "drizzle-orm"
 import { db } from "../.."
-import { channelsTable, InsertChannel, SelectChannel } from "../../schema"
+import {
+  channelsTable,
+  InsertChannel,
+  SelectChannel,
+  spacesTable,
+  projectTable,
+  ProjectUsersTable,
+  SpaceUsersTable,
+  rolesTable,
+  userRolesTable
+} from "../../schema"
 
 export type channelQueryFilters = {
   channelType?: "public" | "private"
@@ -286,6 +296,132 @@ export async function getChannelUsers(channelId: string) {
       }
     })
     return channelUsers
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+// New helpers: used by server actions to remove user from spaces/projects
+export async function getSpaceIdsByChannel(
+  channelId: string
+): Promise<string[]> {
+  try {
+    const spaces = await db.query.spacesTable.findMany({
+      where: eq(spacesTable.channel_id, channelId),
+      columns: { id: true }
+    })
+    return spaces.map((s: any) => s.id)
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function bulkDeleteSpaceUsers(spaceIds: string[], userId: string) {
+  try {
+    if (!spaceIds || spaceIds.length === 0) return
+    return await db
+      .delete(SpaceUsersTable)
+      .where(
+        and(
+          inArray(SpaceUsersTable.space_id, spaceIds),
+          eq(SpaceUsersTable.user_id, userId)
+        )
+      )
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function getProjectIdsBySpaceIds(
+  spaceIds: string[]
+): Promise<string[]> {
+  try {
+    if (!spaceIds || spaceIds.length === 0) return []
+    const projects = await db
+      .select({ id: projectTable.id })
+      .from(projectTable)
+      .where(inArray(projectTable.space_id, spaceIds))
+
+    return projects.map((p: any) => p.id)
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function bulkDeleteProjectUsers(
+  projectIds: string[],
+  userId: string
+) {
+  try {
+    if (!projectIds || projectIds.length === 0) return
+    return await db
+      .delete(ProjectUsersTable)
+      .where(
+        and(
+          inArray(ProjectUsersTable.project_id, projectIds),
+          eq(ProjectUsersTable.user_id, userId)
+        )
+      )
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function getProjectRoleIdsByProjectIds(
+  projectIds: string[]
+): Promise<string[]> {
+  try {
+    if (!projectIds || projectIds.length === 0) return []
+    const projectRoles = await db
+      .select({ id: rolesTable.id })
+      .from(rolesTable)
+      .where(
+        and(
+          eq(rolesTable.entity_type, "PROJECT"),
+          inArray(rolesTable.entity_id, projectIds)
+        )
+      )
+
+    return projectRoles.map((r: any) => r.id)
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function bulkDeleteUserRolesByRoleIds(
+  roleIds: string[],
+  userId: string
+) {
+  try {
+    if (!roleIds || roleIds.length === 0) return
+    return await db.delete(userRolesTable).where(
+      and(
+        // Convert string IDs to numbers since role_id is a number column
+        inArray(
+          userRolesTable.role_id,
+          roleIds.map((id) => parseInt(id, 10))
+        ),
+        eq(userRolesTable.user_id, userId)
+      )
+    )
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+/**
+ * Gets all roles for a user with entity information
+ * Used for finding and cleaning up entity-specific roles
+ */
+export async function getUserRolesWithEntities(userId: string) {
+  try {
+    const userRoles = await db.query.userRolesTable.findMany({
+      where: eq(userRolesTable.user_id, userId),
+      with: {
+        role: true
+      }
+    })
+    return userRoles
   } catch (e: any) {
     throw new Error(e.message)
   }

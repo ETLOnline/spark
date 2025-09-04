@@ -18,22 +18,21 @@ import {
 } from "lucide-react"
 import { Badge } from "../../ui/badge"
 import ChannelsContextMenu from "./ChannelDetails/ChannelsContextMenu"
-import { useAtom, useAtomValue } from "jotai"
-import { channelStore } from "@/src/store/channel/channelStore"
+import { useAtomValue } from "jotai"
+import { useEffect, useState } from "react"
 import { userStore } from "@/src/store/user/userStore"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from "../../ui/tooltip"
-import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { AttachChannelUserAction } from "@/src/server-actions/Channel/Channel"
 import { LeaveChannelAction } from "@/src/server-actions/Channel/ChannelActions"
 import { useToast } from "@/src/hooks/use-toast"
 import { isEntityUser } from "@/src/utils/clientHelper"
+import {
+  Tooltip,
+  TooltipProvider,
+  TooltipTrigger,
+  TooltipContent
+} from "../../ui/tooltip"
 
 interface ChannelProps {
   channel: SelectChannel
@@ -43,67 +42,27 @@ function ChannelCard({ channel }: ChannelProps) {
   const authUser = useAtomValue(userStore.AuthUser)
   const currentUserId = authUser?.unique_id
   const { toast } = useToast()
-  const [isChannelMember, setIsChannelMember] = useState<boolean>(false)
-  const [channels, setChannels] = useAtom(channelStore.channels)
+  const router = useRouter()
 
-  // Server actions
-  const [joinLoading, joinResult, joinError, joinChannel] = useServerAction(
+  const [isChannelMember, setIsChannelMember] = useState<boolean>(false)
+
+  const [joinLoading, , , joinChannel] = useServerAction(
     AttachChannelUserAction
   )
-  const [leaveLoading, leaveResult, leaveError, leaveChannel] =
-    useServerAction(LeaveChannelAction)
+  const [leaveLoading, , , leaveChannel] = useServerAction(LeaveChannelAction)
 
   useEffect(() => {
     if (channel && currentUserId) {
-      const isMember = isEntityUser(channel, currentUserId)
-      setIsChannelMember(isMember)
+      setIsChannelMember(!!isEntityUser(channel, currentUserId))
     }
   }, [channel, currentUserId])
 
-  // Listen for changes from context menu
-  useEffect(() => {
-    const handleStorageEvent = (e: StorageEvent) => {
-      if (e.key === "channel_member_status" && e.newValue) {
-        try {
-          const data = JSON.parse(e.newValue)
-          if (data.channelId === channel.id) {
-            setIsChannelMember(data.isMember)
-          }
-        } catch (err) {
-          console.error("Error parsing channel member status:", err)
-        }
-      }
-    }
-
-    window.addEventListener("storage", handleStorageEvent)
-    return () => window.removeEventListener("storage", handleStorageEvent)
-  }, [channel.id])
-
   const handleJoinChannel = async () => {
-    if (channel.id && currentUserId) {
+    if (channel?.id && currentUserId) {
       const res = await joinChannel(channel.id, currentUserId)
       if (res?.success) {
         setIsChannelMember(true)
-
-        // Notify other components about the status change
-        localStorage.setItem(
-          "channel_member_status",
-          JSON.stringify({
-            channelId: channel.id,
-            isMember: true
-          })
-        )
-        // Trigger storage event for other tabs/components
-        window.dispatchEvent(
-          new StorageEvent("storage", {
-            key: "channel_member_status",
-            newValue: JSON.stringify({
-              channelId: channel.id,
-              isMember: true
-            })
-          })
-        )
-
+        router.refresh()
         toast({
           title: "Channel Joined",
           description: "You have successfully joined the channel!",
@@ -116,30 +75,11 @@ function ChannelCard({ channel }: ChannelProps) {
   }
 
   const handleLeaveChannel = async () => {
-    if (channel.id) {
+    if (channel?.id) {
       const res = await leaveChannel(channel.id)
       if (res?.success) {
         setIsChannelMember(false)
-
-        // Notify other components about the status change
-        localStorage.setItem(
-          "channel_member_status",
-          JSON.stringify({
-            channelId: channel.id,
-            isMember: false
-          })
-        )
-        // Trigger storage event for other tabs/components
-        window.dispatchEvent(
-          new StorageEvent("storage", {
-            key: "channel_member_status",
-            newValue: JSON.stringify({
-              channelId: channel.id,
-              isMember: false
-            })
-          })
-        )
-
+        router.refresh()
         toast({
           title: "Channel Left",
           description: "You have successfully left the channel!",
@@ -152,28 +92,9 @@ function ChannelCard({ channel }: ChannelProps) {
   }
 
   const spacesCount = channel?.spaces ? channel.spaces.length : 0
-  const { permissionChecker } = usePermissionChecker(
-    "scoped",
-    "CHANNEL",
-    channel?.id
-  )
-
-  const canViewSpace = permissionChecker
-    ? permissionChecker?.canAccess("space.view")
-    : false
-  const canViewChannelAction = permissionChecker
-    ? permissionChecker?.canAccess("channel.allow.action")
-    : false
 
   return (
     <Card key={channel.id} className="overflow-hidden">
-      {/* <div className="aspect-video w-full overflow-hidden">
-        <img
-          src={"/images/home/session-image2.jpg"}
-          alt={channel.channel_name}
-          className="w-full h-full object-cover transition-transform hover:scale-105"
-        />
-      </div> */}
       <CardHeader>
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl flex items-center gap-1">
@@ -209,9 +130,7 @@ function ChannelCard({ channel }: ChannelProps) {
               </TooltipProvider>
             )}
           </CardTitle>
-          {authUser || canViewChannelAction ? (
-            <ChannelsContextMenu channel={channel} />
-          ) : null}
+          {authUser || false ? <ChannelsContextMenu channel={channel} /> : null}
         </div>
         <CardDescription>{channel.description}</CardDescription>
       </CardHeader>
@@ -221,7 +140,7 @@ function ChannelCard({ channel }: ChannelProps) {
           {spacesCount} {spacesCount === 1 ? "Space" : "Spaces"}
         </Badge>
         <div className="flex items-center gap-2 w-full justify-between">
-          {channel.channel_type === "public" || canViewSpace ? (
+          {channel.channel_type === "public" ? (
             <Link href={`/channels/${channel.channel_slug}/spaces`}>
               <Button variant="outline">View Spaces</Button>
             </Link>
@@ -234,6 +153,7 @@ function ChannelCard({ channel }: ChannelProps) {
                   variant="outline"
                   onClick={handleLeaveChannel}
                   disabled={leaveLoading}
+                  loading={leaveLoading}
                   className="border-input text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
@@ -245,6 +165,7 @@ function ChannelCard({ channel }: ChannelProps) {
                     variant="outline"
                     onClick={handleJoinChannel}
                     disabled={joinLoading}
+                    loading={joinLoading}
                     className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                   >
                     <PlusCircle className="mr-2 h-4 w-4" />

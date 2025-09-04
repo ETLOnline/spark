@@ -23,8 +23,13 @@ import {
   ChannelUsersTable,
   SpaceUsersTable,
   communitiesTable,
-  spacesTable
+  spacesTable,
+  projectTable,
+  ProjectUsersTable,
+  userRolesTable,
+  rolesTable
 } from "@/src/db/schema"
+import { inArray } from "drizzle-orm"
 import { CreateServerAction } from ".."
 import { db } from "@/src/db"
 import { and, eq } from "drizzle-orm"
@@ -360,20 +365,64 @@ export const LeaveCommunityAction = CreateServerAction(
                 )
               )
 
-            // Get spaces in this channel and detach user from each space
+            // Get spaces in this channel and detach user from each space (bulk)
             const spaces = await db.query.spacesTable.findMany({
               where: eq(spacesTable.channel_id, channel.id)
             })
 
-            for (const space of spaces) {
+            const spaceIds = spaces.map((s) => s.id)
+            if (spaceIds.length > 0) {
               await db
                 .delete(SpaceUsersTable)
                 .where(
                   and(
-                    eq(SpaceUsersTable.space_id, space.id),
+                    inArray(SpaceUsersTable.space_id, spaceIds),
                     eq(SpaceUsersTable.user_id, userId)
                   )
                 )
+            }
+
+            // Remove user from projects inside these spaces (bulk)
+            if (spaceIds.length > 0) {
+              const projects = await db
+                .select({ id: projectTable.id })
+                .from(projectTable)
+                .where(inArray(projectTable.space_id, spaceIds))
+
+              const projectIds = projects.map((p: any) => p.id)
+              if (projectIds.length > 0) {
+                await db
+                  .delete(ProjectUsersTable)
+                  .where(
+                    and(
+                      inArray(ProjectUsersTable.project_id, projectIds),
+                      eq(ProjectUsersTable.user_id, userId)
+                    )
+                  )
+
+                // Delete any project-scoped userRoles for these projects
+                const projectRoles = await db
+                  .select({ id: rolesTable.id })
+                  .from(rolesTable)
+                  .where(
+                    and(
+                      eq(rolesTable.entity_type, "PROJECT"),
+                      inArray(rolesTable.entity_id, projectIds)
+                    )
+                  )
+
+                const projectRoleIds = projectRoles.map((r: any) => r.id)
+                if (projectRoleIds.length > 0) {
+                  await db
+                    .delete(userRolesTable)
+                    .where(
+                      and(
+                        inArray(userRolesTable.role_id, projectRoleIds),
+                        eq(userRolesTable.user_id, userId)
+                      )
+                    )
+                }
+              }
             }
           } catch (err) {
             console.error(

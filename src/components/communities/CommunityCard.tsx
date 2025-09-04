@@ -42,6 +42,7 @@ import {
 } from "@/src/server-actions/Community/Community"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
+import { useRouter } from "next/navigation"
 import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
 
 interface CommunityCardProps {
@@ -95,6 +96,11 @@ export default function CommunityCard({
       attachCommunityUser(community.id, currentUserId).then((res) => {
         if (res?.success) {
           onJoin()
+          try {
+            router.refresh()
+          } catch (e) {
+            // noop
+          }
           toast({
             title: "Community Joined",
             description: "You have successfully joined the community!",
@@ -116,12 +122,19 @@ export default function CommunityCard({
             description: "You have left the community."
           })
           onJoin()
+          try {
+            router.refresh()
+          } catch (e) {
+            // noop
+          }
         } else {
           console.error("Failed to leave community:", res?.error)
         }
       })
     }
   }
+
+  const router = useRouter()
 
   return (
     <Card className="flex flex-col justify-between hover:shadow-md transition-shadow overflow-hidden">

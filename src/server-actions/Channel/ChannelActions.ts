@@ -2,18 +2,21 @@
 
 import { and, eq } from "drizzle-orm"
 import { db } from "@/src/db"
-import {
-  ChannelUsersTable,
-  SpaceUsersTable,
-  spacesTable,
-  userRolesTable,
-  rolesTable
-} from "@/src/db/schema"
+import { userRolesTable } from "@/src/db/schema"
 import { AuthUserAction } from "../User/AuthUserAction"
 import { CreateServerAction } from ".."
-import { dettachChannelUser } from "@/src/db/data-access/channels/query"
+import {
+  dettachChannelUser,
+  GetChannelById,
+  getSpaceIdsByChannel,
+  bulkDeleteSpaceUsers,
+  getProjectIdsBySpaceIds,
+  bulkDeleteProjectUsers,
+  getProjectRoleIdsByProjectIds,
+  bulkDeleteUserRolesByRoleIds,
+  getUserRolesWithEntities
+} from "@/src/db/data-access/channels/query"
 import { deleteUserRole } from "@/src/db/data-access/roles/query"
-import { GetChannelById } from "@/src/db/data-access/channels/query"
 
 // Allows the authenticated user to leave a channel (self-remove).
 // Also removes the user from all spaces within that channel.
@@ -39,40 +42,33 @@ export const LeaveChannelAction = CreateServerAction(
         return { success: false, error: "Channel not found." }
       }
 
-      // Step 2: Remove the user from all spaces in this channel
+      // Step 2: Remove the user from all spaces in this channel and any projects inside those spaces
       try {
-        const spaces = await db.query.spacesTable.findMany({
-          where: eq(spacesTable.channel_id, channelId)
-        })
+        const spaceIds = await getSpaceIdsByChannel(channelId)
 
-        for (const space of spaces) {
-          await db
-            .delete(SpaceUsersTable)
-            .where(
-              and(
-                eq(SpaceUsersTable.space_id, space.id),
-                eq(SpaceUsersTable.user_id, userId)
-              )
-            )
-        }
+        // Bulk delete space users
+        await bulkDeleteSpaceUsers(spaceIds, userId)
+
+        // Remove user from projects inside these spaces (bulk)
+        const projectIds = await getProjectIdsBySpaceIds(spaceIds)
+        await bulkDeleteProjectUsers(projectIds, userId)
+
+        // Delete any project-scoped userRoles for these projects
+        const projectRoleIds = await getProjectRoleIdsByProjectIds(projectIds)
+        await bulkDeleteUserRolesByRoleIds(projectRoleIds, userId)
       } catch (err) {
         console.error(
-          `Error removing user ${userId} from spaces in channel ${channelId}:`,
+          `Error removing user ${userId} from spaces/projects in channel ${channelId}:`,
           err
         )
-        // Continue even if some space removals fail
+        // Continue even if some removals fail
       }
 
       // Step 3: Remove from channel
       const deleted = await dettachChannelUser(channelId, userId)
 
       // Step 4: Get user's role in this channel to delete
-      const userRoles = await db.query.userRolesTable.findMany({
-        where: eq(userRolesTable.user_id, userId),
-        with: {
-          role: true
-        }
-      })
+      const userRoles = await getUserRolesWithEntities(userId)
 
       // Delete role associations
       for (const userRole of userRoles) {
