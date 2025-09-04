@@ -12,6 +12,7 @@ import {
 import { AblyClient } from "../services/realtime/AblyClient"
 import moment from "moment-timezone"
 import { CommunityDetailData } from "../db/data-access/communities/query"
+import { FindUserByUniqueIdAction } from "../server-actions/User/FindUserByUniqueIdAction"
 export type RoleWithPermissions = {
   id: number
   name: string
@@ -327,4 +328,32 @@ export function slugify(input: string): string {
     .replace(/[^a-z0-9]+/gi, "-")
     .replace(/^-+|-+$/g, "")
     .replace(/-+/g, "-")
+}
+
+export async function prepareContactData(
+  user: SelectUser,
+  contact_id: string,
+  event: string
+): Promise<{ payload: any; sendingTo: string[] } | undefined> {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+  const receivedByUser = await FindUserByUniqueIdAction(contact_id)
+
+  if (!receivedByUser.data) {
+    return
+  }
+  const ctaLinkProcess =
+    event == "new_connection"
+      ? `${baseUrl}/connections`
+      : `${baseUrl}/profile/${contact_id}`
+
+  const payload = {
+    logoUrl: `${baseUrl}/logo/spark-logo-animated-themed.gif`,
+    userName:
+      `${receivedByUser.data.first_name ?? ""} ${receivedByUser.data.last_name ?? ""}`.trim(),
+    requesterName: `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim(),
+    ctaLink: ctaLinkProcess
+  }
+  const sendingTo = Array.from(new Set([receivedByUser.data.email]))
+
+  return { payload, sendingTo }
 }
