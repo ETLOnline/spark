@@ -168,7 +168,12 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
     ]
 
     if (globalPostsOnly) {
-      whereClauses.push(isNull(postsTable.entity_id))
+      whereClauses.push(
+        or(
+          isNull(postsTable.entity_id),
+          eq(postsTable.entity_id, "")
+        ) as SQL<unknown>
+      )
     } else if (entityId) {
       whereClauses.push(eq(postsTable.entity_id, entityId))
     } else {

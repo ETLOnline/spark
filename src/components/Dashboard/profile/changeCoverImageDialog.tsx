@@ -139,7 +139,11 @@ function ChangeCoverImageDialog({
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button type="button" variant="outline">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={uploadCoverLoading || removeCoverLoading}
+            >
               Cancel
             </Button>
           </DialogClose>
@@ -149,6 +153,9 @@ function ChangeCoverImageDialog({
             variant="destructive"
             loading={removeCoverLoading}
             onClick={handleRemoveCover}
+            disabled={
+              removeCoverLoading || uploadCoverLoading || !user.cover_image
+            }
           >
             Remove
           </Button>
@@ -157,6 +164,7 @@ function ChangeCoverImageDialog({
             variant="secondary"
             onClick={handleUploadCover}
             loading={uploadCoverLoading}
+            disabled={!coverImage || uploadCoverLoading || removeCoverLoading}
           >
             Upload
           </Button>

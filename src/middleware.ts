@@ -43,7 +43,9 @@ export const config = {
     "/invite",
     "/invite(.*)",
     "/personas(.*)",
-    "/communities(.*)"
+    "/communities(.*)",
+    "/terms",
+    "/privacy"
     // Always run for API routes
     // '/(api|trpc)(.*)',
     // '/sign-in(.*)',

@@ -20,48 +20,46 @@ interface StepTwoProps {
   setUser: Dispatch<SetStateAction<SelectUser | undefined>>
 }
 
-const currentYear = moment().year()
 const userQualificationSchema = z
   .object({
     degree: z.string().min(1, "Required"),
     institute: z.string().min(1, "Required"),
+
     duration_from: z
       .string()
-      .min(1, "Required")
-      .refine(
-        (val) => {
-          const year = parseInt(val, 10)
-          return (
-            moment(val, "YYYY", true).isValid() &&
-            year >= 1900 &&
-            year <= currentYear
-          )
-        },
-        {
-          message: `Start year must be between 1900 and ${currentYear}`
-        }
-      ),
+      .refine((val) => moment(val, "YYYY", true).isValid(), {
+        message: "Invalid start year"
+      })
+      .refine((val) => moment(val, "YYYY", true).year() >= 1990, {
+        message: "Start year must be 1990 or later"
+      }),
+
     duration_to: z
       .string()
-      .min(1, "Required")
-      .refine(
-        (val) => {
-          const year = parseInt(val, 10)
-          return moment(val, "YYYY", true).isValid() && year < currentYear + 10
-        },
-        {
-          message: `End year must be less than ${currentYear + 10}`
-        }
-      )
+      .refine((val) => moment(val, "YYYY", true).isValid(), {
+        message: "Invalid end year"
+      })
   })
   .refine(
     (data) => {
       const start = moment(data.duration_from)
       const end = moment(data.duration_to)
-      return end.isAfter(start)
+      return start < end
     },
     {
-      message: "End year must be after start year",
+      message: "Start year must be before end year",
+      path: ["duration_from"]
+    }
+  )
+  .refine(
+    (data) => {
+      const start = moment(data.duration_from)
+      const end = moment(data.duration_to)
+      const diff = end.diff(start, "years")
+      return diff >= 1 && diff <= 10
+    },
+    {
+      message: "Degree duration must be between 1 and 10 years",
       path: ["duration_to"]
     }
   )
