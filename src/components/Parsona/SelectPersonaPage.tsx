@@ -26,12 +26,11 @@ export default function SelectPersonaPage({
 }: SelectPersonaPageProps) {
   const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
   const [selectedPersona, setSelectedPersona] = useState<number | null>(null)
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [isPersonaSaved, setIsPersonaSaved] = useState<boolean>(false) // <-- add this
+  const [isPersonaSaved, setIsPersonaSaved] = useState<boolean>(false)
 
   const router = useRouter()
 
-  const [savingPersona, saveResult, saveError, executeSavePersona] =
+  const [savingPersonaLoading, saveResult, saveError, executeSavePersona] =
     useServerAction(savePersonaAction)
 
   const handleSelectPersona = (personaId: number) =>
@@ -39,7 +38,6 @@ export default function SelectPersonaPage({
 
   const handleContinue = async () => {
     if (!selectedPersona) return
-    setIsLoading(true)
     try {
       const attachPersona = await executeSavePersona(
         selectedPersona,
@@ -47,16 +45,14 @@ export default function SelectPersonaPage({
         userAuth.external_auth_id
       )
       if (attachPersona && attachPersona.success) {
-        await refreshAuthUser()
         setIsPersonaSaved(true)
+        await refreshAuthUser()
         toast({ title: "Persona saved successfully" })
         router.push("/profile-complition")
       }
     } catch (error) {
       console.log(error)
       toast({ title: "Failed to save persona 2", variant: "destructive" })
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -104,12 +100,12 @@ export default function SelectPersonaPage({
             <div className="pt-8">
               <Button
                 onClick={handleContinue}
-                loading={isLoading}
+                loading={savingPersonaLoading}
                 disabled={!selectedPersona || isPersonaSaved}
                 size="lg"
                 className="px-8 py-3 text-lg font-medium min-w-[160px]"
               >
-                {isLoading ? (
+                {savingPersonaLoading ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                     <span>Saving...</span>
