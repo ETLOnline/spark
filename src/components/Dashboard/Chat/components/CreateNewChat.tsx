@@ -54,12 +54,14 @@ const CreateNewChat = () => {
   const isSpacePage = space_slug ? true : false
 
   const getOptionsFromUserList = (users: SelectUser[]) => {
-    return users.map((user) => {
-      return {
-        label: `${user.first_name} ${user.last_name}`,
-        value: user.unique_id
-      }
-    })
+    return users
+      .filter((user) => user.unique_id !== authUser?.unique_id)
+      .map((user) => {
+        return {
+          label: `${user.first_name} ${user.last_name}`,
+          value: user.unique_id
+        }
+      })
   }
 
   const getUserList = async (filters: ChatContactFilters) => {
