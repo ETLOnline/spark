@@ -430,7 +430,7 @@ export default function CreateCommunityModal({
       }}
     >
       <DialogContent className="max-w-[95vw] sm:max-w-[600px]">
-        <DialogHeader>
+        <DialogHeader className=" ">
           <DialogTitle>
             {editMode === true ? "Edit Community" : "Create Community"}
           </DialogTitle>
@@ -440,9 +440,9 @@ export default function CreateCommunityModal({
               : "Create a new community for users to join and interact."}
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="h-[80vh] w-full p-3">
+        <ScrollArea className="h-[80vh] w-full pr-4">
           <form onSubmit={form.handleSubmit(communitySubmit)}>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-4 py-4 ">
               {/* Community Name (Title) */}
               <div className="flex flex-col gap-1">
                 <div className="flex flex-col gap-3 justify-between">
@@ -563,7 +563,9 @@ export default function CreateCommunityModal({
               {/* Cover image */}
               <div className="flex flex-col gap-1">
                 <div className="flex flex-col gap-3 justify-between">
-                  <Label htmlFor="cover_image">{"Cover Image(Optional)"}</Label>
+                  <Label htmlFor="cover_image">
+                    {"Cover Image (Optional)"}
+                  </Label>
                   <div className="w-full">
                     <Controller
                       name="cover_image"
@@ -607,13 +609,6 @@ export default function CreateCommunityModal({
                       </div>
                     )}
                   </div>
-                </div>
-                <div className="text-left">
-                  {error.category && (
-                    <span className="text-red-500 text-sm">
-                      {String(error.category.message)}
-                    </span>
-                  )}
                 </div>
               </div>
 
