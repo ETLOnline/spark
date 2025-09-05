@@ -17,11 +17,16 @@ import { AuthUserAction } from "../User/AuthUserAction"
 import { createChatMessage } from "@/src/db/data-access/chat/message/query"
 import ChatChannelHash from "@/src/components/Dashboard/Chat/helper"
 import { AblyClientRest } from "@/src/services/realtime/AblyClient"
+import { beamsServerClient } from "@/src/services/notifications/BeamServer"
+import { GetSpaceByIdAction } from "../Space/Space"
+import { GetSpaceById } from "@/src/db/data-access/spaces/query"
 
 export const CreatePrivateChatAction = CreateServerAction(
   true,
   async (user_id: string, contact_id: string, space_id?: string) => {
     try {
+      const authUser = await AuthUserAction()
+
       if (user_id == contact_id) {
         return {
           success: false,
@@ -56,6 +61,35 @@ export const CreatePrivateChatAction = CreateServerAction(
           spaceId: space_id
         })
       }
+
+      let CTALink = "chat"
+      if (space_id) {
+        const space = await GetSpaceById(space_id)
+        CTALink = `channels/${space?.channel.channel_slug}/spaces/${space?.space_slug}?page-type=chat`
+      }
+
+      if (authUser.unique_id === contact_id) {
+        await beamsServerClient.publishToInterests([`user-${user_id}`], {
+          web: {
+            notification: {
+              title: `New Chat Created`,
+              body: `${authUser.first_name} has started a chat with you.`,
+              deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/${CTALink}`
+            }
+          }
+        })
+      } else if (authUser.unique_id === user_id) {
+        await beamsServerClient.publishToInterests([`user-${contact_id}`], {
+          web: {
+            notification: {
+              title: `New Chat Created`,
+              body: `${authUser.first_name} has started a chat with you.`,
+              deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/${CTALink}`
+            }
+          }
+        })
+      }
+
       return { success: true, data: newChat }
     } catch (error) {
       return { error: error }
@@ -90,6 +124,30 @@ export const CreateGroupChatAction = CreateServerAction(
           spaceId: space_id
         })
       }
+
+      let CTALink = "chat"
+      if (space_id) {
+        const space = await GetSpaceById(space_id)
+        CTALink = `channels/${space?.channel.channel_slug}/spaces/${space?.space_slug}?page-type=chat`
+      }
+
+      const recipients = userIds.filter((id) => id !== authUser.unique_id)
+
+      if (recipients.length > 0) {
+        await beamsServerClient.publishToInterests(
+          recipients.map((id) => `user-${id}`),
+          {
+            web: {
+              notification: {
+                title: `New Group Chat: ${chatName}`,
+                body: `You have been added to a new group chat.`,
+                deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/${CTALink}`
+              }
+            }
+          }
+        )
+      }
+
       return { success: true, data: chat }
     } catch (error) {
       return { error: error }
