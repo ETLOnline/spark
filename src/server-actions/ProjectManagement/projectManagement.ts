@@ -21,6 +21,7 @@ import {
   getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
 import pusherServer from "@/src/services/realtime/pusherServer"
+import { beamsServerClient } from "@/src/services/notifications/BeamServer"
 
 export const CreateProjectAction = CreateServerAction(
   true,
@@ -152,6 +153,18 @@ export const AttachProjectUserAction = CreateServerAction(
         projectId,
         usersToCreateWithRoles
       )
+
+      for (const userId of newUsersToAttach) {
+        await beamsServerClient.publishToInterests([`user-${userId}`], {
+          web: {
+            notification: {
+              title: `Added to Project`,
+              body: `You have been added to .`,
+              deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/project/${projectId}/board`
+            }
+          }
+        })
+      }
 
       return { success: true, data: newProjectUsers, failedRoleAssignments }
     } catch (error: any) {

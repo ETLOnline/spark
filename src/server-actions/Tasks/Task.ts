@@ -31,6 +31,9 @@ import {
   base64ToBuffer,
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
+import { beamsServerClient } from "@/src/services/notifications/BeamServer"
+import { AuthUserAction } from "../User/AuthUserAction"
+import { auth } from "@clerk/nextjs/server"
 
 export const CreateTaskAction = CreateServerAction(
   true,
@@ -54,6 +57,16 @@ export const CreateTaskAction = CreateServerAction(
         "task-add",
         task
       )
+
+      await beamsServerClient.publishToInterests([`user-${task?.assign_to}`], {
+        web: {
+          notification: {
+            title: `New Task Assigned: ${task?.task_num}`,
+            body: `You have been assigned a new task in project "${project?.project_name}".`,
+            deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/project/${project?.id}/task/${task?.id}`
+          }
+        }
+      })
 
       return { success: true, data: task }
     } catch (error) {
@@ -127,6 +140,8 @@ export const UpdateTaskAction = CreateServerAction(
     page_name?: string
   ) => {
     try {
+      const authUser = await AuthUserAction()
+
       const UpdatedTask = await UpdateTask(taskId, updatedData)
 
       pusherServer.trigger(
@@ -134,6 +149,47 @@ export const UpdateTaskAction = CreateServerAction(
         "task-update",
         UpdatedTask
       )
+
+      if (authUser.unique_id === UpdatedTask?.assign_to) {
+        await beamsServerClient.publishToInterests(
+          [`user-${UpdatedTask.assign_by}`],
+          {
+            web: {
+              notification: {
+                title: `Task Updated`,
+                body: `${authUser.first_name} ${authUser.last_name} updated the task ${UpdatedTask?.task_num}.`,
+                deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/project/${updatedData?.project_id}/task/${UpdatedTask?.id}`
+              }
+            }
+          }
+        )
+      } else if (authUser.unique_id === UpdatedTask?.assign_by) {
+        await beamsServerClient.publishToInterests(
+          [`user-${UpdatedTask.assign_to}`],
+          {
+            web: {
+              notification: {
+                title: `Task Updated`,
+                body: `${authUser.first_name} ${authUser.last_name} updated the task ${UpdatedTask?.task_num}.`,
+                deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/project/${UpdatedTask?.project_id}/task/${UpdatedTask?.id}`
+              }
+            }
+          }
+        )
+      } else {
+        await beamsServerClient.publishToInterests(
+          [`user-${UpdatedTask?.assign_to}`, `user-${UpdatedTask?.assign_by}`],
+          {
+            web: {
+              notification: {
+                title: `Task Updated`,
+                body: `${authUser.first_name} ${authUser.last_name} updated the task ${UpdatedTask?.task_num}.`,
+                deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/project/${UpdatedTask?.project_id}/task/${UpdatedTask?.id}`
+              }
+            }
+          }
+        )
+      }
 
       return { success: true, data: UpdatedTask }
     } catch (error) {
@@ -146,6 +202,8 @@ export const UpdateTasksSprintAction = CreateServerAction(
   true,
   async (task_ids: string[], sprint_id: string) => {
     try {
+      const AuthUser = await AuthUserAction()
+
       const updatedTasks = await UpdateTasksSprint(task_ids, sprint_id)
 
       return { success: true, data: updatedTasks }
@@ -234,6 +292,8 @@ export const CreateTaskCommentAction = CreateServerAction(
   true,
   async (input) => {
     try {
+      const authUser = await AuthUserAction()
+
       const { task_id, user_id, content } = input
 
       const commentData: InsertTaskComment = {
@@ -242,9 +302,52 @@ export const CreateTaskCommentAction = CreateServerAction(
         content: content
       }
 
+      const task = await GetTaskById(task_id)
+
       const newComment = await createTaskComment(commentData)
 
       if (newComment) {
+        if (authUser.unique_id === task?.assign_by) {
+          await beamsServerClient.publishToInterests(
+            [`user-${task?.assign_to}`],
+            {
+              web: {
+                notification: {
+                  title: `New Comment on Task: ${task?.task_num}`,
+                  body: `${authUser.first_name} ${authUser.last_name} commented on the task "${task?.task_num}".`,
+                  deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/project/${task?.project_id}/task/${task?.id}`
+                }
+              }
+            }
+          )
+        } else if (authUser.unique_id === task?.assign_to) {
+          await beamsServerClient.publishToInterests(
+            [`user-${task?.assign_by}`],
+            {
+              web: {
+                notification: {
+                  title: `New Comment on Task: ${task?.task_num}`,
+                  body: `${authUser.first_name} ${authUser.last_name} commented on the task "${task?.task_num}".`,
+                  deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/project/${task?.project_id}/task/${task?.id}`
+                }
+              }
+            }
+          )
+        } else {
+          await beamsServerClient.publishToInterests(
+            [`user-${task?.assign_by}`, `user-${task?.assign_to}`],
+            {
+              web: {
+                notification: {
+                  title: `New Comment on Task: ${task?.task_num}`,
+                  body: `${authUser.first_name} ${authUser.last_name} commented on the task "${task?.task_num}".`,
+                  deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/project/${task?.project_id}/task/${task?.id}`
+                }
+              }
+            }
+          )
+        }
+
         return { success: true, data: newComment }
       } else {
         return { success: false, error: "Failed to create comment." }
