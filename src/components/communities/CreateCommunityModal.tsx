@@ -43,7 +43,6 @@ import { communityStore } from "@/src/store/community/communityStore"
 import { CommunityCategory } from "@/src/db/data-access/communities/query"
 import { slugify } from "@/src/utils/helpers"
 import { ScrollArea } from "../ui/scroll-area"
-import { log } from "console"
 
 const communitySchema = z.object({
   title: z
@@ -414,7 +413,7 @@ export default function CreateCommunityModal({
       }}
     >
       <DialogContent className="max-w-[95vw] sm:max-w-[600px]">
-        <DialogHeader className=" ">
+        <DialogHeader>
           <DialogTitle>
             {editMode === true ? "Edit Community" : "Create Community"}
           </DialogTitle>
