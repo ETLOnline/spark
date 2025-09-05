@@ -530,7 +530,7 @@ export default function ChannelUserList({
                             : cu.role}
                         </Badge>
                         {entityCreatorId === user.unique_id && (
-                          <Badge variant="outline">{"(Owner)"}</Badge>
+                          <Badge variant="outline">{"(Creator)"}</Badge>
                         )}
                       </div>
                     </div>
