@@ -16,6 +16,8 @@ import {
   NotificationEntity,
   NotificationType
 } from "@/src/components/Dashboard/Notifications/types/notifications.types"
+import { beamsServerClient } from "@/src/services/notifications/BeamServer"
+import { SelectUserByUniqueId } from "@/src/db/data-access/user/query"
 
 export const CreateContactAction = CreateServerAction(
   true,
@@ -54,6 +56,22 @@ export const CreateContactAction = CreateServerAction(
         })
       } catch (error) {
         console.error("Failed to add notification:", error)
+      }
+
+      const contactUser = await SelectUserByUniqueId(contact_id)
+
+      if (newRequest[0].is_requested === 1) {
+        console.log("Sending Beams Notification")
+        await beamsServerClient.publishToInterests([`user-${contact_id}`], {
+          web: {
+            notification: {
+              title: "New Connection Request",
+              body: `${user.first_name} ${user.last_name} has sent you a connection request.`,
+              deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/connections`,
+              icon: user.profile_url ?? undefined
+            }
+          }
+        })
       }
 
       return { success: true, data: newRequest[0] }
@@ -98,6 +116,19 @@ export const AcceptConnectionAction = CreateServerAction(
         })
       } catch (error) {
         console.error(error)
+      }
+
+      if (res[0].is_accepted === 1) {
+        await beamsServerClient.publishToInterests([`user-${user_id}`], {
+          web: {
+            notification: {
+              title: "Connection Accepted",
+              body: `${user.first_name} ${user.last_name} has accepted your connection request. You’re now connected.`,
+              deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/connections`,
+              icon: user.profile_url ?? undefined
+            }
+          }
+        })
       }
 
       return { success: true, data: res[0] }
