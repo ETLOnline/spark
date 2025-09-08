@@ -327,7 +327,7 @@ export default function ChannelUserList({
       } else if (entityType === "space") {
         delUser = await DettachSpaceUser(entityId, userId, roleToRemove.id)
       } else if (entityType === "community") {
-        delUser = await DetachCommunityUser(entityId, userId)
+        delUser = await DetachCommunityUser(entityId, userId, roleToRemove.id)
       }
       if (delUser?.success) {
         setUsersList((prevUsersList) => {
