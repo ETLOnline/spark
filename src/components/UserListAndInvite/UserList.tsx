@@ -419,9 +419,11 @@ export default function ChannelUserList({
         <div className="flex items-center space-x-2">
           <Link
             href={
-              entityType === "channel"
-                ? `/channels/${(entity as SelectChannel).channel_slug}/spaces`
-                : `/channels/${(entity as SelectSpace).channel?.channel_slug}/spaces/${(entity as SelectSpace).space_slug}`
+              entityType === "community"
+                ? `/communities/${(entity as CommunityDetailData).slug}`
+                : entityType === "channel"
+                  ? `/channels/${(entity as SelectChannel).channel_slug}/spaces`
+                  : `/channels/${(entity as SelectSpace).channel?.channel_slug}/spaces/${(entity as SelectSpace).space_slug}`
             }
           >
             <h1 className="text-2xl font-bold">{entityName}</h1>
