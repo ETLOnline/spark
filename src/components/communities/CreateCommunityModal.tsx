@@ -135,25 +135,50 @@ export default function CreateCommunityModal({
     }
   }, [communityFormModalVisibility])
 
+  const handleTitleChange = (titleValue: string) => {
+    setCurrentTitle(titleValue)
+    debouncedCheckSlugAvailability(titleValue, selectedCommunity?.id)
+  }
+
   const debouncedCheckSlugAvailability = useDebouncedCallback(
-    async (
-      slug: string,
-      communityId: string | undefined,
-      onAvailable?: () => void,
-      onNotAvailable?: () => void
-    ) => {
-      if (!slug) {
+    async (titleValue: string, communityId: string | undefined) => {
+      const trimmedTitle = titleValue.trim()
+      if (trimmedTitle.length === 0) {
+        form.setValue("slug", "")
         setSlugAvailableMessage("")
         form.clearErrors("slug")
         return
       }
 
+      const generatedSlug = slugify(trimmedTitle)
+      form.setValue("slug", generatedSlug)
+
+      if (
+        editMode &&
+        selectedCommunity &&
+        generatedSlug === selectedCommunity.slug
+      ) {
+        setSlugAvailableMessage(
+          `${generatedSlug} is your current community slug`
+        )
+        form.clearErrors("slug")
+        return
+      }
+
       try {
-        const result = await isCommunitySlugAvailable(slug, communityId)
+        const result = await isCommunitySlugAvailable(
+          generatedSlug,
+          communityId
+        )
         if (result && result.data) {
-          if (onAvailable) onAvailable()
+          setSlugAvailableMessage(`${generatedSlug} is available`)
+          form.clearErrors("slug")
         } else {
-          if (onNotAvailable) onNotAvailable()
+          form.setError("slug", {
+            type: "manual",
+            message: `${generatedSlug} is already taken`
+          })
+          setSlugAvailableMessage("")
         }
       } catch (error) {
         console.error("Error checking slug availability:", error)
@@ -166,48 +191,6 @@ export default function CreateCommunityModal({
     },
     1000
   )
-
-  const handleTitleChange = (titleValue: string) => {
-    setCurrentTitle(titleValue)
-
-    const slug = (titleValue?.trim() || "").replaceAll(" ", "-").toLowerCase()
-
-    const generatedSlug = slugify(slug)
-
-    form.setValue("slug", generatedSlug)
-
-    if (!titleValue.trim()) {
-      setSlugAvailableMessage("")
-      form.clearErrors("slug")
-      return
-    }
-
-    if (
-      editMode &&
-      selectedCommunity &&
-      generatedSlug === selectedCommunity.slug
-    ) {
-      setSlugAvailableMessage(`${generatedSlug} is your current community slug`)
-      form.clearErrors("slug")
-      return
-    }
-
-    debouncedCheckSlugAvailability(
-      generatedSlug,
-      selectedCommunity?.id,
-      () => {
-        form.clearErrors("slug")
-        setSlugAvailableMessage(`${generatedSlug} is available`)
-      },
-      () => {
-        form.setError("slug", {
-          type: "manual",
-          message: `${generatedSlug} is already taken`
-        })
-        setSlugAvailableMessage("")
-      }
-    )
-  }
 
   useEffect(() => {
     if (communityCoverImage) {
