@@ -19,6 +19,9 @@ import { toast } from "@/src/hooks/use-toast"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import moment from "moment"
+import { UnsavedChangesDialog } from "../../common/unsavedChangesDialog"
+import { useConfirmClose } from "@/src/hooks/useConfirmClose"
+
 interface Props {
   user: SelectUser
   profile: SelectProfile
@@ -82,9 +85,10 @@ function EditEducationModal({ user, profile, setprofile }: Props) {
   })
 
   const error = form.formState.errors
+  const isChanged = form.formState.isDirty
 
   useEffect(() => {
-    if (profile) {
+    if (profile || isDialogOpen) {
       form.reset({
         degree: profile.degree || "",
         institute: profile.institute || "",
@@ -92,7 +96,7 @@ function EditEducationModal({ user, profile, setprofile }: Props) {
         duration_to: profile.education_end_date || ""
       })
     }
-  }, [profile])
+  }, [profile, isDialogOpen])
 
   async function handleSubmit(data: any) {
     try {
@@ -129,112 +133,141 @@ function EditEducationModal({ user, profile, setprofile }: Props) {
     }
   }
 
-  return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogTrigger asChild>
-        <Button variant="edit" size={"sm"}>
-          Edit
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Edit Education</DialogTitle>
-          <DialogDescription>
-            Make changes to your Education section here. Click save when you're
-            done.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={form.handleSubmit(handleSubmit)}>
-          <div className="grid gap-4 py-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor={`degree`} className="font-semibold">
-                Degree/Qualification
-              </Label>
-              <Controller
-                name="degree"
-                defaultValue=""
-                control={form.control}
-                render={({ field }) => (
-                  <Input
-                    id="degree"
-                    placeholder="e.g. Bachelor of Science in Computer Science"
-                    {...field}
-                  />
-                )}
-              />
-              {error.degree && (
-                <span className="text-red-500 text-sm">
-                  {String(error.degree.message)}
-                </span>
-              )}
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor={`institute`} className="font-semibold">
-                University/Institution
-              </Label>
-              <Controller
-                name="institute"
-                defaultValue=""
-                control={form.control}
-                render={({ field }) => (
-                  <Input
-                    id="institute"
-                    placeholder="e.g. Stanford University"
-                    {...field}
-                  />
-                )}
-              />
-              {error.institute && (
-                <span className="text-red-500 text-sm">
-                  {String(error.institute.message)}
-                </span>
-              )}
-            </div>
+  const { showConfirmation, setShowConfirmation, handleClose } =
+    useConfirmClose({
+      isDirty: isChanged,
+      onClose: () => setIsDialogOpen(false)
+    })
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="duration_from" className="font-semibold">
-                Year/Duration
-              </Label>
-              <div className="grid grid-cols-12 gap-2 mb-2">
-                <div className="col-span-6">
-                  <Controller
-                    name="duration_from"
-                    defaultValue=""
-                    control={form.control}
-                    render={({ field }) => (
-                      <Input id="duration_from" placeholder="From" {...field} />
-                    )}
-                  />
-                  {error.duration_from && (
-                    <span className="text-red-500 text-sm">
-                      {String(error.duration_from.message)}
-                    </span>
+  const handleDialogChange = (open: boolean) => {
+    if (open) {
+      setIsDialogOpen(true)
+    } else {
+      handleClose(false)
+    }
+  }
+
+  return (
+    <>
+      <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
+        <DialogTrigger asChild>
+          <Button variant="edit" size={"sm"}>
+            Edit
+          </Button>
+        </DialogTrigger>
+        <DialogContent
+          className="sm:max-w-[425px]"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle>Edit Education</DialogTitle>
+            <DialogDescription>
+              Make changes to your Education section here. Click save when
+              you're done.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={form.handleSubmit(handleSubmit)}>
+            <div className="grid gap-4 py-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor={`degree`} className="font-semibold">
+                  Degree/Qualification
+                </Label>
+                <Controller
+                  name="degree"
+                  defaultValue=""
+                  control={form.control}
+                  render={({ field }) => (
+                    <Input
+                      id="degree"
+                      placeholder="e.g. Bachelor of Science in Computer Science"
+                      {...field}
+                    />
                   )}
-                </div>
-                <div className="col-span-6">
-                  <Controller
-                    name="duration_to"
-                    defaultValue=""
-                    control={form.control}
-                    render={({ field }) => (
-                      <Input id="duration_to" placeholder="To" {...field} />
-                    )}
-                  />
-                  {error.duration_to && (
-                    <span className="text-red-500 text-sm">
-                      {String(error.duration_to.message)}
-                    </span>
+                />
+                {error.degree && (
+                  <span className="text-red-500 text-sm">
+                    {String(error.degree.message)}
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor={`institute`} className="font-semibold">
+                  University/Institution
+                </Label>
+                <Controller
+                  name="institute"
+                  defaultValue=""
+                  control={form.control}
+                  render={({ field }) => (
+                    <Input
+                      id="institute"
+                      placeholder="e.g. Stanford University"
+                      {...field}
+                    />
                   )}
+                />
+                {error.institute && (
+                  <span className="text-red-500 text-sm">
+                    {String(error.institute.message)}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="duration_from" className="font-semibold">
+                  Year/Duration
+                </Label>
+                <div className="grid grid-cols-12 gap-2 mb-2">
+                  <div className="col-span-6">
+                    <Controller
+                      name="duration_from"
+                      defaultValue=""
+                      control={form.control}
+                      render={({ field }) => (
+                        <Input
+                          id="duration_from"
+                          placeholder="From"
+                          {...field}
+                        />
+                      )}
+                    />
+                    {error.duration_from && (
+                      <span className="text-red-500 text-sm">
+                        {String(error.duration_from.message)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="col-span-6">
+                    <Controller
+                      name="duration_to"
+                      defaultValue=""
+                      control={form.control}
+                      render={({ field }) => (
+                        <Input id="duration_to" placeholder="To" {...field} />
+                      )}
+                    />
+                    {error.duration_to && (
+                      <span className="text-red-500 text-sm">
+                        {String(error.duration_to.message)}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button loading={submitDataLoading}>Save changes</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <DialogFooter>
+              <Button loading={submitDataLoading}>Save changes</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <UnsavedChangesDialog
+        showConfirmation={showConfirmation}
+        setShowConfirmation={setShowConfirmation}
+        setIsActualDialogOpen={setIsDialogOpen}
+      />
+    </>
   )
 }
 

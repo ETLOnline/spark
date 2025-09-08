@@ -598,7 +598,7 @@ export default function ChannelUserList({
         open={changeRoleModelVisibility}
         onOpenChange={setChangeRoleModelVisibility}
       >
-        <DialogContent>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Change User Role</DialogTitle>
           </DialogHeader>
