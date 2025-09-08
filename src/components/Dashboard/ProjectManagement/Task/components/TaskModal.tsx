@@ -23,6 +23,9 @@ import { GetTaskByIdAction } from "@/src/server-actions/Tasks/Task"
 import { toast } from "@/src/hooks/use-toast"
 import useTaskHook from "../hooks/useTaskHook"
 import { taskStore } from "@/src/store/tasks/taskStore"
+import { useConfirmClose } from "@/src/hooks/useConfirmClose"
+import { UnsavedChangesDialog } from "@/src/components/common/unsavedChangesDialog"
+import { set } from "zod"
 
 interface TaskModalProps {
   isTaskModelOpen: boolean
@@ -49,10 +52,17 @@ export const TaskModal = ({
   const { createTaskLoading, updateTaskLoading, handleSubmit } = useTaskHook({
     selectedTask,
     sprintId,
-    onCreateComplete,
-    onUpdateComplete
+    onCreateComplete: (task) => {
+      onCreateComplete?.(task)
+      setIsChanged(false)
+    },
+    onUpdateComplete: (task) => {
+      onUpdateComplete?.(task)
+      setIsChanged(false)
+    }
   })
-  const [isClosing, setIsClosing] = useState(false)
+
+  const [isChanged, setIsChanged] = useState(false)
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathName = usePathname()
@@ -111,48 +121,61 @@ export const TaskModal = ({
     }
   }, [isTaskModelOpen, internalTask?.id])
 
-  const handleModalClose = (open: boolean) => {
-    if (!open) {
-      setIsTaskModelOpen(false)
-      setInternalTask(undefined)
-      setSelectedTask(null)
+  const { showConfirmation, setShowConfirmation, handleClose } =
+    useConfirmClose({
+      isDirty: isChanged,
+      onClose: () => {
+        setIsTaskModelOpen(false)
+        setInternalTask(undefined)
+        setSelectedTask(null)
+        setIsChanged(false)
 
-      const newSearchParams = new URLSearchParams(searchParams.toString())
-      newSearchParams.delete("task_id")
+        const newSearchParams = new URLSearchParams(searchParams.toString())
+        newSearchParams.delete("task_id")
 
-      setTimeout(() => {
-        router.push(`${pathName}?${newSearchParams.toString()}`)
-      }, 0)
-    }
-  }
+        setTimeout(() => {
+          router.push(`${pathName}?${newSearchParams.toString()}`)
+        }, 0)
+      }
+    })
 
   const isLoading = createTaskLoading || updateTaskLoading || loading
 
   return (
-    <Dialog open={isTaskModelOpen} onOpenChange={handleModalClose}>
-      <DialogContent
-        className="sm:max-w-5xl [&>button]:w-6 [&>button]:h-6 [&>button>svg]:w-6 [&>button>svg]:h-6"
-        onInteractOutside={(e) => e.preventDefault()}
-      >
-        <DialogHeader>
-          <TaskFormHeader selectedTask={internalTask} />
-          <DialogTitle className="sr-only">
-            {internalTask
-              ? `Edit Task: ${internalTask.task_title}`
-              : "Create New Task"}
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={isTaskModelOpen} onOpenChange={handleClose}>
+        <DialogContent
+          className="sm:max-w-5xl [&>button]:w-6 [&>button]:h-6 [&>button>svg]:w-6 [&>button>svg]:h-6"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <TaskFormHeader selectedTask={internalTask} />
+            <DialogTitle className="sr-only">
+              {internalTask
+                ? `Edit Task: ${internalTask.task_title}`
+                : "Create New Task"}
+            </DialogTitle>
+          </DialogHeader>
 
-        <ScrollArea className="max-h-[80vh]">
-          <TaskForm
-            statuses={statuses}
-            onSubmit={handleSubmit}
-            selectedTask={internalTask}
-            loading={isLoading}
-            isTaskModelOpen={isTaskModelOpen}
-          />
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+          <ScrollArea className="max-h-[80vh]">
+            <TaskForm
+              statuses={statuses}
+              onSubmit={handleSubmit}
+              selectedTask={internalTask}
+              loading={isLoading}
+              isTaskModelOpen={isTaskModelOpen}
+              isChanged={isChanged}
+              setIsChanged={setIsChanged}
+            />
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      <UnsavedChangesDialog
+        showConfirmation={showConfirmation}
+        setShowConfirmation={setShowConfirmation}
+        setIsActualDialogOpen={setIsTaskModelOpen}
+      />
+    </>
   )
 }
