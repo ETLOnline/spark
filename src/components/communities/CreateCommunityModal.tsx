@@ -118,25 +118,50 @@ export default function CreateCommunityModal({
 
   const error = form.formState.errors
 
+  const handleTitleChange = (titleValue: string) => {
+    setCurrentTitle(titleValue)
+    debouncedCheckSlugAvailability(titleValue, selectedCommunity?.id)
+  }
+
   const debouncedCheckSlugAvailability = useDebouncedCallback(
-    async (
-      slug: string,
-      communityId: string | undefined,
-      onAvailable?: () => void,
-      onNotAvailable?: () => void
-    ) => {
-      if (!slug) {
+    async (titleValue: string, communityId: string | undefined) => {
+      const trimmedTitle = titleValue.trim()
+      if (trimmedTitle.length === 0) {
+        form.setValue("slug", "")
         setSlugAvailableMessage("")
         form.clearErrors("slug")
         return
       }
 
+      const generatedSlug = slugify(trimmedTitle)
+      form.setValue("slug", generatedSlug)
+
+      if (
+        editMode &&
+        selectedCommunity &&
+        generatedSlug === selectedCommunity.slug
+      ) {
+        setSlugAvailableMessage(
+          `${generatedSlug} is your current community slug`
+        )
+        form.clearErrors("slug")
+        return
+      }
+
       try {
-        const result = await isCommunitySlugAvailable(slug, communityId)
+        const result = await isCommunitySlugAvailable(
+          generatedSlug,
+          communityId
+        )
         if (result && result.data) {
-          if (onAvailable) onAvailable()
+          setSlugAvailableMessage(`${generatedSlug} is available`)
+          form.clearErrors("slug")
         } else {
-          if (onNotAvailable) onNotAvailable()
+          form.setError("slug", {
+            type: "manual",
+            message: `${generatedSlug} is already taken`
+          })
+          setSlugAvailableMessage("")
         }
       } catch (error) {
         console.error("Error checking slug availability:", error)
@@ -149,48 +174,6 @@ export default function CreateCommunityModal({
     },
     1000
   )
-
-  const handleTitleChange = (titleValue: string) => {
-    setCurrentTitle(titleValue)
-
-    const slug = (titleValue?.trim() || "").replaceAll(" ", "-").toLowerCase()
-
-    const generatedSlug = slugify(slug)
-
-    form.setValue("slug", generatedSlug)
-
-    if (!titleValue.trim()) {
-      setSlugAvailableMessage("")
-      form.clearErrors("slug")
-      return
-    }
-
-    if (
-      editMode &&
-      selectedCommunity &&
-      generatedSlug === selectedCommunity.slug
-    ) {
-      setSlugAvailableMessage(`${generatedSlug} is your current community slug`)
-      form.clearErrors("slug")
-      return
-    }
-
-    debouncedCheckSlugAvailability(
-      generatedSlug,
-      selectedCommunity?.id,
-      () => {
-        form.clearErrors("slug")
-        setSlugAvailableMessage(`${generatedSlug} is available`)
-      },
-      () => {
-        form.setError("slug", {
-          type: "manual",
-          message: `${generatedSlug} is already taken`
-        })
-        setSlugAvailableMessage("")
-      }
-    )
-  }
 
   useEffect(() => {
     if (communityCoverImage) {
@@ -440,9 +423,9 @@ export default function CreateCommunityModal({
               : "Create a new community for users to join and interact."}
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="h-[80vh] w-full p-3">
+        <ScrollArea className="h-[80vh] w-full pr-4">
           <form onSubmit={form.handleSubmit(communitySubmit)}>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-4 py-4 ">
               {/* Community Name (Title) */}
               <div className="flex flex-col gap-1">
                 <div className="flex flex-col gap-3 justify-between">
@@ -563,7 +546,9 @@ export default function CreateCommunityModal({
               {/* Cover image */}
               <div className="flex flex-col gap-1">
                 <div className="flex flex-col gap-3 justify-between">
-                  <Label htmlFor="cover_image">{"Cover Image(Optional)"}</Label>
+                  <Label htmlFor="cover_image">
+                    {"Cover Image (Optional)"}
+                  </Label>
                   <div className="w-full">
                     <Controller
                       name="cover_image"
@@ -607,13 +592,6 @@ export default function CreateCommunityModal({
                       </div>
                     )}
                   </div>
-                </div>
-                <div className="text-left">
-                  {error.category && (
-                    <span className="text-red-500 text-sm">
-                      {String(error.category.message)}
-                    </span>
-                  )}
                 </div>
               </div>
 
