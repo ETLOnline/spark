@@ -68,8 +68,12 @@ export const CreatePrivateChatAction = CreateServerAction(
         CTALink = `channels/${space?.channel.channel_slug}/spaces/${space?.space_slug}?page-type=chat`
       }
 
-      if (authUser.unique_id === contact_id) {
-        await beamsServerClient.publishToInterests([`user-${user_id}`], {
+      const notificationTargetId =
+        authUser.unique_id === contact_id ? user_id : contact_id
+
+      await beamsServerClient.publishToInterests(
+        [`user-${notificationTargetId}`],
+        {
           web: {
             notification: {
               title: `New Chat Created`,
@@ -77,18 +81,8 @@ export const CreatePrivateChatAction = CreateServerAction(
               deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/${CTALink}`
             }
           }
-        })
-      } else if (authUser.unique_id === user_id) {
-        await beamsServerClient.publishToInterests([`user-${contact_id}`], {
-          web: {
-            notification: {
-              title: `New Chat Created`,
-              body: `${authUser.first_name} has started a chat with you.`,
-              deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/${CTALink}`
-            }
-          }
-        })
-      }
+        }
+      )
 
       return { success: true, data: newChat }
     } catch (error) {

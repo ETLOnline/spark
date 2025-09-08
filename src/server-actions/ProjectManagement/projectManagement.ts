@@ -159,7 +159,7 @@ export const AttachProjectUserAction = CreateServerAction(
           web: {
             notification: {
               title: `Added to Project`,
-              body: `You have been added to .`,
+              body: `You have been added to new project .`,
               deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/project/${projectId}/board`
             }
           }

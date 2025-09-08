@@ -61,7 +61,6 @@ export const CreateContactAction = CreateServerAction(
       const contactUser = await SelectUserByUniqueId(contact_id)
 
       if (newRequest[0].is_requested === 1) {
-        console.log("Sending Beams Notification")
         await beamsServerClient.publishToInterests([`user-${contact_id}`], {
           web: {
             notification: {

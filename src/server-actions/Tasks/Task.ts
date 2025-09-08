@@ -144,13 +144,16 @@ export const UpdateTaskAction = CreateServerAction(
 
       const UpdatedTask = await UpdateTask(taskId, updatedData)
 
+      const isAssignee = authUser.unique_id === UpdatedTask?.assign_to
+      const isAssignor = authUser.unique_id === UpdatedTask?.assign_by
+
       pusherServer.trigger(
         `project-${UpdatedTask?.project_id}-tasks`,
         "task-update",
         UpdatedTask
       )
 
-      if (authUser.unique_id === UpdatedTask?.assign_to) {
+      if (isAssignee) {
         await beamsServerClient.publishToInterests(
           [`user-${UpdatedTask.assign_by}`],
           {
@@ -163,7 +166,7 @@ export const UpdateTaskAction = CreateServerAction(
             }
           }
         )
-      } else if (authUser.unique_id === UpdatedTask?.assign_by) {
+      } else if (isAssignor) {
         await beamsServerClient.publishToInterests(
           [`user-${UpdatedTask.assign_to}`],
           {
