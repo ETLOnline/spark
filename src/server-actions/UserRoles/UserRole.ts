@@ -27,6 +27,7 @@ import { updateChannelUser } from "@/src/db/data-access/channels/query"
 import { updateSpaceUser } from "@/src/db/data-access/spaces/query"
 import { updateProjectUserRole } from "@/src/db/data-access/project-management/query"
 import { updateCommunityUser } from "@/src/db/data-access/communities/query"
+import pusherServer from "@/src/services/realtime/pusherServer"
 
 export const getPersonasAction = CreateServerAction(true, async () => {
   const globalRoles = await getAllGlobalRoles()
@@ -214,6 +215,7 @@ export const updateUserRoleForEntityAction = CreateServerAction(
       } else {
         await updateProjectUserRole(entityId, userId, newRoleName)
       }
+      pusherServer.trigger(`user-${userId}`, "update-role", result)
       return { success: true, data: result }
     } catch (error: any) {
       console.error("Error updating user role for entity:", error)
