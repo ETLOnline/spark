@@ -43,7 +43,7 @@ import moment from "moment"
 import { userStore } from "@/src/store/user/userStore"
 import { useTheme } from "next-themes"
 import clsx from "clsx"
-import { useHostUserInfo } from "@/src/hooks/useGetHostData"
+import { hostStore } from "@/src/store/host/hostStore"
 
 interface EventCardProps {
   event: SelectEvent
@@ -61,7 +61,7 @@ const EventCard = ({ event, setRefreshTrigger }: EventCardProps) => {
   const meeting_link = metadata.meeting_link
   const SuperAdmin = useAtomValue(userStore.SuperAdmin)
   const { theme, setTheme } = useTheme()
-
+  const hosts = useAtomValue(hostStore.hosts)
   const formattedStart = moment(event?.start_date_time).calendar(null, {
     sameDay: "[Today at] hh:mm A",
     nextDay: "[Tomorrow at] hh:mm A",
@@ -110,8 +110,7 @@ const EventCard = ({ event, setRefreshTrigger }: EventCardProps) => {
     setFormModalVisibility(true)
   }
 
-  const hostData = useHostUserInfo(event?.host_id)
-
+  const hostData = hosts[event?.host_id]
   const handleDeleteEvent = async (event: SelectEvent) => {
     try {
       const res = await DeleteEvent(event)
@@ -272,7 +271,11 @@ const EventCard = ({ event, setRefreshTrigger }: EventCardProps) => {
             <AvatarImage src={hostData?.profile_url || "/placeholder.svg"} />
             <AvatarFallback className="text-xs">H</AvatarFallback>
           </Avatar>
-          <span className="text-sm ">By {hostData?.full_name} </span>
+          <span className="text-sm ">
+            By{" "}
+            {`${hostData?.first_name || ""} ${hostData?.last_name || ""}` ||
+              "host"}{" "}
+          </span>
         </div>
         <Link href={`/events/${event?.id}`} className="w-full">
           <Button
