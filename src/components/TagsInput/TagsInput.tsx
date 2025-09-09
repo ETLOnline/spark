@@ -13,6 +13,7 @@ import { Tag, TagStatus } from "./tags-input-types"
 type BaseTagsInputProps = {
   autocomplete?: boolean
   placeholder?: string
+  type?: string
 }
 
 type TagsObjUpdaterArgs = Tag[] | ((tags: Tag[]) => Tag[])
@@ -67,7 +68,8 @@ const TagsInput: React.FC<TagsInputProps> = ({
   loadingSuggestions = false,
   onChange = () => {},
   autocomplete = false,
-  placeholder
+  placeholder,
+  type
 }) => {
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false)
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] =
@@ -108,7 +110,14 @@ const TagsInput: React.FC<TagsInputProps> = ({
   }
 
   const handleNewTag = () => {
-    const inputValue = (tagInput.current as HTMLInputElement).value
+    const rawValue = (tagInput.current as HTMLInputElement).value
+    const inputValue = rawValue.trim()
+
+    if (!inputValue) {
+      ;(tagInput.current as HTMLInputElement).value = ""
+      return
+    }
+
     if (autocomplete) {
       if (
         !(tags as Tag[]).some(
@@ -121,7 +130,7 @@ const TagsInput: React.FC<TagsInputProps> = ({
           ...prevTags,
           {
             name:
-              inputValue.trim()[0].toUpperCase() +
+              inputValue[0].toUpperCase() +
               inputValue.substring(1).toLowerCase(),
             status: TagStatus.new
           }
@@ -136,8 +145,7 @@ const TagsInput: React.FC<TagsInputProps> = ({
         const tagUpdater = updateTags as (tags: TagsStringUpdaterArgs) => void
         tagUpdater((prevTags: string[]) => [
           ...prevTags,
-          inputValue.trim()[0].toUpperCase() +
-            inputValue.substring(1).toLowerCase()
+          inputValue[0].toUpperCase() + inputValue.substring(1).toLowerCase()
         ])
       }
     }
@@ -211,6 +219,11 @@ const TagsInput: React.FC<TagsInputProps> = ({
   const enterTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault()
+      const inputValue = tagInput.current?.value.trim()
+      if (!inputValue) {
+        ;(tagInput.current as HTMLInputElement).value = ""
+        return
+      }
       if (tagInput.current?.value) {
         handleNewTag()
         if (onChange) {
@@ -273,33 +286,35 @@ const TagsInput: React.FC<TagsInputProps> = ({
                 : "Type to add tags..."
               : ""
           }
+          required={tags.length === 0 && type === "poll"}
         />
       </div>
-      {showSuggestions && (tagInput.current as HTMLInputElement).value && (
-        <Command className="absolute mt-1 w-full rounded-md border bg-popover shadow-md z-10">
-          {loadingSuggestions ? (
-            <CommandEmpty>Loading...</CommandEmpty>
-          ) : suggestions.length === 0 ? (
-            <CommandGroup>
-              <SuggestionButton hover={selectNewTag} onClick={handleNewTag}>
-                {(tagInput.current as HTMLInputElement).value}
-              </SuggestionButton>
-            </CommandGroup>
-          ) : (
-            <CommandGroup className="max-h-48 overflow-auto">
-              {suggestions.map((suggestion: Tag, index: number) => (
-                <SuggestionButton
-                  key={suggestion.id}
-                  hover={index === selectedSuggestionIndex}
-                  onClick={() => selectSuggestion(suggestion)}
-                >
-                  {suggestion.name}
+      {showSuggestions &&
+        (tagInput.current as HTMLInputElement).value.trim() && (
+          <Command className="absolute mt-1 w-full rounded-md border bg-popover shadow-md z-10">
+            {loadingSuggestions ? (
+              <CommandEmpty>Loading...</CommandEmpty>
+            ) : suggestions.length === 0 ? (
+              <CommandGroup>
+                <SuggestionButton hover={selectNewTag} onClick={handleNewTag}>
+                  {(tagInput.current as HTMLInputElement).value}
                 </SuggestionButton>
-              ))}
-            </CommandGroup>
-          )}
-        </Command>
-      )}
+              </CommandGroup>
+            ) : (
+              <CommandGroup className="max-h-48 overflow-auto">
+                {suggestions.map((suggestion: Tag, index: number) => (
+                  <SuggestionButton
+                    key={suggestion.id}
+                    hover={index === selectedSuggestionIndex}
+                    onClick={() => selectSuggestion(suggestion)}
+                  >
+                    {suggestion.name}
+                  </SuggestionButton>
+                ))}
+              </CommandGroup>
+            )}
+          </Command>
+        )}
     </div>
   )
 }
