@@ -327,7 +327,7 @@ export default function ChannelUserList({
       } else if (entityType === "space") {
         delUser = await DettachSpaceUser(entityId, userId, roleToRemove.id)
       } else if (entityType === "community") {
-        delUser = await DetachCommunityUser(entityId, userId)
+        delUser = await DetachCommunityUser(entityId, userId, roleToRemove.id)
       }
       if (delUser?.success) {
         setUsersList((prevUsersList) => {
@@ -397,12 +397,17 @@ export default function ChannelUserList({
   const canChangeUserRole = (targetUser: SelectUser | undefined) => {
     if (!targetUser) return false
 
+    if (targetUser.unique_id === authUser?.unique_id) return false
+
+    if (isSuperAdmin) return true
+
+    if (targetUser.unique_id === entityCreatorId) return false
+
     if (authUser?.unique_id === entityCreatorId) return true
 
     if (isScopedAdminFn(authUser || undefined)) {
       if (
         targetUser.unique_id === entityCreatorId ||
-        targetUser.unique_id === authUser?.unique_id ||
         isScopedAdminFn(targetUser)
       ) {
         return false
@@ -464,14 +469,14 @@ export default function ChannelUserList({
               <div className="col-span-4 lg:col-span-4">Email</div>
               <div
                 className={
-                  isScopedAdminFn(authUser || undefined)
+                  isScopedAdminFn(authUser || undefined) || isSuperAdmin
                     ? "col-span-3 lg:col-span-4"
                     : "col-span-4 lg:col-span-5 text-center"
                 }
               >
                 Role
               </div>
-              {isScopedAdminFn(authUser || undefined) ? (
+              {isScopedAdminFn(authUser || undefined) || isSuperAdmin ? (
                 <div className="col-span-1">Actions</div>
               ) : null}
             </div>
@@ -506,7 +511,7 @@ export default function ChannelUserList({
 
                     <div
                       className={
-                        isScopedAdminFn(authUser || undefined)
+                        isScopedAdminFn(authUser || undefined) || isSuperAdmin
                           ? "col-span-3 lg:col-span-4 flex gap-1"
                           : "col-span-4 lg:col-span-5"
                       }
@@ -525,15 +530,15 @@ export default function ChannelUserList({
                             : cu.role}
                         </Badge>
                         {entityCreatorId === user.unique_id && (
-                          <Badge variant="outline">{"(Owner)"}</Badge>
+                          <Badge variant="outline">{"(Creator)"}</Badge>
                         )}
                       </div>
                     </div>
 
                     {/* Actions */}
-                    {isScopedAdminFn(authUser || undefined) ? (
+                    {isScopedAdminFn(authUser || undefined) || isSuperAdmin ? (
                       <div className="col-span-1 flex justify-center">
-                        {isEntityOwner || canChangeUserRole(user) ? (
+                        {canChangeUserRole(user) ? (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
@@ -548,7 +553,7 @@ export default function ChannelUserList({
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              {canUpdateUser && canChangeUserRole(user) && (
+                              {canUpdateUser && (
                                 <DropdownMenuItem
                                   onClick={() => {
                                     setSelectedUser(cu)
@@ -598,7 +603,7 @@ export default function ChannelUserList({
         open={changeRoleModelVisibility}
         onOpenChange={setChangeRoleModelVisibility}
       >
-        <DialogContent>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Change User Role</DialogTitle>
           </DialogHeader>

@@ -22,6 +22,7 @@ import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import {
   createScopedCommunityRolesAndAssignAdmin,
+  deleteUserRole,
   getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
 import {
@@ -296,10 +297,11 @@ export const AttachCommunityUserAction = CreateServerAction(
 
 export const DetachCommunityUserAction = CreateServerAction(
   true,
-  async (communityId: string, userId: string) => {
+  async (communityId: string, userId: string, roleId: number) => {
     try {
       const deleted = await detachCommunityUser(communityId, userId)
-      pusherServer.trigger(`user-${userId}`, "update-role", deleted)
+      const deleteRole = await deleteUserRole(userId, roleId)
+      pusherServer.trigger(`user-${userId}`, "update-role", deleteRole)
       return { success: true, data: deleted }
     } catch (error: any) {
       return { success: false, error: error.message }

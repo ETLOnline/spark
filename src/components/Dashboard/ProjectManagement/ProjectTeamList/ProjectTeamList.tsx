@@ -107,14 +107,17 @@ export default function ProjectTeamList({
   const canChangeUserRole = (targetUser: SelectUser | undefined) => {
     if (!targetUser) return false
 
+    if (targetUser.unique_id === authUser?.unique_id) return false
+
     if (isSuperAdmin) return true
+
+    if (targetUser.unique_id === projectCreatorId) return false
 
     if (authUser?.unique_id === projectCreatorId) return true
 
     if (isScopedAdminFn(authUser || undefined)) {
       if (
         targetUser.unique_id === projectCreatorId ||
-        targetUser.unique_id === authUser?.unique_id ||
         isScopedAdminFn(targetUser)
       ) {
         return false
@@ -362,14 +365,14 @@ export default function ProjectTeamList({
               <div className="col-span-4">Email</div>
               <div
                 className={
-                  isScopedAdminFn(authUser || undefined)
+                  isScopedAdminFn(authUser || undefined) || isSuperAdmin
                     ? "col-span-3"
                     : "col-span-4 text-center"
                 }
               >
                 Role
               </div>
-              {isScopedAdminFn(authUser || undefined) ? (
+              {isScopedAdminFn(authUser || undefined) || isSuperAdmin ? (
                 <div className="col-span-1 text-center">Actions</div>
               ) : null}
             </div>
@@ -406,7 +409,7 @@ export default function ProjectTeamList({
                       </div>
                       <div
                         className={
-                          isScopedAdminFn(authUser || undefined)
+                          isScopedAdminFn(authUser || undefined) || isSuperAdmin
                             ? "col-span-3 flex gap-1"
                             : "col-span-4  gap-1"
                         }
@@ -421,13 +424,14 @@ export default function ProjectTeamList({
                             {cu.role}
                           </Badge>
                           {user.unique_id === projectCreatorId ? (
-                            <Badge variant="outline">{"(Owner)"}</Badge>
+                            <Badge variant="outline">{"(Creator)"}</Badge>
                           ) : null}
                         </div>
                       </div>
-                      {isScopedAdminFn(authUser || undefined) ? (
+                      {isScopedAdminFn(authUser || undefined) ||
+                      isSuperAdmin ? (
                         <div className="col-span-1 text-center">
-                          {isProjectCreator || canChangeUserRole(user) ? (
+                          {canChangeUserRole(user) ? (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon">
@@ -484,7 +488,7 @@ export default function ProjectTeamList({
 
       {/* Add Users Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Add Users to Project</DialogTitle>
           </DialogHeader>
@@ -506,7 +510,7 @@ export default function ProjectTeamList({
       </Dialog>
       {/* Change Role Dialog */}
       <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
-        <DialogContent>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Change User Role</DialogTitle>
           </DialogHeader>

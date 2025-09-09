@@ -2,6 +2,7 @@
 
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import { UnsavedChangesDialog } from "@/src/components/common/unsavedChangesDialog"
 import { Button } from "@/src/components/ui/button"
 import {
   Dialog,
@@ -26,6 +27,7 @@ import { Textarea } from "@/src/components/ui/textarea"
 import { InsertSpace } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useAuthUser } from "@/src/hooks/useAuthUser"
+import { useConfirmClose } from "@/src/hooks/useConfirmClose"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateSpaceAction,
@@ -100,6 +102,7 @@ function CreateSpaceModal({
     resolver: zodResolver(spaceSchema)
   })
   const error = form.formState.errors
+  const isChanged = form.formState.isDirty
 
   const debouncedCheckSlugAvailability = useDebouncedCallback(
     async (
@@ -189,6 +192,12 @@ function CreateSpaceModal({
     }
   }, [spaceFormModelVisibility])
 
+  const { showConfirmation, setShowConfirmation, handleClose } =
+    useConfirmClose({
+      isDirty: isChanged,
+      onClose: () => setSpaceFormModelVisibility(false)
+    })
+
   function submitData(data: any) {
     if (data.publish_space === true) {
       data.publish_space = 1
@@ -276,13 +285,8 @@ function CreateSpaceModal({
 
   return (
     <div className="flex justify-center">
-      <Dialog
-        open={spaceFormModelVisibility}
-        onOpenChange={(open) => {
-          setSpaceFormModelVisibility(open)
-        }}
-      >
-        <DialogContent>
+      <Dialog open={spaceFormModelVisibility} onOpenChange={handleClose}>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>
               {editSpace === true ? "Edit Space" : "Create Space"}
@@ -471,6 +475,12 @@ function CreateSpaceModal({
           </ScrollArea>
         </DialogContent>
       </Dialog>
+
+      <UnsavedChangesDialog
+        showConfirmation={showConfirmation}
+        setShowConfirmation={setShowConfirmation}
+        setIsActualDialogOpen={setSpaceFormModelVisibility}
+      />
     </div>
   )
 }
