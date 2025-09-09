@@ -31,6 +31,8 @@ import { desc } from "drizzle-orm"
 import { set, z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import moment from "moment"
+import { UnsavedChangesDialog } from "../../common/unsavedChangesDialog"
+import { useConfirmClose } from "@/src/hooks/useConfirmClose"
 
 interface Props {
   UserId: string
@@ -74,6 +76,7 @@ const CertificateModal = ({
   })
 
   const error = form.formState.errors
+  const isChanged = form.formState.isDirty
 
   useEffect(() => {
     if (!isDialogOpen) {
@@ -189,104 +192,121 @@ const CertificateModal = ({
     }
   }
 
+  const { showConfirmation, setShowConfirmation, handleClose } =
+    useConfirmClose({
+      isDirty: isChanged,
+      onClose: () => setIsDialogOpen(false)
+    })
+
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>
-            {selectedCertificate
-              ? "Update Certificate and Qualification"
-              : "Add Qualification & Certificate"}
-          </DialogTitle>
-          <DialogDescription>
-            {selectedCertificate
-              ? "Update your Certificate and Qualification to your profile."
-              : "Add your Qualification and Certificate to your profile."}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={form.handleSubmit(submitData)}>
-          <div className="grid gap-4 py-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor={`degree`} className="font-semibold">
-                Certificate
-              </Label>
-              <Controller
-                name="title"
-                defaultValue=""
-                control={form.control}
-                render={({ field }) => (
-                  <Input
-                    id="title"
-                    placeholder="e.g. Meta Full Stack Developer Certificate"
-                    {...field}
-                  />
+    <>
+      <Dialog open={isDialogOpen} onOpenChange={handleClose}>
+        <DialogContent
+          className="sm:max-w-[425px]"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle>
+              {selectedCertificate
+                ? "Update Certificate and Qualification"
+                : "Add Qualification & Certificate"}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedCertificate
+                ? "Update your Certificate and Qualification to your profile."
+                : "Add your Qualification and Certificate to your profile."}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={form.handleSubmit(submitData)}>
+            <div className="grid gap-4 py-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor={`degree`} className="font-semibold">
+                  Certificate
+                </Label>
+                <Controller
+                  name="title"
+                  defaultValue=""
+                  control={form.control}
+                  render={({ field }) => (
+                    <Input
+                      id="title"
+                      placeholder="e.g. Meta Full Stack Developer Certificate"
+                      {...field}
+                    />
+                  )}
+                />
+                {error.title && (
+                  <span className="text-red-500 text-sm">
+                    {String(error.title.message)}
+                  </span>
                 )}
-              />
-              {error.title && (
-                <span className="text-red-500 text-sm">
-                  {String(error.title.message)}
-                </span>
-              )}
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor={`institute`} className="font-semibold">
-                Institution
-              </Label>
-              <Controller
-                name="institute"
-                defaultValue=""
-                control={form.control}
-                render={({ field }) => (
-                  <Input id="institute" placeholder="e.g. Meta" {...field} />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor={`institute`} className="font-semibold">
+                  Institution
+                </Label>
+                <Controller
+                  name="institute"
+                  defaultValue=""
+                  control={form.control}
+                  render={({ field }) => (
+                    <Input id="institute" placeholder="e.g. Meta" {...field} />
+                  )}
+                />
+                {error.institute && (
+                  <span className="text-red-500 text-sm">
+                    {String(error.institute.message)}
+                  </span>
                 )}
-              />
-              {error.institute && (
-                <span className="text-red-500 text-sm">
-                  {String(error.institute.message)}
-                </span>
-              )}
-            </div>
+              </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="duration_from" className="font-semibold">
-                Year
-              </Label>
-              <Controller
-                name="year"
-                defaultValue=""
-                control={form.control}
-                render={({ field }) => (
-                  <Input id="year" placeholder="2024" {...field} />
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="duration_from" className="font-semibold">
+                  Year
+                </Label>
+                <Controller
+                  name="year"
+                  defaultValue=""
+                  control={form.control}
+                  render={({ field }) => (
+                    <Input id="year" placeholder="e.g. 2024" {...field} />
+                  )}
+                />
+                {error.year && (
+                  <span className="text-red-500 text-sm">
+                    {String(error.year.message)}
+                  </span>
                 )}
-              />
-              {error.year && (
-                <span className="text-red-500 text-sm">
-                  {String(error.year.message)}
-                </span>
-              )}
+              </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              loading={DeleteCertificateLoading}
-              onClick={() =>
-                handleDeleteCertificate(selectedCertificate?.id || 0)
-              }
-              type="button"
-            >
-              Delete
-            </Button>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                loading={DeleteCertificateLoading}
+                onClick={() =>
+                  handleDeleteCertificate(selectedCertificate?.id || 0)
+                }
+                type="button"
+              >
+                Delete
+              </Button>
 
-            <Button
-              loading={createCertificateLoading || updateCertificateLoading}
-            >
-              {selectedCertificate ? "Update" : "Add"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+              <Button
+                loading={createCertificateLoading || updateCertificateLoading}
+              >
+                {selectedCertificate ? "Update" : "Add"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <UnsavedChangesDialog
+        showConfirmation={showConfirmation}
+        setShowConfirmation={setShowConfirmation}
+        setIsActualDialogOpen={setIsDialogOpen}
+      />
+    </>
   )
 }
 

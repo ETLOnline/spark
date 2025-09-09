@@ -52,6 +52,8 @@ import { InsertEvent, SelectEvent } from "@/src/db/schema"
 import { EventType } from "../../common/types/event.types"
 import { MultiSelectOption } from "../../ui/multi-select"
 import { ScrollArea } from "../../ui/scroll-area"
+import { UnsavedChangesDialog } from "../../common/unsavedChangesDialog"
+import { useConfirmClose } from "@/src/hooks/useConfirmClose"
 
 interface Props {
   events: SelectEvent[]
@@ -233,6 +235,16 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
 
   useEffect(() => {
     if (!formModalVisibility) {
+      form.reset({
+        title: "",
+        description: "",
+        start_date_time: moment().format("YYYY-MM-DDTHH:mm"),
+        end_date_time: moment().add(1, "hours").format("YYYY-MM-DDTHH:mm"),
+        event_type: "",
+        location: "",
+        meeting_link: "",
+        image: undefined
+      })
       setSelectedEvent(null)
       setImageFile(null) // Clear image file when modal is closed
       setExistingImageUrl("")
@@ -248,6 +260,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
   }, [selectedEvent])
 
   const error = form.formState.errors
+  const isChanged = form.formState.isDirty
 
   async function eventSubmit(data: any) {
     const metadata = JSON.stringify({
@@ -337,6 +350,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
         setFormModalVisibility(false)
         setSelectedTags([])
         setImageFile(null)
+        form.reset()
         toast({
           title: "Event created",
           description: "Your event has been created successfully.",
@@ -374,6 +388,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
       setSelectedTags([])
       setImageFile(null)
       setExistingImageUrl("")
+      form.reset()
       toast({
         title: "Event updated",
         description: "Your changes have been saved successfully.",
@@ -404,30 +419,30 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
     form.setValue("existingImageUrl", existingImageUrl)
   }, [existingImageUrl, form])
 
+  const { showConfirmation, setShowConfirmation, handleClose } =
+    useConfirmClose({
+      isDirty: isChanged,
+      onClose: () => setFormModalVisibility(false)
+    })
   return (
-    <Dialog
-      open={formModalVisibility}
-      onOpenChange={(open) => {
-        setFormModalVisibility(open)
-      }}
-    >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {editEvent === true ? "Edit event" : "Create a new event"}
-          </DialogTitle>
-          <DialogDescription>
-            {editEvent === true
-              ? "Fill in the details to edit your event"
-              : "Fill in the details for your new event."}
-          </DialogDescription>
-        </DialogHeader>
-        <ScrollArea className="h-[80vh] w-full p-3">
+    <>
+      <Dialog open={formModalVisibility} onOpenChange={handleClose}>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>
+              {editEvent === true ? "Edit event" : "Create a new event"}
+            </DialogTitle>
+            <DialogDescription>
+              {editEvent === true
+                ? "Fill in the details to edit your event"
+                : "Fill in the details for your new event."}
+            </DialogDescription>
+          </DialogHeader>
           <form onSubmit={form.handleSubmit(eventSubmit)}>
-            <div className="grid gap-4 py-4 ">
-              <div className="flex  flex-col ">
-                <div className="flex flex-col gap-2 justify-between">
-                  <Label htmlFor="title" className="">
+            <div className="grid gap-4 py-1 ">
+              <div className="flex flex-col">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="title" className="text-right">
                     Title
                   </Label>
                   <Controller
@@ -446,7 +461,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                     )}
                   />
                 </div>
-                <div className="text-left">
+                <div className="text-right">
                   {error.title && (
                     <span className="text-red-500 text-sm">
                       {String(error.title?.message)}
@@ -456,8 +471,8 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
               </div>
 
               <div className="flex flex-col">
-                <div className="flex flex-col gap-2 justify-between">
-                  <Label htmlFor="description" className="">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="description" className="text-right">
                     Description
                   </Label>
                   <Controller
@@ -475,7 +490,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                     )}
                   />
                 </div>
-                <div className="text-left">
+                <div className="text-right">
                   {error.description && (
                     <span className="text-red-500 text-sm">
                       {String(error.description.message)}
@@ -483,10 +498,10 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                   )}
                 </div>
               </div>
-              {/* event image */}
+
               <div className="flex flex-col">
-                <div className="flex flex-col gap-2 justify-between">
-                  <Label htmlFor="image" className="">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="image" className="text-right">
                     Event Image
                   </Label>
                   <Controller
@@ -509,31 +524,18 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                     )}
                   />
                 </div>
-                <div className="text-left">
-                  {error.image && !existingImageUrl && (
+                <div className="text-right">
+                  {error.image && (
                     <span className="text-red-500 text-sm">
-                      {String(error.image?.message)}
+                      {String(error.image.message)}
                     </span>
                   )}
                 </div>
               </div>
-              {(existingImageUrl || imageFile) && (
-                <div className="flex justify-center my-4">
-                  <img
-                    src={
-                      imageFile
-                        ? URL.createObjectURL(imageFile)
-                        : existingImageUrl!
-                    }
-                    alt="Event Preview"
-                    className="max-h-64 object-cover rounded-md"
-                  />
-                </div>
-              )}
-              {/* start date and time */}
-              <div className="flex flex-col ">
-                <div className="flex flex-col gap-2 justify-between">
-                  <Label htmlFor="start_date_time" className="">
+
+              <div className="flex flex-col">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="start_date_time" className="text-right">
                     Start Date and Time
                   </Label>
                   <Controller
@@ -544,12 +546,12 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                         id="start_date_time"
                         type="datetime-local"
                         {...field}
-                        className="col-span-3 hover:cursor-pointer"
+                        className="col-span-3"
                       />
                     )}
                   />
                 </div>
-                <div className="text-left">
+                <div className="text-right">
                   {error.start_date_time && (
                     <span className="text-red-500 text-sm">
                       {String(error.start_date_time.message)}
@@ -557,10 +559,10 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                   )}
                 </div>
               </div>
-              {/* end date and time*/}
+
               <div className="flex flex-col">
-                <div className="flex flex-col gap-2 justify-between">
-                  <Label htmlFor="end_date_time" className="">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="end_date_time" className="text-right">
                     End Date and Time
                   </Label>
                   <Controller
@@ -576,7 +578,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                     )}
                   />
                 </div>
-                <div className="text-left">
+                <div className="text-right">
                   {error.end_date_time && (
                     <span className="text-red-500 text-sm">
                       {String(error.end_date_time.message)}
@@ -585,28 +587,10 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                 </div>
               </div>
 
-              {/* select tags */}
-
               <div className="flex flex-col">
-                <div className="flex flex-col gap-2 justify-between">
-                  <Label htmlFor="tags" className="">
-                    Tags (Optional)
-                  </Label>
-                  <div className="col-span-3">
-                    <TagSelect
-                      type="interest"
-                      selected={selectedTags}
-                      setSelected={setSelectedTags}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* select type */}
-              <div className="flex flex-col">
-                <div className="flex flex-col gap-2 justify-between">
-                  <Label htmlFor="type" className="">
-                    Select Type
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="type" className="text-right">
+                    Select type
                   </Label>
                   <Controller
                     name="event_type"
@@ -634,7 +618,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                     )}
                   />
                 </div>
-                <div className="text-left">
+                <div className="text-right">
                   {error.event_type && (
                     <span className="text-red-500 text-sm">
                       {String(error.event_type.message)}
@@ -643,11 +627,28 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                 </div>
               </div>
 
+              {/* select tags */}
+
+              <div className="flex flex-col">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="tags" className="text-right">
+                    Tags
+                  </Label>
+                  <div className="col-span-3">
+                    <TagSelect
+                      type="interest"
+                      selected={selectedTags}
+                      setSelected={setSelectedTags}
+                    />
+                  </div>
+                </div>
+              </div>
+
               {(EventTypeSelection === EventType.Physical ||
                 EventTypeSelection === EventType.Hybrid) && (
                 <div className="flex flex-col">
-                  <div className="flex flex-col gap-2 justify-between">
-                    <Label htmlFor="location" className="">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="location" className="text-right">
                       Location
                     </Label>
                     <Controller
@@ -681,8 +682,8 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
               {(EventTypeSelection === EventType.Virtual ||
                 EventTypeSelection === EventType.Hybrid) && (
                 <div className="flex flex-col">
-                  <div className="flex flex-col gap-2 justify-between">
-                    <Label htmlFor="meeting_link" className="">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="meeting_link" className="text-right">
                       Meeting Link
                     </Label>
                     <Controller
@@ -751,9 +752,15 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
               )}
             </DialogFooter>
           </form>
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <UnsavedChangesDialog
+        showConfirmation={showConfirmation}
+        setShowConfirmation={setShowConfirmation}
+        setIsActualDialogOpen={setFormModalVisibility}
+      />
+    </>
   )
 }
 

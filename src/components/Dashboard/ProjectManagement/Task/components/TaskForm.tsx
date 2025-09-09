@@ -43,6 +43,8 @@ interface Props {
   isTaskModelOpen?: boolean
   selectedTask?: SelectTask
   loading?: boolean
+  isChanged?: boolean
+  setIsChanged?: Dispatch<SetStateAction<boolean>>
 }
 
 const projectSchema = z.object({
@@ -61,7 +63,9 @@ export default function TaskForm({
   isTaskModelOpen,
   selectedTask,
   onSubmit,
-  loading = false
+  loading = false,
+  isChanged,
+  setIsChanged
 }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null)
   const [usersList, setUsersList] = useState<(SelectUser | null)[]>([])
@@ -100,6 +104,10 @@ export default function TaskForm({
     label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
     value: user?.unique_id ?? ""
   }))
+
+  useEffect(() => {
+    if (setIsChanged) setIsChanged(form.formState.isDirty)
+  }, [form.formState.isDirty])
 
   useEffect(() => {
     const fetchProjectUsers = async () => {
@@ -351,6 +359,7 @@ export default function TaskForm({
                           className="col-span-3 !text-lg"
                           autoFocus
                           required
+                          disabled={!isAllowedAction}
                           onBlur={() => setActiveField(null)}
                         />
                       ) : (
@@ -394,6 +403,7 @@ export default function TaskForm({
                         value={field.value}
                         onChange={field.onChange}
                         image_uploading={true}
+                        editable={isAllowedAction}
                       />
                     ) : (
                       <div
@@ -457,6 +467,7 @@ export default function TaskForm({
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
+                            disabled={!isAllowedAction}
                           >
                             <SelectTrigger
                               id="status_id"
@@ -513,6 +524,7 @@ export default function TaskForm({
                           <MultiSelect
                             options={assigneeOptions}
                             selected={selectedAssignee}
+                            disabled={!isAllowedAction}
                             onChange={(newselected) => {
                               if (newselected.length === 0) {
                                 setSelectedAssignee([
@@ -576,6 +588,7 @@ export default function TaskForm({
                           <MultiSelect
                             options={assignorOptions}
                             selected={selectedAssignor}
+                            disabled={!isAllowedAction}
                             onChange={(newselected) => {
                               const latestSelected =
                                 newselected?.[newselected.length - 1]
@@ -632,6 +645,7 @@ export default function TaskForm({
                           <Select
                             value={field.value}
                             onValueChange={field.onChange}
+                            disabled={!isAllowedAction}
                           >
                             <SelectTrigger
                               id="task_priority"
@@ -695,6 +709,7 @@ export default function TaskForm({
                           <Select
                             value={field.value}
                             onValueChange={field.onChange}
+                            disabled={!isAllowedAction}
                           >
                             <SelectTrigger
                               id="task_type"
@@ -753,6 +768,7 @@ export default function TaskForm({
                       render={({ field }) =>
                         activeField === "points" ? (
                           <Input
+                            disabled={!isAllowedAction}
                             id="story_points"
                             type="number"
                             min={0}

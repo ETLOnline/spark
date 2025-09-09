@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useState } from "react"
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import {
   Dialog,
@@ -20,6 +20,8 @@ import {
   UpdateCoverImageAction
 } from "@/src/server-actions/User/User"
 import { SelectUser } from "@/src/db/schema"
+import { UnsavedChangesDialog } from "../../common/unsavedChangesDialog"
+import { useConfirmClose } from "@/src/hooks/useConfirmClose"
 
 interface changeCoverImageDialogProps {
   isChangeCoverImageOpen: boolean
@@ -114,63 +116,73 @@ function ChangeCoverImageDialog({
     }
   }
 
+  const { showConfirmation, setShowConfirmation, handleClose } =
+    useConfirmClose({
+      isDirty: coverImage !== null,
+      onClose: () => setIsChangeCoverImageOpen(false)
+    })
+
+  useEffect(() => {
+    if (isChangeCoverImageOpen) {
+      setCoverImage(null)
+    }
+  }, [isChangeCoverImageOpen])
+
   return (
-    <Dialog
-      open={isChangeCoverImageOpen}
-      onOpenChange={setIsChangeCoverImageOpen}
-    >
-      <DialogContent className="">
-        <DialogHeader>
-          <DialogTitle>Cover Photo</DialogTitle>
-          <DialogDescription>
-            Pick an image to set as your cover photo.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="flex items-center gap-2">
-          <div className="grid flex-1 gap-2">
-            <Label htmlFor="cover_image">Select a file</Label>
-            <FileUpload
-              accept="image/*"
-              onChange={(files) => {
-                setCoverImage(files[0])
-              }}
-            />
+    <>
+      <Dialog open={isChangeCoverImageOpen} onOpenChange={handleClose}>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Cover Photo</DialogTitle>
+            <DialogDescription>
+              Pick an image to set as your cover photo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-2">
+            <div className="grid flex-1 gap-2">
+              <Label htmlFor="cover_image">Select a file</Label>
+              <FileUpload
+                accept="image/*"
+                onChange={(files) => {
+                  setCoverImage(files[0])
+                }}
+              />
+            </div>
           </div>
-        </div>
-        <DialogFooter>
-          <DialogClose asChild>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                Cancel
+              </Button>
+            </DialogClose>
+
             <Button
               type="button"
-              variant="outline"
-              disabled={uploadCoverLoading || removeCoverLoading}
+              variant="destructive"
+              loading={removeCoverLoading}
+              onClick={handleRemoveCover}
             >
-              Cancel
+              Remove
             </Button>
-          </DialogClose>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleUploadCover}
+              loading={uploadCoverLoading}
+              disabled={!coverImage}
+            >
+              Upload
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-          <Button
-            type="button"
-            variant="destructive"
-            loading={removeCoverLoading}
-            onClick={handleRemoveCover}
-            disabled={
-              removeCoverLoading || uploadCoverLoading || !user.cover_image
-            }
-          >
-            Remove
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleUploadCover}
-            loading={uploadCoverLoading}
-            disabled={!coverImage || uploadCoverLoading || removeCoverLoading}
-          >
-            Upload
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <UnsavedChangesDialog
+        showConfirmation={showConfirmation}
+        setShowConfirmation={setShowConfirmation}
+        setIsActualDialogOpen={setIsChangeCoverImageOpen}
+      />
+    </>
   )
 }
 
