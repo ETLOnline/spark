@@ -16,8 +16,9 @@ import {
   NotificationEntity,
   NotificationType
 } from "@/src/components/Dashboard/Notifications/types/notifications.types"
-import { beamsServerClient } from "@/src/services/notifications/BeamServer"
 import { SelectUserByUniqueId } from "@/src/db/data-access/user/query"
+import { sendBeamsNotification } from "@/src/services/notifications/Helper"
+import { NotificationTemplates } from "@/src/services/notifications/NotificationTemplates"
 
 export const CreateContactAction = CreateServerAction(
   true,
@@ -61,15 +62,12 @@ export const CreateContactAction = CreateServerAction(
       const contactUser = await SelectUserByUniqueId(contact_id)
 
       if (newRequest[0].is_requested === 1) {
-        await beamsServerClient.publishToInterests([`user-${contact_id}`], {
-          web: {
-            notification: {
-              title: "New Connection Request",
-              body: `${user.first_name} ${user.last_name} has sent you a connection request.`,
-              deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/connections`,
-              icon: user.profile_url ?? undefined
-            }
-          }
+        await sendBeamsNotification({
+          receivers: [`user-${contact_id}`],
+          template: NotificationTemplates.connectionRequest({
+            sender: user.first_name + " " + user.last_name,
+            senderIcon: user.profile_url ?? undefined
+          })
         })
       }
 
@@ -118,15 +116,12 @@ export const AcceptConnectionAction = CreateServerAction(
       }
 
       if (res[0].is_accepted === 1) {
-        await beamsServerClient.publishToInterests([`user-${user_id}`], {
-          web: {
-            notification: {
-              title: "Connection Accepted",
-              body: `${user.first_name} ${user.last_name} has accepted your connection request. You’re now connected.`,
-              deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/connections`,
-              icon: user.profile_url ?? undefined
-            }
-          }
+        await sendBeamsNotification({
+          receivers: [`user-${user_id}`],
+          template: NotificationTemplates.connectionAccepted({
+            sender: user.first_name + " " + user.last_name,
+            senderIcon: user.profile_url ?? undefined
+          })
         })
       }
 

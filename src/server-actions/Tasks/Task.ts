@@ -31,9 +31,9 @@ import {
   base64ToBuffer,
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
-import { beamsServerClient } from "@/src/services/notifications/BeamServer"
 import { AuthUserAction } from "../User/AuthUserAction"
-import { auth } from "@clerk/nextjs/server"
+import { sendBeamsNotification } from "@/src/services/notifications/Helper"
+import { NotificationTemplates } from "@/src/services/notifications/NotificationTemplates"
 
 export const CreateTaskAction = CreateServerAction(
   true,
@@ -58,14 +58,16 @@ export const CreateTaskAction = CreateServerAction(
         task
       )
 
-      await beamsServerClient.publishToInterests([`user-${task?.assign_to}`], {
-        web: {
-          notification: {
-            title: `New Task Assigned: ${task?.task_num}`,
-            body: `You have been assigned a new task in project "${project?.project_name}".`,
-            deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/project/${project?.id}/task/${task?.id}`
-          }
-        }
+      const ctaLink = `project/${task?.project_id}/task/${task?.id}`
+
+      await sendBeamsNotification({
+        receivers: [`user-${task?.assign_to}`],
+        template: NotificationTemplates.taskAssigned({
+          entityName: task?.task_num ?? undefined,
+          entityId: task?.id,
+          projectName: project?.project_name,
+          ctaLink: ctaLink
+        })
       })
 
       return { success: true, data: task }
@@ -153,46 +155,23 @@ export const UpdateTaskAction = CreateServerAction(
         UpdatedTask
       )
 
-      if (isAssignee) {
-        await beamsServerClient.publishToInterests(
-          [`user-${UpdatedTask.assign_by}`],
-          {
-            web: {
-              notification: {
-                title: `Task Updated`,
-                body: `${authUser.first_name} ${authUser.last_name} updated the task ${UpdatedTask?.task_num}.`,
-                deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/project/${updatedData?.project_id}/task/${UpdatedTask?.id}`
-              }
-            }
-          }
-        )
-      } else if (isAssignor) {
-        await beamsServerClient.publishToInterests(
-          [`user-${UpdatedTask.assign_to}`],
-          {
-            web: {
-              notification: {
-                title: `Task Updated`,
-                body: `${authUser.first_name} ${authUser.last_name} updated the task ${UpdatedTask?.task_num}.`,
-                deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/project/${UpdatedTask?.project_id}/task/${UpdatedTask?.id}`
-              }
-            }
-          }
-        )
-      } else {
-        await beamsServerClient.publishToInterests(
-          [`user-${UpdatedTask?.assign_to}`, `user-${UpdatedTask?.assign_by}`],
-          {
-            web: {
-              notification: {
-                title: `Task Updated`,
-                body: `${authUser.first_name} ${authUser.last_name} updated the task ${UpdatedTask?.task_num}.`,
-                deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/project/${UpdatedTask?.project_id}/task/${UpdatedTask?.id}`
-              }
-            }
-          }
-        )
-      }
+      const receivers = isAssignee
+        ? [`user-${UpdatedTask.assign_by}`]
+        : isAssignor
+          ? [`user-${UpdatedTask.assign_to}`]
+          : [`user-${UpdatedTask?.assign_to}`, `user-${UpdatedTask?.assign_by}`]
+
+      const ctaLink = `project/${UpdatedTask?.project_id}/task/${UpdatedTask?.id}`
+
+      await sendBeamsNotification({
+        receivers,
+        template: NotificationTemplates.taskUpdated({
+          sender: `${authUser.first_name} ${authUser.last_name}`,
+          entityName: UpdatedTask?.task_num ?? undefined,
+          entityId: UpdatedTask?.id,
+          ctaLink: ctaLink
+        })
+      })
 
       return { success: true, data: UpdatedTask }
     } catch (error) {
@@ -309,47 +288,26 @@ export const CreateTaskCommentAction = CreateServerAction(
 
       const newComment = await createTaskComment(commentData)
 
+      const receiver =
+        authUser.unique_id === task?.assign_by
+          ? [`user-${task?.assign_to}`]
+          : authUser.unique_id === task?.assign_to
+            ? [`user-${task?.assign_by}`]
+            : [`user-${task?.assign_by}`, `user-${task?.assign_to}`]
+
+      const ctaLink = `project/${task?.project_id}/task/${task?.id}`
+
       if (newComment) {
-        if (authUser.unique_id === task?.assign_by) {
-          await beamsServerClient.publishToInterests(
-            [`user-${task?.assign_to}`],
-            {
-              web: {
-                notification: {
-                  title: `New Comment on Task: ${task?.task_num}`,
-                  body: `${authUser.first_name} ${authUser.last_name} commented on the task "${task?.task_num}".`,
-                  deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/project/${task?.project_id}/task/${task?.id}`
-                }
-              }
-            }
-          )
-        } else if (authUser.unique_id === task?.assign_to) {
-          await beamsServerClient.publishToInterests(
-            [`user-${task?.assign_by}`],
-            {
-              web: {
-                notification: {
-                  title: `New Comment on Task: ${task?.task_num}`,
-                  body: `${authUser.first_name} ${authUser.last_name} commented on the task "${task?.task_num}".`,
-                  deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/project/${task?.project_id}/task/${task?.id}`
-                }
-              }
-            }
-          )
-        } else {
-          await beamsServerClient.publishToInterests(
-            [`user-${task?.assign_by}`, `user-${task?.assign_to}`],
-            {
-              web: {
-                notification: {
-                  title: `New Comment on Task: ${task?.task_num}`,
-                  body: `${authUser.first_name} ${authUser.last_name} commented on the task "${task?.task_num}".`,
-                  deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/project/${task?.project_id}/task/${task?.id}`
-                }
-              }
-            }
-          )
-        }
+        await sendBeamsNotification({
+          receivers: receiver,
+          template: NotificationTemplates.taskComment({
+            sender: authUser.first_name + " " + authUser.last_name,
+            senderIcon: authUser.profile_url || "",
+            entityName: task?.task_num ?? undefined,
+            entityId: task?.id,
+            ctaLink: ctaLink
+          })
+        })
 
         return { success: true, data: newComment }
       } else {

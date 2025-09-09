@@ -12,14 +12,13 @@ import {
   getExistingSingleChat
 } from "@/src/db/data-access/chat/query"
 import { CreateServerAction } from ".."
-import { InsertMessage, SelectUser } from "@/src/db/schema"
+import { InsertMessage } from "@/src/db/schema"
 import { AuthUserAction } from "../User/AuthUserAction"
 import { createChatMessage } from "@/src/db/data-access/chat/message/query"
-import ChatChannelHash from "@/src/components/Dashboard/Chat/helper"
 import { AblyClientRest } from "@/src/services/realtime/AblyClient"
-import { beamsServerClient } from "@/src/services/notifications/BeamServer"
-import { GetSpaceByIdAction } from "../Space/Space"
 import { GetSpaceById } from "@/src/db/data-access/spaces/query"
+import { sendBeamsNotification } from "@/src/services/notifications/Helper"
+import { NotificationTemplates } from "@/src/services/notifications/NotificationTemplates"
 
 export const CreatePrivateChatAction = CreateServerAction(
   true,
@@ -71,18 +70,14 @@ export const CreatePrivateChatAction = CreateServerAction(
       const notificationTargetId =
         authUser.unique_id === contact_id ? user_id : contact_id
 
-      await beamsServerClient.publishToInterests(
-        [`user-${notificationTargetId}`],
-        {
-          web: {
-            notification: {
-              title: `New Chat Created`,
-              body: `${authUser.first_name} has started a chat with you.`,
-              deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/${CTALink}`
-            }
-          }
-        }
-      )
+      await sendBeamsNotification({
+        receivers: [`user-${notificationTargetId}`],
+        template: NotificationTemplates.chatStarted({
+          sender: authUser.first_name + " " + authUser.last_name,
+          senderIcon: authUser.profile_url || "",
+          ctaLink: CTALink
+        })
+      })
 
       return { success: true, data: newChat }
     } catch (error) {
@@ -128,18 +123,13 @@ export const CreateGroupChatAction = CreateServerAction(
       const recipients = userIds.filter((id) => id !== authUser.unique_id)
 
       if (recipients.length > 0) {
-        await beamsServerClient.publishToInterests(
-          recipients.map((id) => `user-${id}`),
-          {
-            web: {
-              notification: {
-                title: `New Group Chat: ${chatName}`,
-                body: `You have been added to a new group chat.`,
-                deep_link: `${process.env.NEXT_PUBLIC_APP_URL}/${CTALink}`
-              }
-            }
-          }
-        )
+        await sendBeamsNotification({
+          receivers: recipients.map((id) => `user-${id}`),
+          template: NotificationTemplates.groupChatAdded({
+            entityName: chatName,
+            ctaLink: CTALink
+          })
+        })
       }
 
       return { success: true, data: chat }
