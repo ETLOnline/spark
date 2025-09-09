@@ -23,7 +23,6 @@ export default function EventsDetailsClient({ event_id }: Props) {
   const hosts = useAtomValue(hostStore.hosts)
   const [loading, eventData, error, getEvent] =
     useServerAction(GetEventByIdAction)
-
   useEffect(() => {
     const getEventData = async () => {
       const eventId = Number(event_id)
