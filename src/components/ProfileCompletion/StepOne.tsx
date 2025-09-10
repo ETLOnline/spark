@@ -117,14 +117,23 @@ export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
     if (selectedSkillTags) {
       form.setValue(
         "skill",
-        selectedSkillTags.map((tag) => tag.value)
+        selectedSkillTags.map((tag) => tag.value),
+        { shouldDirty: true }
       )
+      if (form.formState.errors.skill) {
+        form.trigger("skill")
+      }
     }
+
     if (selectedInterestTags) {
       form.setValue(
         "interest",
-        selectedInterestTags.map((tag) => tag.value)
+        selectedInterestTags.map((tag) => tag.value),
+        { shouldDirty: true }
       )
+      if (form.formState.errors.interest) {
+        form.trigger("interest")
+      }
     }
   }, [selectedSkillTags, selectedInterestTags])
 
