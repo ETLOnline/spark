@@ -1,17 +1,14 @@
-import { MailService } from "@/src/services/mail/sendMail"
 import { eventsList } from "@/src/services/queue/eventsList"
-import { Queue } from "quirrel/next-app"
 
-export const POST = Queue(
-  "api/queues/email",
-  async (job: { sendingTo: string[]; event: string; payload: any }) => {
-    const handler = eventsList[job.event]
+export async function POST(req: Request) {
+  const job = await req.json()
+  const handler = eventsList[job.event]
 
-    if (!handler) {
-      console.error(`No handler found for event: ${job.event}`)
-      return
-    }
-
-    await handler(job)
+  if (!handler) {
+    console.error(`No handler found for event: ${job.event}`)
+    return new Response("Handler not found", { status: 400 })
   }
-)
+
+  await handler(job)
+  return new Response("OK", { status: 200 })
+}

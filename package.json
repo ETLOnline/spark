@@ -16,6 +16,7 @@
   "dependencies": {
     "@azure/identity": "^4.10.1",
     "@azure/storage-blob": "^12.27.0",
+    "@azure/storage-queue": "^12.27.0",
     "@clerk/nextjs": "^6.20.2",
     "@clerk/themes": "^2.2.49",
     "@hookform/resolvers": "^4.0.0",
@@ -88,7 +89,6 @@
     "postgres": "^3.4.5",
     "pusher": "^5.2.0",
     "pusher-js": "^8.4.0",
-    "quirrel": "^1.14.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-dropzone": "^14.3.5",
