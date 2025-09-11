@@ -22,12 +22,14 @@ import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import {
   createScopedCommunityRolesAndAssignAdmin,
+  deleteUserRole,
   getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
 import {
   base64ToBuffer,
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
+import pusherServer from "@/src/services/realtime/pusherServer"
 
 export const CreateCommunityAction = CreateServerAction(
   true,
@@ -44,7 +46,6 @@ export const CreateCommunityAction = CreateServerAction(
         newCommunity.created_by,
         result.adminRole?.name
       )
-
       return { success: true, data: newCommunity }
     } catch (error: any) {
       console.error("Error in CreateCommunityAction:", error)
@@ -286,6 +287,7 @@ export const AttachCommunityUserAction = CreateServerAction(
         userId,
         attachUserRole?.viewerRole?.name
       )
+      pusherServer.trigger(`user-${userId}`, "update-role", attachUserRole)
       return { success: true, data: channelUser }
     } catch (error) {
       return { error: error }
@@ -295,9 +297,11 @@ export const AttachCommunityUserAction = CreateServerAction(
 
 export const DetachCommunityUserAction = CreateServerAction(
   true,
-  async (communityId: string, userId: string) => {
+  async (communityId: string, userId: string, roleId: number) => {
     try {
       const deleted = await detachCommunityUser(communityId, userId)
+      const deleteRole = await deleteUserRole(userId, roleId)
+      pusherServer.trigger(`user-${userId}`, "update-role", deleteRole)
       return { success: true, data: deleted }
     } catch (error: any) {
       return { success: false, error: error.message }

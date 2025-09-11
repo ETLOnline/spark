@@ -28,6 +28,10 @@ import { getInitials } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { createTaskNotification } from "@/src/services/notify/task/task"
+import {
+  base64ToBuffer,
+  uploadFileAndSaveMetadata
+} from "@/src/services/storage/utils/fileUtils"
 
 export const CreateTaskAction = CreateServerAction(
   true,
@@ -273,6 +277,26 @@ export const GetTaskCommentsAction = CreateServerAction(
         success: false,
         error: e.message || "An unexpected error occurred."
       }
+    }
+  }
+)
+
+export const AddImageToTaskAction = CreateServerAction(
+  true,
+  async (fileName: string, fileB64string: string, fileType: string) => {
+    try {
+      const fileBuffer = base64ToBuffer(fileB64string)
+
+      const { fileUrl } = await uploadFileAndSaveMetadata(
+        fileBuffer,
+        fileName,
+        fileType,
+        "tasks"
+      )
+
+      return { success: true, data: fileUrl }
+    } catch (error) {
+      return { error: error }
     }
   }
 )

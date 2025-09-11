@@ -51,6 +51,8 @@ import TagSelect from "../../TagsInput/tags"
 import { InsertEvent, SelectEvent } from "@/src/db/schema"
 import { EventType } from "../../common/types/event.types"
 import { MultiSelectOption } from "../../ui/multi-select"
+import { UnsavedChangesDialog } from "../../common/unsavedChangesDialog"
+import { useConfirmClose } from "@/src/hooks/useConfirmClose"
 
 interface Props {
   events: SelectEvent[]
@@ -214,6 +216,16 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
 
   useEffect(() => {
     if (!formModalVisibility) {
+      form.reset({
+        title: "",
+        description: "",
+        start_date_time: moment().format("YYYY-MM-DDTHH:mm"),
+        end_date_time: moment().add(1, "hours").format("YYYY-MM-DDTHH:mm"),
+        event_type: "",
+        location: "",
+        meeting_link: "",
+        image: undefined
+      })
       setSelectedEvent(null)
       setImageFile(null) // Clear image file when modal is closed
     }
@@ -228,6 +240,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
   }, [selectedEvent])
 
   const error = form.formState.errors
+  const isChanged = form.formState.isDirty
 
   async function eventSubmit(data: any) {
     const metadata = JSON.stringify({
@@ -318,6 +331,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
         setFormModalVisibility(false)
         setSelectedTags([])
         setImageFile(null)
+        form.reset()
         toast({
           title: "Event created",
           description: "Your event has been created successfully.",
@@ -354,6 +368,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
       setFormModalVisibility(false)
       setSelectedTags([])
       setImageFile(null) // Clear image file after event update
+      form.reset()
       toast({
         title: "Event updated",
         description: "Your changes have been saved successfully.",
@@ -381,244 +396,42 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
     }
   }
 
+  const { showConfirmation, setShowConfirmation, handleClose } =
+    useConfirmClose({
+      isDirty: isChanged,
+      onClose: () => setFormModalVisibility(false)
+    })
   return (
-    <Dialog
-      open={formModalVisibility}
-      onOpenChange={(open) => {
-        setFormModalVisibility(open)
-      }}
-    >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {editEvent === true ? "Edit event" : "Create a new event"}
-          </DialogTitle>
-          <DialogDescription>
-            {editEvent === true
-              ? "Fill in the details to edit your event"
-              : "Fill in the details for your new event."}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={form.handleSubmit(eventSubmit)}>
-          <div className="grid gap-4 py-1 ">
-            <div className="flex flex-col">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="title" className="text-right">
-                  Title
-                </Label>
-                <Controller
-                  name="title"
-                  control={form.control}
-                  defaultValue=""
-                  render={({ field }) => (
-                    <Input
-                      id="title"
-                      {...field}
-                      onChange={(e) =>
-                        field.onChange(e.target.value.trimStart())
-                      }
-                      className="col-span-3"
-                    />
-                  )}
-                />
-              </div>
-              <div className="text-right">
-                {error.title && (
-                  <span className="text-red-500 text-sm">
-                    {String(error.title?.message)}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-col">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="description" className="text-right">
-                  Description
-                </Label>
-                <Controller
-                  name="description"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Textarea
-                      id="description"
-                      {...field}
-                      onChange={(e) =>
-                        field.onChange(e.target.value.trimStart())
-                      }
-                      className="col-span-3"
-                    />
-                  )}
-                />
-              </div>
-              <div className="text-right">
-                {error.description && (
-                  <span className="text-red-500 text-sm">
-                    {String(error.description.message)}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-col">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="image" className="text-right">
-                  Event Image
-                </Label>
-                <Controller
-                  name="image"
-                  control={form.control}
-                  render={({ field: { onChange, value, ...field } }) => (
-                    <Input
-                      id="image"
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null
-                        setImageFile(file)
-                        onChange(file)
-                      }}
-                      className="col-span-3"
-                      {...field}
-                      value={undefined} // File inputs don't use value prop
-                    />
-                  )}
-                />
-              </div>
-              <div className="text-right">
-                {error.image && (
-                  <span className="text-red-500 text-sm">
-                    {String(error.image.message)}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-col">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="start_date_time" className="text-right">
-                  Start Date and Time
-                </Label>
-                <Controller
-                  name="start_date_time"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Input
-                      id="start_date_time"
-                      type="datetime-local"
-                      {...field}
-                      className="col-span-3"
-                    />
-                  )}
-                />
-              </div>
-              <div className="text-right">
-                {error.start_date_time && (
-                  <span className="text-red-500 text-sm">
-                    {String(error.start_date_time.message)}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-col">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="end_date_time" className="text-right">
-                  End Date and Time
-                </Label>
-                <Controller
-                  name="end_date_time"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Input
-                      id="end_date_time"
-                      type="datetime-local"
-                      {...field}
-                      className="col-span-3"
-                    />
-                  )}
-                />
-              </div>
-              <div className="text-right">
-                {error.end_date_time && (
-                  <span className="text-red-500 text-sm">
-                    {String(error.end_date_time.message)}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-col">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="type" className="text-right">
-                  Select type
-                </Label>
-                <Controller
-                  name="event_type"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={EventType.Physical}>
-                          Physical
-                        </SelectItem>
-                        <SelectItem value={EventType.Virtual}>
-                          Virtual
-                        </SelectItem>
-                        <SelectItem value={EventType.Hybrid}>Hybrid</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-              <div className="text-right">
-                {error.event_type && (
-                  <span className="text-red-500 text-sm">
-                    {String(error.event_type.message)}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* select tags */}
-
-            <div className="flex flex-col">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="tags" className="text-right">
-                  Tags
-                </Label>
-                <div className="col-span-3">
-                  <TagSelect
-                    type="interest"
-                    selected={selectedTags}
-                    setSelected={setSelectedTags}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {(EventTypeSelection === EventType.Physical ||
-              EventTypeSelection === EventType.Hybrid) && (
+    <>
+      <Dialog open={formModalVisibility} onOpenChange={handleClose}>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>
+              {editEvent === true ? "Edit event" : "Create a new event"}
+            </DialogTitle>
+            <DialogDescription>
+              {editEvent === true
+                ? "Fill in the details to edit your event"
+                : "Fill in the details for your new event."}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={form.handleSubmit(eventSubmit)}>
+            <div className="grid gap-4 py-1 ">
               <div className="flex flex-col">
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="location" className="text-right">
-                    Location
+                  <Label htmlFor="title" className="text-right">
+                    Title
                   </Label>
                   <Controller
-                    name="location"
+                    name="title"
                     control={form.control}
                     defaultValue=""
                     render={({ field }) => (
                       <Input
-                        id="location"
+                        id="title"
                         {...field}
                         onChange={(e) =>
-                          field.onChange(
-                            e.target.value.toUpperCase().trimStart()
-                          )
+                          field.onChange(e.target.value.trimStart())
                         }
                         className="col-span-3"
                       />
@@ -626,29 +439,89 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                   />
                 </div>
                 <div className="text-right">
-                  {error.location && (
+                  {error.title && (
                     <span className="text-red-500 text-sm">
-                      {String(error.location.message)}
+                      {String(error.title?.message)}
                     </span>
                   )}
                 </div>
               </div>
-            )}
 
-            {(EventTypeSelection === EventType.Virtual ||
-              EventTypeSelection === EventType.Hybrid) && (
               <div className="flex flex-col">
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="meeting_link" className="text-right">
-                    Meeting Link
+                  <Label htmlFor="description" className="text-right">
+                    Description
                   </Label>
                   <Controller
-                    name="meeting_link"
+                    name="description"
                     control={form.control}
-                    defaultValue=""
+                    render={({ field }) => (
+                      <Textarea
+                        id="description"
+                        {...field}
+                        onChange={(e) =>
+                          field.onChange(e.target.value.trimStart())
+                        }
+                        className="col-span-3"
+                      />
+                    )}
+                  />
+                </div>
+                <div className="text-right">
+                  {error.description && (
+                    <span className="text-red-500 text-sm">
+                      {String(error.description.message)}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="image" className="text-right">
+                    Event Image
+                  </Label>
+                  <Controller
+                    name="image"
+                    control={form.control}
+                    render={({ field: { onChange, value, ...field } }) => (
+                      <Input
+                        id="image"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null
+                          setImageFile(file)
+                          onChange(file)
+                        }}
+                        className="col-span-3"
+                        {...field}
+                        value={undefined} // File inputs don't use value prop
+                      />
+                    )}
+                  />
+                </div>
+                <div className="text-right">
+                  {error.image && (
+                    <span className="text-red-500 text-sm">
+                      {String(error.image.message)}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="start_date_time" className="text-right">
+                    Start Date and Time
+                  </Label>
+                  <Controller
+                    name="start_date_time"
+                    control={form.control}
                     render={({ field }) => (
                       <Input
-                        id="meeting_link"
+                        id="start_date_time"
+                        type="datetime-local"
                         {...field}
                         className="col-span-3"
                       />
@@ -656,60 +529,215 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                   />
                 </div>
                 <div className="text-right">
-                  {error.meeting_link && (
+                  {error.start_date_time && (
                     <span className="text-red-500 text-sm">
-                      {String(error.meeting_link.message)}
+                      {String(error.start_date_time.message)}
                     </span>
                   )}
                 </div>
               </div>
-            )}
-          </div>
 
-          <DialogFooter className="flex justify-between">
-            {editEvent === true ? (
-              <>
-                <AlertDialog>
-                  <AlertDialogTrigger className="mr-auto">
-                    <Button
-                      type="button"
-                      loading={addDeleteEventLoading}
-                      variant="destructive"
-                    >
-                      Delete
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Event?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete your event?
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
+              <div className="flex flex-col">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="end_date_time" className="text-right">
+                    End Date and Time
+                  </Label>
+                  <Controller
+                    name="end_date_time"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input
+                        id="end_date_time"
+                        type="datetime-local"
+                        {...field}
+                        className="col-span-3"
+                      />
+                    )}
+                  />
+                </div>
+                <div className="text-right">
+                  {error.end_date_time && (
+                    <span className="text-red-500 text-sm">
+                      {String(error.end_date_time.message)}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="type" className="text-right">
+                    Select type
+                  </Label>
+                  <Controller
+                    name="event_type"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <SelectTrigger className="col-span-3">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={EventType.Physical}>
+                            Physical
+                          </SelectItem>
+                          <SelectItem value={EventType.Virtual}>
+                            Virtual
+                          </SelectItem>
+                          <SelectItem value={EventType.Hybrid}>
+                            Hybrid
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+                <div className="text-right">
+                  {error.event_type && (
+                    <span className="text-red-500 text-sm">
+                      {String(error.event_type.message)}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* select tags */}
+
+              <div className="flex flex-col">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="tags" className="text-right">
+                    Tags
+                  </Label>
+                  <div className="col-span-3">
+                    <TagSelect
+                      type="interest"
+                      selected={selectedTags}
+                      setSelected={setSelectedTags}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {(EventTypeSelection === EventType.Physical ||
+                EventTypeSelection === EventType.Hybrid) && (
+                <div className="flex flex-col">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="location" className="text-right">
+                      Location
+                    </Label>
+                    <Controller
+                      name="location"
+                      control={form.control}
+                      defaultValue=""
+                      render={({ field }) => (
+                        <Input
+                          id="location"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value.toUpperCase().trimStart()
+                            )
+                          }
+                          className="col-span-3"
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="text-right">
+                    {error.location && (
+                      <span className="text-red-500 text-sm">
+                        {String(error.location.message)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {(EventTypeSelection === EventType.Virtual ||
+                EventTypeSelection === EventType.Hybrid) && (
+                <div className="flex flex-col">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="meeting_link" className="text-right">
+                      Meeting Link
+                    </Label>
+                    <Controller
+                      name="meeting_link"
+                      control={form.control}
+                      defaultValue=""
+                      render={({ field }) => (
+                        <Input
+                          id="meeting_link"
+                          {...field}
+                          className="col-span-3"
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="text-right">
+                    {error.meeting_link && (
+                      <span className="text-red-500 text-sm">
+                        {String(error.meeting_link.message)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter className="flex justify-between">
+              {editEvent === true ? (
+                <>
+                  <AlertDialog>
+                    <AlertDialogTrigger className="mr-auto">
+                      <Button
                         type="button"
-                        onClick={handleDeleteEvent}
+                        loading={addDeleteEventLoading}
+                        variant="destructive"
                       >
                         Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-                <Button loading={addUpdatedEventLoading} type="submit">
-                  Save
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Event?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete your event?
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          type="button"
+                          onClick={handleDeleteEvent}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <Button loading={addUpdatedEventLoading} type="submit">
+                    Save
+                  </Button>
+                </>
+              ) : (
+                <Button type="submit" loading={addEventLoading}>
+                  Create Event
                 </Button>
-              </>
-            ) : (
-              <Button type="submit" loading={addEventLoading}>
-                Create Event
-              </Button>
-            )}
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+              )}
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <UnsavedChangesDialog
+        showConfirmation={showConfirmation}
+        setShowConfirmation={setShowConfirmation}
+        setIsActualDialogOpen={setFormModalVisibility}
+      />
+    </>
   )
 }
 

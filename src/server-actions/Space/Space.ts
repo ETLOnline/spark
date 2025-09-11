@@ -41,6 +41,7 @@ import { defaultSpaceOverviewTemplate } from "@/src/app/(dashboard)/channels/[ch
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import { GetUserPermissionsParsedAction } from "../UserRoles/UserRole"
 import { ensureCommunityMembership } from "../Community/Community"
+import pusherServer from "@/src/services/realtime/pusherServer"
 
 export const CreateSpaceAction = CreateServerAction(
   true,
@@ -277,6 +278,7 @@ export const AttachSpaceUserAction = CreateServerAction(
         userId,
         attachSpaceUserRole?.viewerRole?.name
       )
+      pusherServer.trigger(`user-${userId}`, "update-role", attachSpaceUserRole)
       return { success: true, data: spaceUser }
     } catch (error) {
       return { error: error }
@@ -290,7 +292,7 @@ export const DetachSpaceUserAction = CreateServerAction(
     try {
       const spaceUser = await dettachSpaceUser(spaceId, userId)
       const deleteRole = await deleteUserRole(userId, roleId)
-
+      pusherServer.trigger(`user-${userId}`, "update-role", deleteRole)
       return { success: true }
     } catch (error) {
       return { error: error }
