@@ -15,6 +15,12 @@ if (!queueName) {
   )
 }
 
-export const queueClient = new QueueClient(connectionString!, queueName!)
+let queueClient: QueueClient
 
-console.log(`Azure Queue client for '${queueName}' has been initialized.`)
+export function getQueueClient(): QueueClient {
+  if (!queueClient) {
+    queueClient = new QueueClient(connectionString!, queueName!)
+    console.log(`Azure Queue client for '${queueName}' has been initialized.`)
+  }
+  return queueClient
+}
