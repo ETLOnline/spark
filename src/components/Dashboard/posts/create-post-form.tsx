@@ -14,7 +14,7 @@ import {
   CardHeader
 } from "@/src/components/ui/card"
 import { Label } from "@/src/components/ui/label"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Select,
   SelectContent,
@@ -108,12 +108,44 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   const canCreate = permissionChecker
     ? permissionChecker?.canAccess(permissionNamespace)
     : false
+  const validatePost = (
+    post: typeof newPost,
+    pollOptions: string[]
+  ): string | null => {
+    switch (post.type) {
+      case PostType.text:
+        if (!post.content?.trim()) return "Please write your post"
+        break
 
+      case PostType.poll:
+        if (!post.content?.trim()) return "Enter your poll question"
+        if (pollOptions.length < 2)
+          return "Please add at least two poll options"
+        break
+
+      case PostType.file:
+      case PostType.image:
+        if (!post.fileBase64 || !post.fileName)
+          return "Please select a file to upload"
+        break
+    }
+    return null
+  }
   const handleCreatePost = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
       let postData: SelectPost | SelectFilePost | SelectPollPost =
         {} as SelectPost
+
+      const errorMessage = validatePost(newPost, pollOptions)
+      if (errorMessage) {
+        toast({
+          title: errorMessage,
+          description: "Error creating post, please try again!"
+        })
+        return
+      }
+
       if (newPost.type === PostType.text) {
         let linkedHashtags
         const post =
@@ -362,7 +394,16 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           </CardHeader>
           <form onSubmit={handleCreatePost}>
             <CardContent>
-              <Tabs defaultValue="text" className="w-full">
+              <Tabs
+                defaultValue="text"
+                className="w-full"
+                onValueChange={(value) =>
+                  setNewPost((prev) => ({
+                    ...prev,
+                    type: value as PostType
+                  }))
+                }
+              >
                 <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="text">Text</TabsTrigger>
                   <TabsTrigger value="image">Image</TabsTrigger>
