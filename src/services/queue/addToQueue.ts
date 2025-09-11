@@ -1,4 +1,4 @@
-import { queueClient } from "./clientQueue"
+import { getQueueClient } from "./clientQueue"
 
 export async function AddToQueue(job: {
   sendingTo: string[]
@@ -7,7 +7,8 @@ export async function AddToQueue(job: {
   withData?: boolean
 }) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+    const queueClient = getQueueClient()
+    const baseUrl = process.env.WEBHOOK_PUBLIC_BASE_URL
     const messageData = {
       webhookUrl: `${baseUrl}/api/queues/email`,
       sendingTo: job.sendingTo,
