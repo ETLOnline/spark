@@ -1,0 +1,1 @@
+ALTER TABLE "space_file_directory" ADD COLUMN "entity_slug" varchar;

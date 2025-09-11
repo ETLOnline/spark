@@ -22,11 +22,12 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
 import {
   CreateNewFolderAction,
-  GetDirectoryContentsAction
+  GetDirectoryContentsAction,
+  SearchFolderBySlugAction
 } from "@/src/server-actions/FileSharing/FileSharing"
 import { useParams } from "next/navigation"
 import { DirItem } from "./types/spaces-types"
-import { formatFileSize } from "@/src/utils/helpers"
+import { formatFileSize, slugify } from "@/src/utils/helpers"
 import { useAtom, useAtomValue } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { SelectSpaceFileDirectory } from "@/src/db/schema"
@@ -54,6 +55,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
     useState<boolean>(false)
 
   const [isNewFileDrawerOpen, setIsNewFileDrawerOpen] = useState<boolean>(false)
+  const [newFolderError, setNewFolderError] = useState<string>("")
 
   const [dir, setDir] = useAtom(spaceStore.dir)
   const [currentPath, setCurrentPath] = useAtom(spaceStore.currDirPath)
@@ -86,6 +88,13 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
     createFolderError,
     createNewFolder
   ] = useServerAction(CreateNewFolderAction)
+
+  const [
+    searchFolderLoading,
+    searchFolderData,
+    searchFolderError,
+    searchFolder
+  ] = useServerAction(SearchFolderBySlugAction)
 
   useEffect(() => {
     ;(async () => {
@@ -126,17 +135,41 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
   const createFolder = async () => {
     try {
       const parentFolderId = findItemByPath(dir, currentPath)?.id
+      const FolderName = newFolderName.current.trim()
+
+      if (!FolderName) return
+
+      const folderSlug = slugify(FolderName)
+
+      const isRoot = currentPath === "/"
+      const id = isRoot ? currSpace?.id : parentFolderId
+
+      const existingFolder = await searchFolder(
+        id as string | number,
+        folderSlug,
+        isRoot
+      )
+      if (existingFolder?.data && existingFolder.data.length > 0) {
+        setNewFolderError("Folder already exists")
+        return
+      }
+
       let createdFolder: SelectSpaceFileDirectory | undefined
-
-      if (!newFolderName.current.trim()) return
-
       if (currentPath === "/") {
         createdFolder = (
-          await createNewFolder(currSpace?.id as string, newFolderName.current)
+          await createNewFolder(
+            currSpace?.id as string,
+            newFolderName.current,
+            folderSlug
+          )
         )?.data
       } else {
         createdFolder = (
-          await createNewFolder(parentFolderId as number, newFolderName.current)
+          await createNewFolder(
+            parentFolderId as number,
+            newFolderName.current,
+            folderSlug
+          )
         )?.data
       }
 
@@ -363,12 +396,18 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
               <DialogHeader>
                 <DialogTitle>Create New Folder</DialogTitle>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
+              <div className="grid gap-4">
                 <Input
                   placeholder="Folder name"
-                  onChange={(e) => (newFolderName.current = e.target.value)}
+                  onChange={(e) => {
+                    setNewFolderError("")
+                    newFolderName.current = e.target.value
+                  }}
                 />
               </div>
+              {newFolderError && (
+                <span className="text-red-500 text-sm">{newFolderError}</span>
+              )}
               <div className="flex justify-end gap-2">
                 <Button
                   variant="outline"
@@ -378,8 +417,12 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
                 </Button>
                 <Button
                   onClick={createFolder}
-                  loading={createFolderLoading}
-                  disabled={createFolderLoading}
+                  loading={createFolderLoading || searchFolderLoading}
+                  disabled={
+                    createFolderLoading ||
+                    searchFolderLoading ||
+                    !!newFolderError
+                  }
                 >
                   Create
                 </Button>

@@ -120,6 +120,13 @@
       "when": 1755865421734,
       "tag": "0016_2025_08_22_172329__events_table_update_and_create_event_users_table",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1757418732583,
+      "tag": "0017_2025_09_09_165208__update_space_file_directory",
+      "breakpoints": true
     }
   ]
 }
