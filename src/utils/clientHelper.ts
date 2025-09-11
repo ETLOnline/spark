@@ -137,7 +137,6 @@ export function prepareTaskEmailData(task: any, oldTask: any) {
   }
 
   return {
-    subject: "Task Update",
     logo_url: `${baseUrl}/logo/spark-logo-animated-themed.gif`,
     task_title: task.task_title || "N/A",
     task_id: task.task_num || "N/A",
