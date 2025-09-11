@@ -1,3 +1,4 @@
+import { UnsavedChangesDialog } from "@/src/components/common/unsavedChangesDialog"
 import { Button } from "@/src/components/ui/button"
 import {
   Dialog,
@@ -12,6 +13,7 @@ import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import { SelectSprint } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
+import { useConfirmClose } from "@/src/hooks/useConfirmClose"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateSprintAction,
@@ -25,7 +27,7 @@ import moment from "moment"
 import { useParams } from "next/navigation"
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
-import { z } from "zod"
+import { set, z } from "zod"
 
 interface Props {
   isCreateSprintOpen: boolean
@@ -84,6 +86,7 @@ function CreateSprintModal({
   })
 
   const formError = form.formState.errors
+  const isChanged = form.formState.isDirty
 
   const GetSprintCount = async (projectId: string) => {
     const sprintsCount = await GetSprintCountAction(projectId)
@@ -176,119 +179,136 @@ function CreateSprintModal({
     }
   }
 
+  const { showConfirmation, setShowConfirmation, handleClose } =
+    useConfirmClose({
+      isDirty: isChanged,
+      onClose: () => setIsCreateSprintOpen(false)
+    })
+
+  useEffect(() => {
+    if (!isCreateSprintOpen) {
+      form.reset()
+    }
+  }, [isCreateSprintOpen])
+
   return (
-    <Dialog
-      open={isCreateSprintOpen}
-      onOpenChange={(open) => setIsCreateSprintOpen(open)}
-    >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {selectedSprint ? "Edit Sprint" : "Create New Sprint"}
-          </DialogTitle>
-          <DialogDescription>
-            {selectedSprint
-              ? "Edit the details of the sprint."
-              : "Plan a new sprint for your project."}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={form.handleSubmit(submitData)}>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="title" className="text-right">
-                Name
-              </Label>
+    <>
+      <Dialog open={isCreateSprintOpen} onOpenChange={handleClose}>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>
+              {selectedSprint ? "Edit Sprint" : "Create New Sprint"}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedSprint
+                ? "Edit the details of the sprint."
+                : "Plan a new sprint for your project."}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={form.handleSubmit(submitData)}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="title" className="text-right">
+                  Name
+                </Label>
 
-              <div className="col-span-3">
-                <Controller
-                  name="title"
-                  defaultValue=""
-                  control={form.control}
-                  render={({ field }) => (
-                    <Input
-                      id="title"
-                      {...field}
-                      type="text"
-                      className="col-span-3 "
-                    />
-                  )}
-                />
-                <div>
-                  {formError.title && (
-                    <p className="text-sm text-red-500">
-                      {formError.title.message}
-                    </p>
-                  )}
+                <div className="col-span-3">
+                  <Controller
+                    name="title"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input
+                        id="title"
+                        {...field}
+                        type="text"
+                        className="col-span-3 "
+                      />
+                    )}
+                  />
+                  <div>
+                    {formError.title && (
+                      <p className="text-sm text-red-500">
+                        {formError.title.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="start_date" className="text-right">
+                  Start Date
+                </Label>
+
+                <div className="col-span-3">
+                  <Controller
+                    name="start_date"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input
+                        id="start_date"
+                        {...field}
+                        className="col-span-3"
+                        type="date"
+                      />
+                    )}
+                  />
+                  <div>
+                    {formError.start_date && (
+                      <p className="text-sm text-red-500">
+                        {formError.start_date.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="end_date" className="text-right">
+                  End Date
+                </Label>
+
+                <div className="col-span-3">
+                  <Controller
+                    name="end_date"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input
+                        id="end_date"
+                        {...field}
+                        className="col-span-3"
+                        type="date"
+                      />
+                    )}
+                  />
+
+                  <div>
+                    {formError.end_date && (
+                      <p className="text-sm text-red-500">
+                        {formError.end_date.message}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="start_date" className="text-right">
-                Start Date
-              </Label>
 
-              <div className="col-span-3">
-                <Controller
-                  name="start_date"
-                  defaultValue=""
-                  control={form.control}
-                  render={({ field }) => (
-                    <Input
-                      id="start_date"
-                      {...field}
-                      className="col-span-3"
-                      type="date"
-                    />
-                  )}
-                />
-                <div>
-                  {formError.start_date && (
-                    <p className="text-sm text-red-500">
-                      {formError.start_date.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="end_date" className="text-right">
-                End Date
-              </Label>
+            <DialogFooter>
+              <Button loading={createSprintLoading || updateSprintLoading}>
+                {selectedSprint ? "Save Changes" : "Create Sprint"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-              <div className="col-span-3">
-                <Controller
-                  name="end_date"
-                  defaultValue=""
-                  control={form.control}
-                  render={({ field }) => (
-                    <Input
-                      id="end_date"
-                      {...field}
-                      className="col-span-3"
-                      type="date"
-                    />
-                  )}
-                />
-
-                <div>
-                  {formError.end_date && (
-                    <p className="text-sm text-red-500">
-                      {formError.end_date.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button loading={createSprintLoading || updateSprintLoading}>
-              {selectedSprint ? "Save Changes" : "Create Sprint"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <UnsavedChangesDialog
+        setShowConfirmation={setShowConfirmation}
+        showConfirmation={showConfirmation}
+        setIsActualDialogOpen={setIsCreateSprintOpen}
+      />
+    </>
   )
 }
 

@@ -1,4 +1,4 @@
-import React, { SetStateAction, useEffect, useState } from "react"
+import React, { SetStateAction, use, useEffect, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -33,6 +33,8 @@ import { useAuthUser } from "@/src/hooks/useAuthUser"
 import Tiptap from "@/src/components/common/TiptapRichEditor"
 import { ScrollArea } from "@radix-ui/react-scroll-area"
 import { projectSchema } from "./utils/projectSchema"
+import { useConfirmClose } from "@/src/hooks/useConfirmClose"
+import { UnsavedChangesDialog } from "../../common/unsavedChangesDialog"
 
 type ProjectFormData = z.infer<typeof projectSchema>
 
@@ -226,161 +228,198 @@ function ProjectFormModal({
   const canCreate = permissionChecker
     ? permissionChecker?.canAccess("space.project.create")
     : false
+
+  const isChanged = form.formState.isDirty
+
+  const { showConfirmation, setShowConfirmation, handleClose } =
+    useConfirmClose({
+      isDirty: isChanged,
+      onClose: () => setIsOpen(false)
+    })
+
+  const handleDialogChange = (open: boolean) => {
+    if (open) {
+      setIsOpen(true)
+    } else {
+      handleClose(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!isOpen) {
+      form.reset()
+    }
+  }, [isOpen])
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      {!isEditing && canCreate && (
-        <DialogTrigger asChild>
-          <Button>Create New Project</Button>
-        </DialogTrigger>
-      )}
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Update Project" : "Create a New Project"}
-          </DialogTitle>
-          <DialogDescription>
-            Share your innovative idea with the community. Be clear and concise.
-          </DialogDescription>
-        </DialogHeader>
-        <ScrollArea className=" max-h-[80vh] overflow-auto">
-          <form onSubmit={form.handleSubmit(projectSubmit)} className="p-2">
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <div className="flex flex-col gap-2 w-full col-span-4">
-                  <Label htmlFor="project_name">Title</Label>
-                  <Controller
-                    name="project_name"
-                    defaultValue=""
-                    control={form.control}
-                    render={({ field }) => (
-                      <Input
-                        id="project_name"
-                        {...field}
-                        className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        placeholder="Enter project name"
-                      />
-                    )}
-                  />
-                  {form.formState.errors.project_name &&
-                    form.formState.submitCount > 0 && (
-                      <span className="text-red-500 text-sm">
-                        {String(form.formState.errors.project_name.message)}
-                      </span>
-                    )}
+    <>
+      <Dialog open={isOpen} onOpenChange={handleDialogChange}>
+        {!isEditing && canCreate && (
+          <DialogTrigger asChild>
+            <Button>Create New Project</Button>
+          </DialogTrigger>
+        )}
+        <DialogContent
+          className="max-w-2xl"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle>
+              {isEditing ? "Update Project" : "Create a New Project"}
+            </DialogTitle>
+            <DialogDescription>
+              Share your innovative idea with the community. Be clear and
+              concise.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className=" max-h-[80vh] overflow-auto">
+            <form onSubmit={form.handleSubmit(projectSubmit)} className="p-2">
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <div className="flex flex-col gap-2 w-full col-span-4">
+                    <Label htmlFor="project_name">Title</Label>
+                    <Controller
+                      name="project_name"
+                      defaultValue=""
+                      control={form.control}
+                      render={({ field }) => (
+                        <Input
+                          id="project_name"
+                          {...field}
+                          className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          placeholder="Enter project name"
+                        />
+                      )}
+                    />
+                    {form.formState.errors.project_name &&
+                      form.formState.submitCount > 0 && (
+                        <span className="text-red-500 text-sm">
+                          {String(form.formState.errors.project_name.message)}
+                        </span>
+                      )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <div className="flex flex-row w-full col-span-4 items-center">
+                    <Label htmlFor="project_type" className="text-right mr-2">
+                      Draft / Active
+                    </Label>
+
+                    <Controller
+                      name="project_type"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Switch
+                          id="project_type"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <div className="flex flex-col gap-2 w-full col-span-4">
+                    <Label htmlFor="project_startDate">Start Date</Label>
+                    <Controller
+                      name="project_startDate"
+                      defaultValue=""
+                      control={form.control}
+                      render={({ field }) => (
+                        <Input
+                          id="project_startDate"
+                          {...field}
+                          type="date"
+                          min={moment().format("YYYY-MM-DD")}
+                          disabled={isEditing}
+                          className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                      )}
+                    />
+                    {form.formState.errors.project_startDate &&
+                      form.formState.submitCount > 0 && (
+                        <span className="text-red-500 text-sm">
+                          {String(
+                            form.formState.errors.project_startDate.message
+                          )}
+                        </span>
+                      )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <div className="flex flex-col gap-2 w-full col-span-4">
+                    <Label htmlFor="project_targetDate">Target Date</Label>
+                    <Controller
+                      name="project_targetDate"
+                      defaultValue=""
+                      control={form.control}
+                      render={({ field }) => (
+                        <Input
+                          id="project_targetDate"
+                          {...field}
+                          type="date"
+                          min={
+                            !isEditing
+                              ? moment().format("YYYY-MM-DD")
+                              : undefined
+                          }
+                          className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                      )}
+                    />
+                    {form.formState.errors.project_targetDate &&
+                      form.formState.submitCount > 0 && (
+                        <span className="text-red-500 text-sm">
+                          {String(
+                            form.formState.errors.project_targetDate.message
+                          )}
+                        </span>
+                      )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <div className="flex flex-col gap-2  w-full col-span-4">
+                    <Label htmlFor="description">Description</Label>
+                    <Controller
+                      name="description"
+                      defaultValue=""
+                      control={form.control}
+                      render={({ field }) => (
+                        <Tiptap value={field.value} onChange={field.onChange} />
+                      )}
+                    />
+                    {form.formState.errors.description &&
+                      form.formState.submitCount > 0 && (
+                        <span className="text-red-500 text-sm">
+                          {String(form.formState.errors.description.message)}
+                        </span>
+                      )}
+                  </div>
                 </div>
               </div>
+              <DialogFooter>
+                <Button
+                  type="submit"
+                  loading={createProjectLoading || updateLoading}
+                >
+                  Save Project
+                </Button>
+              </DialogFooter>
+            </form>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
-              <div className="grid grid-cols-4 items-center gap-4">
-                <div className="flex flex-row w-full col-span-4 items-center">
-                  <Label htmlFor="project_type" className="text-right mr-2">
-                    Draft / Active
-                  </Label>
-
-                  <Controller
-                    name="project_type"
-                    control={form.control}
-                    render={({ field }) => (
-                      <Switch
-                        id="project_type"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    )}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-4 items-center gap-4">
-                <div className="flex flex-col gap-2 w-full col-span-4">
-                  <Label htmlFor="project_startDate">Start Date</Label>
-                  <Controller
-                    name="project_startDate"
-                    defaultValue=""
-                    control={form.control}
-                    render={({ field }) => (
-                      <Input
-                        id="project_startDate"
-                        {...field}
-                        type="date"
-                        min={moment().format("YYYY-MM-DD")}
-                        disabled={isEditing}
-                        className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      />
-                    )}
-                  />
-                  {form.formState.errors.project_startDate &&
-                    form.formState.submitCount > 0 && (
-                      <span className="text-red-500 text-sm">
-                        {String(
-                          form.formState.errors.project_startDate.message
-                        )}
-                      </span>
-                    )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-4 items-center gap-4">
-                <div className="flex flex-col gap-2 w-full col-span-4">
-                  <Label htmlFor="project_targetDate">Target Date</Label>
-                  <Controller
-                    name="project_targetDate"
-                    defaultValue=""
-                    control={form.control}
-                    render={({ field }) => (
-                      <Input
-                        id="project_targetDate"
-                        {...field}
-                        type="date"
-                        min={
-                          !isEditing ? moment().format("YYYY-MM-DD") : undefined
-                        }
-                        className="col-span-3 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      />
-                    )}
-                  />
-                  {form.formState.errors.project_targetDate &&
-                    form.formState.submitCount > 0 && (
-                      <span className="text-red-500 text-sm">
-                        {String(
-                          form.formState.errors.project_targetDate.message
-                        )}
-                      </span>
-                    )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-4 items-center gap-4">
-                <div className="flex flex-col gap-2  w-full col-span-4">
-                  <Label htmlFor="description">Description</Label>
-                  <Controller
-                    name="description"
-                    defaultValue=""
-                    control={form.control}
-                    render={({ field }) => (
-                      <Tiptap value={field.value} onChange={field.onChange} />
-                    )}
-                  />
-                  {form.formState.errors.description &&
-                    form.formState.submitCount > 0 && (
-                      <span className="text-red-500 text-sm">
-                        {String(form.formState.errors.description.message)}
-                      </span>
-                    )}
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                type="submit"
-                loading={createProjectLoading || updateLoading}
-              >
-                Save Project
-              </Button>
-            </DialogFooter>
-          </form>
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+      <UnsavedChangesDialog
+        showConfirmation={showConfirmation}
+        setShowConfirmation={setShowConfirmation}
+        setIsActualDialogOpen={setIsOpen}
+      />
+    </>
   )
 }
 

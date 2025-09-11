@@ -129,6 +129,7 @@ export const AttachProjectUserAction = CreateServerAction(
 
           const determinedRole = attachUserRole?.viewerRole?.name || "member"
           usersToCreateWithRoles.push({ userId, role: determinedRole })
+          pusherServer.trigger(`user-${userId}`, "update-role", attachUserRole)
         } catch (roleError: any) {
           console.error(
             `Failed to get and assign viewer roles for user ${userId}: ${roleError.message}`
@@ -184,6 +185,7 @@ export const RemoveProjectUserAction = CreateServerAction(
       const deleteRole = await deleteUserRole(userId, roleId)
 
       if (success) {
+        pusherServer.trigger(`user-${userId}`, "update-role", deleteRole)
         return { success: true }
       }
       return { success: false, error: "User not found or already removed" }

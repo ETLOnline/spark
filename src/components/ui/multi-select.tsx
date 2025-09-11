@@ -29,6 +29,7 @@ interface MultiSelectProps {
   className?: string
   loading?: boolean
   shouldFilter?: boolean
+  disabled?: boolean
 }
 
 export default function MultiSelect({
@@ -39,7 +40,8 @@ export default function MultiSelect({
   placeholder = "Select options",
   className,
   loading = false,
-  shouldFilter = true
+  shouldFilter = true,
+  disabled = false
 }: MultiSelectProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
@@ -96,6 +98,7 @@ export default function MultiSelect({
           <Button
             variant="outline"
             className={className ?? "w-full justify-start "}
+            disabled={disabled}
           >
             {placeholder}
           </Button>
