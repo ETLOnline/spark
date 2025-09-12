@@ -3,7 +3,7 @@ import { getEmailTemplateByName } from "@/src/db/data-access/emails/query"
 import Handlebars from "handlebars"
 
 const mailer = new MailService()
-export async function processProjectInviteNotification(job: {
+export async function processChatNotification(job: {
   sendingTo: string[]
   event: string
   payload: any

@@ -39,6 +39,11 @@ const emailTemplates = [
     value: "project_invite",
     label: "Project Invite Email",
     file: "project_invite.html"
+  },
+  {
+    value: "chat_invite",
+    label: "Chat Invite Email",
+    file: "chat_invite.html"
   }
 ]
 

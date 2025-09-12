@@ -1,3 +1,4 @@
+import { processChatNotification } from "./processors/chat"
 import { processContactNotification } from "./processors/contact"
 import { processProjectInviteNotification } from "./processors/project"
 import { processTaskUpdateNotification } from "./processors/task"
@@ -14,5 +15,6 @@ export const eventsList: Record<string, EventProcessor> = {
   update_task: processTaskUpdateNotification,
   new_connection: processContactNotification,
   accept_connection: processContactNotification,
-  project_invite: processProjectInviteNotification
+  project_invite: processProjectInviteNotification,
+  chat_invite: processChatNotification
 }

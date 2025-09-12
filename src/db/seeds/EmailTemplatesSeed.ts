@@ -33,6 +33,11 @@ const templatesToSeed: NewEmailTemplate[] = [
     name: "project_invite",
     subject: "You're invited to join a project",
     body: loadTemplate("project_invite.html")
+  },
+  {
+    name: "chat_invite",
+    subject: "You've got a new chat",
+    body: loadTemplate("chat_invite.html")
   }
 ]
 
