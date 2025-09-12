@@ -311,3 +311,9 @@ export async function UpdateCoverImage(
     throw new Error(error.message || "Failed to update user profile picture")
   }
 }
+
+export async function getBulkUsers(unique_ids: string[]) {
+  return await db.query.usersTable.findMany({
+    where: inArray(usersTable.unique_id, unique_ids)
+  })
+}

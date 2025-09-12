@@ -15,7 +15,8 @@ const isProtectedRoute = createRouteMatcher([
   "/spaces(.*)",
   "/channels(.*)",
   "/personas(.*)",
-  "/communities(.*)"
+  "/communities(.*)",
+  "/email_preview(.*)"
 ])
 
 export default clerkMiddleware(async (auth, req) => {
@@ -45,7 +46,8 @@ export const config = {
     "/personas(.*)",
     "/communities(.*)",
     "/terms",
-    "/privacy"
+    "/privacy",
+    "/email_preview(.*)"
     // Always run for API routes
     // '/(api|trpc)(.*)',
     // '/sign-in(.*)',

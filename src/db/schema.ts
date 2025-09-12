@@ -5,7 +5,9 @@ import {
   pgTable,
   primaryKey,
   varchar,
-  json
+  json,
+  boolean,
+  text
 } from "drizzle-orm/pg-core"
 // import { integer, primaryKey, pgTable, varchar } from "drizzle-orm/sqlite-core"
 
@@ -1028,6 +1030,7 @@ export type InsertTask = typeof taskTable.$inferInsert
 export type SelectTask = typeof taskTable.$inferSelect & {
   assignee?: SelectUser | null
   assignor?: SelectUser | null
+  status?: InferSelectModel<typeof TaskStatusTable> | null
 }
 
 export const taskRelations = relations(taskTable, ({ one }) => ({
@@ -1040,6 +1043,11 @@ export const taskRelations = relations(taskTable, ({ one }) => ({
     fields: [taskTable.assign_by],
     references: [usersTable.unique_id],
     relationName: "taskAssignor"
+  }),
+  status: one(TaskStatusTable, {
+    fields: [taskTable.status_id],
+    references: [TaskStatusTable.id],
+    relationName: "taskStatus"
   })
 }))
 
@@ -1079,6 +1087,12 @@ export const TaskStatusTable = pgTable("tasks_status", {
   status_slug: varchar(),
   ...timestamps
 })
+
+export const TaskStatusRelations = relations(TaskStatusTable, ({ many }) => ({
+  tasks: many(taskTable, {
+    relationName: "taskStatus"
+  })
+}))
 
 export type InsertTaskStatus = typeof TaskStatusTable.$inferInsert
 export type SelectTaskStatus = typeof TaskStatusTable.$inferSelect
@@ -1392,3 +1406,15 @@ export type SelectEventRegistration =
     event?: SelectEvent
     user?: SelectUser
   }
+
+export const emailTemplatesTable = pgTable("email_templates", {
+  unique_id: varchar("unique_id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+
+  subject: varchar("subject", { length: 255 }).notNull(),
+  body: text("body").notNull(),
+  isActive: boolean("is_active").default(true),
+  ...timestamps
+})

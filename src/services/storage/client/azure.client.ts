@@ -10,7 +10,7 @@ export const azureClient = () => {
   let blobServiceClient: BlobServiceClient
   if (AZURE_STORAGE_ACCOUNT_KEY) {
     // Use connection string if key is present (local/dev)
-    const azureConnectionString = `DefaultEndpointsProtocol=https;AccountName=${AZURE_STORAGE_ACCOUNT_NAME};AccountKey=${AZURE_STORAGE_ACCOUNT_KEY};EndpointSuffix=core.windows.net`
+    const azureConnectionString = process.env.AZURE_STORAGE_CONNECTION_STRING!
     blobServiceClient = BlobServiceClient.fromConnectionString(
       azureConnectionString
     )
