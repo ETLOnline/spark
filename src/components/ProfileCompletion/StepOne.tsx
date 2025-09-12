@@ -55,6 +55,7 @@ export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
     MultiSelectOption[]
   >([])
   const [currentImageUrl, setCurrentImageUrl] = useState(user?.profile_url) // State to manage current profile image URL
+  const [isTransitioning, setIsTransitioning] = useState(false)
 
   const [
     updateProfileLoading,
@@ -144,6 +145,7 @@ export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
 
   const saveProfileChanges = async (data: any) => {
     try {
+      setIsTransitioning(true)
       const payload: ProfileData = {
         ...data,
         userId: user.unique_id,
@@ -164,6 +166,8 @@ export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
 
         setStep((prev) => prev + 1)
         window.scrollTo(0, 0)
+      } else {
+        setIsTransitioning(false)
       }
     } catch {
       toast({
@@ -172,6 +176,7 @@ export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
         variant: "destructive",
         duration: 2000
       })
+      setIsTransitioning(false)
     }
   }
 
@@ -368,7 +373,11 @@ export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
               >
                 Previous
               </Button>
-              <Button type="submit" loading={updateProfileLoading}>
+              <Button
+                type="submit"
+                loading={updateProfileLoading}
+                disabled={isTransitioning}
+              >
                 Next
               </Button>
             </div>
