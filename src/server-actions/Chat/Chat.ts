@@ -17,6 +17,7 @@ import { AuthUserAction } from "../User/AuthUserAction"
 import { createChatMessage } from "@/src/db/data-access/chat/message/query"
 import ChatChannelHash from "@/src/components/Dashboard/Chat/helper"
 import { AblyClientRest } from "@/src/services/realtime/AblyClient"
+import { createChatNotification } from "@/src/services/notify/chat/chat"
 
 export const CreatePrivateChatAction = CreateServerAction(
   true,
@@ -56,6 +57,7 @@ export const CreatePrivateChatAction = CreateServerAction(
           spaceId: space_id
         })
       }
+      await createChatNotification("chat_invite", [contact_id], space_id || "")
       return { success: true, data: newChat }
     } catch (error) {
       return { error: error }
@@ -90,6 +92,7 @@ export const CreateGroupChatAction = CreateServerAction(
           spaceId: space_id
         })
       }
+      await createChatNotification("chat_invite", userIds, space_id || "")
       return { success: true, data: chat }
     } catch (error) {
       return { error: error }
