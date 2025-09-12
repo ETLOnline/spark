@@ -135,9 +135,13 @@ export function prepareTaskEmailData(task: any, oldTask: any) {
     const newStatus = task.status ? task.status.name : "N/A"
     changes.status = { oldValue: oldStatus, newValue: newStatus }
   }
+  const logoUrl = getSiteLogoUrl()
+  const taskUrl = createAbsoluteUrl(
+    `/project/${task.project_id}/task/${task.id}`
+  )
 
   return {
-    logo_url: `${baseUrl}/logo/spark-logo-animated-themed.gif`,
+    logo_url: logoUrl,
     task_title: task.task_title || "N/A",
     task_id: task.task_num || "N/A",
     project_name: task.project_name || "N/A",
@@ -146,7 +150,31 @@ export function prepareTaskEmailData(task: any, oldTask: any) {
     assignor_name: assignorName,
     issue_type: task.task_type || "N/A",
     description: task.description || "No description provided.",
-    task_url: `${baseUrl}/project/${task.project_id}/task/${task.id}`,
+    task_url: taskUrl,
     changes: changes
   }
+}
+
+export function createAbsoluteUrl(relativePath: string): string {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+
+  if (!baseUrl) {
+    throw new Error(
+      "NEXT_PUBLIC_BASE_URL is not defined in environment variables."
+    )
+  }
+
+  try {
+    const url = new URL(relativePath, baseUrl)
+    return url.toString()
+  } catch (error) {
+    console.error(
+      `Invalid URL creation with base: ${baseUrl} and path: ${relativePath}`
+    )
+    throw error
+  }
+}
+export function getSiteLogoUrl(): string {
+  const LOGO_PATH = "/logo/spark-logo-animated-themed.gif"
+  return createAbsoluteUrl(LOGO_PATH)
 }

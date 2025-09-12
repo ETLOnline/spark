@@ -1,4 +1,5 @@
 import { processContactNotification } from "./processors/contact"
+import { processProjectInviteNotification } from "./processors/project"
 import { processTaskUpdateNotification } from "./processors/task"
 
 interface EventJob {
@@ -12,5 +13,6 @@ type EventProcessor = (job: EventJob) => Promise<void>
 export const eventsList: Record<string, EventProcessor> = {
   update_task: processTaskUpdateNotification,
   new_connection: processContactNotification,
-  accept_connection: processContactNotification
+  accept_connection: processContactNotification,
+  project_invite: processProjectInviteNotification
 }

@@ -34,6 +34,11 @@ const emailTemplates = [
     value: "accept_connection",
     label: "Accpect Connection Email",
     file: "accept_connection.html"
+  },
+  {
+    value: "project_invite",
+    label: "Project Invite Email",
+    file: "project_invite.html"
   }
 ]
 

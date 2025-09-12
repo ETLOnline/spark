@@ -3,12 +3,13 @@ import { getEmailTemplateByName } from "@/src/db/data-access/emails/query"
 import Handlebars from "handlebars"
 
 const mailer = new MailService()
-export async function processContactNotification(job: {
+export async function processProjectInviteNotification(job: {
   sendingTo: string[]
   event: string
   payload: any
 }) {
   const template = await getEmailTemplateByName(job.event)
+  console.log("Email template:", template)
   if (!template) throw new Error(`Template not found: ${job.event}`)
 
   const compiled = Handlebars.compile(template.body)

@@ -13,6 +13,7 @@ import { AblyClient } from "../services/realtime/AblyClient"
 import moment from "moment-timezone"
 import { CommunityDetailData } from "../db/data-access/communities/query"
 import { FindUserByUniqueIdAction } from "../server-actions/User/FindUserByUniqueIdAction"
+import { createAbsoluteUrl, getSiteLogoUrl } from "./clientHelper"
 export type RoleWithPermissions = {
   id: number
   name: string
@@ -342,16 +343,15 @@ export async function prepareContactData(
     return
   }
   const ctaLinkProcess =
-    event == "new_connection"
-      ? `${baseUrl}/connections`
-      : `${baseUrl}/profile/${contact_id}`
-
+    event == "new_connection" ? `/connections` : `/profile/${contact_id}`
+  const linkUrl = createAbsoluteUrl(ctaLinkProcess)
+  const logoUrl = getSiteLogoUrl()
   const payload = {
-    logoUrl: `${baseUrl}/logo/spark-logo-animated-themed.gif`,
+    logoUrl: logoUrl,
     userName:
       `${receivedByUser.data.first_name ?? ""} ${receivedByUser.data.last_name ?? ""}`.trim(),
     requesterName: `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim(),
-    ctaLink: ctaLinkProcess
+    ctaLink: linkUrl
   }
   const sendingTo = Array.from(new Set([receivedByUser.data.email]))
 

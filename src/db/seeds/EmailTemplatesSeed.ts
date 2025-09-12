@@ -28,6 +28,11 @@ const templatesToSeed: NewEmailTemplate[] = [
     name: "accept_connection",
     subject: "New Connection",
     body: loadTemplate("accept_connection.html")
+  },
+  {
+    name: "project_invite",
+    subject: "You're invited to join a project",
+    body: loadTemplate("project_invite.html")
   }
 ]
 
