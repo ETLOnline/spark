@@ -27,6 +27,7 @@ import { getProjectById } from "@/src/db/data-access/project-management/query"
 import { getInitials } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import pusherServer from "@/src/services/realtime/pusherServer"
+import { createTaskNotification } from "@/src/services/notify/task/task"
 import {
   base64ToBuffer,
   uploadFileAndSaveMetadata
@@ -127,15 +128,19 @@ export const UpdateTaskAction = CreateServerAction(
     page_name?: string
   ) => {
     try {
+      const oldTask = await GetTaskById(taskId)
       const UpdatedTask = await UpdateTask(taskId, updatedData)
 
-      pusherServer.trigger(
-        `project-${UpdatedTask?.project_id}-tasks`,
-        "task-update",
-        UpdatedTask
-      )
+      if (UpdatedTask && oldTask) {
+        pusherServer.trigger(
+          `project-${UpdatedTask?.project_id}-tasks`,
+          "task-update",
+          UpdatedTask
+        )
+        createTaskNotification("update_task", UpdatedTask, oldTask)
 
-      return { success: true, data: UpdatedTask }
+        return { success: true, data: UpdatedTask }
+      }
     } catch (error) {
       return { error: error }
     }
