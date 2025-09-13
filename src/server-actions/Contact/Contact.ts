@@ -17,6 +17,7 @@ import {
   NotificationType
 } from "@/src/components/Dashboard/Notifications/types/notifications.types"
 import { SendConnectionsotification } from "@/src/services/notifications/Connections/utils"
+import { createContactNotification } from "@/src/services/notify/contact/contact"
 
 export const CreateContactAction = CreateServerAction(
   true,
@@ -53,6 +54,7 @@ export const CreateContactAction = CreateServerAction(
           ...data,
           creator: user
         })
+        await createContactNotification("new_connection", user, contact_id)
       } catch (error) {
         console.error("Failed to add notification:", error)
       }
@@ -99,6 +101,7 @@ export const AcceptConnectionAction = CreateServerAction(
           ...data,
           creator: user
         })
+        await createContactNotification("accept_connection", user, user_id)
       } catch (error) {
         console.error(error)
       }

@@ -21,6 +21,7 @@ import {
   SendChatNotification,
   SendMessageNotification
 } from "@/src/services/notifications/Chat/utils"
+import { createChatNotification } from "@/src/services/notify/chat/chat"
 
 export const CreatePrivateChatAction = CreateServerAction(
   true,
@@ -65,6 +66,7 @@ export const CreatePrivateChatAction = CreateServerAction(
 
       await SendChatNotification("Chat_Started", newChat, space)
 
+      await createChatNotification("chat_invite", [contact_id], space_id || "")
       return { success: true, data: newChat }
     } catch (error) {
       return { error: error }
@@ -104,6 +106,7 @@ export const CreateGroupChatAction = CreateServerAction(
 
       await SendChatNotification("Group_Chat_Added", chat, space)
 
+      await createChatNotification("chat_invite", userIds, space_id || "")
       return { success: true, data: chat }
     } catch (error) {
       return { error: error }

@@ -27,6 +27,7 @@ import { getProjectById } from "@/src/db/data-access/project-management/query"
 import { getInitials } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import pusherServer from "@/src/services/realtime/pusherServer"
+import { createTaskNotification } from "@/src/services/notify/task/task"
 import {
   base64ToBuffer,
   uploadFileAndSaveMetadata
@@ -137,23 +138,21 @@ export const UpdateTaskAction = CreateServerAction(
 
       const UpdatedTask = await UpdateTask(taskId, updatedData)
 
-      const isAssignee = authUser.unique_id === UpdatedTask?.assign_to
-      const isAssignor = authUser.unique_id === UpdatedTask?.assign_by
-
-      pusherServer.trigger(
-        `project-${UpdatedTask?.project_id}-tasks`,
-        "task-update",
-        UpdatedTask
-      )
-
-      const receivers = isAssignee
-        ? [`user-${UpdatedTask.assign_by}`]
-        : isAssignor
-          ? [`user-${UpdatedTask.assign_to}`]
-          : [`user-${UpdatedTask?.assign_to}`, `user-${UpdatedTask?.assign_by}`]
+      const oldTask = await GetTaskById(taskId)
 
       if (UpdatedTask) {
         await SendTaskNotifications("task_updated", UpdatedTask)
+      }
+
+      if (UpdatedTask && oldTask) {
+        pusherServer.trigger(
+          `project-${UpdatedTask?.project_id}-tasks`,
+          "task-update",
+          UpdatedTask
+        )
+        createTaskNotification("update_task", UpdatedTask, oldTask)
+
+        return { success: true, data: UpdatedTask }
       }
 
       return { success: true, data: UpdatedTask }

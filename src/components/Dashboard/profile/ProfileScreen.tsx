@@ -419,7 +419,7 @@ export default function ProfileScreen({
               <CardContent className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <MailIcon className="h-5 w-5 text-gray-500" />
-                  <span>{user?.email}</span>
+                  <span className="truncate ">{user?.email}</span>
                 </div>
                 {/* for future use */}
                 {/* <div className="flex items-center space-x-2">
