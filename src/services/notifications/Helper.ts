@@ -1,5 +1,11 @@
 import { beamsServerClient } from "./BeamServer"
-import { Template } from "./NotificationTemplates"
+
+type Template = {
+  title: string
+  body: string
+  deep_link: string
+  icon?: string
+}
 
 type NotificationPayload = {
   receivers: string[]

@@ -32,8 +32,7 @@ import {
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
 import { AuthUserAction } from "../User/AuthUserAction"
-import { sendBeamsNotification } from "@/src/services/notifications/Helper"
-import { NotificationTemplates } from "@/src/services/notifications/NotificationTemplates"
+import { SendTaskNotifications } from "@/src/services/notifications/Tasks/utils"
 
 export const CreateTaskAction = CreateServerAction(
   true,
@@ -58,17 +57,9 @@ export const CreateTaskAction = CreateServerAction(
         task
       )
 
-      const ctaLink = `project/${task?.project_id}/task/${task?.id}`
-
-      await sendBeamsNotification({
-        receivers: [`user-${task?.assign_to}`],
-        template: NotificationTemplates.taskAssigned({
-          entityName: task?.task_num ?? undefined,
-          entityId: task?.id,
-          projectName: project?.project_name,
-          ctaLink: ctaLink
-        })
-      })
+      if (task) {
+        await SendTaskNotifications("task_assigned", task, project)
+      }
 
       return { success: true, data: task }
     } catch (error) {
@@ -161,17 +152,9 @@ export const UpdateTaskAction = CreateServerAction(
           ? [`user-${UpdatedTask.assign_to}`]
           : [`user-${UpdatedTask?.assign_to}`, `user-${UpdatedTask?.assign_by}`]
 
-      const ctaLink = `project/${UpdatedTask?.project_id}/task/${UpdatedTask?.id}`
-
-      await sendBeamsNotification({
-        receivers,
-        template: NotificationTemplates.taskUpdated({
-          sender: `${authUser.first_name} ${authUser.last_name}`,
-          entityName: UpdatedTask?.task_num ?? undefined,
-          entityId: UpdatedTask?.id,
-          ctaLink: ctaLink
-        })
-      })
+      if (UpdatedTask) {
+        await SendTaskNotifications("task_updated", UpdatedTask)
+      }
 
       return { success: true, data: UpdatedTask }
     } catch (error) {
@@ -274,8 +257,6 @@ export const CreateTaskCommentAction = CreateServerAction(
   true,
   async (input) => {
     try {
-      const authUser = await AuthUserAction()
-
       const { task_id, user_id, content } = input
 
       const commentData: InsertTaskComment = {
@@ -288,27 +269,11 @@ export const CreateTaskCommentAction = CreateServerAction(
 
       const newComment = await createTaskComment(commentData)
 
-      const receiver =
-        authUser.unique_id === task?.assign_by
-          ? [`user-${task?.assign_to}`]
-          : authUser.unique_id === task?.assign_to
-            ? [`user-${task?.assign_by}`]
-            : [`user-${task?.assign_by}`, `user-${task?.assign_to}`]
-
-      const ctaLink = `project/${task?.project_id}/task/${task?.id}`
+      if (task) {
+        await SendTaskNotifications("task_commented", task)
+      }
 
       if (newComment) {
-        await sendBeamsNotification({
-          receivers: receiver,
-          template: NotificationTemplates.taskComment({
-            sender: authUser.first_name + " " + authUser.last_name,
-            senderIcon: authUser.profile_url || "",
-            entityName: task?.task_num ?? undefined,
-            entityId: task?.id,
-            ctaLink: ctaLink
-          })
-        })
-
         return { success: true, data: newComment }
       } else {
         return { success: false, error: "Failed to create comment." }

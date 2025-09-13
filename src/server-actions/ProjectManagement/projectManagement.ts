@@ -21,8 +21,7 @@ import {
   getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
 import pusherServer from "@/src/services/realtime/pusherServer"
-import { sendBeamsNotification } from "@/src/services/notifications/Helper"
-import { NotificationTemplates } from "@/src/services/notifications/NotificationTemplates"
+import { SendProjectNotifications } from "@/src/services/notifications/Project/utils"
 
 export const CreateProjectAction = CreateServerAction(
   true,
@@ -155,13 +154,14 @@ export const AttachProjectUserAction = CreateServerAction(
         usersToCreateWithRoles
       )
 
-      for (const userId of newUsersToAttach) {
-        await sendBeamsNotification({
-          receivers: [`user-${userId}`],
-          template: NotificationTemplates.projectMemberAdded({
-            entityId: projectId
-          })
-        })
+      const Project = await getProjectById(projectId)
+
+      if (newProjectUsers.length > 0 && Project) {
+        await SendProjectNotifications(
+          "project_member_added",
+          newProjectUsers,
+          Project
+        )
       }
 
       return { success: true, data: newProjectUsers, failedRoleAssignments }

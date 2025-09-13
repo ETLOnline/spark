@@ -19,6 +19,7 @@ import {
 import { SelectUserByUniqueId } from "@/src/db/data-access/user/query"
 import { sendBeamsNotification } from "@/src/services/notifications/Helper"
 import { NotificationTemplates } from "@/src/services/notifications/NotificationTemplates"
+import { SendConnectionsotification } from "@/src/services/notifications/Connections/utils"
 
 export const CreateContactAction = CreateServerAction(
   true,
@@ -59,17 +60,7 @@ export const CreateContactAction = CreateServerAction(
         console.error("Failed to add notification:", error)
       }
 
-      const contactUser = await SelectUserByUniqueId(contact_id)
-
-      if (newRequest[0].is_requested === 1) {
-        await sendBeamsNotification({
-          receivers: [`user-${contact_id}`],
-          template: NotificationTemplates.connectionRequest({
-            sender: user.first_name + " " + user.last_name,
-            senderIcon: user.profile_url ?? undefined
-          })
-        })
-      }
+      await SendConnectionsotification("connection_request", newRequest[0])
 
       return { success: true, data: newRequest[0] }
     } catch (error) {
@@ -115,15 +106,7 @@ export const AcceptConnectionAction = CreateServerAction(
         console.error(error)
       }
 
-      if (res[0].is_accepted === 1) {
-        await sendBeamsNotification({
-          receivers: [`user-${user_id}`],
-          template: NotificationTemplates.connectionAccepted({
-            sender: user.first_name + " " + user.last_name,
-            senderIcon: user.profile_url ?? undefined
-          })
-        })
-      }
+      await SendConnectionsotification("connection_accepted", res[0])
 
       return { success: true, data: res[0] }
     } catch (error) {

@@ -17,14 +17,13 @@ import { AuthUserAction } from "../User/AuthUserAction"
 import { createChatMessage } from "@/src/db/data-access/chat/message/query"
 import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 import { GetSpaceById } from "@/src/db/data-access/spaces/query"
-import { sendBeamsNotification } from "@/src/services/notifications/Helper"
-import { NotificationTemplates } from "@/src/services/notifications/NotificationTemplates"
+import { SendChatNotification } from "@/src/services/notifications/Chat/utils"
 
 export const CreatePrivateChatAction = CreateServerAction(
   true,
   async (user_id: string, contact_id: string, space_id?: string) => {
     try {
-      const authUser = await AuthUserAction()
+      const space = await GetSpaceById(space_id || "")
 
       if (user_id == contact_id) {
         return {
@@ -61,23 +60,7 @@ export const CreatePrivateChatAction = CreateServerAction(
         })
       }
 
-      let CTALink = "chat"
-      if (space_id) {
-        const space = await GetSpaceById(space_id)
-        CTALink = `channels/${space?.channel.channel_slug}/spaces/${space?.space_slug}?page-type=chat`
-      }
-
-      const notificationTargetId =
-        authUser.unique_id === contact_id ? user_id : contact_id
-
-      await sendBeamsNotification({
-        receivers: [`user-${notificationTargetId}`],
-        template: NotificationTemplates.chatStarted({
-          sender: authUser.first_name + " " + authUser.last_name,
-          senderIcon: authUser.profile_url || "",
-          ctaLink: CTALink
-        })
-      })
+      SendChatNotification("Chat_Started", newChat, space)
 
       return { success: true, data: newChat }
     } catch (error) {
@@ -91,6 +74,8 @@ export const CreateGroupChatAction = CreateServerAction(
   async (userIds: string[], chatName: string, space_id?: string) => {
     try {
       const authUser = await AuthUserAction()
+      const space = await GetSpaceById(space_id || "")
+
       const chat = await CreateGroupChat(userIds, chatName, space_id)
 
       if (!chat) {
@@ -114,23 +99,7 @@ export const CreateGroupChatAction = CreateServerAction(
         })
       }
 
-      let CTALink = "chat"
-      if (space_id) {
-        const space = await GetSpaceById(space_id)
-        CTALink = `channels/${space?.channel.channel_slug}/spaces/${space?.space_slug}?page-type=chat`
-      }
-
-      const recipients = userIds.filter((id) => id !== authUser.unique_id)
-
-      if (recipients.length > 0) {
-        await sendBeamsNotification({
-          receivers: recipients.map((id) => `user-${id}`),
-          template: NotificationTemplates.groupChatAdded({
-            entityName: chatName,
-            ctaLink: CTALink
-          })
-        })
-      }
+      await SendChatNotification("Group_Chat_Added", chat, space)
 
       return { success: true, data: chat }
     } catch (error) {
