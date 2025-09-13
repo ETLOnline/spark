@@ -12,6 +12,7 @@ import {
 import { AblyClient } from "../services/realtime/AblyClient"
 import moment from "moment-timezone"
 import { CommunityDetailData } from "../db/data-access/communities/query"
+import pusherClient from "../services/realtime/PusherClient"
 export type RoleWithPermissions = {
   id: number
   name: string
@@ -327,4 +328,10 @@ export function slugify(input: string): string {
     .replace(/[^a-z0-9]+/gi, "-")
     .replace(/^-+|-+$/g, "")
     .replace(/-+/g, "-")
+}
+
+export function joinPresenceChannel(chatId: number) {
+  const channel = pusherClient.subscribe(`presence-chat-${chatId}`)
+
+  return channel
 }

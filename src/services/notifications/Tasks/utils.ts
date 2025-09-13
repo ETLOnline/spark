@@ -1,5 +1,5 @@
 import { SelectProject, SelectTask } from "@/src/db/schema"
-import { sendBeamsNotification } from "../Helper"
+import { sendBeamsNotification, NotificationPayload } from "../Helper"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 
 export const SendTaskNotifications = async (
@@ -9,7 +9,6 @@ export const SendTaskNotifications = async (
 ) => {
   try {
     const authUser = await AuthUserAction()
-    if (!authUser) throw new Error("Unauthorized")
 
     const isAssignee = authUser.unique_id === task.assign_to
     const isAssignor = authUser.unique_id === task.assign_by
@@ -20,41 +19,42 @@ export const SendTaskNotifications = async (
         ? [`user-${task.assign_to}`]
         : [`user-${task.assign_to}`, `user-${task.assign_by}`]
 
-    const ctaLink = `project/${task?.project_id}/task/${task?.id}`
+    const ctaLink = `${process.env.NEXT_PUBLIC_BASE_URL}/project/${task?.project_id}/task/${task?.id}`
 
-    if (event_type === "task_assigned") {
-      await sendBeamsNotification({
-        receivers: [`user-${task?.assign_to}`],
-
-        template: {
-          title: `New Task Assigned: ${task?.task_num}`,
-          body: `You have been assigned a new task in project "${project?.project_name}".`,
-          deep_link: `${process.env.NEXT_PUBLIC_BASE_URL}/${ctaLink}`
-        }
-      })
-    } else if (event_type === "task_updated") {
-      await sendBeamsNotification({
-        receivers: updateReceivers,
-
-        template: {
-          title: `Task Updated`,
-          body: `${authUser.first_name} ${authUser.last_name} updated the task ${task?.task_num}.`,
-          deep_link: `${process.env.NEXT_PUBLIC_BASE_URL}/${ctaLink}`,
-          icon: authUser.profile_url || ""
-        }
-      })
-    } else if (event_type === "task_commented") {
-      await sendBeamsNotification({
-        receivers: updateReceivers,
-
-        template: {
-          title: `New Comment on Task: ${task?.task_num}`,
-          body: `${authUser.first_name} ${authUser.last_name} commented on the task "${task?.task_num}".`,
-          deep_link: `${process.env.NEXT_PUBLIC_BASE_URL}/${ctaLink}`,
-          icon: authUser.profile_url || ""
-        }
-      })
+    const notificationPayload: NotificationPayload = {
+      receivers: [],
+      template: {
+        title: "",
+        body: "",
+        deep_link: ctaLink,
+        icon: authUser.profile_url || ""
+      }
     }
+
+    switch (event_type) {
+      case "task_assigned":
+        notificationPayload.receivers = [`user-${task?.assign_to}`]
+        notificationPayload.template.title = `New Task Assigned: ${task?.task_num}`
+        notificationPayload.template.body = `You have been assigned a new task in project "${project?.project_name}".`
+        break
+
+      case "task_updated":
+        notificationPayload.receivers = updateReceivers
+        notificationPayload.template.title = "Task Updated"
+        notificationPayload.template.body = `${authUser.first_name} ${authUser.last_name} updated the task ${task?.task_num}.`
+        break
+
+      case "task_commented":
+        notificationPayload.receivers = updateReceivers
+        notificationPayload.template.title = `New Comment on Task: ${task?.task_num}`
+        notificationPayload.template.body = `${authUser.first_name} ${authUser.last_name} commented on the task "${task?.task_num}".`
+        break
+
+      default:
+        return // no notification for unknown event type
+    }
+
+    await sendBeamsNotification(notificationPayload)
   } catch (error) {
     console.error("Error sending notifications:", error)
   }

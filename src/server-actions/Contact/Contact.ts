@@ -16,9 +16,6 @@ import {
   NotificationEntity,
   NotificationType
 } from "@/src/components/Dashboard/Notifications/types/notifications.types"
-import { SelectUserByUniqueId } from "@/src/db/data-access/user/query"
-import { sendBeamsNotification } from "@/src/services/notifications/Helper"
-import { NotificationTemplates } from "@/src/services/notifications/NotificationTemplates"
 import { SendConnectionsotification } from "@/src/services/notifications/Connections/utils"
 
 export const CreateContactAction = CreateServerAction(

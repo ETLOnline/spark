@@ -17,7 +17,10 @@ import { AuthUserAction } from "../User/AuthUserAction"
 import { createChatMessage } from "@/src/db/data-access/chat/message/query"
 import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 import { GetSpaceById } from "@/src/db/data-access/spaces/query"
-import { SendChatNotification } from "@/src/services/notifications/Chat/utils"
+import {
+  SendChatNotification,
+  SendMessageNotification
+} from "@/src/services/notifications/Chat/utils"
 
 export const CreatePrivateChatAction = CreateServerAction(
   true,
@@ -206,6 +209,8 @@ export const AddMessageToChatAction = CreateServerAction(
               })
             }
           }
+
+          await SendMessageNotification(updatedChat)
 
           return { success: true, data: newMessage }
         } else {

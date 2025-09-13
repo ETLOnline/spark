@@ -7,7 +7,7 @@ type Template = {
   icon?: string
 }
 
-type NotificationPayload = {
+export type NotificationPayload = {
   receivers: string[]
   template: Template
 }
