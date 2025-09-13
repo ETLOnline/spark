@@ -60,7 +60,7 @@ export const CreatePrivateChatAction = CreateServerAction(
         })
       }
 
-      SendChatNotification("Chat_Started", newChat, space)
+      await SendChatNotification("Chat_Started", newChat, space)
 
       return { success: true, data: newChat }
     } catch (error) {
