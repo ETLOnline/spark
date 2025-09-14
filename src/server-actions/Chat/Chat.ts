@@ -12,17 +12,23 @@ import {
   getExistingSingleChat
 } from "@/src/db/data-access/chat/query"
 import { CreateServerAction } from ".."
-import { InsertMessage, SelectUser } from "@/src/db/schema"
+import { InsertMessage } from "@/src/db/schema"
 import { AuthUserAction } from "../User/AuthUserAction"
 import { createChatMessage } from "@/src/db/data-access/chat/message/query"
-import ChatChannelHash from "@/src/components/Dashboard/Chat/helper"
 import { AblyClientRest } from "@/src/services/realtime/AblyClient"
+import { GetSpaceById } from "@/src/db/data-access/spaces/query"
+import {
+  SendChatNotification,
+  SendMessageNotification
+} from "@/src/services/notifications/Chat/utils"
 import { createChatNotification } from "@/src/services/notify/chat/chat"
 
 export const CreatePrivateChatAction = CreateServerAction(
   true,
   async (user_id: string, contact_id: string, space_id?: string) => {
     try {
+      const space = await GetSpaceById(space_id || "")
+
       if (user_id == contact_id) {
         return {
           success: false,
@@ -57,6 +63,9 @@ export const CreatePrivateChatAction = CreateServerAction(
           spaceId: space_id
         })
       }
+
+      await SendChatNotification("Chat_Started", newChat, space)
+
       await createChatNotification("chat_invite", [contact_id], space_id || "")
       return { success: true, data: newChat }
     } catch (error) {
@@ -70,6 +79,8 @@ export const CreateGroupChatAction = CreateServerAction(
   async (userIds: string[], chatName: string, space_id?: string) => {
     try {
       const authUser = await AuthUserAction()
+      const space = await GetSpaceById(space_id || "")
+
       const chat = await CreateGroupChat(userIds, chatName, space_id)
 
       if (!chat) {
@@ -92,6 +103,9 @@ export const CreateGroupChatAction = CreateServerAction(
           spaceId: space_id
         })
       }
+
+      await SendChatNotification("Group_Chat_Added", chat, space)
+
       await createChatNotification("chat_invite", userIds, space_id || "")
       return { success: true, data: chat }
     } catch (error) {
@@ -198,6 +212,8 @@ export const AddMessageToChatAction = CreateServerAction(
               })
             }
           }
+
+          await SendMessageNotification(updatedChat)
 
           return { success: true, data: newMessage }
         } else {
