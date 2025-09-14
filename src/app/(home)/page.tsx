@@ -531,7 +531,7 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <span className="bg-gradient-to-r from-primary via-primary-hover to-foreground bg-clip-text text-transparent">
-              Where Tech Dreams
+              Where Tech Dreams true 
             </span>
             <br />
             <span className="inline-block">
