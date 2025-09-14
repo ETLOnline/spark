@@ -1,16 +1,25 @@
 import { SelectUserContact } from "@/src/db/schema"
-import { NotificationPayload, sendBeamsNotification } from "../Helper"
+import {
+  NotificationPayload,
+  sendPushNotification
+} from "../PushNotification.utils"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 
-export const SendConnectionsotification = async (
+export const SendConnectionNotification = async (
   event_type: string,
   connection: SelectUserContact
 ) => {
   try {
     const authUser = await AuthUserAction()
 
+    const contacts = [connection.contact_id, connection.user_id]
+
+    const receiverIds = contacts
+      .filter((id) => id !== authUser.unique_id)
+      .map((id) => `user-${id}`)
+
     const notificationPayload: NotificationPayload = {
-      receivers: [`user-${connection.contact_id}`],
+      receivers: receiverIds,
       template: {
         title: "New Connection Request",
         body: `${authUser.first_name} ${authUser.last_name} sent you a connection request.`,
@@ -32,7 +41,7 @@ export const SendConnectionsotification = async (
         break
     }
 
-    await sendBeamsNotification(notificationPayload)
+    await sendPushNotification(notificationPayload)
   } catch (err) {
     console.error("Error sending notifications:", err)
   }

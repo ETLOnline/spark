@@ -1,6 +1,7 @@
 "use client"
 
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
+import { getBeamsClient } from "@/src/services/notifications/BeamClient"
 import { useEffect } from "react"
 
 export default function NotificationProvider() {
@@ -12,15 +13,10 @@ export default function NotificationProvider() {
       const userId = user?.unique_id
       if (!userId) return
 
-      const PusherPushNotifications = await import(
-        "@pusher/push-notifications-web"
-      )
-
-      const beamsClient = new PusherPushNotifications.Client({
-        instanceId: process.env.NEXT_PUBLIC_PUSHER_BEAMS_INSTANCE_ID as string
-      })
+      const beamsClient = getBeamsClient()
 
       await beamsClient.start()
+      console.log("✅ Device registered with Beams")
 
       await beamsClient.addDeviceInterest("spark")
 

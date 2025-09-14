@@ -1,7 +1,10 @@
 import { SelectChat, SelectSpace } from "@/src/db/schema"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import { NotificationPayload, sendBeamsNotification } from "../Helper"
 import pusherServer from "../../realtime/pusherServer"
+import {
+  NotificationPayload,
+  sendPushNotification
+} from "../PushNotification.utils"
 
 type PusherUsersResponse = {
   users: { id: string }[]
@@ -53,7 +56,7 @@ export const SendChatNotification = async (
       }
     }
 
-    await sendBeamsNotification(notificationPayload)
+    await sendPushNotification(notificationPayload)
   } catch (error) {
     console.error("Error sending notifications:", error)
   }
@@ -92,7 +95,7 @@ export const SendMessageNotification = async (message: SelectChat) => {
 
     if (nonPresentReciversIds?.length && nonPresentReciversIds.length > 0) {
       // Only send push if user is NOT present
-      await sendBeamsNotification({
+      await sendPushNotification({
         receivers: nonPresentReciversIds,
         template: {
           title: `Spark- ${authUser.first_name} ${authUser.last_name} sent you a message`,

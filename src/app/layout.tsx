@@ -6,7 +6,7 @@ import ThemeProvider from "../components/ThemeProvider/ThemeProvider"
 import { Toaster } from "../components/ui/toaster"
 import { dark } from "@clerk/themes"
 import AuthInitializer from "../services/auth/AuthInitializer"
-import NotificationProvider from "../components/common/NotificationProvider"
+import NotificationProvider from "../services/notifications/NotificationProvider"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",

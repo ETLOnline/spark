@@ -1,6 +1,9 @@
 import { SelectProject, SelectTask } from "@/src/db/schema"
-import { sendBeamsNotification, NotificationPayload } from "../Helper"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
+import {
+  NotificationPayload,
+  sendPushNotification
+} from "../PushNotification.utils"
 
 export const SendTaskNotifications = async (
   event_type: string,
@@ -54,7 +57,7 @@ export const SendTaskNotifications = async (
         return // no notification for unknown event type
     }
 
-    await sendBeamsNotification(notificationPayload)
+    await sendPushNotification(notificationPayload)
   } catch (error) {
     console.error("Error sending notifications:", error)
   }

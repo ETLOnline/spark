@@ -1,4 +1,4 @@
-import { beamsServerClient } from "./BeamServer"
+import { beamsServerClient } from "./BeamServerClient"
 
 type Template = {
   title: string
@@ -12,7 +12,7 @@ export type NotificationPayload = {
   template: Template
 }
 
-export async function sendBeamsNotification({
+export async function sendPushNotification({
   receivers,
   template
 }: NotificationPayload) {

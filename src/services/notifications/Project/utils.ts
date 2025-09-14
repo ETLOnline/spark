@@ -1,5 +1,5 @@
 import { SelectProject, SelectProjectUser } from "@/src/db/schema"
-import { sendBeamsNotification } from "../Helper"
+import { sendPushNotification } from "../PushNotification.utils"
 
 export const SendProjectNotifications = async (
   event_type: string,
@@ -7,7 +7,7 @@ export const SendProjectNotifications = async (
   project?: SelectProject
 ) => {
   try {
-    await sendBeamsNotification({
+    await sendPushNotification({
       receivers: projectUsers.map((user) => `user-${user.user_id}`),
       template: {
         title: `New Project: ${project?.project_name}`,
