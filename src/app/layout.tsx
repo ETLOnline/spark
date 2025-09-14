@@ -6,6 +6,7 @@ import ThemeProvider from "../components/ThemeProvider/ThemeProvider"
 import { Toaster } from "../components/ui/toaster"
 import { dark } from "@clerk/themes"
 import AuthInitializer from "../services/auth/AuthInitializer"
+import NotificationProvider from "../components/common/NotificationProvider"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -43,6 +44,7 @@ export default function RootLayout({
           >
             <Toaster />
             {children}
+            <NotificationProvider />
           </ThemeProvider>
         </body>
       </html>
