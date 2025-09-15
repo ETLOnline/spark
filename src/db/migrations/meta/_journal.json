@@ -127,6 +127,13 @@
       "when": 1756289562425,
       "tag": "0017_2025_08_27_151240__add_email_temapltes_table",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1757694148533,
+      "tag": "0018_2025_09_12_212225__update_space_file_directory",
+      "breakpoints": true
     }
   ]
 }
