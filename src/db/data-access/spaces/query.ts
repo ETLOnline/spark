@@ -1,4 +1,4 @@
-import { and, eq, SQLWrapper } from "drizzle-orm"
+import { and, eq, inArray, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
 import {
   channelsTable,
@@ -325,6 +325,17 @@ export async function getSpaceUsers(spaceId: string) {
       }
     })
     return spaceUsers
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function getSpaceByChannelId(channelIds: string[]) {
+  try {
+    const spaces = await db.query.spacesTable.findMany({
+      where: inArray(spacesTable.channel_id, channelIds)
+    })
+    return spaces
   } catch (e: any) {
     throw new Error(e.message)
   }

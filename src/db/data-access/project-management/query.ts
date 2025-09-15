@@ -213,3 +213,23 @@ export async function countProjectMembers(projectId: string) {
     throw new Error(error.message)
   }
 }
+
+export async function getProjectsBySpaceIds(spaceIds: string[]) {
+  try {
+    if (spaceIds.length === 0) {
+      console.warn("No space IDs provided to retrieve projects.")
+      return []
+    }
+
+    const projects = await db
+      .select()
+      .from(projectTable)
+      .where(inArray(projectTable.space_id, spaceIds))
+
+    return projects
+  } catch (error: any) {
+    throw new Error(
+      `Failed to retrieve projects by space IDs: ${error.message}`
+    )
+  }
+}

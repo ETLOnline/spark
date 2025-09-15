@@ -865,3 +865,42 @@ export const getAllRoles = async () => {
     throw new Error(error.message)
   }
 }
+
+export async function deleteRolesAndAssociatedData(entityIds: string[]) {
+  try {
+    await db.transaction(async (tx) => {
+      const rolesToDelete = await tx
+        .select({ id: rolesTable.id })
+        .from(rolesTable)
+        .where(inArray(rolesTable.entity_id, entityIds))
+
+      const roleIdsToDelete = rolesToDelete.map((role) => role.id)
+
+      if (roleIdsToDelete.length > 0) {
+        await tx
+          .delete(userRolesTable)
+          .where(inArray(userRolesTable.role_id, roleIdsToDelete))
+
+        await tx
+          .delete(rolePermissionsTable)
+          .where(inArray(rolePermissionsTable.role_id, roleIdsToDelete))
+
+        await tx
+          .delete(rolesTable)
+          .where(inArray(rolesTable.id, roleIdsToDelete))
+      }
+
+      console.log(
+        `Successfully deleted roles and associated data for entity IDs: ${entityIds.join(", ")}`
+      )
+    })
+  } catch (error) {
+    console.error(
+      `Failed to delete roles and associated data for entity IDs: ${entityIds.join(", ")}`
+    )
+    console.error(error)
+    throw new Error(
+      "Database error: Unable to delete roles and associated data."
+    )
+  }
+}
