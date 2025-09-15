@@ -444,7 +444,7 @@ export default function CreateCommunityModal({
                 : "Create a new community for users to join and interact."}
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="h-[80vh] w-full p-3">
+          <ScrollArea className="h-[80vh] w-full pr-4">
             <form onSubmit={form.handleSubmit(communitySubmit)}>
               <div className="grid gap-4 py-4">
                 {/* Community Name (Title) */}
@@ -570,7 +570,7 @@ export default function CreateCommunityModal({
                 <div className="flex flex-col gap-1">
                   <div className="flex flex-col gap-3 justify-between">
                     <Label htmlFor="cover_image">
-                      {"Cover Image(Optional)"}
+                      {"Cover Image (Optional)"}
                     </Label>
                     <div className="w-full">
                       <Controller
@@ -612,13 +612,6 @@ export default function CreateCommunityModal({
                         </div>
                       )}
                     </div>
-                  </div>
-                  <div className="text-left">
-                    {error.category && (
-                      <span className="text-red-500 text-sm">
-                        {String(error.category.message)}
-                      </span>
-                    )}
                   </div>
                 </div>
 
