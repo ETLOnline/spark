@@ -32,10 +32,12 @@ export const SendConnectionNotification = async (
       case "connection_request":
         notificationPayload.template.title = "New Connection Request"
         notificationPayload.template.body = `${authUser.first_name} ${authUser.last_name} sent you a connection request.`
+        notificationPayload.template.deep_link = `${process.env.NEXT_PUBLIC_BASE_URL}/connections`
         break
       case "connection_accepted":
         notificationPayload.template.title = "Connection Request Accepted"
         notificationPayload.template.body = `${authUser.first_name} ${authUser.last_name}  has accepted your connection request. You’re now connected.`
+        notificationPayload.template.deep_link = `${process.env.NEXT_PUBLIC_BASE_URL}/profile/${authUser.unique_id}`
         break
       default:
         break
