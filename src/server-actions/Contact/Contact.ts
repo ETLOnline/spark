@@ -16,6 +16,7 @@ import {
   NotificationEntity,
   NotificationType
 } from "@/src/components/Dashboard/Notifications/types/notifications.types"
+import { SendConnectionNotification } from "@/src/services/notifications/Connections/utils"
 import { createContactNotification } from "@/src/services/notify/contact/contact"
 
 export const CreateContactAction = CreateServerAction(
@@ -57,6 +58,8 @@ export const CreateContactAction = CreateServerAction(
       } catch (error) {
         console.error("Failed to add notification:", error)
       }
+
+      await SendConnectionNotification("connection_request", newRequest[0])
 
       return { success: true, data: newRequest[0] }
     } catch (error) {
@@ -102,6 +105,8 @@ export const AcceptConnectionAction = CreateServerAction(
       } catch (error) {
         console.error(error)
       }
+
+      await SendConnectionNotification("connection_accepted", res[0])
 
       return { success: true, data: res[0] }
     } catch (error) {

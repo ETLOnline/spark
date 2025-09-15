@@ -35,6 +35,8 @@ jobs:
       EMAIL_FROM_ADDRESS: ${{ secrets.EMAIL_FROM_ADDRESS }}
       MAILCHIMP_API_KEY: ${{ secrets.MAILCHIMP_API_KEY }}
       NEXT_PUBLIC_ENABLE_EMAIL_PREVIEW: ${{ secrets.NEXT_PUBLIC_ENABLE_EMAIL_PREVIEW }}
+      NEXT_PUBLIC_PUSHER_BEAMS_INSTANCE_ID: ${{ secrets.NEXT_PUBLIC_PUSHER_BEAMS_INSTANCE_ID }}
+      NEXT_PUBLIC_PUSHER_BEAMS_SECRET_KEY: ${{ secrets.NEXT_PUBLIC_PUSHER_BEAMS_SECRET_KEY }}
     permissions:
       contents: read # This is required for actions/checkout
 
