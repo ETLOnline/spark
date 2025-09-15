@@ -11,6 +11,7 @@ import { CheckRolePermissionMismatch } from "./CheckRolePermissionMismatch"
 import { SyncRolePermissionsSeeder } from "./SyncScopedPermissions"
 import { siteSettingsSeed } from "./SiteSettingsSeed"
 import { UpdateRoleTable } from "./UpdateRolesTable"
+import { EmailTemplatesSeed } from "./EmailTemplatesSeed"
 
 const SEEDERS: Record<string, () => Promise<void>> = {
   FeatureSeed,
@@ -25,7 +26,8 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   NewTagsSeed,
   CheckRolePermissionMismatch,
   SyncRolePermissionsSeeder,
-  siteSettingsSeed
+  siteSettingsSeed,
+  EmailTemplatesSeed
 }
 
 async function runSeeders() {
@@ -37,7 +39,8 @@ async function runSeeders() {
       "CommunityUserListRolePermission",
       "NewTagsSeed",
       "CheckRolePermissionMismatch",
-      "SyncRolePermissionsSeeder"
+      "SyncRolePermissionsSeeder",
+      "EmailTemplatesSeed"
     ]
 
     const seederNames =

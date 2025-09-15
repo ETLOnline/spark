@@ -170,7 +170,8 @@ export async function GetTaskById(taskId: string) {
       where: and(isNull(taskTable.deleted_at), eq(taskTable.id, taskId)),
       with: {
         assignee: true,
-        assignor: true
+        assignor: true,
+        status: true
       }
     })
 
