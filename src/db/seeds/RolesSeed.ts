@@ -12,24 +12,28 @@ const roleSeedList = [
   {
     name: "Faculty",
     role_type: "GLOBAL",
+    slug: "faculty",
     entity_type: null,
     entity_id: null
   },
   {
     name: "Mentor",
     role_type: "GLOBAL",
+    slug: "mentor",
     entity_type: null,
     entity_id: null
   },
   {
     name: "Student",
     role_type: "GLOBAL",
+    slug: "student",
     entity_type: null,
     entity_id: null
   },
   {
     name: "Industry Partner",
     role_type: "GLOBAL",
+    slug: "industry_partner",
     entity_type: null,
     entity_id: null
   },
