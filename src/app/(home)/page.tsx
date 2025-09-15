@@ -344,7 +344,7 @@ const roadmapPhases = [
     title: "Foundation (Q3 2025)",
     status: "completed",
     items: [
-      "Community & Channel Creation",
+      "Channel Creation",
       "Basic Mentorship Matching",
       "Project Collaboration Spaces",
       "User Profiles & Authentication",
