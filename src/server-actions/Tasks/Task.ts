@@ -134,11 +134,8 @@ export const UpdateTaskAction = CreateServerAction(
     page_name?: string
   ) => {
     try {
-      const authUser = await AuthUserAction()
-
-      const UpdatedTask = await UpdateTask(taskId, updatedData)
-
       const oldTask = await GetTaskById(taskId)
+      const UpdatedTask = await UpdateTask(taskId, updatedData)
 
       if (UpdatedTask) {
         await SendTaskNotifications("task_updated", UpdatedTask)
