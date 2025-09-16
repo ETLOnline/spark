@@ -19,7 +19,7 @@ export async function processTaskUpdateNotification(job: {
       mailer.sendEmail({
         to,
         from: process.env.EMAIL_FROM_ADDRESS!,
-        subject: template.subject,
+        subject: `${job.payload.task_id} : ${job.payload.task_title} - Task Update`,
         body: renderedBody
       })
     )
