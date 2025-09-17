@@ -5,13 +5,17 @@ import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
 import { Button } from "../../ui/button"
 import NotificationItem from "../NotificationItem/NotifictionItem"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { GetNotificationsAction } from "@/src/server-actions/Notification/Notification"
+import {
+  GetNotificationsAction,
+  MarkNotificationAsReadAction
+} from "@/src/server-actions/Notification/Notification"
 import { SelectNotification } from "@/src/db/schema"
 import { useAtom, useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { notificationStore } from "@/src/store/notification/notificationStore"
 import pusherClient from "@/src/services/realtime/PusherClient"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
+import Link from "next/link"
 
 const Notifications: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false)
@@ -43,6 +47,24 @@ const Notifications: React.FC = () => {
     })()
   }, [])
 
+  const handleMarkAllAsRead = async () => {
+    const unreadIds = notifications
+      .filter((n) => n.is_read === 0)
+      .map((n) => n.id)
+
+    if (unreadIds.length === 0) return
+
+    try {
+      await MarkNotificationAsReadAction(unreadIds)
+
+      setNotifications((notifications) =>
+        notifications.map((n) => (n.is_read === 0 ? { ...n, is_read: 1 } : n))
+      )
+    } catch (error) {
+      console.error("Failed to mark all as read:", error)
+    }
+  }
+
   useEffect(() => {
     if (!userId) return
 
@@ -68,8 +90,16 @@ const Notifications: React.FC = () => {
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end" sideOffset={5}>
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between">
             <CardTitle>Notifications</CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-sky-600"
+              onClick={handleMarkAllAsRead}
+            >
+              Mark all as read
+            </Button>
           </CardHeader>
           <CardContent className="max-h-[300px] overflow-auto">
             {notifications &&
