@@ -11,13 +11,9 @@ import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 import { ActivityType } from "@/src/components/Dashboard/Connections/types/connections.types"
-import { AddNotification } from "@/src/db/data-access/notification/query"
-import {
-  NotificationEntity,
-  NotificationType
-} from "@/src/components/Dashboard/Notifications/types/notifications.types"
-import { SendConnectionNotification } from "@/src/services/notifications/Connections/utils"
-import { createContactNotification } from "@/src/services/notify/contact/contact"
+import { SendConnectionPushNotification } from "@/src/services/notifications/Connections/utils"
+import { createContactEmailNotification } from "@/src/services/notify/contact/contact"
+import { NotificationEvent } from "@/src/utils/constants"
 
 export const CreateContactAction = CreateServerAction(
   true,
@@ -42,24 +38,19 @@ export const CreateContactAction = CreateServerAction(
       })
 
       try {
-        const data = await AddNotification({
-          created_by: user.unique_id,
-          received_by: contact_id,
-          type: NotificationType.requestSent,
-          entity_type: NotificationEntity.request,
-          entity_id: `${newRequest[0].user_id}${newRequest[0].contact_id}`
-        })
-
-        await realTimeChannel.publish("notification", {
-          ...data,
-          creator: user
-        })
-        await createContactNotification("new_connection", user, contact_id)
+        await createContactEmailNotification(
+          NotificationEvent.NEW_CONNECTION,
+          user,
+          contact_id
+        )
       } catch (error) {
         console.error("Failed to add notification:", error)
       }
 
-      await SendConnectionNotification("connection_request", newRequest[0])
+      await SendConnectionPushNotification(
+        NotificationEvent.NEW_CONNECTION,
+        newRequest[0]
+      )
 
       return { success: true, data: newRequest[0] }
     } catch (error) {
@@ -89,24 +80,19 @@ export const AcceptConnectionAction = CreateServerAction(
       })
 
       try {
-        const data = await AddNotification({
-          created_by: contact_id,
-          received_by: user_id,
-          type: NotificationType.outgoingRequestAcceptance,
-          entity_type: NotificationEntity.request,
-          entity_id: `${user_id}-${contact_id}`
-        })
-
-        await realTimeChannel.publish("notification", {
-          ...data,
-          creator: user
-        })
-        await createContactNotification("accept_connection", user, user_id)
+        await createContactEmailNotification(
+          NotificationEvent.CONNECTION_ACCEPTED,
+          user,
+          user_id
+        )
       } catch (error) {
         console.error(error)
       }
 
-      await SendConnectionNotification("connection_accepted", res[0])
+      await SendConnectionPushNotification(
+        NotificationEvent.CONNECTION_ACCEPTED,
+        res[0]
+      )
 
       return { success: true, data: res[0] }
     } catch (error) {

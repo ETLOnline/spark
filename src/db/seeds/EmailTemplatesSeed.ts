@@ -3,6 +3,7 @@ import { db } from "../index"
 import { InferInsertModel, sql } from "drizzle-orm"
 import fs from "fs"
 import path from "path"
+import { NotificationEvent } from "@/src/utils/constants"
 
 type NewEmailTemplate = InferInsertModel<typeof emailTemplatesTable>
 
@@ -20,12 +21,12 @@ const templatesToSeed: NewEmailTemplate[] = [
     body: loadTemplate("update_task.html")
   },
   {
-    name: "new_connection",
+    name: NotificationEvent.NEW_CONNECTION,
     subject: "New Connection",
     body: loadTemplate("new_connection.html")
   },
   {
-    name: "accept_connection",
+    name: NotificationEvent.CONNECTION_ACCEPTED,
     subject: "New Connection",
     body: loadTemplate("accept_connection.html")
   },
@@ -35,7 +36,7 @@ const templatesToSeed: NewEmailTemplate[] = [
     body: loadTemplate("project_invite.html")
   },
   {
-    name: "chat_invite",
+    name: NotificationEvent.CHAT_INVITE,
     subject: "You've got a new chat",
     body: loadTemplate("chat_invite.html")
   }

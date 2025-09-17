@@ -228,3 +228,9 @@ export type PageMeta = (typeof pageMeta)[0]
 export enum Sendgrid {
   SENDGRID_TASK_UPDATE_TEMPLATE_ID = "d-d2538f8fe746453c9b264174ed580961"
 }
+
+export enum NotificationEvent {
+  CHAT_INVITE = "chat_invite",
+  NEW_CONNECTION = "new_connection",
+  CONNECTION_ACCEPTED = "accept_connection"
+}

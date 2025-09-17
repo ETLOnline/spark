@@ -6,8 +6,8 @@ import { useToast } from "@/src/hooks/use-toast"
 import { Button } from "../../ui/button"
 import { UserRoundX } from "lucide-react"
 import { ProfileActivity, ReqType } from "./types/connections.types"
-import NotificationItem from "../NotificationItem/NotifictionItem"
 import { killConnection } from "@/src/utils/helpers"
+import ProfileActivityItem from "../profile/ProfileActivityItem"
 
 type ConnectionProps = {
   activity: ProfileActivity
@@ -46,7 +46,7 @@ const Connection: React.FC<ConnectionProps> = ({ activity, variant }) => {
   }
 
   return (
-    <NotificationItem activity={activity}>
+    <ProfileActivityItem activity={activity}>
       <Button
         size="sm"
         variant="outline"
@@ -58,7 +58,7 @@ const Connection: React.FC<ConnectionProps> = ({ activity, variant }) => {
         <UserRoundX className="h-4 w-4 mr-2" />
         Disconnect
       </Button>
-    </NotificationItem>
+    </ProfileActivityItem>
   )
 }
 

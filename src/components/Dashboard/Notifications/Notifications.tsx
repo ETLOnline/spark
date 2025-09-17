@@ -10,7 +10,8 @@ import { SelectNotification } from "@/src/db/schema"
 import { useAtom, useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { notificationStore } from "@/src/store/notification/notificationStore"
-import { joinNotificationChannel } from "@/src/utils/helpers"
+import pusherClient from "@/src/services/realtime/PusherClient"
+import { ScrollArea } from "@/src/components/ui/scroll-area"
 
 const Notifications: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false)
@@ -43,25 +44,18 @@ const Notifications: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    if (userId) {
-      const { unsubscribe } = joinNotificationChannel(
-        userId,
-        (request) => {
-          setNotifications((prev) => [
-            {
-              ...request
-            } as SelectNotification,
-            ...prev
-          ])
-        },
-        ["notification"]
-      )
-      return () => {
-        unsubscribe()
-      }
+    if (!userId) return
+
+    const channel = pusherClient.subscribe(`user-system-notification-${userId}`)
+
+    channel.bind("system-notifications", (data: SelectNotification) => {
+      setNotifications((prev) => [data, ...prev])
+    })
+
+    return () => {
+      pusherClient.unsubscribe(`user-system-notification-${userId}`)
     }
   }, [userId])
-
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
@@ -79,10 +73,9 @@ const Notifications: React.FC = () => {
           </CardHeader>
           <CardContent className="max-h-[300px] overflow-auto">
             {notifications &&
-              notifications &&
               notifications.map((notification) => (
                 <NotificationItem
-                  key={notification.id}
+                  key={notification.id + notification.created_by}
                   activity={notification}
                   size="sm"
                 />

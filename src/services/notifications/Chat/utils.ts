@@ -5,6 +5,8 @@ import {
   NotificationPayload,
   sendPushNotification
 } from "../PushNotification.utils"
+import { SendChatSystemNotification } from "../../system-notification/Chat/utlis"
+import { NotificationEvent } from "@/src/utils/constants"
 
 type PusherUsersResponse = {
   users: { id: string }[]
@@ -57,6 +59,7 @@ export const SendChatNotification = async (
     }
 
     await sendPushNotification(notificationPayload)
+    await SendChatSystemNotification(authUser.unique_id, notificationPayload)
   } catch (error) {
     console.error("Error sending notifications:", error)
   }
