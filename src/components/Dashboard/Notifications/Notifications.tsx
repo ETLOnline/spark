@@ -17,6 +17,7 @@ import { notificationStore } from "@/src/store/notification/notificationStore"
 import pusherClient from "@/src/services/realtime/PusherClient"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
 import Link from "next/link"
+import { playNotificationSound } from "@/src/services/system-notification/playNotificationSound"
 
 const Notifications: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false)
@@ -71,6 +72,7 @@ const Notifications: React.FC = () => {
     const channel = pusherClient.subscribe(`user-${userId}`)
 
     channel.bind("system-notifications", (data: SelectNotification) => {
+      playNotificationSound()
       setNotifications((prev) => [data, ...prev])
     })
 
