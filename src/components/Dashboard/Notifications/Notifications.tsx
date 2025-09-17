@@ -1,3 +1,4 @@
+"use client"
 import { useEffect, useState } from "react"
 import { Bell } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
@@ -67,15 +68,14 @@ const Notifications: React.FC = () => {
 
   useEffect(() => {
     if (!userId) return
-
-    const channel = pusherClient.subscribe(`user-system-notification-${userId}`)
+    const channel = pusherClient.subscribe(`user-${userId}`)
 
     channel.bind("system-notifications", (data: SelectNotification) => {
       setNotifications((prev) => [data, ...prev])
     })
 
     return () => {
-      pusherClient.unsubscribe(`user-system-notification-${userId}`)
+      pusherClient.unsubscribe(`user-${userId}`)
     }
   }, [userId])
   return (
@@ -103,9 +103,9 @@ const Notifications: React.FC = () => {
           </CardHeader>
           <CardContent className="max-h-[300px] overflow-auto">
             {notifications &&
-              notifications.map((notification) => (
+              notifications.map((notification, index) => (
                 <NotificationItem
-                  key={notification.id + notification.created_by}
+                  key={index}
                   activity={notification}
                   size="sm"
                 />

@@ -4,8 +4,8 @@ import {
   sendPushNotification
 } from "../PushNotification.utils"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import { SendConnectionSystemNotification } from "../../system-notification/Connection/utils"
 import { NotificationEvent } from "@/src/utils/constants"
+import { SendSystemNotification } from "../../system-notification/SystemNotification.utils"
 
 export const SendConnectionPushNotification = async (
   event_type: NotificationEvent,
@@ -44,10 +44,10 @@ export const SendConnectionPushNotification = async (
     }
 
     await sendPushNotification(notificationPayload)
-    await SendConnectionSystemNotification(
-      authUser.unique_id,
-      notificationPayload
-    )
+    await SendSystemNotification({
+      user_id: authUser.unique_id,
+      ...notificationPayload
+    })
   } catch (err) {
     console.error("Error sending notifications:", err)
   }

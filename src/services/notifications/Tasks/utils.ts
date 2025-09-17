@@ -4,6 +4,7 @@ import {
   NotificationPayload,
   sendPushNotification
 } from "../PushNotification.utils"
+import { SendSystemNotification } from "../../system-notification/SystemNotification.utils"
 
 export const SendTaskNotifications = async (
   event_type: string,
@@ -58,6 +59,10 @@ export const SendTaskNotifications = async (
     }
 
     await sendPushNotification(notificationPayload)
+    await SendSystemNotification({
+      ...notificationPayload,
+      user_id: authUser.unique_id
+    })
   } catch (error) {
     console.error("Error sending notifications:", error)
   }

@@ -5,8 +5,7 @@ import {
   NotificationPayload,
   sendPushNotification
 } from "../PushNotification.utils"
-import { SendChatSystemNotification } from "../../system-notification/Chat/utlis"
-import { NotificationEvent } from "@/src/utils/constants"
+import { SendSystemNotification } from "../../system-notification/SystemNotification.utils"
 
 type PusherUsersResponse = {
   users: { id: string }[]
@@ -25,7 +24,6 @@ export const SendChatNotification = async (
     if (space) {
       CTALink = `channels/${space?.channel?.channel_slug}/spaces/${space?.space_slug}?page-type=chat`
     }
-    const user = chat.users
 
     const receivers =
       chat.users
@@ -59,7 +57,10 @@ export const SendChatNotification = async (
     }
 
     await sendPushNotification(notificationPayload)
-    await SendChatSystemNotification(authUser.unique_id, notificationPayload)
+    await SendSystemNotification({
+      ...notificationPayload,
+      user_id: authUser.unique_id
+    })
   } catch (error) {
     console.error("Error sending notifications:", error)
   }
