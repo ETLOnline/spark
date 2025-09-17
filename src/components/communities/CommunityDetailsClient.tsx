@@ -21,7 +21,8 @@ import {
   Globe,
   PlusCircle,
   PencilRuler,
-  Check
+  Check,
+  LogOut
 } from "lucide-react"
 import { CommunityDetailData } from "@/src/db/data-access/communities/query"
 import CreateChannels from "@/src/components/Dashboard/Channels/CreateChannels"
@@ -59,6 +60,8 @@ import {
 } from "@/src/components/ui/tooltip"
 import ChannelCardItem from "../Dashboard/Channels/ChannelCardItem"
 import Image from "next/image"
+import clsx from "clsx"
+import { useTheme } from "next-themes"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -79,6 +82,7 @@ const demoRules = [
 export default function CommunityDetailsClient({
   community
 }: CommunityDetailsClientProps) {
+  const { theme } = useTheme()
   const router = useRouter()
   const { toast } = useToast()
   const setCurrentCommunity = useSetAtom(communityStore.selectedCommunity)
@@ -369,18 +373,25 @@ export default function CommunityDetailsClient({
                         variant="outline"
                         onClick={handleJoinCommunity}
                         disabled={joinLoading}
+                        className="border-none px-1"
                       >
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        {joinLoading ? "Joining..." : "Join"}
+                        {joinLoading ? "Joining..." : "Join Community"}
                       </Button>
                     ) : (
                       <Button
                         variant="outline"
                         onClick={handleLeaveCommunity}
                         disabled={leaveLoading}
-                        className="hover:bg-muted hover:text-red-500 focus:bg-muted focus:text-red-500"
+                        className={clsx(
+                          "text-red-500",
+                          theme === "light"
+                            ? "hover:text-white hover:bg-red-500 border-none"
+                            : "hover:text-red-500 hover:bg-muted "
+                        )}
                       >
-                        {leaveLoading ? "Leaving..." : "Leave"}
+                        <LogOut className="mr-2 h-4 w-4" />
+                        {leaveLoading ? "Leaving..." : "Leave Community"}
                       </Button>
                     )}
                   </>

@@ -28,12 +28,15 @@ import { AttachSpaceUserAction } from "@/src/server-actions/Space/Space"
 import { LeaveSpaceAction } from "@/src/server-actions/Space/SpaceActions"
 import { useToast } from "@/src/hooks/use-toast"
 import { LogOut } from "lucide-react"
+import { useTheme } from "next-themes"
+import clsx from "clsx"
 
 interface Props {
   space: SelectSpace
 }
 
 function SpaceSidebar({ space }: Props) {
+  const { theme } = useTheme()
   const router = useRouter()
   const pathname = usePathname()
   const pageType = useSearchParams()
@@ -159,7 +162,6 @@ function SpaceSidebar({ space }: Props) {
   function getFeatureUrl(feature_slug: string) {
     return `/channels/${encodedChannelSlug}/spaces/${encodedSpaceSlug}?page-type=${feature_slug}`
   }
-  // /channels/etl-online/spaces/test
 
   return (
     <SidebarGroup className="p-0">
@@ -193,11 +195,17 @@ function SpaceSidebar({ space }: Props) {
                               handleLeaveSpace()
                             }
                           }}
-                          className={`inline-flex items-center rounded-md border border-input bg-background px-3 py-1 text-xs font-medium ring-offset-background transition-colors ${
+                          className={clsx(
+                            "inline-flex items-center rounded-md border border-input bg-background px-3 py-1 text-xs font-medium ring-offset-background transition-colors",
                             leaveLoading
                               ? "text-gray-500 cursor-not-allowed opacity-50"
-                              : "text-muted-foreground hover:bg-muted hover:text-red-500 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                          }`}
+                              : [
+                                  "text-red-500 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                                  theme === "light"
+                                    ? "hover:bg-red-500 hover:text-white"
+                                    : "hover:bg-muted hover:text-red-500"
+                                ]
+                          )}
                         >
                           <LogOut className="mr-2 h-3 w-3" />
                           {leaveLoading ? "Leaving..." : "Leave"}
@@ -211,10 +219,10 @@ function SpaceSidebar({ space }: Props) {
                               handleJoinSpace()
                             }
                           }}
-                          className={`inline-flex items-center rounded-md border border-primary bg-background px-3 py-1 text-xs font-medium ring-offset-background transition-colors ${
+                          className={`inline-flex items-center rounded-md border  bg-background px-3 py-1 text-xs font-medium ring-offset-background transition-colors ${
                             joinLoading
                               ? "text-gray-500 cursor-not-allowed opacity-50"
-                              : "text-primary hover:bg-primary hover:text-primary-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                              : " hover:bg-primary hover:text-primary-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                           }`}
                         >
                           <PlusCircle className="mr-2 h-3 w-3" />

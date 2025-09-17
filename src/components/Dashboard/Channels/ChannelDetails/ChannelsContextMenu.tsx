@@ -33,6 +33,8 @@ import { userStore } from "@/src/store/user/userStore"
 import { useEffect, useState } from "react"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
+import { useTheme } from "next-themes"
+import clsx from "clsx"
 
 interface ChannelProps {
   channel: SelectChannel
@@ -48,6 +50,7 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
   onActionComplete,
   setIsCommunityMember
 }) => {
+  const { theme } = useTheme()
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const superAdmin = useAtomValue(userStore.SuperAdmin)
   const [isChannelMember, setIsChannelMember] = useState<boolean>(false)
@@ -67,47 +70,64 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
     }
   }, [channel, currentUserId])
 
-  const handleJoinChannel = () => {
-    if (channel.id && currentUserId) {
-      joinChannel(channel.id, currentUserId).then((res) => {
-        if (res?.success) {
-          setIsChannelMember(true)
-          setIsCommunityMember?.(true)
-          toast({
-            title: "Channel Joined",
-            description: "You have successfully joined the channel!",
-            duration: 3000
-          })
-          router.refresh()
-        } else {
-          console.error("Failed to join Channel:", res?.error)
-        }
+  const handleJoinChannel = async () => {
+    if (!channel.id || !currentUserId) return
+
+    try {
+      const res = await joinChannel(channel.id, currentUserId)
+
+      if (res?.success) {
+        setIsChannelMember(true)
+        setIsCommunityMember?.(true)
+
+        toast({
+          title: "Channel Joined",
+          description: "You have successfully joined the channel!",
+          duration: 3000
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong while joining the channel.",
+        duration: 3000
       })
     }
   }
 
-  const handleLeaveChannel = () => {
-    if (channel.id) {
-      leaveChannel(channel.id).then((res) => {
-        if (res?.success) {
-          toast({
-            title: "Channel Left",
-            description: "You have successfully left the channel!",
-            duration: 3000
-          })
+  const handleLeaveChannel = async () => {
+    if (!channel.id) return
 
-          if (channel.community?.slug) {
-            router.push(`/communities/${channel.community.slug}`)
-          } else {
-            router.push(`/communities`)
-          }
-          router.refresh()
+    try {
+      const res = await leaveChannel(channel.id)
+
+      if (res?.success) {
+        setIsChannelMember(false)
+        setIsCommunityMember?.(false)
+
+        toast({
+          title: "Channel Left",
+          description: "You have successfully left the channel!",
+          duration: 3000
+        })
+
+        if (channel.community?.slug) {
+          router.push(`/communities/${channel.community.slug}`)
         } else {
-          console.error("Failed to leave Channel:", res?.error)
+          router.push(`/communities`)
         }
+
+        // router.refresh()
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong while leaving the channel.",
+        duration: 3000
       })
     }
   }
+
   const encodedChannelSlug = encodeURIComponent(channel.channel_slug)
 
   const { permissionChecker } = usePermissionChecker(
@@ -139,7 +159,6 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
   )
 
   const { toast } = useToast()
-
   const [
     addDeleteChannelLoading,
     addDeleteChannelData,
@@ -194,7 +213,7 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
             <DropdownMenuItem
               onClick={handleJoinChannel}
               disabled={joinLoading}
-              className="text-primary hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground"
+              className=" hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground"
             >
               <PlusCircle className="mr-2 h-4 w-4" />
               {joinLoading ? "Joining..." : "Join Channel"}
@@ -205,7 +224,12 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
             <DropdownMenuItem
               onClick={handleLeaveChannel}
               disabled={leaveLoading}
-              className="text-muted-foreground hover:bg-muted hover:text-red-500 focus:bg-muted focus:text-red-500"
+              className={clsx(
+                "text-red-500",
+                theme === "light"
+                  ? "focus:text-white focus:bg-red-500"
+                  : "focus:text-red-500 focus:bg-muted"
+              )}
             >
               <LogOut className="mr-2 h-4 w-4" />
               {leaveLoading ? "Leaving..." : "Leave Channel"}

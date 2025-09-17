@@ -12,7 +12,7 @@ import SpacesCard from "@/src/components/Dashboard/Channels/ChannelDetails/Space
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
 import CreateSpaceModal from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/CreateSpaceModal"
 import { Button } from "@/src/components/ui/button"
-import { CirclePlus, LogOut } from "lucide-react"
+import { CirclePlus, LogOut, PlusCircle } from "lucide-react"
 import { GetSpacesAction } from "@/src/server-actions/Space/Space"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { SelectChannel, SelectSpace } from "@/src/db/schema"
@@ -24,8 +24,11 @@ import { LeaveChannelAction } from "@/src/server-actions/Channel/ChannelActions"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 import { useToast } from "@/src/hooks/use-toast"
+import clsx from "clsx"
+import { useTheme } from "next-themes"
 
 export default function ChannelPage() {
+  const { theme } = useTheme()
   const router = useRouter()
   const { toast } = useToast()
   const community = useAtomValue(communityStore.selectedCommunity)
@@ -61,51 +64,62 @@ export default function ChannelPage() {
     )
 
     if (isMember) setIsChannelMember(true)
-    else {
-      setIsChannelMember(false)
-    }
   }, [selectedChannel, authUser])
 
-  const handleJoinChannel = () => {
+  const handleJoinChannel = async () => {
     if (
-      selectedChannel?.channel_type === "public" &&
-      !isChannelMember &&
-      selectedChannel?.id &&
-      authUser?.unique_id
+      selectedChannel?.channel_type !== "public" ||
+      isChannelMember ||
+      !selectedChannel?.id ||
+      !authUser?.unique_id
     ) {
-      joinChannel(selectedChannel.id, authUser.unique_id).then((res) => {
-        if (res?.success) {
-          setIsChannelMember(true)
-          toast({
-            title: "Channel Joined",
-            description: "You have successfully joined the channel!",
-            duration: 3000
-          })
-          router.refresh()
-        } else {
-          setIsChannelMember(false)
-        }
+      return
+    }
+
+    try {
+      const res = await joinChannel(selectedChannel.id, authUser.unique_id)
+
+      if (res?.success) {
+        setIsChannelMember(true)
+        toast({
+          title: "Channel Joined",
+          description: "You have successfully joined the channel!",
+          duration: 3000
+        })
+      }
+    } catch (error) {
+      setIsChannelMember(false)
+      toast({
+        title: "Error",
+        description: "Something went wrong while joining the channel.",
+        duration: 3000
       })
     }
   }
 
-  const handleLeaveChannel = () => {
+  const handleLeaveChannel = async () => {
     if (selectedChannel?.id && isChannelMember) {
-      leaveChannel(selectedChannel.id).then((res) => {
+      try {
+        const res = await leaveChannel(selectedChannel.id)
         if (res?.success) {
+          setIsChannelMember(false)
           toast({
             title: "Channel Left",
             description: "You have successfully left the channel!",
             duration: 3000
           })
+
           if (community?.slug) {
             router.push(`/communities/${community.slug}`)
           }
-          router.refresh()
-        } else {
-          console.error("Failed to leave Channel:", res?.error)
         }
-      })
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Something went wrong while leaving the channel.",
+          duration: 3000
+        })
+      }
     }
   }
 
@@ -197,8 +211,9 @@ export default function ChannelPage() {
                       variant="outline"
                       onClick={handleJoinChannel}
                       disabled={joinLoading}
-                      className="border-primary text-primary font-medium px-6 py-2 hover:bg-primary hover:text-primary-foreground"
+                      className=" font-medium px-6 py-2 hover:bg-primary hover:text-primary-foreground"
                     >
+                      <PlusCircle className="mr-2 h-4 w-4" />
                       {joinLoading ? "Joining..." : "Join Channel"}
                     </Button>
                   )}
@@ -208,7 +223,12 @@ export default function ChannelPage() {
                     variant="outline"
                     onClick={handleLeaveChannel}
                     disabled={leaveLoading}
-                    className="border-input text-muted-foreground font-medium px-6 py-2 hover:bg-muted hover:text-red-500"
+                    className={clsx(
+                      "text-red-500",
+                      theme === "light"
+                        ? "hover:text-white hover:bg-red-500"
+                        : "hover:text-red-500 hover:bg-muted"
+                    )}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     {leaveLoading ? "Leaving..." : "Leave Channel"}

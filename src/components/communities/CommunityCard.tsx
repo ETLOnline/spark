@@ -21,7 +21,8 @@ import {
   Globe,
   User,
   PlusCircle,
-  ArrowRight
+  ArrowRight,
+  LogOut
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -43,6 +44,8 @@ import {
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
 import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
+import { useTheme } from "next-themes"
+import clsx from "clsx"
 
 interface CommunityCardProps {
   community: SelectCommunity
@@ -59,6 +62,7 @@ export default function CommunityCard({
   onDelete,
   onJoin
 }: CommunityCardProps) {
+  const { theme } = useTheme()
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "COMMUNITY",
@@ -149,16 +153,6 @@ export default function CommunityCard({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      {!isCurrentUserMember && (
-                        <DropdownMenuItem
-                          onClick={handleJoinCommunity}
-                          disabled={joinLoading}
-                          className="flex items-center"
-                        >
-                          <PlusCircle className="mr-2 h-4 w-4" />
-                          {joinLoading ? "Joining..." : "Join"}
-                        </DropdownMenuItem>
-                      )}
                       <DropdownMenuItem asChild>
                         <Link
                           href={`/communities/${encodedCommunitySlug}/users`}
@@ -246,8 +240,14 @@ export default function CommunityCard({
                   onClick={handleLeaveCommunity}
                   disabled={leaveLoading}
                   loading={leaveLoading}
-                  className="hover:bg-muted hover:text-red-500 focus:bg-muted focus:text-red-500"
+                  className={clsx(
+                    "text-red-500",
+                    theme === "light"
+                      ? "hover:text-white hover:bg-red-500"
+                      : "hover:text-red-500 hover:bg-muted"
+                  )}
                 >
+                  <LogOut className=" h-4 w-4" />
                   {leaveLoading ? "Leaving..." : "Leave"}
                 </Button>
               )}
