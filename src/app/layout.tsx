@@ -44,7 +44,6 @@ export default function RootLayout({
           >
             <Toaster />
             {children}
-            <NotificationProvider />
           </ThemeProvider>
         </body>
       </html>
