@@ -724,7 +724,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                 {editEvent === true ? (
                   <>
                     <AlertDialog>
-                      <AlertDialogTrigger className="mr-auto">
+                      <AlertDialogTrigger asChild className="mr-auto">
                         <Button
                           type="button"
                           loading={addDeleteEventLoading}
