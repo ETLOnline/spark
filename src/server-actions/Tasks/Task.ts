@@ -34,6 +34,7 @@ import {
 } from "@/src/services/storage/utils/fileUtils"
 import { AuthUserAction } from "../User/AuthUserAction"
 import { SendTaskNotifications } from "@/src/services/notifications/Tasks/utils"
+import { NotificationEvent } from "@/src/utils/constants"
 
 export const CreateTaskAction = CreateServerAction(
   true,
@@ -141,7 +142,7 @@ export const UpdateTaskAction = CreateServerAction(
       const oldTask = await GetTaskById(taskId)
 
       if (UpdatedTask) {
-        await SendTaskNotifications("task_updated", UpdatedTask)
+        await SendTaskNotifications(NotificationEvent.UPDATE_TASK, UpdatedTask)
       }
 
       if (UpdatedTask && oldTask) {
@@ -150,7 +151,11 @@ export const UpdateTaskAction = CreateServerAction(
           "task-update",
           UpdatedTask
         )
-        createTaskNotification("update_task", UpdatedTask, oldTask)
+        createTaskNotification(
+          NotificationEvent.UPDATE_TASK,
+          UpdatedTask,
+          oldTask
+        )
 
         return { success: true, data: UpdatedTask }
       }
