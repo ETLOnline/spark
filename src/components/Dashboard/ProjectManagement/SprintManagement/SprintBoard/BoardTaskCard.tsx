@@ -42,6 +42,7 @@ import {
 import { projectTaskTypes } from "../../constants/projectManagment"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { useDraggable } from "@dnd-kit/core"
 
 interface Props {
   task: SelectTask
@@ -164,10 +165,28 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
     )
   }
 
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: task.id,
+      data: { statusId: task.status_id }, // keep column info
+      disabled: !canUpdate
+    })
+
+  const style = {
+    transform: transform
+      ? `translate(${transform.x}px, ${transform.y}px)`
+      : undefined,
+    opacity: isDragging ? 0.5 : 1
+  }
+
   return (
     <>
       <Card
         key={task.id}
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        {...listeners}
         className={`p-3 transition-colors hover:cursor-pointer hover:bg-muted`}
         onClick={() => onClick(task)}
       >
