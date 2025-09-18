@@ -11,7 +11,6 @@ import {
 import { SelectSpace, SelectSpaceFeature } from "@/src/db/schema"
 import { PlusCircle, Users } from "lucide-react"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
-import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useSearchParams, useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
@@ -28,7 +27,6 @@ import { AttachSpaceUserAction } from "@/src/server-actions/Space/Space"
 import { LeaveSpaceAction } from "@/src/server-actions/Space/SpaceActions"
 import { useToast } from "@/src/hooks/use-toast"
 import { LogOut } from "lucide-react"
-import { useTheme } from "next-themes"
 import clsx from "clsx"
 
 interface Props {
@@ -36,7 +34,6 @@ interface Props {
 }
 
 function SpaceSidebar({ space }: Props) {
-  const { theme } = useTheme()
   const router = useRouter()
   const pathname = usePathname()
   const pageType = useSearchParams()
@@ -73,9 +70,12 @@ function SpaceSidebar({ space }: Props) {
             description: "You have successfully joined the Space!",
             duration: 3000
           })
-          router.refresh()
         } else {
-          console.error("Failed to join Space:", res?.error)
+          toast({
+            title: "Error",
+            description: "Something went wrong while joining the space.",
+            duration: 3000
+          })
         }
       })
     }
@@ -95,9 +95,12 @@ function SpaceSidebar({ space }: Props) {
             space.channel?.channel_slug ?? ""
           )
           router.push(`/channels/${encodedChannelSlug}/spaces`)
-          router.refresh()
         } else {
-          console.error("Failed to leave Space:", res?.error)
+          toast({
+            title: "Error",
+            description: "Failed to leave Space.",
+            duration: 3000
+          })
         }
       })
     }
@@ -201,9 +204,8 @@ function SpaceSidebar({ space }: Props) {
                               ? "text-gray-500 cursor-not-allowed opacity-50"
                               : [
                                   "text-red-500 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                                  theme === "light"
-                                    ? "hover:bg-red-500 hover:text-white"
-                                    : "hover:bg-muted hover:text-red-500"
+                                  "hover:bg-red-500 hover:text-white",
+                                  "dark:hover:bg-muted dark:hover:text-red-500"
                                 ]
                           )}
                         >

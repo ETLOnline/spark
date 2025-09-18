@@ -33,7 +33,6 @@ import { userStore } from "@/src/store/user/userStore"
 import { useEffect, useState } from "react"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
-import { useTheme } from "next-themes"
 import clsx from "clsx"
 
 interface ChannelProps {
@@ -50,7 +49,6 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
   onActionComplete,
   setIsCommunityMember
 }) => {
-  const { theme } = useTheme()
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const superAdmin = useAtomValue(userStore.SuperAdmin)
   const [isChannelMember, setIsChannelMember] = useState<boolean>(false)
@@ -116,8 +114,6 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
         } else {
           router.push(`/communities`)
         }
-
-        // router.refresh()
       }
     } catch (error) {
       toast({
@@ -226,9 +222,8 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
               disabled={leaveLoading}
               className={clsx(
                 "text-red-500",
-                theme === "light"
-                  ? "focus:text-white focus:bg-red-500"
-                  : "focus:text-red-500 focus:bg-muted"
+                "focus:bg-red-500 focus:text-white",
+                "dark:focus:bg-muted dark:focus:text-red-500"
               )}
             >
               <LogOut className="mr-2 h-4 w-4" />

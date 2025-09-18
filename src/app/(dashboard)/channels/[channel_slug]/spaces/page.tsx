@@ -25,10 +25,8 @@ import { isEntityUser } from "@/src/utils/clientHelper"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 import { useToast } from "@/src/hooks/use-toast"
 import clsx from "clsx"
-import { useTheme } from "next-themes"
 
 export default function ChannelPage() {
-  const { theme } = useTheme()
   const router = useRouter()
   const { toast } = useToast()
   const community = useAtomValue(communityStore.selectedCommunity)
@@ -108,7 +106,6 @@ export default function ChannelPage() {
             description: "You have successfully left the channel!",
             duration: 3000
           })
-
           if (community?.slug) {
             router.push(`/communities/${community.slug}`)
           }
@@ -224,10 +221,9 @@ export default function ChannelPage() {
                     onClick={handleLeaveChannel}
                     disabled={leaveLoading}
                     className={clsx(
-                      "text-red-500",
-                      theme === "light"
-                        ? "hover:text-white hover:bg-red-500"
-                        : "hover:text-red-500 hover:bg-muted"
+                      "text-red-500 cursor-pointer",
+                      "hover:bg-red-500 hover:text-white",
+                      "dark:hover:bg-muted dark:hover:text-red-500"
                     )}
                   >
                     <LogOut className="mr-2 h-4 w-4" />

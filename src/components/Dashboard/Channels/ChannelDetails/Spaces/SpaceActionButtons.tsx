@@ -35,7 +35,6 @@ import { userStore } from "@/src/store/user/userStore"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 import clsx from "clsx"
-import { useTheme } from "next-themes"
 
 interface Props {
   space: SelectSpace
@@ -43,7 +42,6 @@ interface Props {
 }
 
 function SpacesActionButtons({ space, setIsChannelMember }: Props) {
-  const { theme } = useTheme()
   const [joinLoading, joinResult, joinError, joinSpace] = useServerAction(
     AttachSpaceUserAction
   )
@@ -187,9 +185,8 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
               disabled={leaveLoading}
               className={clsx(
                 "text-red-500",
-                theme === "light"
-                  ? "focus:text-white focus:bg-red-500"
-                  : "focus:text-red-500 focus:bg-muted"
+                "focus:bg-red-500 focus:text-white",
+                "dark:focus:bg-muted dark:focus:text-red-500"
               )}
             >
               <LogOut className="mr-2 h-4 w-4" />

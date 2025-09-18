@@ -44,7 +44,6 @@ import {
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
 import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
-import { useTheme } from "next-themes"
 import clsx from "clsx"
 
 interface CommunityCardProps {
@@ -62,7 +61,6 @@ export default function CommunityCard({
   onDelete,
   onJoin
 }: CommunityCardProps) {
-  const { theme } = useTheme()
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "COMMUNITY",
@@ -242,9 +240,8 @@ export default function CommunityCard({
                   loading={leaveLoading}
                   className={clsx(
                     "text-red-500",
-                    theme === "light"
-                      ? "hover:text-white hover:bg-red-500"
-                      : "hover:text-red-500 hover:bg-muted"
+                    "hover:bg-red-500 hover:text-white",
+                    "dark:hover:bg-muted dark:hover:text-red-500"
                   )}
                 >
                   <LogOut className=" h-4 w-4" />

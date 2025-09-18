@@ -1,13 +1,17 @@
-import { and, eq, SQLWrapper } from "drizzle-orm"
+import { and, eq, inArray, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
 import {
   channelsTable,
   InsertSpace,
+  projectTable,
+  ProjectUsersTable,
+  rolesTable,
   SelectSpace,
   SelectSpaceUser,
   spaceFeaturesTable,
   spacesTable,
-  SpaceUsersTable
+  SpaceUsersTable,
+  userRolesTable
 } from "../../schema"
 
 export type spaceQueryFilters = {
@@ -325,6 +329,85 @@ export async function getSpaceUsers(spaceId: string) {
       }
     })
     return spaceUsers
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function leaveSpaceUser(spaceId: string, userId: string) {
+  try {
+    await db.transaction(async (trx) => {
+      const projects = await trx
+        .select({ id: projectTable.id })
+        .from(projectTable)
+        .where(eq(projectTable.space_id, spaceId))
+
+      const projectIds = projects.map((p: any) => p.id)
+
+      // 1) Bulk delete project users for all projects in this space
+      if (projectIds.length > 0) {
+        await trx
+          .delete(ProjectUsersTable)
+          .where(
+            and(
+              inArray(ProjectUsersTable.project_id, projectIds),
+              eq(ProjectUsersTable.user_id, userId)
+            )
+          )
+      }
+
+      // 2) Delete any userRoles that reference project-scoped roles within these projects
+      if (projectIds.length > 0) {
+        const projectRoles = await trx
+          .select({ id: rolesTable.id })
+          .from(rolesTable)
+          .where(
+            and(
+              eq(rolesTable.entity_type, "PROJECT"),
+              inArray(rolesTable.entity_id, projectIds)
+            )
+          )
+
+        const projectRoleIds = projectRoles.map((r: any) => r.id)
+
+        if (projectRoleIds.length > 0) {
+          await trx
+            .delete(userRolesTable)
+            .where(
+              and(
+                inArray(userRolesTable.role_id, projectRoleIds),
+                eq(userRolesTable.user_id, userId)
+              )
+            )
+        }
+      }
+
+      // 3) Detach the user from the space
+      await dettachSpaceUser(spaceId, userId)
+
+      // 4) Delete any SPACE-scoped user roles for this user and space
+      const spaceRoleIds = await trx
+        .select({ id: rolesTable.id })
+        .from(rolesTable)
+        .where(
+          and(
+            eq(rolesTable.entity_type, "SPACE"),
+            eq(rolesTable.entity_id, spaceId)
+          )
+        )
+
+      if (spaceRoleIds.length > 0) {
+        const sids = spaceRoleIds.map((r: any) => r.id)
+        await trx
+          .delete(userRolesTable)
+          .where(
+            and(
+              inArray(userRolesTable.role_id, sids),
+              eq(userRolesTable.user_id, userId)
+            )
+          )
+      }
+    })
   } catch (e: any) {
     throw new Error(e.message)
   }

@@ -61,7 +61,6 @@ import {
 import ChannelCardItem from "../Dashboard/Channels/ChannelCardItem"
 import Image from "next/image"
 import clsx from "clsx"
-import { useTheme } from "next-themes"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -82,7 +81,6 @@ const demoRules = [
 export default function CommunityDetailsClient({
   community
 }: CommunityDetailsClientProps) {
-  const { theme } = useTheme()
   const router = useRouter()
   const { toast } = useToast()
   const setCurrentCommunity = useSetAtom(communityStore.selectedCommunity)
@@ -262,7 +260,6 @@ export default function CommunityDetailsClient({
             duration: 3000
           })
           router.push("/communities")
-          router.refresh()
         } else {
           console.error("Failed to leave community:", res?.error)
           toast({
@@ -385,9 +382,8 @@ export default function CommunityDetailsClient({
                         disabled={leaveLoading}
                         className={clsx(
                           "text-red-500",
-                          theme === "light"
-                            ? "hover:text-white hover:bg-red-500 border-none"
-                            : "hover:text-red-500 hover:bg-muted "
+                          "hover:bg-red-500 hover:text-white border-none",
+                          "dark:hover:bg-muted dark:hover:text-red-500"
                         )}
                       >
                         <LogOut className="mr-2 h-4 w-4" />
