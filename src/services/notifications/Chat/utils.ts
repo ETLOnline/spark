@@ -28,7 +28,7 @@ export const SendChatNotification = async (
     const receivers =
       chat.users
         ?.filter((user) => user.user_id !== authUser.unique_id)
-        .map((user) => `user-${user.user_id}`) || []
+        .map((user) => user.user_id) || []
 
     if (receivers.length === 0) return
 
@@ -91,7 +91,7 @@ export const SendMessageNotification = async (message: SelectChat) => {
           (userId) =>
             !presenceChannelUsers.users.find((user) => user.id === userId)
         )
-        .map((userId) => `user-${userId}`)
+        .map((userId) => userId)
 
     if (nonPresentReciversIds?.length && nonPresentReciversIds.length > 0) {
       // Only send push if user is NOT present
