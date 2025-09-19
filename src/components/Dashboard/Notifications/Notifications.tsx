@@ -76,6 +76,16 @@ const Notifications: React.FC = () => {
       setNotifications((prev) => [data, ...prev])
     })
 
+    // Resync on reconnect
+    pusherClient.connection.bind("connected", async () => {
+      try {
+        const fresh = (await getNotifications())?.data
+        if (fresh) setNotifications(fresh)
+      } catch (err) {
+        console.error("Failed to resync notifications:", err)
+      }
+    })
+
     return () => {
       pusherClient.unsubscribe(`user-${userId}`)
     }
