@@ -52,12 +52,6 @@ import { useToast } from "@/src/hooks/use-toast"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import { getInitials } from "@/src/utils/helpers"
 import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from "@/src/components/ui/tooltip"
 import ChannelCardItem from "../Dashboard/Channels/ChannelCardItem"
 import Image from "next/image"
 import clsx from "clsx"
@@ -233,41 +227,48 @@ export default function CommunityDetailsClient({
     ? permissionChecker?.canAccess("community.user.invite")
     : false
 
-  const handleJoinCommunity = () => {
-    if (community.id && currentUserId) {
-      attachCommunityUser(community.id, currentUserId).then((res) => {
-        if (res?.success) {
-          setIsCommunityMember(true)
-          toast({
-            title: "Community Joined",
-            description: "You have successfully joined the community!",
-            duration: 3000
-          })
-        } else {
-          console.error("Failed to join community:", res?.error)
-        }
+  const handleJoinCommunity = async () => {
+    if (!community.id || !currentUserId) return
+
+    try {
+      const res = await attachCommunityUser(community.id, currentUserId)
+
+      if (res?.success) {
+        setIsCommunityMember(true)
+        toast({
+          title: "Community Joined",
+          description: "You have successfully joined the community!",
+          duration: 3000
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong while joining the community.",
+        variant: "destructive"
       })
     }
   }
 
-  const handleLeaveCommunity = () => {
-    if (community.id) {
-      leaveCommunity(community.id).then((res) => {
-        if (res?.success) {
-          toast({
-            title: "Left community",
-            description: "You have left the community.",
-            duration: 3000
-          })
-          router.push("/communities")
-        } else {
-          console.error("Failed to leave community:", res?.error)
-          toast({
-            title: "Failed to leave community",
-            description: res?.error || "An unexpected error occurred.",
-            variant: "destructive"
-          })
-        }
+  const handleLeaveCommunity = async () => {
+    if (!community.id || !currentUserId) return
+
+    try {
+      const res = await leaveCommunity(community.id, currentUserId)
+
+      if (res?.success) {
+        toast({
+          title: "Left community",
+          description: "You have left the community.",
+          duration: 3000
+        })
+        router.push("/communities")
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong while leaving the community.",
+        variant: "destructive"
       })
     }
   }
@@ -370,6 +371,7 @@ export default function CommunityDetailsClient({
                         variant="outline"
                         onClick={handleJoinCommunity}
                         disabled={joinLoading}
+                        loading={joinLoading}
                         className="border-none px-1"
                       >
                         <PlusCircle className="mr-2 h-4 w-4" />
@@ -380,6 +382,7 @@ export default function CommunityDetailsClient({
                         variant="outline"
                         onClick={handleLeaveCommunity}
                         disabled={leaveLoading}
+                        loading={leaveLoading}
                         className={clsx(
                           "text-red-500",
                           "hover:bg-red-500 hover:text-white border-none",

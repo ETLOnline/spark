@@ -19,8 +19,10 @@ import { SelectChannel, SelectSpace } from "@/src/db/schema"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import Overlay from "@/src/components/common/Overlay/OverLay"
 import { communityStore } from "@/src/store/community/communityStore"
-import { AttachChannelUserAction } from "@/src/server-actions/Channel/Channel"
-import { LeaveChannelAction } from "@/src/server-actions/Channel/ChannelActions"
+import {
+  AttachChannelUserAction,
+  LeaveChannelAction
+} from "@/src/server-actions/Channel/Channel"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 import { useToast } from "@/src/hooks/use-toast"
@@ -96,9 +98,9 @@ export default function ChannelPage() {
   }
 
   const handleLeaveChannel = async () => {
-    if (selectedChannel?.id && isChannelMember) {
+    if (selectedChannel?.id && isChannelMember && currentUserId) {
       try {
-        const res = await leaveChannel(selectedChannel.id)
+        const res = await leaveChannel(selectedChannel.id, currentUserId)
         if (res?.success) {
           setIsChannelMember(false)
           toast({
@@ -208,6 +210,7 @@ export default function ChannelPage() {
                       variant="outline"
                       onClick={handleJoinChannel}
                       disabled={joinLoading}
+                      loading={joinLoading}
                       className=" font-medium px-6 py-2 hover:bg-primary hover:text-primary-foreground"
                     >
                       <PlusCircle className="mr-2 h-4 w-4" />
@@ -220,6 +223,7 @@ export default function ChannelPage() {
                     variant="outline"
                     onClick={handleLeaveChannel}
                     disabled={leaveLoading}
+                    loading={leaveLoading}
                     className={clsx(
                       "text-red-500 cursor-pointer",
                       "hover:bg-red-500 hover:text-white",

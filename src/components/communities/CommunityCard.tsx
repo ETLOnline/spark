@@ -35,7 +35,7 @@ import { SelectCommunity } from "@/src/db/schema"
 import Link from "next/link"
 import { getInitials } from "@/src/utils/helpers"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import { useAtomValue } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import {
   AttachCommunityUserAction,
@@ -45,6 +45,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
 import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
 import clsx from "clsx"
+import { communityStore } from "@/src/store/community/communityStore"
 
 interface CommunityCardProps {
   community: SelectCommunity
@@ -71,6 +72,9 @@ export default function CommunityCard({
   const { toast } = useToast()
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const superAdmin = useAtomValue(userStore.SuperAdmin)
+  const setRefreshCommunity = useSetAtom(
+    communityStore.refreshCommunitiesTriggerAtom
+  )
   const isCurrentUserMember = community?.communityMembers?.some(
     (member) => member.user_id === currentUserId
   )
@@ -92,35 +96,49 @@ export default function CommunityCard({
     ? permissionChecker?.canAccess("community.view")
     : false
 
-  const handleJoinCommunity = () => {
-    if (community.id && currentUserId) {
-      attachCommunityUser(community.id, currentUserId).then((res) => {
-        if (res?.success) {
-          onJoin()
-          toast({
-            title: "Community Joined",
-            description: "You have successfully joined the community!",
-            duration: 3000
-          })
-        } else {
-          console.error("Failed to join community:", res?.error)
-        }
+  const handleJoinCommunity = async () => {
+    if (!community.id || !currentUserId) return
+
+    try {
+      const res = await attachCommunityUser(community.id, currentUserId)
+
+      if (res?.success) {
+        setRefreshCommunity((pre) => !pre)
+        toast({
+          title: "Community Joined",
+          description: "You have successfully joined the community!",
+          duration: 3000
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong while joining the community.",
+        variant: "destructive"
       })
     }
   }
 
-  const handleLeaveCommunity = () => {
-    if (community.id) {
-      leaveCommunity(community.id).then((res) => {
-        if (res?.success) {
-          toast({
-            title: "Left community",
-            description: "You have left the community."
-          })
-          onJoin()
-        } else {
-          console.error("Failed to leave community:", res?.error)
-        }
+  const handleLeaveCommunity = async () => {
+    if (!community.id || !currentUserId) return
+
+    try {
+      const res = await leaveCommunity(community.id, currentUserId)
+
+      if (res?.success) {
+        setRefreshCommunity((pre) => !pre)
+
+        toast({
+          title: "Left community",
+          description: "You have left the community.",
+          duration: 3000
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong while leaving the community.",
+        variant: "destructive"
       })
     }
   }

@@ -10,7 +10,13 @@ import {
   ChannelUsersTable,
   communityCategoriesTable,
   SelectCommunityCategory,
-  SelectUser
+  SelectUser,
+  spacesTable,
+  SpaceUsersTable,
+  projectTable,
+  ProjectUsersTable,
+  rolesTable,
+  userRolesTable
 } from "../../schema"
 import {
   eq,
@@ -544,5 +550,120 @@ export const getCommunitiesByIds = async function (communityIds: string[]) {
   } catch (error) {
     console.error("Error fetching communities:", error)
     throw new Error("Failed to fetch communities")
+  }
+}
+
+export async function leaveCommunity(
+  communityId: string,
+  currentUserId: string
+) {
+  try {
+    // Step 1: Get all channels in this community
+    const communityWithChannels = await db.query.communitiesTable.findFirst({
+      where: eq(communitiesTable.id, communityId),
+      with: {
+        channels: true
+      }
+    })
+
+    if (!communityWithChannels) {
+      return { success: false, error: "Community not found." }
+    }
+
+    // Step 2: For each channel, remove the user from the channel and its spaces
+    if (
+      communityWithChannels.channels &&
+      communityWithChannels.channels.length > 0
+    ) {
+      for (const channel of communityWithChannels.channels) {
+        try {
+          // Detach user from channel
+          await db
+            .delete(ChannelUsersTable)
+            .where(
+              and(
+                eq(ChannelUsersTable.channel_id, channel.id),
+                eq(ChannelUsersTable.user_id, currentUserId)
+              )
+            )
+
+          // Get spaces in this channel and detach user from each space (bulk)
+          const spaces = await db.query.spacesTable.findMany({
+            where: eq(spacesTable.channel_id, channel.id)
+          })
+
+          const spaceIds = spaces.map((s) => s.id)
+          if (spaceIds.length > 0) {
+            await db
+              .delete(SpaceUsersTable)
+              .where(
+                and(
+                  inArray(SpaceUsersTable.space_id, spaceIds),
+                  eq(SpaceUsersTable.user_id, currentUserId)
+                )
+              )
+          }
+
+          // Remove user from projects inside these spaces (bulk)
+          if (spaceIds.length > 0) {
+            const projects = await db
+              .select({ id: projectTable.id })
+              .from(projectTable)
+              .where(inArray(projectTable.space_id, spaceIds))
+
+            const projectIds = projects.map((p: any) => p.id)
+            if (projectIds.length > 0) {
+              await db
+                .delete(ProjectUsersTable)
+                .where(
+                  and(
+                    inArray(ProjectUsersTable.project_id, projectIds),
+                    eq(ProjectUsersTable.user_id, currentUserId)
+                  )
+                )
+
+              // Delete any project-scoped userRoles for these projects
+              const projectRoles = await db
+                .select({ id: rolesTable.id })
+                .from(rolesTable)
+                .where(
+                  and(
+                    eq(rolesTable.entity_type, "PROJECT"),
+                    inArray(rolesTable.entity_id, projectIds)
+                  )
+                )
+
+              const projectRoleIds = projectRoles.map((r: any) => r.id)
+              if (projectRoleIds.length > 0) {
+                await db
+                  .delete(userRolesTable)
+                  .where(
+                    and(
+                      inArray(userRolesTable.role_id, projectRoleIds),
+                      eq(userRolesTable.user_id, currentUserId)
+                    )
+                  )
+              }
+            }
+          }
+        } catch (err: any) {
+          throw new Error(err.message)
+        }
+      }
+    }
+
+    // Step 3: Finally remove from community
+    const deleted = await detachCommunityUser(communityId, currentUserId)
+
+    if (!deleted) {
+      return {
+        success: false,
+        error: "You are not a member of this community."
+      }
+    }
+
+    return deleted
+  } catch (e: any) {
+    throw new Error(e.message)
   }
 }

@@ -5,9 +5,9 @@ import { useToast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   AttachChannelUserAction,
-  DeleteChannelAction
+  DeleteChannelAction,
+  LeaveChannelAction
 } from "@/src/server-actions/Channel/Channel"
-import { LeaveChannelAction } from "@/src/server-actions/Channel/ChannelActions"
 import { channelStore } from "@/src/store/channel/channelStore"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useRouter } from "next/navigation"
@@ -94,10 +94,10 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
   }
 
   const handleLeaveChannel = async () => {
-    if (!channel.id) return
+    if (!channel.id || !currentUserId) return
 
     try {
-      const res = await leaveChannel(channel.id)
+      const res = await leaveChannel(channel.id, currentUserId)
 
       if (res?.success) {
         setIsChannelMember(false)

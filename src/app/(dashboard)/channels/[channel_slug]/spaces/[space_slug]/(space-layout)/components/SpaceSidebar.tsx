@@ -23,8 +23,10 @@ import { Button } from "@/src/components/ui/button"
 import { userStore } from "@/src/store/user/userStore"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { AttachSpaceUserAction } from "@/src/server-actions/Space/Space"
-import { LeaveSpaceAction } from "@/src/server-actions/Space/SpaceActions"
+import {
+  AttachSpaceUserAction,
+  LeaveSpaceAction
+} from "@/src/server-actions/Space/Space"
 import { useToast } from "@/src/hooks/use-toast"
 import { LogOut } from "lucide-react"
 import clsx from "clsx"
@@ -60,9 +62,11 @@ function SpaceSidebar({ space }: Props) {
     }
   }, [space, currentUserId])
 
-  const handleJoinSpace = () => {
+  const handleJoinSpace = async () => {
     if (space.id && currentUserId) {
-      joinSpace(space.id, currentUserId).then((res) => {
+      try {
+        const res = await joinSpace(space.id, currentUserId)
+
         if (res?.success) {
           setIsSpaceMember(true)
           toast({
@@ -70,20 +74,22 @@ function SpaceSidebar({ space }: Props) {
             description: "You have successfully joined the Space!",
             duration: 3000
           })
-        } else {
-          toast({
-            title: "Error",
-            description: "Something went wrong while joining the space.",
-            duration: 3000
-          })
         }
-      })
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred.",
+          duration: 3000
+        })
+      }
     }
   }
 
-  const handleLeaveSpace = () => {
-    if (space.id) {
-      leaveSpace(space.id).then((res) => {
+  const handleLeaveSpace = async () => {
+    if (space.id && currentUserId) {
+      try {
+        const res = await leaveSpace(space.id, currentUserId)
+
         if (res?.success) {
           toast({
             title: "Space Left",
@@ -95,14 +101,14 @@ function SpaceSidebar({ space }: Props) {
             space.channel?.channel_slug ?? ""
           )
           router.push(`/channels/${encodedChannelSlug}/spaces`)
-        } else {
-          toast({
-            title: "Error",
-            description: "Failed to leave Space.",
-            duration: 3000
-          })
         }
-      })
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred while leaving the Space.",
+          duration: 3000
+        })
+      }
     }
   }
 

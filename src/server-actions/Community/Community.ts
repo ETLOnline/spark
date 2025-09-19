@@ -14,25 +14,12 @@ import {
   attachCommunityUser,
   GetCommunityById,
   detachCommunityUser,
-  getCommunitiesByIds
+  getCommunitiesByIds,
+  leaveCommunity
 } from "@/src/db/data-access/communities/query"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
-import {
-  InsertCommunity,
-  SelectCommunity,
-  ChannelUsersTable,
-  SpaceUsersTable,
-  communitiesTable,
-  spacesTable,
-  projectTable,
-  ProjectUsersTable,
-  userRolesTable,
-  rolesTable
-} from "@/src/db/schema"
-import { inArray } from "drizzle-orm"
+import { InsertCommunity, SelectCommunity } from "@/src/db/schema"
 import { CreateServerAction } from ".."
-import { db } from "@/src/db"
-import { and, eq } from "drizzle-orm"
 import { AuthUserAction } from "../User/AuthUserAction"
 import {
   createScopedCommunityRolesAndAssignAdmin,
@@ -325,130 +312,12 @@ export const DetachCommunityUserAction = CreateServerAction(
 // Also removes the user from all channels and spaces within the community.
 export const LeaveCommunityAction = CreateServerAction(
   true,
-  async (communityId: string) => {
+  async (communityId: string, currentUserId: string) => {
     try {
-      const authUser = await AuthUserAction()
-
-      if (!authUser?.unique_id) {
-        return {
-          success: false,
-          error: "Authentication required to leave community."
-        }
-      }
-
-      const userId = authUser.unique_id
-
-      // Step 1: Get all channels in this community
-      const communityWithChannels = await db.query.communitiesTable.findFirst({
-        where: eq(communitiesTable.id, communityId),
-        with: {
-          channels: true
-        }
-      })
-
-      if (!communityWithChannels) {
-        return { success: false, error: "Community not found." }
-      }
-
-      // Step 2: For each channel, remove the user from the channel and its spaces
-      if (
-        communityWithChannels.channels &&
-        communityWithChannels.channels.length > 0
-      ) {
-        for (const channel of communityWithChannels.channels) {
-          try {
-            // Detach user from channel
-            await db
-              .delete(ChannelUsersTable)
-              .where(
-                and(
-                  eq(ChannelUsersTable.channel_id, channel.id),
-                  eq(ChannelUsersTable.user_id, userId)
-                )
-              )
-
-            // Get spaces in this channel and detach user from each space (bulk)
-            const spaces = await db.query.spacesTable.findMany({
-              where: eq(spacesTable.channel_id, channel.id)
-            })
-
-            const spaceIds = spaces.map((s) => s.id)
-            if (spaceIds.length > 0) {
-              await db
-                .delete(SpaceUsersTable)
-                .where(
-                  and(
-                    inArray(SpaceUsersTable.space_id, spaceIds),
-                    eq(SpaceUsersTable.user_id, userId)
-                  )
-                )
-            }
-
-            // Remove user from projects inside these spaces (bulk)
-            if (spaceIds.length > 0) {
-              const projects = await db
-                .select({ id: projectTable.id })
-                .from(projectTable)
-                .where(inArray(projectTable.space_id, spaceIds))
-
-              const projectIds = projects.map((p: any) => p.id)
-              if (projectIds.length > 0) {
-                await db
-                  .delete(ProjectUsersTable)
-                  .where(
-                    and(
-                      inArray(ProjectUsersTable.project_id, projectIds),
-                      eq(ProjectUsersTable.user_id, userId)
-                    )
-                  )
-
-                // Delete any project-scoped userRoles for these projects
-                const projectRoles = await db
-                  .select({ id: rolesTable.id })
-                  .from(rolesTable)
-                  .where(
-                    and(
-                      eq(rolesTable.entity_type, "PROJECT"),
-                      inArray(rolesTable.entity_id, projectIds)
-                    )
-                  )
-
-                const projectRoleIds = projectRoles.map((r: any) => r.id)
-                if (projectRoleIds.length > 0) {
-                  await db
-                    .delete(userRolesTable)
-                    .where(
-                      and(
-                        inArray(userRolesTable.role_id, projectRoleIds),
-                        eq(userRolesTable.user_id, userId)
-                      )
-                    )
-                }
-              }
-            }
-          } catch (err) {
-            console.error(
-              `Error removing user ${userId} from channel ${channel.id}:`,
-              err
-            )
-            // Continue with other channels even if one fails
-          }
-        }
-      }
-
-      // Step 3: Finally remove from community
-      const deleted = await detachCommunityUser(communityId, userId)
-
-      if (!deleted) {
-        return {
-          success: false,
-          error: "You are not a member of this community."
-        }
-      }
+      const deleted = await leaveCommunity(communityId, currentUserId)
 
       return { success: true, data: deleted }
     } catch (error: any) {
-      console.error("Error in LeaveCommunityAction:", error)
       return { success: false, error: error.message || error }
     }
   }

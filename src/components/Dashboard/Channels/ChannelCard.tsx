@@ -23,8 +23,10 @@ import { useEffect, useState } from "react"
 import { userStore } from "@/src/store/user/userStore"
 import { useRouter } from "next/navigation"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { AttachChannelUserAction } from "@/src/server-actions/Channel/Channel"
-import { LeaveChannelAction } from "@/src/server-actions/Channel/ChannelActions"
+import {
+  AttachChannelUserAction,
+  LeaveChannelAction
+} from "@/src/server-actions/Channel/Channel"
 import { useToast } from "@/src/hooks/use-toast"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import {
@@ -62,31 +64,37 @@ function ChannelCard({ channel }: ChannelProps) {
       const res = await joinChannel(channel.id, currentUserId)
       if (res?.success) {
         setIsChannelMember(true)
-        router.refresh()
         toast({
           title: "Channel Joined",
           description: "You have successfully joined the channel!",
           duration: 3000
         })
       } else {
-        console.error("Failed to join Channel:", res?.error)
+        toast({
+          title: "Error",
+          description: "Failed to join channel",
+          variant: "destructive"
+        })
       }
     }
   }
 
   const handleLeaveChannel = async () => {
-    if (channel?.id) {
-      const res = await leaveChannel(channel.id)
+    if (channel?.id && currentUserId) {
+      const res = await leaveChannel(channel.id, currentUserId)
       if (res?.success) {
         setIsChannelMember(false)
-        router.refresh()
         toast({
           title: "Channel Left",
           description: "You have successfully left the channel!",
           duration: 3000
         })
       } else {
-        console.error("Failed to leave Channel:", res?.error)
+        toast({
+          title: "Error",
+          description: "Failed to leave channel",
+          variant: "destructive"
+        })
       }
     }
   }

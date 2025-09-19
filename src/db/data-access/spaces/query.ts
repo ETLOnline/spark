@@ -334,7 +334,7 @@ export async function getSpaceUsers(spaceId: string) {
   }
 }
 
-export async function leaveSpaceUser(spaceId: string, userId: string) {
+export async function leaveSpaceUser(spaceId: string, currentUserId: string) {
   try {
     await db.transaction(async (trx) => {
       const projects = await trx
@@ -351,7 +351,7 @@ export async function leaveSpaceUser(spaceId: string, userId: string) {
           .where(
             and(
               inArray(ProjectUsersTable.project_id, projectIds),
-              eq(ProjectUsersTable.user_id, userId)
+              eq(ProjectUsersTable.user_id, currentUserId)
             )
           )
       }
@@ -376,14 +376,14 @@ export async function leaveSpaceUser(spaceId: string, userId: string) {
             .where(
               and(
                 inArray(userRolesTable.role_id, projectRoleIds),
-                eq(userRolesTable.user_id, userId)
+                eq(userRolesTable.user_id, currentUserId)
               )
             )
         }
       }
 
       // 3) Detach the user from the space
-      await dettachSpaceUser(spaceId, userId)
+      await dettachSpaceUser(spaceId, currentUserId)
 
       // 4) Delete any SPACE-scoped user roles for this user and space
       const spaceRoleIds = await trx
@@ -403,11 +403,15 @@ export async function leaveSpaceUser(spaceId: string, userId: string) {
           .where(
             and(
               inArray(userRolesTable.role_id, sids),
-              eq(userRolesTable.user_id, userId)
+              eq(userRolesTable.user_id, currentUserId)
             )
           )
       }
     })
+    return {
+      success: true,
+      message: "User successfully left the space"
+    }
   } catch (e: any) {
     throw new Error(e.message)
   }

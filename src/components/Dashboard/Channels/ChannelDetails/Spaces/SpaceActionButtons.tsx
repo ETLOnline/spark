@@ -13,9 +13,9 @@ import { spaceStore } from "@/src/store/space/spaceStore"
 import { useAtomValue, useSetAtom } from "jotai"
 import {
   AttachSpaceUserAction,
-  DeleteSpaceAction
+  DeleteSpaceAction,
+  LeaveSpaceAction
 } from "@/src/server-actions/Space/Space"
-import { LeaveSpaceAction } from "@/src/server-actions/Space/SpaceActions"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { SelectSpace } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
@@ -72,14 +72,18 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
           duration: 3000
         })
       } else {
-        console.error("Failed to join Space:", res?.error)
+        toast({
+          title: "Error",
+          description: "Failed to leave Space",
+          variant: "destructive"
+        })
       }
     }
   }
 
   const handleLeaveSpace = async () => {
-    if (space.id) {
-      const res = await leaveSpace(space.id)
+    if (space.id && currentUserId) {
+      const res = await leaveSpace(space.id, currentUserId)
       if (res?.success) {
         setIsSpaceMember(false)
         toast({
@@ -88,7 +92,11 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
           duration: 3000
         })
       } else {
-        console.error("Failed to leave Space:", res?.error)
+        toast({
+          title: "Error",
+          description: "Failed to leave Space",
+          variant: "destructive"
+        })
       }
     }
   }

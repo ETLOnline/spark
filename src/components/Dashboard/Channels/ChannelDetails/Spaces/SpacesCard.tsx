@@ -22,8 +22,10 @@ import {
   PlusCircle
 } from "lucide-react"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { AttachSpaceUserAction } from "@/src/server-actions/Space/Space"
-import { LeaveSpaceAction } from "@/src/server-actions/Space/SpaceActions"
+import {
+  AttachSpaceUserAction,
+  LeaveSpaceAction
+} from "@/src/server-actions/Space/Space"
 import { useToast } from "@/src/hooks/use-toast"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import {
@@ -60,43 +62,6 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
       setIsSpaceMember(isMember)
     }
   }, [space, currentUserId])
-
-  const handleJoinSpace = () => {
-    if (space.id && currentUserId) {
-      joinSpace(space.id, currentUserId).then((res) => {
-        if (res?.success) {
-          setIsSpaceMember(true)
-          setIsChannelMember?.(true)
-          toast({
-            title: "Space Joined",
-            description: "You have successfully joined the Space!",
-            duration: 3000
-          })
-          router.refresh()
-        } else {
-          console.error("Failed to join Space:", res?.error)
-        }
-      })
-    }
-  }
-
-  const handleLeaveSpace = () => {
-    if (space.id) {
-      leaveSpace(space.id).then((res) => {
-        if (res?.success) {
-          setIsSpaceMember(false)
-          toast({
-            title: "Space Left",
-            description: "You have successfully left the Space!",
-            duration: 3000
-          })
-          router.refresh()
-        } else {
-          console.error("Failed to leave Space:", res?.error)
-        }
-      })
-    }
-  }
 
   const { permissionChecker } = usePermissionChecker(
     "scoped",
