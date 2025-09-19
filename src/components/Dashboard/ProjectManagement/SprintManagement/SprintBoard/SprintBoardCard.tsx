@@ -32,6 +32,7 @@ import {
 } from "@dnd-kit/core"
 import BoardTaskCard from "./BoardTaskCard"
 import { createPortal } from "react-dom"
+import { toast } from "@/src/hooks/use-toast"
 
 interface Props {
   sprint: SelectSprint
@@ -132,6 +133,10 @@ function SprintBoardCard({
     })
 
     if (statusChanged) {
+      toast({
+        title: "Task status updated successfully",
+        duration: 2000
+      })
       await UpdateTaskAction(taskId as string, {
         status_id: overStatusId as string
       })
