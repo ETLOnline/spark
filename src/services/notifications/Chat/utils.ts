@@ -5,6 +5,7 @@ import {
   NotificationPayload,
   sendPushNotification
 } from "../PushNotification.utils"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 type PusherUsersResponse = {
   users: { id: string }[]
@@ -110,7 +111,7 @@ export const SendMessageNotification = async (
         template: {
           title: `Spark- ${authUser.first_name} ${authUser.last_name} sent you a message`,
           body: message.last_message || "",
-          deep_link: `${process.env.NEXT_PUBLIC_BASE_URL}/${CTALink}`,
+          deep_link: createAbsoluteUrl(CTALink),
           icon: authUser.profile_url || ""
         }
       })
