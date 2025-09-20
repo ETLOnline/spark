@@ -30,6 +30,7 @@ import {
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
 import pusherServer from "@/src/services/realtime/pusherServer"
+import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
 
 export const CreateCommunityAction = CreateServerAction(
   true,
@@ -195,6 +196,7 @@ export const DeleteCommunityAction = CreateServerAction(
     try {
       const communityIdToDelete = deletedCommunityData.id
       await DeleteCommunity(communityIdToDelete)
+      await deleteRoleBasedOnEntityType("COMMUNITY", communityIdToDelete)
 
       return { success: true, message: "Community deleted successfully." }
     } catch (error: any) {

@@ -12,7 +12,8 @@ import {
   dettachChannelUser,
   updateChannelUser,
   getChannelUsers,
-  channelQueryFilters
+  channelQueryFilters,
+  getChannelsByCommunityId
 } from "@/src/db/data-access/channels/query"
 import { CreateServerAction } from ".."
 import {
@@ -33,6 +34,7 @@ import { GetUserPermissionsParsedAction } from "../UserRoles/UserRole"
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import { ensureCommunityMembership } from "../Community/Community"
 import pusherServer from "@/src/services/realtime/pusherServer"
+import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
 
 export const CreateChannelAction = CreateServerAction(
   true,
@@ -133,6 +135,7 @@ export const DeleteChannelAction = CreateServerAction(
         "broadcast-channels-spaces-update"
       )
       await channel.publish("channel-del", deletedChannelData)
+      await deleteRoleBasedOnEntityType("CHANNEL", deletedChannelData.id)
       return { success: true }
     } catch (error) {
       return { error: error }
@@ -247,6 +250,18 @@ export const GetChannelUsersAction = CreateServerAction(
     try {
       const channelUsers = await getChannelUsers(channelId)
       return { success: true, data: channelUsers }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetChannelsByCommunityIdAction = CreateServerAction(
+  true,
+  async (communityId: string) => {
+    try {
+      const channels = await getChannelsByCommunityId(communityId)
+      return { success: true, data: channels }
     } catch (error) {
       return { error: error }
     }
