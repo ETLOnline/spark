@@ -100,6 +100,7 @@ const CreatePostInput: React.FC<Props> = ({
         tags={pollOptions as string[]}
         updateTags={setPollOptions as PollOptionsSetter}
         placeholder="Type to add poll options..."
+        type={type}
       />
     </div>
   ) : (

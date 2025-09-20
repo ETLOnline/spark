@@ -3,7 +3,8 @@ import {
   CreateFile,
   CreateFolder,
   GetDirectoryContents,
-  DeleteFile
+  DeleteFile,
+  searchFoldersBySlug
 } from "@/src/db/data-access/file-sharing/query"
 import {
   base64ToBuffer,
@@ -18,15 +19,31 @@ import { eq } from "drizzle-orm"
 
 export const CreateNewFolderAction = CreateServerAction(
   true,
-  async (id: string | number, folderName: string) => {
+  async (id: string | number, folderName: string, folderSlug: string) => {
     try {
-      const result = await CreateFolder(id, folderName)
+      const result = await CreateFolder(id, folderName, folderSlug)
       return { success: true, data: result[0] }
     } catch (error) {
       console.error("Error creating folder:", error)
       return {
         success: false,
         error: "Failed to create folder"
+      }
+    }
+  }
+)
+
+export const SearchFolderBySlugAction = CreateServerAction(
+  true,
+  async (id: string | number, slug: string, isRoot: boolean) => {
+    try {
+      const result = await searchFoldersBySlug(id, slug, isRoot)
+      return { success: true, data: result }
+    } catch (error) {
+      console.error("Error searching folder:", error)
+      return {
+        success: false,
+        error: "Failed to search folder"
       }
     }
   }

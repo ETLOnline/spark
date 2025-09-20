@@ -67,9 +67,9 @@ export function PlatformSuggestionCard({ authUser }: Props) {
             suggestedUsers.map((suggestion) => (
               <div
                 key={suggestion.unique_id}
-                className="flex items-center justify-between"
+                className="flex items-center justify-between gap-1 "
               >
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 flex-1 min-w-0">
                   <Avatar>
                     <AvatarImage
                       src={suggestion.profile_url ?? ""}
@@ -79,11 +79,11 @@ export function PlatformSuggestionCard({ authUser }: Props) {
                       {suggestion.first_name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <p className="text-sm font-medium">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate line-clamp-2">
                       {suggestion.first_name} {suggestion.last_name}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground break-words line-clamp-2">
                       {GetUserRole(suggestion) || "No Role"}
                     </p>
                   </div>

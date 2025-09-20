@@ -131,7 +131,10 @@ export function InviteUserDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent
+        className="sm:max-w-[600px]"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Invite Users to {entityType}</DialogTitle>
           {/* <DialogDescription>Invite users to join your space either from the platform or via email.</DialogDescription> */}

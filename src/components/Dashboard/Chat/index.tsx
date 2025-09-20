@@ -46,6 +46,7 @@ import {
 } from "../../ui/emoji-picker"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import pusherClient from "@/src/services/realtime/PusherClient"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -218,8 +219,12 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       setChatContact(chatContact || null)
     }
 
+    const channelName = `presence-chat-${currentChat.id}`
+    const presenceChannel = pusherClient.subscribe(channelName)
+
     return () => {
       unsubscribe()
+      presenceChannel.unsubscribe()
     }
   }, [currentChat?.channel_id, authUser])
 

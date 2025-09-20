@@ -1,124 +1,125 @@
 import { sql } from "drizzle-orm"
 import { db } from "../index"
 import { permissionsTable } from "../schema"
+import { permissions } from "@/src/utils/constants"
 
 const permissionSeedList = [
   // Posting
-  { namespace: "posting", action: "create" },
-  { namespace: "posting", action: "view" },
-  { namespace: "posting", action: "update" },
-  { namespace: "posting", action: "delete" },
+  { namespace: "posting", action: permissions.posting.create },
+  { namespace: "posting", action: permissions.posting.view },
+  { namespace: "posting", action: permissions.posting.update },
+  { namespace: "posting", action: permissions.posting.delete },
 
   // Chat
-  { namespace: "chat", action: "create" },
-  { namespace: "chat", action: "view" },
-  { namespace: "chat", action: "delete" },
-  { namespace: "chat", action: "update" },
+  { namespace: "chat", action: permissions.chat.create },
+  { namespace: "chat", action: permissions.chat.view },
+  { namespace: "chat", action: permissions.chat.delete },
+  { namespace: "chat", action: permissions.chat.update },
 
   // Events
-  { namespace: "events", action: "create" },
-  { namespace: "events", action: "update" },
-  { namespace: "events", action: "delete" },
-  { namespace: "events", action: "view" },
+  { namespace: "events", action: permissions.events.create },
+  { namespace: "events", action: permissions.events.update },
+  { namespace: "events", action: permissions.events.delete },
+  { namespace: "events", action: permissions.events.view },
 
-  // community
-  { namespace: "community", action: "create" },
-  { namespace: "community", action: "view" },
-  { namespace: "community", action: "update" },
-  { namespace: "community", action: "delete" },
-  { namespace: "community", action: "allow.action" },
-  { namespace: "community", action: "user.invite" },
-  { namespace: "community", action: "user.update" },
-  { namespace: "community", action: "user.remove" },
-  { namespace: "community", action: "user.view" },
-  { namespace: "community", action: "channel.create" },
+  // Community
+  { namespace: "community", action: permissions.community.create },
+  { namespace: "community", action: permissions.community.view },
+  { namespace: "community", action: permissions.community.update },
+  { namespace: "community", action: permissions.community.delete },
+  { namespace: "community", action: permissions.community.allowAction },
+  { namespace: "community", action: permissions.community.userInvite },
+  { namespace: "community", action: permissions.community.userUpdate },
+  { namespace: "community", action: permissions.community.userRemove },
+  { namespace: "community", action: permissions.community.userView },
+  { namespace: "community", action: permissions.community.channelCreate },
 
-  // channel
-  { namespace: "channel", action: "create" },
-  { namespace: "channel", action: "update" },
-  { namespace: "channel", action: "delete" },
-  { namespace: "channel", action: "view" },
-  { namespace: "channel", action: "allow.action" },
-  { namespace: "channel", action: "space.create" },
+  // Channel
+  { namespace: "channel", action: permissions.channel.create },
+  { namespace: "channel", action: permissions.channel.update },
+  { namespace: "channel", action: permissions.channel.delete },
+  { namespace: "channel", action: permissions.channel.view },
+  { namespace: "channel", action: permissions.channel.allowAction },
+  { namespace: "channel", action: permissions.channel.spaceCreate },
 
   // Channel Users
-  { namespace: "channel", action: "user.view" },
-  { namespace: "channel", action: "user.invite" },
-  { namespace: "channel", action: "user.remove" },
-  { namespace: "channel", action: "user.update" },
+  { namespace: "channel", action: permissions.channel.userView },
+  { namespace: "channel", action: permissions.channel.userInvite },
+  { namespace: "channel", action: permissions.channel.userRemove },
+  { namespace: "channel", action: permissions.channel.userUpdate },
 
   // Space
-  { namespace: "space", action: "create" },
-  { namespace: "space", action: "view" },
-  { namespace: "space", action: "update" },
-  { namespace: "space", action: "delete" },
-  { namespace: "space", action: "allow.action" },
-  { namespace: "space", action: "project.create" },
+  { namespace: "space", action: permissions.space.create },
+  { namespace: "space", action: permissions.space.view },
+  { namespace: "space", action: permissions.space.update },
+  { namespace: "space", action: permissions.space.delete },
+  { namespace: "space", action: permissions.space.allowAction },
+  { namespace: "space", action: permissions.space.projectCreate },
 
   // Space Settings
-  { namespace: "space", action: "setting.update" },
+  { namespace: "space", action: permissions.space.settingUpdate },
 
   // Space Users
-  { namespace: "space", action: "user.invite" },
-  { namespace: "space", action: "user.view" },
-  { namespace: "space", action: "user.update" },
-  { namespace: "space", action: "user.remove" },
+  { namespace: "space", action: permissions.space.userInvite },
+  { namespace: "space", action: permissions.space.userView },
+  { namespace: "space", action: permissions.space.userUpdate },
+  { namespace: "space", action: permissions.space.userRemove },
 
   // Space File Sharing
-  { namespace: "space", action: "file_sharing.create" },
-  { namespace: "space", action: "file_sharing.view" },
-  { namespace: "space", action: "file_sharing.update" },
-  { namespace: "space", action: "file_sharing.delete" },
-  { namespace: "space", action: "file_sharing.allow.action" },
+  { namespace: "space", action: permissions.space.fileCreate },
+  { namespace: "space", action: permissions.space.fileView },
+  { namespace: "space", action: permissions.space.fileUpdate },
+  { namespace: "space", action: permissions.space.fileDelete },
+  { namespace: "space", action: permissions.space.fileAllow },
 
-  // Posting
-  { namespace: "space", action: "posting.create" },
-  { namespace: "space", action: "posting.view" },
-  { namespace: "space", action: "posting.update" },
-  { namespace: "space", action: "posting.delete" },
+  // Space Posting
+  { namespace: "space", action: permissions.space.postingCreate },
+  { namespace: "space", action: permissions.space.postingView },
+  { namespace: "space", action: permissions.space.postingUpdate },
+  { namespace: "space", action: permissions.space.postingDelete },
 
-  // Chat
-  { namespace: "space", action: "chat.create" },
-  { namespace: "space", action: "chat.view" },
-  { namespace: "space", action: "chat.delete" },
-  { namespace: "space", action: "chat.update" },
-  { namespace: "space", action: "project.view" },
+  // Space Chat
+  { namespace: "space", action: permissions.space.chatCreate },
+  { namespace: "space", action: permissions.space.chatView },
+  { namespace: "space", action: permissions.space.chatDelete },
+  { namespace: "space", action: permissions.space.chatUpdate },
+  { namespace: "space", action: permissions.space.projectView },
 
   // Project
-  { namespace: "project", action: "create" },
-  { namespace: "project", action: "view" },
-  { namespace: "project", action: "update" },
+  { namespace: "project", action: permissions.project.create },
+  { namespace: "project", action: permissions.project.view },
+  { namespace: "project", action: permissions.project.update },
 
-  { namespace: "project", action: "detail" },
-  { namespace: "project", action: "launch.board" },
+  { namespace: "project", action: permissions.project.detail },
+  { namespace: "project", action: permissions.project.launchBoard },
 
-  { namespace: "project", action: "overview.view" },
+  { namespace: "project", action: permissions.project.overviewView },
 
-  { namespace: "project", action: "sprint.create" },
-  { namespace: "project", action: "sprint.update" },
-  { namespace: "project", action: "sprint.view" },
+  { namespace: "project", action: permissions.project.sprintCreate },
+  { namespace: "project", action: permissions.project.sprintUpdate },
+  { namespace: "project", action: permissions.project.sprintView },
 
-  { namespace: "project", action: "task.create" },
-  { namespace: "project", action: "task.view" },
-  { namespace: "project", action: "task.update" },
-  { namespace: "project", action: "task.delete" },
+  { namespace: "project", action: permissions.project.taskCreate },
+  { namespace: "project", action: permissions.project.taskView },
+  { namespace: "project", action: permissions.project.taskUpdate },
+  { namespace: "project", action: permissions.project.taskDelete },
 
-  { namespace: "project", action: "board.view" },
+  { namespace: "project", action: permissions.project.boardView },
 
-  { namespace: "project", action: "backlog.view" },
-  { namespace: "project", action: "backlog.task.view" },
-  { namespace: "project", action: "backlog.task.create" },
-  { namespace: "project", action: "backlog.task.update" },
-  { namespace: "project", action: "backlog.task.delete" },
+  { namespace: "project", action: permissions.project.backlogView },
+  { namespace: "project", action: permissions.project.backlogTaskView },
+  { namespace: "project", action: permissions.project.backlogTaskCreate },
+  { namespace: "project", action: permissions.project.backlogTaskUpdate },
+  { namespace: "project", action: permissions.project.backlogTaskDelete },
 
-  { namespace: "project", action: "files.view" },
+  { namespace: "project", action: permissions.project.filesView },
 
-  { namespace: "project", action: "teams.view" },
-  { namespace: "project", action: "teams.add" },
-  { namespace: "project", action: "teams.update" },
-  { namespace: "project", action: "teams.delete" },
+  { namespace: "project", action: permissions.project.teamsView },
+  { namespace: "project", action: permissions.project.teamsAdd },
+  { namespace: "project", action: permissions.project.teamsUpdate },
+  { namespace: "project", action: permissions.project.teamsDelete },
 
-  { namespace: "project", action: "settings.view" }
+  { namespace: "project", action: permissions.project.settingsView }
 ]
 
 export const PermissionsSeed = async () => {

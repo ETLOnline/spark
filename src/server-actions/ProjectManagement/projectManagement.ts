@@ -21,6 +21,8 @@ import {
   getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
 import pusherServer from "@/src/services/realtime/pusherServer"
+import { SendProjectNotifications } from "@/src/services/notifications/Project/utils"
+import { createProjectInviteNotification } from "@/src/services/notify/project/project"
 
 export const CreateProjectAction = CreateServerAction(
   true,
@@ -153,6 +155,21 @@ export const AttachProjectUserAction = CreateServerAction(
         usersToCreateWithRoles
       )
 
+      const Project = await getProjectById(projectId)
+
+      if (newProjectUsers.length > 0 && Project) {
+        await SendProjectNotifications(
+          "project_member_added",
+          newProjectUsers,
+          Project
+        )
+      }
+
+      await createProjectInviteNotification(
+        "project_invite",
+        newUsersToAttach,
+        projectId
+      )
       return { success: true, data: newProjectUsers, failedRoleAssignments }
     } catch (error: any) {
       return {
