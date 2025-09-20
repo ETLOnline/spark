@@ -15,10 +15,24 @@ import { useAtomValue } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
 import { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
-import { TaskModal } from "../../Task/components/TaskModal"
+import {
+  GetSprintTasksAction,
+  UpdateTaskAction
+} from "@/src/server-actions/Tasks/Task"
 import { TaskFiltersType } from "../../types/taskFilters.type"
 import TaskFilters from "../../TaskFilter/TaskFilters"
+import {
+  DndContext,
+  closestCenter,
+  DragEndEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay
+} from "@dnd-kit/core"
+import BoardTaskCard from "./BoardTaskCard"
+import { createPortal } from "react-dom"
+import { toast } from "@/src/hooks/use-toast"
 
 interface Props {
   sprint: SelectSprint
@@ -40,6 +54,7 @@ function SprintBoardCard({
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
   const [filteredTasks, setFilteredTasks] = useState<SelectTask[]>([])
   const [filters, setFilters] = useState<TaskFiltersType | null>(null)
+  const [activeTask, setActiveTask] = useState<SelectTask | null>(null)
 
   const [getTaskLoading, , , GetSPrintTask] =
     useServerAction(GetSprintTasksAction)
@@ -87,6 +102,49 @@ function SprintBoardCard({
     setFilters(filters)
   }
 
+  const sensors = useSensors(useSensor(PointerSensor))
+
+  function handleDragStart(event: any) {
+    const taskId = event.active.id
+    const task = filteredTasks.find((t) => t.id === taskId)
+    setActiveTask(task || null)
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over) {
+      setActiveTask(null)
+      return
+    }
+
+    const taskId = active.id
+    const overStatusId = over.data?.current?.statusId
+
+    let statusChanged = false
+
+    setFilteredTasks((prev) => {
+      return prev.map((task) => {
+        if (task.id === taskId && task.status_id !== overStatusId) {
+          statusChanged = true
+          return { ...task, status_id: overStatusId }
+        }
+        return task
+      })
+    })
+
+    if (statusChanged) {
+      toast({
+        title: "Task status updated successfully",
+        duration: 2000
+      })
+      await UpdateTaskAction(taskId as string, {
+        status_id: overStatusId as string
+      })
+    }
+
+    setActiveTask(null)
+  }
+
   return (
     <>
       <Card key={sprint.id} className="mb-6 ">
@@ -115,20 +173,40 @@ function SprintBoardCard({
           />
         </CardHeader>
         <CardContent>
-          <div className="flex overflow-x-auto  ">
-            <div className="flex justify-between gap-2 w-full">
-              {projectStatusList.map((status) => (
-                <BoardColumn
-                  key={status.id}
-                  sprint={sprint}
-                  status={status}
-                  tasks={filteredTasks}
-                  onTaskClick={handleOnTaskClick}
-                  setTasks={setFilteredTasks}
-                />
-              ))}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="flex overflow-x-auto  ">
+              <div className="flex justify-between gap-2 w-full">
+                {projectStatusList.map((status) => (
+                  <BoardColumn
+                    key={status.id}
+                    sprint={sprint}
+                    status={status}
+                    tasks={filteredTasks}
+                    onTaskClick={handleOnTaskClick}
+                    setTasks={setFilteredTasks}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+
+            {createPortal(
+              <DragOverlay>
+                {activeTask ? (
+                  <BoardTaskCard
+                    task={activeTask}
+                    onClick={handleOnTaskClick}
+                    setTasks={setFilteredTasks}
+                  />
+                ) : null}
+              </DragOverlay>,
+              document.body
+            )}
+          </DndContext>
         </CardContent>
         <CardFooter>
           <SprintStatus />

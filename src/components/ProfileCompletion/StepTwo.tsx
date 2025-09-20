@@ -6,7 +6,7 @@ import { Label } from "@/src/components/ui/label"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Dispatch, SetStateAction, useEffect } from "react"
+import { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { SelectProfile, SelectUser } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
@@ -68,6 +68,7 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
   const [submitDataLoading, , , submitUserProfileData] = useServerAction(
     updateUserProfileAction
   )
+  const [isTransitioning, setIsTransitioning] = useState(false)
 
   const form = useForm({
     resolver: zodResolver(userQualificationSchema)
@@ -94,6 +95,8 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
 
   async function handleSubmit(data: any) {
     try {
+      setIsTransitioning(true)
+
       if (user) {
         const payload = {
           ...data,
@@ -113,6 +116,8 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
             setStep((prev) => prev + 1)
             window.scrollTo(0, 0)
           }
+        } else {
+          setIsTransitioning(false)
         }
       }
     } catch {
@@ -121,6 +126,7 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
         variant: "destructive",
         duration: 2000
       })
+      setIsTransitioning(false)
     }
   }
 
@@ -228,7 +234,11 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
               >
                 Previous
               </Button>
-              <Button type="submit" loading={submitDataLoading}>
+              <Button
+                type="submit"
+                loading={submitDataLoading}
+                disabled={isTransitioning}
+              >
                 Next
               </Button>
             </div>
