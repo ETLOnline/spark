@@ -11,7 +11,7 @@ function prepareDataForNotification(
 ): InsertNotification | InsertNotification[] {
   const notifications = notificationData.receivers.map((receiverId) => ({
     created_by: notificationData.user_id,
-    received_by: receiverId.replace(/^user-/, ""),
+    received_by: receiverId,
     title: notificationData.template.title,
     body: notificationData.template.body,
     deep_link: notificationData.template.deep_link,
