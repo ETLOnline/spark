@@ -13,7 +13,8 @@ import {
   updateProject,
   getExistingProjectUsers,
   createProjectUser,
-  countProjectMembers
+  countProjectMembers,
+  getProjectsBySpaceIds
 } from "@/src/db/data-access/project-management/query"
 import {
   createScopedProjectRolesAndAssignAdmin,
@@ -235,6 +236,19 @@ export const countProjectMembersAction = CreateServerAction(
       return { success: true, data: count }
     } catch (error) {
       console.error("Failed to count project members:", error)
+      return { success: false, error }
+    }
+  }
+)
+
+export const GetProjectBySpaceIdsAction = CreateServerAction(
+  true,
+  async (spaceIds: string[]) => {
+    try {
+      const projects = await getProjectsBySpaceIds(spaceIds)
+      return { success: true, data: projects }
+    } catch (error) {
+      console.error("Failed to get projects by space IDs:", error)
       return { success: false, error }
     }
   }

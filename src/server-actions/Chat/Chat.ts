@@ -179,7 +179,7 @@ export const GetChatBySlugWithMessagesAction = CreateServerAction(
 
 export const AddMessageToChatAction = CreateServerAction(
   true,
-  async (message: InsertMessage) => {
+  async (message: InsertMessage, space_id?: string) => {
     try {
       const authUser = await AuthUserAction()
       if (authUser) {
@@ -222,7 +222,9 @@ export const AddMessageToChatAction = CreateServerAction(
             }
           }
 
-          await SendMessageNotification(updatedChat)
+          const space = await GetSpaceById(space_id || "")
+
+          await SendMessageNotification(updatedChat, space)
 
           return { success: true, data: newMessage }
         } else {

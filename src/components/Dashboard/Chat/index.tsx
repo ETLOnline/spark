@@ -354,7 +354,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       )
     )
     setNewMessage("")
-    await addMessageToChat(newMsg)
+    await addMessageToChat(newMsg, currentSpace?.id)
   }
 
   return (

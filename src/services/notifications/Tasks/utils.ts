@@ -6,6 +6,7 @@ import {
 } from "../PushNotification.utils"
 import { SendSystemNotification } from "../../system-notification/SystemNotification.utils"
 import { NotificationEvent } from "@/src/utils/constants"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 export const SendTaskNotifications = async (
   event_type: string,
@@ -31,7 +32,7 @@ export const SendTaskNotifications = async (
       template: {
         title: "",
         body: "",
-        deep_link: ctaLink,
+        deep_link: createAbsoluteUrl(ctaLink),
         icon: authUser.profile_url || ""
       }
     }

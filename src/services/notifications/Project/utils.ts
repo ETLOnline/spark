@@ -2,6 +2,7 @@ import { SelectProject, SelectProjectUser } from "@/src/db/schema"
 import { sendPushNotification } from "../PushNotification.utils"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { SendSystemNotification } from "../../system-notification/SystemNotification.utils"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 export const SendProjectNotifications = async (
   event_type: string,
@@ -17,8 +18,7 @@ export const SendProjectNotifications = async (
       template: {
         title: `New Project: ${project?.project_name}`,
         body: `You have been added to project "${project?.project_name}".`,
-        deep_link: `${process.env.NEXT_PUBLIC_BASE_URL}/project/${project?.id}/board`,
-        icon: authUser.profile_url || ""
+        deep_link: createAbsoluteUrl(`/project/${project?.id}/board`)
       }
     }
 

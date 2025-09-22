@@ -6,9 +6,18 @@ import {
   sendPushNotification
 } from "../PushNotification.utils"
 import { SendSystemNotification } from "../../system-notification/SystemNotification.utils"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 type PusherUsersResponse = {
   users: { id: string }[]
+}
+
+const getCTALink = (chat: SelectChat, space?: SelectSpace) => {
+  let CTALink = `chat?active_chat=${chat.chat_slug}`
+  if (space) {
+    CTALink = `channels/${space?.channel?.channel_slug}/spaces/${space?.space_slug}?page-type=chat&active_chat=${chat.chat_slug}`
+  }
+  return CTALink
 }
 
 export const SendChatNotification = async (
@@ -20,10 +29,8 @@ export const SendChatNotification = async (
     const authUser = await AuthUserAction()
     if (!authUser) throw new Error("Unauthorized")
 
-    let CTALink = "chat"
-    if (space) {
-      CTALink = `channels/${space?.channel?.channel_slug}/spaces/${space?.space_slug}?page-type=chat`
-    }
+    const CTALink = getCTALink(chat, space)
+    const user = chat.users
 
     const receivers =
       chat.users
@@ -66,9 +73,14 @@ export const SendChatNotification = async (
   }
 }
 
-export const SendMessageNotification = async (message: SelectChat) => {
+export const SendMessageNotification = async (
+  message: SelectChat,
+  space?: SelectSpace
+) => {
   try {
     const authUser = await AuthUserAction()
+
+    const CTALink = getCTALink(message, space)
 
     const chatReciversIds =
       message.users &&
@@ -104,7 +116,7 @@ export const SendMessageNotification = async (message: SelectChat) => {
         template: {
           title: `Spark- ${authUser.first_name} ${authUser.last_name} sent you a message`,
           body: message.last_message || "",
-          deep_link: `${process.env.NEXT_PUBLIC_BASE_URL}/chat`,
+          deep_link: createAbsoluteUrl(CTALink),
           icon: authUser.profile_url || ""
         }
       })

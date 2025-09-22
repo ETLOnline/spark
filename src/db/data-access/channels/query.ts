@@ -290,3 +290,14 @@ export async function getChannelUsers(channelId: string) {
     throw new Error(e.message)
   }
 }
+
+export async function getChannelsByCommunityId(communityId: string) {
+  try {
+    const channels = await db.query.channelsTable.findMany({
+      where: eq(channelsTable.community_id, communityId)
+    })
+    return channels
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}

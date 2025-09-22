@@ -6,6 +6,7 @@ import {
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { NotificationEvent } from "@/src/utils/constants"
 import { SendSystemNotification } from "../../system-notification/SystemNotification.utils"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 export const SendConnectionPushNotification = async (
   event_type: NotificationEvent,
@@ -20,13 +21,18 @@ export const SendConnectionPushNotification = async (
       .filter((id) => id !== authUser.unique_id)
       .map((id) => `user-${id}`)
 
+    const sendRequestURL = createAbsoluteUrl("/connections")
+    const acceptedRequestURL = createAbsoluteUrl(
+      `/profile/${authUser.unique_id}`
+    )
+
     const notificationPayload: NotificationPayload = {
       receivers: receiverIds,
       template: {
         title: "New Connection Request",
         body: `${authUser.first_name} ${authUser.last_name} sent you a connection request.`,
         icon: authUser.profile_url || "",
-        deep_link: `${process.env.NEXT_PUBLIC_BASE_URL}/connections`
+        deep_link: sendRequestURL
       }
     }
 
@@ -34,10 +40,12 @@ export const SendConnectionPushNotification = async (
       case NotificationEvent.NEW_CONNECTION:
         notificationPayload.template.title = "New Connection Request"
         notificationPayload.template.body = `${authUser.first_name} ${authUser.last_name} sent you a connection request.`
+        notificationPayload.template.deep_link = sendRequestURL
         break
       case NotificationEvent.CONNECTION_ACCEPTED:
         notificationPayload.template.title = "Connection Request Accepted"
         notificationPayload.template.body = `${authUser.first_name} ${authUser.last_name}  has accepted your connection request. You’re now connected.`
+        notificationPayload.template.deep_link = acceptedRequestURL
         break
       default:
         break

@@ -339,7 +339,12 @@ export default function TaskForm({
 
   return (
     <>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") e.preventDefault()
+        }}
+      >
         <div className="flex flex-col md:flex-row gap-2 ">
           {/* Main content area (left side) */}
           <div className="flex-1 px-2">
