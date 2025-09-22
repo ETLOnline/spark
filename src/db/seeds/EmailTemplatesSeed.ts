@@ -3,7 +3,7 @@ import { db } from "../index"
 import { InferInsertModel, sql } from "drizzle-orm"
 import fs from "fs"
 import path from "path"
-import { NotificationEvent } from "@/src/utils/constants"
+import { NotificationEvent } from "@/src/services/notify/types/events"
 
 type NewEmailTemplate = InferInsertModel<typeof emailTemplatesTable>
 

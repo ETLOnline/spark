@@ -34,7 +34,7 @@ export async function SendSystemNotification(
     await Promise.all(
       notificationsArray.map((notification) =>
         pusherServer.trigger(
-          `user-${notification.received_by}`,
+          `${notification.received_by}`,
           "system-notifications",
           notification
         )

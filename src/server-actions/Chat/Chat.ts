@@ -22,7 +22,7 @@ import {
   SendMessageNotification
 } from "@/src/services/notifications/Chat/utils"
 import { createChatEmailNotification } from "@/src/services/notify/chat/chat"
-import { NotificationEvent } from "@/src/utils/constants"
+import { NotificationEvent } from "@/src/services/notify/types/events"
 
 export const CreatePrivateChatAction = CreateServerAction(
   true,

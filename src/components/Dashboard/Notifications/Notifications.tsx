@@ -69,7 +69,7 @@ const Notifications: React.FC = () => {
 
   useEffect(() => {
     if (!userId) return
-    const channel = pusherClient.subscribe(`user-${userId}`)
+    const channel = pusherClient.subscribe(`${userId}`)
 
     channel.bind("system-notifications", (data: SelectNotification) => {
       playNotificationSound()
@@ -87,7 +87,7 @@ const Notifications: React.FC = () => {
     })
 
     return () => {
-      pusherClient.unsubscribe(`user-${userId}`)
+      pusherClient.unsubscribe(`${userId}`)
     }
   }, [userId])
   return (

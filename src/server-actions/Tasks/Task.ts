@@ -34,7 +34,7 @@ import {
 } from "@/src/services/storage/utils/fileUtils"
 import { AuthUserAction } from "../User/AuthUserAction"
 import { SendTaskNotifications } from "@/src/services/notifications/Tasks/utils"
-import { NotificationEvent } from "@/src/utils/constants"
+import { NotificationEvent } from "@/src/services/notify/types/events"
 
 export const CreateTaskAction = CreateServerAction(
   true,

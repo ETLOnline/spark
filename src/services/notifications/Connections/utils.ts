@@ -4,7 +4,7 @@ import {
   sendPushNotification
 } from "../PushNotification.utils"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import { NotificationEvent } from "@/src/utils/constants"
+import { NotificationEvent } from "@/src/services/notify/types/events"
 import { SendSystemNotification } from "../../system-notification/SystemNotification.utils"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 

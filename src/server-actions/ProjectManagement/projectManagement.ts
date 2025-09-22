@@ -24,7 +24,7 @@ import {
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { SendProjectNotifications } from "@/src/services/notifications/Project/utils"
 import { createProjectInviteNotification } from "@/src/services/notify/project/project"
-import { NotificationEvent } from "@/src/utils/constants"
+import { NotificationEvent } from "@/src/services/notify/types/events"
 
 export const CreateProjectAction = CreateServerAction(
   true,

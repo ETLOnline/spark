@@ -5,7 +5,7 @@ import {
   sendPushNotification
 } from "../PushNotification.utils"
 import { SendSystemNotification } from "../../system-notification/SystemNotification.utils"
-import { NotificationEvent } from "@/src/utils/constants"
+import { NotificationEvent } from "@/src/services/notify/types/events"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 export const SendTaskNotifications = async (

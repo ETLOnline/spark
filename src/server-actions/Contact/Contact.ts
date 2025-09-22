@@ -13,7 +13,7 @@ import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 import { ActivityType } from "@/src/components/Dashboard/Connections/types/connections.types"
 import { SendConnectionPushNotification } from "@/src/services/notifications/Connections/utils"
 import { createContactEmailNotification } from "@/src/services/notify/contact/contact"
-import { NotificationEvent } from "@/src/utils/constants"
+import { NotificationEvent } from "@/src/services/notify/types/events"
 
 export const CreateContactAction = CreateServerAction(
   true,
