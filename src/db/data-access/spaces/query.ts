@@ -340,3 +340,16 @@ export async function getSpaceByChannelId(channelIds: string[]) {
     throw new Error(e.message)
   }
 }
+
+export async function leaveSpaceUser(spaceId: string, currentUserId: string) {
+  try {
+    await dettachSpaceUser(spaceId, currentUserId)
+
+    return {
+      success: true,
+      message: "User successfully left the space"
+    }
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}

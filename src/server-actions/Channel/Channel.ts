@@ -210,6 +210,23 @@ export const AttachChannelUserAction = CreateServerAction(
   }
 )
 
+export const LeaveChannelAction = CreateServerAction(
+  true,
+  async (channelId: string, currentUserId: string) => {
+    try {
+      const userId = currentUserId
+      const deleted = await dettachChannelUser(channelId, userId)
+
+      if (!deleted) {
+        return { success: false, error: "Failed to leave the channel" }
+      }
+      return { success: true }
+    } catch (error: any) {
+      return { success: false, error: error.message || error }
+    }
+  }
+)
+
 export const DettachChannelUserAction = CreateServerAction(
   true,
   async (channelId: string, userId: string, roleId: number) => {

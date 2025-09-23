@@ -11,6 +11,7 @@ import {
   GetSpaces,
   getSpaceUsers,
   IsSlugAvailable,
+  leaveSpaceUser,
   spaceQueryFilters,
   UpdateSpace,
   updateSpaceUser
@@ -285,6 +286,18 @@ export const AttachSpaceUserAction = CreateServerAction(
       return { success: true, data: spaceUser }
     } catch (error) {
       return { error: error }
+    }
+  }
+)
+export const LeaveSpaceAction = CreateServerAction(
+  true,
+  async (spaceId: string, currentUserId: string) => {
+    try {
+      await leaveSpaceUser(spaceId, currentUserId)
+
+      return { success: true }
+    } catch (error: any) {
+      return { success: false, error: error.message || error }
     }
   }
 )

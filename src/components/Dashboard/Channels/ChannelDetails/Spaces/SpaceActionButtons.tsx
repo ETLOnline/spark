@@ -2,6 +2,7 @@ import { Button } from "@/src/components/ui/button"
 import {
   Edit,
   ExternalLink,
+  LogOut,
   MoreHorizontal,
   PlusCircle,
   Settings,
@@ -12,7 +13,8 @@ import { spaceStore } from "@/src/store/space/spaceStore"
 import { useAtomValue, useSetAtom } from "jotai"
 import {
   AttachSpaceUserAction,
-  DeleteSpaceAction
+  DeleteSpaceAction,
+  LeaveSpaceAction
 } from "@/src/server-actions/Space/Space"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { SelectSpace } from "@/src/db/schema"
@@ -32,6 +34,7 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { userStore } from "@/src/store/user/userStore"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
+import clsx from "clsx"
 
 interface Props {
   space: SelectSpace
@@ -42,6 +45,8 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
   const [joinLoading, joinResult, joinError, joinSpace] = useServerAction(
     AttachSpaceUserAction
   )
+  const [leaveLoading, leaveResult, leaveError, leaveSpace] =
+    useServerAction(LeaveSpaceAction)
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const superAdmin = useAtomValue(userStore.SuperAdmin)
   const [isSpaceMember, setIsSpaceMember] = useState<boolean>(false)
@@ -67,7 +72,31 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
           duration: 3000
         })
       } else {
-        console.error("Failed to join Channel:", res?.error)
+        toast({
+          title: "Error",
+          description: "Failed to leave Space",
+          variant: "destructive"
+        })
+      }
+    }
+  }
+
+  const handleLeaveSpace = async () => {
+    if (space.id && currentUserId) {
+      const res = await leaveSpace(space.id, currentUserId)
+      if (res?.success) {
+        setIsSpaceMember(false)
+        toast({
+          title: "Space Left",
+          description: "You have successfully left the Space!",
+          duration: 3000
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to leave Space",
+          variant: "destructive"
+        })
       }
     }
   }
@@ -151,16 +180,25 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
               Edit
             </DropdownMenuItem>
           )}
-          {!superAdmin && (
-            <DropdownMenuItem
-              onClick={handleJoinSpace}
-              disabled={isSpaceMember || joinLoading}
-              className={
-                isSpaceMember ? "text-gray-500 cursor-not-allowed" : ""
-              }
-            >
+          {!superAdmin && !isSpaceMember && (
+            <DropdownMenuItem onClick={handleJoinSpace} disabled={joinLoading}>
               <PlusCircle className="mr-2 h-4 w-4" />
-              {joinLoading ? "Joining..." : isSpaceMember ? "Joined" : "Join"}
+              {joinLoading ? "Joining..." : "Join Space"}
+            </DropdownMenuItem>
+          )}
+
+          {!superAdmin && isSpaceMember && (
+            <DropdownMenuItem
+              onClick={handleLeaveSpace}
+              disabled={leaveLoading}
+              className={clsx(
+                "text-red-500",
+                "focus:bg-red-500 focus:text-white",
+                "dark:focus:bg-muted dark:focus:text-red-500"
+              )}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              {leaveLoading ? "Leaving..." : "Leave Space"}
             </DropdownMenuItem>
           )}
           {canViewSpaceUsers && (

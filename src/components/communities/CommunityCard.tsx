@@ -21,7 +21,8 @@ import {
   Globe,
   User,
   PlusCircle,
-  ArrowRight
+  ArrowRight,
+  LogOut
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -34,12 +35,17 @@ import { SelectCommunity } from "@/src/db/schema"
 import Link from "next/link"
 import { getInitials } from "@/src/utils/helpers"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import { useAtomValue } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
-import { AttachCommunityUserAction } from "@/src/server-actions/Community/Community"
+import {
+  AttachCommunityUserAction,
+  LeaveCommunityAction
+} from "@/src/server-actions/Community/Community"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
 import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
+import clsx from "clsx"
+import { communityStore } from "@/src/store/community/communityStore"
 
 interface CommunityCardProps {
   community: SelectCommunity
@@ -69,8 +75,13 @@ export default function CommunityCard({
   const isCurrentUserMember = community?.communityMembers?.some(
     (member) => member.user_id === currentUserId
   )
+  const setRefreshCommunity = useSetAtom(
+    communityStore.refreshCommunitiesTriggerAtom
+  )
   const [joinLoading, joinResult, joinError, attachCommunityUser] =
     useServerAction(AttachCommunityUserAction)
+  const [leaveLoading, leaveResult, leaveError, leaveCommunity] =
+    useServerAction(LeaveCommunityAction)
 
   const allowAction = permissionChecker
     ? permissionChecker?.canAccess("community.allow.action")
@@ -86,18 +97,49 @@ export default function CommunityCard({
     : false
 
   const handleJoinCommunity = async () => {
-    if (community.id && currentUserId) {
+    if (!community.id || !currentUserId) return
+
+    try {
       const res = await attachCommunityUser(community.id, currentUserId)
+
       if (res?.success) {
-        onJoin()
+        setRefreshCommunity((pre) => !pre)
         toast({
           title: "Community Joined",
           description: "You have successfully joined the community!",
           duration: 3000
         })
-      } else {
-        console.error("Failed to join community:", res?.error)
       }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong while joining the community.",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleLeaveCommunity = async () => {
+    if (!community.id || !currentUserId) return
+
+    try {
+      const res = await leaveCommunity(community.id, currentUserId)
+
+      if (res?.success) {
+        setRefreshCommunity((pre) => !pre)
+
+        toast({
+          title: "Left community",
+          description: "You have left the community.",
+          duration: 3000
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong while leaving the community.",
+        variant: "destructive"
+      })
     }
   }
 
@@ -203,21 +245,34 @@ export default function CommunityCard({
         <div className="flex justify-end flex-wrap items-center gap-2 mt-auto">
           {((!superAdmin && community.type === "public") ||
             (!superAdmin && isCurrentUserMember)) && (
-            <Button
-              variant="outline"
-              onClick={handleJoinCommunity}
-              disabled={isCurrentUserMember || joinLoading}
-              className={
-                isCurrentUserMember ? "text-gray-500 cursor-not-allowed" : ""
-              }
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              {joinLoading
-                ? "Joining..."
-                : isCurrentUserMember
-                  ? "Joined"
-                  : "Join"}
-            </Button>
+            <>
+              {!isCurrentUserMember ? (
+                <Button
+                  variant="outline"
+                  onClick={handleJoinCommunity}
+                  disabled={joinLoading}
+                  loading={joinLoading}
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  {joinLoading ? "Joining..." : "Join"}
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={handleLeaveCommunity}
+                  disabled={leaveLoading}
+                  loading={leaveLoading}
+                  className={clsx(
+                    "text-red-500",
+                    "hover:bg-red-500 hover:text-white",
+                    "dark:hover:bg-muted dark:hover:text-red-500"
+                  )}
+                >
+                  <LogOut className=" h-4 w-4" />
+                  {leaveLoading ? "Leaving..." : "Leave"}
+                </Button>
+              )}
+            </>
           )}
           <Link href={`/communities/${encodedCommunitySlug}`}>
             <Button variant="outline">

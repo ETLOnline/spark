@@ -546,3 +546,23 @@ export const getCommunitiesByIds = async function (communityIds: string[]) {
     throw new Error("Failed to fetch communities")
   }
 }
+
+export async function leaveCommunity(
+  communityId: string,
+  currentUserId: string
+) {
+  try {
+    const deleted = await detachCommunityUser(communityId, currentUserId)
+    console.log("Deleted community user:", deleted)
+
+    if (!deleted) {
+      return {
+        success: false,
+        error: "You are not a member of this community."
+      }
+    }
+    return deleted
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}

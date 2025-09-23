@@ -5,7 +5,8 @@ import { useToast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   AttachChannelUserAction,
-  DeleteChannelAction
+  DeleteChannelAction,
+  LeaveChannelAction
 } from "@/src/server-actions/Channel/Channel"
 import { channelStore } from "@/src/store/channel/channelStore"
 import { useAtomValue, useSetAtom } from "jotai"
@@ -20,6 +21,7 @@ import {
 import {
   Edit,
   Layout,
+  LogOut,
   MoreHorizontal,
   PlusCircle,
   Trash2,
@@ -31,6 +33,7 @@ import { userStore } from "@/src/store/user/userStore"
 import { useEffect, useState } from "react"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
+import clsx from "clsx"
 
 interface ChannelProps {
   channel: SelectChannel
@@ -53,6 +56,8 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
   const [joinLoading, joinResult, joinError, joinChannel] = useServerAction(
     AttachChannelUserAction
   )
+  const [leaveLoading, leaveResult, leaveError, leaveChannel] =
+    useServerAction(LeaveChannelAction)
 
   useEffect(() => {
     const isMember = isEntityUser(channel, currentUserId as string)
@@ -77,6 +82,36 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
       } else {
         console.error("Failed to join Channel:", res?.error)
       }
+    }
+  }
+  const handleLeaveChannel = async () => {
+    if (!channel.id || !currentUserId) return
+
+    try {
+      const res = await leaveChannel(channel.id, currentUserId)
+
+      if (res?.success) {
+        setIsChannelMember(false)
+        setIsCommunityMember?.(false)
+
+        toast({
+          title: "Channel Left",
+          description: "You have successfully left the channel!",
+          duration: 3000
+        })
+
+        if (channel.community?.slug) {
+          router.push(`/communities/${channel.community.slug}`)
+        } else {
+          router.push(`/communities`)
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong while leaving the channel.",
+        duration: 3000
+      })
     }
   }
   const encodedChannelSlug = encodeURIComponent(channel.channel_slug)
@@ -161,16 +196,29 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
               View Spaces
             </DropdownMenuItem>
           )}
-          {!superAdmin && (
+          {!superAdmin && !isChannelMember && (
             <DropdownMenuItem
               onClick={handleJoinChannel}
-              disabled={isChannelMember || joinLoading}
-              className={
-                isChannelMember ? "text-gray-500 cursor-not-allowed" : ""
-              }
+              disabled={joinLoading}
+              className=" hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground"
             >
               <PlusCircle className="mr-2 h-4 w-4" />
-              {joinLoading ? "Joining..." : isChannelMember ? "Joined" : "Join"}
+              {joinLoading ? "Joining..." : "Join Channel"}
+            </DropdownMenuItem>
+          )}
+
+          {!superAdmin && isChannelMember && (
+            <DropdownMenuItem
+              onClick={handleLeaveChannel}
+              disabled={leaveLoading}
+              className={clsx(
+                "text-red-500",
+                "focus:bg-red-500 focus:text-white",
+                "dark:focus:bg-muted dark:focus:text-red-500"
+              )}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              {leaveLoading ? "Leaving..." : "Leave Channel"}
             </DropdownMenuItem>
           )}
           {canEdit && (

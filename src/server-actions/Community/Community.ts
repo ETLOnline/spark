@@ -14,7 +14,8 @@ import {
   attachCommunityUser,
   GetCommunityById,
   detachCommunityUser,
-  getCommunitiesByIds
+  getCommunitiesByIds,
+  leaveCommunity
 } from "@/src/db/data-access/communities/query"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import { InsertCommunity, SelectCommunity } from "@/src/db/schema"
@@ -374,6 +375,18 @@ export const communityCoverImageAction = CreateServerAction(
         success: false,
         error: error
       }
+    }
+  }
+)
+export const LeaveCommunityAction = CreateServerAction(
+  true,
+  async (communityId: string, currentUserId: string) => {
+    try {
+      const deleted = await leaveCommunity(communityId, currentUserId)
+
+      return { success: true, data: deleted }
+    } catch (error: any) {
+      return { success: false, error: error.message || error }
     }
   }
 )
