@@ -134,6 +134,13 @@
       "when": 1757694148533,
       "tag": "0018_2025_09_12_212225__update_space_file_directory",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1758716099369,
+      "tag": "0019_2025_09_24_171455__update_channel_and_space_user_table",
+      "breakpoints": true
     }
   ]
 }

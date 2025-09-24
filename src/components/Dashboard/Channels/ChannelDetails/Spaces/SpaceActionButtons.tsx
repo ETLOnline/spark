@@ -47,10 +47,10 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
   )
   const [leaveLoading, leaveResult, leaveError, leaveSpace] =
     useServerAction(LeaveSpaceAction)
+
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const superAdmin = useAtomValue(userStore.SuperAdmin)
   const [isSpaceMember, setIsSpaceMember] = useState<boolean>(false)
-
   useEffect(() => {
     const isMember = isEntityUser(space, currentUserId as string)
 
@@ -61,8 +61,11 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
   }, [space, currentUserId])
 
   const handleJoinSpace = async () => {
-    if (space.id && currentUserId) {
+    if (!space.id || !currentUserId) return
+
+    try {
       const res = await joinSpace(space.id, currentUserId)
+
       if (res?.success) {
         setIsSpaceMember(true)
         setIsChannelMember?.(true)
@@ -71,13 +74,13 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
           description: "You have successfully joined the Space!",
           duration: 3000
         })
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to leave Space",
-          variant: "destructive"
-        })
       }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong while joining the Space",
+        variant: "destructive"
+      })
     }
   }
 

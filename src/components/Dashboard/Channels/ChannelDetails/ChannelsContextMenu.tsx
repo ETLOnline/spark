@@ -96,7 +96,7 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
 
         toast({
           title: "Channel Left",
-          description: "You have successfully left the channel!",
+          description: "You have left the channel and its spaces.",
           duration: 3000
         })
 

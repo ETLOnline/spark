@@ -263,7 +263,7 @@ export default function CommunityDetailsClient({
       if (res?.success) {
         toast({
           title: "Left community",
-          description: "You have left the community.",
+          description: "You have left the community, its channels, and spaces.",
           duration: 3000
         })
         router.push("/communities")

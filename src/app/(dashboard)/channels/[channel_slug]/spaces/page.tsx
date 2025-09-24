@@ -76,7 +76,6 @@ export default function ChannelPage() {
 
     try {
       const res = await joinChannel(selectedChannel.id, authUser.unique_id)
-
       if (res?.success) {
         setIsChannelMember(true)
         toast({
@@ -103,7 +102,7 @@ export default function ChannelPage() {
           setIsChannelMember(false)
           toast({
             title: "Channel Left",
-            description: "You have successfully left the channel!",
+            description: "You have left the channel and its spaces.",
             duration: 3000
           })
           if (community?.slug) {

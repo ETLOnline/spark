@@ -130,7 +130,7 @@ export default function CommunityCard({
 
         toast({
           title: "Left community",
-          description: "You have left the community.",
+          description: "You have left the community, its channels, and spaces.",
           duration: 3000
         })
       }
