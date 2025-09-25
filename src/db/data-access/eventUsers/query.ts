@@ -1,11 +1,6 @@
 import { and, eq } from "drizzle-orm"
 import { db } from "../.."
-import {
-  eventRegistrationsTable,
-  InsertEventRegistration,
-  SelectEventRegistration,
-  usersTable
-} from "../../schema"
+import { eventRegistrationsTable, InsertEventRegistration } from "../../schema"
 
 export async function CreateEventUser(eventUserData: InsertEventRegistration) {
   try {
@@ -55,20 +50,39 @@ export async function GetEventUserByIds(event_id: number, user_id: string) {
 
 export async function GetEventAttendees(event_id: number) {
   try {
-    const attendees = await db
-      .select({
-        name: usersTable.first_name,
-        role: usersTable.role,
-        email: usersTable.email
-      })
-      .from(eventRegistrationsTable)
-      .innerJoin(
-        usersTable,
-        eq(eventRegistrationsTable.user_id, usersTable.unique_id)
-      )
-      .where(eq(eventRegistrationsTable.event_id, event_id))
+    const attendees = await db.query.eventRegistrationsTable.findMany({
+      where: (eventUser, { eq }) => eq(eventUser.event_id, event_id),
+      with: {
+        user: {
+          columns: {
+            first_name: true,
+            email: true,
+            role: true
+          },
+          with: {
+            roles: {
+              with: {
+                role: {
+                  columns: {
+                    name: true,
+                    slug: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    })
 
-    return attendees
+    return attendees.map((a) => ({
+      name: a.user?.first_name,
+      email: a.user?.email,
+      userRoles: a.user?.roles?.map((r) => ({
+        name: r.role?.name,
+        slug: r.role?.slug
+      }))
+    }))
   } catch (e: any) {
     throw new Error(e.message)
   }

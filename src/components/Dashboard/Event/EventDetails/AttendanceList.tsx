@@ -85,7 +85,7 @@ export function AttendeesList({ eventId }: { eventId: number | undefined }) {
               <div>
                 <div className="font-medium text-sm">{attendee.name}</div>
                 <div className="text-xs text-gray-500">
-                  {attendee.role || "Attendee"}
+                  {(attendee as any)?.userRoles?.[0]?.name || "Attendee"}
                 </div>
               </div>
             </div>
