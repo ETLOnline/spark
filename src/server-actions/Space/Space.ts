@@ -11,7 +11,6 @@ import {
   GetSpaces,
   getSpaceUsers,
   IsSlugAvailable,
-  leaveSpaceUser,
   spaceQueryFilters,
   UpdateSpace,
   updateSpaceUser
@@ -322,9 +321,9 @@ export const LeaveSpaceAction = CreateServerAction(
   true,
   async (spaceId: string, currentUserId: string) => {
     try {
-      await leaveSpaceUser(spaceId, currentUserId)
+      const deleted = await dettachSpaceUser(spaceId, currentUserId)
 
-      return { success: true }
+      return { success: true, data: deleted }
     } catch (error: any) {
       return { success: false, error: error.message || error }
     }

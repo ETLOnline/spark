@@ -29,7 +29,7 @@ import {
   LeaveSpaceAction
 } from "@/src/server-actions/Space/Space"
 import { useToast } from "@/src/hooks/use-toast"
-import clsx from "clsx"
+import "./../../../../../../style.css"
 
 interface Props {
   space: SelectSpace
@@ -204,16 +204,7 @@ function SpaceSidebar({ space }: Props) {
                               handleLeaveSpace()
                             }
                           }}
-                          className={clsx(
-                            "inline-flex items-center rounded-md border border-input bg-background px-3 py-1 text-xs font-medium ring-offset-background transition-colors",
-                            leaveLoading
-                              ? "text-gray-500 cursor-not-allowed opacity-50"
-                              : [
-                                  "text-red-500 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                                  "hover:bg-red-500 hover:text-white",
-                                  "dark:hover:bg-muted dark:hover:text-red-500"
-                                ]
-                          )}
+                          className={`leave-btn${leaveLoading ? " disabled" : ""}`}
                         >
                           <LogOut className="mr-2 h-3 w-3" />
                           {leaveLoading ? "Leaving..." : "Leave"}

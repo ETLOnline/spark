@@ -53,11 +53,16 @@ import { isEntityUser } from "@/src/utils/clientHelper"
 import { getInitials } from "@/src/utils/helpers"
 import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from "@/src/components/ui/tooltip"
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "../ui/alert-dialog"
+
 import ChannelCardItem from "../Dashboard/Channels/ChannelCardItem"
 import Image from "next/image"
 import clsx from "clsx"
@@ -95,6 +100,7 @@ export default function CommunityDetailsClient({
   const [channels, setChannels] = useAtom(channelStore.channels)
   const [pagination, setPagination] = useState<PaginationType | null>(null)
   const searchParams = useSearchParams()
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState<boolean>(false)
   const page = Number(searchParams.get("page")) || 1
   const [isCommunityMember, setIsCommunityMember] = useState<boolean | null>(
     null
@@ -384,7 +390,7 @@ export default function CommunityDetailsClient({
                     ) : (
                       <Button
                         variant="outline"
-                        onClick={handleLeaveCommunity}
+                        onClick={() => setLeaveDialogOpen(true)}
                         disabled={leaveLoading}
                         loading={leaveLoading}
                         className={clsx(
@@ -715,6 +721,29 @@ export default function CommunityDetailsClient({
         entityType="community"
         entity={community}
       />
+      <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave Community?</AlertDialogTitle>
+            <AlertDialogDescription>
+              By leaving this, you will also be removed from related channels
+              and spaces.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              loading={leaveLoading}
+              onClick={async () => {
+                await handleLeaveCommunity()
+                setLeaveDialogOpen(false)
+              }}
+            >
+              Leave Community
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

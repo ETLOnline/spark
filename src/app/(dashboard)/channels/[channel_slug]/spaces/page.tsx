@@ -26,7 +26,17 @@ import {
 import { isEntityUser } from "@/src/utils/clientHelper"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 import { useToast } from "@/src/hooks/use-toast"
-import clsx from "clsx"
+import "../spaces/../../../style.css"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/src/components/ui/alert-dialog"
 
 export default function ChannelPage() {
   const router = useRouter()
@@ -35,6 +45,7 @@ export default function ChannelPage() {
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
   const [isChannelMember, setIsChannelMember] = useState<boolean>(false)
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState<boolean>(false)
 
   const [selectedChannel, setSelectedChannel] = useAtom(
     channelStore.selectedChannel
@@ -218,14 +229,10 @@ export default function ChannelPage() {
                 {!isSuperAdmin && isChannelMember && (
                   <Button
                     variant="outline"
-                    onClick={handleLeaveChannel}
+                    onClick={() => setLeaveDialogOpen(true)}
                     disabled={leaveLoading}
                     loading={leaveLoading}
-                    className={clsx(
-                      "text-red-500 cursor-pointer",
-                      "hover:bg-red-500 hover:text-white",
-                      "dark:hover:bg-muted dark:hover:text-red-500"
-                    )}
+                    className={`leave-btn${leaveLoading ? " disabled" : ""}`}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     {leaveLoading ? "Leaving..." : "Leave Channel"}
@@ -296,6 +303,29 @@ export default function ChannelPage() {
           </div>
         </main>
       </div>
+
+      <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave Channel?</AlertDialogTitle>
+            <AlertDialogDescription>
+              By leaving this, you will also be removed from related spaces.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              loading={leaveLoading}
+              onClick={async () => {
+                await handleLeaveChannel()
+                setLeaveDialogOpen(false)
+              }}
+            >
+              Leave Channel
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

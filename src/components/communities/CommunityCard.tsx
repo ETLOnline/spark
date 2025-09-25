@@ -46,7 +46,18 @@ import { useToast } from "@/src/hooks/use-toast"
 import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
 import clsx from "clsx"
 import { communityStore } from "@/src/store/community/communityStore"
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "../ui/alert-dialog"
+import { useState } from "react"
+import "../../app/(dashboard)/style.css"
 interface CommunityCardProps {
   community: SelectCommunity
   showStar?: boolean
@@ -67,7 +78,7 @@ export default function CommunityCard({
     "COMMUNITY",
     community.id
   )
-
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState<boolean>(false)
   const encodedCommunitySlug = encodeURIComponent(community.slug)
   const { toast } = useToast()
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
@@ -259,14 +270,10 @@ export default function CommunityCard({
               ) : (
                 <Button
                   variant="outline"
-                  onClick={handleLeaveCommunity}
+                  onClick={() => setLeaveDialogOpen(true)}
                   disabled={leaveLoading}
                   loading={leaveLoading}
-                  className={clsx(
-                    "text-red-500",
-                    "hover:bg-red-500 hover:text-white",
-                    "dark:hover:bg-muted dark:hover:text-red-500"
-                  )}
+                  className={`leave-btn${leaveLoading ? " disabled" : ""}  `}
                 >
                   <LogOut className=" h-4 w-4" />
                   {leaveLoading ? "Leaving..." : "Leave"}
@@ -281,6 +288,30 @@ export default function CommunityCard({
           </Link>
         </div>
       </CardContent>
+
+      <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave Community?</AlertDialogTitle>
+            <AlertDialogDescription>
+              By leaving this, you will also be removed from related channels
+              and spaces.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              loading={leaveLoading}
+              onClick={async () => {
+                await handleLeaveCommunity()
+                setLeaveDialogOpen(false)
+              }}
+            >
+              Leave Community
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   )
 }

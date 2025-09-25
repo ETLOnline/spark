@@ -34,6 +34,16 @@ import { useEffect, useState } from "react"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 import clsx from "clsx"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/src/components/ui/alert-dialog"
 
 interface ChannelProps {
   channel: SelectChannel
@@ -52,7 +62,7 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const superAdmin = useAtomValue(userStore.SuperAdmin)
   const [isChannelMember, setIsChannelMember] = useState<boolean>(false)
-
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState<boolean>(false)
   const [joinLoading, joinResult, joinError, joinChannel] = useServerAction(
     AttachChannelUserAction
   )
@@ -178,85 +188,110 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
 
   return (
     (canViewActions || channel?.channel_type === "public") && (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
-            <MoreHorizontal className="h-5 w-5" />
-            <span className="sr-only">More options</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {(canViewSpace || channel.channel_type === "public") && (
-            <DropdownMenuItem
-              onClick={() =>
-                router.push(`/channels/${encodedChannelSlug}/spaces`)
-              }
-            >
-              <Layout className="mr-2 h-4 w-4" />
-              View Spaces
-            </DropdownMenuItem>
-          )}
-          {!superAdmin && !isChannelMember && (
-            <DropdownMenuItem
-              onClick={handleJoinChannel}
-              disabled={joinLoading}
-              className=" hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground"
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              {joinLoading ? "Joining..." : "Join Channel"}
-            </DropdownMenuItem>
-          )}
+      <>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreHorizontal className="h-5 w-5" />
+              <span className="sr-only">More options</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {(canViewSpace || channel.channel_type === "public") && (
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(`/channels/${encodedChannelSlug}/spaces`)
+                }
+              >
+                <Layout className="mr-2 h-4 w-4" />
+                View Spaces
+              </DropdownMenuItem>
+            )}
+            {!superAdmin && !isChannelMember && (
+              <DropdownMenuItem
+                onClick={handleJoinChannel}
+                disabled={joinLoading}
+                className=" hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground"
+              >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                {joinLoading ? "Joining..." : "Join Channel"}
+              </DropdownMenuItem>
+            )}
 
-          {!superAdmin && isChannelMember && (
-            <DropdownMenuItem
-              onClick={handleLeaveChannel}
-              disabled={leaveLoading}
-              className={clsx(
-                "text-red-500",
-                "focus:bg-red-500 focus:text-white",
-                "dark:focus:bg-muted dark:focus:text-red-500"
-              )}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              {leaveLoading ? "Leaving..." : "Leave Channel"}
-            </DropdownMenuItem>
-          )}
-          {canEdit && (
-            <DropdownMenuItem onClick={() => editChannel(channel)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </DropdownMenuItem>
-          )}
-          {canViewUser && (
-            <DropdownMenuItem
-              onClick={() =>
-                router.push(`/channels/${encodedChannelSlug}/users`)
-              }
-            >
-              <User className="mr-2 h-4 w-4" />
-              Users
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuSeparator />
-          <CreateShortcut
-            type="channel"
-            entity={{
-              slug: channel?.channel_slug ?? "",
-              title: `${channel?.community?.title} - ${channel?.channel_name}`
-            }}
-            ctaType="menuItem"
-          />
-          {canDeletChannel && (
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
-              onClick={() => handleDeleteChannel(channel)}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+            {!superAdmin && isChannelMember && (
+              <DropdownMenuItem
+                onClick={() => setLeaveDialogOpen(true)}
+                disabled={leaveLoading}
+                className={clsx(
+                  "text-red-500",
+                  "focus:bg-red-500 focus:text-white",
+                  "dark:focus:bg-muted dark:focus:text-red-500"
+                )}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                {leaveLoading ? "Leaving..." : "Leave Channel"}
+              </DropdownMenuItem>
+            )}
+            {canEdit && (
+              <DropdownMenuItem onClick={() => editChannel(channel)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+            )}
+            {canViewUser && (
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(`/channels/${encodedChannelSlug}/users`)
+                }
+              >
+                <User className="mr-2 h-4 w-4" />
+                Users
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <CreateShortcut
+              type="channel"
+              entity={{
+                slug: channel?.channel_slug ?? "",
+                title: `${channel?.community?.title} - ${channel?.channel_name}`
+              }}
+              ctaType="menuItem"
+            />
+            {canDeletChannel && (
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => handleDeleteChannel(channel)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Leave Channel?</AlertDialogTitle>
+              <AlertDialogDescription>
+                By leaving this, you will also be removed from related spaces.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                loading={leaveLoading}
+                onClick={async () => {
+                  await handleLeaveChannel()
+                  setLeaveDialogOpen(false)
+                }}
+              >
+                Leave Channel
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
     )
   )
 }
