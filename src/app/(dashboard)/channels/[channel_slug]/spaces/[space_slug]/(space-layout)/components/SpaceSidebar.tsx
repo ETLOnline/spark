@@ -11,7 +11,6 @@ import {
 import { SelectSpace, SelectSpaceFeature } from "@/src/db/schema"
 import { PlusCircle, Users } from "lucide-react"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
-import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import React, { useEffect, useState } from "react"

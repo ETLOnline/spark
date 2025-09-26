@@ -316,11 +316,24 @@ export const formatRelativeTime = (
     .fromNow()
 }
 
-export const GetUserRole = (user: SelectUser) => {
+export const GetUserRole = (user: SelectUser, entity_id?: string) => {
   if (user.roles && user.roles.length > 0) {
-    return user.roles.flatMap((ur) =>
-      ur.role?.role_type === "GLOBAL" ? ur.role.name : []
-    )
+    if (entity_id) {
+      return user.roles.flatMap((ur) =>
+        ur.role &&
+        ur.role.entity_id === entity_id &&
+        ur.role.role_type === "SCOPED"
+          ? ur.role.name
+          : ""
+      )
+    } else {
+      return user.roles.flatMap((ur) =>
+        ur.role &&
+        (ur.role.role_type === "GLOBAL" || ur.role.role_type === "SYSTEM")
+          ? ur.role.name
+          : ""
+      )
+    }
   }
 }
 

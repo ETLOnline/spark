@@ -35,7 +35,7 @@ import Link from "next/link"
 import Loader from "../../common/Loader/Loader"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
-import { isOnlyEmoji } from "@/src/utils/helpers"
+import { GetUserRole, isOnlyEmoji } from "@/src/utils/helpers"
 import CreateNewChat from "./components/CreateNewChat"
 import Avvvatars from "avvvatars-react"
 import {
@@ -357,6 +357,14 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     await addMessageToChat(newMsg, currentSpace?.id)
   }
 
+  const handleGetUSerRole = (user: SelectUser) => {
+    if (currentSpace) {
+      return GetUserRole(user, currentSpace.id)
+    } else {
+      return GetUserRole(user)
+    }
+  }
+
   return (
     <div className={`flex h-full gap-4`}>
       {/* Contacts list - visible on desktop, hidden on mobile */}
@@ -442,8 +450,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       {!currentChat?.is_group && chatContact ? (
                         <>
                           <p className="text-sm font-medium leading-none">{`${chatContact?.first_name} ${chatContact?.last_name}`}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {chatContact?.email}
+                          <p className="text-sm text-muted-foreground truncate">
+                            {handleGetUSerRole(chatContact && chatContact)}
                           </p>
                         </>
                       ) : null}

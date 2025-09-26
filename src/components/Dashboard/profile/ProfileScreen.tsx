@@ -41,7 +41,7 @@ import {
   CardContent,
   CardFooter
 } from "@/src/components/ui/card"
-import { generateUrl, getPagePath } from "@/src/utils/helpers"
+import { generateUrl, getPagePath, GetUserRole } from "@/src/utils/helpers"
 import EditProfileModal from "./edit-profile-modal"
 import { UpdateUserProfilePictureAction } from "@/src/server-actions/User/User"
 import { useServerAction } from "@/src/hooks/useServerAction"
@@ -265,9 +265,14 @@ export default function ProfileScreen({
         <div className="mt-16 flex flex-wrap justify-between items-center">
           <div className="flex flex-col items-start">
             <div className="flex items-center">
-              <h2 className="text-xl sm:text-2xl font-bold inline-flex items-center">
-                {displayUser.first_name} {displayUser.last_name}
-              </h2>
+              <div className="flex flex-col items-center gap-1 ">
+                <h2 className="text-xl sm:text-2xl font-bold inline-flex items-center">
+                  {displayUser.first_name} {displayUser.last_name}
+                </h2>
+                <p className="w-full text-sm text-muted-foreground">
+                  {GetUserRole(displayUser)}
+                </p>
+              </div>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>

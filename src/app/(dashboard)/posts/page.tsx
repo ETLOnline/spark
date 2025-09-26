@@ -7,9 +7,6 @@ import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
 import { GetPostsAction } from "@/src/server-actions/Post/Post"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
-import { useAtom, useAtomValue } from "jotai"
-import { userStore } from "@/src/store/user/userStore"
-import { postStore } from "@/src/store/post/postStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 const PostsPage = () => {
