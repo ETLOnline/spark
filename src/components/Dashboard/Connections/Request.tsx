@@ -9,8 +9,8 @@ import { useToast } from "@/src/hooks/use-toast"
 import { Button } from "../../ui/button"
 import { UserCheck, X } from "lucide-react"
 import { ProfileActivity, ReqType } from "./types/connections.types"
-import NotificationItem from "../NotificationItem/NotifictionItem"
 import { killConnection } from "@/src/utils/helpers"
+import ProfileActivityItem from "../profile/ProfileActivityItem"
 
 type RequestProps = {
   activity: ProfileActivity
@@ -106,7 +106,7 @@ const Request: React.FC<RequestProps> = ({ activity, variant }) => {
   }
 
   return (
-    <NotificationItem activity={activity}>
+    <ProfileActivityItem activity={activity}>
       {variant === ReqType.incoming ? (
         <div className="flex space-x-2">
           <Button
@@ -148,7 +148,7 @@ const Request: React.FC<RequestProps> = ({ activity, variant }) => {
           Cancel
         </Button>
       )}
-    </NotificationItem>
+    </ProfileActivityItem>
   )
 }
 
