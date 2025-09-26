@@ -376,7 +376,16 @@ export default function CommunityDetailsClient({
                 )}
                 {!isSuperAdmin && (
                   <>
-                    {!isCommunityMember ? (
+                    {isCommunityMember === null ? (
+                      <Button
+                        variant="outline"
+                        disabled
+                        className="border-none px-1"
+                      >
+                        <Loader size={LoaderSizes.sm} />
+                        <span className="ml-2">Loading...</span>
+                      </Button>
+                    ) : !isCommunityMember ? (
                       <Button
                         variant="outline"
                         onClick={handleJoinCommunity}

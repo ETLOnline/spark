@@ -46,7 +46,8 @@ export default function ChannelPage() {
   const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
   const [isChannelMember, setIsChannelMember] = useState<boolean>(false)
   const [leaveDialogOpen, setLeaveDialogOpen] = useState<boolean>(false)
-
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [channelLoading, setChannelLoading] = useState<boolean>(true)
   const [selectedChannel, setSelectedChannel] = useAtom(
     channelStore.selectedChannel
   )
@@ -66,14 +67,6 @@ export default function ChannelPage() {
   )
   const [leaveLoading, leaveResult, leaveError, leaveChannel] =
     useServerAction(LeaveChannelAction)
-  useEffect(() => {
-    const isMember = isEntityUser(
-      selectedChannel as SelectChannel,
-      authUser?.unique_id as string
-    )
-
-    if (isMember) setIsChannelMember(true)
-  }, [selectedChannel, authUser])
 
   const handleJoinChannel = async () => {
     if (
@@ -132,29 +125,26 @@ export default function ChannelPage() {
 
   useEffect(() => {
     const fetchChannel = async () => {
+      setChannelLoading(true)
+
       const slug = decodeURIComponent(channelSlug as string)
       const res = await getSpaces({ channel_slug: slug })
+
       if (res?.success && res.data) {
         if (res.data.channel) {
-          setSelectedChannel(res?.data.channel)
+          setSelectedChannel(res.data.channel)
         }
         if (res.data.paginatedSpaces && res.data.joinedSpaces) {
           const publicSpaces = res.data.paginatedSpaces.spaces || []
           const joinedSpaces = res.data.joinedSpaces || []
-          if (publicSpaces.length === 0 && joinedSpaces.length === 0) {
-            setSpaces([])
-            setJoinedSpaces([])
-          } else {
-            const uniquePublicSpaces = publicSpaces.filter(
-              (publicSpace) =>
-                !joinedSpaces.some(
-                  (joinedSpace) => joinedSpace.id === publicSpace.id
-                )
-            )
-
-            setSpaces(uniquePublicSpaces)
-            setJoinedSpaces(joinedSpaces)
-          }
+          const uniquePublicSpaces = publicSpaces.filter(
+            (publicSpace) =>
+              !joinedSpaces.some(
+                (joinedSpace) => joinedSpace.id === publicSpace.id
+              )
+          )
+          setSpaces(uniquePublicSpaces)
+          setJoinedSpaces(joinedSpaces)
         } else {
           setSpaces([])
           setJoinedSpaces([])
@@ -164,6 +154,8 @@ export default function ChannelPage() {
         setJoinedSpaces([])
         setSelectedChannel(null)
       }
+
+      setChannelLoading(false)
     }
 
     setSpaces([])
@@ -171,7 +163,18 @@ export default function ChannelPage() {
     setSelectedChannel(null)
 
     fetchChannel()
-  }, [])
+  }, [channelSlug])
+
+  useEffect(() => {
+    if (!channelLoading && selectedChannel && authUser?.unique_id) {
+      const isMember = isEntityUser(
+        selectedChannel as SelectChannel,
+        authUser.unique_id
+      )
+      setIsChannelMember(isMember)
+      setIsLoading(false)
+    }
+  }, [channelLoading, selectedChannel, authUser])
 
   const { permissionChecker } = usePermissionChecker(
     "scoped",
@@ -211,7 +214,12 @@ export default function ChannelPage() {
                 </span>
               </h1>
               <div className="flex items-center gap-2 ">
-                {!isSuperAdmin &&
+                {isLoading ? (
+                  <Button variant="outline" disabled>
+                    Loading...
+                  </Button>
+                ) : (
+                  !isSuperAdmin &&
                   selectedChannel?.channel_type === "public" &&
                   !isChannelMember && (
                     <Button
@@ -224,7 +232,8 @@ export default function ChannelPage() {
                       <PlusCircle className="mr-2 h-4 w-4" />
                       {joinLoading ? "Joining..." : "Join Channel"}
                     </Button>
-                  )}
+                  )
+                )}
 
                 {!isSuperAdmin && isChannelMember && (
                   <Button

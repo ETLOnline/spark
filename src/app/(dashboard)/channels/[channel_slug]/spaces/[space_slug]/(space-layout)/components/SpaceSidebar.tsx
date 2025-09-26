@@ -11,7 +11,6 @@ import {
 import { SelectSpace, SelectSpaceFeature } from "@/src/db/schema"
 import { LogOut, PlusCircle, Users } from "lucide-react"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
-import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import React, { useEffect, useState } from "react"
@@ -20,7 +19,6 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { useAtom, useAtomValue } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import Avvvatars from "avvvatars-react"
-import { Button } from "@/src/components/ui/button"
 import { userStore } from "@/src/store/user/userStore"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import { useServerAction } from "@/src/hooks/useServerAction"
@@ -45,19 +43,16 @@ function SpaceSidebar({ space }: Props) {
   const router = useRouter()
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
-  const [joinLoading, joinResult, joinError, joinSpace] = useServerAction(
-    AttachSpaceUserAction
-  )
-  const [leaveLoading, leaveResult, leaveError, leaveSpace] =
-    useServerAction(LeaveSpaceAction)
+  const [joinLoading, , , joinSpace] = useServerAction(AttachSpaceUserAction)
+  const [leaveLoading, , , leaveSpace] = useServerAction(LeaveSpaceAction)
+
+  const [isLoading, setIsLoading] = useState<boolean>(true)
   const [isSpaceMember, setIsSpaceMember] = useState<boolean>(false)
 
   useEffect(() => {
-    const isMember = isEntityUser(space, currentUserId as string)
-
-    if (isMember) setIsSpaceMember(true)
-    else {
-      setIsSpaceMember(false)
+    if (currentUserId !== undefined) {
+      setIsSpaceMember(isEntityUser(space, currentUserId as string))
+      setIsLoading(false)
     }
   }, [space, currentUserId])
 
@@ -65,7 +60,6 @@ function SpaceSidebar({ space }: Props) {
     if (space.id && currentUserId) {
       try {
         const res = await joinSpace(space.id, currentUserId)
-
         if (res?.success) {
           setIsSpaceMember(true)
           toast({
@@ -88,8 +82,8 @@ function SpaceSidebar({ space }: Props) {
     if (space.id && currentUserId) {
       try {
         const res = await leaveSpace(space.id, currentUserId)
-
         if (res?.success) {
+          setIsSpaceMember(false)
           toast({
             title: "Space Left",
             description: "You have successfully left the Space!",
@@ -131,21 +125,15 @@ function SpaceSidebar({ space }: Props) {
     space.channel?.channel_slug ?? ""
   )
 
-  const canViewChat = permissionChecker
-    ? permissionChecker.canAccess("space.chat.view")
-    : false
-  const canViewPost = permissionChecker
-    ? permissionChecker.canAccess("space.posting.view")
-    : false
-  const canViewFileSharing = permissionChecker
-    ? permissionChecker.canAccess("space.file_sharing.create")
-    : false
-  const canViewProject = permissionChecker
-    ? permissionChecker.canAccess("space.project.view")
-    : false
-  const canViewSetting = permissionChecker
-    ? permissionChecker.canAccess("space.setting.update")
-    : false
+  const canViewChat = permissionChecker?.canAccess("space.chat.view") ?? false
+  const canViewPost =
+    permissionChecker?.canAccess("space.posting.view") ?? false
+  const canViewFileSharing =
+    permissionChecker?.canAccess("space.file_sharing.create") ?? false
+  const canViewProject =
+    permissionChecker?.canAccess("space.project.view") ?? false
+  const canViewSetting =
+    permissionChecker?.canAccess("space.setting.update") ?? false
 
   const hasFeaturePermission = (featureSlug: string): boolean => {
     switch (featureSlug) {
@@ -158,7 +146,7 @@ function SpaceSidebar({ space }: Props) {
       case "chat":
         return canViewChat
       default:
-        return false // Default to no access for unknown features
+        return false
     }
   }
 
@@ -170,11 +158,9 @@ function SpaceSidebar({ space }: Props) {
   function getFeatureUrl(feature_slug: string) {
     return `/channels/${encodedChannelSlug}/spaces/${encodedSpaceSlug}?page-type=${feature_slug}`
   }
-  // /channels/etl-online/spaces/test
 
   return (
     <SidebarGroup className="p-0">
-      {/* <SidebarGroupLabel>{space.space_name}</SidebarGroupLabel> */}
       <SidebarGroupContent>
         <SidebarMenu>
           {/* Space Name */}
@@ -195,14 +181,15 @@ function SpaceSidebar({ space }: Props) {
                   </span>
                   {!isSuperAdmin && (
                     <>
-                      {isSpaceMember ? (
+                      {isLoading ? (
+                        <span className="text-xs text-gray-500">
+                          Loading...
+                        </span>
+                      ) : isSpaceMember ? (
                         <span
                           onClick={(e) => {
                             e.stopPropagation()
-                            // Only handle click if not disabled
-                            if (!leaveLoading) {
-                              handleLeaveSpace()
-                            }
+                            if (!leaveLoading) handleLeaveSpace()
                           }}
                           className={`leave-btn${leaveLoading ? " disabled" : ""}`}
                         >
@@ -213,10 +200,7 @@ function SpaceSidebar({ space }: Props) {
                         <span
                           onClick={(e) => {
                             e.stopPropagation()
-                            // Only handle click if not disabled
-                            if (!joinLoading) {
-                              handleJoinSpace()
-                            }
+                            if (!joinLoading) handleJoinSpace()
                           }}
                           className={`inline-flex items-center rounded-md border  bg-background px-3 py-1 text-xs font-medium ring-offset-background transition-colors ${
                             joinLoading
@@ -293,12 +277,9 @@ function SpaceSidebar({ space }: Props) {
           )}
 
           {/* Static Features */}
-
           <SidebarGroupLabel>Other</SidebarGroupLabel>
           {spaceStaticFeatures.map((feature) => {
-            if (feature.name === "Settings" && !canViewSetting) {
-              return null
-            }
+            if (feature.name === "Settings" && !canViewSetting) return null
             return (
               <Link
                 key={feature.slug}
