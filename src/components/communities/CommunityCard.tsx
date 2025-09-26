@@ -58,6 +58,7 @@ import {
 } from "../ui/alert-dialog"
 import { useState } from "react"
 import "../../app/(dashboard)/style.css"
+import Loader from "../common/Loader/Loader"
 interface CommunityCardProps {
   community: SelectCommunity
   showStar?: boolean
@@ -257,7 +258,11 @@ export default function CommunityCard({
           {((!superAdmin && community.type === "public") ||
             (!superAdmin && isCurrentUserMember)) && (
             <>
-              {!isCurrentUserMember ? (
+              {!currentUserId ? (
+                <Button variant="outline" disabled>
+                  <Loader />
+                </Button>
+              ) : !isCurrentUserMember ? (
                 <Button
                   variant="outline"
                   onClick={handleJoinCommunity}

@@ -1,7 +1,7 @@
 /* Base button */
 .leave-btn {
   @apply inline-flex items-center rounded-md  border-input px-3 py-1 
-         text-xs font-medium transition-colors cursor-pointer;
+         text-xs font-medium transition-colors cursor-pointer border border-gray-600;
   @apply text-red-500; /* red text in both themes */
   background-color: hsl(var(--background)); /* dynamic background */
 }
