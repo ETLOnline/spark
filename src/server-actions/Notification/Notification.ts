@@ -36,7 +36,7 @@ export const GetNotificationsAction = CreateServerAction(true, async () => {
 
 export const MarkNotificationAsReadAction = CreateServerAction(
   true,
-  async (id: number) => {
+  async (id: number | number[]) => {
     try {
       const data = await MarkNotificationAsRead(id)
       return { success: true, data }

@@ -4,7 +4,7 @@ import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { createAbsoluteUrl, getSiteLogoUrl } from "@/src/utils/clientHelper"
 import { GetSpaceById } from "@/src/db/data-access/spaces/query"
 
-export async function createChatNotification(
+export async function createChatEmailNotification(
   event: string,
   users_ids: string[],
   space_id: string

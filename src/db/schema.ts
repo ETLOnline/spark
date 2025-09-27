@@ -476,12 +476,11 @@ export const notificationsTable = pgTable("notifications", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   created_by: varchar().notNull(),
   received_by: varchar().notNull(),
-  type: varchar().notNull(),
-  link: varchar(),
+  title: varchar().notNull(),
+  body: varchar().notNull(),
+  deep_link: varchar().notNull(),
+  icon: varchar(),
   is_read: integer().notNull().default(0),
-  counter: integer().notNull().default(0),
-  entity_id: varchar(),
-  entity_type: varchar().notNull(),
   ...timestamps
 })
 

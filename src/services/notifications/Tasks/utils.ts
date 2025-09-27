@@ -4,6 +4,8 @@ import {
   NotificationPayload,
   sendPushNotification
 } from "../PushNotification.utils"
+import { SendSystemNotification } from "../../system-notification/SystemNotification.utils"
+import { NotificationEvent } from "@/src/services/notify/types/events"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 export const SendTaskNotifications = async (
@@ -36,19 +38,19 @@ export const SendTaskNotifications = async (
     }
 
     switch (event_type) {
-      case "task_assigned":
+      case NotificationEvent.TASK_ASSIGNED:
         notificationPayload.receivers = [`user-${task?.assign_to}`]
         notificationPayload.template.title = `New Task Assigned: ${task?.task_num}`
         notificationPayload.template.body = `You have been assigned a new task in project "${project?.project_name}".`
         break
 
-      case "task_updated":
+      case NotificationEvent.UPDATE_TASK:
         notificationPayload.receivers = updateReceivers
         notificationPayload.template.title = "Task Updated"
         notificationPayload.template.body = `${authUser.first_name} ${authUser.last_name} updated the task ${task?.task_num}.`
         break
 
-      case "task_commented":
+      case NotificationEvent.TASK_COMMENTED:
         notificationPayload.receivers = updateReceivers
         notificationPayload.template.title = `New Comment on Task: ${task?.task_num}`
         notificationPayload.template.body = `${authUser.first_name} ${authUser.last_name} commented on the task "${task?.task_num}".`
@@ -59,6 +61,10 @@ export const SendTaskNotifications = async (
     }
 
     await sendPushNotification(notificationPayload)
+    await SendSystemNotification({
+      ...notificationPayload,
+      user_id: authUser.unique_id
+    })
   } catch (error) {
     console.error("Error sending notifications:", error)
   }

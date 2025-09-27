@@ -5,6 +5,7 @@ import {
   NotificationPayload,
   sendPushNotification
 } from "../PushNotification.utils"
+import { SendSystemNotification } from "../../system-notification/SystemNotification.utils"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 type PusherUsersResponse = {
@@ -63,6 +64,10 @@ export const SendChatNotification = async (
     }
 
     await sendPushNotification(notificationPayload)
+    await SendSystemNotification({
+      ...notificationPayload,
+      user_id: authUser.unique_id
+    })
   } catch (error) {
     console.error("Error sending notifications:", error)
   }
