@@ -1,5 +1,6 @@
 import { SelectProject, SelectProjectUser } from "@/src/db/schema"
 import { sendPushNotification } from "../PushNotification.utils"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 export const SendProjectNotifications = async (
   event_type: string,
@@ -12,7 +13,7 @@ export const SendProjectNotifications = async (
       template: {
         title: `New Project: ${project?.project_name}`,
         body: `You have been added to project "${project?.project_name}".`,
-        deep_link: `${process.env.NEXT_PUBLIC_BASE_URL}/project/${project?.id}/board`
+        deep_link: createAbsoluteUrl(`/project/${project?.id}/board`)
       }
     })
   } catch (error) {

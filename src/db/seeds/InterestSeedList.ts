@@ -9,7 +9,7 @@ export const interestSeedList = [
   "UI/UX Design", // 7
   "Cloud Computing", // 8
   "DevOps", // 9
-  "Game Development", // 10
+  "Game/Playable Development", // 10
   "Blockchain", // 11
   "Internet of Things (IoT)", // 12
   "Augmented Reality", // 13

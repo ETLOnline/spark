@@ -305,7 +305,8 @@ export default function ProfileScreen({
           </div> */}
           </div>
 
-          {authUser?.unique_id === user?.unique_id ? null : (
+          {authUser === null ? null : authUser?.unique_id ===
+            user?.unique_id ? null : (
             <ProfileFollowActions user={user} />
           )}
         </div>

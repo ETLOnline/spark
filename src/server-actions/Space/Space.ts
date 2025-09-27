@@ -5,6 +5,7 @@ import {
   CreateSpace,
   DeleteSpace,
   dettachSpaceUser,
+  getSpaceByChannelId,
   GetSpaceById,
   GetSpaceBySlug,
   GetSpaces,
@@ -42,6 +43,7 @@ import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import { GetUserPermissionsParsedAction } from "../UserRoles/UserRole"
 import { ensureCommunityMembership } from "../Community/Community"
 import pusherServer from "@/src/services/realtime/pusherServer"
+import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
 
 export const CreateSpaceAction = CreateServerAction(
   true,
@@ -189,6 +191,7 @@ export const DeleteSpaceAction = CreateServerAction(
         "broadcast-channels-spaces-update"
       )
       await channel.publish("space-del", deletedSpaceData)
+      await deleteRoleBasedOnEntityType("SPACE", deletedSpaceData.id)
       return { success: true }
     } catch (error) {
       return { error: error }
@@ -322,6 +325,18 @@ export const GetSpaceUsersAction = CreateServerAction(
     try {
       const spaceUsers = await getSpaceUsers(spaceId)
       return { success: true, data: spaceUsers }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetSpaceByChannelIdsAction = CreateServerAction(
+  true,
+  async (channelIds: string[]) => {
+    try {
+      const spaces = await getSpaceByChannelId(channelIds)
+      return { success: true, data: spaces }
     } catch (error) {
       return { error: error }
     }

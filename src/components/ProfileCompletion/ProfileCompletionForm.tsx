@@ -28,7 +28,7 @@ export default function ProfileCompletionForm() {
       }
     }
     fetchUserData()
-  }, [])
+  }, [step])
 
   const steps = [
     {
