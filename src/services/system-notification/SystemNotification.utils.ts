@@ -2,6 +2,7 @@ import { AddNotification } from "@/src/db/data-access/notification/query"
 import pusherServer from "../realtime/pusherServer"
 import { InsertNotification } from "@/src/db/schema"
 import { NotificationPayload } from "../notifications/PushNotification.utils"
+import { getRealtimeSystemNotificationChannel } from "../realtime/utils/helper"
 
 type NotificationWithUser = NotificationPayload & {
   user_id: string
@@ -34,7 +35,7 @@ export async function SendSystemNotification(
     await Promise.all(
       notificationsArray.map((notification) =>
         pusherServer.trigger(
-          `${notification.received_by}`,
+          getRealtimeSystemNotificationChannel(notification.received_by),
           "system-notifications",
           notification
         )
