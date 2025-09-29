@@ -20,10 +20,10 @@ export const SendTaskNotifications = async (
     const isAssignor = authUser.unique_id === task.assign_by
 
     const updateReceivers = isAssignee
-      ? [`user-${task.assign_by}`]
+      ? [`${task.assign_by}`]
       : isAssignor
-        ? [`user-${task.assign_to}`]
-        : [`user-${task.assign_to}`, `user-${task.assign_by}`]
+        ? [`${task.assign_to}`]
+        : [`${task.assign_to}`, `${task.assign_by}`]
 
     const ctaLink = `${process.env.NEXT_PUBLIC_BASE_URL}/project/${task?.project_id}/task/${task?.id}`
 
@@ -39,7 +39,7 @@ export const SendTaskNotifications = async (
 
     switch (event_type) {
       case NotificationEvent.TASK_ASSIGNED:
-        notificationPayload.receivers = [`user-${task?.assign_to}`]
+        notificationPayload.receivers = [`${task?.assign_to}`]
         notificationPayload.template.title = `New Task Assigned: ${task?.task_num}`
         notificationPayload.template.body = `You have been assigned a new task in project "${project?.project_name}".`
         break
