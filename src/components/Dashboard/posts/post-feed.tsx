@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Card, CardContent, CardHeader } from "@/src/components/ui/card"
 import PostMenu from "./post-menu"
 import NoDataCard from "../Channels/ChannelDetails/NoDataCard"
-import { formatRelativeTime, GetUserRole } from "@/src/utils/helpers"
+import { formatRelativeTime, getUserRole } from "@/src/utils/helpers"
 import {
   GetPostsAction,
   GetSpacePostsAction
@@ -102,13 +102,11 @@ const PostFeed: React.FC<PostFeedProps> = ({
 
   const handleGetUserRole = (user: SelectUser) => {
     if (spaceId) {
-      return GetUserRole(user, spaceId)
+      return getUserRole(user, spaceId)
     } else {
-      return GetUserRole(user)
+      return getUserRole(user)
     }
   }
-
-  console.log(posts.map((post) => post.author))
 
   return (
     <div className="space-y-6">
@@ -134,7 +132,7 @@ const PostFeed: React.FC<PostFeedProps> = ({
                       <div>
                         <p className="font-semibold">{name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {handleGetUserRole(post.author)}
+                          {getUserRole(post.author, spaceId)}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {formatRelativeTime(post.created_at || "")}

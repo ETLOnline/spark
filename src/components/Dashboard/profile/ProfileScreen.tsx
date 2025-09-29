@@ -41,7 +41,7 @@ import {
   CardContent,
   CardFooter
 } from "@/src/components/ui/card"
-import { generateUrl, getPagePath, GetUserRole } from "@/src/utils/helpers"
+import { generateUrl, getPagePath, getUserRole } from "@/src/utils/helpers"
 import EditProfileModal from "./edit-profile-modal"
 import { UpdateUserProfilePictureAction } from "@/src/server-actions/User/User"
 import { useServerAction } from "@/src/hooks/useServerAction"
@@ -270,7 +270,7 @@ export default function ProfileScreen({
                   {displayUser.first_name} {displayUser.last_name}
                 </h2>
                 <p className="w-full text-sm text-muted-foreground">
-                  {GetUserRole(displayUser)}
+                  {getUserRole(displayUser)}
                 </p>
               </div>
               <TooltipProvider>

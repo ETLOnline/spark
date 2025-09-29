@@ -21,7 +21,7 @@ import { GetRandomUsersAction } from "@/src/server-actions/User/User"
 import { Eye, Users } from "lucide-react"
 import { useEffect, useState } from "react"
 import Loader from "../../common/Loader/Loader"
-import { GetUserRole } from "@/src/utils/helpers"
+import { getUserRole } from "@/src/utils/helpers"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 interface Props {
@@ -84,7 +84,7 @@ export function PlatformSuggestionCard({ authUser }: Props) {
                       {suggestion.first_name} {suggestion.last_name}
                     </p>
                     <p className="text-xs text-muted-foreground break-words line-clamp-2">
-                      {GetUserRole(suggestion) || "No Role"}
+                      {getUserRole(suggestion) || "No Role"}
                     </p>
                   </div>
                 </div>

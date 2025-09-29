@@ -6,7 +6,6 @@ import { ScrollArea } from "@/src/components/ui/scroll-area"
 import { isSuperAdmin } from "@/src/utils/helpers"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import Overlay from "@/src/components/common/Overlay/OverLay"
-import ClientSpaceCleanup from "./components/SpaceCleanUp"
 
 interface Props {
   params: Promise<{
@@ -45,7 +44,6 @@ async function Layout({ params, children }: Props) {
 
   return (
     <div className="min-h-[83vh] bg-background relative">
-      <ClientSpaceCleanup />
       {/* Added relative for the overlay positioning */}
       {showAccessDeniedOverlay && (
         <Overlay page="space" pageHref={`/channels/${channel_slug}/spaces`} />

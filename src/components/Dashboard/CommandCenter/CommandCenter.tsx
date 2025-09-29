@@ -31,7 +31,7 @@ import { Avatar, AvatarImage } from "../../ui/avatar"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import Loader from "../../common/Loader/Loader"
 import { useEffect, useState } from "react"
-import { GetUserRole } from "@/src/utils/helpers"
+import { getUserRole } from "@/src/utils/helpers"
 
 export default function CommandCenter() {
   const [open, setOpen] = useState(false)
@@ -72,11 +72,6 @@ export default function CommandCenter() {
       setPeopleList(state.data)
     }
   }, [state])
-
-  const handeGetRole = (user: SelectUser) => {
-    const res = GetUserRole(user)
-    return res ?? "No Role"
-  }
 
   return (
     <div>
@@ -127,7 +122,7 @@ export default function CommandCenter() {
                    
                    group-data-[selected=true]:text-muted"
                   >
-                    {handeGetRole(person)}
+                    {getUserRole(person)}
                   </p>
                 </div>
               </CommandItem>

@@ -73,6 +73,10 @@ function SpaceSidebar({ space }: Props) {
   useEffect(() => {
     setSideBarCollapse(false)
     setCurrentSpace(space)
+
+    return () => {
+      setCurrentSpace(null)
+    }
   }, [space])
 
   useEffect(() => {
