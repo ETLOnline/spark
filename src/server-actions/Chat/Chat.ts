@@ -21,7 +21,8 @@ import {
   SendChatNotification,
   SendMessageNotification
 } from "@/src/services/notifications/Chat/utils"
-import { createChatNotification } from "@/src/services/notify/chat/chat"
+import { createChatEmailNotification } from "@/src/services/notify/chat/chat"
+import { NotificationEvent } from "@/src/services/notify/types/events"
 
 export const CreatePrivateChatAction = CreateServerAction(
   true,
@@ -64,9 +65,13 @@ export const CreatePrivateChatAction = CreateServerAction(
         })
       }
 
-      await SendChatNotification("Chat_Started", newChat, space)
+      await SendChatNotification(NotificationEvent.CHAT_INVITE, newChat, space)
 
-      await createChatNotification("chat_invite", [contact_id], space_id || "")
+      await createChatEmailNotification(
+        NotificationEvent.CHAT_INVITE,
+        [contact_id],
+        space_id || ""
+      )
       return { success: true, data: newChat }
     } catch (error) {
       return { error: error }
@@ -104,9 +109,13 @@ export const CreateGroupChatAction = CreateServerAction(
         })
       }
 
-      await SendChatNotification("Group_Chat_Added", chat, space)
+      await SendChatNotification(NotificationEvent.CHAT_INVITE, chat, space)
 
-      await createChatNotification("chat_invite", userIds, space_id || "")
+      await createChatEmailNotification(
+        NotificationEvent.CHAT_INVITE,
+        userIds,
+        space_id || ""
+      )
       return { success: true, data: chat }
     } catch (error) {
       return { error: error }
@@ -170,7 +179,7 @@ export const GetChatBySlugWithMessagesAction = CreateServerAction(
 
 export const AddMessageToChatAction = CreateServerAction(
   true,
-  async (message: InsertMessage) => {
+  async (message: InsertMessage, space_id?: string) => {
     try {
       const authUser = await AuthUserAction()
       if (authUser) {
@@ -213,7 +222,9 @@ export const AddMessageToChatAction = CreateServerAction(
             }
           }
 
-          await SendMessageNotification(updatedChat)
+          const space = await GetSpaceById(space_id || "")
+
+          await SendMessageNotification(updatedChat, space)
 
           return { success: true, data: newMessage }
         } else {

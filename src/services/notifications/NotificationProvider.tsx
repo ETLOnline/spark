@@ -15,10 +15,8 @@ export default function NotificationProvider() {
       const beamsClient = getBeamsClient()
 
       await beamsClient.clearAllState()
-      console.log("✅ Beams state cleared")
 
       await beamsClient.start()
-      console.log("✅ Beams started")
 
       await beamsClient.setUserId(userId, {
         fetchToken: async () => {
@@ -26,7 +24,6 @@ export default function NotificationProvider() {
           return token
         }
       })
-      console.log("✅ User registered with Beams")
     }
 
     init()
