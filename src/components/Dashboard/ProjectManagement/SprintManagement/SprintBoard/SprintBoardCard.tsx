@@ -102,7 +102,13 @@ function SprintBoardCard({
     setFilters(filters)
   }
 
-  const sensors = useSensors(useSensor(PointerSensor))
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 15
+      }
+    })
+  )
 
   function handleDragStart(event: any) {
     const taskId = event.active.id
