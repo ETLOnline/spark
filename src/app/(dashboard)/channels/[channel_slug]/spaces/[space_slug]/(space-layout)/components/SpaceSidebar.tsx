@@ -182,7 +182,7 @@ function SpaceSidebar({ space }: Props) {
                   {!isSuperAdmin && (
                     <>
                       {isLoading ? (
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 border border-gray-500 rounded-md px-2 py-1">
                           Loading...
                         </span>
                       ) : isSpaceMember ? (
