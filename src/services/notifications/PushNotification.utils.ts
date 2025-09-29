@@ -17,7 +17,7 @@ export async function sendPushNotification({
   template
 }: NotificationPayload) {
   try {
-    await beamsServerClient.publishToInterests(receivers, {
+    await beamsServerClient.publishToUsers(receivers, {
       web: {
         notification: template
       }

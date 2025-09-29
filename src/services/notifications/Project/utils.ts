@@ -14,7 +14,7 @@ export const SendProjectNotifications = async (
 
     const notificationPayload = {
       user_id: authUser.unique_id,
-      receivers: projectUsers.map((user) => `user-${user.user_id}`),
+      receivers: projectUsers.map((user) => `${user.user_id}`),
       template: {
         title: `New Project: ${project?.project_name}`,
         body: `You have been added to project "${project?.project_name}".`,
