@@ -24,6 +24,7 @@ import {
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { SendProjectNotifications } from "@/src/services/notifications/Project/utils"
 import { createProjectInviteNotification } from "@/src/services/notify/project/project"
+import { NotificationEvent } from "@/src/services/notify/types/events"
 
 export const CreateProjectAction = CreateServerAction(
   true,
@@ -160,14 +161,14 @@ export const AttachProjectUserAction = CreateServerAction(
 
       if (newProjectUsers.length > 0 && Project) {
         await SendProjectNotifications(
-          "project_member_added",
+          NotificationEvent.PROJECT_INVITE,
           newProjectUsers,
           Project
         )
       }
 
       await createProjectInviteNotification(
-        "project_invite",
+        NotificationEvent.PROJECT_INVITE,
         newUsersToAttach,
         projectId
       )

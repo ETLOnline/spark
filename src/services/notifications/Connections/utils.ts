@@ -4,10 +4,12 @@ import {
   sendPushNotification
 } from "../PushNotification.utils"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
+import { NotificationEvent } from "@/src/services/notify/types/events"
+import { SendSystemNotification } from "../../system-notification/SystemNotification.utils"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
-export const SendConnectionNotification = async (
-  event_type: string,
+export const SendConnectionPushNotification = async (
+  event_type: NotificationEvent,
   connection: SelectUserContact
 ) => {
   try {
@@ -35,12 +37,12 @@ export const SendConnectionNotification = async (
     }
 
     switch (event_type) {
-      case "connection_request":
+      case NotificationEvent.NEW_CONNECTION:
         notificationPayload.template.title = "New Connection Request"
         notificationPayload.template.body = `${authUser.first_name} ${authUser.last_name} sent you a connection request.`
         notificationPayload.template.deep_link = sendRequestURL
         break
-      case "connection_accepted":
+      case NotificationEvent.CONNECTION_ACCEPTED:
         notificationPayload.template.title = "Connection Request Accepted"
         notificationPayload.template.body = `${authUser.first_name} ${authUser.last_name}  has accepted your connection request. You’re now connected.`
         notificationPayload.template.deep_link = acceptedRequestURL
@@ -50,6 +52,10 @@ export const SendConnectionNotification = async (
     }
 
     await sendPushNotification(notificationPayload)
+    await SendSystemNotification({
+      user_id: authUser.unique_id,
+      ...notificationPayload
+    })
   } catch (err) {
     console.error("Error sending notifications:", err)
   }

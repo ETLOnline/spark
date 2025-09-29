@@ -3,7 +3,7 @@ import { AddToQueue } from "../../queue/addToQueue"
 import { FindUserByUniqueIdAction } from "@/src/server-actions/User/FindUserByUniqueIdAction"
 import { prepareContactData } from "@/src/utils/helpers"
 
-export async function createContactNotification(
+export async function createContactEmailNotification(
   event: string,
   createdByUser: SelectUser,
   receivedBy: string

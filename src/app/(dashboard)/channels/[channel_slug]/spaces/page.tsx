@@ -81,12 +81,12 @@ export default function ChannelPage() {
     try {
       const res = await joinChannel(selectedChannel.id, authUser.unique_id)
       if (res?.success) {
-        setIsChannelMember(true)
         toast({
           title: "Channel Joined",
           description: "You have successfully joined the channel!",
           duration: 3000
         })
+        fetchChannel()
       }
     } catch (error) {
       setIsChannelMember(false)
@@ -109,6 +109,7 @@ export default function ChannelPage() {
             description: "You have left the channel and its spaces.",
             duration: 3000
           })
+          fetchChannel()
           if (community?.slug) {
             router.push(`/communities/${community.slug}`)
           }
@@ -122,42 +123,40 @@ export default function ChannelPage() {
       }
     }
   }
+  const fetchChannel = async () => {
+    setChannelLoading(true)
 
-  useEffect(() => {
-    const fetchChannel = async () => {
-      setChannelLoading(true)
+    const slug = decodeURIComponent(channelSlug as string)
+    const res = await getSpaces({ channel_slug: slug })
 
-      const slug = decodeURIComponent(channelSlug as string)
-      const res = await getSpaces({ channel_slug: slug })
-
-      if (res?.success && res.data) {
-        if (res.data.channel) {
-          setSelectedChannel(res.data.channel)
-        }
-        if (res.data.paginatedSpaces && res.data.joinedSpaces) {
-          const publicSpaces = res.data.paginatedSpaces.spaces || []
-          const joinedSpaces = res.data.joinedSpaces || []
-          const uniquePublicSpaces = publicSpaces.filter(
-            (publicSpace) =>
-              !joinedSpaces.some(
-                (joinedSpace) => joinedSpace.id === publicSpace.id
-              )
-          )
-          setSpaces(uniquePublicSpaces)
-          setJoinedSpaces(joinedSpaces)
-        } else {
-          setSpaces([])
-          setJoinedSpaces([])
-        }
+    if (res?.success && res.data) {
+      if (res.data.channel) {
+        setSelectedChannel(res.data.channel)
+      }
+      if (res.data.paginatedSpaces && res.data.joinedSpaces) {
+        const publicSpaces = res.data.paginatedSpaces.spaces || []
+        const joinedSpaces = res.data.joinedSpaces || []
+        const uniquePublicSpaces = publicSpaces.filter(
+          (publicSpace) =>
+            !joinedSpaces.some(
+              (joinedSpace) => joinedSpace.id === publicSpace.id
+            )
+        )
+        setSpaces(uniquePublicSpaces)
+        setJoinedSpaces(joinedSpaces)
       } else {
         setSpaces([])
         setJoinedSpaces([])
-        setSelectedChannel(null)
       }
-
-      setChannelLoading(false)
+    } else {
+      setSpaces([])
+      setJoinedSpaces([])
+      setSelectedChannel(null)
     }
 
+    setChannelLoading(false)
+  }
+  useEffect(() => {
     setSpaces([])
     setJoinedSpaces([])
     setSelectedChannel(null)
