@@ -27,6 +27,7 @@ export function EventPricing({ event_id, eventEndTime }: Props) {
   const [isEventEnded, setIsEventEnded] = useState<boolean>(false)
   const [eventEntity, setEventEntity] = useState<SelectEvent>()
   const [openModal, setOpenModal] = useState<boolean>(false)
+  const [inviteLink, setInviteLink] = useState<string>("")
   const Iam = useAtomValue(userStore.Iam)
 
   const setRefreshEventsTrigger = useSetAtom(
@@ -110,7 +111,14 @@ export function EventPricing({ event_id, eventEndTime }: Props) {
   }
 
   const path = usePathname()
-  const inviteLink = `${window.location.protocol}//${window.location.host}${path}`
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setInviteLink(
+        `${window.location.protocol}//${window.location.host}${path}`
+      )
+    }
+  }, [path])
 
   return (
     <Card className="mb-6">

@@ -88,7 +88,7 @@ export default function EventsDetailsClient({ event_id }: Props) {
               event_id={event_id}
             />
 
-            <AttendeesList eventId={isEventData?.id} />
+            {isEventData?.id && <AttendeesList eventId={isEventData.id} />}
           </div>
         </div>
       </div>

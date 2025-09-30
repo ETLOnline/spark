@@ -54,20 +54,10 @@ export async function GetEventAttendees(event_id: number) {
       where: (eventUser, { eq }) => eq(eventUser.event_id, event_id),
       with: {
         user: {
-          columns: {
-            first_name: true,
-            email: true,
-            role: true
-          },
           with: {
             roles: {
               with: {
-                role: {
-                  columns: {
-                    name: true,
-                    slug: true
-                  }
-                }
+                role: true
               }
             }
           }
@@ -75,14 +65,7 @@ export async function GetEventAttendees(event_id: number) {
       }
     })
 
-    return attendees.map((a) => ({
-      name: a.user?.first_name,
-      email: a.user?.email,
-      userRoles: a.user?.roles?.map((r) => ({
-        name: r.role?.name,
-        slug: r.role?.slug
-      }))
-    }))
+    return attendees
   } catch (e: any) {
     throw new Error(e.message)
   }

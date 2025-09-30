@@ -315,6 +315,8 @@ export const formatRelativeTime = (
 
 export const GetUserRole = (user: SelectUser) => {
   if (user.roles && user.roles.length > 0) {
+    console.log("userRoles", user.roles)
+
     return user.roles.flatMap((ur) =>
       ur.role?.role_type === "GLOBAL" ? ur.role.name : []
     )
