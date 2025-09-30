@@ -5,6 +5,7 @@ import {
   NotificationPayload,
   sendPushNotification
 } from "../PushNotification.utils"
+import { SendSystemNotification } from "../../system-notification/SystemNotification.utils"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 type PusherUsersResponse = {
@@ -34,7 +35,7 @@ export const SendChatNotification = async (
     const receivers =
       chat.users
         ?.filter((user) => user.user_id !== authUser.unique_id)
-        .map((user) => `user-${user.user_id}`) || []
+        .map((user) => user.user_id) || []
 
     if (receivers.length === 0) return
 
@@ -63,6 +64,10 @@ export const SendChatNotification = async (
     }
 
     await sendPushNotification(notificationPayload)
+    await SendSystemNotification({
+      ...notificationPayload,
+      user_id: authUser.unique_id
+    })
   } catch (error) {
     console.error("Error sending notifications:", error)
   }
@@ -102,7 +107,7 @@ export const SendMessageNotification = async (
           (userId) =>
             !presenceChannelUsers.users.find((user) => user.id === userId)
         )
-        .map((userId) => `user-${userId}`)
+        .map((userId) => userId)
 
     if (nonPresentReciversIds?.length && nonPresentReciversIds.length > 0) {
       // Only send push if user is NOT present

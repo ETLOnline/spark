@@ -1,13 +1,6 @@
 "use client"
 
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-  Sparkles
-} from "lucide-react"
+import { BadgeCheck, ChevronsUpDown, LogOut } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
@@ -27,11 +20,14 @@ import {
 } from "@/src/components/ui/sidebar"
 import { useRouter } from "next/navigation"
 import { SignOutButton, UserProfile, useUser } from "@clerk/nextjs"
+import { useOnLogout } from "@/src/hooks/useSignOut"
 
 export default function NavUser() {
   const { isMobile } = useSidebar()
   const router = useRouter()
   const { user } = useUser()
+
+  const { manualLogout } = useOnLogout()
 
   return (
     <SidebarMenu>
@@ -114,9 +110,12 @@ export default function NavUser() {
               </DropdownMenuItem> */}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => {}}>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() => manualLogout()}
+            >
               <LogOut />
-              <SignOutButton />
+              Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

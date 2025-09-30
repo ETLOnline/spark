@@ -4,6 +4,8 @@ import {
   NotificationPayload,
   sendPushNotification
 } from "../PushNotification.utils"
+import { SendSystemNotification } from "../../system-notification/SystemNotification.utils"
+import { NotificationEvent } from "@/src/services/notify/types/events"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 export const SendTaskNotifications = async (
@@ -18,10 +20,10 @@ export const SendTaskNotifications = async (
     const isAssignor = authUser.unique_id === task.assign_by
 
     const updateReceivers = isAssignee
-      ? [`user-${task.assign_by}`]
+      ? [`${task.assign_by}`]
       : isAssignor
-        ? [`user-${task.assign_to}`]
-        : [`user-${task.assign_to}`, `user-${task.assign_by}`]
+        ? [`${task.assign_to}`]
+        : [`${task.assign_to}`, `${task.assign_by}`]
 
     const ctaLink = `${process.env.NEXT_PUBLIC_BASE_URL}/project/${task?.project_id}/task/${task?.id}`
 
@@ -36,19 +38,19 @@ export const SendTaskNotifications = async (
     }
 
     switch (event_type) {
-      case "task_assigned":
-        notificationPayload.receivers = [`user-${task?.assign_to}`]
+      case NotificationEvent.TASK_ASSIGNED:
+        notificationPayload.receivers = [`${task?.assign_to}`]
         notificationPayload.template.title = `New Task Assigned: ${task?.task_num}`
         notificationPayload.template.body = `You have been assigned a new task in project "${project?.project_name}".`
         break
 
-      case "task_updated":
+      case NotificationEvent.UPDATE_TASK:
         notificationPayload.receivers = updateReceivers
         notificationPayload.template.title = "Task Updated"
         notificationPayload.template.body = `${authUser.first_name} ${authUser.last_name} updated the task ${task?.task_num}.`
         break
 
-      case "task_commented":
+      case NotificationEvent.TASK_COMMENTED:
         notificationPayload.receivers = updateReceivers
         notificationPayload.template.title = `New Comment on Task: ${task?.task_num}`
         notificationPayload.template.body = `${authUser.first_name} ${authUser.last_name} commented on the task "${task?.task_num}".`
@@ -59,6 +61,10 @@ export const SendTaskNotifications = async (
     }
 
     await sendPushNotification(notificationPayload)
+    await SendSystemNotification({
+      ...notificationPayload,
+      user_id: authUser.unique_id
+    })
   } catch (error) {
     console.error("Error sending notifications:", error)
   }
