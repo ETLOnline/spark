@@ -1,6 +1,6 @@
 {
-  "id": "bd17f755-322a-49ce-b70f-4114406bc484",
-  "prevId": "1969044a-3494-4193-b8e4-49e83927dc23",
+  "id": "d0de55e0-1d89-483c-8e55-f80b04c16aca",
+  "prevId": "ceb8bd45-77e8-41e0-ba7f-3e7e9a4d1a05",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1602,14 +1602,26 @@
           "primaryKey": false,
           "notNull": true
         },
-        "type": {
-          "name": "type",
+        "title": {
+          "name": "title",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
-        "link": {
-          "name": "link",
+        "body": {
+          "name": "body",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deep_link": {
+          "name": "deep_link",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "icon": {
+          "name": "icon",
           "type": "varchar",
           "primaryKey": false,
           "notNull": false
@@ -1620,25 +1632,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": 0
-        },
-        "counter": {
-          "name": "counter",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "entity_id": {
-          "name": "entity_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "entity_type": {
-          "name": "entity_type",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
         },
         "updated_at": {
           "name": "updated_at",
