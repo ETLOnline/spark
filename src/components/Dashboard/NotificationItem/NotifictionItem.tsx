@@ -34,8 +34,8 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     <div className="flex items-center justify-between p-2 border-b last:border-b-0 max-[622px]:flex-col max-[622px]:items-start max-[622px]:space-x-0 max-[622px]:space-y-4">
       <div className="grid grid-cols-[48px,1fr] gap-3 items-start w-full">
         {/* Avatar column (fixed 48px) */}
-        <div className="relative">
-          <Avatar className="h-12 w-12">
+        <div className="relative h-12 w-12 ">
+          <Avatar>
             <AvatarImage
               src={activity.icon || ""}
               alt={activity.title}
