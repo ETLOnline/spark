@@ -21,18 +21,27 @@ import {
 import { useRouter } from "next/navigation"
 import { SignOutButton, UserProfile, useUser } from "@clerk/nextjs"
 import { useOnLogout } from "@/src/hooks/useSignOut"
+import { useEffect, useState } from "react"
 
 export default function NavUser() {
   const { isMobile } = useSidebar()
   const router = useRouter()
   const { user } = useUser()
 
-  const { manualLogout } = useOnLogout()
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  const { manualLogout, loading } = useOnLogout()
+
+  useEffect(() => {
+    if (!loading) {
+      setIsDropdownOpen(false)
+    }
+  }, [loading])
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
+        <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
@@ -112,7 +121,9 @@ export default function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="cursor-pointer"
+              onSelect={(e) => e.preventDefault()}
               onClick={() => manualLogout()}
+              loading={loading}
             >
               <LogOut />
               Sign out
