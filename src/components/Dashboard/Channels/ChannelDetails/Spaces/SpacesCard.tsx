@@ -59,7 +59,16 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
           <CardTitle className="text-xl flex items-center gap-1">
             {space.space_name}
             {space.space_type === "private" && (
-              <Lock className="text-muted-foreground" height={14} />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Lock className="text-muted-foreground" height={14} />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-sm">Private</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
 
             {canUpdateSpace &&
