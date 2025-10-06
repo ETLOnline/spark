@@ -1,13 +1,6 @@
 "use client"
 
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-  Sparkles
-} from "lucide-react"
+import { BadgeCheck, ChevronsUpDown, LogOut } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
@@ -27,16 +20,28 @@ import {
 } from "@/src/components/ui/sidebar"
 import { useRouter } from "next/navigation"
 import { SignOutButton, UserProfile, useUser } from "@clerk/nextjs"
+import { useOnLogout } from "@/src/hooks/useSignOut"
+import { useEffect, useState } from "react"
 
 export default function NavUser() {
   const { isMobile } = useSidebar()
   const router = useRouter()
   const { user } = useUser()
 
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  const { manualLogout, loading } = useOnLogout()
+
+  useEffect(() => {
+    if (!loading) {
+      setIsDropdownOpen(false)
+    }
+  }, [loading])
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
+        <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
@@ -114,9 +119,14 @@ export default function NavUser() {
               </DropdownMenuItem> */}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => {}}>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onSelect={(e) => e.preventDefault()}
+              onClick={() => manualLogout()}
+              loading={loading}
+            >
               <LogOut />
-              <SignOutButton />
+              Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

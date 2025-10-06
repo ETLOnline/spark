@@ -17,9 +17,7 @@ export const SendConnectionPushNotification = async (
 
     const contacts = [connection.contact_id, connection.user_id]
 
-    const receiverIds = contacts
-      .filter((id) => id !== authUser.unique_id)
-      .map((id) => `user-${id}`)
+    const receiverIds = contacts.filter((id) => id !== authUser.unique_id)
 
     const sendRequestURL = createAbsoluteUrl("/connections")
     const acceptedRequestURL = createAbsoluteUrl(

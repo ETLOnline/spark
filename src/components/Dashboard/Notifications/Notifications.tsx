@@ -15,9 +15,8 @@ import { useAtom, useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { notificationStore } from "@/src/store/notification/notificationStore"
 import pusherClient from "@/src/services/realtime/PusherClient"
-import { ScrollArea } from "@/src/components/ui/scroll-area"
-import Link from "next/link"
 import { playNotificationSound } from "@/src/services/system-notification/playNotificationSound"
+import { getRealtimeSystemNotificationChannel } from "@/src/services/realtime/utils/helper"
 
 const Notifications: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false)
@@ -69,7 +68,11 @@ const Notifications: React.FC = () => {
 
   useEffect(() => {
     if (!userId) return
-    const channel = pusherClient.subscribe(`${userId}`)
+
+    const ChannelName = getRealtimeSystemNotificationChannel(userId)
+    if (!ChannelName) return
+
+    const channel = pusherClient.subscribe(ChannelName)
 
     channel.bind("system-notifications", (data: SelectNotification) => {
       playNotificationSound()
@@ -90,6 +93,7 @@ const Notifications: React.FC = () => {
       pusherClient.unsubscribe(`${userId}`)
     }
   }, [userId])
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
