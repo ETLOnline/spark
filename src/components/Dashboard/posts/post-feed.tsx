@@ -100,14 +100,6 @@ const PostFeed: React.FC<PostFeedProps> = ({
     offset.current += 10
   }
 
-  const handleGetUserRole = (user: SelectUser) => {
-    if (spaceId) {
-      return getUserRole(user, spaceId)
-    } else {
-      return getUserRole(user)
-    }
-  }
-
   return (
     <div className="space-y-6">
       {posts.length === 0 ? (
