@@ -7,7 +7,7 @@ import { toast } from "@/src/hooks/use-toast"
 import { useEventAttendees } from "@/src/hooks/useEventAttendees"
 import { useAtomValue } from "jotai"
 import { eventStore } from "@/src/store/event/eventStore"
-import { GetUserRole } from "@/src/utils/helpers"
+import { getUserRole } from "@/src/utils/helpers"
 
 type Attendee = {
   name: string
@@ -61,7 +61,7 @@ export function AttendeesList({ eventId }: { eventId: number | undefined }) {
                   {attendee.first_name} {attendee.last_name}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {GetUserRole(attendee) || "Attendee"}
+                  {getUserRole(attendee) || "Attendee"}
                 </div>
               </div>
             </div>

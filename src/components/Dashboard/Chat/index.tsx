@@ -35,7 +35,7 @@ import Link from "next/link"
 import Loader from "../../common/Loader/Loader"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
-import { isOnlyEmoji } from "@/src/utils/helpers"
+import { getUserRole, isOnlyEmoji } from "@/src/utils/helpers"
 import CreateNewChat from "./components/CreateNewChat"
 import Avvvatars from "avvvatars-react"
 import {
@@ -442,8 +442,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       {!currentChat?.is_group && chatContact ? (
                         <>
                           <p className="text-sm font-medium leading-none">{`${chatContact?.first_name} ${chatContact?.last_name}`}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {chatContact?.email}
+                          <p className="text-sm text-muted-foreground truncate">
+                            {getUserRole(chatContact, currentSpace?.id)}
                           </p>
                         </>
                       ) : null}
