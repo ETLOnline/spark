@@ -240,6 +240,8 @@ export default function CommunityDetailsClient({
     }
   }
 
+  const encodedCommunitySlug = encodeURIComponent(community.slug)
+
   return (
     <div className="min-h-screen bg-background relative">
       {/* Added relative for the overlay positioning */}
@@ -582,7 +584,12 @@ export default function CommunityDetailsClient({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-xs lg:text-sm">Total Members</span>
+                    <Link
+                      href={`/communities/${encodedCommunitySlug}/users`}
+                      className="text-xs lg:text-sm hover:underline hover:decoration-white"
+                    >
+                      Members
+                    </Link>
                   </div>
                   <span className="font-bold text-sm lg:text-base">
                     {community?.totalMembers?.toLocaleString() ?? 0}
