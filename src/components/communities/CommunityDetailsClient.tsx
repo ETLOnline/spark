@@ -21,7 +21,8 @@ import {
   Globe,
   PlusCircle,
   PencilRuler,
-  Check
+  Check,
+  LogOut
 } from "lucide-react"
 import { CommunityDetailData } from "@/src/db/data-access/communities/query"
 import CreateChannels from "@/src/components/Dashboard/Channels/CreateChannels"
@@ -33,7 +34,7 @@ import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import PaginationComponent from "../common/Pagination"
 import { PaginationType } from "../common/types/pagination.type"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import ChannelsContextMenu from "@/src/components/Dashboard/Channels/ChannelDetails/ChannelsContextMenu"
 import Link from "next/link"
 import { userStore } from "@/src/store/user/userStore"
@@ -42,20 +43,29 @@ import { communityStore } from "@/src/store/community/communityStore"
 import { useSetAtom } from "jotai"
 import { InviteUserDialog } from "../UserListAndInvite/UserInviteDialog"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import { AttachCommunityUserAction } from "@/src/server-actions/Community/Community"
+import {
+  AttachCommunityUserAction,
+  LeaveCommunityAction
+} from "@/src/server-actions/Community/Community"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import { getInitials } from "@/src/utils/helpers"
 import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from "@/src/components/ui/tooltip"
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "../ui/alert-dialog"
+
 import ChannelCardItem from "../Dashboard/Channels/ChannelCardItem"
 import Image from "next/image"
+import clsx from "clsx"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -76,6 +86,7 @@ const demoRules = [
 export default function CommunityDetailsClient({
   community
 }: CommunityDetailsClientProps) {
+  const router = useRouter()
   const { toast } = useToast()
   const setCurrentCommunity = useSetAtom(communityStore.selectedCommunity)
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
@@ -83,10 +94,13 @@ export default function CommunityDetailsClient({
   const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
   const [joinLoading, joinResult, joinError, attachCommunityUser] =
     useServerAction(AttachCommunityUserAction)
+  const [leaveLoading, leaveResult, leaveError, leaveCommunity] =
+    useServerAction(LeaveCommunityAction)
   const [loadingChannels, setLoadingChannels] = useState(true)
   const [channels, setChannels] = useAtom(channelStore.channels)
   const [pagination, setPagination] = useState<PaginationType | null>(null)
   const searchParams = useSearchParams()
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState<boolean>(false)
   const page = Number(searchParams.get("page")) || 1
   const [isCommunityMember, setIsCommunityMember] = useState<boolean | null>(
     null
@@ -223,10 +237,12 @@ export default function CommunityDetailsClient({
   const canInviteUser = permissionChecker
     ? permissionChecker?.canAccess("community.user.invite")
     : false
-
   const handleJoinCommunity = async () => {
-    if (community.id && currentUserId) {
+    if (!community.id || !currentUserId) return
+
+    try {
       const res = await attachCommunityUser(community.id, currentUserId)
+
       if (res?.success) {
         setIsCommunityMember(true)
         toast({
@@ -234,9 +250,36 @@ export default function CommunityDetailsClient({
           description: "You have successfully joined the community!",
           duration: 3000
         })
-      } else {
-        console.error("Failed to join community:", res?.error)
       }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong while joining the community.",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleLeaveCommunity = async () => {
+    if (!community.id || !currentUserId) return
+
+    try {
+      const res = await leaveCommunity(community.id, currentUserId)
+
+      if (res?.success) {
+        toast({
+          title: "Left community",
+          description: "You have left the community, its channels, and spaces.",
+          duration: 3000
+        })
+        router.push("/communities")
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong while leaving the community.",
+        variant: "destructive"
+      })
     }
   }
 
@@ -332,23 +375,44 @@ export default function CommunityDetailsClient({
                   </Button>
                 )}
                 {!isSuperAdmin && (
-                  <Button
-                    variant="outline"
-                    onClick={handleJoinCommunity}
-                    disabled={isCommunityMember || joinLoading}
-                    className={
-                      isCommunityMember
-                        ? "text-gray-500 cursor-not-allowed"
-                        : ""
-                    }
-                  >
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    {joinLoading
-                      ? "Joining..."
-                      : isCommunityMember
-                        ? "Joined"
-                        : "Join"}
-                  </Button>
+                  <>
+                    {isCommunityMember === null ? (
+                      <Button
+                        variant="outline"
+                        disabled
+                        className="border-none px-1"
+                      >
+                        <Loader size={LoaderSizes.sm} />
+                        <span className="ml-2">Loading...</span>
+                      </Button>
+                    ) : !isCommunityMember ? (
+                      <Button
+                        variant="outline"
+                        onClick={handleJoinCommunity}
+                        disabled={joinLoading}
+                        loading={joinLoading}
+                        className="border-none px-1"
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        {joinLoading ? "Joining..." : "Join Community"}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        onClick={() => setLeaveDialogOpen(true)}
+                        disabled={leaveLoading}
+                        loading={leaveLoading}
+                        className={clsx(
+                          "text-red-500",
+                          "hover:bg-red-500 hover:text-white border-none",
+                          "dark:hover:bg-muted dark:hover:text-red-500"
+                        )}
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        {leaveLoading ? "Leaving..." : "Leave Community"}
+                      </Button>
+                    )}
+                  </>
                 )}
                 <CreateShortcut
                   type="community"
@@ -666,6 +730,29 @@ export default function CommunityDetailsClient({
         entityType="community"
         entity={community}
       />
+      <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave Community?</AlertDialogTitle>
+            <AlertDialogDescription>
+              By leaving this, you will also be removed from related channels
+              and spaces.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              loading={leaveLoading}
+              onClick={async () => {
+                await handleLeaveCommunity()
+                setLeaveDialogOpen(false)
+              }}
+            >
+              Leave Community
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
