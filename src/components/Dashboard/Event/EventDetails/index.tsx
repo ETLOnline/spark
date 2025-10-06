@@ -9,8 +9,9 @@ import { EventOrganizer } from "@/src/components/Dashboard/Event/EventDetails/Ev
 import { EventPricing } from "@/src/components/Dashboard/Event/EventDetails/EventPrice"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetEventByIdAction } from "@/src/server-actions/events/event"
-import { SelectEvent } from "@/src/db/schema"
-import { useHostUserInfo } from "@/src/hooks/useGetHostData"
+import { SelectEvent, SelectUser } from "@/src/db/schema"
+import { hostStore } from "@/src/store/host/hostStore"
+import { useAtomValue } from "jotai"
 
 interface Props {
   event_id: string
@@ -18,10 +19,10 @@ interface Props {
 
 export default function EventsDetailsClient({ event_id }: Props) {
   const [isEventData, setIsEventData] = useState<SelectEvent | null>(null)
-
+  const [hostInfoData, setHostInfoData] = useState<SelectUser | null>(null)
+  const hosts = useAtomValue(hostStore.hosts)
   const [loading, eventData, error, getEvent] =
     useServerAction(GetEventByIdAction)
-
   useEffect(() => {
     const getEventData = async () => {
       const eventId = Number(event_id)
@@ -34,8 +35,15 @@ export default function EventsDetailsClient({ event_id }: Props) {
 
     getEventData()
   }, [event_id])
-  const hostInfo = useHostUserInfo(isEventData?.host_id)
 
+  useEffect(() => {
+    if (isEventData?.host_id) {
+      const hostData = hosts[isEventData.host_id]
+      if (hostData) {
+        setHostInfoData(hostData)
+      }
+    }
+  }, [isEventData, hosts])
   const { location, meeting_link } = isEventData?.metadata
     ? JSON.parse(isEventData.metadata)
     : { location: "", meeting_link: "" }
@@ -64,7 +72,13 @@ export default function EventsDetailsClient({ event_id }: Props) {
               eventId={isEventData?.id}
             />
             <EventAbout description={isEventData?.description ?? ""} />
-            <EventOrganizer hostName={hostInfo?.full_name || "host"} />
+            <EventOrganizer
+              profile_url={hostInfoData?.profile_url || null}
+              hostName={
+                `${hostInfoData?.first_name || ""} ${hostInfoData?.last_name || ""}` ||
+                "host"
+              }
+            />
           </div>
 
           {/* Sidebar: Spans one column on large screens */}
@@ -74,7 +88,7 @@ export default function EventsDetailsClient({ event_id }: Props) {
               event_id={event_id}
             />
 
-            <AttendeesList eventId={isEventData?.id} />
+            {isEventData?.id && <AttendeesList eventId={isEventData.id} />}
           </div>
         </div>
       </div>
