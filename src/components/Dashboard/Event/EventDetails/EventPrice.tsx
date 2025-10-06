@@ -1,3 +1,4 @@
+"use client"
 import { useEffect, useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import { Card, CardContent } from "@/src/components/ui/card"
@@ -26,6 +27,7 @@ export function EventPricing({ event_id, eventEndTime }: Props) {
   const [isEventEnded, setIsEventEnded] = useState<boolean>(false)
   const [eventEntity, setEventEntity] = useState<SelectEvent>()
   const [openModal, setOpenModal] = useState<boolean>(false)
+  const [inviteLink, setInviteLink] = useState<string>("")
   const Iam = useAtomValue(userStore.Iam)
 
   const setRefreshEventsTrigger = useSetAtom(
@@ -108,51 +110,19 @@ export function EventPricing({ event_id, eventEndTime }: Props) {
     }
   }
 
-  // useEffect(() => {
-  //   const fetchEvent = async () => {
-  //     try {
-  //       const res = await getEventById(event_id)
-
-  //       if (res?.success) {
-  //         const event = res?.data[0]
-  //         setEventEntity(event)
-  //       }
-  //     } catch (error: any) {
-  //       toast({
-  //         title: "Error",
-  //         description: error?.message || "Failed to fetch event details.",
-  //         duration: 3000
-  //       })
-  //     }
-  //   }
-
-  //   if (event_id) {
-  //     fetchEvent()
-  //   }
-  // }, [event_id])
-
   const path = usePathname()
-  const inviteLink = `${window.location.protocol}//${window.location.host}${path}`
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setInviteLink(
+        `${window.location.protocol}//${window.location.host}${path}`
+      )
+    }
+  }, [path])
 
   return (
     <Card className="mb-6">
       <CardContent className="p-4 text-center">
-        {isEventEnded ? (
-          <>
-            <div className="text-2xl font-bold text-red-600 mb-1">
-              Event Ended
-            </div>
-            <div className="text-sm text-gray-600 mb-4">
-              This event is no longer active.
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="text-2xl font-bold text-green-600 mb-1">Free</div>
-            <div className="text-sm text-gray-600 mb-4">No cost to attend</div>
-          </>
-        )}
-
         <Button
           onClick={handleRegisterEvent}
           variant="default"

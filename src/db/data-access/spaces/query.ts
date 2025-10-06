@@ -253,6 +253,7 @@ export async function attachSpaceFeatures(
 export async function attachSpaceUser(
   spaceId: string,
   userId: string,
+  channel_user_id: number,
   spaceRole?: string
 ) {
   try {
@@ -261,6 +262,7 @@ export async function attachSpaceUser(
       .values({
         space_id: spaceId,
         user_id: userId,
+        channel_user_id: channel_user_id,
         role: spaceRole
       })
       .returning()

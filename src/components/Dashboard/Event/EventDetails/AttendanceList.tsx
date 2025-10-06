@@ -7,6 +7,7 @@ import { toast } from "@/src/hooks/use-toast"
 import { useEventAttendees } from "@/src/hooks/useEventAttendees"
 import { useAtomValue } from "jotai"
 import { eventStore } from "@/src/store/event/eventStore"
+import { GetUserRole } from "@/src/utils/helpers"
 
 type Attendee = {
   name: string
@@ -15,41 +16,13 @@ type Attendee = {
 }
 
 export function AttendeesList({ eventId }: { eventId: number | undefined }) {
-  // const [attendeeLoading, attendeeData, attendeeError, getEventAttendees] =
-  //   useServerAction(GetEventAttendeesAction)
-
-  // const [attendees, setAttendees] = useState<Attendee[]>([])
-
-  // useEffect(() => {
-  //   if (!eventId) return
-
-  //   const fetchEventAttendees = async () => {
-  //     try {
-  //       const res = await getEventAttendees(eventId)
-  //       console.log("attendees", res)
-
-  //       if (res?.data && Array.isArray(res.data)) {
-  //         console.log("attendes", res)
-
-  //         setAttendees(res.data)
-  //       } else {
-  //         setAttendees([])
-  //       }
-  //     } catch (error) {
-  //       toast({
-  //         title: "Login required",
-  //         description: "Please log in to register for the event.",
-  //         duration: 3000
-  //       })
-  //     }
-  //   }
-
-  //   fetchEventAttendees()
-  // }, [eventId])
-
-  const { attendees, loading, error, refetch } = useEventAttendees(eventId)
+  const {
+    attendees = [],
+    loading,
+    error,
+    refetch
+  } = useEventAttendees(eventId || 0)
   const refreshTrigger = useAtomValue(eventStore.refreshEventsTriggerAtom)
-
   useEffect(() => {
     refetch()
   }, [refreshTrigger])
@@ -75,17 +48,20 @@ export function AttendeesList({ eventId }: { eventId: number | undefined }) {
         )}
 
         <div className="space-y-3">
-          {attendees.map((attendee, index) => (
+          {attendees?.map((attendee, index) => (
             <div key={index} className="flex items-center gap-3">
               <Avatar className="w-8 h-8">
                 <AvatarFallback className="bg-gray-300 text-gray-700 text-xs">
-                  {attendee.initials || attendee.name.slice(0, 2).toUpperCase()}
+                  {`${attendee?.first_name?.[0] || ""}${attendee?.last_name?.[0] || ""}`.toUpperCase() ||
+                    "NA"}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <div className="font-medium text-sm">{attendee.name}</div>
+                <div className="font-medium text-sm">
+                  {attendee.first_name} {attendee.last_name}
+                </div>
                 <div className="text-xs text-gray-500">
-                  {attendee.role || "Attendee"}
+                  {GetUserRole(attendee) || "Attendee"}
                 </div>
               </div>
             </div>

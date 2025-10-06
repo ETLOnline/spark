@@ -87,9 +87,6 @@ export default function CreateCommunityModal({
   const [selectedCommunity, setSelectedCommunity] = useAtom(
     communityStore.selectedCommunity
   )
-  const [, setRefreshCommunitiesTrigger] = useAtom(
-    communityStore.refreshCommunitiesTriggerAtom
-  )
 
   const [addCommunityLoading, , addCommunityError, CreateCommunity] =
     useServerAction(CreateCommunityAction)
@@ -316,7 +313,6 @@ export default function CreateCommunityModal({
         })
 
         setCommunityFormModalVisibility(false)
-        setRefreshCommunitiesTrigger((prev) => !prev)
 
         toast({
           title: "Community Created",
@@ -395,7 +391,6 @@ export default function CreateCommunityModal({
         })
 
         setCommunityFormModalVisibility(false)
-        setRefreshCommunitiesTrigger((prev) => !prev)
 
         toast({
           title: "Community updated",

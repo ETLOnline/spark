@@ -1,6 +1,6 @@
 "use client"
 
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
 import { channelStore } from "@/src/store/channel/channelStore"
@@ -12,23 +12,42 @@ import SpacesCard from "@/src/components/Dashboard/Channels/ChannelDetails/Space
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
 import CreateSpaceModal from "@/src/components/Dashboard/Channels/ChannelDetails/Spaces/CreateSpaceModal"
 import { Button } from "@/src/components/ui/button"
-import { CirclePlus } from "lucide-react"
+import { CirclePlus, LogOut, PlusCircle } from "lucide-react"
 import { GetSpacesAction } from "@/src/server-actions/Space/Space"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { SelectChannel, SelectSpace } from "@/src/db/schema"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import Overlay from "@/src/components/common/Overlay/OverLay"
 import { communityStore } from "@/src/store/community/communityStore"
-import { AttachChannelUserAction } from "@/src/server-actions/Channel/Channel"
+import {
+  AttachChannelUserAction,
+  LeaveChannelAction
+} from "@/src/server-actions/Channel/Channel"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
+import { useToast } from "@/src/hooks/use-toast"
+import "../spaces/../../../style.css"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/src/components/ui/alert-dialog"
 
 export default function ChannelPage() {
+  const router = useRouter()
+  const { toast } = useToast()
   const community = useAtomValue(communityStore.selectedCommunity)
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
   const [isChannelMember, setIsChannelMember] = useState<boolean>(false)
-
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [channelLoading, setChannelLoading] = useState<boolean>(true)
   const [selectedChannel, setSelectedChannel] = useAtom(
     channelStore.selectedChannel
   )
@@ -46,76 +65,115 @@ export default function ChannelPage() {
   const [joinLoading, joinResult, joinError, joinChannel] = useServerAction(
     AttachChannelUserAction
   )
+  const [leaveLoading, leaveResult, leaveError, leaveChannel] =
+    useServerAction(LeaveChannelAction)
 
-  useEffect(() => {
-    const isMember = isEntityUser(
-      selectedChannel as SelectChannel,
-      authUser?.unique_id as string
-    )
-
-    if (isMember) setIsChannelMember(true)
-    else {
-      setIsChannelMember(false)
-    }
-  }, [selectedChannel, authUser])
-
-  async function handleJoinChannel() {
+  const handleJoinChannel = async () => {
     if (
-      selectedChannel?.channel_type === "public" &&
-      !isChannelMember &&
-      selectedChannel?.id &&
-      authUser?.unique_id
+      selectedChannel?.channel_type !== "public" ||
+      isChannelMember ||
+      !selectedChannel?.id ||
+      !authUser?.unique_id
     ) {
+      return
+    }
+
+    try {
       const res = await joinChannel(selectedChannel.id, authUser.unique_id)
-      if (res?.success) setIsChannelMember(true)
-      else {
-        setIsChannelMember(false)
+      if (res?.success) {
+        toast({
+          title: "Channel Joined",
+          description: "You have successfully joined the channel!",
+          duration: 3000
+        })
+        fetchChannel()
       }
+    } catch (error) {
+      setIsChannelMember(false)
+      toast({
+        title: "Error",
+        description: "Something went wrong while joining the channel.",
+        duration: 3000
+      })
     }
   }
 
-  useEffect(() => {
-    const fetchChannel = async () => {
-      const slug = decodeURIComponent(channelSlug as string)
-      const res = await getSpaces({ channel_slug: slug })
-      if (res?.success && res.data) {
-        if (res.data.channel) {
-          setSelectedChannel(res?.data.channel)
-        }
-        if (res.data.paginatedSpaces && res.data.joinedSpaces) {
-          const publicSpaces = res.data.paginatedSpaces.spaces || []
-          const joinedSpaces = res.data.joinedSpaces || []
-          if (publicSpaces.length === 0 && joinedSpaces.length === 0) {
-            setSpaces([])
-            setJoinedSpaces([])
-          } else {
-            const uniquePublicSpaces = publicSpaces.filter(
-              (publicSpace) =>
-                !joinedSpaces.some(
-                  (joinedSpace) => joinedSpace.id === publicSpace.id
-                )
-            )
-
-            setSpaces(uniquePublicSpaces)
-            setJoinedSpaces(joinedSpaces)
+  const handleLeaveChannel = async () => {
+    if (selectedChannel?.id && isChannelMember && currentUserId) {
+      try {
+        const res = await leaveChannel(selectedChannel.id, currentUserId)
+        if (res?.success) {
+          setIsChannelMember(false)
+          toast({
+            title: "Channel Left",
+            description: "You have left the channel and its spaces.",
+            duration: 3000
+          })
+          fetchChannel()
+          if (community?.slug) {
+            router.push(`/communities/${community.slug}`)
           }
-        } else {
-          setSpaces([])
-          setJoinedSpaces([])
         }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Something went wrong while leaving the channel.",
+          duration: 3000
+        })
+      }
+    }
+  }
+  const fetchChannel = async () => {
+    setChannelLoading(true)
+
+    const slug = decodeURIComponent(channelSlug as string)
+    const res = await getSpaces({ channel_slug: slug })
+
+    if (res?.success && res.data) {
+      if (res.data.channel) {
+        setSelectedChannel(res.data.channel)
+      }
+      if (res.data.paginatedSpaces && res.data.joinedSpaces) {
+        const publicSpaces = res.data.paginatedSpaces.spaces || []
+        const joinedSpaces = res.data.joinedSpaces || []
+        const uniquePublicSpaces = publicSpaces.filter(
+          (publicSpace) =>
+            !joinedSpaces.some(
+              (joinedSpace) => joinedSpace.id === publicSpace.id
+            )
+        )
+        setSpaces(uniquePublicSpaces)
+        setJoinedSpaces(joinedSpaces)
       } else {
         setSpaces([])
         setJoinedSpaces([])
-        setSelectedChannel(null)
       }
+    } else {
+      setSpaces([])
+      setJoinedSpaces([])
+      setSelectedChannel(null)
     }
 
+    setChannelLoading(false)
+  }
+  useEffect(() => {
     setSpaces([])
     setJoinedSpaces([])
     setSelectedChannel(null)
 
     fetchChannel()
-  }, [])
+  }, [channelSlug])
+
+  useEffect(() => {
+    if (!channelLoading && selectedChannel && authUser?.unique_id) {
+      const isMember = isEntityUser(
+        selectedChannel as SelectChannel,
+        authUser.unique_id
+      )
+      setIsChannelMember(isMember)
+      setIsLoading(false)
+    }
+  }, [channelLoading, selectedChannel, authUser])
 
   const { permissionChecker } = usePermissionChecker(
     "scoped",
@@ -155,21 +213,39 @@ export default function ChannelPage() {
                 </span>
               </h1>
               <div className="flex items-center gap-2 ">
-                {!isSuperAdmin &&
-                  selectedChannel?.channel_type === "public" && (
+                {isLoading ? (
+                  <Button variant="outline" disabled>
+                    Loading...
+                  </Button>
+                ) : (
+                  !isSuperAdmin &&
+                  selectedChannel?.channel_type === "public" &&
+                  !isChannelMember && (
                     <Button
                       variant="outline"
                       onClick={handleJoinChannel}
-                      disabled={isChannelMember || joinLoading}
-                      className={`border-2 border-red-500 font-bold px-6 py-2 ${isChannelMember ? "bg-red-500 text-white" : "text-red-500 hover:bg-red-500 hover:text-white"}`}
+                      disabled={joinLoading}
+                      loading={joinLoading}
+                      className=" font-medium px-6 py-2 hover:bg-primary hover:text-primary-foreground"
                     >
-                      {isChannelMember
-                        ? "Joined"
-                        : joinLoading
-                          ? "Joining..."
-                          : "Join"}
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      {joinLoading ? "Joining..." : "Join Channel"}
                     </Button>
-                  )}
+                  )
+                )}
+
+                {!isSuperAdmin && isChannelMember && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setLeaveDialogOpen(true)}
+                    disabled={leaveLoading}
+                    loading={leaveLoading}
+                    className={`leave-btn${leaveLoading ? " disabled" : ""}`}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {leaveLoading ? "Leaving..." : "Leave Channel"}
+                  </Button>
+                )}
 
                 {selectedChannel?.id && user && canCreateSpace ? (
                   <>
@@ -235,6 +311,29 @@ export default function ChannelPage() {
           </div>
         </main>
       </div>
+
+      <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave Channel?</AlertDialogTitle>
+            <AlertDialogDescription>
+              By leaving this, you will also be removed from related spaces.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              loading={leaveLoading}
+              onClick={async () => {
+                await handleLeaveChannel()
+                setLeaveDialogOpen(false)
+              }}
+            >
+              Leave Channel
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

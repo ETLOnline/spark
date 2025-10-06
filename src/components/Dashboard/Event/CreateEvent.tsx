@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -51,9 +51,10 @@ import TagSelect from "../../TagsInput/tags"
 import { InsertEvent, SelectEvent } from "@/src/db/schema"
 import { EventType } from "../../common/types/event.types"
 import { MultiSelectOption } from "../../ui/multi-select"
+import { ScrollArea } from "../../ui/scroll-area"
 import { UnsavedChangesDialog } from "../../common/unsavedChangesDialog"
 import { useConfirmClose } from "@/src/hooks/useConfirmClose"
-
+import { hostStore } from "@/src/store/host/hostStore"
 interface Props {
   events: SelectEvent[]
   setEvents: React.Dispatch<React.SetStateAction<SelectEvent[]>>
@@ -62,14 +63,16 @@ interface Props {
 const now = moment().format("YYYY-MM-DD HH:mm")
 const eventSchema = z
   .object({
-    title: z.string().min(1, "Title required").max(30, "Title is too long"),
+    title: z
+      .string()
+      .min(1, "Event name required")
+      .max(30, "Event name is too long"),
     description: z
       .string()
       .min(1, "Description required")
-      .max(50, "Description is too long"),
-    image: z
-      .instanceof(File, { message: "Image is required" })
-      .refine((file) => file.size > 0, { message: "Image cannot be empty" }),
+      .max(150, "Description is too long"),
+    image: z.any().optional(),
+    existingImageUrl: z.string().optional(),
 
     start_date_time: z.string().min(1, "Start date and time required"),
     end_date_time: z.string().min(1, "End date and time required"),
@@ -78,6 +81,21 @@ const eventSchema = z
     meeting_link: z.string().optional()
   })
   .superRefine((data, ctx) => {
+    if (!data.existingImageUrl && !(data.image instanceof File)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["image"],
+        message: "Image is required"
+      })
+    }
+
+    if (data.image instanceof File && data.image.size <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["image"],
+        message: "Image cannot be empty"
+      })
+    }
     if (new Date(data.start_date_time) <= new Date(now)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -97,7 +115,7 @@ const eventSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["location"],
-        message: "location required"
+        message: "Location required"
       })
     }
     if (data.event_type === EventType.Virtual && !data.meeting_link) {
@@ -112,7 +130,7 @@ const eventSchema = z
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["location"],
-          message: "location required"
+          message: "Location required"
         })
       }
       if (!data.meeting_link) {
@@ -140,6 +158,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
   const [selectedTags, setSelectedTags] = useState<MultiSelectOption[]>([])
   const [imageFile, setImageFile] = useState<File | null>(null)
+  const [existingImageUrl, setExistingImageUrl] = useState<string>("")
   const form = useForm({
     resolver: zodResolver(eventSchema),
     defaultValues: {
@@ -147,10 +166,11 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
       description: "",
       start_date_time: moment().format("YYYY-MM-DDTHH:mm"),
       end_date_time: moment().add(1, "hours").format("YYYY-MM-DDTHH:mm"),
-      event_type: "Hybrid",
+      event_type: "",
       location: "",
       meeting_link: "",
-      image: undefined
+      image: undefined,
+      existingImageUrl
     },
     shouldUnregister: true
   })
@@ -210,7 +230,8 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
       form.setValue("event_type", selesctedEventCopy?.type || EventType.Hybrid)
       form.setValue("location", metadata.location)
       form.setValue("meeting_link", metadata.meeting_link)
-      setImageFile(null) // Clear image file on event selection change
+      setExistingImageUrl(selesctedEventCopy.coverImage || "")
+      setImageFile(null)
     }
   }, [selectedEvent])
 
@@ -228,6 +249,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
       })
       setSelectedEvent(null)
       setImageFile(null) // Clear image file when modal is closed
+      setExistingImageUrl("")
     }
   }, [formModalVisibility])
 
@@ -249,8 +271,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
     })
 
     const tags = selectedTags.map((tag) => tag.label)
-
-    let coverImageUrl = ""
+    let coverImageUrl = selectedEvent?.coverImage
     if (imageFile instanceof File) {
       try {
         const base64 = await new Promise<string>((resolve, reject) => {
@@ -367,7 +388,8 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
       )
       setFormModalVisibility(false)
       setSelectedTags([])
-      setImageFile(null) // Clear image file after event update
+      setImageFile(null)
+      setExistingImageUrl("")
       form.reset()
       toast({
         title: "Event updated",
@@ -395,6 +417,9 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
       })
     }
   }
+  useEffect(() => {
+    form.setValue("existingImageUrl", existingImageUrl)
+  }, [existingImageUrl, form])
 
   const { showConfirmation, setShowConfirmation, handleClose } =
     useConfirmClose({
@@ -415,320 +440,329 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                 : "Fill in the details for your new event."}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={form.handleSubmit(eventSubmit)}>
-            <div className="grid gap-4 py-1 ">
-              <div className="flex flex-col">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="title" className="text-right">
-                    Title
-                  </Label>
-                  <Controller
-                    name="title"
-                    control={form.control}
-                    defaultValue=""
-                    render={({ field }) => (
-                      <Input
-                        id="title"
-                        {...field}
-                        onChange={(e) =>
-                          field.onChange(e.target.value.trimStart())
-                        }
-                        className="col-span-3"
-                      />
-                    )}
-                  />
-                </div>
-                <div className="text-right">
-                  {error.title && (
-                    <span className="text-red-500 text-sm">
-                      {String(error.title?.message)}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-col">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="description" className="text-right">
-                    Description
-                  </Label>
-                  <Controller
-                    name="description"
-                    control={form.control}
-                    render={({ field }) => (
-                      <Textarea
-                        id="description"
-                        {...field}
-                        onChange={(e) =>
-                          field.onChange(e.target.value.trimStart())
-                        }
-                        className="col-span-3"
-                      />
-                    )}
-                  />
-                </div>
-                <div className="text-right">
-                  {error.description && (
-                    <span className="text-red-500 text-sm">
-                      {String(error.description.message)}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-col">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="image" className="text-right">
-                    Event Image
-                  </Label>
-                  <Controller
-                    name="image"
-                    control={form.control}
-                    render={({ field: { onChange, value, ...field } }) => (
-                      <Input
-                        id="image"
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0] || null
-                          setImageFile(file)
-                          onChange(file)
-                        }}
-                        className="col-span-3"
-                        {...field}
-                        value={undefined} // File inputs don't use value prop
-                      />
-                    )}
-                  />
-                </div>
-                <div className="text-right">
-                  {error.image && (
-                    <span className="text-red-500 text-sm">
-                      {String(error.image.message)}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-col">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="start_date_time" className="text-right">
-                    Start Date and Time
-                  </Label>
-                  <Controller
-                    name="start_date_time"
-                    control={form.control}
-                    render={({ field }) => (
-                      <Input
-                        id="start_date_time"
-                        type="datetime-local"
-                        {...field}
-                        className="col-span-3"
-                      />
-                    )}
-                  />
-                </div>
-                <div className="text-right">
-                  {error.start_date_time && (
-                    <span className="text-red-500 text-sm">
-                      {String(error.start_date_time.message)}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-col">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="end_date_time" className="text-right">
-                    End Date and Time
-                  </Label>
-                  <Controller
-                    name="end_date_time"
-                    control={form.control}
-                    render={({ field }) => (
-                      <Input
-                        id="end_date_time"
-                        type="datetime-local"
-                        {...field}
-                        className="col-span-3"
-                      />
-                    )}
-                  />
-                </div>
-                <div className="text-right">
-                  {error.end_date_time && (
-                    <span className="text-red-500 text-sm">
-                      {String(error.end_date_time.message)}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-col">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="type" className="text-right">
-                    Select type
-                  </Label>
-                  <Controller
-                    name="event_type"
-                    control={form.control}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <SelectTrigger className="col-span-3">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value={EventType.Physical}>
-                            Physical
-                          </SelectItem>
-                          <SelectItem value={EventType.Virtual}>
-                            Virtual
-                          </SelectItem>
-                          <SelectItem value={EventType.Hybrid}>
-                            Hybrid
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
-                <div className="text-right">
-                  {error.event_type && (
-                    <span className="text-red-500 text-sm">
-                      {String(error.event_type.message)}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* select tags */}
-
-              <div className="flex flex-col">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="tags" className="text-right">
-                    Tags
-                  </Label>
-                  <div className="col-span-3">
-                    <TagSelect
-                      type="interest"
-                      selected={selectedTags}
-                      setSelected={setSelectedTags}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {(EventTypeSelection === EventType.Physical ||
-                EventTypeSelection === EventType.Hybrid) && (
+          <ScrollArea className="h-[80vh] w-full pr-4">
+            <form onSubmit={form.handleSubmit(eventSubmit)}>
+              <div className="grid gap-4 py-4 ">
                 <div className="flex flex-col">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="location" className="text-right">
-                      Location
-                    </Label>
+                  <div className="flex flex-col gap-2 justify-between">
+                    <Label htmlFor="title">Enter event name</Label>
                     <Controller
-                      name="location"
+                      name="title"
                       control={form.control}
                       defaultValue=""
                       render={({ field }) => (
                         <Input
-                          id="location"
+                          id="title"
                           {...field}
                           onChange={(e) =>
-                            field.onChange(
-                              e.target.value.toUpperCase().trimStart()
-                            )
+                            field.onChange(e.target.value.trimStart())
                           }
                           className="col-span-3"
+                          placeholder="Enter event name"
                         />
                       )}
                     />
                   </div>
-                  <div className="text-right">
-                    {error.location && (
+                  <div className="text-left">
+                    {error.title && (
                       <span className="text-red-500 text-sm">
-                        {String(error.location.message)}
+                        {String(error.title?.message)}
                       </span>
                     )}
                   </div>
                 </div>
-              )}
 
-              {(EventTypeSelection === EventType.Virtual ||
-                EventTypeSelection === EventType.Hybrid) && (
                 <div className="flex flex-col">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="meeting_link" className="text-right">
-                      Meeting Link
-                    </Label>
+                  <div className="flex flex-col gap-2 justify-between">
+                    <Label htmlFor="description">Description</Label>
                     <Controller
-                      name="meeting_link"
+                      name="description"
                       control={form.control}
-                      defaultValue=""
+                      render={({ field }) => {
+                        const charCount = field.value?.length || 0
+                        const maxChars = 150
+                        return (
+                          <>
+                            <Textarea
+                              id="description"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.trimStart())
+                              }
+                              className="col-span-3"
+                              maxLength={maxChars}
+                              placeholder="Description"
+                            />
+                            <div className="flex justify-between items-center text-sm text-muted-foreground ">
+                              {error.description && (
+                                <span className="text-red-500 text-sm">
+                                  {String(error.description.message)}
+                                </span>
+                              )}
+                              <span className="ml-auto">
+                                {/* characters */}
+                                {charCount}/{maxChars} characters
+                              </span>
+                            </div>
+                          </>
+                        )
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col">
+                  <div className="flex flex-col gap-2 justify-between">
+                    <Label htmlFor="image">Event Image</Label>
+                    <Controller
+                      name="image"
+                      control={form.control}
+                      render={({ field: { onChange, value, ...field } }) => (
+                        <Input
+                          id="image"
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] || null
+                            setImageFile(file)
+                            onChange(file)
+                          }}
+                          className="col-span-3"
+                          {...field}
+                          value={undefined} // File inputs don't use value prop
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="text-left">
+                    {error.image && (
+                      <span className="text-red-500 text-sm">
+                        {String(error.image.message)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {(existingImageUrl || imageFile) && (
+                  <div className="flex justify-center my-4">
+                    <img
+                      src={
+                        imageFile
+                          ? URL.createObjectURL(imageFile)
+                          : existingImageUrl!
+                      }
+                      alt="Event Preview"
+                      className="max-h-64 object-cover rounded-md"
+                    />
+                  </div>
+                )}
+                <div className="flex flex-col">
+                  <div className="flex flex-col gap-2 justify-between">
+                    <Label htmlFor="start_date_time">Start Date and Time</Label>
+                    <Controller
+                      name="start_date_time"
+                      control={form.control}
                       render={({ field }) => (
                         <Input
-                          id="meeting_link"
+                          id="start_date_time"
+                          type="datetime-local"
                           {...field}
-                          className="col-span-3"
+                          className="col-span-3 "
                         />
                       )}
                     />
                   </div>
-                  <div className="text-right">
-                    {error.meeting_link && (
+                  <div className="text-left">
+                    {error.start_date_time && (
                       <span className="text-red-500 text-sm">
-                        {String(error.meeting_link.message)}
+                        {String(error.start_date_time.message)}
                       </span>
                     )}
                   </div>
                 </div>
-              )}
-            </div>
 
-            <DialogFooter className="flex justify-between">
-              {editEvent === true ? (
-                <>
-                  <AlertDialog>
-                    <AlertDialogTrigger className="mr-auto">
-                      <Button
-                        type="button"
-                        loading={addDeleteEventLoading}
-                        variant="destructive"
-                      >
-                        Delete
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Event?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete your event?
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
+                <div className="flex flex-col">
+                  <div className="flex flex-col gap-2 justify-between">
+                    <Label htmlFor="end_date_time">End Date and Time</Label>
+                    <Controller
+                      name="end_date_time"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Input
+                          id="end_date_time"
+                          type="datetime-local"
+                          {...field}
+                          className="col-span-3 "
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="text-left">
+                    {error.end_date_time && (
+                      <span className="text-red-500 text-sm">
+                        {String(error.end_date_time.message)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* select tags */}
+
+                <div className="flex flex-col">
+                  <div className="flex flex-col gap-2 justify-between">
+                    <Label htmlFor="tags">Tags</Label>
+                    <div className="col-span-3">
+                      <TagSelect
+                        type="interest"
+                        selected={selectedTags}
+                        setSelected={setSelectedTags}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col">
+                  <div className="flex flex-col gap-2 justify-between">
+                    <Label htmlFor="type">Select Type</Label>
+                    <Controller
+                      name="event_type"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <SelectTrigger className="col-span-3">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={EventType.Physical}>
+                              Physical
+                            </SelectItem>
+                            <SelectItem value={EventType.Virtual}>
+                              Virtual
+                            </SelectItem>
+                            <SelectItem value={EventType.Hybrid}>
+                              Hybrid
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
+                  <div className="text-left">
+                    {error.event_type && (
+                      <span className="text-red-500 text-sm">
+                        {String(error.event_type.message)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {(EventTypeSelection === EventType.Physical ||
+                  EventTypeSelection === EventType.Hybrid) && (
+                  <div className="flex flex-col">
+                    <div className="flex flex-col gap-2 justify-between">
+                      <Label htmlFor="location">Location</Label>
+                      <Controller
+                        name="location"
+                        control={form.control}
+                        defaultValue=""
+                        render={({ field }) => (
+                          <Input
+                            id="location"
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value.toUpperCase().trimStart()
+                              )
+                            }
+                            className="col-span-3"
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="text-left">
+                      {error.location && (
+                        <span className="text-red-500 text-sm">
+                          {String(error.location.message)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {(EventTypeSelection === EventType.Virtual ||
+                  EventTypeSelection === EventType.Hybrid) && (
+                  <div className="flex flex-col">
+                    <div className="flex flex-col gap-2 justify-between">
+                      <Label htmlFor="meeting_link">Meeting Link</Label>
+                      <Controller
+                        name="meeting_link"
+                        control={form.control}
+                        defaultValue=""
+                        render={({ field }) => (
+                          <Input
+                            id="meeting_link"
+                            {...field}
+                            className="col-span-3"
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="text-left">
+                      {error.meeting_link && (
+                        <span className="text-red-500 text-sm">
+                          {String(error.meeting_link.message)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <DialogFooter className="flex justify-between">
+                {editEvent === true ? (
+                  <>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild className="mr-auto">
+                        <Button
                           type="button"
-                          onClick={handleDeleteEvent}
+                          loading={addDeleteEventLoading}
+                          variant="destructive"
                         >
                           Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  <Button loading={addUpdatedEventLoading} type="submit">
-                    Save
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Event?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete your event?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            type="button"
+                            onClick={handleDeleteEvent}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <Button loading={addUpdatedEventLoading} type="submit">
+                      Save
+                    </Button>
+                  </>
+                ) : (
+                  <Button type="submit" loading={addEventLoading}>
+                    Create Event
                   </Button>
-                </>
-              ) : (
-                <Button type="submit" loading={addEventLoading}>
-                  Create Event
-                </Button>
-              )}
-            </DialogFooter>
-          </form>
+                )}
+              </DialogFooter>
+            </form>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
