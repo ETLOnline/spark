@@ -141,6 +141,13 @@
       "when": 1758041330249,
       "tag": "0019_2025_09_16_214843__update_notifcation_table_column",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1759317885751,
+      "tag": "0020_2025_10_01_162442__update_channel_and_space_user_table",
+      "breakpoints": true
     }
   ]
 }

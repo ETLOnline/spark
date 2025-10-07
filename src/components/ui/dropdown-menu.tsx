@@ -5,6 +5,8 @@ import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { Check, ChevronRight, Circle } from "lucide-react"
 
 import { cn } from "@/src/lib/utils"
+import Loader from "../common/Loader/Loader"
+import { LoaderSizes } from "../common/types/loader-types"
 
 const DropdownMenu = DropdownMenuPrimitive.Root
 
@@ -79,8 +81,9 @@ const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
     inset?: boolean
+    loading?: boolean
   }
->(({ className, inset, ...props }, ref) => (
+>(({ className, inset, loading, disabled, children, ...props }, ref) => (
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
@@ -88,8 +91,12 @@ const DropdownMenuItem = React.forwardRef<
       inset && "pl-8",
       className
     )}
+    disabled={disabled || loading}
     {...props}
-  />
+  >
+    {children}
+    {loading ? <Loader size={LoaderSizes.sm} /> : null}
+  </DropdownMenuPrimitive.Item>
 ))
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
 

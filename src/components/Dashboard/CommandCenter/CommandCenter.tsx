@@ -31,6 +31,7 @@ import { Avatar, AvatarImage } from "../../ui/avatar"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import Loader from "../../common/Loader/Loader"
 import { useEffect, useState } from "react"
+import { getUserRole } from "@/src/utils/helpers"
 
 export default function CommandCenter() {
   const [open, setOpen] = useState(false)
@@ -104,6 +105,7 @@ export default function CommandCenter() {
                 value={`${person.first_name} ${person.last_name}`}
                 key={person.unique_id}
                 onSelect={() => handleItemPress(`/profile/${person.unique_id}`)}
+                className="group"
               >
                 <Avatar>
                   <AvatarImage
@@ -111,9 +113,18 @@ export default function CommandCenter() {
                     alt={person.first_name}
                   />
                 </Avatar>
-                <span>
-                  {person.first_name} {person.last_name}
-                </span>
+                <div className="flex flex-col">
+                  <h2>
+                    {person.first_name} {person.last_name}
+                  </h2>
+                  <p
+                    className="text-sm text-muted-foreground
+                   
+                   group-data-[selected=true]:text-muted"
+                  >
+                    {getUserRole(person)}
+                  </p>
+                </div>
               </CommandItem>
             ))}
           </CommandGroup>
