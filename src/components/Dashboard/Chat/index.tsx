@@ -35,7 +35,7 @@ import Link from "next/link"
 import Loader from "../../common/Loader/Loader"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
-import { isOnlyEmoji } from "@/src/utils/helpers"
+import { getUserRole, isOnlyEmoji } from "@/src/utils/helpers"
 import CreateNewChat from "./components/CreateNewChat"
 import Avvvatars from "avvvatars-react"
 import {
@@ -358,9 +358,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   }
 
   return (
-    <div className={`flex h-full gap-4`}>
+    <div className="flex h-[calc(100vh-7rem)] gap-4">
       {/* Contacts list - visible on desktop, hidden on mobile */}
-      <Card className="w-80 flex-shrink-0 border-r hidden md:flex md:flex-col">
+      <Card className="w-80 flex-shrink-0 border-r hidden md:flex md:flex-col h-full">
         <CardHeader className="px-3">
           <CardTitle className="flex items-center justify-between">
             Chats
@@ -383,7 +383,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
       {/* Main chat area */}
       {canView && (
-        <Card className="flex-1 flex flex-col">
+        <Card className="flex-1 flex flex-col h-full">
           <CardHeader className="flex flex-row items-center justify-between py-4">
             <div className="flex items-center">
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -442,8 +442,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       {!currentChat?.is_group && chatContact ? (
                         <>
                           <p className="text-sm font-medium leading-none">{`${chatContact?.first_name} ${chatContact?.last_name}`}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {chatContact?.email}
+                          <p className="text-sm text-muted-foreground truncate">
+                            {getUserRole(chatContact, currentSpace?.id)}
                           </p>
                         </>
                       ) : null}
@@ -490,7 +490,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           </CardHeader>
           {currentChat ? (
             <>
-              <CardContent className="flex-1 overflow-hidden p-4 flex flex-col">
+              <CardContent className="flex-1 min-h-0 p-4 flex flex-col">
                 {authUser && currentChat && !fetchingChatMessages ? (
                   <ScrollArea className="flex-1 pr-4 mt-2">
                     {messages.map((message) => (

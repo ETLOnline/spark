@@ -168,7 +168,15 @@ export const GetChats = async (
       with: {
         users: {
           with: {
-            user: true
+            user: {
+              with: {
+                roles: {
+                  with: {
+                    role: true
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -252,7 +260,15 @@ export const GetChatByIdWithMessages = async (chat_id: number) => {
         },
         users: {
           with: {
-            user: true
+            user: {
+              with: {
+                roles: {
+                  with: {
+                    role: true
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -283,7 +299,15 @@ export const GetChatBySlugWithMessages = async (slug: string) => {
         },
         users: {
           with: {
-            user: true
+            user: {
+              with: {
+                roles: {
+                  with: {
+                    role: true
+                  }
+                }
+              }
+            }
           }
         }
       }

@@ -75,6 +75,13 @@ export async function FindUserWildCard(wildcard: string) {
         role: true,
         meta_profile: true
       },
+      with: {
+        roles: {
+          with: {
+            role: true
+          }
+        }
+      },
       where: (usersTable, { or }) =>
         or(
           ilike(

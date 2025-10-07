@@ -43,7 +43,7 @@ import moment from "moment"
 import { userStore } from "@/src/store/user/userStore"
 import { useTheme } from "next-themes"
 import clsx from "clsx"
-import { useHostUserInfo } from "@/src/hooks/useGetHostData"
+import { hostStore } from "@/src/store/host/hostStore"
 
 interface EventCardProps {
   event: SelectEvent
@@ -61,18 +61,7 @@ const EventCard = ({ event, setRefreshTrigger }: EventCardProps) => {
   const meeting_link = metadata.meeting_link
   const SuperAdmin = useAtomValue(userStore.SuperAdmin)
   const { theme, setTheme } = useTheme()
-
-  const startDate = new Date(event?.start_date_time as string)
-  const localStartDate = startDate.toLocaleDateString("en-US", {
-    month: "2-digit",
-    day: "2-digit",
-    year: "numeric"
-  })
-  const localStartTime = startDate.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false
-  })
+  const hosts = useAtomValue(hostStore.hosts)
   const formattedStart = moment(event?.start_date_time).calendar(null, {
     sameDay: "[Today at] hh:mm A",
     nextDay: "[Tomorrow at] hh:mm A",
@@ -121,8 +110,7 @@ const EventCard = ({ event, setRefreshTrigger }: EventCardProps) => {
     setFormModalVisibility(true)
   }
 
-  const hostData = useHostUserInfo(event?.host_id)
-
+  const hostData = hosts[event?.host_id]
   const handleDeleteEvent = async (event: SelectEvent) => {
     try {
       const res = await DeleteEvent(event)
@@ -159,8 +147,12 @@ const EventCard = ({ event, setRefreshTrigger }: EventCardProps) => {
           {SuperAdmin && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="h-4 w-4" />
+                <Button
+                  variant={"outline"}
+                  size="icon"
+                  className="h-8 w-8 bg-background "
+                >
+                  <MoreHorizontal className="h-4 w-4 " />
                   <span className="sr-only">Event Card Actions</span>
                 </Button>
               </DropdownMenuTrigger>
@@ -200,7 +192,7 @@ const EventCard = ({ event, setRefreshTrigger }: EventCardProps) => {
       </div>
 
       <CardHeader className="p-3">
-        <CardTitle className="text-lg font-semibold leading-tight  whitespace-nowrap text-ellipsis overflow-hidden">
+        <CardTitle className="text-lg font-semibold leading-tight  pt-1 whitespace-nowrap text-ellipsis overflow-hidden">
           {event.title}
         </CardTitle>
         <CardDescription className="text-sm line-clamp-2 text-white  whitespace-nowrap overflow-hidden text-ellipsis">
@@ -251,14 +243,8 @@ const EventCard = ({ event, setRefreshTrigger }: EventCardProps) => {
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2 ">
               <Users className="w-4 h-4" />
-              <span>
-                {attendees.length}/ {100} attending
-              </span>
+              <span>{attendees.length}</span>
             </div>
-            {/* Optional: dynamic fill status */}
-            <span className="text-xs font-medium ">
-              {Math.round((attendees.length / 100) * 100)}% full
-            </span>
           </div>
         </div>
         <div className="flex gap-1  w-full overflow-hidden  whitespace-nowrap">
@@ -282,10 +268,14 @@ const EventCard = ({ event, setRefreshTrigger }: EventCardProps) => {
       <CardFooter className="flex flex-col items-start gap-2 p-3  ">
         <div className="flex items-center gap-2">
           <Avatar className="w-6 h-6">
-            <AvatarImage src={"/placeholder.svg"} />
+            <AvatarImage src={hostData?.profile_url || "/placeholder.svg"} />
             <AvatarFallback className="text-xs">H</AvatarFallback>
           </Avatar>
-          <span className="text-sm ">By {hostData?.full_name} </span>
+          <span className="text-sm ">
+            By{" "}
+            {`${hostData?.first_name || ""} ${hostData?.last_name || ""}` ||
+              "host"}{" "}
+          </span>
         </div>
         <Link href={`/events/${event?.id}`} className="w-full">
           <Button

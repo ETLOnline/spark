@@ -30,8 +30,8 @@ interface Props {
 
 const userQualificationSchema = z
   .object({
-    degree: z.string().min(1, "Required"),
-    institute: z.string().min(1, "Required"),
+    degree: z.string().min(1, "Required").max(100, "Maximum 100 characters"),
+    institute: z.string().min(1, "Required").max(100, "Maximum 100 characters"),
 
     duration_from: z
       .string()
@@ -40,6 +40,9 @@ const userQualificationSchema = z
       })
       .refine((val) => moment(val, "YYYY", true).year() >= 1990, {
         message: "Start year must be 1990 or later"
+      })
+      .refine((val) => moment(val, "YYYY", true).year() <= moment().year(), {
+        message: "Start Year cannot be in the future"
       }),
 
     duration_to: z

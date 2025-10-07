@@ -1,7 +1,12 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { SelectFilePost, SelectPollPost, SelectPost } from "@/src/db/schema"
+import {
+  SelectFilePost,
+  SelectPollPost,
+  SelectPost,
+  SelectUser
+} from "@/src/db/schema"
 import FilePost from "./post-file"
 import ImagePost from "./post-image"
 import PollPost from "./post-poll"
@@ -12,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Card, CardContent, CardHeader } from "@/src/components/ui/card"
 import PostMenu from "./post-menu"
 import NoDataCard from "../Channels/ChannelDetails/NoDataCard"
-import { formatRelativeTime } from "@/src/utils/helpers"
+import { formatRelativeTime, getUserRole } from "@/src/utils/helpers"
 import {
   GetPostsAction,
   GetSpacePostsAction
@@ -109,7 +114,7 @@ const PostFeed: React.FC<PostFeedProps> = ({
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <Avatar>
+                      <Avatar className="h-12 w-12">
                         <AvatarImage
                           src={post.author.profile_url as string}
                           alt={name}
@@ -119,6 +124,9 @@ const PostFeed: React.FC<PostFeedProps> = ({
                       <div>
                         <p className="font-semibold">{name}</p>
                         <p className="text-sm text-muted-foreground">
+                          {getUserRole(post.author, spaceId)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
                           {formatRelativeTime(post.created_at || "")}
                         </p>
                       </div>

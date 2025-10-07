@@ -377,3 +377,16 @@ export const communityCoverImageAction = CreateServerAction(
     }
   }
 )
+export const LeaveCommunityAction = CreateServerAction(
+  true,
+  async (communityId: string, currentUserId: string) => {
+    try {
+      // const deleted = await leaveCommunity(communityId, currentUserId)
+      const deleted = await detachCommunityUser(communityId, currentUserId)
+
+      return { success: true, data: deleted }
+    } catch (error: any) {
+      return { success: false, error: error.message || error }
+    }
+  }
+)

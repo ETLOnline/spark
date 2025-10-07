@@ -161,7 +161,7 @@ export function TaskComment({ taskId }: TaskCommentFormProps) {
                     </div>
                   </div>
                   <div
-                    className="text-sm"
+                    className="text-sm rich-editor"
                     dangerouslySetInnerHTML={{ __html: comment.content }}
                   />
                 </div>

@@ -192,7 +192,7 @@ const CreateNewChat = () => {
               onChange={(value) => {
                 setSelectedContacts(value)
               }}
-              placeholder="Select contacts"
+              placeholder="Select Contacts"
               loading={loading}
             />
 
