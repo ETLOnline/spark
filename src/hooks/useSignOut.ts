@@ -1,10 +1,11 @@
 import { useClerk } from "@clerk/nextjs"
 import { getBeamsClient } from "../services/notifications/BeamClient"
 import { useState } from "react"
+import { useScreenOverlay } from "./useScreenOverlay"
 
 export function useOnLogout() {
   const { signOut } = useClerk()
-  const [loading, setLoading] = useState(false)
+  const { showOverlay, hideOverlay } = useScreenOverlay()
 
   const beamClient = getBeamsClient()
 
@@ -16,13 +17,13 @@ export function useOnLogout() {
   // manual logout
   async function manualLogout() {
     try {
-      setLoading(true)
+      showOverlay()
       await cleanup()
       await signOut()
     } finally {
-      setLoading(false)
+      hideOverlay()
     }
   }
 
-  return { manualLogout, loading }
+  return { manualLogout }
 }
