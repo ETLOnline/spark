@@ -56,7 +56,12 @@ export async function SelectUserByUniqueId(unique_id: string) {
   return await db.query.usersTable.findFirst({
     where: eq(usersTable.unique_id, unique_id),
     with: {
-      profile: true
+      profile: true,
+      roles: {
+        with: {
+          role: true
+        }
+      }
     }
   })
 }

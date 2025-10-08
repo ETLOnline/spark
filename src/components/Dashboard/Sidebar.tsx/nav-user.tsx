@@ -30,13 +30,7 @@ export default function NavUser() {
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
-  const { manualLogout, loading } = useOnLogout()
-
-  useEffect(() => {
-    if (!loading) {
-      setIsDropdownOpen(false)
-    }
-  }, [loading])
+  const { manualLogout } = useOnLogout()
 
   return (
     <SidebarMenu>
@@ -123,7 +117,6 @@ export default function NavUser() {
               className="cursor-pointer"
               onSelect={(e) => e.preventDefault()}
               onClick={() => manualLogout()}
-              loading={loading}
             >
               <LogOut />
               Sign out
