@@ -107,6 +107,19 @@ const EditProfileModal: React.FC = () => {
     )
   }, [interests])
 
+  const firstNameError: string =
+    firstName && firstName?.length > 30
+      ? "First Name cannot exceed 30 characters"
+      : firstName?.length === 0
+        ? "First name required"
+        : ""
+
+  const lastNameError: string =
+    lastName && lastName?.length > 30
+      ? "Last Name cannot exceed 30 characters"
+      : lastName?.length === 0
+        ? "Last name required"
+        : ""
   const skillsError: string =
     selectedSkillTags.length > 20
       ? "You can only add a maximum of 20 skills"
@@ -131,6 +144,21 @@ const EditProfileModal: React.FC = () => {
   const saveProfileChanges = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
+      if (
+        firstNameError ||
+        lastNameError ||
+        bioError ||
+        skillsError ||
+        interestsError
+      ) {
+        toast({
+          variant: "destructive",
+          title: "Validation Error",
+          description: "Please fix the errors before saving.",
+          duration: 3000
+        })
+        return
+      }
       const payload: ProfileData = {
         userId: user?.unique_id || "",
         first_name: firstName,
@@ -270,7 +298,7 @@ const EditProfileModal: React.FC = () => {
           <ScrollArea className="max-h-[78vh] overflow-auto">
             <form
               onSubmit={saveProfileChanges}
-              className="edit-profile-form p-2"
+              className="edit-profile-form pr-3"
             >
               <div className="grid gap-4 py-4">
                 <div className="flex flex-col gap-y-7">
@@ -286,6 +314,9 @@ const EditProfileModal: React.FC = () => {
                         onChange={(e) => setFirstName(e.target.value)}
                         placeholder="Enter first name"
                       />
+                      {firstNameError && (
+                        <p className="text-sm text-red-500">{firstNameError}</p>
+                      )}
                     </div>
                     <div className="w-1/2">
                       <Label htmlFor="lastName" className="edit-label">
@@ -298,6 +329,9 @@ const EditProfileModal: React.FC = () => {
                         onChange={(e) => setLastName(e.target.value)}
                         placeholder="Enter last name"
                       />
+                      {lastNameError && (
+                        <p className="text-sm text-red-500">{lastNameError}</p>
+                      )}
                     </div>
                   </div>
                   <div className="edit-bio w-full">
@@ -387,6 +421,8 @@ const EditProfileModal: React.FC = () => {
                     bioError.length > 0 ||
                     skillsError.length > 0 ||
                     interestsError.length > 0 ||
+                    firstNameError.length > 0 ||
+                    lastNameError.length > 0 ||
                     updateProfileLoading
                   }
                   loading={updateProfileLoading}

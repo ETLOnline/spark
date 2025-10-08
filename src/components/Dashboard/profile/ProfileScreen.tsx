@@ -265,7 +265,7 @@ export default function ProfileScreen({
         <div className="mt-16 flex flex-wrap justify-between items-center">
           <div className="flex flex-col items-start">
             <div className="flex items-center">
-              <div className="flex flex-col items-center gap-1 ">
+              <div className="flex flex-col items-center">
                 <h2 className="text-xl sm:text-2xl font-bold inline-flex items-center">
                   {displayUser.first_name} {displayUser.last_name}
                 </h2>
