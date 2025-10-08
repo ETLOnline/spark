@@ -81,9 +81,8 @@ const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
     inset?: boolean
-    loading?: boolean
   }
->(({ className, inset, loading, disabled, children, ...props }, ref) => (
+>(({ className, inset, disabled, children, ...props }, ref) => (
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
@@ -91,11 +90,10 @@ const DropdownMenuItem = React.forwardRef<
       inset && "pl-8",
       className
     )}
-    disabled={disabled || loading}
+    disabled={disabled}
     {...props}
   >
     {children}
-    {loading ? <Loader size={LoaderSizes.sm} /> : null}
   </DropdownMenuPrimitive.Item>
 ))
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
