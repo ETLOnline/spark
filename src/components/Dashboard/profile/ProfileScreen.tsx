@@ -267,7 +267,10 @@ export default function ProfileScreen({
             <div className="flex items-center">
               <div className="flex flex-col items-center">
                 <h2 className="text-xl sm:text-2xl font-bold inline-flex items-center">
-                  {displayUser.first_name} {displayUser.last_name}
+                  {displayUser.first_name}{" "}
+                  {displayUser.last_name.length > 15
+                    ? `${displayUser.last_name.slice(0, 15)}...`
+                    : displayUser.last_name}
                 </h2>
                 <p className="w-full text-sm text-muted-foreground">
                   {getUserRole(displayUser)}
