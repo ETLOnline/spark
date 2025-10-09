@@ -22,7 +22,7 @@ export const SendPostLikeOrCommentNotification = async (
     const  contentType =  event == 'post_comment' ? 'comment' : 'like'
     const authUser = await AuthUserAction()
     if (!authUser) throw new Error("Unauthorized")
-
+    if (authUser.unique_id == post.author.unique_id) return
     const CTALink = getCTALink(post, space)
     const receivers = post.author.unique_id ? [post.author.unique_id] : [];
     if (receivers.length === 0) return
