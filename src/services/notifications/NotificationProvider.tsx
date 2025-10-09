@@ -8,22 +8,51 @@ import { beamsAuthAction } from "./BeamAuthAction"
 export default function NotificationProvider() {
   useEffect(() => {
     async function init() {
-      const user = await AuthUserAction()
-      const userId = user?.unique_id
+      if (!("Notification" in window)) {
+        console.warn("Notifications not supported in this browser.")
+        return
+      }
+
+      if (Notification.permission === "denied") {
+        console.warn(
+          "User has blocked notifications. Skipping Beams registration."
+        )
+        return
+      }
+
+      if (Notification.permission !== "granted") {
+        const permission = await Notification.requestPermission()
+        if (permission !== "granted") {
+          console.warn("User denied or dismissed notification permission.")
+          return
+        }
+      }
+
+      try {
+        const user = await AuthUserAction()
+        const userId = user?.unique_id
       if (!userId) return
 
-      const beamsClient = getBeamsClient()
+        const beamsClient = getBeamsClient()
 
-      await beamsClient.clearAllState()
+        await beamsClient.clearAllState()
 
-      await beamsClient.start()
-
-      await beamsClient.setUserId(userId, {
-        fetchToken: async () => {
-          const token = await beamsAuthAction(userId)
-          return token
+        try {
+          await beamsClient.start()
+        } catch (err) {
+          console.error("Beams start failed:", err)
+          return
         }
-      })
+
+        await beamsClient.setUserId(userId, {
+          fetchToken: async () => {
+            const token = await beamsAuthAction(userId)
+            return token
+          }
+        })
+      } catch (err) {
+        console.error("Error initializing notifications:", err)
+      }
     }
 
     init()
