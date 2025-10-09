@@ -1,5 +1,5 @@
 {
-  "id": "d789445c-abc3-49f5-9bbf-d828dc28f9ae",
+  "id": "d0de55e0-1d89-483c-8e55-f80b04c16aca",
   "prevId": "ceb8bd45-77e8-41e0-ba7f-3e7e9a4d1a05",
   "version": "7",
   "dialect": "postgresql",
@@ -37,6 +37,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "community_user_id": {
+          "name": "community_user_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "role": {
           "name": "role",
           "type": "varchar",
@@ -53,7 +59,17 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "channel_users_community_user_id_community_users_id_fk": {
+          "name": "channel_users_community_user_id_community_users_id_fk",
+          "tableFrom": "channel_users",
+          "tableTo": "community_users",
+          "columnsFrom": ["community_user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -218,6 +234,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "channel_user_id": {
+          "name": "channel_user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "role": {
           "name": "role",
           "type": "varchar",
@@ -234,7 +256,17 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "space_users_channel_user_id_channel_users_id_fk": {
+          "name": "space_users_channel_user_id_channel_users_id_fk",
+          "tableFrom": "space_users",
+          "tableTo": "channel_users",
+          "columnsFrom": ["channel_user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -2071,79 +2103,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.project_recent_activity": {
-      "name": "project_recent_activity",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "always",
-            "name": "project_recent_activity_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "project_id": {
-          "name": "project_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "icon": {
-          "name": "icon",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "activity": {
-          "name": "activity",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "deep_link": {
-          "name": "deep_link",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.project": {
       "name": "project",
       "schema": "",
@@ -2812,88 +2771,6 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.sprint_burndown": {
-      "name": "sprint_burndown",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "always",
-            "name": "sprint_burndown_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "sprint_id": {
-          "name": "sprint_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "task_id": {
-          "name": "task_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "total_tasks": {
-          "name": "total_tasks",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "completed_tasks": {
-          "name": "completed_tasks",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "total_story_points": {
-          "name": "total_story_points",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
         },
         "updated_at": {
           "name": "updated_at",

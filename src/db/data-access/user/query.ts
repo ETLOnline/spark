@@ -56,7 +56,12 @@ export async function SelectUserByUniqueId(unique_id: string) {
   return await db.query.usersTable.findFirst({
     where: eq(usersTable.unique_id, unique_id),
     with: {
-      profile: true
+      profile: true,
+      roles: {
+        with: {
+          role: true
+        }
+      }
     }
   })
 }
@@ -74,6 +79,13 @@ export async function FindUserWildCard(wildcard: string) {
         unique_id: true,
         role: true,
         meta_profile: true
+      },
+      with: {
+        roles: {
+          with: {
+            role: true
+          }
+        }
       },
       where: (usersTable, { or }) =>
         or(

@@ -919,6 +919,9 @@ export const SpaceUsersTable = pgTable("space_users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   space_id: varchar().notNull(),
   user_id: varchar().notNull(),
+  channel_user_id: integer().references(() => ChannelUsersTable.id, {
+    onDelete: "cascade"
+  }),
   role: varchar().default("member"),
   status: varchar().default("active")
 })
@@ -946,6 +949,9 @@ export const ChannelUsersTable = pgTable("channel_users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   channel_id: varchar().notNull(),
   user_id: varchar().notNull(),
+  community_user_id: varchar().references(() => communityUsersTable.id, {
+    onDelete: "cascade"
+  }),
   role: varchar().default("member"),
   status: varchar().default("active")
 })
