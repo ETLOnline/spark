@@ -38,22 +38,8 @@ interface Props {
 const sprintSchema = z
   .object({
     title: z.string().min(1, "Required").max(50, "Title is too long"),
-    start_date: z
-      .string()
-      .min(1, "Required")
-      .refine(
-        (value) =>
-          !value || moment(value).isSameOrAfter(moment().startOf("day")),
-        { message: "Date must not be in the past" }
-      ),
-    end_date: z
-      .string()
-      .min(1, "Required")
-      .refine(
-        (value) =>
-          !value || moment(value).isSameOrAfter(moment().startOf("day")),
-        { message: "End date must not be in the past" }
-      )
+    start_date: z.string(),
+    end_date: z.string().min(1, "Required")
   })
   .refine(
     (data) => {

@@ -1,6 +1,6 @@
 "use server"
 
-import { InsertProject } from "@/src/db/schema"
+import { InsertProject, InsertProjectRecentActivity } from "@/src/db/schema"
 import { CreateServerAction } from ".."
 import {
   CreateProject,
@@ -14,7 +14,9 @@ import {
   getExistingProjectUsers,
   createProjectUser,
   countProjectMembers,
-  getProjectsBySpaceIds
+  getProjectsBySpaceIds,
+  addProjectRecentActivities,
+  getProjectRecentActivities
 } from "@/src/db/data-access/project-management/query"
 import {
   createScopedProjectRolesAndAssignAdmin,
@@ -249,6 +251,32 @@ export const GetProjectBySpaceIdsAction = CreateServerAction(
       return { success: true, data: projects }
     } catch (error) {
       console.error("Failed to get projects by space IDs:", error)
+      return { success: false, error }
+    }
+  }
+)
+
+export const AddProjectRecentActivityAction = CreateServerAction(
+  true,
+  async (payLoad: InsertProjectRecentActivity) => {
+    try {
+      const result = await addProjectRecentActivities(payLoad)
+      return { success: true, data: result }
+    } catch (error) {
+      console.error("Failed to add project recent activity:", error)
+      return { success: false, error }
+    }
+  }
+)
+
+export const getProjectRecentActivitiesAction = CreateServerAction(
+  true,
+  async (projectId: string) => {
+    try {
+      const activities = await getProjectRecentActivities(projectId)
+      return { success: true, data: activities }
+    } catch (error) {
+      console.error("Failed to get project recent activities:", error)
       return { success: false, error }
     }
   }

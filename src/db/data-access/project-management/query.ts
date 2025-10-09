@@ -1,8 +1,10 @@
-import { and, eq, inArray } from "drizzle-orm"
+import { and, desc, eq, inArray } from "drizzle-orm"
 import { db } from "../.."
 import {
   channelsTable,
   InsertProject,
+  InsertProjectRecentActivity,
+  projectRecentActivityTable,
   projectTable,
   ProjectUsersTable,
   SelectProject,
@@ -231,5 +233,40 @@ export async function getProjectsBySpaceIds(spaceIds: string[]) {
     throw new Error(
       `Failed to retrieve projects by space IDs: ${error.message}`
     )
+  }
+}
+
+export const addProjectRecentActivities = async (
+  payLoad: InsertProjectRecentActivity
+) => {
+  try {
+    const result = await db
+      .insert(projectRecentActivityTable)
+      .values({
+        project_id: payLoad.project_id,
+        icon: payLoad.icon,
+        activity: payLoad.activity,
+        deep_link: payLoad.deep_link
+      })
+      .returning()
+
+    return result[0]
+  } catch (error: any) {
+    throw new Error(`Failed to add recent activity: ${error.message}`)
+  }
+}
+
+export const getProjectRecentActivities = async (projectId: string) => {
+  try {
+    const activities = await db
+      .select()
+      .from(projectRecentActivityTable)
+      .where(eq(projectRecentActivityTable.project_id, projectId))
+      .orderBy(desc(projectRecentActivityTable.created_at))
+      .limit(10)
+
+    return activities
+  } catch (error: any) {
+    throw new Error(`Failed to retrieve recent activities: ${error.message}`)
   }
 }

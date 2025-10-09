@@ -79,7 +79,11 @@ export default function TaskMoveDialog({
 
   const handleMoveTask = async () => {
     if (selectedSprint) {
-      const updatedTask = await UpdateTask(task_ids, selectedSprint)
+      const updatedTask = await UpdateTask(
+        task_ids,
+        selectedSprint,
+        currSprintId
+      )
       if (updatedTask?.success && updatedTask.data) {
         if (setTasks) {
           setTasks((prevTasks) =>
@@ -106,7 +110,6 @@ export default function TaskMoveDialog({
     if (!updatedTask?.success || !updatedTask.data) return
 
     if (setTasks) {
-      console.log(updatedTask.data)
       setTasks((prevTasks) =>
         prevTasks.map((t) => {
           const updated = updatedTask.data.find((ut) => ut?.id === t.id)
@@ -136,7 +139,6 @@ export default function TaskMoveDialog({
     if (!updatedTask?.success || !updatedTask.data) return
 
     if (setTasks) {
-      console.log(updatedTask.data)
       setTasks((prevTasks) =>
         prevTasks.map((t) => {
           const updated = updatedTask.data.find((ut) => ut?.id === t.id)

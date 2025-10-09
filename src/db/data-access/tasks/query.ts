@@ -19,6 +19,7 @@ import {
   InsertTaskStatus,
   SelectTask,
   SelectTaskComment,
+  SprintTable,
   taskCommentsTable,
   TaskStatusTable,
   taskTable
@@ -140,7 +141,8 @@ export async function GetTasks(filters?: taskQueryFilters) {
       ],
       with: {
         assignee: true,
-        assignor: true
+        assignor: true,
+        status: true
       }
     })
 
@@ -196,6 +198,38 @@ export async function GetTasksByStatusId(statusId: string) {
   }
 }
 
+export async function GetBacklogTaskCount(projectId: string) {
+  try {
+    const Count = await db.$count(
+      taskTable,
+      and(
+        eq(taskTable.project_id, projectId),
+        isNull(taskTable.sprint_id),
+        isNull(taskTable.deleted_at)
+      )
+    )
+    return Count
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function GetSprintTaskCount(projectId: string, sprintId: string) {
+  try {
+    const Count = await db.$count(
+      taskTable,
+      and(
+        eq(taskTable.project_id, projectId),
+        eq(taskTable.sprint_id, sprintId),
+        isNull(taskTable.deleted_at)
+      )
+    )
+    return Count
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
 export async function UpdateTask(
   taskId: string,
   updatedData: Partial<SelectTask>
@@ -207,6 +241,13 @@ export async function UpdateTask(
       .where(eq(taskTable.id, taskId))
       .returning()
 
+    if (UpdatedTask.sprint_id) {
+      await db
+        .update(SprintTable)
+        .set({ updated_at: sql`CURRENT_TIMESTAMP` })
+        .where(eq(SprintTable.id, UpdatedTask.sprint_id))
+    }
+
     const updatedTasksWithUsers = GetTaskById(UpdatedTask.id)
 
     return updatedTasksWithUsers
@@ -215,13 +256,31 @@ export async function UpdateTask(
   }
 }
 
-export async function UpdateTasksSprint(task_ids: string[], sprint_id: string) {
+export async function UpdateTasksSprint(
+  task_ids: string[],
+  sprint_id: string,
+  oldSprintId?: string
+) {
   try {
     const updatedTasks = await db
       .update(taskTable)
       .set({ sprint_id: sprint_id })
       .where(inArray(taskTable.id, task_ids))
       .returning()
+
+    if (sprint_id) {
+      await db
+        .update(SprintTable)
+        .set({ updated_at: sql`CURRENT_TIMESTAMP` })
+        .where(eq(SprintTable.id, sprint_id))
+    }
+
+    if (oldSprintId) {
+      await db
+        .update(SprintTable)
+        .set({ updated_at: sql`CURRENT_TIMESTAMP` })
+        .where(eq(SprintTable.id, oldSprintId))
+    }
 
     const updatedTasksWithUsers = await Promise.all(
       updatedTasks.map((t) => GetTaskById(t.id))

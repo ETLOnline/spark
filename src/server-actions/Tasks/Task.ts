@@ -14,7 +14,9 @@ import {
   UpdateTaskStatus,
   createTaskComment,
   getTaskCommentsByTaskId,
-  UpdateTasksSprint
+  UpdateTasksSprint,
+  GetBacklogTaskCount,
+  GetSprintTaskCount
 } from "@/src/db/data-access/tasks/query"
 import { CreateServerAction } from ".."
 import {
@@ -35,6 +37,7 @@ import {
 import { AuthUserAction } from "../User/AuthUserAction"
 import { SendTaskNotifications } from "@/src/services/notifications/Tasks/utils"
 import { NotificationEvent } from "@/src/services/notify/types/events"
+import { addProjectRecentActivity } from "@/src/utils/taskHelpr"
 
 export const CreateTaskAction = CreateServerAction(
   true,
@@ -61,6 +64,7 @@ export const CreateTaskAction = CreateServerAction(
 
       if (task) {
         await SendTaskNotifications("task_assigned", task, project)
+        await addProjectRecentActivity("task_created", task)
       }
 
       return { success: true, data: task }
@@ -129,20 +133,15 @@ export const GetTasksByStatusIdAction = CreateServerAction(
 
 export const UpdateTaskAction = CreateServerAction(
   true,
-  async (
-    taskId: string,
-    updatedData: Partial<SelectTask>,
-    page_name?: string
-  ) => {
+  async (taskId: string, updatedData: Partial<SelectTask>) => {
     try {
-      const authUser = await AuthUserAction()
-
       const UpdatedTask = await UpdateTask(taskId, updatedData)
 
       const oldTask = await GetTaskById(taskId)
 
       if (UpdatedTask) {
         await SendTaskNotifications(NotificationEvent.UPDATE_TASK, UpdatedTask)
+        await addProjectRecentActivity("task_updated", UpdatedTask)
       }
 
       if (UpdatedTask && oldTask) {
@@ -167,17 +166,50 @@ export const UpdateTaskAction = CreateServerAction(
   }
 )
 
+export const GetBacklogTaskCountAction = CreateServerAction(
+  true,
+  async (projectId: string) => {
+    try {
+      const taskCount = await GetBacklogTaskCount(projectId)
+
+      return { success: true, data: taskCount }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetSprintTaskCountAction = CreateServerAction(
+  true,
+  async (projectId: string, sprintId: string) => {
+    try {
+      const taskCount = await GetSprintTaskCount(projectId, sprintId)
+
+      return { success: true, data: taskCount }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
 export const UpdateTasksSprintAction = CreateServerAction(
   true,
-  async (task_ids: string[], sprint_id: string) => {
+  async (
+    task_ids: string[],
+    sprint_id: string | null,
+    oldSprintId?: string
+  ) => {
     try {
-      const AuthUser = await AuthUserAction()
-
-      const updatedTasks = await UpdateTasksSprint(task_ids, sprint_id)
+      const updatedTasks = await UpdateTasksSprint(
+        task_ids,
+        sprint_id || "",
+        oldSprintId
+      )
+      console.log("Updated Tasks: ", oldSprintId)
 
       return { success: true, data: updatedTasks }
     } catch (error) {
-      return { error: error }
+      return { error }
     }
   }
 )
@@ -275,6 +307,7 @@ export const CreateTaskCommentAction = CreateServerAction(
 
       if (task) {
         await SendTaskNotifications("task_commented", task)
+        await addProjectRecentActivity("task_commented", task)
       }
 
       if (newComment) {
