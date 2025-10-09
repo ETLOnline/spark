@@ -27,7 +27,7 @@ export const SendPostLikeOrCommentNotification = async (
     const receivers = post.author.unique_id ? [post.author.unique_id] : [];
     if (receivers.length === 0) return
 
-    let notificationPayload: NotificationPayload = {
+    const notificationPayload: NotificationPayload = {
       receivers: receivers,
       template: {
         title: `New Post ${contentType}`,
