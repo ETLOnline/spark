@@ -35,6 +35,7 @@ import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import { ensureCommunityMembership } from "../Community/Community"
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
+import { attachCommunityUser } from "@/src/db/data-access/communities/query"
 
 export const CreateChannelAction = CreateServerAction(
   true,
@@ -50,9 +51,16 @@ export const CreateChannelAction = CreateServerAction(
         newChannel.channel_name,
         newChannel.created_by
       )
+      const communityUserId = await attachCommunityUser(
+        newChannel?.community_id as string,
+        newChannel.created_by
+      )
+      const community_user_id: string = communityUserId?.id
+
       await attachChannelUser(
         newChannel.id,
         newChannel.created_by,
+        community_user_id,
         result.adminRole?.name
       )
       const channelWithUsers = await GetChannelById(newChannel.id, true)
@@ -194,9 +202,16 @@ export const AttachChannelUserAction = CreateServerAction(
         "channel_viewer",
         channelId
       )
+      const communityUserId = await attachCommunityUser(
+        channel?.community_id as string,
+        userId
+      )
+      const community_user_id: string = communityUserId?.id
+
       const channelUser = await attachChannelUser(
         channelId,
         userId,
+        community_user_id,
         attachUserRole?.viewerRole?.name
       )
       if (channel?.community_id) {
@@ -206,6 +221,23 @@ export const AttachChannelUserAction = CreateServerAction(
       return { success: true, data: channelUser }
     } catch (error) {
       return { error: error }
+    }
+  }
+)
+
+export const LeaveChannelAction = CreateServerAction(
+  true,
+  async (channelId: string, currentUserId: string) => {
+    try {
+      const userId = currentUserId
+      const deleted = await dettachChannelUser(channelId, userId)
+
+      if (!deleted) {
+        return { success: false, error: "Failed to leave the channel" }
+      }
+      return { success: true }
+    } catch (error: any) {
+      return { success: false, error: error.message || error }
     }
   }
 )

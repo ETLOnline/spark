@@ -34,7 +34,7 @@ export function EventsScreen() {
     "virtual" | "physical" | "hybrid" | "all"
   >("all")
   const [eventCategory, setEventCategory] = useState("all")
-  const [availableCategories, setAvailableCategories] = useState<
+  const [availableTags, setAvailableTags] = useState<
     { id: string; name: string }[]
   >([])
   const setHostsGlobal = useSetAtom(hostStore.hosts)
@@ -63,8 +63,6 @@ export function EventsScreen() {
 
       allEvents.forEach((item: any) => {
         processedEvents.push(item)
-        console.log("item", item)
-
         if (item.host?.unique_id) {
           hostMap[item.host.unique_id] = item.host
         }
@@ -73,19 +71,19 @@ export function EventsScreen() {
       setEvents(processedEvents)
       setHostsGlobal(hostMap)
 
-      const categorySet = new Set<string>()
+      const TagSet = new Set<string>()
       processedEvents.forEach((event) => {
         event.tags?.forEach((tag) => {
-          categorySet.add(tag)
+          TagSet.add(tag)
         })
       })
 
-      const categories = Array.from(categorySet).map((cat) => ({
-        id: cat,
-        name: cat.charAt(0).toUpperCase() + cat.slice(1)
+      const tags = Array.from(TagSet).map((tag) => ({
+        id: tag,
+        name: tag.charAt(0).toUpperCase() + tag.slice(1)
       }))
 
-      setAvailableCategories(categories)
+      setAvailableTags(tags)
     }
   }, [getEventsData, setHostsGlobal])
 
@@ -116,8 +114,8 @@ export function EventsScreen() {
   return (
     <div className="h-auto flex flex-col gap-1">
       <CardHeader className="flex flex-row p-0 justify-between w-full">
-        <CardContent>
-          <CardTitle>Spark Community Events</CardTitle>
+        <CardContent className=" pl-1">
+          <CardTitle className="text-lg">Spark Community Events</CardTitle>
           <CardDescription>
             Discover and join amazing events in our community.
           </CardDescription>
@@ -139,7 +137,7 @@ export function EventsScreen() {
             onEventTypeChange={setEventType}
             eventCategory={eventCategory}
             onCategoryChange={setEventCategory}
-            availableCategories={availableCategories}
+            availableTags={availableTags}
           />
         </TabsList>
 

@@ -16,7 +16,7 @@ interface EventsFilterBarProps {
   onEventTypeChange: (value: "virtual" | "physical" | "hybrid" | "all") => void
   eventCategory: string
   onCategoryChange: (value: string) => void
-  availableCategories: { id: string; name: string }[]
+  availableTags: { id: string; name: string }[]
 }
 
 const EventsFilterBar = ({
@@ -26,7 +26,7 @@ const EventsFilterBar = ({
   onEventTypeChange,
   eventCategory,
   onCategoryChange,
-  availableCategories
+  availableTags
 }: EventsFilterBarProps) => {
   return (
     <div className="flex justify-between  w-full gap-3">
@@ -60,10 +60,10 @@ const EventsFilterBar = ({
           <SelectValue placeholder="All Categories" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Categories</SelectItem>
-          {availableCategories?.map((category) => (
-            <SelectItem key={category.id} value={category.id}>
-              {category.name}
+          <SelectItem value="all">All Tags</SelectItem>
+          {availableTags?.map((tag) => (
+            <SelectItem key={tag.id} value={tag.id}>
+              {tag.name}
             </SelectItem>
           ))}
         </SelectContent>

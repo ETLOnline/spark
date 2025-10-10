@@ -19,6 +19,8 @@
 
 .rich-editor p {
   font-size: 16px;
+  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 
 .rich-editor ul {
@@ -41,10 +43,32 @@
   margin: 0.5em 0;
 }
 
-.rich-editor a:hover {
-  color: blueviolet;
-  text-decoration: underline;
+.rich-editor ul ul {
+  list-style-type: circle;
+}
+
+.rich-editor ol ol {
+  list-style-type: lower-alpha;
+}
+
+.rich-editor li {
+  line-height: 1.6;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.rich-editor a {
+  color: #2563eb;
+  text-decoration: none;
   cursor: pointer;
+  transition:
+    color 0.2s ease,
+    text-decoration 0.2s ease;
+}
+
+.rich-editor a:hover {
+  color: #7c3aed;
+  text-decoration: underline;
 }
 
 .tiptap-image-wrapper {
@@ -59,4 +83,9 @@
 .tiptap-image-wrapper img:hover {
   transform: scale(1.02);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.rich-editor {
+  word-break: break-all;
+  overflow-wrap: anywhere;
 }

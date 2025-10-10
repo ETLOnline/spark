@@ -200,7 +200,15 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
         offset,
         where: whereClauses.length ? and(...whereClauses) : undefined,
         with: {
-          author: true,
+          author: {
+            with: {
+              roles: {
+                with: {
+                  role: true
+                }
+              }
+            }
+          },
           postComments: {
             with: { commentor: true },
             orderBy: [desc(commentsTable.created_at)]
@@ -222,7 +230,15 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
         offset,
         where: whereClauses.length ? and(...whereClauses) : undefined,
         with: {
-          author: true,
+          author: {
+            with: {
+              roles: {
+                with: {
+                  role: true
+                }
+              }
+            }
+          },
           postComments: {
             with: { commentor: true },
             limit: 3,

@@ -45,7 +45,7 @@ const ProfileActivityItem: React.FC<ProfileActivityItemProps> = ({
         <Avatar className="h-12 w-12">
           <Link href={size === "sm" ? "#" : `/profile/${otherUser.unique_id}`}>
             <AvatarImage
-              className="rounded-full"
+              className="h-[100%] w-[100%] object-cover rounded-full"
               src={otherUser.profile_url as string}
               alt={name}
             />

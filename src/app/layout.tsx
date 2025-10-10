@@ -6,8 +6,7 @@ import ThemeProvider from "../components/ThemeProvider/ThemeProvider"
 import { Toaster } from "../components/ui/toaster"
 import { dark } from "@clerk/themes"
 import AuthInitializer from "../services/auth/AuthInitializer"
-import NotificationProvider from "../services/notifications/NotificationProvider"
-
+import { ScreenOverlayProvider } from "../hooks/useScreenOverlay"
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -43,7 +42,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <Toaster />
-            {children}
+            <ScreenOverlayProvider>{children}</ScreenOverlayProvider>
           </ThemeProvider>
         </body>
       </html>

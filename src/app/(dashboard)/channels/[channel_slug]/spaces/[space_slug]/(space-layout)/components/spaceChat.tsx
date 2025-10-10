@@ -39,11 +39,9 @@ const SpaceChat = () => {
   }, [currentSpace])
 
   return (
-    <div className="h-[78vh]">
-      <Suspense>
-        <ChatScreen allChatsSSR={myChats} currentChatSSR={undefined} />
-      </Suspense>
-    </div>
+    <Suspense>
+      <ChatScreen allChatsSSR={myChats} currentChatSSR={undefined} />
+    </Suspense>
   )
 }
 
