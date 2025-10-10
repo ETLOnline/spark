@@ -56,29 +56,6 @@ export const UpdateSprintAction = CreateServerAction(
     try {
       const updatedSprint = await UpdateSprint(SprintId, sprintData)
 
-      // const user = await AuthUserAction()
-
-      // const sprintTasks = await GetTasks({
-      //   sprint_id: SprintId,
-      //   project_id: updatedSprint.projectId
-      // })
-
-      // let totalPoints = 0
-      // let noPointTasks = 0
-
-      // for (const task of sprintTasks.tasks) {
-      //   if (task.story_points) {
-      //     const points = Number(task.story_points) || 0
-      //     totalPoints += points
-      //   } else {
-      //     noPointTasks += 1
-      //   }
-      // }
-
-      // const value = totalPoints + noPointTasks
-
-      // await addSprintBurnDown(SprintId, user?.unique_id, value)
-
       pusherServer.trigger(
         `project-${updatedSprint.projectId}-sprints`,
         "sprint-edit",
