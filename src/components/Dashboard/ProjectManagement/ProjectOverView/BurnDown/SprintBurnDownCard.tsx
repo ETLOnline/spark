@@ -51,6 +51,9 @@ export function SprintBurnDownCard({
           <CardTitle>Sprint Burndown (Tasks)</CardTitle>
           <CardDescription>
             Tracks the remaining number of tasks throughout the sprint.
+            <br />
+            Burn down data automatically refreshes every 5 minutes if there are
+            any updates.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -79,6 +82,9 @@ export function SprintBurnDownCard({
           <CardTitle>Sprint Burndown (Story Points)</CardTitle>
           <CardDescription>
             Shows remaining story points across the sprint.
+            <br />
+            Burn down data automatically refreshes every 5 minutes if there are
+            any updates.
           </CardDescription>
         </CardHeader>
         <CardContent>
