@@ -33,9 +33,18 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import z from "zod"
 
 const editProfileSchema = z.object({
-  first_name: z.string().min(1, "First name required").max(30, "Too long"),
-  last_name: z.string().min(1, "Last name required").max(30, "Too long"),
-  bio: z.string().min(1, "Bio required").max(2000, "Too long"),
+  first_name: z
+    .string()
+    .min(1, "First name required")
+    .max(30, "Maximum 30 characters allowed"),
+  last_name: z
+    .string()
+    .min(1, "Last name required")
+    .max(30, "Maximum 30 characters allowed"),
+  bio: z
+    .string()
+    .min(1, "Bio required")
+    .max(2000, "Maximum 2000 characters allowed"),
   skill: z
     .array(z.string().min(1, "required"))
     .min(1, "At least one skill is required"),
