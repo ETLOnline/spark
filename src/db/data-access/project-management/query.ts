@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from "drizzle-orm"
+import { and, desc, eq, inArray, sql } from "drizzle-orm"
 import { db } from "../.."
 import {
   channelsTable,
@@ -144,6 +144,36 @@ export async function getProjectUsers(projectId: string) {
 
     return projectUsers
   } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
+
+export async function getProjectUserCountAndProfileUrl(projectId: string) {
+  try {
+    const projectUsers = await db.query.ProjectUsersTable.findMany({
+      with: {
+        user: {
+          columns: {
+            profile_url: true
+          }
+        }
+      },
+      where: eq(ProjectUsersTable.project_id, projectId),
+      orderBy: sql`RANDOM()`,
+      limit: 4
+    })
+
+    const count = await db.$count(
+      ProjectUsersTable,
+      eq(ProjectUsersTable.project_id, projectId)
+    )
+
+    return {
+      count,
+      usersProfileUrl: projectUsers.map((pu) => pu.user?.profile_url)
+    }
+  } catch (error: any) {
+    console.error("Error fetching project users:", error)
     throw new Error(error.message)
   }
 }

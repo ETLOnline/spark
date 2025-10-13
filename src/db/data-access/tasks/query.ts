@@ -39,6 +39,15 @@ export type taskQueryFilters = {
   status?: string[]
 }
 
+export type SprintTaskCountFilters = {
+  project_id?: string
+  sprint_id?: string
+  total?: boolean
+  done?: boolean
+  inprogress?: boolean
+  todo?: boolean
+}
+
 export async function CreateTask(taskData: InsertTask) {
   try {
     const [insertedTask] = await db
@@ -214,17 +223,76 @@ export async function GetBacklogTaskCount(projectId: string) {
   }
 }
 
-export async function GetSprintTaskCount(projectId: string, sprintId: string) {
+export async function GetSprintTaskCount(filters?: SprintTaskCountFilters) {
   try {
-    const Count = await db.$count(
-      taskTable,
-      and(
-        eq(taskTable.project_id, projectId),
-        eq(taskTable.sprint_id, sprintId),
-        isNull(taskTable.deleted_at)
-      )
+    const project_id = filters?.project_id
+    const sprint_id = filters?.sprint_id
+    const done = filters?.done
+    const inprogress = filters?.inprogress
+    const todo = filters?.todo
+
+    if (!project_id) {
+      throw new Error("Project ID is required")
+    }
+
+    const needStatus = done || inprogress || todo
+
+    let statuses: { id: string; status_slug: string | null }[] = []
+    if (needStatus) {
+      statuses = await db.query.TaskStatusTable.findMany({
+        where: eq(TaskStatusTable.project_id, project_id),
+        columns: {
+          id: true,
+          status_slug: true
+        }
+      })
+    }
+
+    const doneStatusId = statuses.find((s) => s.status_slug === "done")?.id
+    const inprogressStatusId = statuses.find(
+      (s) => s.status_slug === "in-progress"
+    )?.id
+    const todoStatusId = statuses.find((s) => s.status_slug === "todo")?.id
+
+    const whereClauses: (SQLWrapper | undefined)[] = []
+
+    whereClauses.push(
+      eq(taskTable.project_id, project_id),
+      isNull(taskTable.deleted_at)
     )
-    return Count
+
+    if (sprint_id) {
+      whereClauses.push(eq(taskTable.sprint_id, sprint_id))
+    } else {
+      whereClauses.push(isNull(taskTable.sprint_id))
+    }
+
+    const results: Record<string, number> = {}
+
+    results.totalTasksCount = await db.$count(taskTable, and(...whereClauses))
+
+    if (done && doneStatusId) {
+      results.DoneTasksCount = await db.$count(
+        taskTable,
+        and(...whereClauses, eq(taskTable.status_id, doneStatusId))
+      )
+    }
+
+    if (inprogress && inprogressStatusId) {
+      results.InprogressTasksCount = await db.$count(
+        taskTable,
+        and(...whereClauses, eq(taskTable.status_id, inprogressStatusId))
+      )
+    }
+
+    if (todo && todoStatusId) {
+      results.TodoTasksCount = await db.$count(
+        taskTable,
+        and(...whereClauses, eq(taskTable.status_id, todoStatusId))
+      )
+    }
+
+    return results
   } catch (e: any) {
     throw new Error(e.message)
   }

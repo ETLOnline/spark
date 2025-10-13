@@ -63,13 +63,14 @@ export default function TaskMoveDialog({
 
   const projectId = useParams().id as string
 
-  const filteredSprints = sprintList.filter(
-    (s) => s.id !== currSprintId && s.sprint_status !== "closed"
-  )
+  const filteredSprints = sprintList.filter((s) => s.id !== currSprintId)
 
   useEffect(() => {
     const fetchSprints = async () => {
-      const Sprints = await GetSprints(projectId)
+      const Sprints = await GetSprints({
+        projectId: projectId,
+        status: ["active", "upcoming"]
+      })
       if (Sprints?.success && Sprints.data) {
         setSprintList(Sprints.data)
       }

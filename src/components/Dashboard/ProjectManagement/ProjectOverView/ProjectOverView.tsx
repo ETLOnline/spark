@@ -1,14 +1,7 @@
 "use client"
-import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
+import { Avatar, AvatarImage } from "@/src/components/ui/avatar"
 import { Badge } from "@/src/components/ui/badge"
-import {
-  Calendar,
-  CheckCircle2,
-  Clock,
-  ListTodo,
-  Settings,
-  User
-} from "lucide-react"
+import { Calendar, CheckCircle2, Clock, ListTodo, User } from "lucide-react"
 import React, { useEffect, useState } from "react"
 import { Progress } from "@/src/components/ui/progress"
 import RecentActivity from "./RecentActivity"
@@ -19,20 +12,14 @@ import StatusRequiredDialog from "../StatusRequiredDialog"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   GetBacklogTaskCountAction,
-  GetSprintTasksAction
+  GetSprintTaskCountAction
 } from "@/src/server-actions/Tasks/Task"
 import { useParams } from "next/navigation"
 import Loader from "@/src/components/common/Loader/Loader"
-import { GetProjectUsersAction } from "@/src/server-actions/ProjectManagement/projectManagement"
-import {
-  SelectProjectUser,
-  SelectSprint,
-  SelectTask,
-  SelectUser
-} from "@/src/db/schema"
+import { getProjectUserCountAndProfileUrlAction } from "@/src/server-actions/ProjectManagement/projectManagement"
+import { SelectSprint } from "@/src/db/schema"
 import { GetSprintAction } from "@/src/server-actions/Sprint/sprint"
 import { SelectCurrentSprint } from "./SelectCurrentSprint"
-import { set } from "zod"
 import moment from "moment"
 import { SprintBurnDownCard } from "./BurnDown/SprintBurnDownCard"
 
@@ -62,8 +49,14 @@ function ProjectOverView() {
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
   const [openDialog, setOpenDialog] = useState(false)
   const [backlogTaskCount, setBacklogTaskCount] = useState(0)
-  const [sprintTasks, setSprintTasks] = useState<SelectTask[]>([])
-  const [Members, setMembers] = useState<SelectProjectUser[]>([])
+  const [sprintDoneTasksCount, setSprintDoneTasksCount] = useState(0)
+  const [sprintInprogressTasksCount, setSprintInprogressTasksCount] =
+    useState(0)
+  const [totalSprintTasksCount, setTotalSprintTasksCount] = useState(0)
+  const [membersCount, setMembersCount] = useState(0)
+  const [membersProfileUrl, setMembersProfileUrl] = useState<(string | null)[]>(
+    []
+  )
   const [sprintList, setSprintList] = useState<SelectSprint[]>([])
   const [activeDropdown, setActiveDropdown] = useState(false)
   const [currentSprint, setCurrentSprint] = useState<SelectSprint | null>(null)
@@ -73,11 +66,12 @@ function ProjectOverView() {
     GetBacklogTaskCountAction
   )
   const [getTeamLoading, , , getTeamUsers] = useServerAction(
-    GetProjectUsersAction
+    getProjectUserCountAndProfileUrlAction
   )
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
-  const [getSprintTaskLoading, , , GetSprintTasks] =
-    useServerAction(GetSprintTasksAction)
+  const [getSprintTaskLoading, , , GetSprintTasksCount] = useServerAction(
+    GetSprintTaskCountAction
+  )
 
   const params = useParams()
 
@@ -96,7 +90,8 @@ function ProjectOverView() {
     try {
       const res = await getTeamUsers(projectId)
       if (res?.success && res.data) {
-        setMembers(res.data)
+        setMembersCount(res.data.count)
+        setMembersProfileUrl(res.data.usersProfileUrl)
       }
     } catch (error) {
       console.error("Error fetching team members:", error)
@@ -104,12 +99,13 @@ function ProjectOverView() {
   }
 
   const fetchSprints = async (projectId: string) => {
-    const Sprints = await GetSprints(projectId)
+    const Sprints = await GetSprints({
+      projectId: projectId,
+      status: ["active"]
+    })
     if (Sprints?.success && Sprints.data) {
       setSprintList(Sprints.data)
-      const activeSprint =
-        Sprints.data.find((sprint) => sprint.sprint_status === "active") || null
-      setCurrentSprint(activeSprint)
+      setCurrentSprint(Sprints.data[0])
     }
   }
 
@@ -136,36 +132,31 @@ function ProjectOverView() {
     if (!currentSprint) return
 
     const fetchSprintTasks = async () => {
-      const tasks = await GetSprintTasks({
+      const tasks = await GetSprintTasksCount({
         project_id: params.id as string,
-        sprint_id: currentSprint.id
+        sprint_id: currentSprint.id,
+        done: true,
+        inprogress: true
       })
       if (tasks?.success && tasks.data) {
-        setSprintTasks(tasks.data.tasks)
+        setSprintDoneTasksCount(tasks.data.DoneTasksCount)
+        setSprintInprogressTasksCount(tasks.data.InprogressTasksCount)
+        setTotalSprintTasksCount(tasks.data.totalTasksCount)
       }
     }
     fetchSprintTasks()
   }, [currentSprint])
 
-  const completesSprintTasks = sprintTasks.filter(
-    (task) => task.status?.status_slug === "done"
-  ).length
-
-  const inProgressSprintTasks = sprintTasks.filter(
-    (task) => task.status?.status_slug === "in-progress"
-  ).length
-
   useEffect(() => {
     let percentage = 0
 
-    if (sprintTasks.length > 0) {
-      const completedTasks = sprintTasks.filter(
-        (task) => task.status?.status_slug === "done"
-      ).length
-      percentage = Math.round((completedTasks / sprintTasks.length) * 100)
+    if (sprintDoneTasksCount > 0 && totalSprintTasksCount > 0) {
+      percentage = Math.round(
+        (sprintDoneTasksCount / totalSprintTasksCount) * 100
+      )
     }
     setPercentage(percentage)
-  }, [sprintTasks])
+  }, [sprintDoneTasksCount, totalSprintTasksCount])
 
   useEffect(() => {
     if (projectStatusList.length === 0) {
@@ -217,7 +208,7 @@ function ProjectOverView() {
           content={
             <>
               <div className="text-2xl font-bold">
-                {getSprintTaskLoading ? <Loader /> : sprintTasks.length}
+                {getSprintTaskLoading ? <Loader /> : totalSprintTasksCount}
                 <span className="text-xs text-muted-foreground ml-2">
                   Tasks
                 </span>
@@ -228,14 +219,14 @@ function ProjectOverView() {
                   className="bg-green-100 text-green-800 hover:bg-green-100 w-full justify-center"
                 >
                   <CheckCircle2 className="mr-1 h-3 w-3" />
-                  {completesSprintTasks} Completed
+                  {sprintDoneTasksCount} Completed
                 </Badge>
                 <Badge
                   variant="secondary"
                   className="bg-blue-100 text-blue-800 hover:bg-blue-100 w-full justify-center"
                 >
                   <Clock className="mr-1 h-3 w-3" />
-                  {inProgressSprintTasks} In Progress
+                  {sprintInprogressTasksCount} In Progress
                 </Badge>
               </div>
             </>
@@ -266,7 +257,7 @@ function ProjectOverView() {
           content={
             <>
               <div className="text-2xl font-bold">
-                {Members.length}
+                {membersCount}
                 <span className="text-xs text-muted-foreground ml-2">
                   Members
                 </span>
@@ -275,21 +266,12 @@ function ProjectOverView() {
                 {getTeamLoading ? (
                   <Loader />
                 ) : (
-                  Members.slice(0, 4).map((member: SelectProjectUser) => (
-                    <Avatar key={member.id} className="h-8 w-8">
+                  membersProfileUrl.map((userProfileUrl) => (
+                    <Avatar key={userProfileUrl} className="h-8 w-8">
                       <AvatarImage
-                        src={
-                          member.user?.profile_url ||
-                          "https://github.com/shadcn.png"
-                        }
-                        alt={member.user?.first_name}
+                        src={userProfileUrl || "https://github.com/shadcn.png"}
+                        alt={"user"}
                       />
-                      <AvatarFallback>
-                        {member.user?.first_name
-                          ? member.user.first_name.charAt(0) +
-                            member.user.last_name.charAt(0)
-                          : "CN"}
-                      </AvatarFallback>
                     </Avatar>
                   ))
                 )}

@@ -16,7 +16,8 @@ import {
   countProjectMembers,
   getProjectsBySpaceIds,
   addProjectRecentActivities,
-  getProjectRecentActivities
+  getProjectRecentActivities,
+  getProjectUserCountAndProfileUrl
 } from "@/src/db/data-access/project-management/query"
 import {
   createScopedProjectRolesAndAssignAdmin,
@@ -193,6 +194,19 @@ export const GetProjectUsersAction = CreateServerAction(
       return { success: true, data: projectUsers }
     } catch (error) {
       console.error("Error fetching project users:", error)
+      return { error }
+    }
+  }
+)
+
+export const getProjectUserCountAndProfileUrlAction = CreateServerAction(
+  true,
+  async (projectId: string) => {
+    try {
+      const projectUser = await getProjectUserCountAndProfileUrl(projectId)
+      return { success: true, data: projectUser }
+    } catch (error) {
+      console.error("Error fetching project user:", error)
       return { error }
     }
   }

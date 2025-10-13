@@ -39,15 +39,13 @@ export function SelectCurrentSprint({
       </SelectTrigger>
       <SelectContent>
         {sprints.length > 0 ? (
-          sprints
-            .filter((s) => s.sprint_status === "active")
-            .map((sprint) => (
-              <SelectGroup key={sprint.id}>
-                <SelectItem value={sprint.id.toString()}>
-                  {sprint.title}
-                </SelectItem>
-              </SelectGroup>
-            ))
+          sprints.map((sprint) => (
+            <SelectGroup key={sprint.id}>
+              <SelectItem value={sprint.id.toString()}>
+                {sprint.title}
+              </SelectItem>
+            </SelectGroup>
+          ))
         ) : (
           <SelectItem
             value="no-sprint"

@@ -1,7 +1,12 @@
-import { and, desc, eq, gte } from "drizzle-orm"
+import { and, desc, eq, gte, inArray, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
 import { SelectSprint, sprintBurnDownTable, SprintTable } from "../../schema"
 import moment from "moment"
+
+export type sprintQueryFilters = {
+  projectId?: string
+  status?: string[]
+}
 
 export async function CreateSprint(sprintData: SelectSprint) {
   try {
@@ -13,12 +18,23 @@ export async function CreateSprint(sprintData: SelectSprint) {
   }
 }
 
-export async function getSprints(projectId: string) {
+export async function getSprints(filters?: sprintQueryFilters) {
   try {
-    const sprints = await db
-      .select()
-      .from(SprintTable)
-      .where(eq(SprintTable.projectId, projectId))
+    const whereClauses: (SQLWrapper | undefined)[] = []
+
+    if (filters) {
+      if (filters.projectId) {
+        whereClauses.push(eq(SprintTable.projectId, filters.projectId))
+      }
+
+      if (filters.status && filters.status.length > 0) {
+        whereClauses.push(inArray(SprintTable.sprint_status, filters.status))
+      }
+    }
+
+    const sprints = await db.query.SprintTable.findMany({
+      where: whereClauses.length ? and(...whereClauses) : undefined
+    })
 
     return sprints
   } catch (e: any) {

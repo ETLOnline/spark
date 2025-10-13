@@ -16,7 +16,8 @@ import {
   getTaskCommentsByTaskId,
   UpdateTasksSprint,
   GetBacklogTaskCount,
-  GetSprintTaskCount
+  GetSprintTaskCount,
+  SprintTaskCountFilters
 } from "@/src/db/data-access/tasks/query"
 import { CreateServerAction } from ".."
 import {
@@ -181,9 +182,9 @@ export const GetBacklogTaskCountAction = CreateServerAction(
 
 export const GetSprintTaskCountAction = CreateServerAction(
   true,
-  async (projectId: string, sprintId: string) => {
+  async (filters?: SprintTaskCountFilters) => {
     try {
-      const taskCount = await GetSprintTaskCount(projectId, sprintId)
+      const taskCount = await GetSprintTaskCount({ ...filters })
 
       return { success: true, data: taskCount }
     } catch (error) {

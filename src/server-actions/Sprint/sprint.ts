@@ -6,6 +6,7 @@ import {
   getSprintBurnDown,
   getSprints,
   sprintCount,
+  sprintQueryFilters,
   UpdateSprint
 } from "@/src/db/data-access/sprints/query"
 import { CreateServerAction } from ".."
@@ -35,9 +36,9 @@ export const CreateSprintAction = CreateServerAction(
 
 export const GetSprintAction = CreateServerAction(
   true,
-  async (projectId: string) => {
+  async (filters?: sprintQueryFilters) => {
     try {
-      const sprints = await getSprints(projectId)
+      const sprints = await getSprints({ ...filters })
 
       return { success: true, data: sprints }
     } catch (error) {
