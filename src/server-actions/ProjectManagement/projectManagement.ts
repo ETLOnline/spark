@@ -13,7 +13,8 @@ import {
   updateProject,
   getExistingProjectUsers,
   createProjectUser,
-  countProjectMembers
+  countProjectMembers,
+  getProjectsBySpaceIds
 } from "@/src/db/data-access/project-management/query"
 import {
   createScopedProjectRolesAndAssignAdmin,
@@ -21,6 +22,9 @@ import {
   getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
 import pusherServer from "@/src/services/realtime/pusherServer"
+import { SendProjectNotifications } from "@/src/services/notifications/Project/utils"
+import { createProjectInviteNotification } from "@/src/services/notify/project/project"
+import { NotificationEvent } from "@/src/services/notify/types/events"
 
 export const CreateProjectAction = CreateServerAction(
   true,
@@ -153,6 +157,21 @@ export const AttachProjectUserAction = CreateServerAction(
         usersToCreateWithRoles
       )
 
+      const Project = await getProjectById(projectId)
+
+      if (newProjectUsers.length > 0 && Project) {
+        await SendProjectNotifications(
+          NotificationEvent.PROJECT_INVITE,
+          newProjectUsers,
+          Project
+        )
+      }
+
+      await createProjectInviteNotification(
+        NotificationEvent.PROJECT_INVITE,
+        newUsersToAttach,
+        projectId
+      )
       return { success: true, data: newProjectUsers, failedRoleAssignments }
     } catch (error: any) {
       return {
@@ -217,6 +236,19 @@ export const countProjectMembersAction = CreateServerAction(
       return { success: true, data: count }
     } catch (error) {
       console.error("Failed to count project members:", error)
+      return { success: false, error }
+    }
+  }
+)
+
+export const GetProjectBySpaceIdsAction = CreateServerAction(
+  true,
+  async (spaceIds: string[]) => {
+    try {
+      const projects = await getProjectsBySpaceIds(spaceIds)
+      return { success: true, data: projects }
+    } catch (error) {
+      console.error("Failed to get projects by space IDs:", error)
       return { success: false, error }
     }
   }

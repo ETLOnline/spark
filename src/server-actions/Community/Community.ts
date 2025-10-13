@@ -30,6 +30,7 @@ import {
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
 import pusherServer from "@/src/services/realtime/pusherServer"
+import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
 
 export const CreateCommunityAction = CreateServerAction(
   true,
@@ -195,6 +196,7 @@ export const DeleteCommunityAction = CreateServerAction(
     try {
       const communityIdToDelete = deletedCommunityData.id
       await DeleteCommunity(communityIdToDelete)
+      await deleteRoleBasedOnEntityType("COMMUNITY", communityIdToDelete)
 
       return { success: true, message: "Community deleted successfully." }
     } catch (error: any) {
@@ -372,6 +374,19 @@ export const communityCoverImageAction = CreateServerAction(
         success: false,
         error: error
       }
+    }
+  }
+)
+export const LeaveCommunityAction = CreateServerAction(
+  true,
+  async (communityId: string, currentUserId: string) => {
+    try {
+      // const deleted = await leaveCommunity(communityId, currentUserId)
+      const deleted = await detachCommunityUser(communityId, currentUserId)
+
+      return { success: true, data: deleted }
+    } catch (error: any) {
+      return { success: false, error: error.message || error }
     }
   }
 )

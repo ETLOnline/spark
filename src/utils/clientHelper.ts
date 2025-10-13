@@ -90,3 +90,91 @@ export function isEntityUser(
     ) ?? false
   )
 }
+
+export function prepareTaskEmailData(task: any, oldTask: any) {
+  const assigneeName = task.assignee
+    ? `${task.assignee.first_name} ${task.assignee.last_name}`.trim()
+    : "Unassigned"
+
+  const oldAssigneeName = oldTask.assignee
+    ? `${oldTask.assignee.first_name} ${oldTask.assignee.last_name}`.trim()
+    : "Unassigned"
+
+  const assignorName = task.assignor
+    ? `${task.assignor.first_name} ${task.assignor.last_name}`.trim()
+    : "System"
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+
+  const changes: { [key: string]: { oldValue: any; newValue: any } } = {}
+
+  // Compare fields and log changes
+  if (oldTask.task_title !== task.task_title) {
+    changes.task_title = {
+      oldValue: oldTask.task_title,
+      newValue: task.task_title
+    }
+  }
+  if (oldTask.task_priority !== task.task_priority) {
+    changes.priority = {
+      oldValue: oldTask.task_priority,
+      newValue: task.task_priority
+    }
+  }
+  if (oldTask.assignee?.id !== task.assignee?.id) {
+    changes.assignee = { oldValue: oldAssigneeName, newValue: assigneeName }
+  }
+  if (oldTask.task_type !== task.task_type) {
+    changes.issue_type = {
+      oldValue: oldTask.task_type,
+      newValue: task.task_type
+    }
+  }
+  if (oldTask.status?.id !== task.status?.id) {
+    const oldStatus = oldTask.status ? oldTask.status.name : "N/A"
+    const newStatus = task.status ? task.status.name : "N/A"
+    changes.status = { oldValue: oldStatus, newValue: newStatus }
+  }
+  const logoUrl = getSiteLogoUrl()
+  const taskUrl = createAbsoluteUrl(
+    `/project/${task.project_id}/task/${task.id}`
+  )
+
+  return {
+    logo_url: logoUrl,
+    task_title: task.task_title || "N/A",
+    task_id: task.task_num || "N/A",
+    project_name: task.project_name || "N/A",
+    priority: task.task_priority || "N/A",
+    assignee_name: assigneeName,
+    assignor_name: assignorName,
+    issue_type: task.task_type || "N/A",
+    description: task.description || "No description provided.",
+    task_url: taskUrl,
+    changes: changes
+  }
+}
+
+export function createAbsoluteUrl(relativePath: string): string {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+
+  if (!baseUrl) {
+    throw new Error(
+      "NEXT_PUBLIC_BASE_URL is not defined in environment variables."
+    )
+  }
+
+  try {
+    const url = new URL(relativePath, baseUrl)
+    return url.toString()
+  } catch (error) {
+    console.error(
+      `Invalid URL creation with base: ${baseUrl} and path: ${relativePath}`
+    )
+    throw error
+  }
+}
+export function getSiteLogoUrl(): string {
+  const LOGO_PATH = "/logo/spark-logo-animated-themed.gif"
+  return createAbsoluteUrl(LOGO_PATH)
+}

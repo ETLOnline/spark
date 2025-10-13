@@ -12,16 +12,24 @@ import {
   getExistingSingleChat
 } from "@/src/db/data-access/chat/query"
 import { CreateServerAction } from ".."
-import { InsertMessage, SelectUser } from "@/src/db/schema"
+import { InsertMessage } from "@/src/db/schema"
 import { AuthUserAction } from "../User/AuthUserAction"
 import { createChatMessage } from "@/src/db/data-access/chat/message/query"
-import ChatChannelHash from "@/src/components/Dashboard/Chat/helper"
 import { AblyClientRest } from "@/src/services/realtime/AblyClient"
+import { GetSpaceById } from "@/src/db/data-access/spaces/query"
+import {
+  SendChatNotification,
+  SendMessageNotification
+} from "@/src/services/notifications/Chat/utils"
+import { createChatEmailNotification } from "@/src/services/notify/chat/chat"
+import { NotificationEvent } from "@/src/services/notify/types/events"
 
 export const CreatePrivateChatAction = CreateServerAction(
   true,
   async (user_id: string, contact_id: string, space_id?: string) => {
     try {
+      const space = await GetSpaceById(space_id || "")
+
       if (user_id == contact_id) {
         return {
           success: false,
@@ -56,6 +64,14 @@ export const CreatePrivateChatAction = CreateServerAction(
           spaceId: space_id
         })
       }
+
+      await SendChatNotification(NotificationEvent.CHAT_INVITE, newChat, space)
+
+      await createChatEmailNotification(
+        NotificationEvent.CHAT_INVITE,
+        [contact_id],
+        space_id || ""
+      )
       return { success: true, data: newChat }
     } catch (error) {
       return { error: error }
@@ -68,6 +84,8 @@ export const CreateGroupChatAction = CreateServerAction(
   async (userIds: string[], chatName: string, space_id?: string) => {
     try {
       const authUser = await AuthUserAction()
+      const space = await GetSpaceById(space_id || "")
+
       const chat = await CreateGroupChat(userIds, chatName, space_id)
 
       if (!chat) {
@@ -90,6 +108,14 @@ export const CreateGroupChatAction = CreateServerAction(
           spaceId: space_id
         })
       }
+
+      await SendChatNotification(NotificationEvent.CHAT_INVITE, chat, space)
+
+      await createChatEmailNotification(
+        NotificationEvent.CHAT_INVITE,
+        userIds,
+        space_id || ""
+      )
       return { success: true, data: chat }
     } catch (error) {
       return { error: error }
@@ -153,7 +179,7 @@ export const GetChatBySlugWithMessagesAction = CreateServerAction(
 
 export const AddMessageToChatAction = CreateServerAction(
   true,
-  async (message: InsertMessage) => {
+  async (message: InsertMessage, space_id?: string) => {
     try {
       const authUser = await AuthUserAction()
       if (authUser) {
@@ -195,6 +221,10 @@ export const AddMessageToChatAction = CreateServerAction(
               })
             }
           }
+
+          const space = await GetSpaceById(space_id || "")
+
+          await SendMessageNotification(updatedChat, space)
 
           return { success: true, data: newMessage }
         } else {

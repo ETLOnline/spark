@@ -12,6 +12,9 @@ import {
 import { AblyClient } from "../services/realtime/AblyClient"
 import moment from "moment-timezone"
 import { CommunityDetailData } from "../db/data-access/communities/query"
+import pusherClient from "../services/realtime/PusherClient"
+import { FindUserByUniqueIdAction } from "../server-actions/User/FindUserByUniqueIdAction"
+import { createAbsoluteUrl, getSiteLogoUrl } from "./clientHelper"
 export type RoleWithPermissions = {
   id: number
   name: string
@@ -313,13 +316,24 @@ export const formatRelativeTime = (
     .fromNow()
 }
 
-export const GetUserRole = (user: SelectUser) => {
+export const getUserRole = (user: SelectUser, entity_id?: string) => {
   if (user.roles && user.roles.length > 0) {
-    console.log("userRoles", user.roles)
-
-    return user.roles.flatMap((ur) =>
-      ur.role?.role_type === "GLOBAL" ? ur.role.name : []
-    )
+    if (entity_id) {
+      return user.roles.flatMap((ur) =>
+        ur.role &&
+        ur.role.entity_id === entity_id &&
+        ur.role.role_type === "SCOPED"
+          ? ur.role.name
+          : ""
+      )
+    } else {
+      return user.roles.flatMap((ur) =>
+        ur.role &&
+        (ur.role.role_type === "GLOBAL" || ur.role.role_type === "SYSTEM")
+          ? ur.role.name
+          : ""
+      )
+    }
   }
 }
 
@@ -329,4 +343,36 @@ export function slugify(input: string): string {
     .replace(/[^a-z0-9]+/gi, "-")
     .replace(/^-+|-+$/g, "")
     .replace(/-+/g, "-")
+}
+
+export function joinPresenceChannel(chatId: number) {
+  const channel = pusherClient.subscribe(`presence-chat-${chatId}`)
+
+  return channel
+}
+export async function prepareContactData(
+  user: SelectUser,
+  contact_id: string,
+  event: string
+): Promise<{ payload: any; sendingTo: string[] } | undefined> {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+  const receivedByUser = await FindUserByUniqueIdAction(contact_id)
+
+  if (!receivedByUser.data) {
+    return
+  }
+  const ctaLinkProcess =
+    event == "new_connection" ? `/connections` : `/profile/${contact_id}`
+  const linkUrl = createAbsoluteUrl(ctaLinkProcess)
+  const logoUrl = getSiteLogoUrl()
+  const payload = {
+    logoUrl: logoUrl,
+    userName:
+      `${receivedByUser.data.first_name ?? ""} ${receivedByUser.data.last_name ?? ""}`.trim(),
+    requesterName: `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim(),
+    ctaLink: linkUrl
+  }
+  const sendingTo = Array.from(new Set([receivedByUser.data.email]))
+
+  return { payload, sendingTo }
 }

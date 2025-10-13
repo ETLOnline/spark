@@ -192,6 +192,7 @@ export async function GetChannelById(id: string, withChannelUsers?: boolean) {
 export async function attachChannelUser(
   channelId: string,
   userId: string,
+  community_user_id: string,
   user_role?: string
 ) {
   try {
@@ -211,11 +212,13 @@ export async function attachChannelUser(
       )
       return existingChannelUser[0]
     }
+
     const newChannelUser = await db
       .insert(ChannelUsersTable)
       .values({
         channel_id: channelId,
         user_id: userId,
+        community_user_id: community_user_id,
         role: user_role
       })
       .returning()
@@ -286,6 +289,17 @@ export async function getChannelUsers(channelId: string) {
       }
     })
     return channelUsers
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function getChannelsByCommunityId(communityId: string) {
+  try {
+    const channels = await db.query.channelsTable.findMany({
+      where: eq(channelsTable.community_id, communityId)
+    })
+    return channels
   } catch (e: any) {
     throw new Error(e.message)
   }

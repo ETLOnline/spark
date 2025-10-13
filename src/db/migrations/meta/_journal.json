@@ -120,6 +120,34 @@
       "when": 1755865421734,
       "tag": "0016_2025_08_22_172329__events_table_update_and_create_event_users_table",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1756289562425,
+      "tag": "0017_2025_08_27_151240__add_email_temapltes_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1757694148533,
+      "tag": "0018_2025_09_12_212225__update_space_file_directory",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1758041330249,
+      "tag": "0019_2025_09_16_214843__update_notifcation_table_column",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1759317885751,
+      "tag": "0020_2025_10_01_162442__update_channel_and_space_user_table",
+      "breakpoints": true
     }
   ]
 }

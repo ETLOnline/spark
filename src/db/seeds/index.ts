@@ -5,12 +5,13 @@ import { PermissionsSeed } from "./PermissionsSeed"
 import { RolePermissionsSeed } from "./RolePermissionsSeed"
 import { TagSeed } from "./TagsSeeder"
 import { CommunityCategorySeed } from "./CommunityCategories"
-import { NewRolePermissions } from "./NewRolePermissions"
 import { CommunityUserListRolePermission } from "./CommunityUserListRolePermission"
 import { NewTagsSeed } from "./NewTagsSeeder"
 import { CheckRolePermissionMismatch } from "./CheckRolePermissionMismatch"
 import { SyncRolePermissionsSeeder } from "./SyncScopedPermissions"
 import { siteSettingsSeed } from "./SiteSettingsSeed"
+import { UpdateRoleTable } from "./UpdateRolesTable"
+import { EmailTemplatesSeed } from "./EmailTemplatesSeed"
 
 const SEEDERS: Record<string, () => Promise<void>> = {
   FeatureSeed,
@@ -20,12 +21,13 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   RolePermissionsSeed,
   UserSeed,
   CommunityCategorySeed,
-  NewRolePermissions,
+  UpdateRoleTable,
   CommunityUserListRolePermission,
   NewTagsSeed,
   CheckRolePermissionMismatch,
   SyncRolePermissionsSeeder,
-  siteSettingsSeed
+  siteSettingsSeed,
+  EmailTemplatesSeed
 }
 
 async function runSeeders() {
@@ -33,11 +35,12 @@ async function runSeeders() {
     const args = process.argv.slice(2)
     const excludedSeeders = [
       "UserSeed",
-      "NewRolePermissions",
+      "UpdateRoleTable",
       "CommunityUserListRolePermission",
       "NewTagsSeed",
       "CheckRolePermissionMismatch",
-      "SyncRolePermissionsSeeder"
+      "SyncRolePermissionsSeeder",
+      "EmailTemplatesSeed"
     ]
 
     const seederNames =

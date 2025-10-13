@@ -5,7 +5,9 @@ import {
   pgTable,
   primaryKey,
   varchar,
-  json
+  json,
+  boolean,
+  text
 } from "drizzle-orm/pg-core"
 // import { integer, primaryKey, pgTable, varchar } from "drizzle-orm/sqlite-core"
 
@@ -474,12 +476,11 @@ export const notificationsTable = pgTable("notifications", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   created_by: varchar().notNull(),
   received_by: varchar().notNull(),
-  type: varchar().notNull(),
-  link: varchar(),
+  title: varchar().notNull(),
+  body: varchar().notNull(),
+  deep_link: varchar().notNull(),
+  icon: varchar(),
   is_read: integer().notNull().default(0),
-  counter: integer().notNull().default(0),
-  entity_id: varchar(),
-  entity_type: varchar().notNull(),
   ...timestamps
 })
 
@@ -888,6 +889,7 @@ export const spaceFileDirectoryTable = pgTable("space_file_directory", {
   space_id: varchar(),
   entity_name: varchar().notNull(),
   entity_type: varchar().notNull(),
+  entity_slug: varchar(),
   entity_id: integer(),
   entity_size: integer(),
   parent_id: integer(),
@@ -917,6 +919,9 @@ export const SpaceUsersTable = pgTable("space_users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   space_id: varchar().notNull(),
   user_id: varchar().notNull(),
+  channel_user_id: integer().references(() => ChannelUsersTable.id, {
+    onDelete: "cascade"
+  }),
   role: varchar().default("member"),
   status: varchar().default("active")
 })
@@ -944,6 +949,9 @@ export const ChannelUsersTable = pgTable("channel_users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   channel_id: varchar().notNull(),
   user_id: varchar().notNull(),
+  community_user_id: varchar().references(() => communityUsersTable.id, {
+    onDelete: "cascade"
+  }),
   role: varchar().default("member"),
   status: varchar().default("active")
 })
@@ -1027,6 +1035,7 @@ export type InsertTask = typeof taskTable.$inferInsert
 export type SelectTask = typeof taskTable.$inferSelect & {
   assignee?: SelectUser | null
   assignor?: SelectUser | null
+  status?: InferSelectModel<typeof TaskStatusTable> | null
 }
 
 export const taskRelations = relations(taskTable, ({ one }) => ({
@@ -1039,6 +1048,11 @@ export const taskRelations = relations(taskTable, ({ one }) => ({
     fields: [taskTable.assign_by],
     references: [usersTable.unique_id],
     relationName: "taskAssignor"
+  }),
+  status: one(TaskStatusTable, {
+    fields: [taskTable.status_id],
+    references: [TaskStatusTable.id],
+    relationName: "taskStatus"
   })
 }))
 
@@ -1078,6 +1092,12 @@ export const TaskStatusTable = pgTable("tasks_status", {
   status_slug: varchar(),
   ...timestamps
 })
+
+export const TaskStatusRelations = relations(TaskStatusTable, ({ many }) => ({
+  tasks: many(taskTable, {
+    relationName: "taskStatus"
+  })
+}))
 
 export type InsertTaskStatus = typeof TaskStatusTable.$inferInsert
 export type SelectTaskStatus = typeof TaskStatusTable.$inferSelect
@@ -1391,3 +1411,15 @@ export type SelectEventRegistration =
     event?: SelectEvent
     user?: SelectUser
   }
+
+export const emailTemplatesTable = pgTable("email_templates", {
+  unique_id: varchar("unique_id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+
+  subject: varchar("subject", { length: 255 }).notNull(),
+  body: text("body").notNull(),
+  isActive: boolean("is_active").default(true),
+  ...timestamps
+})

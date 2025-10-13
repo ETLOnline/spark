@@ -41,7 +41,7 @@ import {
   CardContent,
   CardFooter
 } from "@/src/components/ui/card"
-import { generateUrl, getPagePath } from "@/src/utils/helpers"
+import { generateUrl, getPagePath, getUserRole } from "@/src/utils/helpers"
 import EditProfileModal from "./edit-profile-modal"
 import { UpdateUserProfilePictureAction } from "@/src/server-actions/User/User"
 import { useServerAction } from "@/src/hooks/useServerAction"
@@ -265,9 +265,14 @@ export default function ProfileScreen({
         <div className="mt-16 flex flex-wrap justify-between items-center">
           <div className="flex flex-col items-start">
             <div className="flex items-center">
-              <h2 className="text-xl sm:text-2xl font-bold inline-flex items-center">
-                {displayUser.first_name} {displayUser.last_name}
-              </h2>
+              <div className="flex flex-col items-center gap-1 ">
+                <h2 className="text-xl sm:text-2xl font-bold inline-flex items-center">
+                  {displayUser.first_name} {displayUser.last_name}
+                </h2>
+                <p className="w-full text-sm text-muted-foreground">
+                  {getUserRole(displayUser)}
+                </p>
+              </div>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -305,7 +310,8 @@ export default function ProfileScreen({
           </div> */}
           </div>
 
-          {authUser?.unique_id === user?.unique_id ? null : (
+          {authUser === null ? null : authUser?.unique_id ===
+            user?.unique_id ? null : (
             <ProfileFollowActions user={user} />
           )}
         </div>
@@ -448,10 +454,12 @@ export default function ProfileScreen({
               </CardHeader>
               <CardContent>
                 <div className="flex items-start gap-3">
-                  <GraduationCap className="h-6 w-6 text-muted-foreground mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">{profile?.institute}</h4>
-                    <p className="text-sm text-muted-foreground">
+                  <GraduationCap className="h-6 w-6 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0 ">
+                    <h4 className="font-medium truncate">
+                      {profile?.institute}
+                    </h4>
+                    <p className="text-sm text-muted-foreground truncate">
                       {profile?.degree}
                     </p>
                     <div className="flex items-center gap-1 mt-1">

@@ -1,17 +1,47 @@
-import { eq } from "drizzle-orm"
+import { and, eq, isNull } from "drizzle-orm"
 import { db } from "../.."
 import { spaceFileDirectoryTable, filesTable } from "../../schema"
+import { space } from "postcss/lib/list"
 
-export async function CreateFolder(id: string | number, folderName: string) {
+export async function CreateFolder(
+  id: string | number,
+  folderName: string,
+  folderSlug: string
+) {
   return await db
     .insert(spaceFileDirectoryTable)
     .values({
       space_id: typeof id === "string" ? id : undefined,
       parent_id: typeof id === "number" ? id : undefined,
       entity_name: folderName,
-      entity_type: "folder"
+      entity_type: "folder",
+      entity_slug: folderSlug
     })
     .returning()
+}
+
+export const searchFoldersBySlug = async (
+  id: string | number,
+  folderSlug: string,
+  isRoot: boolean
+) => {
+  try {
+    const folder = await db
+      .select()
+      .from(spaceFileDirectoryTable)
+      .where(
+        and(
+          eq(spaceFileDirectoryTable.entity_slug, folderSlug),
+          isRoot
+            ? eq(spaceFileDirectoryTable.space_id, id as string)
+            : eq(spaceFileDirectoryTable.parent_id, id as number)
+        )
+      )
+
+    return folder
+  } catch (error) {
+    console.error("Error getting folder by slug:", error)
+  }
 }
 
 export async function CreateFile(

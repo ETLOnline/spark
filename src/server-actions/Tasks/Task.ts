@@ -27,10 +27,14 @@ import { getProjectById } from "@/src/db/data-access/project-management/query"
 import { getInitials } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import pusherServer from "@/src/services/realtime/pusherServer"
+import { createTaskNotification } from "@/src/services/notify/task/task"
 import {
   base64ToBuffer,
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
+import { AuthUserAction } from "../User/AuthUserAction"
+import { SendTaskNotifications } from "@/src/services/notifications/Tasks/utils"
+import { NotificationEvent } from "@/src/services/notify/types/events"
 
 export const CreateTaskAction = CreateServerAction(
   true,
@@ -54,6 +58,10 @@ export const CreateTaskAction = CreateServerAction(
         "task-add",
         task
       )
+
+      if (task) {
+        await SendTaskNotifications("task_assigned", task, project)
+      }
 
       return { success: true, data: task }
     } catch (error) {
@@ -127,13 +135,30 @@ export const UpdateTaskAction = CreateServerAction(
     page_name?: string
   ) => {
     try {
+      const authUser = await AuthUserAction()
+
       const UpdatedTask = await UpdateTask(taskId, updatedData)
 
-      pusherServer.trigger(
-        `project-${UpdatedTask?.project_id}-tasks`,
-        "task-update",
-        UpdatedTask
-      )
+      const oldTask = await GetTaskById(taskId)
+
+      if (UpdatedTask) {
+        await SendTaskNotifications(NotificationEvent.UPDATE_TASK, UpdatedTask)
+      }
+
+      if (UpdatedTask && oldTask) {
+        pusherServer.trigger(
+          `project-${UpdatedTask?.project_id}-tasks`,
+          "task-update",
+          UpdatedTask
+        )
+        createTaskNotification(
+          NotificationEvent.UPDATE_TASK,
+          UpdatedTask,
+          oldTask
+        )
+
+        return { success: true, data: UpdatedTask }
+      }
 
       return { success: true, data: UpdatedTask }
     } catch (error) {
@@ -146,6 +171,8 @@ export const UpdateTasksSprintAction = CreateServerAction(
   true,
   async (task_ids: string[], sprint_id: string) => {
     try {
+      const AuthUser = await AuthUserAction()
+
       const updatedTasks = await UpdateTasksSprint(task_ids, sprint_id)
 
       return { success: true, data: updatedTasks }
@@ -242,7 +269,13 @@ export const CreateTaskCommentAction = CreateServerAction(
         content: content
       }
 
+      const task = await GetTaskById(task_id)
+
       const newComment = await createTaskComment(commentData)
+
+      if (task) {
+        await SendTaskNotifications("task_commented", task)
+      }
 
       if (newComment) {
         return { success: true, data: newComment }
