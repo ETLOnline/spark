@@ -99,12 +99,19 @@ function EditEducationModal({ user, profile, setprofile }: Props) {
   const isChanged = form.formState.isDirty
 
   useEffect(() => {
-    if (profile || isDialogOpen) {
+    if (profile) {
       form.reset({
         degree: profile.degree || "",
         institute: profile.institute || "",
         duration_from: profile.education_start_date || "",
         duration_to: profile.education_end_date || ""
+      })
+    } else {
+      form.reset({
+        degree: "",
+        institute: "",
+        duration_from: "",
+        duration_to: ""
       })
     }
   }, [profile, isDialogOpen])
