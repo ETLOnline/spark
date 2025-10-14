@@ -115,7 +115,10 @@ function SprintBoard() {
 
   useEffect(() => {
     const fetchSprints = async () => {
-      const Sprints = await GetSprints(projectId)
+      const Sprints = await GetSprints({
+        projectId: projectId,
+        status: ["active"]
+      })
       if (Sprints?.success && Sprints.data) {
         setSprintList(Sprints.data)
       }
@@ -143,27 +146,24 @@ function SprintBoard() {
         <div className="flex items-center justify-center">
           <Loader size={LoaderSizes.lg} />
         </div>
-      ) : sprintList.filter((s) => s.sprint_status === "active").length ===
-        0 ? (
+      ) : sprintList.length === 0 ? (
         <NoDataCard
           title="No Active Sprint"
           description="There are no active sprints for this project. Create and active a new sprint to get started."
           icon={<Kanban />}
         />
       ) : (
-        sprintList
-          .filter((s) => s.sprint_status === "active")
-          .map((sprint) => (
-            <SprintBoardCard
-              sprint={sprint}
-              key={sprint.id}
-              tasks={tasks}
-              isTaskModalOpen={isTaskModalOpen}
-              setIsTaskModalOpen={setIsTaskModalOpen}
-              selectedTask={selectedTask}
-              setSelectedTask={setSelectedTask}
-            />
-          ))
+        sprintList.map((sprint) => (
+          <SprintBoardCard
+            sprint={sprint}
+            key={sprint.id}
+            tasks={tasks}
+            isTaskModalOpen={isTaskModalOpen}
+            setIsTaskModalOpen={setIsTaskModalOpen}
+            selectedTask={selectedTask}
+            setSelectedTask={setSelectedTask}
+          />
+        ))
       )}
 
       <TaskModal

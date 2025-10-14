@@ -63,13 +63,14 @@ export default function TaskMoveDialog({
 
   const projectId = useParams().id as string
 
-  const filteredSprints = sprintList.filter(
-    (s) => s.id !== currSprintId && s.sprint_status !== "closed"
-  )
+  const filteredSprints = sprintList.filter((s) => s.id !== currSprintId)
 
   useEffect(() => {
     const fetchSprints = async () => {
-      const Sprints = await GetSprints(projectId)
+      const Sprints = await GetSprints({
+        projectId: projectId,
+        status: ["active", "upcoming"]
+      })
       if (Sprints?.success && Sprints.data) {
         setSprintList(Sprints.data)
       }
@@ -79,7 +80,11 @@ export default function TaskMoveDialog({
 
   const handleMoveTask = async () => {
     if (selectedSprint) {
-      const updatedTask = await UpdateTask(task_ids, selectedSprint)
+      const updatedTask = await UpdateTask(
+        task_ids,
+        selectedSprint,
+        currSprintId
+      )
       if (updatedTask?.success && updatedTask.data) {
         if (setTasks) {
           setTasks((prevTasks) =>
@@ -106,7 +111,6 @@ export default function TaskMoveDialog({
     if (!updatedTask?.success || !updatedTask.data) return
 
     if (setTasks) {
-      console.log(updatedTask.data)
       setTasks((prevTasks) =>
         prevTasks.map((t) => {
           const updated = updatedTask.data.find((ut) => ut?.id === t.id)
@@ -136,7 +140,6 @@ export default function TaskMoveDialog({
     if (!updatedTask?.success || !updatedTask.data) return
 
     if (setTasks) {
-      console.log(updatedTask.data)
       setTasks((prevTasks) =>
         prevTasks.map((t) => {
           const updated = updatedTask.data.find((ut) => ut?.id === t.id)
