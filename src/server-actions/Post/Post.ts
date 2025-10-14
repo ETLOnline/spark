@@ -24,6 +24,9 @@ import {
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
 import { CreateFilePostParams } from "@/src/services/storage/types/interface"
+import { NotificationEvent } from "@/src/services/notify/types/events"
+import { SendPostLikeOrCommentNotification } from "@/src/services/notifications/Post/utlis"
+import { GetSpaceById } from "@/src/db/data-access/spaces/query"
 
 export const CreatePostAction = CreateServerAction(
   true,
@@ -158,7 +161,7 @@ export const CreatePollPostAction = CreateServerAction(
 
 export const ToggleLikeAction = CreateServerAction(
   true,
-  async (postId: string, isLiked: boolean, likes: number) => {
+  async (postId: string, isLiked: boolean, likes: number, space_id?: string) => {
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
@@ -167,6 +170,15 @@ export const ToggleLikeAction = CreateServerAction(
           return { success: true, data }
         } else {
           const data = await LikePost(postId, userId, likes)
+          const PostWithAuther = await GetPostByIdAction(data.id)
+          if (PostWithAuther.success && PostWithAuther.data) {
+            const space = await GetSpaceById(space_id || "")
+            SendPostLikeOrCommentNotification(
+              NotificationEvent.POST_LIKE,
+              PostWithAuther.data,
+              space
+            )
+          }
           return { success: true, data }
         }
       } else {
@@ -183,7 +195,7 @@ export const ToggleLikeAction = CreateServerAction(
 
 export const CreateCommentAction = CreateServerAction(
   true,
-  async (postId: string, content: string, comments: number) => {
+  async (postId: string, content: string, comments: number, space_id?:string) => {
     try {
       const user = await AuthUserAction()
       if (user?.unique_id) {
@@ -195,6 +207,15 @@ export const CreateCommentAction = CreateServerAction(
           },
           comments
         )
+        const PostWithAuther = await GetPostByIdAction(postId)
+        if (PostWithAuther.success && PostWithAuther.data) {
+          const space = await GetSpaceById(space_id || "")
+          SendPostLikeOrCommentNotification(
+            NotificationEvent.POST_COMMENT,
+            PostWithAuther.data,
+            space
+          )
+        }
         return { success: true, data: { ...commentData, commentor: user } }
       } else {
         throw new Error("Unauthorized", { cause: 401 })
