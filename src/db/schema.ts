@@ -1038,7 +1038,7 @@ export type SelectTask = typeof taskTable.$inferSelect & {
   status?: InferSelectModel<typeof TaskStatusTable> | null
 }
 
-export const taskRelations = relations(taskTable, ({ one }) => ({
+export const taskRelations = relations(taskTable, ({ one, many }) => ({
   assignee: one(usersTable, {
     fields: [taskTable.assign_to],
     references: [usersTable.unique_id],
@@ -1053,6 +1053,9 @@ export const taskRelations = relations(taskTable, ({ one }) => ({
     fields: [taskTable.status_id],
     references: [TaskStatusTable.id],
     relationName: "taskStatus"
+  }),
+  burnDowns: many(sprintBurnDownTable, {
+    relationName: "taskToBurnDown"
   })
 }))
 
@@ -1113,6 +1116,12 @@ export const SprintTable = pgTable("sprints", {
   sprint_status: varchar(),
   ...timestamps
 })
+
+export const SprintRelations = relations(SprintTable, ({ many }) => ({
+  burnDowns: many(sprintBurnDownTable, {
+    relationName: "sprintToBurnDown"
+  })
+}))
 
 export type InsertSprint = typeof SprintTable.$inferInsert
 export type SelectSprint = typeof SprintTable.$inferSelect
@@ -1423,3 +1432,49 @@ export const emailTemplatesTable = pgTable("email_templates", {
   isActive: boolean("is_active").default(true),
   ...timestamps
 })
+
+export const sprintBurnDownTable = pgTable("sprint_burndown", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  sprint_id: varchar().notNull(),
+  task_id: varchar(),
+  total_tasks: integer().notNull().default(0),
+  completed_tasks: integer().notNull().default(0),
+  total_story_points: integer().notNull().default(0),
+  ...timestamps
+})
+
+export const sprintBurnDownRelations = relations(
+  sprintBurnDownTable,
+  ({ one }) => ({
+    sprint: one(SprintTable, {
+      fields: [sprintBurnDownTable.sprint_id],
+      references: [SprintTable.id],
+      relationName: "sprintToBurnDown"
+    }),
+    task: one(taskTable, {
+      fields: [sprintBurnDownTable.task_id],
+      references: [taskTable.id],
+      relationName: "taskToBurnDown"
+    })
+  })
+)
+export type InsertSprintBurnDown = typeof sprintBurnDownTable.$inferInsert
+export type SelectSprintBurnDown = typeof sprintBurnDownTable.$inferSelect & {
+  sprint?: SelectSprint
+  task?: SelectTask
+  user?: SelectUser
+}
+
+export const projectRecentActivityTable = pgTable("project_recent_activity", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  project_id: varchar().notNull(),
+  icon: varchar().notNull(),
+  activity: varchar().notNull(),
+  deep_link: varchar().notNull(),
+  ...timestamps
+})
+
+export type InsertProjectRecentActivity =
+  typeof projectRecentActivityTable.$inferInsert
+export type SelectProjectRecentActivity =
+  typeof projectRecentActivityTable.$inferSelect

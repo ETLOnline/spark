@@ -148,6 +148,13 @@
       "when": 1759317885751,
       "tag": "0020_2025_10_01_162442__update_channel_and_space_user_table",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1760023196481,
+      "tag": "0021_2025_10_09_201952__create_sprint_burn_down_and_project_recent_activity_table",
+      "breakpoints": true
     }
   ]
 }

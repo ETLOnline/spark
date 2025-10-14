@@ -445,7 +445,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
               <div className="grid gap-4 py-4 ">
                 <div className="flex flex-col">
                   <div className="flex flex-col gap-2 justify-between">
-                    <Label htmlFor="title">Enter event name</Label>
+                    <Label htmlFor="title">Enter Event Name</Label>
                     <Controller
                       name="title"
                       control={form.control}

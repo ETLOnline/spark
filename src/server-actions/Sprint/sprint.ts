@@ -1,14 +1,19 @@
 "use server"
 import {
+  addSprintBurnDown,
   CreateSprint,
   DeleteSprint,
+  getSprintBurnDown,
   getSprints,
   sprintCount,
+  sprintQueryFilters,
   UpdateSprint
 } from "@/src/db/data-access/sprints/query"
 import { CreateServerAction } from ".."
 import { SelectSprint } from "@/src/db/schema"
 import pusherServer from "@/src/services/realtime/pusherServer"
+import { GetTasks } from "@/src/db/data-access/tasks/query"
+import { AuthUserAction } from "../User/AuthUserAction"
 
 export const CreateSprintAction = CreateServerAction(
   true,
@@ -31,9 +36,9 @@ export const CreateSprintAction = CreateServerAction(
 
 export const GetSprintAction = CreateServerAction(
   true,
-  async (projectId: string) => {
+  async (filters?: sprintQueryFilters) => {
     try {
-      const sprints = await getSprints(projectId)
+      const sprints = await getSprints({ ...filters })
 
       return { success: true, data: sprints }
     } catch (error) {
@@ -90,6 +95,18 @@ export const GetSprintCountAction = CreateServerAction(
     try {
       const sprints = await sprintCount(projectId)
       return { success: true, data: sprints }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const getSprintBurnDownAction = CreateServerAction(
+  true,
+  async (sprintId: string) => {
+    try {
+      const sprint = await getSprintBurnDown(sprintId)
+      return { success: true, data: sprint }
     } catch (error) {
       return { error: error }
     }

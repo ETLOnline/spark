@@ -94,11 +94,7 @@ const useTaskHook = ({
           assign_to: data.assign_to || null,
           assign_by: data.assign_by || authUser?.unique_id
         }
-        const updatedTask = await UpdateTask(
-          selectedTask?.id,
-          payload,
-          pageName
-        )
+        const updatedTask = await UpdateTask(selectedTask?.id, payload)
         if (updatedTask?.success && updatedTask.data) {
           if (onUpdateComplete) {
             onUpdateComplete(updatedTask?.data)
