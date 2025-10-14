@@ -64,7 +64,7 @@ const FilePost: React.FC<Props> = ({ post, spaceId }) => {
         />
         <Separator />
         <PostCommentsSection comments={post.postComments || []} />
-        <PostCommentForm postId={post.id} comments={post.comments} />
+        <PostCommentForm postId={post.id} comments={post.comments} spaceId={spaceId}/>
       </CardFooter>
     </>
   )
