@@ -88,9 +88,9 @@ function ProjectOverView() {
 
   const getTeamMembers = async (projectId: string) => {
     try {
-      const res = await getTeamUsers(projectId)
+      const res = await getTeamUsers(projectId, 3, true)
       if (res?.success && res.data) {
-        setMembersCount(res.data.count)
+        setMembersCount(res.data.totalMembersCount)
         setMembersProfileUrl(res.data.usersProfileUrl)
       }
     } catch (error) {

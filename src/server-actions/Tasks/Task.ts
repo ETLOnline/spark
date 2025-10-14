@@ -206,7 +206,6 @@ export const UpdateTasksSprintAction = CreateServerAction(
         sprint_id || "",
         oldSprintId
       )
-      console.log("Updated Tasks: ", oldSprintId)
 
       return { success: true, data: updatedTasks }
     } catch (error) {

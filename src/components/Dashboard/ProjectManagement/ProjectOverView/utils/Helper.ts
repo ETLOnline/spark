@@ -68,3 +68,7 @@ export function calculateYAxisTicks(
 
   return Array.from({ length: numberOfTicks }, (_, i) => i * step)
 }
+
+export function formatDate(dateString: string) {
+  return moment(dateString ?? "").format("YYYY-MM-DD")
+}

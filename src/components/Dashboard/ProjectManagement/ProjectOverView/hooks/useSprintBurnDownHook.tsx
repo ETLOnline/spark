@@ -3,7 +3,7 @@ import { getSprintBurnDownAction } from "@/src/server-actions/Sprint/sprint"
 import { eachDayOfInterval, format } from "date-fns"
 import moment from "moment"
 import { useEffect, useState } from "react"
-import { generateBenchmarkData } from "../utils/Helper"
+import { formatDate, generateBenchmarkData } from "../utils/Helper"
 
 interface Props {
   sprintId: string
@@ -52,7 +52,7 @@ function useSprintBurnDownHook({ sprintId, sprintStart, sprintEnd }: Props) {
       const allDays = eachDayOfInterval({
         start: startDate.toDate(),
         end: endDate.toDate()
-      }).map((d) => format(d, "yyyy-MM-dd"))
+      }).map((d) => formatDate(String(d)))
 
       const dayMap: Record<
         string,
@@ -60,7 +60,7 @@ function useSprintBurnDownHook({ sprintId, sprintStart, sprintEnd }: Props) {
       > = {}
 
       for (const ev of events) {
-        const dayKey = moment(ev.created_at ?? "").format("YYYY-MM-DD")
+        const dayKey = formatDate(ev.created_at ?? "")
         const fullDay = moment(ev.created_at ?? "").format("YYYY-MM-DD HH:mm")
         const remainingTasks = (ev.total_tasks || 0) - (ev.completed_tasks || 0)
         const storyPoints = ev.total_story_points ?? 0
@@ -82,9 +82,7 @@ function useSprintBurnDownHook({ sprintId, sprintStart, sprintEnd }: Props) {
         fullDate: string
       }[] = []
 
-      const eventDays = events.map((ev) =>
-        moment(ev.created_at ?? "").format("YYYY-MM-DD")
-      )
+      const eventDays = events.map((ev) => formatDate(ev.created_at ?? ""))
       const firstEventDay = eventDays[0]
       const lastEventDay = eventDays[eventDays.length - 1]
 

@@ -148,9 +148,27 @@ export async function getProjectUsers(projectId: string) {
   }
 }
 
-export async function getProjectUserCountAndProfileUrl(projectId: string) {
+export async function getProjectMembersCount(projectId: string) {
   try {
-    const projectUsers = await db.query.ProjectUsersTable.findMany({
+    const totalMembers = await db.$count(
+      ProjectUsersTable,
+      eq(ProjectUsersTable.project_id, projectId)
+    )
+
+    return totalMembers
+  } catch (error: any) {
+    console.error("Error fetching project users:", error)
+    throw new Error(error.message)
+  }
+}
+
+export async function getProjectusersProfileUrl(
+  projectId: string,
+  limit?: number,
+  isRendom?: boolean
+) {
+  try {
+    const usersProfileUrls = await db.query.ProjectUsersTable.findMany({
       with: {
         user: {
           columns: {
@@ -159,21 +177,12 @@ export async function getProjectUserCountAndProfileUrl(projectId: string) {
         }
       },
       where: eq(ProjectUsersTable.project_id, projectId),
-      orderBy: sql`RANDOM()`,
-      limit: 4
+      limit: limit,
+      orderBy: isRendom ? sql`random()` : undefined
     })
 
-    const count = await db.$count(
-      ProjectUsersTable,
-      eq(ProjectUsersTable.project_id, projectId)
-    )
-
-    return {
-      count,
-      usersProfileUrl: projectUsers.map((pu) => pu.user?.profile_url)
-    }
+    return usersProfileUrls.map((user) => user.user.profile_url)
   } catch (error: any) {
-    console.error("Error fetching project users:", error)
     throw new Error(error.message)
   }
 }
