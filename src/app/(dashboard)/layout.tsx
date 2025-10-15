@@ -5,7 +5,6 @@ import Header from "@/src/components/Dashboard/header"
 import { SidebarInset, SidebarProvider } from "@/src/components/ui/sidebar"
 import { checkUserPersonaCompletion, isSuperAdmin } from "@/src/utils/helpers"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import NotificationProvider from "@/src/services/notifications/NotificationProvider"
 
 export default async function DashboardLayout({
   children
