@@ -39,7 +39,6 @@ export default async function DashboardLayout({
           {children}
         </div>
       </SidebarInset>
-      {/* <NotificationProvider /> */}
     </SidebarProvider>
   )
 }
