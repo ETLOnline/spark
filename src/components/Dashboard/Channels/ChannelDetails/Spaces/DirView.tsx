@@ -65,8 +65,13 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
     return []
   }
 
+  const spaceUserRole = currSpace?.users?.find(
+    (item) => item?.user_id === authUser?.unique_id
+  )?.role
+
   const canDeleteFile = (item: DirItem): boolean => {
     if (!authUser || !currSpace) return false
+    if (spaceUserRole === "Space Admin") return true
     return item.created_by === authUser.unique_id
   }
 

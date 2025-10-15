@@ -16,6 +16,7 @@ import { getStorageClient } from "@/src/services/storage/client/storage.client"
 import { db } from "@/src/db"
 import { spaceFileDirectoryTable } from "@/src/db/schema"
 import { eq } from "drizzle-orm"
+import { getSpaceUsers } from "@/src/db/data-access/spaces/query"
 
 export const CreateNewFolderAction = CreateServerAction(
   true,
@@ -140,7 +141,22 @@ export const DeleteFileAction = CreateServerAction(
           error: "File not found"
         }
       }
-      if (fileEntry.created_by !== user.unique_id) {
+
+      const spaceUsers = await getSpaceUsers(spaceId)
+
+      // Find the current user in the space
+      const spaceUser = spaceUsers.find((u) => u.user_id === user.unique_id)
+      if (!spaceUser) {
+        return {
+          success: false,
+          error: "You are not part of this space"
+        }
+      }
+
+      const isFileOwner = fileEntry.created_by === user.unique_id
+      const isSpaceAdmin = spaceUser.role === "Space Admin"
+
+      if (!isFileOwner && !isSpaceAdmin) {
         return {
           success: false,
           error: "You can only delete files that you uploaded"
