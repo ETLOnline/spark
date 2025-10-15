@@ -65,10 +65,13 @@ export default function NotificationProvider() {
   const requestPermission = async () => {
     setShouldRequestPermission(false)
     setIsOverlayOpen(true)
+
     const permission = await Notification.requestPermission()
-    if (permission !== "granted") {
-      console.warn("User denied or dismissed notification permission.")
-      return
+
+    if (permission === "granted") {
+      await enableNotifications()
+    } else if (permission === "denied" || permission === "default") {
+      setIsOverlayOpen(false)
     }
   }
 
@@ -100,7 +103,10 @@ export default function NotificationProvider() {
         open={shouldRequestPermission}
         onOpenChange={setShouldRequestPermission}
       >
-        <DialogContent>
+        <DialogContent
+          className="[&>button]:hidden"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Enable Notifications</DialogTitle>
             <DialogDescription>
