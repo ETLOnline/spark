@@ -18,8 +18,14 @@ import NotificationTourOverlay from "./NotificationTourOverlay"
 export default function NotificationProvider() {
   const [shouldRequestPermission, setShouldRequestPermission] = useState(false)
   const [isOverlayOpen, setIsOverlayOpen] = useState(false)
+  const [enableNotificationInProgress, setEnableNotificationInProgress] =
+    useState(false)
 
   const enableNotifications = async () => {
+    if (enableNotificationInProgress) return
+    setEnableNotificationInProgress(true)
+    console.log("Enabling notifications...")
+
     const user = await AuthUserAction()
     const userId = user?.unique_id
     if (!userId) return
@@ -36,29 +42,40 @@ export default function NotificationProvider() {
         return token
       }
     })
+    console.log("Notifications enabled!")
+    setEnableNotificationInProgress(false)
   }
 
-  const checkNotificationPermissions = async () => {
-    if (!("Notification" in window)) {
-      console.warn("Notifications not supported in this browser.")
-      return
-    }
+  const checkNotificationPermissions = async (updatedStatus?: string) => {
+    try {
+      const user = await AuthUserAction()
+      if (!user) return
 
-    if (Notification.permission === "denied") {
-      setShouldRequestPermission(false)
-      setIsOverlayOpen(false)
-      console.warn(
-        "User has blocked notifications. Skipping Beams registration."
-      )
-      return
-    }
+      if (Notification.permission === updatedStatus) return
 
-    if (Notification.permission === "granted") {
-      setShouldRequestPermission(false)
-      setIsOverlayOpen(false)
-      await enableNotifications()
-    } else {
-      setShouldRequestPermission(true)
+      if (!("Notification" in window)) {
+        console.warn("Notifications not supported in this browser.")
+        return
+      }
+
+      if (Notification.permission === "denied") {
+        setShouldRequestPermission(false)
+        setIsOverlayOpen(false)
+        console.warn(
+          "User has blocked notifications. Skipping Beams registration."
+        )
+        return
+      }
+
+      if (Notification.permission === "granted") {
+        setShouldRequestPermission(false)
+        setIsOverlayOpen(false)
+        await enableNotifications()
+      } else {
+        setShouldRequestPermission(true)
+      }
+    } catch (e) {
+      console.log(e)
     }
   }
 
@@ -70,9 +87,8 @@ export default function NotificationProvider() {
 
     if (permission === "granted") {
       await enableNotifications()
-    } else if (permission === "denied" || permission === "default") {
-      setIsOverlayOpen(false)
     }
+    setIsOverlayOpen(false)
   }
 
   useEffect(() => {
@@ -91,7 +107,7 @@ export default function NotificationProvider() {
               "Notification permission changed to",
               permissionStatus.state
             )
-            checkNotificationPermissions()
+            checkNotificationPermissions(permissionStatus.state)
           }
         })
     }

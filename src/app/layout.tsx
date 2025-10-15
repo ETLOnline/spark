@@ -8,6 +8,7 @@ import { dark } from "@clerk/themes"
 import AuthInitializer from "../services/auth/AuthInitializer"
 import { ScreenOverlayProvider } from "../hooks/useScreenOverlay"
 import NotificationProvider from "../services/notifications/NotificationProvider"
+import { Suspense } from "react"
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -43,7 +44,9 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <Toaster />
-            <NotificationProvider />
+            <Suspense>
+              <NotificationProvider />
+            </Suspense>
             <ScreenOverlayProvider>{children}</ScreenOverlayProvider>
           </ThemeProvider>
         </body>
