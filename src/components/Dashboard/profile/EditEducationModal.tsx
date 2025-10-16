@@ -35,6 +35,7 @@ const userQualificationSchema = z
 
     duration_from: z
       .string()
+      .min(4, "Start year required")
       .refine((val) => moment(val, "YYYY", true).isValid(), {
         message: "Invalid start year"
       })
@@ -47,15 +48,22 @@ const userQualificationSchema = z
 
     duration_to: z
       .string()
+      .min(4, "End year required")
       .refine((val) => moment(val, "YYYY", true).isValid(), {
         message: "Invalid end year"
       })
   })
   .refine(
     (data) => {
-      const start = moment(data.duration_from)
-      const end = moment(data.duration_to)
-      return start < end
+      if (
+        !data.duration_to ||
+        data.duration_to.trim() === "" ||
+        !moment(data.duration_to, "YYYY", true).isValid()
+      )
+        return true
+      const start = moment(data.duration_from, "YYYY", true)
+      const end = moment(data.duration_to, "YYYY", true)
+      return start.isBefore(end)
     },
     {
       message: "Start year must be before end year",
@@ -91,12 +99,19 @@ function EditEducationModal({ user, profile, setprofile }: Props) {
   const isChanged = form.formState.isDirty
 
   useEffect(() => {
-    if (profile || isDialogOpen) {
+    if (profile) {
       form.reset({
         degree: profile.degree || "",
         institute: profile.institute || "",
         duration_from: profile.education_start_date || "",
         duration_to: profile.education_end_date || ""
+      })
+    } else {
+      form.reset({
+        degree: "",
+        institute: "",
+        duration_from: "",
+        duration_to: ""
       })
     }
   }, [profile, isDialogOpen])
@@ -149,6 +164,14 @@ function EditEducationModal({ user, profile, setprofile }: Props) {
       handleClose(false)
     }
   }
+  const startYear = form.watch("duration_from")
+  const endYear = form.watch("duration_to")
+  useEffect(() => {
+    if (startYear || endYear) {
+      form.trigger("duration_from")
+      form.trigger("duration_to")
+    }
+  }, [startYear, endYear, form])
 
   return (
     <>

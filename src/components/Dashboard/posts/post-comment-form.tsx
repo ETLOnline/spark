@@ -13,11 +13,13 @@ import { SelectComment } from "@/src/db/schema"
 type PostCommentFormProps = {
   postId: string
   comments: number
+  spaceId?:string
 }
 
 const PostCommentForm: React.FC<PostCommentFormProps> = ({
   postId,
-  comments
+  comments,
+  spaceId
 }) => {
   const commentText = useRef<string>("")
   const commentInput = useRef<HTMLInputElement>(null)
@@ -52,7 +54,8 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
       const response = await createComment(
         postId,
         commentText.current,
-        comments
+        comments,
+        spaceId
       )
       if (response?.data) {
         const addedComment = response.data
