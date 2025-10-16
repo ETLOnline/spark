@@ -38,7 +38,6 @@ interface Props {
 
 const InviteScreen = ({ entityType, entity }: Props) => {
   const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
-  const [alreadyMember, setAlreadyMember] = useState<boolean>(false)
   const [isCheckingMember, setIsCheckingMember] = useState<boolean>(true)
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
@@ -78,16 +77,16 @@ const InviteScreen = ({ entityType, entity }: Props) => {
     useServerAction(AttachSpaceUserAction)
 
   const [navigate, setNavigate] = useState(false)
+  const isUser = isEntityUser(entity, authUser?.unique_id ?? "")
+
   useEffect(() => {
-    const isUser = isEntityUser(entity, authUser?.unique_id ?? "")
+    if (isUser) setNavigate(true)
+    const timer = setTimeout(() => {
+      setIsCheckingMember(false)
+    }, 3000)
 
-    setAlreadyMember(isUser)
-    setIsCheckingMember(false)
-
-    if (isUser) {
-      setNavigate(true)
-    }
-  }, [entity, authUser?.unique_id])
+    return () => clearTimeout(timer)
+  }, [entity, authUser?.unique_id, isUser])
 
   useEffect(() => {
     if (navigate) {
@@ -108,7 +107,7 @@ const InviteScreen = ({ entityType, entity }: Props) => {
   }, [navigate])
 
   const handleJoin = async () => {
-    if (isLoading || alreadyMember) return
+    if (isLoading) return
     setIsLoading(true)
     if (authUser?.unique_id && entity.id) {
       try {
@@ -187,18 +186,16 @@ const InviteScreen = ({ entityType, entity }: Props) => {
         <CardFooter className="flex flex-col sm:flex-row gap-3">
           <Button
             loading={isLoading || isCheckingMember}
-            disabled={isLoading || isCheckingMember || alreadyMember}
+            disabled={isLoading || isCheckingMember}
             className="w-full sm:w-auto"
             onClick={handleJoin}
           >
             {isCheckingMember
               ? "Checking..."
-              : alreadyMember
-                ? "Already joined"
-                : isLoading
-                  ? "Joining..."
-                  : "Continue to Join"}
-            {!alreadyMember && !isCheckingMember && !isLoading && (
+              : isLoading
+                ? "Joining..."
+                : "Continue to Join"}
+            {!isCheckingMember && !isLoading && (
               <ArrowRight className="ml-2 h-4 w-4" />
             )}
           </Button>
