@@ -29,6 +29,7 @@ import { AttachSpaceUserAction } from "@/src/server-actions/Space/Space"
 import { useRouter } from "next/navigation"
 import { useAuthUser } from "@/src/hooks/useAuthUser"
 import { AttachCommunityUserAction } from "@/src/server-actions/Community/Community"
+import { isEntityUser } from "@/src/utils/clientHelper"
 
 interface Props {
   entityType: "channel" | "space" | "community"
@@ -37,6 +38,10 @@ interface Props {
 
 const InviteScreen = ({ entityType, entity }: Props) => {
   const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
+  const [alreadyMember, setAlreadyMember] = useState<boolean>(false)
+  const [isCheckingMember, setIsCheckingMember] = useState<boolean>(true)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+
   const entityName = isEntityCommunity(entity)
     ? entity.title
     : isEntityChannel(entity)
@@ -73,6 +78,16 @@ const InviteScreen = ({ entityType, entity }: Props) => {
     useServerAction(AttachSpaceUserAction)
 
   const [navigate, setNavigate] = useState(false)
+  useEffect(() => {
+    const isUser = isEntityUser(entity, authUser?.unique_id ?? "")
+
+    setAlreadyMember(isUser)
+    setIsCheckingMember(false)
+
+    if (isUser) {
+      setNavigate(true)
+    }
+  }, [entity, authUser?.unique_id])
 
   useEffect(() => {
     if (navigate) {
@@ -93,6 +108,8 @@ const InviteScreen = ({ entityType, entity }: Props) => {
   }, [navigate])
 
   const handleJoin = async () => {
+    if (isLoading || alreadyMember) return
+    setIsLoading(true)
     if (authUser?.unique_id && entity.id) {
       try {
         if (isEntityCommunity(entity)) {
@@ -107,8 +124,8 @@ const InviteScreen = ({ entityType, entity }: Props) => {
           await attachSpaceUser(entity.id, authUser.unique_id)
         }
         await refreshAuthUser()
-        setNavigate(true)
 
+        setNavigate(true)
         toast({
           title: `Successfully joined ${entityType}`,
           description: `You have successfully joined the ${entityType}.`,
@@ -121,10 +138,10 @@ const InviteScreen = ({ entityType, entity }: Props) => {
           description: `An error occurred while trying to join the ${entityType}.`,
           variant: "destructive"
         })
+        setIsLoading(false)
       }
     }
   }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-md">
@@ -169,13 +186,21 @@ const InviteScreen = ({ entityType, entity }: Props) => {
 
         <CardFooter className="flex flex-col sm:flex-row gap-3">
           <Button
-            loading={loadingChannelAttach || loadingSpaceAttach}
-            disabled={loadingChannelAttach || loadingSpaceAttach}
+            loading={isLoading || isCheckingMember}
+            disabled={isLoading || isCheckingMember || alreadyMember}
             className="w-full sm:w-auto"
             onClick={handleJoin}
           >
-            Continue to Join
-            <ArrowRight className="ml-2 h-4 w-4" />
+            {isCheckingMember
+              ? "Checking..."
+              : alreadyMember
+                ? "Already joined"
+                : isLoading
+                  ? "Joining..."
+                  : "Continue to Join"}
+            {!alreadyMember && !isCheckingMember && !isLoading && (
+              <ArrowRight className="ml-2 h-4 w-4" />
+            )}
           </Button>
         </CardFooter>
       </Card>

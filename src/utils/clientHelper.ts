@@ -1,5 +1,6 @@
 import { CommunityDetailData } from "../db/data-access/communities/query"
-import { SelectChannel, SelectSpace } from "../db/schema"
+import { SelectChannel, SelectCommunity, SelectSpace } from "../db/schema"
+import { isEntityChannel, isEntityCommunity, isEntitySpace } from "./helpers"
 
 export type RawUserPerms = {
   global?: string[]
@@ -81,14 +82,26 @@ export function buildUserPerms(rows: RawPermissionRow[]): UserPerms {
 
 // Entity is channel or space or community
 export function isEntityUser(
-  entity: SelectChannel | SelectSpace | CommunityDetailData,
+  entity: SelectChannel | SelectSpace | SelectCommunity | CommunityDetailData,
   currentUserId: string
 ): boolean {
-  return (
-    entity?.users?.some(
-      (u: { user_id: string }) => u.user_id === currentUserId
-    ) ?? false
-  )
+  if (isEntityChannel(entity) || isEntitySpace(entity) || "users" in entity) {
+    return (
+      entity.users?.some(
+        (u: { user_id: string }) => u.user_id === currentUserId
+      ) ?? false
+    )
+  }
+
+  if (isEntityCommunity(entity)) {
+    return (
+      entity.communityMembers?.some(
+        (m: { user_id: string }) => m.user_id === currentUserId
+      ) ?? false
+    )
+  }
+
+  return false
 }
 
 export function prepareTaskEmailData(task: any, oldTask: any) {
