@@ -32,9 +32,18 @@ interface StepOneProps {
 }
 
 const profileSchema = z.object({
-  first_name: z.string().min(1, "First Name Required").max(30, "Too Long"),
-  last_name: z.string().min(1, "Last Name Required").max(30, "Too Long"),
-  bio: z.string().min(1, "Bio Required"),
+  first_name: z
+    .string()
+    .min(1, "First Name Required")
+    .max(30, "Maximum 30 characters allowed"),
+  last_name: z
+    .string()
+    .min(1, "Last Name Required")
+    .max(30, "Maximum 30 characters allowed"),
+  bio: z
+    .string()
+    .min(1, "Bio Required")
+    .max(2000, "Maximum 2000 characters allowed"),
   skill: z
     .array(z.string().min(1, "required"))
     .min(1, "At least one skill is required"),

@@ -5,5 +5,8 @@ export enum NotificationEvent {
   UPDATE_TASK = "update_task",
   TASK_ASSIGNED = "task_assigned",
   TASK_COMMENTED = "task_commented",
-  PROJECT_INVITE = "project_invite"
+  PROJECT_INVITE = "project_invite",
+  POST_LIKE = "post_like",
+  POST_COMMENT = "post_comment"
+
 }

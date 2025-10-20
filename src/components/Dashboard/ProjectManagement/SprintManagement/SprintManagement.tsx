@@ -61,7 +61,10 @@ export function SprintManagement() {
   // Get Sprints
   useEffect(() => {
     const fetchSprints = async () => {
-      const Sprints = await GetSprints(projectId)
+      const Sprints = await GetSprints({
+        projectId: projectId,
+        status: ["active", "upcoming"]
+      })
       if (Sprints?.success && Sprints.data) {
         setSprintList(Sprints.data)
       }
@@ -203,21 +206,19 @@ export function SprintManagement() {
             <Loader size={LoaderSizes.lg} />
           </div>
         ) : sprintList.length > 0 ? (
-          sprintList
-            .filter((s) => s.sprint_status !== "closed")
-            .map((sprint) => (
-              <SprintCardPage
-                key={sprint.id}
-                sprint={sprint}
-                tasks={tasks}
-                setSelectedTask={setSelectedTask}
-                isTaskModalOpen={isTaskModalOpen}
-                setIsTaskModalOpen={setIsTaskModalOpen}
-                setTasks={setTasks}
-                setSprintId={setSprintID}
-                getTaskLoading={getTaskLoading}
-              />
-            ))
+          sprintList.map((sprint) => (
+            <SprintCardPage
+              key={sprint.id}
+              sprint={sprint}
+              tasks={tasks}
+              setSelectedTask={setSelectedTask}
+              isTaskModalOpen={isTaskModalOpen}
+              setIsTaskModalOpen={setIsTaskModalOpen}
+              setTasks={setTasks}
+              setSprintId={setSprintID}
+              getTaskLoading={getTaskLoading}
+            />
+          ))
         ) : (
           <NoDataCard
             title="No Sprints Found"
