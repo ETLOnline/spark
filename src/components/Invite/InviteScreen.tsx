@@ -30,16 +30,40 @@ import { useRouter } from "next/navigation"
 import { useAuthUser } from "@/src/hooks/useAuthUser"
 import { AttachCommunityUserAction } from "@/src/server-actions/Community/Community"
 import { isEntityUser } from "@/src/utils/clientHelper"
+import Loader from "@/src/components/common/Loader/Loader"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
 
 interface Props {
   entityType: "channel" | "space" | "community"
   entity: SelectChannel | SelectSpace | SelectCommunity
 }
 
+const getEntityRedirectPath = (
+  entity: SelectChannel | SelectSpace | SelectCommunity
+) => {
+  if (isEntityCommunity(entity)) {
+    return `/communities/${entity.slug}`
+  }
+  if (isEntityChannel(entity)) {
+    return `/channels/${entity.channel_slug}/spaces`
+  }
+  if (isEntitySpace(entity)) {
+    return `/channels/${entity.channel?.channel_slug}/spaces/${entity.space_slug}`
+  }
+  return "/"
+}
+
 const InviteScreen = ({ entityType, entity }: Props) => {
-  const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
-  const [isCheckingMember, setIsCheckingMember] = useState<boolean>(true)
+  const { refreshAuthUser } = useAuthUser()
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [navigate, setNavigate] = useState(false)
+  const [hasCheckedMembership, setHasCheckedMembership] = useState(false)
+
+  const router = useRouter()
+  const authUser = useAtomValue(userStore.AuthUser)
+  const { toast } = useToast()
+
+  const isUserMember = isEntityUser(entity, authUser?.unique_id ?? "")
 
   const entityName = isEntityCommunity(entity)
     ? entity.title
@@ -62,9 +86,6 @@ const InviteScreen = ({ entityType, entity }: Props) => {
   const title = `Join ${entityName} ${entityType}`
   const description = `You have been invited to Join the ${entityType} to start collaborating.`
 
-  const { toast } = useToast()
-  const router = useRouter()
-  const authUser = useAtomValue(userStore.AuthUser)
   const [
     loadingCommunityAttach,
     ___,
@@ -76,35 +97,23 @@ const InviteScreen = ({ entityType, entity }: Props) => {
   const [loadingSpaceAttach, __, errorAttachingSpace, attachSpaceUser] =
     useServerAction(AttachSpaceUserAction)
 
-  const [navigate, setNavigate] = useState(false)
-  const isUser = isEntityUser(entity, authUser?.unique_id ?? "")
-
   useEffect(() => {
-    if (isUser) setNavigate(true)
-    const timer = setTimeout(() => {
-      setIsCheckingMember(false)
-    }, 3000)
-
-    return () => clearTimeout(timer)
-  }, [entity, authUser?.unique_id, isUser])
+    if (authUser?.unique_id) {
+      if (isUserMember) {
+        const path = getEntityRedirectPath(entity)
+        router.replace(path)
+      } else {
+        setHasCheckedMembership(true)
+      }
+    }
+  }, [isUserMember, entity, router, authUser])
 
   useEffect(() => {
     if (navigate) {
-      if (isEntityCommunity(entity)) {
-        router.push(
-          `/communities/${isEntityCommunity(entity) ? entity.slug : ""}`
-        )
-      } else if (isEntityChannel(entity)) {
-        router.push(
-          `/channels/${isEntityChannel(entity) ? entity.channel_slug : ""}/spaces`
-        )
-      } else {
-        router.push(
-          `/channels/${entity.channel?.channel_slug}/spaces/${isEntitySpace(entity) ? entity.space_slug : ""}`
-        )
-      }
+      const path = getEntityRedirectPath(entity)
+      router.push(path)
     }
-  }, [navigate])
+  }, [navigate, router, entity])
 
   const handleJoin = async () => {
     if (isLoading) return
@@ -141,6 +150,15 @@ const InviteScreen = ({ entityType, entity }: Props) => {
       }
     }
   }
+
+  if (!hasCheckedMembership || isUserMember) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+        <Loader size={LoaderSizes.xl} />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-md">
@@ -185,19 +203,13 @@ const InviteScreen = ({ entityType, entity }: Props) => {
 
         <CardFooter className="flex flex-col sm:flex-row gap-3">
           <Button
-            loading={isLoading || isCheckingMember}
-            disabled={isLoading || isCheckingMember}
+            loading={isLoading}
+            disabled={isLoading}
             className="w-full sm:w-auto"
             onClick={handleJoin}
           >
-            {isCheckingMember
-              ? "Checking..."
-              : isLoading
-                ? "Joining..."
-                : "Continue to Join"}
-            {!isCheckingMember && !isLoading && (
-              <ArrowRight className="ml-2 h-4 w-4" />
-            )}
+            {isLoading ? "Joining..." : "Continue to Join"}
+            {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
           </Button>
         </CardFooter>
       </Card>
