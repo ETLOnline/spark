@@ -141,22 +141,10 @@ export const DeleteFileAction = CreateServerAction(
           error: "File not found"
         }
       }
-
-      const spaceUsers = await getSpaceUsers(spaceId)
-
-      // Find the current user in the space
-      const spaceUser = spaceUsers.find((u) => u.user_id === user.unique_id)
-      if (!spaceUser) {
-        return {
-          success: false,
-          error: "You are not part of this space"
-        }
-      }
-
       const isFileOwner = fileEntry.created_by === user.unique_id
-      const isSpaceAdmin = spaceUser.role === "Space Admin"
 
-      if (!isFileOwner && !isSpaceAdmin) {
+
+      if (!isFileOwner) {
         return {
           success: false,
           error: "You can only delete files that you uploaded"

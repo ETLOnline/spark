@@ -20,6 +20,7 @@ import { Button } from "@/src/components/ui/button"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { DeleteFileAction } from "@/src/server-actions/FileSharing/FileSharing"
 import { useToast } from "@/src/hooks/use-toast"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 type DirViewProps = {
   navigateToFolder: (path: string) => Promise<void>
@@ -64,14 +65,19 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
 
     return []
   }
-
-  const spaceUserRole = currSpace?.users?.find(
-    (item) => item?.user_id === authUser?.unique_id
-  )?.role
+  const { permissionChecker } = usePermissionChecker(
+      "scoped",
+      "SPACE",
+      currSpace?.id
+    )
+ const canDeleteSpaceFile = permissionChecker
+    ? permissionChecker?.canAccess("space.file_sharing.delete")
+    : false
+    console.log("canDeleteSpaceFile", canDeleteSpaceFile)
 
   const canDeleteFile = (item: DirItem): boolean => {
     if (!authUser || !currSpace) return false
-    if (spaceUserRole === "Space Admin") return true
+    if (canDeleteSpaceFile) return true
     return item.created_by === authUser.unique_id
   }
 
