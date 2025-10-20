@@ -6,7 +6,12 @@ import {
   CardHeader,
   CardTitle
 } from "@/src/components/ui/card"
-import React from "react"
+import { SelectProjectRecentActivity } from "@/src/db/schema"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { getProjectRecentActivitiesAction } from "@/src/server-actions/ProjectManagement/projectManagement"
+import moment from "moment"
+import Link from "next/link"
+import React, { useEffect, useState } from "react"
 
 const recentActivity = [
   {
@@ -51,7 +56,35 @@ const recentActivity = [
   }
 ]
 
-function RecentActivity() {
+interface RecentActivityProps {
+  projectId: string
+}
+
+function RecentActivity({ projectId }: RecentActivityProps) {
+  const [recentActivity, setRecentActivity] = useState<
+    SelectProjectRecentActivity[]
+  >([])
+
+  const [recentActivityLoading, , , GetRecentActivities] = useServerAction(
+    getProjectRecentActivitiesAction
+  )
+
+  const GetActivities = async () => {
+    try {
+      const res = await GetRecentActivities(projectId)
+      if (res?.success && res.data) {
+        setRecentActivity(res.data)
+      }
+    } catch (error) {
+      console.error("Error fetching recent activities:", error)
+    }
+  }
+
+  useEffect(() => {
+    if (!projectId) return
+    GetActivities()
+  }, [projectId])
+
   return (
     <Card>
       <CardHeader>
@@ -59,24 +92,26 @@ function RecentActivity() {
         <CardDescription>Latest updates from the team</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           {recentActivity.map((activity) => (
-            <div key={activity.id} className="flex items-start space-x-3">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={activity.avatar} />
-                <AvatarFallback>{activity.user[0]}</AvatarFallback>
-              </Avatar>
-              <div className="space-y-1">
-                <p className="text-sm">
-                  <span className="font-medium">{activity.user}</span>{" "}
-                  <span className="text-muted-foreground">
-                    {activity.action}
-                  </span>{" "}
-                  <span className="font-medium">{activity.item}</span>
-                </p>
-                <p className="text-xs text-muted-foreground">{activity.time}</p>
+            <Link
+              href={activity.deep_link}
+              key={activity.id}
+              className="group hover:bg-muted hover:rounded-md p-2 rounded-md"
+            >
+              <div key={activity.id} className="flex items-start space-x-3">
+                <Avatar className="h-8 w-8 group-hover:ring-1 ">
+                  <AvatarImage src={activity.icon || "/avatars/01.png"} />
+                  <AvatarFallback>{activity.activity.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="space-y-1">
+                  <p className="text-sm">{activity.activity}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {moment(activity.created_at).fromNow()}
+                  </p>
+                </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </CardContent>

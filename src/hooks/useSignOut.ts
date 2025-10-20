@@ -9,16 +9,10 @@ export function useOnLogout() {
 
   const beamClient = getBeamsClient()
 
-  // clean up
-  async function cleanup() {
-    await beamClient.clearAllState()
-  }
-
   // manual logout
   async function manualLogout() {
     try {
       showOverlay()
-      await cleanup()
       await signOut()
     } finally {
       hideOverlay()
