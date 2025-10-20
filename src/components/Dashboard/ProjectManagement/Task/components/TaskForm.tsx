@@ -48,7 +48,7 @@ interface Props {
 }
 
 const projectSchema = z.object({
-  task_title: z.string().min(1, "Required").max(50, "Title is too long"),
+  task_title: z.string().min(1, "Required").max(150, "Title is too long"),
   description: z.string().optional(),
   task_type: z.string().min(1, "Required"),
   task_priority: z.string().min(1, "Required"),

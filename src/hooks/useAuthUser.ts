@@ -66,7 +66,10 @@ export const useAuthUser = () => {
         const rawPerms = await getUserPermissionRowsAction(userRes.unique_id)
 
         // Determine if the user is a super admin
-        const isSuperadmin = userRes?.roles?.[0]?.role?.name === "Super_Admin"
+        const isSuperadmin = userRes?.roles?.some(
+          (userRole) => userRole.role?.name === "Super_Admin"
+        ) ?? false
+        
 
         // 3. Update Jotai atoms with the fetched user data
         setUser(userRes as SelectUser) // Cast if AuthUserAction returns slightly different type
