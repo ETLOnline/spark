@@ -118,7 +118,7 @@ export const GetDirectoryContentsAction = CreateServerAction(
 
 export const DeleteFileAction = CreateServerAction(
   true,
-  async (directoryId: number, spaceId: string) => {
+  async (directoryId: number, spaceId: string, canDeleteSpaceFile: boolean) => {
     try {
       const user = await AuthUserAction()
       if (!user) {
@@ -143,8 +143,7 @@ export const DeleteFileAction = CreateServerAction(
       }
       const isFileOwner = fileEntry.created_by === user.unique_id
 
-
-      if (!isFileOwner) {
+      if (!isFileOwner && !canDeleteSpaceFile) {
         return {
           success: false,
           error: "You can only delete files that you uploaded"

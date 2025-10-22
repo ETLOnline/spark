@@ -66,14 +66,13 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
     return []
   }
   const { permissionChecker } = usePermissionChecker(
-      "scoped",
-      "SPACE",
-      currSpace?.id
-    )
- const canDeleteSpaceFile = permissionChecker
+    "scoped",
+    "SPACE",
+    currSpace?.id
+  )
+  const canDeleteSpaceFile = permissionChecker
     ? permissionChecker?.canAccess("space.file_sharing.delete")
     : false
-    console.log("canDeleteSpaceFile", canDeleteSpaceFile)
 
   const canDeleteFile = (item: DirItem): boolean => {
     if (!authUser || !currSpace) return false
@@ -85,7 +84,11 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
     if (!selectedFileId || !currSpace || !authUser) return
 
     try {
-      const result = await deleteFile(selectedFileId, currSpace.id)
+      const result = await deleteFile(
+        selectedFileId,
+        currSpace.id,
+        canDeleteSpaceFile
+      )
 
       if (result?.success) {
         // Remove the file from the local state
