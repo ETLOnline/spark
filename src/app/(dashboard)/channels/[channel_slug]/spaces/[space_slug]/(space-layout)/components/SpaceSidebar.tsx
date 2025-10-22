@@ -186,55 +186,56 @@ function SpaceSidebar({ space }: Props) {
               </div>
             </div>
           </SidebarMenuButton>
+          {/* Responsive Member Info & Action Area */}
+          <div className="px-4 py-2 border-b border-sidebar-border/50">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              {/* Member Count - allows shrinking */}
+              <span className="flex items-center gap-1 text-xs text-sidebar-foreground/70">
+                <Users className="h-3 w-3 flex-shrink-0" />
+                <span>{space.users?.length || 0} members</span>
+              </span>
 
-          {/* 2. NEW DEDICATED BUTTON/INFO AREA */}
-          <div className="px-4 py-2 flex items-center justify-between border-b border-sidebar-border/50">
-            {/* Member Count */}
-            <span className="truncate flex items-center gap-1 text-xs text-sidebar-foreground/70">
-              <Users className="h-3 w-3" />
-              {space.users?.length || 0} members
-            </span>
-
-            {/* Join/Leave Button */}
-            {!isSuperAdmin && (
-              <>
-                {isLoading ? (
-                  <span className="text-xs text-gray-500 rounded-md">
-                    Loading...
-                  </span>
-                ) : isSpaceMember ? (
-                  <span
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      if (!leaveLoading) handleLeaveSpace()
-                    }}
-                    className={`leave-btn flex items-center text-xs font-medium cursor-pointer rounded-md px-2 py-1 transition-colors hover:bg-red-500/10 hover:text-red-500 ${
-                      leaveLoading
-                        ? "text-gray-500 cursor-not-allowed opacity-50"
-                        : "text-red-400"
-                    }`}
-                  >
-                    <LogOut className="mr-1 h-3 w-3" />
-                    {leaveLoading ? "Leaving..." : "Leave"}
-                  </span>
-                ) : (
-                  <span
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      if (!joinLoading) handleJoinSpace()
-                    }}
-                    className={`inline-flex items-center rounded-md border border-sidebar-accent bg-sidebar-accent/10 px-3 py-1 text-xs font-medium ring-offset-background transition-colors ${
-                      joinLoading
-                        ? "text-gray-500 cursor-not-allowed opacity-50"
-                        : " hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    }`}
-                  >
-                    <PlusCircle className="mr-1 h-3 w-3" />
-                    {joinLoading ? "Joining..." : "Join"}
-                  </span>
-                )}
-              </>
-            )}
+              {/* Join/Leave Button - prevents shrinking */}
+              {!isSuperAdmin && (
+                <div className="flex-shrink-0">
+                  {isLoading ? (
+                    <span className="text-xs text-gray-500 rounded-md whitespace-nowrap">
+                      Loading...
+                    </span>
+                  ) : isSpaceMember ? (
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (!leaveLoading) handleLeaveSpace()
+                      }}
+                      className={`leave-btn flex items-center text-xs font-medium cursor-pointer rounded-md px-2 py-1 transition-colors hover:bg-red-500/10 hover:text-red-500 whitespace-nowrap ${
+                        leaveLoading
+                          ? "text-gray-500 cursor-not-allowed opacity-50"
+                          : "text-red-400"
+                      }`}
+                    >
+                      <LogOut className="mr-1 h-3 w-3 flex-shrink-0" />
+                      {leaveLoading ? "Leaving..." : "Leave"}
+                    </span>
+                  ) : (
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (!joinLoading) handleJoinSpace()
+                      }}
+                      className={`inline-flex items-center rounded-md border border-sidebar-accent bg-sidebar-accent/10 px-3 py-1 text-xs font-medium ring-offset-background transition-colors whitespace-nowrap ${
+                        joinLoading
+                          ? "text-gray-500 cursor-not-allowed opacity-50"
+                          : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      }`}
+                    >
+                      <PlusCircle className="mr-1 h-3 w-3 flex-shrink-0" />
+                      {joinLoading ? "Joining..." : "Join"}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* space overview */}
