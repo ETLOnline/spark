@@ -19,8 +19,8 @@
 
 .rich-editor p {
   font-size: 16px;
-  word-break: break-all;
-  overflow-wrap: anywhere;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
 .rich-editor ul {
@@ -53,8 +53,8 @@
 
 .rich-editor li {
   line-height: 1.6;
-  word-break: break-all;
-  overflow-wrap: anywhere;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
 .rich-editor a {
@@ -86,6 +86,6 @@
 }
 
 .rich-editor {
-  word-break: break-all;
-  overflow-wrap: anywhere;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
