@@ -22,8 +22,14 @@ interface StepTwoProps {
 
 const userQualificationSchema = z
   .object({
-    degree: z.string().min(1, "Required").max(100, "Maximum 100 characters"),
-    institute: z.string().min(1, "Required").max(100, "Maximum 100 characters"),
+    degree: z
+      .string()
+      .min(1, "Degree name required")
+      .max(100, "Maximum 100 characters"),
+    institute: z
+      .string()
+      .min(1, "Institute name required")
+      .max(100, "Maximum 100 characters"),
 
     duration_from: z
       .string()
@@ -143,12 +149,14 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
 
   const startYear = form.watch("duration_from")
   const endYear = form.watch("duration_to")
+  const degree = form.watch("degree")
+  const institute = form.watch("institute")
+
   useEffect(() => {
-    if (startYear || endYear) {
-      form.trigger("duration_from")
-      form.trigger("duration_to")
+    if (degree || institute || startYear || endYear) {
+      form.trigger(["degree", "institute", "duration_from", "duration_to"])
     }
-  }, [startYear, endYear, form])
+  }, [startYear, endYear, form, degree, institute])
 
   return (
     <div className="space-y-6">
