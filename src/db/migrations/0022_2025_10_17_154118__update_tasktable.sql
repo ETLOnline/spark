@@ -1,0 +1,1 @@
+ALTER TABLE "task" ADD COLUMN "parent_task_id" varchar;

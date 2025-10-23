@@ -8,6 +8,7 @@ import {
   isNotNull,
   isNull,
   like,
+  not,
   or,
   sql,
   SQLWrapper
@@ -37,6 +38,8 @@ export type taskQueryFilters = {
   type?: string[]
   assignee?: string[]
   status?: string[]
+  parent_id?: string
+  excludedTypes?: string[]
 }
 
 export type SprintTaskCountFilters = {
@@ -117,7 +120,6 @@ export async function GetTasks(filters?: taskQueryFilters) {
 
       if (filters.assignee) {
         const assigneeList = filters.assignee.filter((a) => a !== "")
-
         const hasEmptyString = filters.assignee.includes("")
 
         if (assigneeList.length > 0 && hasEmptyString) {
@@ -137,6 +139,16 @@ export async function GetTasks(filters?: taskQueryFilters) {
       if (filters.status && filters.status.length > 0) {
         whereClauses.push(inArray(taskTable.status_id, filters.status))
       }
+
+      if (filters.parent_id) {
+        whereClauses.push(eq(taskTable.parent_task_id, filters.parent_id))
+      }
+
+      if (filters.excludedTypes && filters.excludedTypes.length > 0) {
+        whereClauses.push(
+          not(inArray(taskTable.task_type, filters.excludedTypes))
+        )
+      }
     }
 
     const tasks = await db.query.taskTable.findMany({
@@ -151,7 +163,9 @@ export async function GetTasks(filters?: taskQueryFilters) {
       with: {
         assignee: true,
         assignor: true,
-        status: true
+        status: true,
+        parentTask: true,
+        subTasks: true
       }
     })
 
@@ -182,7 +196,9 @@ export async function GetTaskById(taskId: string) {
       with: {
         assignee: true,
         assignor: true,
-        status: true
+        status: true,
+        parentTask: true,
+        subTasks: true
       }
     })
 

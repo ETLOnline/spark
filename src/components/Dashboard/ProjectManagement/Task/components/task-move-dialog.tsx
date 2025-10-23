@@ -34,7 +34,7 @@ import { sprintStore } from "@/src/store/sprint/sprintsStore"
 interface Props {
   isTaskMoveDialogOpen: boolean
   setIsTaskMoveDialogOpen: Dispatch<SetStateAction<boolean>>
-  task_ids: string[]
+  tasks: SelectTask[]
   currSprintId?: string
   setTasks?: Dispatch<SetStateAction<SelectTask[]>>
   dialogAction: string
@@ -43,7 +43,7 @@ interface Props {
 export default function TaskMoveDialog({
   isTaskMoveDialogOpen,
   setIsTaskMoveDialogOpen,
-  task_ids,
+  tasks,
   currSprintId,
   setTasks,
   dialogAction
@@ -79,6 +79,11 @@ export default function TaskMoveDialog({
   }, [projectId])
 
   const handleMoveTask = async () => {
+    const task_ids = tasks.flatMap((task) => [
+      task.id,
+      ...(task.subTasks?.map((sub) => sub.id) || [])
+    ])
+
     if (selectedSprint) {
       const updatedTask = await UpdateTask(
         task_ids,
@@ -106,6 +111,11 @@ export default function TaskMoveDialog({
 
   const handleEndSprint = async () => {
     if (!selectedSprint || !currSprintId) return
+
+    const task_ids = tasks.flatMap((task) => [
+      task.id,
+      ...(task.subTasks?.map((sub) => sub.id) || [])
+    ])
 
     const updatedTask = await UpdateTask(task_ids, selectedSprint)
     if (!updatedTask?.success || !updatedTask.data) return
@@ -135,6 +145,11 @@ export default function TaskMoveDialog({
 
   const handleDeleteSprint = async () => {
     if (!selectedSprint || !currSprintId) return
+
+    const task_ids = tasks.flatMap((task) => [
+      task.id,
+      ...(task.subTasks?.map((sub) => sub.id) || [])
+    ])
 
     const updatedTask = await UpdateTask(task_ids, selectedSprint)
     if (!updatedTask?.success || !updatedTask.data) return

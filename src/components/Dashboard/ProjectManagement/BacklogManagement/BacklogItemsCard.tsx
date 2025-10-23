@@ -14,6 +14,7 @@ import { TaskFiltersType } from "../types/taskFilters.type"
 import { SelectTask } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
 import { projectStore } from "@/src/store/project/projectStore"
+import { TaskType } from "../constants/projectManagment"
 
 interface Props {
   searchedItem: string
@@ -52,7 +53,8 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
       assignee: filters?.assignee,
       priority: filters?.priority,
       type: filters?.type,
-      status: filters?.status
+      status: filters?.status,
+      excludedTypes: [TaskType.SUBTASK]
     })
     if (res?.success && res.data) {
       const tasks = res?.data
@@ -115,9 +117,10 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
       <div className="w-full overflow-x-auto">
         <div className="rounded-md border">
           <div className="grid grid-cols-12 gap-3 p-4 bg-muted/50 text-sm font-medium">
-            <div className="col-span-1 text-left">ID</div>
-            <div className="col-span-4 text-left">Title</div>
             <div className="col-span-1 text-center">Type</div>
+            <div className="col-span-1 text-left">ID</div>
+            <div className="col-span-3 text-left">Title</div>
+            <div className="col-span-1 text-center">Parent</div>
             <div className="col-span-2 text-center">Status</div>
             <div className="col-span-1 text-center">Priority</div>
             <div className="col-span-1 text-center">Points</div>

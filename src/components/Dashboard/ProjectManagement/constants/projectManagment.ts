@@ -1,33 +1,71 @@
 import { InsertTaskStatus } from "@/src/db/schema"
 
+export enum TaskType {
+  STORY = "story",
+  BUG = "bug",
+  TASK = "task",
+  EPIC = "epic",
+  SUBTASK = "subtask",
+  SPIKE = "spike",
+  FEATURE = "feature"
+}
+
 export const projectTaskTypes = [
   {
-    key: "story",
+    key: TaskType.STORY,
     title: "Story",
-    icon: "lightbulb",
+    icon: "book-open-text",
     iconColor: "#22c55e",
-    badgeVariant: "default"
+    badgeVariant: "default",
+    acceptedChildTypes: [TaskType.SUBTASK]
   },
   {
-    key: "bug",
+    key: TaskType.BUG,
     title: "Bug",
     icon: "bug",
     iconColor: "#ef4444",
-    badgeVariant: "destructive"
+    badgeVariant: "destructive",
+    acceptedChildTypes: []
   },
   {
-    key: "task",
+    key: TaskType.TASK,
     title: "Task",
-    icon: "circle-check",
+    icon: "square-check",
     iconColor: "#3b82f6",
-    badgeVariant: "secondary"
+    badgeVariant: "secondary",
+    acceptedChildTypes: [TaskType.SUBTASK]
   },
   {
-    key: "epic",
+    key: TaskType.EPIC,
     title: "Epic",
-    icon: "rocket",
+    icon: "layers",
     iconColor: "#a855f7",
-    badgeVariant: "default"
+    badgeVariant: "default",
+    acceptedChildTypes: [TaskType.STORY, TaskType.TASK, TaskType.BUG]
+  },
+  {
+    key: TaskType.SUBTASK,
+    title: "Subtask",
+    icon: "list-minus",
+    iconColor: "#3b82f6",
+    badgeVariant: "secondary",
+    acceptedChildTypes: []
+  },
+  {
+    key: TaskType.FEATURE,
+    title: "Feature",
+    icon: "sparkles",
+    iconColor: "#3b82f6",
+    badgeVariant: "secondary",
+    acceptedChildTypes: [TaskType.STORY, TaskType.TASK, TaskType.BUG]
+  },
+  {
+    key: TaskType.SPIKE,
+    title: "Spike",
+    icon: "zap",
+    iconColor: "#ef4444",
+    badgeVariant: "destructive",
+    acceptedChildTypes: []
   }
 ]
 
@@ -35,42 +73,42 @@ export const projectTaskPriority = [
   {
     key: "lowest",
     title: "Lowest",
-    icon: "flag",
-    iconColor: "#6b7280",
-    badgeBorderColor: "#6b7280",
-    badgeTextColor: "#6b7280"
+    icon: "chevrons-down",
+    iconColor: "#22c55e", // green-500
+    badgeBorderColor: "#22c55e",
+    badgeTextColor: "#22c55e"
   },
   {
     key: "low",
     title: "Low",
-    icon: "flag",
-    iconColor: "#22c55e",
+    icon: "chevron-down",
+    iconColor: "#22c55e", // green-500
     badgeBorderColor: "#22c55e",
     badgeTextColor: "#22c55e"
   },
   {
     key: "medium",
     title: "Medium",
-    icon: "flag",
-    iconColor: "#eab308",
+    icon: "equal",
+    iconColor: "#eab308", // yellow-500
     badgeBorderColor: "#eab308",
     badgeTextColor: "#eab308"
   },
   {
     key: "high",
     title: "High",
-    icon: "flag",
-    iconColor: "#f97316",
-    badgeBorderColor: "#f97316",
-    badgeTextColor: "#f97316"
+    icon: "chevron-up",
+    iconColor: "#ef4444", // red-500
+    badgeBorderColor: "#ef4444",
+    badgeTextColor: "#ef4444"
   },
   {
     key: "highest",
     title: "Highest",
-    icon: "flag",
-    iconColor: "#dc2626",
-    badgeBorderColor: "#dc2626",
-    badgeTextColor: "#dc2626"
+    icon: "chevrons-up",
+    iconColor: "#ef4444", // red-500
+    badgeBorderColor: "#ef4444",
+    badgeTextColor: "#ef4444"
   }
 ]
 

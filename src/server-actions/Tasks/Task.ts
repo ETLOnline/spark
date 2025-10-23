@@ -106,6 +106,19 @@ export const GetSprintTasksAction = CreateServerAction(
   }
 )
 
+export const GetLinkedTasksAction = CreateServerAction(
+  true,
+  async (filters?: taskQueryFilters) => {
+    try {
+      const subTasks = await GetTasks({ ...filters })
+
+      return { success: true, data: subTasks }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
 export const GetTaskByIdAction = CreateServerAction(
   true,
   async (taskId: string) => {

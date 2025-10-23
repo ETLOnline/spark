@@ -25,7 +25,6 @@ import useTaskHook from "../hooks/useTaskHook"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import { useConfirmClose } from "@/src/hooks/useConfirmClose"
 import { UnsavedChangesDialog } from "@/src/components/common/unsavedChangesDialog"
-import { set } from "zod"
 
 interface TaskModalProps {
   isTaskModelOpen: boolean
@@ -101,8 +100,7 @@ export const TaskModal = ({
   useEffect(() => {
     if (!isReady) return
 
-    if (!taskIdFromUrl || internalTask?.id === taskIdFromUrl || isTaskModelOpen)
-      return
+    if (!taskIdFromUrl || internalTask?.id === taskIdFromUrl) return
 
     fetchTask(taskIdFromUrl)
   }, [taskIdFromUrl, isReady])
@@ -157,17 +155,15 @@ export const TaskModal = ({
             </DialogTitle>
           </DialogHeader>
 
-          <ScrollArea className="max-h-[80vh]">
-            <TaskForm
-              statuses={statuses}
-              onSubmit={handleSubmit}
-              selectedTask={internalTask}
-              loading={isLoading}
-              isTaskModelOpen={isTaskModelOpen}
-              isChanged={isChanged}
-              setIsChanged={setIsChanged}
-            />
-          </ScrollArea>
+          <TaskForm
+            statuses={statuses}
+            onSubmit={handleSubmit}
+            selectedTask={internalTask}
+            loading={isLoading}
+            isTaskModelOpen={isTaskModelOpen}
+            isChanged={isChanged}
+            setIsChanged={setIsChanged}
+          />
         </DialogContent>
       </Dialog>
 

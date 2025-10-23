@@ -155,8 +155,9 @@ export default function SprintCardPage({
 
           <div className="grid grid-cols-1 ">
             <div className="grid grid-cols-12 p-4  border-t text-sm font-medium bg-muted/50">
-              <div className="col-span-2">ID</div>
+              <div className="col-span-1">ID</div>
               <div className="col-span-3">Title</div>
+              <div className="col-span-1 text-center">Parent</div>
               <div className="col-span-1 text-center">Type</div>
               <div className="col-span-3 flex justify-around text-center">
                 <span>Status</span>

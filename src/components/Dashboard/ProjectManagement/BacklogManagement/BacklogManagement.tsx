@@ -23,6 +23,7 @@ import { SelectTask } from "@/src/db/schema"
 import { TaskFiltersType } from "../types/taskFilters.type"
 import TaskFilters from "../TaskFilter/TaskFilters"
 import TaskMoveDialog from "../Task/components/task-move-dialog"
+import ConfirmationDialog from "../Task/components/ConfirmationDialog"
 
 export function BacklogManagement() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -41,6 +42,9 @@ export function BacklogManagement() {
   )
   const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useAtom(
     taskStore.isTaskMoveDialogOpen
+  )
+  const [isConfirmationAlertOpen, setIsConfirmationAlertOpen] = useAtom(
+    taskStore.isConfirmationAlertOpen
   )
   const taskMoveDialogAction = useAtomValue(taskStore.taskMoveDialogAction)
   const [isInitailDataLoad, setIsInitailDataLoad] = useState(false)
@@ -124,9 +128,14 @@ export function BacklogManagement() {
       <TaskMoveDialog
         isTaskMoveDialogOpen={isTaskMoveDialogOpen}
         setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
-        task_ids={selectedTask?.id ? [selectedTask.id] : []}
+        tasks={selectedTask ? [selectedTask] : []}
         setTasks={setTasks}
         dialogAction={taskMoveDialogAction}
+      />
+
+      <ConfirmationDialog
+        isAlertOpen={isConfirmationAlertOpen}
+        setIsAlertDialogOpen={setIsConfirmationAlertOpen}
       />
 
       <div className="space-y-6">

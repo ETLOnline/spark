@@ -2,7 +2,7 @@ import { Badge } from "@/src/components/ui/badge"
 import { SelectSprint, SelectTask, SelectUser } from "@/src/db/schema"
 import { projectStore } from "@/src/store/project/projectStore"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
-import { CircleHelp, MoreHorizontal } from "lucide-react"
+import { AlertCircle, CircleHelp, MoreHorizontal } from "lucide-react"
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import {
   projectTaskPriority,
@@ -40,6 +40,7 @@ import {
 import { getInitials } from "@/src/utils/helpers"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import { sprintStore } from "@/src/store/sprint/sprintsStore"
+import { DynamicIcon, IconName } from "lucide-react/dynamic"
 
 interface Props {
   task: SelectTask
@@ -60,6 +61,9 @@ function SprintTasks({
   const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useAtom(
     taskStore.isTaskMoveDialogOpen
   )
+  const setIsConformationAlertOpen = useSetAtom(
+    taskStore.isConfirmationAlertOpen
+  )
   const setSelectedSprint = useSetAtom(sprintStore.selectedSprint)
   const setSelectedTaskForEdit = useSetAtom(taskStore.selectedTask)
   const setSelectedTasksForMoveTasks = useSetAtom(taskStore.selectedSprintTask)
@@ -74,28 +78,37 @@ function SprintTasks({
 
   async function handleRemoveTask(task: SelectTask) {
     try {
-      const updatedTask = await RemoveTask(task.id, { sprint_id: null })
-      if (updatedTask?.success && updatedTask.data) {
-        setTasks((prevTasks) => prevTasks.filter((t) => t.id !== task.id))
+      const taskIds = [task.id, ...(task.subTasks?.map((sub) => sub.id) || [])]
 
-        toast({
-          title: "Task removed from sprint successfully",
-          duration: 2000
-        })
-        setIsAlertOpen(false)
+      for (const id of taskIds) {
+        await RemoveTask(id, { sprint_id: null })
       }
+
+      setTasks((prevTasks) => prevTasks.filter((t) => !taskIds.includes(t.id)))
+
+      toast({
+        title: "Task and its subtasks removed from sprint successfully",
+        duration: 2000
+      })
+
+      setIsAlertOpen(false)
     } catch {
       toast({
-        title: "Unable to remove task",
+        title: "Unable to remove tasks",
         duration: 2000
       })
     }
   }
 
   function moveTask(taskId: string) {
+    if (task.subTasks?.length && task.subTasks?.length > 0) {
+      setIsConformationAlertOpen(true)
+    } else {
+      setIsTaskMoveDialogOpen(true)
+    }
+
     setSelectedTasksForMoveTasks([task])
     setSelectedSprint(currSprint)
-    setIsTaskMoveDialogOpen(true)
     setIsTaskDropDownOpen(false)
     setTaskMoveDialogAction("moveTask")
   }
@@ -149,6 +162,19 @@ function SprintTasks({
     ? permissionChecker?.canAccess("project.task.delete")
     : false
 
+  function IssueTypeIcon({ type }: { type: string }) {
+    const typeMap = projectTaskTypes.find((t) => t.key === type)
+    return typeMap ? (
+      <DynamicIcon
+        name={typeMap.icon as IconName}
+        className="h-5 w-5"
+        style={{ color: typeMap.iconColor }}
+      />
+    ) : (
+      <AlertCircle className="h-5 w-5" />
+    )
+  }
+
   return (
     <>
       <div
@@ -156,7 +182,7 @@ function SprintTasks({
         className="grid grid-cols-12 gap-2 p-4 border-t items-center hover:bg-muted/50  transition delay-150 duration-300"
       >
         <div
-          className={`col-span-2 text-sm font-medium text-muted-foreground cursor-pointer`}
+          className={`col-span-1 text-sm font-medium text-muted-foreground cursor-pointer`}
           onClick={() => EditTask(task)}
         >
           #{task.task_num}
@@ -172,6 +198,15 @@ function SprintTasks({
         </div>
 
         <div className="col-span-1 text-center">
+          {task.parentTask ? (
+            <Badge variant={"outline"}>
+              <IssueTypeIcon type={task.parentTask?.task_type} />
+              {task.parentTask?.task_num}
+            </Badge>
+          ) : null}
+        </div>
+
+        <div className="col-span-1 text-center">
           {getTypeLabel(task.task_type)}
         </div>
 
@@ -182,7 +217,11 @@ function SprintTasks({
           <div>{getPriorityLabel(task.task_priority)}</div>
         </div>
 
-        <div className="col-span-1 text-center">{task.story_points}</div>
+        <div className="col-span-1 text-center">
+          {task.story_points && task.story_points !== "0"
+            ? task.story_points
+            : "-"}
+        </div>
 
         <div className="col-span-1 text-center">
           {task.assign_to ? (
