@@ -64,6 +64,8 @@
   transition:
     color 0.2s ease,
     text-decoration 0.2s ease;
+  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 
 .rich-editor a:hover {
