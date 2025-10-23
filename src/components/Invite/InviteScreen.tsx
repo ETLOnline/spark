@@ -100,8 +100,13 @@ const InviteScreen = ({ entityType, entity }: Props) => {
   useEffect(() => {
     if (authUser?.unique_id) {
       if (isUserMember) {
+        toast({
+          title: `You are already a member of this ${entityType}.`,
+          variant: "default"
+        })
         const path = getEntityRedirectPath(entity)
         router.replace(path)
+        
       } else {
         setHasCheckedMembership(true)
       }
