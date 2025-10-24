@@ -26,6 +26,7 @@ import { SelectSprint } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
 import TaskMoveDialog from "../Task/components/task-move-dialog"
 import ConfirmationDialog from "../Task/components/ConfirmationDialog"
+import { TaskType } from "../constants/projectManagment"
 
 export function SprintManagement() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
@@ -78,7 +79,8 @@ export function SprintManagement() {
   const fetchTasks = async () => {
     const tasksResponse = await GetTasks({
       project_id: projectId,
-      sprint_ids: sprintList.map((s) => s.id)
+      sprint_ids: sprintList.map((s) => s.id),
+      excludedTypes: [TaskType.SUBTASK]
     })
     if (tasksResponse?.success && tasksResponse.data.tasks) {
       setTasks(tasksResponse.data.tasks)

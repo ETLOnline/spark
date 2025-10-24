@@ -24,6 +24,7 @@ interface Props {
   toDoStatusId?: string
   setSubTasks: Dispatch<SetStateAction<SelectTask[]>>
   isAllowedAction?: boolean
+  onSubTaskCreate?: (task: SelectTask) => void
 }
 
 const subTaskSchema = z.object({
@@ -35,7 +36,8 @@ function AddSubTask({
   selectedTask,
   toDoStatusId,
   setSubTasks,
-  isAllowedAction
+  isAllowedAction,
+  onSubTaskCreate
 }: Props) {
   const [isAddingSubtask, setIsAddingSubtask] = useState(false)
   const [addSubTaskLoading, , , addSubTask] = useServerAction(CreateTaskAction)
@@ -45,7 +47,6 @@ function AddSubTask({
   })
 
   const handleCreateSubTask = async (data: any) => {
-    console.log(data)
     try {
       const authUser = await AuthUserAction()
 
@@ -62,10 +63,11 @@ function AddSubTask({
         assign_to: null,
         assign_by: authUser?.unique_id
       }
-      console.log(payload)
 
       const res = await addSubTask(payload)
       if (res?.success && res?.data) {
+        onSubTaskCreate?.(res.data as SelectTask)
+
         setSubTasks((prev) => [...prev, res.data as SelectTask])
 
         toast({

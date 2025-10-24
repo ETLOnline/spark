@@ -71,8 +71,8 @@ interface Props {
   isTaskModelOpen?: boolean
   selectedTask?: SelectTask
   loading?: boolean
-  isChanged?: boolean
   setIsChanged?: Dispatch<SetStateAction<boolean>>
+  onSubTaskCreate?: (task: SelectTask) => void
 }
 
 const projectSchema = z.object({
@@ -93,8 +93,8 @@ export default function TaskForm({
   selectedTask,
   onSubmit,
   loading = false,
-  isChanged,
-  setIsChanged
+  setIsChanged,
+  onSubTaskCreate
 }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null)
   const [usersList, setUsersList] = useState<(SelectUser | null)[]>([])
@@ -380,12 +380,17 @@ export default function TaskForm({
       selectedTask?.task_type || form.watch("task_type")
     )
 
+    const selectedTaskSprintId = selectedTask?.sprint_id ?? undefined
+
+    setGetParentTaskLoading(true)
+
     if (type.length === 0 || !searchParentTask) return
 
     const res = await GetLinkedTasksAction({
       project_id: projectId,
       type: type.map((t) => t.key),
-      searchedItem: searchParentTask
+      searchedItem: searchParentTask,
+      sprint_id: selectedTaskSprintId
     })
 
     if (res.success && res.data) {
@@ -496,16 +501,18 @@ export default function TaskForm({
                 {/* Subtask list */}
                 <div className="space-y-2 border rounded-md p-2">
                   {subTasks?.length && subTasks?.length > 0 ? (
-                    subTasks?.map((subtask) => (
-                      <SubTask
-                        key={subtask.id}
-                        subtask={subtask}
-                        isAllowedAction={isAllowedAction}
-                        projectId={projectId}
-                        statuses={statuses}
-                        setSubTasks={setSubTasks}
-                      />
-                    ))
+                    subTasks
+                      ?.filter((subtask) => subtask.deleted_at === null)
+                      .map((subtask) => (
+                        <SubTask
+                          key={subtask.id}
+                          subtask={subtask}
+                          isAllowedAction={isAllowedAction}
+                          projectId={projectId}
+                          statuses={statuses}
+                          setSubTasks={setSubTasks}
+                        />
+                      ))
                   ) : (
                     <p className="text-sm text-muted-foreground italic">
                       No subtasks added yet
@@ -519,6 +526,7 @@ export default function TaskForm({
                   toDoStatusId={toDoStatus?.id}
                   setSubTasks={setSubTasks}
                   isAllowedAction={isAllowedAction}
+                  onSubTaskCreate={onSubTaskCreate}
                 />
               </div>
 

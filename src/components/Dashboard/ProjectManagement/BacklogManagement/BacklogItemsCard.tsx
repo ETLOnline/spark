@@ -117,7 +117,7 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
       <div className="w-full overflow-x-auto">
         <div className="rounded-md border">
           <div className="grid grid-cols-12 gap-3 p-4 bg-muted/50 text-sm font-medium">
-            <div className="col-span-1 text-center">Type</div>
+            <div className="col-span-1">Type</div>
             <div className="col-span-1 text-left">ID</div>
             <div className="col-span-3 text-left">Title</div>
             <div className="col-span-1 text-center">Parent</div>

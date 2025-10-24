@@ -82,7 +82,7 @@ function SubTask({
       }
     } catch {
       toast({
-        title: "Task Deleted successfully",
+        title: "Unable to delete task",
         variant: "destructive"
       })
     }

@@ -40,7 +40,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
-import { getInitials } from "@/src/utils/helpers"
+import { getInitials, ToUpperCase } from "@/src/utils/helpers"
 import Link from "next/link"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 
@@ -89,42 +89,6 @@ function BacklogItems({ task }: Props) {
         variant: "destructive"
       })
     }
-  }
-
-  const getTypeLabel = (type: string) => {
-    const matchedType = projectTaskTypes.find((t) => t.key === type)
-    return matchedType ? (
-      <Badge
-        variant={
-          matchedType?.badgeVariant as
-            | "default"
-            | "destructive"
-            | "secondary"
-            | "outline"
-        }
-      >
-        {matchedType.title}
-      </Badge>
-    ) : (
-      <Badge variant={"outline"} />
-    )
-  }
-
-  const getPriorityLabel = (priority: string) => {
-    const priorityMap = projectTaskPriority.find((p) => p.key === priority)
-    return priorityMap ? (
-      <Badge
-        variant={"outline"}
-        style={{
-          color: priorityMap.badgeTextColor,
-          borderColor: priorityMap.badgeBorderColor
-        }}
-      >
-        {priorityMap?.title}
-      </Badge>
-    ) : (
-      <Badge variant="outline">Unknown</Badge>
-    )
   }
 
   const HandleMoveTask = (task: SelectTask) => {
@@ -185,7 +149,7 @@ function BacklogItems({ task }: Props) {
         key={task.id}
         className="grid grid-cols-12 gap-3 p-4 border-t items-center hover:bg-muted/50  transition delay-150 duration-300"
       >
-        <div className={`col-span-1 `}>
+        <div className={`col-span-1`}>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>
@@ -202,7 +166,7 @@ function BacklogItems({ task }: Props) {
         >
           {task.task_num}
         </div>
-        <div className={`${isParentAvailable ? "col-span-3" : "col-span-4"}`}>
+        <div className={"col-span-3"}>
           <div
             className={`font-medium break-words whitespace-normal line-clamp-2 cursor-pointer text-left`}
             onClick={() => EditTask(task)}
@@ -211,8 +175,8 @@ function BacklogItems({ task }: Props) {
           </div>
         </div>
 
-        {task.parentTask ? (
-          <div className="col-span-1 text-center">
+        <div className="col-span-1 text-center">
+          {task.parentTask ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
@@ -229,8 +193,8 @@ function BacklogItems({ task }: Props) {
                 <TooltipContent>{task.parentTask?.task_title}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
 
         <div className="col-span-2 text-center">
           <Badge variant={"outline"}>
@@ -238,8 +202,15 @@ function BacklogItems({ task }: Props) {
           </Badge>
         </div>
 
-        <div className="col-span-1 flex justify-center">
-          <PriorityIcon priority={task.task_priority} />
+        <div className="col-span-1 text-center">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <PriorityIcon priority={task.task_priority} />
+              </TooltipTrigger>
+              <TooltipContent>{ToUpperCase(task.task_priority)}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         <div className="col-span-1 text-center">
