@@ -44,7 +44,10 @@ import { GetUserPermissionsParsedAction } from "../UserRoles/UserRole"
 import { ensureCommunityMembership } from "../Community/Community"
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
-import { attachCommunityUser } from "@/src/db/data-access/communities/query"
+import {
+  attachCommunityUser,
+  getCommunityUsers
+} from "@/src/db/data-access/communities/query"
 
 export const CreateSpaceAction = CreateServerAction(
   true,
@@ -236,32 +239,45 @@ export const AttachSpaceUserAction = CreateServerAction(
   async (spaceId: string, userId: string) => {
     try {
       const space = await GetSpaceById(spaceId, true)
-      if (!space) {
-        return { success: false, error: "Space not found" }
-      }
+      if (!space) return { success: false, error: "Space not found" }
 
-      const spaceUserIds = space.users.map((su) => su.user_id)
-      if (spaceUserIds.includes(userId)) {
+      const existingSpaceUserIds = space.users.map((su) => su.user_id)
+      if (existingSpaceUserIds.includes(userId)) {
         return { success: true, data: null } // already a member
       }
 
-      let channel = null
-      if (space.channel_id) {
-        const channelUsers = await getChannelUsers(space.channel_id)
-        const channelUserIds = channelUsers.map((cu) => cu.user_id)
+      if (!space.channel_id)
+        return { success: false, error: "Space has no associated channel" }
 
-        channel = await GetChannelById(space.channel_id)
-        if (!channel) {
-          return { success: false, error: "Channel not found" }
-        }
+      const channel = await GetChannelById(space.channel_id)
+      if (!channel) return { success: false, error: "Channel not found" }
 
-        const communityUser = await attachCommunityUser(
-          channel.community_id as string,
-          userId
+      const { community_id: communityId } = channel
+      const [channelUsers, communityUsers] = await Promise.all([
+        getChannelUsers(space.channel_id),
+        getCommunityUsers(communityId ?? "")
+      ])
+
+      const channelUserIds = channelUsers.map((cu) => cu.user_id)
+      const communityUserIds = communityUsers.map((cu) => cu.user_id)
+
+      if (!communityUserIds.includes(userId)) {
+        const communityViewerRole = await getAndAssignViewerRoles(
+          userId,
+          "community_viewer",
+          communityId as string
         )
 
+        const newCommunityUser = await attachCommunityUser(
+          communityId as string,
+          userId,
+          communityViewerRole?.viewerRole?.name
+        )
+
+        await ensureCommunityMembership(communityId as string, userId)
+
         if (!channelUserIds.includes(userId)) {
-          const attachChannelUserRole = await getAndAssignViewerRoles(
+          const channelViewerRole = await getAndAssignViewerRoles(
             userId,
             "channel_viewer",
             space.channel_id
@@ -270,46 +286,43 @@ export const AttachSpaceUserAction = CreateServerAction(
           await attachChannelUser(
             space.channel_id,
             userId,
-            communityUser.id,
-            attachChannelUserRole?.viewerRole?.name
+            newCommunityUser.id,
+            channelViewerRole?.viewerRole?.name
           )
         }
-
-        await ensureCommunityMembership(channel.community_id as string, userId)
       }
 
-      const attachSpaceUserRole = await getAndAssignViewerRoles(
+      const spaceViewerRole = await getAndAssignViewerRoles(
         userId,
         "space_viewer",
         spaceId
       )
 
-      const channelUsersAfter = await getChannelUsers(space.channel_id)
-      const channel_user_id = channelUsersAfter.find(
+      const updatedChannelUsers = await getChannelUsers(space.channel_id)
+      const channelUserId = updatedChannelUsers.find(
         (cu) => cu.user_id === userId
       )?.id
 
-      if (!channel_user_id) {
+      if (!channelUserId)
         return {
           success: false,
           error: "Could not find channel_user for space"
         }
-      }
 
-      const spaceUser = await attachSpaceUser(
+      const newSpaceUser = await attachSpaceUser(
         spaceId,
         userId,
-        channel_user_id,
-        attachSpaceUserRole?.viewerRole?.name
+        channelUserId,
+        spaceViewerRole?.viewerRole?.name
       )
 
       await pusherServer.trigger(
         `user-${userId}`,
         "update-role",
-        attachSpaceUserRole
+        spaceViewerRole
       )
 
-      return { success: true, data: spaceUser }
+      return { success: true, data: newSpaceUser }
     } catch (error) {
       console.error("AttachSpaceUserAction failed:", error)
       return { success: false, error: "Internal server error" }

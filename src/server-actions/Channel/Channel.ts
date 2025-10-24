@@ -191,36 +191,52 @@ export const AttachChannelUserAction = CreateServerAction(
   true,
   async (channelId: string, userId: string) => {
     try {
-      // get channel by id and attach user
       const channel = await GetChannelById(channelId)
 
       if (!channel) {
         return { success: false, error: "Channel not found" }
       }
-      const attachUserRole = await getAndAssignViewerRoles(
+
+      const [channelViewerRole, communityViewerRole] = await Promise.all([
+        getAndAssignViewerRoles(userId, "channel_viewer", channelId),
+        getAndAssignViewerRoles(
+          userId,
+          "community_viewer",
+          channel?.community_id as string
+        )
+      ])
+      const communityUser = await attachCommunityUser(
+        channel.community_id as string,
         userId,
-        "channel_viewer",
-        channelId
+        communityViewerRole?.viewerRole?.name
       )
-      const communityUserId = await attachCommunityUser(
-        channel?.community_id as string,
-        userId
-      )
-      const community_user_id: string = communityUserId?.id
+
+      const community_user_id = communityUser?.id
+      if (!community_user_id) {
+        return { success: false, error: "Failed to attach community user" }
+      }
 
       const channelUser = await attachChannelUser(
         channelId,
         userId,
         community_user_id,
-        attachUserRole?.viewerRole?.name
+        channelViewerRole?.viewerRole?.name
       )
-      if (channel?.community_id) {
+
+      if (channel.community_id) {
         await ensureCommunityMembership(channel.community_id, userId)
       }
-      pusherServer.trigger(`user-${userId}`, "update-role", attachUserRole)
+
+      await pusherServer.trigger(
+        `user-${userId}`,
+        "update-role",
+        channelViewerRole
+      )
+
       return { success: true, data: channelUser }
     } catch (error) {
-      return { error: error }
+      console.error("AttachChannelUserAction failed:", error)
+      return { success: false, error: "Internal server error" }
     }
   }
 )
