@@ -257,6 +257,10 @@ export function SprintManagement() {
             })
           )
         }}
+        onSubTaskCreate={(task: SelectTask) => {
+          if (task.task_type === TaskType.SUBTASK) return
+          setTasks((prev) => [...prev, task])
+        }}
       />
 
       <TaskMoveDialog

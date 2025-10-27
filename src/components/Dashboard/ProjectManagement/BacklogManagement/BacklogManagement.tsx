@@ -24,6 +24,7 @@ import { TaskFiltersType } from "../types/taskFilters.type"
 import TaskFilters from "../TaskFilter/TaskFilters"
 import TaskMoveDialog from "../Task/components/task-move-dialog"
 import ConfirmationDialog from "../Task/components/ConfirmationDialog"
+import { TaskType } from "../constants/projectManagment"
 
 export function BacklogManagement() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -122,6 +123,10 @@ export function BacklogManagement() {
         onUpdateComplete={(task: SelectTask) => {
           setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
           setSelectedTask(task)
+        }}
+        onSubTaskCreate={(task: SelectTask) => {
+          if (task.task_type === TaskType.SUBTASK) return
+          setTasks((prev) => [...prev, task])
         }}
       />
 
