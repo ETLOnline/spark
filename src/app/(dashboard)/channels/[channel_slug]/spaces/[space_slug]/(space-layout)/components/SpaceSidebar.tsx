@@ -170,19 +170,18 @@ function SpaceSidebar({ space }: Props) {
           {/* 1. Space Name (Cleaned up) */}
           <SidebarMenuButton
             size={"lg"}
-            className="hover:bg-transparent hover:text-sidebar-foreground"
+            className="hover:bg-transparent hover:text-sidebar-foreground overflow-visible"
           >
-            <div className="flex items-center gap-3 w-full">
+            <div className="flex w-full items-start gap-3">
               {/* Avatar */}
-              <div className="flex aspect-square items-center justify-center rounded-lg text-sidebar-primary-foreground flex-shrink-0">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg text-sidebar-primary-foreground">
                 <Avvvatars value={space.space_name} size={40} style="shape" />
               </div>
               {/* Content */}
-              <div className="flex-1 min-w-0 ">
-                {/* Cleaned up space name */}
-                <span className="font-semibold text-sm">
+              <div className="flex-1">
+                <p className="font-semibold text-sm leading-[1.3] break-words whitespace-normal">
                   {space.space_name}
-                </span>
+                </p>
               </div>
             </div>
           </SidebarMenuButton>
