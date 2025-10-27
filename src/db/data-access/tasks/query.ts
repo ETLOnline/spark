@@ -24,6 +24,8 @@ import {
   TaskStatusTable,
   taskTable
 } from "../../schema"
+import { getInitials } from "@/src/utils/helpers"
+import { getProjectById } from "../project-management/query"
 
 export type taskQueryFilters = {
   page?: number
@@ -50,6 +52,20 @@ export type SprintTaskCountFilters = {
 
 export async function CreateTask(taskData: InsertTask) {
   try {
+    const project = await getProjectById(taskData.project_id)
+    if (!project) {
+      throw new Error("Project not found")
+    }
+
+    const existingTaskCountResult = await GetTaskCount(taskData.project_id)
+    const taskCount = existingTaskCountResult + 1
+
+    const titleInitials = getInitials(project?.project_name)
+    
+    const task_num = `${titleInitials}-${taskCount}`
+
+    taskData.task_num = task_num
+
     const [insertedTask] = await db
       .insert(taskTable)
       .values(taskData)

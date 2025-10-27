@@ -11,7 +11,9 @@
     "db:seed": "npx tsx src/db/seeds/index.ts",
     "db:create-migration": "node src/db/scripts/create-migration.mjs",
     "db:migrate": "npx drizzle-kit migrate",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "db:migrate-tasks": "npx tsx src/db/scripts/migrate-tasks.ts"
+
   },
   "dependencies": {
     "@azure/identity": "^4.10.1",
