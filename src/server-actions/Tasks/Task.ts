@@ -17,7 +17,8 @@ import {
   UpdateTasksSprint,
   GetBacklogTaskCount,
   GetSprintTaskCount,
-  SprintTaskCountFilters
+  SprintTaskCountFilters,
+  checkIfTaskIsParent
 } from "@/src/db/data-access/tasks/query"
 import { CreateServerAction } from ".."
 import {
@@ -258,6 +259,19 @@ export const CreateTaskStatusAction = CreateServerAction(
       })
 
       return { success: true, data: taskStatus }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const checkIfTaskIsParentAction = CreateServerAction(
+  true,
+  async (taskId: string) => {
+    try {
+      const res = await checkIfTaskIsParent(taskId)
+
+      return { success: true, data: res }
     } catch (error) {
       return { error: error }
     }

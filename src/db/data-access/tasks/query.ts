@@ -189,6 +189,21 @@ export async function GetTasks(filters?: taskQueryFilters) {
   }
 }
 
+export async function checkIfTaskIsParent(task_id: string) {
+  try {
+    const res = await db
+      .select({ id: taskTable.id })
+      .from(taskTable)
+      .where(
+        and(eq(taskTable.parent_task_id, task_id), isNull(taskTable.deleted_at))
+      )
+
+    return res.length > 0
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
 export async function GetTaskById(taskId: string) {
   try {
     const task = await db.query.taskTable.findFirst({

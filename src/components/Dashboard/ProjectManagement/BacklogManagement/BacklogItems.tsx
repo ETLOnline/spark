@@ -21,7 +21,10 @@ import {
 import { SelectTask, SelectUser } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { DeleteTaskAction } from "@/src/server-actions/Tasks/Task"
+import {
+  checkIfTaskIsParentAction,
+  DeleteTaskAction
+} from "@/src/server-actions/Tasks/Task"
 import { projectStore } from "@/src/store/project/projectStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import { useAtom, useSetAtom } from "jotai"
@@ -91,8 +94,10 @@ function BacklogItems({ task }: Props) {
     }
   }
 
-  const HandleMoveTask = (task: SelectTask) => {
-    if (task.subTasks?.length && task.subTasks?.length > 0) {
+  const HandleMoveTask = async (task: SelectTask) => {
+    const isTaskParent = await checkIfTaskIsParentAction(task.id)
+    console.log(isTaskParent.data)
+    if (isTaskParent.data) {
       setIsConfirmationAlertOpen(true)
     } else {
       setIsTaskMoveDialogOpen(true)

@@ -27,7 +27,10 @@ import {
   AlertDialogTitle
 } from "@/src/components/ui/alert-dialog"
 import { toast } from "@/src/hooks/use-toast"
-import { UpdateTaskAction } from "@/src/server-actions/Tasks/Task"
+import {
+  checkIfTaskIsParentAction,
+  UpdateTaskAction
+} from "@/src/server-actions/Tasks/Task"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
@@ -100,8 +103,9 @@ function SprintTasks({
     }
   }
 
-  function moveTask(taskId: string) {
-    if (task.subTasks?.length && task.subTasks?.length > 0) {
+  async function moveTask(taskId: string) {
+    const isTaskParent = await checkIfTaskIsParentAction(taskId)
+    if (isTaskParent.data) {
       setIsConformationAlertOpen(true)
     } else {
       setIsTaskMoveDialogOpen(true)
