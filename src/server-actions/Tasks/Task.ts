@@ -18,7 +18,8 @@ import {
   GetBacklogTaskCount,
   GetSprintTaskCount,
   SprintTaskCountFilters,
-  checkIfTaskIsParent
+  checkIfTaskIsParent,
+  GetTaskByIds
 } from "@/src/db/data-access/tasks/query"
 import { CreateServerAction } from ".."
 import {
@@ -127,6 +128,19 @@ export const GetTaskByIdAction = CreateServerAction(
       const task = await GetTaskById(taskId)
 
       return { success: true, data: task }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetTaskByIdsAction = CreateServerAction(
+  true,
+  async (taskIds: string[]) => {
+    try {
+      const tasks = await GetTaskByIds(taskIds)
+
+      return { success: true, data: tasks }
     } catch (error) {
       return { error: error }
     }

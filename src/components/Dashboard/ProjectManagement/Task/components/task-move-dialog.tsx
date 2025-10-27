@@ -23,6 +23,7 @@ import {
 } from "@/src/server-actions/Sprint/sprint"
 import Loader from "@/src/components/common/Loader/Loader"
 import {
+  GetTaskByIdsAction,
   UpdateTaskAction,
   UpdateTasksSprintAction
 } from "@/src/server-actions/Tasks/Task"
@@ -79,7 +80,10 @@ export default function TaskMoveDialog({
   }, [projectId])
 
   const handleMoveTask = async () => {
-    const task_ids = tasks.flatMap((task) => [
+    const res = await GetTaskByIdsAction(tasks.map((task) => task.id))
+    if (!res?.success || !res.data) return
+
+    const task_ids = res.data.flatMap((task) => [
       task.id,
       ...(task.subTasks?.map((sub) => sub.id) || [])
     ])

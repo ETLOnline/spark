@@ -223,6 +223,25 @@ export async function GetTaskById(taskId: string) {
   }
 }
 
+export async function GetTaskByIds(taskId: string[]) {
+  try {
+    const tasks = await db.query.taskTable.findMany({
+      where: and(isNull(taskTable.deleted_at), inArray(taskTable.id, taskId)),
+      with: {
+        assignee: true,
+        assignor: true,
+        status: true,
+        parentTask: true,
+        subTasks: true
+      }
+    })
+
+    return tasks
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
 export async function GetTasksByStatusId(statusId: string) {
   try {
     const tasks = await db
