@@ -10,6 +10,14 @@ export enum TaskType {
   FEATURE = "feature"
 }
 
+export enum TaskPriority {
+  LOWEST = "lowest",
+  LOW = "low",
+  MEDIUM = "medium",
+  HIGH = "high",
+  HIGHEST = "highest"
+}
+
 export const projectTaskTypes = [
   {
     key: TaskType.STORY,
@@ -71,7 +79,7 @@ export const projectTaskTypes = [
 
 export const projectTaskPriority = [
   {
-    key: "lowest",
+    key: TaskPriority.LOWEST,
     title: "Lowest",
     icon: "chevrons-down",
     iconColor: "#22c55e", // green-500
@@ -79,7 +87,7 @@ export const projectTaskPriority = [
     badgeTextColor: "#22c55e"
   },
   {
-    key: "low",
+    key: TaskPriority.LOW,
     title: "Low",
     icon: "chevron-down",
     iconColor: "#22c55e", // green-500
@@ -87,7 +95,7 @@ export const projectTaskPriority = [
     badgeTextColor: "#22c55e"
   },
   {
-    key: "medium",
+    key: TaskPriority.MEDIUM,
     title: "Medium",
     icon: "equal",
     iconColor: "#eab308", // yellow-500
@@ -95,7 +103,7 @@ export const projectTaskPriority = [
     badgeTextColor: "#eab308"
   },
   {
-    key: "high",
+    key: TaskPriority.HIGH,
     title: "High",
     icon: "chevron-up",
     iconColor: "#ef4444", // red-500
@@ -103,7 +111,7 @@ export const projectTaskPriority = [
     badgeTextColor: "#ef4444"
   },
   {
-    key: "highest",
+    key: TaskPriority.HIGHEST,
     title: "Highest",
     icon: "chevrons-up",
     iconColor: "#ef4444", // red-500

@@ -65,6 +65,7 @@ import {
 } from "@/src/components/ui/command"
 import { getChildTypes, getParentTypes } from "../utils/helper"
 import { GetLinkedTasksAction } from "@/src/server-actions/Tasks/Task"
+import Loader from "@/src/components/common/Loader/Loader"
 interface Props {
   onSubmit: (task: any) => void
   statuses?: InsertTaskStatus[]
@@ -111,7 +112,8 @@ export default function TaskForm({
   const [subTasks, setSubTasks] = useState<SelectTask[]>([])
   const [searchParentTask, setSearchParentTask] = useState("")
   const [parentTasks, setParentTasks] = useState<SelectTask[]>([])
-  const [getParentTaskLoading, setGetParentTaskLoading] = useState(false)
+  const [getSubTaskTaskLoading, setGetSubTaskTaskLoading] = useState(false)
+  const [popoverOpen, setPopoverOpen] = useState(false)
   const authUser = useAtomValue(userStore.AuthUser)
   const form = useForm({
     resolver: zodResolver(projectSchema)
@@ -382,8 +384,6 @@ export default function TaskForm({
 
     const selectedTaskSprintId = selectedTask?.sprint_id ?? undefined
 
-    setGetParentTaskLoading(true)
-
     if (type.length === 0 || !searchParentTask) return
 
     const res = await GetLinkedTasksAction({
@@ -398,10 +398,22 @@ export default function TaskForm({
     }
   }
 
-  useEffect(() => {
-    const subTasks = selectedTask?.subTasks
+  const getSubTasks = async () => {
+    setGetSubTaskTaskLoading(true)
+    const res = await GetLinkedTasksAction({
+      project_id: projectId,
+      parent_id: selectedTask?.id
+    })
+    if (res.success && res.data) {
+      setSubTasks(res.data.tasks)
+    }
+    setGetSubTaskTaskLoading(false)
+  }
 
-    setSubTasks(subTasks || [])
+  useEffect(() => {
+    if (!selectedTask) return
+
+    getSubTasks()
   }, [selectedTask])
 
   return (
@@ -500,7 +512,11 @@ export default function TaskForm({
 
                 {/* Subtask list */}
                 <div className="space-y-2 border rounded-md p-2">
-                  {subTasks?.length && subTasks?.length > 0 ? (
+                  {getSubTaskTaskLoading ? (
+                    <div className="flex justify-center items-center ">
+                      <Loader />
+                    </div>
+                  ) : subTasks?.length && subTasks?.length > 0 ? (
                     subTasks
                       ?.filter((subtask) => subtask.deleted_at === null)
                       .map((subtask) => (
@@ -961,6 +977,7 @@ export default function TaskForm({
                                     className="flex items-center gap-2 rounded-md border p-2 cursor-pointer"
                                     onClick={() => {
                                       setActiveField("parent")
+                                      setPopoverOpen(true)
                                     }}
                                   >
                                     <IssueTypeIcon
@@ -1000,6 +1017,7 @@ export default function TaskForm({
                                   disabled={!isAllowedAction || isTaskEpic}
                                   onClick={() => {
                                     setActiveField("parent")
+                                    setPopoverOpen(true)
                                   }}
                                 >
                                   Select Parent Task
@@ -1007,7 +1025,10 @@ export default function TaskForm({
                               )}
 
                               {activeField === "parent" ? (
-                                <Popover open>
+                                <Popover
+                                  open={popoverOpen}
+                                  onOpenChange={setPopoverOpen}
+                                >
                                   <PopoverTrigger asChild>
                                     <div />
                                   </PopoverTrigger>
@@ -1035,6 +1056,7 @@ export default function TaskForm({
                                             onSelect={() => {
                                               field.onChange("")
                                               setActiveField(null)
+                                              setPopoverOpen(false)
                                             }}
                                           >
                                             Remove Parent
@@ -1048,6 +1070,7 @@ export default function TaskForm({
                                               onSelect={() => {
                                                 field.onChange(option.id)
                                                 setActiveField(null)
+                                                setPopoverOpen(false)
                                               }}
                                             >
                                               {`${option.task_num} - ${option.task_title}`}

@@ -18,6 +18,7 @@ import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { toast, useToast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { getChildTypes } from "../utils/helper"
+import { TaskPriority } from "../../constants/projectManagment"
 
 interface Props {
   selectedTask?: SelectTask
@@ -28,8 +29,8 @@ interface Props {
 }
 
 const subTaskSchema = z.object({
-  task_title: z.string().min(1, "SubTask Title Required"),
-  task_type: z.string().min(1, "SubTask Type Required")
+  task_title: z.string().min(1, "Title Required"),
+  task_type: z.string().min(1, "Type Required")
 })
 
 function AddSubTask({
@@ -57,7 +58,7 @@ function AddSubTask({
         sprint_id: selectedTask?.sprint_id,
         created_by: authUser?.unique_id,
         description: "",
-        task_priority: "medium",
+        task_priority: TaskPriority.MEDIUM,
         story_points: 0,
         status_id: toDoStatusId,
         assign_to: null,
@@ -95,6 +96,10 @@ function AddSubTask({
     }
   }, [isAddingSubtask])
 
+  useEffect(() => {
+    setIsAddingSubtask(false)
+  }, [selectedTask])
+
   return (
     <form onSubmit={subTaskForm.handleSubmit(handleCreateSubTask)}>
       <div className="mt-2">
@@ -120,6 +125,7 @@ function AddSubTask({
                 <div className="absolute right-1">
                   <Controller
                     name="task_type"
+                    defaultValue=""
                     control={subTaskForm.control}
                     render={({ field }) => (
                       <Select

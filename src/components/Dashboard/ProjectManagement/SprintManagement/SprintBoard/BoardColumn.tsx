@@ -26,8 +26,6 @@ function BoardColumn({ sprint, status, tasks, onTaskClick, setTasks }: Props) {
       : true
   )
 
-  // const SubTask = tasks.map((task)=> task.subTasks)
-
   return (
     <div
       ref={setNodeRef}
