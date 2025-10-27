@@ -418,6 +418,20 @@ export default function TaskForm({
     getSubTasks()
   }, [selectedTask])
 
+  const handleChangeInAssignTo = (newselected: MultiSelectOption[]) => {
+    if (newselected.length === 0) {
+      setSelectedAssignee([
+        {
+          label: "Unassigned",
+          value: ""
+        }
+      ])
+    } else {
+      const latestSelected = newselected?.[newselected.length - 1]
+      setSelectedAssignee(latestSelected ? [latestSelected] : [])
+    }
+  }
+
   return (
     <>
       <div className="grid grid-cols-12 gap-2 ">
@@ -660,20 +674,7 @@ export default function TaskForm({
                               selected={selectedAssignee}
                               disabled={!isAllowedAction}
                               onChange={(newselected) => {
-                                if (newselected.length === 0) {
-                                  setSelectedAssignee([
-                                    {
-                                      label: "Unassigned",
-                                      value: ""
-                                    }
-                                  ])
-                                } else {
-                                  const latestSelected =
-                                    newselected?.[newselected.length - 1]
-                                  setSelectedAssignee(
-                                    latestSelected ? [latestSelected] : []
-                                  )
-                                }
+                                handleChangeInAssignTo(newselected)
                               }}
                               placeholder="Select Assignee"
                             />

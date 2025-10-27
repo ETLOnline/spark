@@ -14,11 +14,12 @@ import {
   SelectValue
 } from "@/src/components/ui/select"
 import { CreateTaskAction } from "@/src/server-actions/Tasks/Task"
-import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import { toast, useToast } from "@/src/hooks/use-toast"
+import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { getChildTypes } from "../utils/helper"
 import { TaskPriority } from "../../constants/projectManagment"
+import { useAtomValue } from "jotai"
+import { userStore } from "@/src/store/user/userStore"
 
 interface Props {
   selectedTask?: SelectTask
@@ -42,6 +43,7 @@ function AddSubTask({
 }: Props) {
   const [isAddingSubtask, setIsAddingSubtask] = useState(false)
   const [addSubTaskLoading, , , addSubTask] = useServerAction(CreateTaskAction)
+  const authUser = useAtomValue(userStore.AuthUser)
 
   const subTaskForm = useForm({
     resolver: zodResolver(subTaskSchema)
@@ -49,8 +51,6 @@ function AddSubTask({
 
   const handleCreateSubTask = async (data: any) => {
     try {
-      const authUser = await AuthUserAction()
-
       const payload = {
         ...data,
         parent_task_id: selectedTask?.id,

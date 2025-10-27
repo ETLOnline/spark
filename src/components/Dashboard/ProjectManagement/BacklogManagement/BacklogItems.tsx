@@ -96,7 +96,6 @@ function BacklogItems({ task }: Props) {
 
   const HandleMoveTask = async (task: SelectTask) => {
     const isTaskParent = await checkIfTaskIsParentAction(task.id)
-    console.log(isTaskParent.data)
     if (isTaskParent.data) {
       setIsConfirmationAlertOpen(true)
     } else {
