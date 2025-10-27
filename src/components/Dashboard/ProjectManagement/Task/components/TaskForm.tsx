@@ -399,9 +399,11 @@ export default function TaskForm({
   }
 
   const getSubTasks = async () => {
+    if (!selectedTask) return
     setGetSubTaskTaskLoading(true)
     const res = await GetLinkedTasksAction({
       project_id: projectId,
+      sprint_id: selectedTask.sprint_id || undefined,
       parent_id: selectedTask?.id
     })
     if (res.success && res.data) {
@@ -842,10 +844,15 @@ export default function TaskForm({
                         control={form.control}
                         render={({ field }) => {
                           const parentTask = selectedTask?.parentTask
+                          const childTasks = selectedTask?.subTasks
 
                           const validTypes = parentTask
                             ? getChildTypes(parentTask.task_type)
-                            : projectTaskTypes
+                            : childTasks
+                              ? getParentTypes(childTasks[0].task_type)
+                              : projectTaskTypes.filter(
+                                  (t) => t.key !== TaskType.SUBTASK
+                                )
 
                           return activeField === "issueType" ? (
                             <Select
