@@ -16,6 +16,7 @@ import { getStorageClient } from "@/src/services/storage/client/storage.client"
 import { db } from "@/src/db"
 import { spaceFileDirectoryTable } from "@/src/db/schema"
 import { eq } from "drizzle-orm"
+import { getSpaceUsers } from "@/src/db/data-access/spaces/query"
 
 export const CreateNewFolderAction = CreateServerAction(
   true,
@@ -117,7 +118,7 @@ export const GetDirectoryContentsAction = CreateServerAction(
 
 export const DeleteFileAction = CreateServerAction(
   true,
-  async (directoryId: number, spaceId: string) => {
+  async (directoryId: number, spaceId: string, canDeleteSpaceFile: boolean) => {
     try {
       const user = await AuthUserAction()
       if (!user) {
@@ -140,7 +141,9 @@ export const DeleteFileAction = CreateServerAction(
           error: "File not found"
         }
       }
-      if (fileEntry.created_by !== user.unique_id) {
+      const isFileOwner = fileEntry.created_by === user.unique_id
+
+      if (!isFileOwner && !canDeleteSpaceFile) {
         return {
           success: false,
           error: "You can only delete files that you uploaded"
