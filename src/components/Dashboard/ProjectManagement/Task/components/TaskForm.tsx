@@ -846,9 +846,9 @@ export default function TaskForm({
                           const parentTask = selectedTask?.parentTask
                           const childTasks = selectedTask?.subTasks
 
-                          const validTypes = parentTask
+                          const validTypes = parentTask?.task_type
                             ? getChildTypes(parentTask.task_type)
-                            : childTasks
+                            : childTasks?.[0]?.task_type
                               ? getParentTypes(childTasks[0].task_type)
                               : projectTaskTypes.filter(
                                   (t) => t.key !== TaskType.SUBTASK
