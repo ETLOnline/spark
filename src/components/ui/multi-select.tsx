@@ -62,19 +62,14 @@ export default function MultiSelect({
     }
   }
 
-  const allValues = options.map((o) => o.value)
-  const allSelected = allValues.every((val) => selectedValues.includes(val))
-  const noneSelected = allValues.every((val) => !selectedValues.includes(val))
+  const hasAnySelected = selectedValues.length > 0
 
-  const toggleAll = () => {
-    if (allSelected) {
-      onChange(selected.filter((s) => !allValues.includes(s.value)))
-    } else {
-      const mergedMap = new Map<string, MultiSelectOption>()
-      selected.forEach((s) => mergedMap.set(s.value, s))
-      options.forEach((o) => mergedMap.set(o.value, o))
-      onChange(Array.from(mergedMap.values()))
-    }
+  const selectAll = () => {
+    onChange([...options])
+  }
+
+  const deselectAll = () => {
+    onChange([])
   }
 
   return (
@@ -116,34 +111,43 @@ export default function MultiSelect({
                 <Loader />
               </div>
             ) : null}
-
-            <CommandEmpty>No results found.</CommandEmpty>
-
-            <CommandGroup>
-              <CommandItem
-                onSelect={toggleAll}
-                className="text-muted-foreground"
-              >
-                <Checkbox
-                  checked={allSelected && !noneSelected}
-                  className="mr-2"
-                />
-                {allSelected ? "Deselect All" : "Select All"}
-              </CommandItem>
-              {options.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  onSelect={() => toggleOption(option)}
-                >
-                  <Checkbox
-                    checked={selectedValues.includes(option.value)}
-                    onCheckedChange={() => toggleOption(option)}
-                    className="mr-2"
-                  />
-                  {option.label}
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            {!loading && options.length === 0 && query.length > 0 && (
+              <CommandEmpty>No results found.</CommandEmpty>
+            )}
+            {options.length > 0 && (
+              <CommandGroup>
+                {hasAnySelected ? (
+                  <CommandItem
+                    onSelect={deselectAll}
+                    className="text-muted-foreground"
+                  >
+                    <Checkbox checked={hasAnySelected} className="mr-2" />
+                    Deselect All
+                  </CommandItem>
+                ) : (
+                  <CommandItem
+                    onSelect={selectAll}
+                    className="text-muted-foreground"
+                  >
+                    <Checkbox checked={false} className="mr-2" />
+                    Select All
+                  </CommandItem>
+                )}
+                {options.map((option) => (
+                  <CommandItem
+                    key={option.value}
+                    onSelect={() => toggleOption(option)}
+                  >
+                    <Checkbox
+                      checked={selectedValues.includes(option.value)}
+                      onCheckedChange={() => toggleOption(option)}
+                      className="mr-2"
+                    />
+                    {option.label}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
           </Command>
         </PopoverContent>
       </Popover>
