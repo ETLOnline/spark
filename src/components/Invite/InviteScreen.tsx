@@ -29,14 +29,42 @@ import { AttachSpaceUserAction } from "@/src/server-actions/Space/Space"
 import { useRouter } from "next/navigation"
 import { useAuthUser } from "@/src/hooks/useAuthUser"
 import { AttachCommunityUserAction } from "@/src/server-actions/Community/Community"
+import { isEntityUser } from "@/src/utils/clientHelper"
+import Loader from "@/src/components/common/Loader/Loader"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
 
 interface Props {
   entityType: "channel" | "space" | "community"
   entity: SelectChannel | SelectSpace | SelectCommunity
 }
 
+const getEntityRedirectPath = (
+  entity: SelectChannel | SelectSpace | SelectCommunity
+) => {
+  if (isEntityCommunity(entity)) {
+    return `/communities/${entity.slug}`
+  }
+  if (isEntityChannel(entity)) {
+    return `/channels/${entity.channel_slug}/spaces`
+  }
+  if (isEntitySpace(entity)) {
+    return `/channels/${entity.channel?.channel_slug}/spaces/${entity.space_slug}`
+  }
+  return "/"
+}
+
 const InviteScreen = ({ entityType, entity }: Props) => {
-  const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
+  const { refreshAuthUser } = useAuthUser()
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [navigate, setNavigate] = useState(false)
+  const [hasCheckedMembership, setHasCheckedMembership] = useState(false)
+
+  const router = useRouter()
+  const authUser = useAtomValue(userStore.AuthUser)
+  const { toast } = useToast()
+
+  const isUserMember = isEntityUser(entity, authUser?.unique_id ?? "")
+
   const entityName = isEntityCommunity(entity)
     ? entity.title
     : isEntityChannel(entity)
@@ -58,9 +86,6 @@ const InviteScreen = ({ entityType, entity }: Props) => {
   const title = `Join ${entityName} ${entityType}`
   const description = `You have been invited to Join the ${entityType} to start collaborating.`
 
-  const { toast } = useToast()
-  const router = useRouter()
-  const authUser = useAtomValue(userStore.AuthUser)
   const [
     loadingCommunityAttach,
     ___,
@@ -72,27 +97,32 @@ const InviteScreen = ({ entityType, entity }: Props) => {
   const [loadingSpaceAttach, __, errorAttachingSpace, attachSpaceUser] =
     useServerAction(AttachSpaceUserAction)
 
-  const [navigate, setNavigate] = useState(false)
+  useEffect(() => {
+    if (authUser?.unique_id) {
+      if (isUserMember) {
+        toast({
+          title: `You are already a member of this ${entityType}.`,
+          variant: "default"
+        })
+        const path = getEntityRedirectPath(entity)
+        router.replace(path)
+        
+      } else {
+        setHasCheckedMembership(true)
+      }
+    }
+  }, [isUserMember, entity, router, authUser])
 
   useEffect(() => {
     if (navigate) {
-      if (isEntityCommunity(entity)) {
-        router.push(
-          `/communities/${isEntityCommunity(entity) ? entity.slug : ""}`
-        )
-      } else if (isEntityChannel(entity)) {
-        router.push(
-          `/channels/${isEntityChannel(entity) ? entity.channel_slug : ""}/spaces`
-        )
-      } else {
-        router.push(
-          `/channels/${entity.channel?.channel_slug}/spaces/${isEntitySpace(entity) ? entity.space_slug : ""}`
-        )
-      }
+      const path = getEntityRedirectPath(entity)
+      router.push(path)
     }
-  }, [navigate])
+  }, [navigate, router, entity])
 
   const handleJoin = async () => {
+    if (isLoading) return
+    setIsLoading(true)
     if (authUser?.unique_id && entity.id) {
       try {
         if (isEntityCommunity(entity)) {
@@ -107,8 +137,8 @@ const InviteScreen = ({ entityType, entity }: Props) => {
           await attachSpaceUser(entity.id, authUser.unique_id)
         }
         await refreshAuthUser()
-        setNavigate(true)
 
+        setNavigate(true)
         toast({
           title: `Successfully joined ${entityType}`,
           description: `You have successfully joined the ${entityType}.`,
@@ -121,8 +151,17 @@ const InviteScreen = ({ entityType, entity }: Props) => {
           description: `An error occurred while trying to join the ${entityType}.`,
           variant: "destructive"
         })
+        setIsLoading(false)
       }
     }
+  }
+
+  if (!hasCheckedMembership || isUserMember) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+        <Loader size={LoaderSizes.xl} />
+      </div>
+    )
   }
 
   return (
@@ -169,13 +208,13 @@ const InviteScreen = ({ entityType, entity }: Props) => {
 
         <CardFooter className="flex flex-col sm:flex-row gap-3">
           <Button
-            loading={loadingChannelAttach || loadingSpaceAttach}
-            disabled={loadingChannelAttach || loadingSpaceAttach}
+            loading={isLoading}
+            disabled={isLoading}
             className="w-full sm:w-auto"
             onClick={handleJoin}
           >
-            Continue to Join
-            <ArrowRight className="ml-2 h-4 w-4" />
+            {isLoading ? "Joining..." : "Continue to Join"}
+            {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
           </Button>
         </CardFooter>
       </Card>

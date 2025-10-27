@@ -19,7 +19,7 @@ export async function createProjectInviteNotification(
   const linkUrl = createAbsoluteUrl(`/project/${project?.data?.id}/board`)
   const payload = {
     logoUrl: logoUrl,
-    subject: "You're invited to join a project",
+    subject: "You've Been Added to a Project!",
     projectName: project?.data?.project_name,
     inviterName: `${authUser.first_name} ${authUser.last_name}`,
     ctaLink: linkUrl
