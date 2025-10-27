@@ -17,7 +17,9 @@ import {
   UpdateTasksSprint,
   GetBacklogTaskCount,
   GetSprintTaskCount,
-  SprintTaskCountFilters
+  SprintTaskCountFilters,
+  checkIfTaskIsParent,
+  GetTaskByIds
 } from "@/src/db/data-access/tasks/query"
 import { CreateServerAction } from ".."
 import {
@@ -106,6 +108,19 @@ export const GetSprintTasksAction = CreateServerAction(
   }
 )
 
+export const GetLinkedTasksAction = CreateServerAction(
+  true,
+  async (filters?: taskQueryFilters) => {
+    try {
+      const subTasks = await GetTasks({ ...filters })
+
+      return { success: true, data: subTasks }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
 export const GetTaskByIdAction = CreateServerAction(
   true,
   async (taskId: string) => {
@@ -113,6 +128,19 @@ export const GetTaskByIdAction = CreateServerAction(
       const task = await GetTaskById(taskId)
 
       return { success: true, data: task }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetTaskByIdsAction = CreateServerAction(
+  true,
+  async (taskIds: string[]) => {
+    try {
+      const tasks = await GetTaskByIds(taskIds)
+
+      return { success: true, data: tasks }
     } catch (error) {
       return { error: error }
     }
@@ -245,6 +273,19 @@ export const CreateTaskStatusAction = CreateServerAction(
       })
 
       return { success: true, data: taskStatus }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const checkIfTaskIsParentAction = CreateServerAction(
+  true,
+  async (taskId: string) => {
+    try {
+      const res = await checkIfTaskIsParent(taskId)
+
+      return { success: true, data: res }
     } catch (error) {
       return { error: error }
     }

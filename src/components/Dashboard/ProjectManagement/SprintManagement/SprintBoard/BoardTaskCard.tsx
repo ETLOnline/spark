@@ -39,18 +39,20 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
-import { projectTaskTypes } from "../../constants/projectManagment"
+import { projectTaskTypes, TaskType } from "../../constants/projectManagment"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { useDraggable } from "@dnd-kit/core"
+import { ToUpperCase } from "@/src/utils/helpers"
 
 interface Props {
   task: SelectTask
   onClick: (task: SelectTask) => void
   setTasks: Dispatch<SetStateAction<SelectTask[]>>
+  taskList?: SelectTask[]
 }
 
-function BoardTaskCard({ task, onClick, setTasks }: Props) {
+function BoardTaskCard({ task, onClick, setTasks, taskList }: Props) {
   const [isAlertOpen, setIsAlertOpen] = useState(false)
 
   const [removeTaskLoading, , , RemoveTask] = useServerAction(UpdateTaskAction)
@@ -179,84 +181,125 @@ function BoardTaskCard({ task, onClick, setTasks }: Props) {
     opacity: isDragging ? 0.5 : 1
   }
 
+  const subTasks = taskList?.filter((t) => t.parent_task_id === task.id)
+
+  const filteredSubTasks = subTasks?.filter(
+    (subTask) => subTask.status_id === task.status_id
+  )
+
   return (
     <>
       <Card
-        key={task.id}
-        ref={setNodeRef}
-        style={style}
-        {...attributes}
-        {...listeners}
-        className={`p-3 transition-colors hover:cursor-pointer hover:bg-muted`}
-        onClick={() => onClick(task)}
+        key={`${task.id}-card`}
+        className={` transition-colors hover:cursor-pointer hover:bg-muted`}
       >
-        <div className="flex justify-between items-start">
-          <div>
-            <span className="text-xs flex items-center gap-2 mb-2">
-              <IssueTypeIcon type={task.task_type} />
-              <span className="text-muted-foreground">{task.task_num}</span>
-            </span>
-            <h4 className="font-medium text-sm line-clamp-2">
-              {task.task_title}
-            </h4>
-            {/* <p className="text-xs text-muted-foreground mt-1">
-              {task.description}
-            </p> */}
-          </div>
-          {canUpdate && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  className="text-destructive"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setIsAlertOpen(true)
-                  }}
-                >
-                  Move to Backlog
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
-        <div className="flex flex-wrap justify-between items-center mt-3">
-          <div className="flex gap-2 items-center">
-            {task.assign_to ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Avatar className="h-5 w-5 cursor-pointer">
-                      <AvatarImage
-                        src={task.assignee?.profile_url || ""}
-                        alt={task.assignee?.first_name}
-                      />
-                      <AvatarFallback className="text-xs">
-                        {task.assignee?.first_name[0]}
-                        {task.assignee?.last_name[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <span>
-                      {task.assignee?.first_name} {task.assignee?.last_name}
-                    </span>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
-              <CircleHelp className="h-5 w-5" />
+        <div
+          ref={setNodeRef}
+          style={style}
+          {...attributes}
+          {...listeners}
+          className="p-3"
+          onClick={() => onClick(task)}
+        >
+          <div className="flex justify-between items-start">
+            <div>
+              <span className="text-xs flex items-center gap-2 mb-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger className="">
+                      <IssueTypeIcon type={task.task_type} />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {ToUpperCase(task.task_type)}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <span className="text-muted-foreground">{task.task_num}</span>
+              </span>
+              <h4 className="font-medium text-sm line-clamp-2">
+                {task.task_title}
+              </h4>
+            </div>
+            {canUpdate && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    className="text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setIsAlertOpen(true)
+                    }}
+                  >
+                    Move to Backlog
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
-            <span className="text-sm text-muted-foreground">
-              {task.assignee?.first_name} {task.assignee?.last_name}
-            </span>
           </div>
-          {getPriorityBadge(task.task_priority)}
+
+          {task.parentTask ? (
+            <div className="p-1 border rounded-md mt-2 flex items-center gap-2">
+              <div>
+                <IssueTypeIcon type={task.parentTask?.task_type} />
+              </div>
+              <span className="text-xs line-clamp-1">
+                {task.parentTask?.task_num} {task.parentTask?.task_title}
+              </span>
+            </div>
+          ) : null}
+
+          <div className="flex flex-wrap justify-between items-center mt-3">
+            <div className="flex gap-2 items-center">
+              {task.assign_to ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Avatar className="h-5 w-5 cursor-pointer">
+                        <AvatarImage
+                          src={task.assignee?.profile_url || ""}
+                          alt={task.assignee?.first_name}
+                        />
+                        <AvatarFallback className="text-xs">
+                          {task.assignee?.first_name[0]}
+                          {task.assignee?.last_name[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <span>
+                        {task.assignee?.first_name} {task.assignee?.last_name}
+                      </span>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <CircleHelp className="h-5 w-5" />
+              )}
+              <span className="text-sm text-muted-foreground">
+                {task.assignee?.first_name} {task.assignee?.last_name}
+              </span>
+            </div>
+            {getPriorityBadge(task.task_priority)}
+          </div>
         </div>
+
+        {(filteredSubTasks?.length ?? 0) > 0 && (
+          <div className="text-xs flex flex-col gap-2 p-2 ">
+            {filteredSubTasks?.map((subTask) => (
+              <BoardTaskCard
+                key={subTask.id}
+                task={subTask}
+                onClick={onClick}
+                setTasks={setTasks}
+              />
+            ))}
+          </div>
+        )}
       </Card>
 
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>

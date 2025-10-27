@@ -24,9 +24,9 @@ import { taskStore } from "@/src/store/tasks/taskStore"
 import pusherClient from "@/src/services/realtime/PusherClient"
 import { SelectSprint } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
-import { set } from "zod"
-import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import TaskMoveDialog from "../Task/components/task-move-dialog"
+import ConfirmationDialog from "../Task/components/ConfirmationDialog"
+import { TaskType } from "../constants/projectManagment"
 
 export function SprintManagement() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
@@ -47,6 +47,9 @@ export function SprintManagement() {
   const pusherChannel = useAtomValue(projectStore.pusherChannel)
   const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useAtom(
     taskStore.isTaskMoveDialogOpen
+  )
+  const [isConfirmationAlertOpen, setIsConfirmationAlertOpen] = useAtom(
+    taskStore.isConfirmationAlertOpen
   )
   const [selectedSprint, setSelectedSprint] = useAtom(
     sprintStore.selectedSprint
@@ -76,7 +79,8 @@ export function SprintManagement() {
   const fetchTasks = async () => {
     const tasksResponse = await GetTasks({
       project_id: projectId,
-      sprint_ids: sprintList.map((s) => s.id)
+      sprint_ids: sprintList.map((s) => s.id),
+      excludedTypes: [TaskType.SUBTASK]
     })
     if (tasksResponse?.success && tasksResponse.data.tasks) {
       setTasks(tasksResponse.data.tasks)
@@ -253,15 +257,24 @@ export function SprintManagement() {
             })
           )
         }}
+        onSubTaskCreate={(task: SelectTask) => {
+          if (task.task_type === TaskType.SUBTASK) return
+          setTasks((prev) => [...prev, task])
+        }}
       />
 
       <TaskMoveDialog
         isTaskMoveDialogOpen={isTaskMoveDialogOpen}
         setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
-        task_ids={selectedTasksForMove.map((t) => t.id)}
+        tasks={selectedTasksForMove}
         currSprintId={selectedSprint?.id}
         setTasks={setTasks}
         dialogAction={taskMoveDialogAction}
+      />
+
+      <ConfirmationDialog
+        setIsAlertDialogOpen={setIsConfirmationAlertOpen}
+        isAlertOpen={isConfirmationAlertOpen}
       />
     </div>
   ) : (

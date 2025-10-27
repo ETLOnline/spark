@@ -2,7 +2,7 @@ import { Badge } from "@/src/components/ui/badge"
 import { SelectSprint, SelectTask, SelectUser } from "@/src/db/schema"
 import { projectStore } from "@/src/store/project/projectStore"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
-import { CircleHelp, MoreHorizontal } from "lucide-react"
+import { AlertCircle, CircleHelp, Flag, MoreHorizontal } from "lucide-react"
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import {
   projectTaskPriority,
@@ -27,7 +27,10 @@ import {
   AlertDialogTitle
 } from "@/src/components/ui/alert-dialog"
 import { toast } from "@/src/hooks/use-toast"
-import { UpdateTaskAction } from "@/src/server-actions/Tasks/Task"
+import {
+  checkIfTaskIsParentAction,
+  UpdateTaskAction
+} from "@/src/server-actions/Tasks/Task"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
@@ -37,9 +40,10 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
-import { getInitials } from "@/src/utils/helpers"
+import { getInitials, ToUpperCase } from "@/src/utils/helpers"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import { sprintStore } from "@/src/store/sprint/sprintsStore"
+import { DynamicIcon, IconName } from "lucide-react/dynamic"
 
 interface Props {
   task: SelectTask
@@ -60,6 +64,9 @@ function SprintTasks({
   const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useAtom(
     taskStore.isTaskMoveDialogOpen
   )
+  const setIsConformationAlertOpen = useSetAtom(
+    taskStore.isConfirmationAlertOpen
+  )
   const setSelectedSprint = useSetAtom(sprintStore.selectedSprint)
   const setSelectedTaskForEdit = useSetAtom(taskStore.selectedTask)
   const setSelectedTasksForMoveTasks = useSetAtom(taskStore.selectedSprintTask)
@@ -74,65 +81,65 @@ function SprintTasks({
 
   async function handleRemoveTask(task: SelectTask) {
     try {
-      const updatedTask = await RemoveTask(task.id, { sprint_id: null })
-      if (updatedTask?.success && updatedTask.data) {
-        setTasks((prevTasks) => prevTasks.filter((t) => t.id !== task.id))
+      const taskIds = [task.id, ...(task.subTasks?.map((sub) => sub.id) || [])]
 
-        toast({
-          title: "Task removed from sprint successfully",
-          duration: 2000
-        })
-        setIsAlertOpen(false)
+      for (const id of taskIds) {
+        await RemoveTask(id, { sprint_id: null })
       }
+
+      setTasks((prevTasks) => prevTasks.filter((t) => !taskIds.includes(t.id)))
+
+      toast({
+        title: "Task and its subtasks removed from sprint successfully",
+        duration: 2000
+      })
+
+      setIsAlertOpen(false)
     } catch {
       toast({
-        title: "Unable to remove task",
+        title: "Unable to remove tasks",
         duration: 2000
       })
     }
   }
 
-  function moveTask(taskId: string) {
+  async function moveTask(taskId: string) {
+    const isTaskParent = await checkIfTaskIsParentAction(taskId)
+    if (isTaskParent.data) {
+      setIsConformationAlertOpen(true)
+    } else {
+      setIsTaskMoveDialogOpen(true)
+    }
+
     setSelectedTasksForMoveTasks([task])
     setSelectedSprint(currSprint)
-    setIsTaskMoveDialogOpen(true)
     setIsTaskDropDownOpen(false)
     setTaskMoveDialogAction("moveTask")
   }
 
-  const getTypeLabel = (type: string) => {
-    const matchedType = projectTaskTypes.find((t) => t.key === type)
-    return matchedType ? (
-      <Badge
-        variant={
-          matchedType?.badgeVariant as
-            | "default"
-            | "destructive"
-            | "secondary"
-            | "outline"
-        }
-      >
-        {matchedType.title}
-      </Badge>
+  function IssueTypeIcon({ type }: { type: string }) {
+    const typeMap = projectTaskTypes.find((t) => t.key === type)
+    return typeMap ? (
+      <DynamicIcon
+        name={typeMap.icon as IconName}
+        className="h-5 w-5"
+        style={{ color: typeMap.iconColor }}
+      />
     ) : (
-      <Badge variant={"outline"} />
+      <AlertCircle className="h-5 w-5" />
     )
   }
 
-  const getPriorityLabel = (priority: string) => {
+  function PriorityIcon({ priority }: { priority: string }) {
     const priorityMap = projectTaskPriority.find((p) => p.key === priority)
     return priorityMap ? (
-      <Badge
-        variant={"outline"}
-        style={{
-          color: priorityMap.badgeTextColor,
-          borderColor: priorityMap.badgeBorderColor
-        }}
-      >
-        {priorityMap?.title}
-      </Badge>
+      <DynamicIcon
+        name={priorityMap.icon as IconName}
+        className="h-5 w-5"
+        style={{ color: priorityMap.iconColor }}
+      />
     ) : (
-      <Badge variant="outline">Unknown</Badge>
+      <Flag className="h-5 w-5" />
     )
   }
 
@@ -155,8 +162,19 @@ function SprintTasks({
         key={task.id}
         className="grid grid-cols-12 gap-2 p-4 border-t items-center hover:bg-muted/50  transition delay-150 duration-300"
       >
+        <div className="col-span-1">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger className="">
+                <IssueTypeIcon type={task.task_type} />
+              </TooltipTrigger>
+              <TooltipContent>{ToUpperCase(task.task_type)}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
         <div
-          className={`col-span-2 text-sm font-medium text-muted-foreground cursor-pointer`}
+          className={`col-span-1 text-sm font-medium text-muted-foreground cursor-pointer`}
           onClick={() => EditTask(task)}
         >
           #{task.task_num}
@@ -172,17 +190,36 @@ function SprintTasks({
         </div>
 
         <div className="col-span-1 text-center">
-          {getTypeLabel(task.task_type)}
+          {task.parentTask ? (
+            <Badge variant={"outline"}>
+              <IssueTypeIcon type={task.parentTask?.task_type} />
+              {task.parentTask?.task_num}
+            </Badge>
+          ) : null}
         </div>
 
-        <div className="col-span-3 flex justify-around items-center">
+        <div className="col-span-2  text-center">
           <Badge variant={"outline"}>
             {status.find((s) => s.id === task.status_id)?.name}
           </Badge>
-          <div>{getPriorityLabel(task.task_priority)}</div>
         </div>
 
-        <div className="col-span-1 text-center">{task.story_points}</div>
+        <div className="col-span-1 text-center">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <PriorityIcon priority={task.task_priority} />
+              </TooltipTrigger>
+              <TooltipContent>{ToUpperCase(task.task_priority)}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        <div className="col-span-1 text-center">
+          {task.story_points && task.story_points !== "0"
+            ? task.story_points
+            : "-"}
+        </div>
 
         <div className="col-span-1 text-center">
           {task.assign_to ? (

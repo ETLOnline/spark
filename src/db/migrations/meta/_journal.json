@@ -155,6 +155,13 @@
       "when": 1760023196481,
       "tag": "0021_2025_10_09_201952__create_sprint_burn_down_and_project_recent_activity_table",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1760697682721,
+      "tag": "0022_2025_10_17_154118__update_tasktable",
+      "breakpoints": true
     }
   ]
 }

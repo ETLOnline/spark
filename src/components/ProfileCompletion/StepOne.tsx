@@ -263,7 +263,7 @@ export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
               disabled={loading}
             >
               <Upload className="mr-2 h-4 w-4" />
-              Upload Picture
+              {currentImageUrl ? "Change Picture" : "Upload Picture"}
             </Button>
             <input
               type="file"

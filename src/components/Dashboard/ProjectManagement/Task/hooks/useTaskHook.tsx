@@ -61,7 +61,8 @@ const useTaskHook = ({
           project_id: projectId || "",
           sprint_id: sprintId || null,
           assign_to: data.assign_to || null,
-          assign_by: data.assign_by || authUser?.unique_id
+          assign_by: data.assign_by || authUser?.unique_id,
+          parent_task_id: data.parent_task_id || null
         }
         const task = await CreateTask(payload, pageName)
         if (task?.success && task.data) {
@@ -92,7 +93,8 @@ const useTaskHook = ({
         const payload = {
           ...data,
           assign_to: data.assign_to || null,
-          assign_by: data.assign_by || authUser?.unique_id
+          assign_by: data.assign_by || authUser?.unique_id,
+          parent_task_id: data.parent_task_id || null
         }
         const updatedTask = await UpdateTask(selectedTask?.id, payload)
         if (updatedTask?.success && updatedTask.data) {

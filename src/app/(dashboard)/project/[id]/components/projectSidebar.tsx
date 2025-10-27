@@ -106,7 +106,10 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
               }
 
               return (
-                <Link href={`.${page.link}`} key={page.key}>
+                <Link
+                  href={`/project/${currProject.id}/${page.link}`}
+                  key={page.key}
+                >
                   <SidebarMenuItem
                     className={`flex flex-row items-center gap-2 p-2 rounded
                     ${pathName.includes(page.link) ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}`}
