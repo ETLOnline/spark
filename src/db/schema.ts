@@ -1028,6 +1028,7 @@ export const taskTable = pgTable("task", {
   sprint_id: varchar(),
   assign_to: varchar(),
   assign_by: varchar(),
+  parent_task_id: varchar(),
   ...timestamps
 })
 
@@ -1036,6 +1037,8 @@ export type SelectTask = typeof taskTable.$inferSelect & {
   assignee?: SelectUser | null
   assignor?: SelectUser | null
   status?: InferSelectModel<typeof TaskStatusTable> | null
+  parentTask?: SelectTask | null
+  subTasks?: SelectTask[]
 }
 
 export const taskRelations = relations(taskTable, ({ one, many }) => ({
@@ -1056,6 +1059,14 @@ export const taskRelations = relations(taskTable, ({ one, many }) => ({
   }),
   burnDowns: many(sprintBurnDownTable, {
     relationName: "taskToBurnDown"
+  }),
+  parentTask: one(taskTable, {
+    fields: [taskTable.parent_task_id],
+    references: [taskTable.id],
+    relationName: "taskParent"
+  }),
+  subTasks: many(taskTable, {
+    relationName: "taskParent"
   })
 }))
 

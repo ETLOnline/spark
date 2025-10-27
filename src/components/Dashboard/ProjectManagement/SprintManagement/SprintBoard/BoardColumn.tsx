@@ -2,6 +2,7 @@ import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { InsertTaskStatus, SelectSprint, SelectTask } from "@/src/db/schema"
 import BoardTaskCard from "./BoardTaskCard"
 import { useDroppable } from "@dnd-kit/core"
+import { TaskType } from "../../constants/projectManagment"
 
 interface Props {
   sprint?: SelectSprint
@@ -19,18 +20,25 @@ function BoardColumn({ sprint, status, tasks, onTaskClick, setTasks }: Props) {
 
   const columnTasks = tasks.filter((t) => t.status_id === status?.id)
 
+  const filteredTasks = columnTasks.filter((task) =>
+    task.parentTask && task.parentTask.task_type !== TaskType.EPIC
+      ? task.parentTask?.status_id !== task.status_id
+      : true
+  )
+
   return (
     <div
       ref={setNodeRef}
-      className="w-[24%] border p-2 pb-4 rounded-xl flex-shrink-0 space-y-2"
+      className="w-[33%] bg-muted/50 p-2 pb-4 rounded-xl flex-shrink-0 space-y-2"
     >
       <div className="font-medium text-sm mb-4 text-center">{status?.name}</div>
-      {columnTasks.map((task) => (
+      {filteredTasks.map((task) => (
         <BoardTaskCard
           task={task}
           key={task.id}
           onClick={onTaskClick}
           setTasks={setTasks}
+          taskList={tasks}
         />
       ))}
 
