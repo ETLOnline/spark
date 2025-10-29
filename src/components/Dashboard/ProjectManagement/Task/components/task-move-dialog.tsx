@@ -31,6 +31,7 @@ import { useAtom, useSetAtom } from "jotai"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import { toast } from "@/src/hooks/use-toast"
 import { sprintStore } from "@/src/store/sprint/sprintsStore"
+import { SprintStatus } from "../../constants/projectManagment"
 
 interface Props {
   isTaskMoveDialogOpen: boolean
@@ -70,10 +71,10 @@ export default function TaskMoveDialog({
     const fetchSprints = async () => {
       const Sprints = await GetSprints({
         projectId: projectId,
-        status: ["active", "upcoming"]
+        status: [SprintStatus.ACTIVE, SprintStatus.UPCOMING]
       })
       if (Sprints?.success && Sprints.data) {
-        setSprintList(Sprints.data)
+        setSprintList(Sprints.data.sprints)
       }
     }
     fetchSprints()

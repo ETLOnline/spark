@@ -48,15 +48,17 @@ import { DynamicIcon, IconName } from "lucide-react/dynamic"
 interface Props {
   task: SelectTask
   currSprint: SelectSprint
-  setIsTaskModelOpen: Dispatch<SetStateAction<boolean>>
-  setTasks: Dispatch<SetStateAction<SelectTask[]>>
+  setIsTaskModelOpen?: Dispatch<SetStateAction<boolean>>
+  setTasks?: Dispatch<SetStateAction<SelectTask[]>>
+  isSprintCompleted?: boolean
 }
 
 function SprintTasks({
   task,
   currSprint,
   setIsTaskModelOpen,
-  setTasks
+  setTasks,
+  isSprintCompleted
 }: Props) {
   const [status, setStatus] = useAtom(projectStore.projectStatusList)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
@@ -76,7 +78,7 @@ function SprintTasks({
 
   function EditTask(task: SelectTask) {
     setSelectedTaskForEdit(task)
-    setIsTaskModelOpen(true)
+    setIsTaskModelOpen?.(true)
   }
 
   async function handleRemoveTask(task: SelectTask) {
@@ -87,7 +89,9 @@ function SprintTasks({
         await RemoveTask(id, { sprint_id: null })
       }
 
-      setTasks((prevTasks) => prevTasks.filter((t) => !taskIds.includes(t.id)))
+      setTasks?.((prevTasks) =>
+        prevTasks.filter((t) => !taskIds.includes(t.id))
+      )
 
       toast({
         title: "Task and its subtasks removed from sprint successfully",
@@ -253,31 +257,34 @@ function SprintTasks({
         </div>
 
         <div className="col-span-1 text-center">
-          {canUpdateTask && (
-            <DropdownMenu
-              open={isTaskDropDownOpen}
-              onOpenChange={(open) => setIsTaskDropDownOpen(open)}
-            >
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => {
-                    setIsTaskDropDownOpen(false)
-                    setIsAlertOpen(true)
-                  }}
-                >
-                  Move to Backlog
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => moveTask(task.id)}>
-                  Move to other Sprint
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          {canUpdateTask &&
+            (isSprintCompleted ? (
+              <span>-</span>
+            ) : (
+              <DropdownMenu
+                open={isTaskDropDownOpen}
+                onOpenChange={(open) => setIsTaskDropDownOpen(open)}
+              >
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setIsTaskDropDownOpen(false)
+                      setIsAlertOpen(true)
+                    }}
+                  >
+                    Move to Backlog
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => moveTask(task.id)}>
+                    Move to other Sprint
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ))}
         </div>
       </div>
 

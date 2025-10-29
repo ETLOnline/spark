@@ -35,6 +35,7 @@ interface TaskModalProps {
   onUpdateComplete?: (task: SelectTask) => void
   isReady?: boolean
   onSubTaskCreate?: (task: SelectTask) => void
+  isSprintCompleted?: boolean
 }
 
 export const TaskModal = ({
@@ -45,7 +46,8 @@ export const TaskModal = ({
   onUpdateComplete,
   sprintId,
   isReady,
-  onSubTaskCreate
+  onSubTaskCreate,
+  isSprintCompleted = false
 }: TaskModalProps) => {
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [taskIdFromUrl, setTaskIdFromUrl] = useState<string | null>(null)
@@ -166,6 +168,17 @@ export const TaskModal = ({
             setIsChanged={setIsChanged}
             onSubTaskCreate={onSubTaskCreate}
           />
+          <ScrollArea className="max-h-[80vh]">
+            <TaskForm
+              statuses={statuses}
+              onSubmit={handleSubmit}
+              selectedTask={internalTask}
+              loading={isLoading}
+              isTaskModelOpen={isTaskModelOpen}
+              setIsChanged={setIsChanged}
+              isSprintCompleted={isSprintCompleted}
+            />
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
