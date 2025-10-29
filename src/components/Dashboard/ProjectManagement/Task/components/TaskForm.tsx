@@ -988,6 +988,7 @@ export default function TaskForm({
                                   <div
                                     className="flex items-center gap-2 rounded-md border p-2 cursor-pointer"
                                     onClick={() => {
+                                      if (!isEditable || isTaskEpic) return
                                       setActiveField("parent")
                                       setPopoverOpen(true)
                                     }}

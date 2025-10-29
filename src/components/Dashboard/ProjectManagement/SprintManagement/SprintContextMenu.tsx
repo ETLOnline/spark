@@ -120,8 +120,8 @@ function SprintContextMenu({
         sprint_status: SprintStatus.ACTIVE
       })
       if (res?.success && res.data) {
-        setSprintList((prev) =>
-          prev.map((s) => (s.id === res.data.id ? res.data : s))
+        setSprintList((prevSprints) =>
+          prevSprints.filter((s) => s.id !== res.data.id)
         )
       }
     }
@@ -143,8 +143,8 @@ function SprintContextMenu({
     } else {
       const res = await UpdateSprint(sprint.id, { sprint_status: "closed" })
       if (res?.success && res.data) {
-        setSprintList((prev) =>
-          prev.map((s) => (s.id === res.data.id ? res.data : s))
+        setSprintList((prevSprints) =>
+          prevSprints.filter((s) => s.id !== res.data.id)
         )
       }
     }

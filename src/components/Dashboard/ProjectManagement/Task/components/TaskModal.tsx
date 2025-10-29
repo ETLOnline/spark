@@ -167,18 +167,8 @@ export const TaskModal = ({
             isTaskModelOpen={isTaskModelOpen}
             setIsChanged={setIsChanged}
             onSubTaskCreate={onSubTaskCreate}
+            isSprintCompleted={isSprintCompleted}
           />
-          <ScrollArea className="max-h-[80vh]">
-            <TaskForm
-              statuses={statuses}
-              onSubmit={handleSubmit}
-              selectedTask={internalTask}
-              loading={isLoading}
-              isTaskModelOpen={isTaskModelOpen}
-              setIsChanged={setIsChanged}
-              isSprintCompleted={isSprintCompleted}
-            />
-          </ScrollArea>
         </DialogContent>
       </Dialog>
 
