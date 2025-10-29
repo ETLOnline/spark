@@ -141,9 +141,7 @@ export default function TaskMoveDialog({
 
     const res = await UpdateSprint(currSprintId, { sprint_status: "closed" })
     if (res?.success && res.data) {
-      setSprintList((prev) =>
-        prev.map((s) => (s.id === res.data.id ? res.data : s))
-      )
+      setSprintList((prev) => prev.filter((s) => s.id !== res.data.id))
       setIsTaskMoveDialogOpen(false)
     }
   }
