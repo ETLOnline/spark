@@ -121,7 +121,7 @@ function SprintContextMenu({
       })
       if (res?.success && res.data) {
         setSprintList((prevSprints) =>
-          prevSprints.filter((s) => s.id !== res.data.id)
+          prevSprints.map((s) => (s.id === res.data.id ? res.data : s))
         )
       }
     }
@@ -181,7 +181,14 @@ function SprintContextMenu({
             {isSprintCompleted ? (
               <>
                 {sprint.sprint_status === "closed" ? (
-                  <DropdownMenuItem onClick={() => HandleStartSprint(sprint)}>
+                  <DropdownMenuItem
+                    onClick={async () => {
+                      await HandleStartSprint(sprint)
+                      setSprintList((prev) =>
+                        prev.filter((s) => s.id !== sprint.id)
+                      )
+                    }}
+                  >
                     Reopen Sprint
                   </DropdownMenuItem>
                 ) : (
