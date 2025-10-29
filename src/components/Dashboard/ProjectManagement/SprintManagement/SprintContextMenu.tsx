@@ -32,19 +32,22 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { useParams } from "next/navigation"
 import { projectStore } from "@/src/store/project/projectStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
+import { SprintStatus } from "../constants/projectManagment"
 
 interface Props {
   isSprintContextMenuOpen: boolean
   setIsSprintContextMenuOpen: Dispatch<SetStateAction<boolean>>
   sprint: SelectSprint
   sprintTasks: SelectTask[]
+  isSprintCompleted?: boolean
 }
 
 function SprintContextMenu({
   sprint,
   sprintTasks,
   isSprintContextMenuOpen,
-  setIsSprintContextMenuOpen
+  setIsSprintContextMenuOpen,
+  isSprintCompleted
 }: Props) {
   const params = useParams()
   const projectId = params.id as string
@@ -113,10 +116,12 @@ function SprintContextMenu({
 
   async function HandleStartSprint(sprint: SelectSprint) {
     if (sprint) {
-      const res = await UpdateSprint(sprint.id, { sprint_status: "active" })
+      const res = await UpdateSprint(sprint.id, {
+        sprint_status: SprintStatus.ACTIVE
+      })
       if (res?.success && res.data) {
-        setSprintList((prev) =>
-          prev.map((s) => (s.id === res.data.id ? res.data : s))
+        setSprintList((prevSprints) =>
+          prevSprints.map((s) => (s.id === res.data.id ? res.data : s))
         )
       }
     }
@@ -138,8 +143,8 @@ function SprintContextMenu({
     } else {
       const res = await UpdateSprint(sprint.id, { sprint_status: "closed" })
       if (res?.success && res.data) {
-        setSprintList((prev) =>
-          prev.map((s) => (s.id === res.data.id ? res.data : s))
+        setSprintList((prevSprints) =>
+          prevSprints.filter((s) => s.id !== res.data.id)
         )
       }
     }
@@ -173,33 +178,50 @@ function SprintContextMenu({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {canUpdate && (
-              <DropdownMenuItem onClick={() => EditSprint(sprint)}>
-                Edit Sprint
-              </DropdownMenuItem>
-            )}
-            {sprint.sprint_status !== "active" ? (
-              <DropdownMenuItem
-                onClick={() => {
-                  HandleStartSprint(sprint)
-                }}
-              >
-                Start Sprint
-              </DropdownMenuItem>
-            ) : null}
-            <DropdownMenuItem onClick={() => HandleEndSprint(sprint)}>
-              End Sprint
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {canDelete && (
-              <DropdownMenuItem
-                className="text-red-500 "
-                onClick={() => {
-                  canDeleteSprint(sprint.id)
-                }}
-              >
-                Delete Sprint
-              </DropdownMenuItem>
+            {isSprintCompleted ? (
+              <>
+                {sprint.sprint_status === "closed" ? (
+                  <DropdownMenuItem
+                    onClick={async () => {
+                      await HandleStartSprint(sprint)
+                      setSprintList((prev) =>
+                        prev.filter((s) => s.id !== sprint.id)
+                      )
+                    }}
+                  >
+                    Reopen Sprint
+                  </DropdownMenuItem>
+                ) : null}
+              </>
+            ) : (
+              <>
+                {canUpdate && (
+                  <DropdownMenuItem onClick={() => EditSprint(sprint)}>
+                    Edit Sprint
+                  </DropdownMenuItem>
+                )}
+
+                {sprint.sprint_status !== SprintStatus.ACTIVE ? (
+                  <DropdownMenuItem onClick={() => HandleStartSprint(sprint)}>
+                    Start Sprint
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={() => HandleEndSprint(sprint)}>
+                    End Sprint
+                  </DropdownMenuItem>
+                )}
+
+                <DropdownMenuSeparator />
+
+                {canDelete && (
+                  <DropdownMenuItem
+                    className="text-red-500"
+                    onClick={() => canDeleteSprint(sprint.id)}
+                  >
+                    Delete Sprint
+                  </DropdownMenuItem>
+                )}
+              </>
             )}
           </DropdownMenuContent>
         </DropdownMenu>

@@ -19,7 +19,7 @@ import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import pusherClient from "@/src/services/realtime/PusherClient"
 import { userStore } from "@/src/store/user/userStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
-import { TaskType } from "../../constants/projectManagment"
+import { SprintStatus, TaskType } from "../../constants/projectManagment"
 
 function SprintBoard() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
@@ -118,10 +118,10 @@ function SprintBoard() {
     const fetchSprints = async () => {
       const Sprints = await GetSprints({
         projectId: projectId,
-        status: ["active"]
+        status: [SprintStatus.ACTIVE]
       })
       if (Sprints?.success && Sprints.data) {
-        setSprintList(Sprints.data)
+        setSprintList(Sprints.data.sprints)
       }
     }
     fetchSprints()
