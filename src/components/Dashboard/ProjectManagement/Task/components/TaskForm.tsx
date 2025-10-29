@@ -570,7 +570,10 @@ export default function TaskForm({
               {selectedTask && (
                 <div className="space-y-4 pl-2">
                   <h2 className="text-lg  font-semibold">Comments</h2>
-                  <TaskComment taskId={selectedTask.id} />
+                  <TaskComment
+                    taskId={selectedTask.id}
+                    isSprintCompleted={isSprintCompleted}
+                  />
                 </div>
               )}
             </div>
