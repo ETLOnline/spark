@@ -35,6 +35,7 @@ interface TaskModalProps {
   onUpdateComplete?: (task: SelectTask) => void
   isReady?: boolean
   onSubTaskCreate?: (task: SelectTask) => void
+  isSprintCompleted?: boolean
 }
 
 export const TaskModal = ({
@@ -45,7 +46,8 @@ export const TaskModal = ({
   onUpdateComplete,
   sprintId,
   isReady,
-  onSubTaskCreate
+  onSubTaskCreate,
+  isSprintCompleted = false
 }: TaskModalProps) => {
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [taskIdFromUrl, setTaskIdFromUrl] = useState<string | null>(null)
@@ -165,6 +167,7 @@ export const TaskModal = ({
             isTaskModelOpen={isTaskModelOpen}
             setIsChanged={setIsChanged}
             onSubTaskCreate={onSubTaskCreate}
+            isSprintCompleted={isSprintCompleted}
           />
         </DialogContent>
       </Dialog>

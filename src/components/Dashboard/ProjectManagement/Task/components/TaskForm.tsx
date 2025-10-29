@@ -74,6 +74,7 @@ interface Props {
   loading?: boolean
   setIsChanged?: Dispatch<SetStateAction<boolean>>
   onSubTaskCreate?: (task: SelectTask) => void
+  isSprintCompleted?: boolean
 }
 
 const projectSchema = z.object({
@@ -95,7 +96,8 @@ export default function TaskForm({
   onSubmit,
   loading = false,
   setIsChanged,
-  onSubTaskCreate
+  onSubTaskCreate,
+  isSprintCompleted
 }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null)
   const [usersList, setUsersList] = useState<(SelectUser | null)[]>([])
@@ -432,6 +434,8 @@ export default function TaskForm({
     }
   }
 
+  const isEditable = isAllowedAction && !isSprintCompleted
+
   return (
     <>
       <div className="grid grid-cols-12 gap-2 ">
@@ -455,7 +459,7 @@ export default function TaskForm({
                           className="col-span-3 !text-lg"
                           autoFocus
                           required
-                          disabled={!isAllowedAction}
+                          disabled={!isEditable}
                           onBlur={() => setActiveField(null)}
                         />
                       ) : (
@@ -500,7 +504,7 @@ export default function TaskForm({
                         value={field.value}
                         onChange={field.onChange}
                         image_uploading={true}
-                        editable={isAllowedAction}
+                        editable={isEditable}
                       />
                     ) : (
                       <div
@@ -539,7 +543,7 @@ export default function TaskForm({
                         <SubTask
                           key={subtask.id}
                           subtask={subtask}
-                          isAllowedAction={isAllowedAction}
+                          isAllowedAction={isEditable}
                           projectId={projectId}
                           statuses={statuses}
                           setSubTasks={setSubTasks}
@@ -557,7 +561,7 @@ export default function TaskForm({
                   selectedTask={selectedTask}
                   toDoStatusId={toDoStatus?.id}
                   setSubTasks={setSubTasks}
-                  isAllowedAction={isAllowedAction}
+                  isAllowedAction={isEditable}
                   onSubTaskCreate={onSubTaskCreate}
                 />
               </div>
@@ -566,7 +570,10 @@ export default function TaskForm({
               {selectedTask && (
                 <div className="space-y-4 pl-2">
                   <h2 className="text-lg  font-semibold">Comments</h2>
-                  <TaskComment taskId={selectedTask.id} />
+                  <TaskComment
+                    taskId={selectedTask.id}
+                    isSprintCompleted={isSprintCompleted}
+                  />
                 </div>
               )}
             </div>
@@ -586,7 +593,7 @@ export default function TaskForm({
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-end gap-4 mb-2">
-                    {isAllowedAction && (
+                    {isEditable && (
                       <Button
                         loading={loading}
                         variant={"outline"}
@@ -615,7 +622,7 @@ export default function TaskForm({
                             <Select
                               onValueChange={field.onChange}
                               value={field.value}
-                              disabled={!isAllowedAction}
+                              disabled={!isEditable}
                             >
                               <SelectTrigger
                                 id="status_id"
@@ -672,7 +679,7 @@ export default function TaskForm({
                             <MultiSelect
                               options={assigneeOptions}
                               selected={selectedAssignee}
-                              disabled={!isAllowedAction}
+                              disabled={!isEditable}
                               onChange={(newselected) => {
                                 handleChangeInAssignTo(newselected)
                               }}
@@ -725,7 +732,7 @@ export default function TaskForm({
                             <MultiSelect
                               options={assignorOptions}
                               selected={selectedAssignor}
-                              disabled={!isAllowedAction}
+                              disabled={!isEditable}
                               onChange={(newselected) => {
                                 const latestSelected =
                                   newselected?.[newselected.length - 1]
@@ -784,7 +791,7 @@ export default function TaskForm({
                             <Select
                               value={field.value}
                               onValueChange={field.onChange}
-                              disabled={!isAllowedAction}
+                              disabled={!isEditable}
                             >
                               <SelectTrigger
                                 id="task_priority"
@@ -859,7 +866,7 @@ export default function TaskForm({
                             <Select
                               value={field.value}
                               onValueChange={field.onChange}
-                              disabled={!isAllowedAction}
+                              disabled={!isEditable}
                             >
                               <SelectTrigger
                                 id="task_type"
@@ -920,7 +927,7 @@ export default function TaskForm({
                         render={({ field }) =>
                           activeField === "points" ? (
                             <Input
-                              disabled={!isAllowedAction}
+                              disabled={!isEditable}
                               id="story_points"
                               type="number"
                               min={0}
@@ -984,6 +991,7 @@ export default function TaskForm({
                                   <div
                                     className="flex items-center gap-2 rounded-md border p-2 cursor-pointer"
                                     onClick={() => {
+                                      if (!isEditable || isTaskEpic) return
                                       setActiveField("parent")
                                       setPopoverOpen(true)
                                     }}
@@ -1022,7 +1030,7 @@ export default function TaskForm({
                                   type="button"
                                   variant="outline"
                                   className="w-full justify-start"
-                                  disabled={!isAllowedAction || isTaskEpic}
+                                  disabled={!isEditable || isTaskEpic}
                                   onClick={() => {
                                     setActiveField("parent")
                                     setPopoverOpen(true)
