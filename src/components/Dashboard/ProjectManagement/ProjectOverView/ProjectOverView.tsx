@@ -22,6 +22,7 @@ import { GetSprintAction } from "@/src/server-actions/Sprint/sprint"
 import { SelectCurrentSprint } from "./SelectCurrentSprint"
 import moment from "moment"
 import { SprintBurnDownCard } from "./BurnDown/SprintBurnDownCard"
+import { SprintStatus } from "../constants/projectManagment"
 
 interface ProjectStats {
   totalTasks: number
@@ -101,11 +102,11 @@ function ProjectOverView() {
   const fetchSprints = async (projectId: string) => {
     const Sprints = await GetSprints({
       projectId: projectId,
-      status: ["active"]
+      status: [SprintStatus.ACTIVE]
     })
     if (Sprints?.success && Sprints.data) {
-      setSprintList(Sprints.data)
-      setCurrentSprint(Sprints.data[0])
+      setSprintList(Sprints.data.sprints)
+      setCurrentSprint(Sprints.data.sprints[0])
     }
   }
 

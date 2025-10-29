@@ -26,13 +26,14 @@ import TaskFilters from "../TaskFilter/TaskFilters"
 interface Props {
   sprint: SelectSprint
   tasks: SelectTask[]
-  setTasks: Dispatch<SetStateAction<SelectTask[]>>
-  setSelectedTask: Dispatch<SetStateAction<SelectTask | null>>
-  isTaskModalOpen: boolean
-  setIsTaskModalOpen: Dispatch<SetStateAction<boolean>>
-  setSprintId: Dispatch<SetStateAction<string>>
-  getTaskLoading: boolean
+  setTasks?: Dispatch<SetStateAction<SelectTask[]>>
+  setSelectedTask?: Dispatch<SetStateAction<SelectTask | null>>
+  isTaskModalOpen?: boolean
+  setIsTaskModalOpen?: Dispatch<SetStateAction<boolean>>
+  setSprintId?: Dispatch<SetStateAction<string>>
+  getTaskLoading?: boolean
   selectedTask?: SelectTask
+  isSprintCompleted?: boolean
 }
 
 export default function SprintCardPage({
@@ -44,7 +45,8 @@ export default function SprintCardPage({
   isTaskModalOpen,
   setIsTaskModalOpen,
   setTasks,
-  getTaskLoading
+  getTaskLoading,
+  isSprintCompleted
 }: Props) {
   const [filteredTasks, setFilteredTasks] = useState<SelectTask[]>([])
   const [isSprintContextMenuOpen, setIsSprintContextMenuOpen] = useState(false)
@@ -82,9 +84,9 @@ export default function SprintCardPage({
   ])
 
   useEffect(() => {
-    if (tasks.length > 0 && sprint.id) {
+    if (tasks?.length > 0 && sprint.id) {
       setFilteredTasks(
-        tasks.filter((t) => t?.sprint_id && t.sprint_id === sprint.id)
+        tasks?.filter((t) => t?.sprint_id && t.sprint_id === sprint.id)
       )
     }
   }, [tasks, sprint.id])
@@ -128,23 +130,25 @@ export default function SprintCardPage({
                 onApplyFilters={HandleTaskFilters}
               />
 
-              {canCreateTask && (
-                <Button
-                  variant={"outline"}
-                  onClick={() => {
-                    setIsTaskModalOpen(true)
-                    setSprintId(sprint.id ?? "")
-                  }}
-                >
-                  Add Task
-                </Button>
-              )}
+              {canCreateTask &&
+                (!isSprintCompleted ? (
+                  <Button
+                    variant={"outline"}
+                    onClick={() => {
+                      setIsTaskModalOpen?.(true)
+                      setSprintId?.(sprint.id ?? "")
+                    }}
+                  >
+                    Add Task
+                  </Button>
+                ) : null)}
 
               <SprintContextMenu
                 sprintTasks={filteredTasks}
                 sprint={sprint}
                 isSprintContextMenuOpen={isSprintContextMenuOpen}
                 setIsSprintContextMenuOpen={setIsSprintContextMenuOpen}
+                isSprintCompleted={isSprintCompleted}
               />
             </div>
           </div>
@@ -178,6 +182,7 @@ export default function SprintCardPage({
                   currSprint={sprint}
                   setIsTaskModelOpen={setIsTaskModalOpen}
                   setTasks={setTasks}
+                  isSprintCompleted={isSprintCompleted}
                 />
               ))
             ) : (

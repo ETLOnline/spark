@@ -17,10 +17,14 @@ import { formatRelativeTime } from "@/src/utils/helpers"
 
 interface TaskCommentFormProps {
   taskId: string
+  isSprintCompleted?: boolean
 }
 const COMMENTS_PER_LOAD = 4
 
-export function TaskComment({ taskId }: TaskCommentFormProps) {
+export function TaskComment({
+  taskId,
+  isSprintCompleted
+}: TaskCommentFormProps) {
   const authUser = useAtomValue(userStore.AuthUser)
   const userId = authUser?.unique_id
   const { toast } = useToast()
@@ -100,7 +104,11 @@ export function TaskComment({ taskId }: TaskCommentFormProps) {
         <div className="grid gap-2">
           {isEditing ? (
             <div className="space-y-3">
-              <Tiptap value={commentContent} onChange={setCommentContent} />
+              <Tiptap
+                value={commentContent}
+                onChange={setCommentContent}
+                editable={!isSprintCompleted}
+              />
               <div className="flex gap-2 justify-end">
                 <Button
                   type="button"
@@ -113,7 +121,11 @@ export function TaskComment({ taskId }: TaskCommentFormProps) {
                 <Button
                   type="button"
                   onClick={handleAddComment}
-                  disabled={!commentContent.trim() || creatingComment}
+                  disabled={
+                    !commentContent.trim() ||
+                    creatingComment ||
+                    isSprintCompleted
+                  }
                   loading={creatingComment}
                 >
                   {creatingComment ? "Adding..." : "Comment"}

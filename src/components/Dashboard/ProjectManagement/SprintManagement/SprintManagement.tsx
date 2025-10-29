@@ -1,6 +1,6 @@
 "use client"
 
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import CreateSprintModal from "./CreateSprintModal"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useAtom, useAtomValue } from "jotai"
@@ -26,7 +26,7 @@ import { SelectSprint } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
 import TaskMoveDialog from "../Task/components/task-move-dialog"
 import ConfirmationDialog from "../Task/components/ConfirmationDialog"
-import { TaskType } from "../constants/projectManagment"
+import { SprintStatus, TaskType } from "../constants/projectManagment"
 
 export function SprintManagement() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
@@ -56,20 +56,22 @@ export function SprintManagement() {
   )
   const taskMoveDialogAction = useAtomValue(taskStore.taskMoveDialogAction)
   const [isInitailDataLoad, setIsInitailDataLoad] = useState(false)
+  const [isNavigating, setIsNavigating] = useState(false)
 
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
 
   const projectId = useParams().id as string
+  const router = useRouter()
 
   // Get Sprints
   useEffect(() => {
     const fetchSprints = async () => {
       const Sprints = await GetSprints({
         projectId: projectId,
-        status: ["active", "upcoming"]
+        status: [SprintStatus.ACTIVE, SprintStatus.UPCOMING]
       })
       if (Sprints?.success && Sprints.data) {
-        setSprintList(Sprints.data)
+        setSprintList(Sprints.data.sprints)
       }
     }
     fetchSprints()
@@ -192,16 +194,30 @@ export function SprintManagement() {
     ? permissionChecker?.canAccess("project.sprint.create")
     : false
 
+  const handleNavigateToCompleted = async () => {
+    setIsNavigating(true)
+    router.push(`/project/${projectId}/completed-sprints`)
+  }
+
   return projectStatusList.length > 0 ? (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-bold">Sprint Management</h2>
-        {canCreate && (
-          <Button onClick={() => setIsCreateSprintOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Sprint
+        <div className="flex flex-row items-center gap-2">
+          <Button
+            variant="outline"
+            loading={isNavigating}
+            onClick={handleNavigateToCompleted}
+          >
+            Show Completed Sprints
           </Button>
-        )}
+          {canCreate && (
+            <Button onClick={() => setIsCreateSprintOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Sprint
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-4 print:space-y-3">

@@ -18,6 +18,12 @@ export enum TaskPriority {
   HIGHEST = "highest"
 }
 
+export enum SprintStatus {
+  UPCOMING = "upcomming",
+  ACTIVE = "active",
+  ENDED = "ended"
+}
+
 export const projectTaskTypes = [
   {
     key: TaskType.STORY,
@@ -191,19 +197,19 @@ export const ProjectManagementPages = [
   }
 ]
 
-export const SprintStatus = [
+export const sprintStatuses = [
   {
-    key: "upcomming",
+    key: SprintStatus.UPCOMING,
     title: "Upcoming",
     badgeVariants: "outline"
   },
   {
-    key: "active",
+    key: SprintStatus.ACTIVE,
     title: "Active",
     badgeVariants: "default"
   },
   {
-    key: "ended",
+    key: SprintStatus.ENDED,
     title: "Ended",
     badgeVariants: "secondary"
   }

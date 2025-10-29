@@ -28,6 +28,7 @@ import { useParams } from "next/navigation"
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { set, z } from "zod"
+import { SprintStatus } from "../constants/projectManagment"
 
 interface Props {
   isCreateSprintOpen: boolean
@@ -127,7 +128,7 @@ function CreateSprintModal({
       const payload = {
         ...data,
         projectId: projectId,
-        sprint_status: "upcoming"
+        sprint_status: SprintStatus.UPCOMING
       }
       const sprint = await CreateSprint(payload)
       if (sprint?.success && sprint.data) {
