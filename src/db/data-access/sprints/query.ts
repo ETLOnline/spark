@@ -2,8 +2,11 @@ import { and, desc, eq, gte, inArray, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
 import { SelectSprint, sprintBurnDownTable, SprintTable } from "../../schema"
 import moment from "moment"
+import { SprintStatus } from "@/src/components/Dashboard/ProjectManagement/constants/projectManagment"
 
 export type sprintQueryFilters = {
+  page?: number
+  limit?: number
   projectId?: string
   status?: string[]
 }
@@ -20,6 +23,10 @@ export async function CreateSprint(sprintData: SelectSprint) {
 
 export async function getSprints(filters?: sprintQueryFilters) {
   try {
+    const page = filters?.page
+    const limit = filters?.limit
+    const offset = page && limit ? (page - 1) * limit : 0
+
     const whereClauses: (SQLWrapper | undefined)[] = []
 
     if (filters) {
@@ -33,10 +40,26 @@ export async function getSprints(filters?: sprintQueryFilters) {
     }
 
     const sprints = await db.query.SprintTable.findMany({
+      limit: limit,
+      offset: offset,
       where: whereClauses.length ? and(...whereClauses) : undefined
     })
 
-    return sprints
+    const totalCount = await db.$count(
+      SprintTable,
+      whereClauses.length ? and(...whereClauses) : undefined
+    )
+
+    return {
+      sprints,
+      pagination: {
+        total: Number(totalCount),
+        page: page || 1,
+        limit: limit || 0,
+        totalPages:
+          limit && limit !== 0 ? Math.ceil(Number(totalCount) / limit) : 1
+      }
+    }
   } catch (e: any) {
     throw new Error(e.message)
   }
@@ -148,7 +171,7 @@ export const getRecentlyUpdatedSprints = async () => {
       .where(
         and(
           gte(SprintTable.updated_at, fifteenMinutesAgo),
-          eq(SprintTable.sprint_status, "active")
+          eq(SprintTable.sprint_status, SprintStatus.ACTIVE)
         )
       )
 

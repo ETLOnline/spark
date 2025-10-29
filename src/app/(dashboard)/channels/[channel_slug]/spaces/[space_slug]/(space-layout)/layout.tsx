@@ -43,12 +43,12 @@ async function Layout({ params, children }: Props) {
     currentSpace.data?.space_type === "private" && !isUserMember && !superAdmin
 
   return (
-    <div className="min-h-[calc(100vh-7rem)] bg-background relative">
+    <div className="min-h-[calc(100vh-6rem)] bg-background relative">
       {/* Added relative for the overlay positioning */}
       {showAccessDeniedOverlay && (
         <Overlay page="space" pageHref={`/channels/${channel_slug}/spaces`} />
       )}
-      <div className="grid grid-cols-12 w-full h-full overflow-hidden mt-0">
+      <div className="grid grid-cols-12 w-full h-[calc(100vh-6rem)] overflow-hidden">
         <div className="col-span-2 border-r p-2 pl-0 overflow-y-auto">
           <SpaceSidebar space={currentSpace.data} />
         </div>

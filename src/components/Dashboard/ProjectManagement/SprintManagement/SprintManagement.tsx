@@ -1,6 +1,6 @@
 "use client"
 
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import CreateSprintModal from "./CreateSprintModal"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useAtom, useAtomValue } from "jotai"
@@ -24,9 +24,9 @@ import { taskStore } from "@/src/store/tasks/taskStore"
 import pusherClient from "@/src/services/realtime/PusherClient"
 import { SelectSprint } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
-import { set } from "zod"
-import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import TaskMoveDialog from "../Task/components/task-move-dialog"
+import ConfirmationDialog from "../Task/components/ConfirmationDialog"
+import { SprintStatus, TaskType } from "../constants/projectManagment"
 
 export function SprintManagement() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
@@ -48,25 +48,30 @@ export function SprintManagement() {
   const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useAtom(
     taskStore.isTaskMoveDialogOpen
   )
+  const [isConfirmationAlertOpen, setIsConfirmationAlertOpen] = useAtom(
+    taskStore.isConfirmationAlertOpen
+  )
   const [selectedSprint, setSelectedSprint] = useAtom(
     sprintStore.selectedSprint
   )
   const taskMoveDialogAction = useAtomValue(taskStore.taskMoveDialogAction)
   const [isInitailDataLoad, setIsInitailDataLoad] = useState(false)
+  const [isNavigating, setIsNavigating] = useState(false)
 
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
 
   const projectId = useParams().id as string
+  const router = useRouter()
 
   // Get Sprints
   useEffect(() => {
     const fetchSprints = async () => {
       const Sprints = await GetSprints({
         projectId: projectId,
-        status: ["active", "upcoming"]
+        status: [SprintStatus.ACTIVE, SprintStatus.UPCOMING]
       })
       if (Sprints?.success && Sprints.data) {
-        setSprintList(Sprints.data)
+        setSprintList(Sprints.data.sprints)
       }
     }
     fetchSprints()
@@ -76,7 +81,8 @@ export function SprintManagement() {
   const fetchTasks = async () => {
     const tasksResponse = await GetTasks({
       project_id: projectId,
-      sprint_ids: sprintList.map((s) => s.id)
+      sprint_ids: sprintList.map((s) => s.id),
+      excludedTypes: [TaskType.SUBTASK]
     })
     if (tasksResponse?.success && tasksResponse.data.tasks) {
       setTasks(tasksResponse.data.tasks)
@@ -188,16 +194,30 @@ export function SprintManagement() {
     ? permissionChecker?.canAccess("project.sprint.create")
     : false
 
+  const handleNavigateToCompleted = async () => {
+    setIsNavigating(true)
+    router.push(`/project/${projectId}/completed-sprints`)
+  }
+
   return projectStatusList.length > 0 ? (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-bold">Sprint Management</h2>
-        {canCreate && (
-          <Button onClick={() => setIsCreateSprintOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Sprint
+        <div className="flex flex-row items-center gap-2">
+          <Button
+            variant="outline"
+            loading={isNavigating}
+            onClick={handleNavigateToCompleted}
+          >
+            Show Completed Sprints
           </Button>
-        )}
+          {canCreate && (
+            <Button onClick={() => setIsCreateSprintOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Sprint
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-4 print:space-y-3">
@@ -253,15 +273,24 @@ export function SprintManagement() {
             })
           )
         }}
+        onSubTaskCreate={(task: SelectTask) => {
+          if (task.task_type === TaskType.SUBTASK) return
+          setTasks((prev) => [...prev, task])
+        }}
       />
 
       <TaskMoveDialog
         isTaskMoveDialogOpen={isTaskMoveDialogOpen}
         setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
-        task_ids={selectedTasksForMove.map((t) => t.id)}
+        tasks={selectedTasksForMove}
         currSprintId={selectedSprint?.id}
         setTasks={setTasks}
         dialogAction={taskMoveDialogAction}
+      />
+
+      <ConfirmationDialog
+        setIsAlertDialogOpen={setIsConfirmationAlertOpen}
+        isAlertOpen={isConfirmationAlertOpen}
       />
     </div>
   ) : (

@@ -19,6 +19,7 @@ import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import pusherClient from "@/src/services/realtime/PusherClient"
 import { userStore } from "@/src/store/user/userStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
+import { SprintStatus, TaskType } from "../../constants/projectManagment"
 
 function SprintBoard() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
@@ -117,27 +118,30 @@ function SprintBoard() {
     const fetchSprints = async () => {
       const Sprints = await GetSprints({
         projectId: projectId,
-        status: ["active"]
+        status: [SprintStatus.ACTIVE]
       })
       if (Sprints?.success && Sprints.data) {
-        setSprintList(Sprints.data)
+        setSprintList(Sprints.data.sprints)
       }
     }
     fetchSprints()
   }, [projectId])
 
+  const getTasks = async () => {
+    const tasks = await GetSPrintTask({
+      project_id: projectId,
+      sprint_ids: sprintList.map((s) => s.id),
+      excludedTypes: [TaskType.EPIC]
+    })
+    if (tasks?.success && tasks.data) {
+      setTasks(tasks.data.tasks)
+    }
+  }
+
   useEffect(() => {
     if (!projectId || sprintList.length === 0) return
-    const getTask = async () => {
-      const tasks = await GetSPrintTask({
-        project_id: projectId,
-        sprint_ids: sprintList.map((s) => s.id)
-      })
-      if (tasks?.success && tasks.data) {
-        setTasks(tasks.data.tasks)
-      }
-    }
-    getTask()
+
+    getTasks()
   }, [projectId, sprintList])
 
   return projectStatusList.length > 0 ? (
@@ -175,6 +179,7 @@ function SprintBoard() {
           setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
           setSelectedTask(task)
         }}
+        onSubTaskCreate={(task: SelectTask) => getTasks()}
       />
     </>
   ) : (

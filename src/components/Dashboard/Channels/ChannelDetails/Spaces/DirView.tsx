@@ -20,6 +20,7 @@ import { Button } from "@/src/components/ui/button"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { DeleteFileAction } from "@/src/server-actions/FileSharing/FileSharing"
 import { useToast } from "@/src/hooks/use-toast"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 type DirViewProps = {
   navigateToFolder: (path: string) => Promise<void>
@@ -64,9 +65,18 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
 
     return []
   }
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "SPACE",
+    currSpace?.id
+  )
+  const canDeleteSpaceFile = permissionChecker
+    ? permissionChecker?.canAccess("space.file_sharing.delete")
+    : false
 
   const canDeleteFile = (item: DirItem): boolean => {
     if (!authUser || !currSpace) return false
+    if (canDeleteSpaceFile) return true
     return item.created_by === authUser.unique_id
   }
 
@@ -74,7 +84,11 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
     if (!selectedFileId || !currSpace || !authUser) return
 
     try {
-      const result = await deleteFile(selectedFileId, currSpace.id)
+      const result = await deleteFile(
+        selectedFileId,
+        currSpace.id,
+        canDeleteSpaceFile
+      )
 
       if (result?.success) {
         // Remove the file from the local state

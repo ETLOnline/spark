@@ -23,6 +23,7 @@ import {
 } from "@/src/server-actions/Sprint/sprint"
 import Loader from "@/src/components/common/Loader/Loader"
 import {
+  GetTaskByIdsAction,
   UpdateTaskAction,
   UpdateTasksSprintAction
 } from "@/src/server-actions/Tasks/Task"
@@ -30,11 +31,12 @@ import { useAtom, useSetAtom } from "jotai"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import { toast } from "@/src/hooks/use-toast"
 import { sprintStore } from "@/src/store/sprint/sprintsStore"
+import { SprintStatus } from "../../constants/projectManagment"
 
 interface Props {
   isTaskMoveDialogOpen: boolean
   setIsTaskMoveDialogOpen: Dispatch<SetStateAction<boolean>>
-  task_ids: string[]
+  tasks: SelectTask[]
   currSprintId?: string
   setTasks?: Dispatch<SetStateAction<SelectTask[]>>
   dialogAction: string
@@ -43,7 +45,7 @@ interface Props {
 export default function TaskMoveDialog({
   isTaskMoveDialogOpen,
   setIsTaskMoveDialogOpen,
-  task_ids,
+  tasks,
   currSprintId,
   setTasks,
   dialogAction
@@ -69,16 +71,24 @@ export default function TaskMoveDialog({
     const fetchSprints = async () => {
       const Sprints = await GetSprints({
         projectId: projectId,
-        status: ["active", "upcoming"]
+        status: [SprintStatus.ACTIVE, SprintStatus.UPCOMING]
       })
       if (Sprints?.success && Sprints.data) {
-        setSprintList(Sprints.data)
+        setSprintList(Sprints.data.sprints)
       }
     }
     fetchSprints()
   }, [projectId])
 
   const handleMoveTask = async () => {
+    const res = await GetTaskByIdsAction(tasks.map((task) => task.id))
+    if (!res?.success || !res.data) return
+
+    const task_ids = res.data.flatMap((task) => [
+      task.id,
+      ...(task.subTasks?.map((sub) => sub.id) || [])
+    ])
+
     if (selectedSprint) {
       const updatedTask = await UpdateTask(
         task_ids,
@@ -107,6 +117,11 @@ export default function TaskMoveDialog({
   const handleEndSprint = async () => {
     if (!selectedSprint || !currSprintId) return
 
+    const task_ids = tasks.flatMap((task) => [
+      task.id,
+      ...(task.subTasks?.map((sub) => sub.id) || [])
+    ])
+
     const updatedTask = await UpdateTask(task_ids, selectedSprint)
     if (!updatedTask?.success || !updatedTask.data) return
 
@@ -126,15 +141,18 @@ export default function TaskMoveDialog({
 
     const res = await UpdateSprint(currSprintId, { sprint_status: "closed" })
     if (res?.success && res.data) {
-      setSprintList((prev) =>
-        prev.map((s) => (s.id === res.data.id ? res.data : s))
-      )
+      setSprintList((prev) => prev.filter((s) => s.id !== res.data.id))
       setIsTaskMoveDialogOpen(false)
     }
   }
 
   const handleDeleteSprint = async () => {
     if (!selectedSprint || !currSprintId) return
+
+    const task_ids = tasks.flatMap((task) => [
+      task.id,
+      ...(task.subTasks?.map((sub) => sub.id) || [])
+    ])
 
     const updatedTask = await UpdateTask(task_ids, selectedSprint)
     if (!updatedTask?.success || !updatedTask.data) return

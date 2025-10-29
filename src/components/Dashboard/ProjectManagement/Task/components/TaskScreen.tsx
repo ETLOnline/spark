@@ -35,7 +35,7 @@ function TaskScreenPage({ statuses, task }: Props) {
   }, [task])
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
       <TaskFormHeader selectedTask={selectedTask ?? undefined} />
       <TaskForm
         loading={createTaskLoading || updateTaskLoading}
@@ -43,7 +43,7 @@ function TaskScreenPage({ statuses, task }: Props) {
         selectedTask={selectedTask ?? undefined}
         statuses={statuses}
       />
-    </>
+    </div>
   )
 }
 

@@ -32,7 +32,7 @@ const templatesToSeed: NewEmailTemplate[] = [
   },
   {
     name: "project_invite",
-    subject: "You're invited to join a project",
+    subject: `You've Been Added to a Project - {{projectName}}`,
     body: loadTemplate("project_invite.html")
   },
   {

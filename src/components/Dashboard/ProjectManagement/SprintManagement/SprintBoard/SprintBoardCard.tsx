@@ -33,6 +33,7 @@ import {
 import BoardTaskCard from "./BoardTaskCard"
 import { createPortal } from "react-dom"
 import { toast } from "@/src/hooks/use-toast"
+import { Skeleton } from "@/src/components/ui/skeleton"
 
 interface Props {
   sprint: SelectSprint
@@ -127,13 +128,28 @@ function SprintBoardCard({
     const overStatusId = over.data?.current?.statusId
 
     let statusChanged = false
+    let movedParent: any = null
 
     setFilteredTasks((prev) => {
       return prev.map((task) => {
+        // update the dragged task’s status
         if (task.id === taskId && task.status_id !== overStatusId) {
           statusChanged = true
-          return { ...task, status_id: overStatusId }
+          movedParent = { ...task, status_id: overStatusId }
+          return movedParent
         }
+
+        // if this task is a child of the moved parent → update its embedded parentTask reference
+        if (task.parent_task_id === taskId && task.parentTask) {
+          return {
+            ...task,
+            parentTask: {
+              ...task.parentTask,
+              status_id: overStatusId
+            }
+          }
+        }
+
         return task
       })
     })
@@ -143,6 +159,8 @@ function SprintBoardCard({
         title: "Task status updated successfully",
         duration: 2000
       })
+
+      // update on server
       await UpdateTaskAction(taskId as string, {
         status_id: overStatusId as string
       })
@@ -203,11 +221,7 @@ function SprintBoardCard({
             {createPortal(
               <DragOverlay>
                 {activeTask ? (
-                  <BoardTaskCard
-                    task={activeTask}
-                    onClick={handleOnTaskClick}
-                    setTasks={setFilteredTasks}
-                  />
+                  <Skeleton className="h-[200px] w-full rounded-lg" />
                 ) : null}
               </DragOverlay>,
               document.body

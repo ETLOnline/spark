@@ -1,7 +1,14 @@
 "use client"
 
 import type React from "react"
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react"
+import {
+  Dispatch,
+  SetStateAction,
+  use,
+  useEffect,
+  useRef,
+  useState
+} from "react"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
@@ -224,6 +231,12 @@ export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
     }
     reader.readAsDataURL(file)
   }
+  const first_name = form.watch("first_name")
+  const last_name = form.watch("last_name")
+  const bio = form.watch("bio")
+  useEffect(() => {
+    form.trigger(["first_name", "last_name", "bio"])
+  }, [first_name, last_name, bio])
 
   return (
     <div className="space-y-6">
@@ -250,7 +263,7 @@ export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
               disabled={loading}
             >
               <Upload className="mr-2 h-4 w-4" />
-              Upload Picture
+              {currentImageUrl ? "Change Picture" : "Upload Picture"}
             </Button>
             <input
               type="file"
@@ -272,13 +285,27 @@ export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
               <Controller
                 name="first_name"
                 control={form.control}
-                render={({ field }) => <Input id="first_name" {...field} />}
+                render={({ field }) => {
+                  const charCount = field.value?.length || 0
+                  const maxChars = 30
+                  return (
+                    <>
+                      <Input id="first_name" {...field} maxLength={maxChars} />
+                      <div className="flex justify-between items-center text-sm text-muted-foreground ">
+                        {formError.first_name && (
+                          <span className="text-red-500 text-sm">
+                            {String(formError.first_name.message)}
+                          </span>
+                        )}
+                        <span className="ml-auto">
+                          {/* characters */}
+                          {charCount}/{maxChars} characters
+                        </span>
+                      </div>
+                    </>
+                  )
+                }}
               />
-              {formError.first_name && (
-                <span className="text-red-500 text-sm">
-                  {String(formError.first_name.message)}
-                </span>
-              )}
             </div>
             <div className="col-span-6">
               <Label htmlFor="last_name" className="font-semibold">
@@ -287,13 +314,26 @@ export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
               <Controller
                 name="last_name"
                 control={form.control}
-                render={({ field }) => <Input id="last_name" {...field} />}
+                render={({ field }) => {
+                  const charCount = field.value?.length || 0
+                  const maxChars = 30
+                  return (
+                    <>
+                      <Input id="last_name" {...field} maxLength={maxChars} />
+                      <div className="flex justify-between items-center text-sm text-muted-foreground ">
+                        {formError.last_name && (
+                          <span className="text-red-500 text-sm">
+                            {String(formError.last_name.message)}
+                          </span>
+                        )}
+                        <span className="ml-auto">
+                          {charCount}/{maxChars} characters
+                        </span>
+                      </div>
+                    </>
+                  )
+                }}
               />
-              {formError.last_name && (
-                <span className="text-red-500 text-sm">
-                  {String(formError.last_name.message)}
-                </span>
-              )}
             </div>
           </div>
 
@@ -305,20 +345,32 @@ export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
             <Controller
               name="bio"
               control={form.control}
-              render={({ field }) => (
-                <Textarea
-                  id={"bio"}
-                  {...field}
-                  placeholder="Add Your Bio..."
-                  className="min-h-[100px] w-full"
-                />
-              )}
+              render={({ field }) => {
+                const charCount = field.value?.length || 0
+                const maxChars = 2000
+                return (
+                  <>
+                    <Textarea
+                      id={"bio"}
+                      {...field}
+                      placeholder="Add Your Bio..."
+                      className="min-h-[100px] w-full"
+                      maxLength={maxChars}
+                    />
+                    <div className="flex justify-between items-center text-sm text-muted-foreground ">
+                      {formError.bio && (
+                        <span className="text-red-500 text-sm">
+                          {String(formError.bio.message)}
+                        </span>
+                      )}
+                      <span className="ml-auto">
+                        {charCount}/{maxChars} characters
+                      </span>
+                    </div>
+                  </>
+                )
+              }}
             />
-            {formError.bio && (
-              <span className="text-red-500 text-sm">
-                {String(formError.bio.message)}
-              </span>
-            )}
           </div>
 
           {/* Interests */}

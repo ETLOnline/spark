@@ -27,7 +27,7 @@ import {
   AlignRight,
   AlignJustify
 } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Heading from "@tiptap/extension-heading"
 import "./RichEditorFormat.css"
 import CharacterCount from "@tiptap/extension-character-count"
@@ -36,6 +36,7 @@ import { Image as ImageIcon } from "lucide-react"
 import { AddImageToTaskAction } from "@/src/server-actions/Tasks/Task"
 import Loader from "./Loader/Loader"
 import { LoaderSizes } from "./types/loader-types"
+import type { Editor as TiptapEditor } from "@tiptap/core"
 
 interface RichTextEditorProps {
   value?: string
@@ -56,8 +57,43 @@ export default function RichTextEditor({
   const [loading, setLoading] = useState(false)
 
   const CustomImage = Image.extend({
-    renderHTML({ HTMLAttributes }) {
-      return ["div", { class: "tiptap-image-wrapper" }, ["img", HTMLAttributes]]
+    addNodeView() {
+      return ({ node, getPos, editor }) => {
+        // Create wrapper
+        const dom = document.createElement("div")
+        dom.className =
+          "tiptap-image-wrapper relative inline-block group max-w-full overflow-hidden align-middle **max-w-xs**"
+
+        // Create image
+        const img = document.createElement("img")
+        img.src = node.attrs.src
+        img.className =
+          "rounded-md max-w-full h-auto object-contain transition-all duration-200 ease-in-out"
+        img.onload = () => {
+          img.style.opacity = "1"
+        }
+
+        dom.appendChild(img)
+
+        // Create delete button
+        const deleteBtn = document.createElement("button")
+        deleteBtn.textContent = "✕"
+        deleteBtn.className =
+          "absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200 hover:bg-black"
+
+        deleteBtn.onclick = (e) => {
+          e.stopPropagation()
+          editor
+            .chain()
+            .focus()
+            .deleteRange({ from: getPos(), to: getPos() + node.nodeSize })
+            .run()
+        }
+
+        dom.appendChild(deleteBtn)
+
+        return { dom }
+      }
     }
   })
 
@@ -139,6 +175,16 @@ export default function RichTextEditor({
       }
     }
   })
+
+  useEffect(() => {
+    if (editor && value !== undefined) {
+      editor.commands.setContent(value, false)
+
+      setTimeout(() => {
+        editor.view.dispatch(editor.view.state.tr)
+      }, 100)
+    }
+  }, [value, editor])
 
   if (!editor) {
     return null
@@ -450,7 +496,13 @@ export default function RichTextEditor({
       {/* Editor Content */}
 
       <div className="relative rich-editor">
-        <EditorContent editor={editor} className="min-h-[200px]" />
+        <div
+          className="tiptap-editor-wrapper"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <EditorContent editor={editor} className="min-h-[200px]" />
+        </div>
         {loading ? (
           <div className="absolute inset-0 bg-transparent backdrop-blur-sm z-50 flex flex-col items-center justify-center p-4 text-center">
             <Loader size={LoaderSizes.md} />

@@ -10,6 +10,7 @@ const isTaskMoveDialogOpen = atom<boolean>(false)
 const taskMoveDialogAction = atom<"moveTask" | "endSprint" | "deleteSprint">(
   "moveTask"
 )
+const isConfirmationAlertOpen = atom<boolean>(false)
 
 export const taskStore = {
   BackLogTasks,
@@ -18,5 +19,6 @@ export const taskStore = {
   shouldRefetchTasks,
   isTaskModalOpen,
   isTaskMoveDialogOpen,
-  taskMoveDialogAction
+  taskMoveDialogAction,
+  isConfirmationAlertOpen
 }
