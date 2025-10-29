@@ -191,11 +191,7 @@ function SprintContextMenu({
                   >
                     Reopen Sprint
                   </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem onClick={() => HandleEndSprint(sprint)}>
-                    Close Sprint
-                  </DropdownMenuItem>
-                )}
+                ) : null}
               </>
             ) : (
               <>
