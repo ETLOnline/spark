@@ -24,7 +24,6 @@ import {
   SelectUserChat
 } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
-// REMOVED: import { AblyClient } from "@/src/services/realtime/AblyClient" // Removed AblyClient
 import ChatsList from "./components/ChatsList"
 import {
   AddMessageToChatAction,
@@ -46,7 +45,7 @@ import {
 } from "../../ui/emoji-picker"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import pusherClient from "@/src/services/realtime/PusherClient" // Keep PusherClient
+import pusherClient from "@/src/services/realtime/PusherClient"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -58,11 +57,38 @@ type ChatUpdatePayload = {
   lastMessage: string
 }
 
-// Function to join a channel (for group or one-to-one chat)
+const sortChats = (chats: SelectChat[]): SelectChat[] => {
+  return [...chats].sort((a, b) => {
+    const dateAString = a.updated_at
+    const dateBString = b.updated_at
+
+    const dateA = dateAString ? new Date(dateAString).getTime() : 0
+    const dateB = dateBString ? new Date(dateBString).getTime() : 0
+
+    return dateB - dateA
+  })
+}
+
+const updateAndSortChats = (
+  prevChats: SelectChat[],
+  updatedChatData: SelectChat
+) => {
+  const otherChats = prevChats.filter((chat) => chat.id !== updatedChatData.id)
+
+  const existingChat = prevChats.find((chat) => chat.id === updatedChatData.id)
+  const newChat = existingChat
+    ? { ...existingChat, ...updatedChatData }
+    : updatedChatData
+
+  const newChatsList = [newChat, ...otherChats]
+
+  return sortChats(newChatsList)
+}
+
 /**
- * Joins a specified channel and sets up message subscription.
+ * Joins a specified channel for a chat.
  *
- * @param {string} channelName - The name of the channel to join (e.g., 'private-chat-123').
+ * @param {number} chatId - The ID of the chat to join.
  * @param {(message: SelectMessage) => void} onMessageReceived - Callback function to handle received messages.
  * @returns {{ unsubscribe: () => void }} An object containing a function to unsubscribe.
  */
@@ -70,11 +96,9 @@ function joinChannel(
   chatId: number,
   onMessageReceived: (message: SelectMessage) => void
 ) {
-  // Use a Pusher private channel name convention
   const channelName = `private-chat-${chatId}`
   const channel = pusherClient.subscribe(channelName)
 
-  // Subscribe to the specific event triggered by the server action
   channel.bind("new-message", (data: { message: SelectMessage }) => {
     onMessageReceived(data.message)
   })
@@ -84,8 +108,6 @@ function joinChannel(
     pusherClient.unsubscribe(channelName)
   }
 
-  // sendMessage is removed as client-side publishing is generally insecure 
-  // and message sending now relies on the server action.
   return { unsubscribe }
 }
 
@@ -122,8 +144,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const [switchedChat, setSwitchedChat] = useAtom(chatStore.switchedChat)
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
   const authUser = useAtomValue(userStore.AuthUser)
-  // Updated state to only hold the unsubscribe function
-  const [chatRealTime, setChatRealtime] = useState<{ unsubscribe: () => void } | null>(null)
+  const [chatRealTime, setChatRealtime] = useState<{
+    unsubscribe: () => void
+  } | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>("")
 
   const [chatContact, setChatContact] = useState<SelectUser | null>(null)
@@ -142,7 +165,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
   useEffect(() => {
     setCurrentChat(currentChatSSR || null)
-    setMyChats(allChatsSSR || [])
+
+    setMyChats(sortChats(allChatsSSR || []))
     setMessages(currentChatSSR?.messages || [])
     scrollToBottom()
     return () => {
@@ -159,32 +183,26 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   useEffect(() => {
     if (!currentChat || !authUser) return
 
-    // UPDATED: joinChannel now takes chat ID and returns only unsubscribe
-    const { unsubscribe } = joinChannel(
-      currentChat.id, // Use chat ID for Pusher channel naming
-      (message) => {
-        setMessages((prev) => [...prev, message])
+    const { unsubscribe } = joinChannel(currentChat.id, (message) => {
+      setMessages((prev) => [...prev, message])
 
-        // Update the last message and unread count in the chat list
-        setMyChats((prevChats) => {
-          const updatedChats = prevChats.map((chat) => {
-            if (chat.id === message.chat_id) {
-              return {
-                ...chat,
-                last_message: message.message,
-                last_message_at: message.created_at,
-                // Only reset unread count if we are currently viewing the chat
-                unread_count: 0 
-              }
-            }
-            return chat
-          })
-          return updatedChats
-        })
-      }
-    )
+      setMyChats((prevChats) => {
+        const updatedChat = prevChats.find(
+          (chat) => chat.id === message.chat_id
+        )
+        if (!updatedChat) return prevChats
 
-    // UPDATED: Set chatRealtime with only unsubscribe
+        const updatedChatData = {
+          ...updatedChat,
+          last_message: message.message,
+          last_message_at: message.created_at,
+          unread_count: 0
+        }
+
+        return updateAndSortChats(prevChats, updatedChatData)
+      })
+    })
+
     setChatRealtime({ unsubscribe })
 
     if (!currentChat.is_group) {
@@ -194,16 +212,14 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       setChatContact(chatContact || null)
     }
 
-    // This already uses pusher, so it remains the same
     const channelName = `presence-chat-${currentChat.id}`
     const presenceChannel = pusherClient.subscribe(channelName)
 
     return () => {
       unsubscribe()
-      // Pusher presence channel unsubscribe
       presenceChannel.unsubscribe()
     }
-  }, [currentChat?.id, authUser]) // Changed dependency from channel_id to id
+  }, [currentChat?.id, authUser])
 
   useEffect(() => {
     if (!switchedChat) return
@@ -215,9 +231,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
   /**
    * Handles switching to a different chat by fetching the chat data and its messages.
-   *
-   * @param {number} chatId - The ID of the chat to switch to.
-   * @returns {Promise<void>} A promise that resolves when the chat has been switched.
+   * ...
    */
   const handleChatSwitch = async (chatId: number) => {
     const newSwitchedChat = await fetchChatWithMessages(chatId)
@@ -239,11 +253,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   useEffect(() => {
     if (!authUser) return
 
-    // UPDATED: Use Pusher private-user channel convention
     const userChannelName = `private-user-${authUser.unique_id}`
     const userChannel = pusherClient.subscribe(userChannelName)
 
-    // UPDATED: Bind to the "chat-update" event
     userChannel.bind("chat-update", (data: { update: ChatUpdatePayload }) => {
       const update = data.update as ChatUpdatePayload
 
@@ -251,26 +263,19 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         const updatedChat = prevChats.find((chat) => chat.id === update.chatId)
 
         if (updatedChat && update.lastMessage) {
-          const newChats = prevChats.map((chat) => {
-            if (chat.id === update.chatId) {
-              const isActiveChat = currentChat?.id === update.chatId
-              return {
-                ...chat,
-                last_message: update.lastMessage,
-                updated_at: new Date().toISOString(),
-                // Increment unread count only if not active chat
-                unread_count: isActiveChat ? 0 : (chat.unread_count || 0) + 1
-              }
-            }
-            return chat
-          })
-          return newChats
+          const isActiveChat = currentChat?.id === update.chatId
+          const updatedChatData = {
+            ...updatedChat,
+            last_message: update.lastMessage,
+            updated_at: new Date().toISOString(),
+            unread_count: isActiveChat ? 0 : (updatedChat.unread_count || 0) + 1
+          }
+          return updateAndSortChats(prevChats, updatedChatData)
         }
         return prevChats
       })
     })
 
-    // UPDATED: Bind to the "chat-created" event
     userChannel.bind(
       "chat-created",
       (data: { newChat: SelectChat; initiatorId: string; spaceId: string }) => {
@@ -281,14 +286,13 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         const currentSpaceId = currentSpace?.id
 
         if (currentSpaceId === spaceId) {
-          setMyChats((prevChats) => [newChat, ...prevChats])
+          setMyChats((prevChats) => sortChats([newChat, ...prevChats]))
           setSwitchedChat(newChat)
         }
       }
     )
 
     return () => {
-      // Clean up Pusher subscriptions
       userChannel.unbind_all()
       pusherClient.unsubscribe(userChannelName)
     }
@@ -296,48 +300,36 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
   /**
    * Handles the sending of a new message in the chat.
-   *
-   * This function checks if the new message is not empty, creates a new message object,
-   * clears the input field, and then calls the action to add the message to the chat.
-   *
-   * @async
-   * @function handleSendMessage
-   * @returns {Promise<void>} A promise that resolves when the message has been added to the chat.
+   * ...
    */
   const handleSendMessage = async () => {
     if (newMessage.trim() === "" || !currentChat || !authUser) return
+    const messageContent = newMessage
+
     const newMsg: InsertMessage = {
       sender_id: authUser?.unique_id || "",
       chat_id: currentChat?.id || 0,
-      message: newMessage,
+      message: messageContent,
       type: "text"
     }
 
-    // The temporary message logic is now REMOVED as the message will come 
-    // back via the Pusher subscription after the server action successfully 
-    // creates and broadcasts it. This ensures the message only appears if 
-    // the server action succeeds, preventing desync.
+    setMyChats((prevChats) => {
+      const updatedChat = prevChats.find((chat) => chat.id === currentChat.id)
+      if (!updatedChat) return prevChats
 
-    // Update chat list optimistically before calling the server action
-    setMyChats((prevChats) =>
-      prevChats.map((chat) =>
-        chat.id === currentChat.id
-          ? {
-              ...chat,
-              last_message: newMsg.message,
-              last_message_at: new Date().toISOString()
-            }
-          : chat
-      )
-    )
+      const updatedChatData = {
+        ...updatedChat,
+        last_message: messageContent,
+        updated_at: new Date().toISOString()
+      }
+      return updateAndSortChats(prevChats, updatedChatData)
+    })
+
     setNewMessage("")
-    // This server action will now handle Pusher trigger for both 
-    // "new-message" on the chat channel and "chat-update" on user channels.
     await addMessageToChat(newMsg, currentSpace?.id)
   }
 
   return (
-    // ... (The rest of the component JSX remains the same)
     <div className="flex h-[calc(100vh-7rem)] gap-4">
       {/* Contacts list - visible on desktop, hidden on mobile */}
       <Card className="w-80 flex-shrink-0 border-r hidden md:flex md:flex-col h-full">
@@ -357,11 +349,13 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           </div>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden p-0">
+          {/* ChatsList component will now display the properly sorted myChats */}
           {canView && <ChatsList searchQuery={searchQuery} />}
         </CardContent>
       </Card>
 
       {/* Main chat area */}
+      {/* ... (rest of the component JSX remains the same) ... */}
       {canView && (
         <Card className="flex-1 flex flex-col h-full">
           <CardHeader className="flex flex-row items-center justify-between py-4">
@@ -541,7 +535,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     className="flex-1"
-                    // type="text"
                   />
                   <Popover>
                     <PopoverTrigger>
