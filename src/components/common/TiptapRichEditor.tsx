@@ -105,7 +105,7 @@ export default function RichTextEditor({
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Heading.configure({ levels: [1, 2, 3] }),
       CharacterCount.configure({ limit }),
-      CustomImage.extend({
+      CustomImage.configure({
         inline: false,
         allowBase64: true,
         HTMLAttributes: {
@@ -147,10 +147,11 @@ export default function RichTextEditor({
                   editor
                     ?.chain()
                     .focus()
-                    .insertContentAt(editor.state.selection.head, {
-                      type: "image",
-                      attrs: { src: res.data }
-                    })
+                    .insertContentAt(editor.state.selection.head, [
+                      { type: "image", attrs: { src: res.data } },
+                      { type: "paragraph" }
+                    ])
+                    .focus()
                     .run()
 
                   setLoading(false)
@@ -177,12 +178,8 @@ export default function RichTextEditor({
   })
 
   useEffect(() => {
-    if (editor && value !== undefined) {
+    if (editor && value !== undefined && value !== editor.getHTML()) {
       editor.commands.setContent(value, false)
-
-      setTimeout(() => {
-        editor.view.dispatch(editor.view.state.tr)
-      }, 100)
     }
   }, [value, editor])
 
@@ -232,10 +229,11 @@ export default function RichTextEditor({
             editor
               ?.chain()
               .focus()
-              .insertContentAt(editor.state.selection.head, {
-                type: "image",
-                attrs: { src: res.data }
-              })
+              .insertContentAt(editor.state.selection.head, [
+                { type: "image", attrs: { src: res.data } },
+                { type: "paragraph" }
+              ])
+              .focus()
               .run()
             setLoading(false)
           }
