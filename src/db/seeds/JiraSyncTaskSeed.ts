@@ -1,14 +1,13 @@
-import { sql } from "drizzle-orm"
+import {marked} from "marked"
 import { db } from "../index"
 import { getProjectById } from "../data-access/project-management/query"
 import { CreateTask, GetTaskCount, GetTaskStatusList } from "../data-access/tasks/query"
 import fs from "fs"
 import path from "path"
-import { GetTaskStatusAction } from "@/src/server-actions/Tasks/Task"
 
 // Fixed values
 // const FIXED_STATUS_ID = "74aa63e9-ab68-4726-b4c4-25743c8d18d7"
-const FIXED_PROJECT_ID = "4a5cbaac-fd97-4fbc-a476-b817efc6c5b7"
+const FIXED_PROJECT_ID = "08ce22b9-6738-47dd-9acf-b544d832e04d"
 const FIXED_USER_ID = "5b887879-9d4a-403a-acdb-4bf45178b528"
 
 // Story point mapping
@@ -45,7 +44,7 @@ function mapIssueToPayload(issue: any, FIXED_STATUS_ID:string) {
   return {
     assign_by: FIXED_USER_ID,
     assign_to: null,
-    description: `<p>${issue.Description || "No description"}</p>`,
+    description: `${marked.parse(issue.Description)}`, //`${issue.Description || "No description"}</p>`,
     parent_task_id: null,
     status_id: FIXED_STATUS_ID,
     story_points: String(STORY_POINT_MAPPING[priority] || 2),
@@ -60,7 +59,7 @@ function mapIssueToPayload(issue: any, FIXED_STATUS_ID:string) {
 }
 
 // --- SEEDER FUNCTION ---
-export const TaskSeed = async () => {
+export const JiraSyncTaskSeed = async () => {
   console.log("🌱 Starting Task Seeder...")
 
   try {
