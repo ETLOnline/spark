@@ -12,7 +12,7 @@ import { SyncRolePermissionsSeeder } from "./SyncScopedPermissions"
 import { siteSettingsSeed } from "./SiteSettingsSeed"
 import { UpdateRoleTable } from "./UpdateRolesTable"
 import { EmailTemplatesSeed } from "./EmailTemplatesSeed"
-import { JiraSyncTaskSeed } from "./JiraSyncTaskSeed"
+import { JiraTaskMigrationSeed } from "./JiraTaskMigrationSeed"
 
 const SEEDERS: Record<string, () => Promise<void>> = {
   FeatureSeed,
@@ -29,7 +29,7 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   SyncRolePermissionsSeeder,
   siteSettingsSeed,
   EmailTemplatesSeed,
-  JiraSyncTaskSeed
+  JiraTaskMigrationSeed
 }
 
 async function runSeeders() {
@@ -43,7 +43,7 @@ async function runSeeders() {
       "CheckRolePermissionMismatch",
       "SyncRolePermissionsSeeder",
       "EmailTemplatesSeed",
-      "JiraSyncTaskSeed"
+      "JiraTaskMigrationSeed"
     ]
 
     const seederNames =

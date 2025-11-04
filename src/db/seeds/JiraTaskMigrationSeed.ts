@@ -59,7 +59,7 @@ function mapIssueToPayload(issue: any, FIXED_STATUS_ID:string) {
 }
 
 // --- SEEDER FUNCTION ---
-export const JiraSyncTaskSeed = async () => {
+export const JiraTaskMigrationSeed = async () => {
   console.log("🌱 Starting Task Seeder...")
 
   try {
