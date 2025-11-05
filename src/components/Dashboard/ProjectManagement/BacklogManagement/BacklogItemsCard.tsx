@@ -65,7 +65,7 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
 
   useEffect(() => {
     if (searchedItem || orderList) fatchTasks()
-  }, [searchedItem, orderList, searchParamsPage])
+  }, [searchedItem, orderList, searchParamsPage, limit])
 
   useEffect(() => {
     if (filters) fatchTasks()
