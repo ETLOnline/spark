@@ -261,6 +261,11 @@ export const AttachSpaceUserAction = CreateServerAction(
       const channelUserIds = channelUsers.map((cu) => cu.user_id)
       const communityUserIds = communityUsers.map((cu) => cu.user_id)
 
+      // this will be used as a reference when we insert in the channel_user table
+      let communityUserID = communityUsers.find(
+        (cu) => cu.user_id === userId
+      )?.id
+
       if (!communityUserIds.includes(userId)) {
         const communityViewerRole = await getAndAssignViewerRoles(
           userId,
@@ -274,22 +279,27 @@ export const AttachSpaceUserAction = CreateServerAction(
           communityViewerRole?.viewerRole?.name
         )
 
-        await ensureCommunityMembership(communityId as string, userId)
-
-        if (!channelUserIds.includes(userId)) {
-          const channelViewerRole = await getAndAssignViewerRoles(
-            userId,
-            "channel_viewer",
-            space.channel_id
-          )
-
-          await attachChannelUser(
-            space.channel_id,
-            userId,
-            newCommunityUser.id,
-            channelViewerRole?.viewerRole?.name
-          )
+        communityUserID = newCommunityUser?.id
+      }
+      if (!communityUserID) {
+        return {
+          success: false,
+          error: "Could not find community_user for space"
         }
+      }
+      if (!channelUserIds.includes(userId)) {
+        const channelViewerRole = await getAndAssignViewerRoles(
+          userId,
+          "channel_viewer",
+          space.channel_id
+        )
+
+        await attachChannelUser(
+          space.channel_id,
+          userId,
+          communityUserID,
+          channelViewerRole?.viewerRole?.name
+        )
       }
 
       const spaceViewerRole = await getAndAssignViewerRoles(
