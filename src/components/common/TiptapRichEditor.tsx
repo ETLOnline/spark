@@ -97,6 +97,15 @@ export default function RichTextEditor({
     }
   })
 
+  const isContentEmpty = (html: string) => {
+    if (!html) return true
+    const text = html
+      .replace(/<[^>]*>/g, "")
+      .replace(/&nbsp;/g, "")
+      .trim()
+    return text === ""
+  }
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -172,7 +181,9 @@ export default function RichTextEditor({
     onUpdate({ editor }) {
       const html = editor.getHTML()
       if (onChange) {
-        onChange(html)
+        console.log("Editor HTML:", html)
+        console.log("Editor isContentEmpty:", isContentEmpty(html))
+        onChange(isContentEmpty(html) ? "" : html)
       }
     }
   })
