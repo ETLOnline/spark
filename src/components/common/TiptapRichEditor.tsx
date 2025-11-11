@@ -181,8 +181,6 @@ export default function RichTextEditor({
     onUpdate({ editor }) {
       const html = editor.getHTML()
       if (onChange) {
-        console.log("Editor HTML:", html)
-        console.log("Editor isContentEmpty:", isContentEmpty(html))
         onChange(isContentEmpty(html) ? "" : html)
       }
     }
