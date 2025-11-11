@@ -7,6 +7,7 @@ import {
   inArray,
   like,
   or,
+  sql,
   SQLWrapper
 } from "drizzle-orm"
 import { db } from "../.."
@@ -502,6 +503,44 @@ export const getExistingSingleChat = async (
     })
   } catch (error: any) {
     console.log(error.message, "error")
+    throw new Error(error.message)
+  }
+}
+
+export const getExistingGroupName = async (
+  chatName: string,
+  space_id?: string
+) => {
+  try {
+    if (!space_id) {
+      return undefined
+    }
+
+    const existingChat = await db.query.chatsTable.findFirst({
+      where: and(
+        eq(chatsTable.is_group, 1),
+        eq(chatsTable.name, chatName),
+
+        inArray(
+          chatsTable.id,
+          sql`${db
+            .select({ chat_id: SpaceChatsTable.chat_id })
+            .from(SpaceChatsTable)
+            .where(eq(SpaceChatsTable.space_id, space_id))}`
+        )
+      ),
+      with: {
+        users: {
+          with: {
+            user: true
+          }
+        }
+      }
+    })
+
+    return existingChat
+  } catch (error: any) {
+    console.error("Error during group name check:", error.message)
     throw new Error(error.message)
   }
 }

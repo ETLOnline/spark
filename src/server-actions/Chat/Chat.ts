@@ -9,7 +9,8 @@ import {
   GetMutualChat,
   GetChats,
   updateLastChatMessage,
-  getExistingSingleChat
+  getExistingSingleChat,
+  getExistingGroupName
 } from "@/src/db/data-access/chat/query"
 import { CreateServerAction } from ".."
 import { InsertMessage } from "@/src/db/schema"
@@ -83,6 +84,17 @@ export const CreateGroupChatAction = CreateServerAction(
   true,
   async (userIds: string[], chatName: string, space_id?: string) => {
     try {
+      if (space_id) {
+        const existingChat = await getExistingGroupName(chatName, space_id)
+
+        if (existingChat) {
+          return {
+            success: false,
+            error:
+              "A group with this name already exists in this space. Please choose a different name."
+          }
+        }
+      }
       const authUser = await AuthUserAction()
       const space = await GetSpaceById(space_id || "")
 
