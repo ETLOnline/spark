@@ -399,9 +399,18 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
               <div className="grid gap-4">
                 <Input
                   placeholder="Folder name"
+                  maxLength={100}
                   onChange={(e) => {
-                    setNewFolderError("")
-                    newFolderName.current = e.target.value
+                    const value = e.target.value
+                    newFolderName.current = value
+
+                    if (value.length === 100) {
+                      setNewFolderError(
+                        "Folder name reached 100 characters limit"
+                      )
+                    } else {
+                      setNewFolderError("")
+                    }
                   }}
                 />
               </div>
