@@ -87,7 +87,7 @@ export const CreateGroupChatAction = CreateServerAction(
       if (space_id) {
         const existingChat = await getExistingGroupName(chatName, space_id)
 
-        if (existingChat) {
+        if (existingChat?.name?.toLowerCase() ==chatName.toLocaleLowerCase()) {
           return {
             success: false,
             error:
