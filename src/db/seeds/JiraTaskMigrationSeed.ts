@@ -8,7 +8,7 @@ import path from "path"
 // Fixed values
 // const FIXED_STATUS_ID = "74aa63e9-ab68-4726-b4c4-25743c8d18d7"
 const FIXED_PROJECT_ID = "08ce22b9-6738-47dd-9acf-b544d832e04d"
-const FIXED_USER_ID = "5b887879-9d4a-403a-acdb-4bf45178b528"
+const FIXED_USER_ID = "27bb08c7-e89c-4b5c-bb6f-1837b55bd996"
 
 // Story point mapping
 const STORY_POINT_MAPPING = {
@@ -76,7 +76,7 @@ export const JiraTaskMigrationSeed = async () => {
       }
 
       const FIXED_STATUS_ID = toDoStatus.id
-      console.log("🔄 Truncating tasks table...")
+      // console.log("🔄 Truncating tasks table...")
       // await tx.execute(sql`TRUNCATE TABLE tasks CASCADE;`)
 
       const issues = loadFilteredData()
