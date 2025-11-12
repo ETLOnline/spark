@@ -135,9 +135,8 @@ const CreateNewChat = () => {
         )
 
         if (response.success === false && response.error) {
-          // Check for the specific error returned by the server action
           setGroupNameError(response.error)
-          setIsCreatingChat(false) // Stop loading
+          setIsCreatingChat(false)
           return
         }
         if (response.success && response.data) {
@@ -175,18 +174,14 @@ const CreateNewChat = () => {
         }
       }
 
-      // --- FINAL SUCCESS CLEANUP ---
       setSelectedContacts([])
       setGroupName("")
       setIsGroupChat(false)
       setDialogOpen(false)
     } catch (e) {
-      // Catch any uncaught errors during execution
       console.error("Uncaught error during chat creation:", e)
       setGroupNameError("An unexpected error occurred.")
     } finally {
-      // Ensure loading state is off unless a return happened previously
-      // and it was handled (like in the duplicate check or validation).
       setIsCreatingChat(false)
     }
   }
