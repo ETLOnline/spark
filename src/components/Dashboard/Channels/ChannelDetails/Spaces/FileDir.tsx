@@ -335,6 +335,16 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
       })
     }
   }
+  const handleFolderNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    newFolderName.current = value
+
+    if (value.length === 100) {
+      setNewFolderError("Folder name reached 100 characters limit")
+    } else {
+      setNewFolderError("")
+    }
+  }
 
   return (
     <section className="directory">
@@ -400,18 +410,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
                 <Input
                   placeholder="Folder name"
                   maxLength={100}
-                  onChange={(e) => {
-                    const value = e.target.value
-                    newFolderName.current = value
-
-                    if (value.length === 100) {
-                      setNewFolderError(
-                        "Folder name reached 100 characters limit"
-                      )
-                    } else {
-                      setNewFolderError("")
-                    }
-                  }}
+                  onChange={handleFolderNameChange}
                 />
               </div>
               {newFolderError && (
