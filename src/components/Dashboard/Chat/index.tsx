@@ -112,6 +112,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     chatStore.isMobileMenuOpen
   )
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const initialChatLoadRef = useRef<boolean>(true)
   const [currentChat, setCurrentChat] = useAtom(chatStore.currentChat)
   const [switchedChat, setSwitchedChat] = useAtom(chatStore.switchedChat)
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
@@ -139,7 +140,10 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     setCurrentChat(currentChatSSR || null)
 
     setMyChats(allChatsSSR || [])
-    setMessages(currentChatSSR?.messages || [])
+    initialChatLoadRef.current = true
+    const initialMessages = currentChatSSR?.messages || []
+
+    setMessages(initialMessages)
     scrollToBottom()
     return () => {
       setCurrentChat(null)
@@ -147,10 +151,13 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       setMessages([])
     }
   }, [])
-
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+    const behavior: ScrollBehavior = initialChatLoadRef.current
+      ? "auto"
+      : "smooth"
+    messagesEndRef.current?.scrollIntoView({ behavior })
+    initialChatLoadRef.current = false
+  }, [])
 
   useEffect(() => {
     if (!currentChat || !authUser) return
@@ -210,6 +217,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
    * ...
    */
   const handleChatSwitch = async (chatId: number) => {
+    initialChatLoadRef.current = true
     const newSwitchedChat = await fetchChatWithMessages(chatId)
     if (newSwitchedChat && newSwitchedChat.data) {
       setCurrentChat(newSwitchedChat.data)
