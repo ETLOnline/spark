@@ -57,34 +57,6 @@ type ChatUpdatePayload = {
   lastMessage: string
 }
 
-const sortChats = (chats: SelectChat[]): SelectChat[] => {
-  return [...chats].sort((a, b) => {
-    const dateAString = a.updated_at
-    const dateBString = b.updated_at
-
-    const dateA = dateAString ? new Date(dateAString).getTime() : 0
-    const dateB = dateBString ? new Date(dateBString).getTime() : 0
-
-    return dateB - dateA
-  })
-}
-
-const updateAndSortChats = (
-  prevChats: SelectChat[],
-  updatedChatData: SelectChat
-) => {
-  const otherChats = prevChats.filter((chat) => chat.id !== updatedChatData.id)
-
-  const existingChat = prevChats.find((chat) => chat.id === updatedChatData.id)
-  const newChat = existingChat
-    ? { ...existingChat, ...updatedChatData }
-    : updatedChatData
-
-  const newChatsList = [newChat, ...otherChats]
-
-  return sortChats(newChatsList)
-}
-
 /**
  * Joins a specified channel for a chat.
  *
@@ -166,7 +138,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   useEffect(() => {
     setCurrentChat(currentChatSSR || null)
 
-    setMyChats(sortChats(allChatsSSR || []))
+    setMyChats(allChatsSSR || [])
     setMessages(currentChatSSR?.messages || [])
     scrollToBottom()
     return () => {
@@ -183,25 +155,29 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   useEffect(() => {
     if (!currentChat || !authUser) return
 
-    const { unsubscribe } = joinChannel(currentChat.id, (message) => {
-      setMessages((prev) => [...prev, message])
+    const { unsubscribe } = joinChannel(
+      currentChat.id, // Use chat ID for Pusher channel naming
+      (message) => {
+        setMessages((prev) => [...prev, message])
 
-      setMyChats((prevChats) => {
-        const updatedChat = prevChats.find(
-          (chat) => chat.id === message.chat_id
-        )
-        if (!updatedChat) return prevChats
-
-        const updatedChatData = {
-          ...updatedChat,
-          last_message: message.message,
-          last_message_at: message.created_at,
-          unread_count: 0
-        }
-
-        return updateAndSortChats(prevChats, updatedChatData)
-      })
-    })
+        // Update the last message and unread count in the chat list
+        setMyChats((prevChats) => {
+          const updatedChats = prevChats.map((chat) => {
+            if (chat.id === message.chat_id) {
+              return {
+                ...chat,
+                last_message: message.message,
+                last_message_at: message.created_at,
+                // Only reset unread count if we are currently viewing the chat
+                unread_count: 0
+              }
+            }
+            return chat
+          })
+          return updatedChats
+        })
+      }
+    )
 
     setChatRealtime({ unsubscribe })
 
@@ -263,14 +239,20 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         const updatedChat = prevChats.find((chat) => chat.id === update.chatId)
 
         if (updatedChat && update.lastMessage) {
-          const isActiveChat = currentChat?.id === update.chatId
-          const updatedChatData = {
-            ...updatedChat,
-            last_message: update.lastMessage,
-            updated_at: new Date().toISOString(),
-            unread_count: isActiveChat ? 0 : (updatedChat.unread_count || 0) + 1
-          }
-          return updateAndSortChats(prevChats, updatedChatData)
+          const newChats = prevChats.map((chat) => {
+            if (chat.id === update.chatId) {
+              const isActiveChat = currentChat?.id === update.chatId
+              return {
+                ...chat,
+                last_message: update.lastMessage,
+                updated_at: new Date().toISOString(),
+                // Increment unread count only if not active chat
+                unread_count: isActiveChat ? 0 : (chat.unread_count || 0) + 1
+              }
+            }
+            return chat
+          })
+          return newChats
         }
         return prevChats
       })
@@ -286,7 +268,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         const currentSpaceId = currentSpace?.id
 
         if (currentSpaceId === spaceId) {
-          setMyChats((prevChats) => sortChats([newChat, ...prevChats]))
+          setMyChats((prevChats) => [newChat, ...prevChats])
           setSwitchedChat(newChat)
         }
       }
@@ -313,17 +295,17 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       type: "text"
     }
 
-    setMyChats((prevChats) => {
-      const updatedChat = prevChats.find((chat) => chat.id === currentChat.id)
-      if (!updatedChat) return prevChats
-
-      const updatedChatData = {
-        ...updatedChat,
-        last_message: messageContent,
-        updated_at: new Date().toISOString()
-      }
-      return updateAndSortChats(prevChats, updatedChatData)
-    })
+    setMyChats((prevChats) =>
+      prevChats.map((chat) =>
+        chat.id === currentChat.id
+          ? {
+              ...chat,
+              last_message: newMsg.message,
+              last_message_at: new Date().toISOString()
+            }
+          : chat
+      )
+    )
 
     setNewMessage("")
     await addMessageToChat(newMsg, currentSpace?.id)
