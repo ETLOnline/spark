@@ -58,6 +58,3 @@ export const EmailTemplatesSeed = async () => {
     }
   })
 }
-
-// You can call the function directly if you want this file to be executable
-EmailTemplatesSeed()

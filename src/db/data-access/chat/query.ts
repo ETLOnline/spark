@@ -21,6 +21,7 @@ import {
   usersTable
 } from "../../schema"
 import { randomUUID } from "crypto"
+import { slugify } from "@/src/utils/helpers"
 
 export const CreatePrivateChat = async (
   user_id: string,
@@ -84,6 +85,7 @@ export const CreateGroupChat = async (
         type: space_id ? "space" : "open",
         name: chatName,
         channel_id: realtimeChannelId,
+        chat_slug: slugify(chatName),
         is_group: 1
       })
       .returning()
@@ -550,6 +552,43 @@ export const markChatAsReadForUser = async (chatId: number, userId: string) => {
 
     return result
   } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
+export const getExistingGroupName = async (
+  chatName: string,
+  space_id?: string
+) => {
+  try {
+    if (!space_id) {
+      return undefined
+    }
+    const chatNamePattern = slugify(chatName)
+    const existingChat = await db.query.chatsTable.findFirst({
+      where: and(
+        eq(chatsTable.is_group, 1),
+        eq(chatsTable.chat_slug, chatNamePattern),
+
+        inArray(
+          chatsTable.id,
+          sql`${db
+            .select({ chat_id: SpaceChatsTable.chat_id })
+            .from(SpaceChatsTable)
+            .where(eq(SpaceChatsTable.space_id, space_id))}`
+        )
+      ),
+      with: {
+        users: {
+          with: {
+            user: true
+          }
+        }
+      }
+    })
+
+    return existingChat
+  } catch (error: any) {
+    console.error("Error during group name check:", error.message)
     throw new Error(error.message)
   }
 }
