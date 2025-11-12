@@ -510,11 +510,11 @@ export const getExistingSingleChat = async (
 
 export const incrementUnreadCountForChat = async (
   chatId: number,
-  senderId: string
+  user_id: string
 ) => {
   try {
     // 1. Increment the unread_count for all users who are NOT the sender
-    await db
+    const result = await db
       .update(userChatsTable)
       .set({
         unread_count: sql`${userChatsTable.unread_count} + 1`
@@ -522,23 +522,11 @@ export const incrementUnreadCountForChat = async (
       .where(
         and(
           eq(userChatsTable.chat_id, chatId),
-          ne(userChatsTable.user_id, senderId)
+          eq(userChatsTable.user_id, user_id)
         )
       )
 
-    // 2. Ensure the sender's unread count is 0
-    const [senderResult] = await db
-      .update(userChatsTable)
-      .set({ unread_count: 0 })
-      .where(
-        and(
-          eq(userChatsTable.chat_id, chatId),
-          eq(userChatsTable.user_id, senderId)
-        )
-      )
-      .returning({ userId: userChatsTable.user_id })
-
-    return senderResult
+    return result
   } catch (error: any) {
     throw new Error(error.message)
   }

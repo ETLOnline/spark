@@ -219,7 +219,8 @@ export const AddMessageToChatAction = CreateServerAction(
               )
               await userNotificationChannel.publish("chat-update", {
                 chatId: updatedChat.id,
-                lastMessage: newMessage.message
+                lastMessage: newMessage.message,
+                sender_id: authUser.unique_id
               })
             }
           }
@@ -268,15 +269,10 @@ export const MarkChatAsReadAction = CreateServerAction(
 
 export const incrementUnreadCountForChatAction = CreateServerAction(
   true,
-  async (chat_id: number) => {
+  async (chat_id: number, user_id: string) => {
     try {
-      const authUser = await AuthUserAction()
-      if (!authUser) return { success: false, error: "Unauthorized" }
-
-      const result = await incrementUnreadCountForChat(
-        chat_id,
-        authUser.unique_id
-      )
+      console.log(chat_id, user_id)
+      const result = await incrementUnreadCountForChat(chat_id, user_id)
       return { success: true, data: result }
     } catch (error) {
       return { error: error }

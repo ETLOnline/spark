@@ -58,6 +58,7 @@ interface ChatScreenProps {
 type ChatUpdatePayload = {
   chatId: number
   lastMessage: string
+  sender_id: string
 }
 
 // Function to join a channel (for group or one-to-one chat)
@@ -285,7 +286,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
     userChannel.subscribe("chat-update", (message) => {
       const update = message.data as ChatUpdatePayload
-
       setMyChats((prevChats) => {
         const updatedChat = prevChats.find((chat) => chat.id === update.chatId)
 
@@ -294,6 +294,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
             if (chat.id === update.chatId) {
               const isActiveChat = currentChat?.id === update.chatId
               const updatedUsers = chat.users?.map((uc) => {
+                if (!isActiveChat && authUser.unique_id !== update.sender_id) {
+                  incrementUnreadCount(update.chatId, uc.user_id)
+                }
                 if (uc.user_id === authUser.unique_id) {
                   return {
                     ...uc,
