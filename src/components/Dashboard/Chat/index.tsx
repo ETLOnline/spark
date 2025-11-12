@@ -341,14 +341,16 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       sender_id: newMsg.sender_id,
       message: newMsg.message
     }
-
+    setMessages((prevMessages) => [...prevMessages, tempMessage])
     setMyChats((prevChats) =>
       prevChats.map((chat) =>
         chat.id === currentChat.id
           ? {
               ...chat,
               last_message: newMsg.message,
-              last_message_at: new Date().toISOString()
+              last_message_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              unread_count: 0
             }
           : chat
       )
