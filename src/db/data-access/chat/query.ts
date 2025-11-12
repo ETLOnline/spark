@@ -6,7 +6,9 @@ import {
   eq,
   inArray,
   like,
+  ne,
   or,
+  sql,
   SQLWrapper
 } from "drizzle-orm"
 import { db } from "../.."
@@ -502,6 +504,64 @@ export const getExistingSingleChat = async (
     })
   } catch (error: any) {
     console.log(error.message, "error")
+    throw new Error(error.message)
+  }
+}
+
+export const incrementUnreadCountForChat = async (
+  chatId: number,
+  senderId: string
+) => {
+  try {
+    // 1. Increment the unread_count for all users who are NOT the sender
+    await db
+      .update(userChatsTable)
+      .set({
+        unread_count: sql`${userChatsTable.unread_count} + 1`
+      })
+      .where(
+        and(
+          eq(userChatsTable.chat_id, chatId),
+          ne(userChatsTable.user_id, senderId)
+        )
+      )
+
+    // 2. Ensure the sender's unread count is 0
+    const [senderResult] = await db
+      .update(userChatsTable)
+      .set({ unread_count: 0 })
+      .where(
+        and(
+          eq(userChatsTable.chat_id, chatId),
+          eq(userChatsTable.user_id, senderId)
+        )
+      )
+      .returning({ userId: userChatsTable.user_id })
+
+    return senderResult
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
+
+export const markChatAsReadForUser = async (chatId: number, userId: string) => {
+  try {
+    const [result] = await db
+      .update(userChatsTable)
+      .set({ unread_count: 0 })
+      .where(
+        and(
+          eq(userChatsTable.chat_id, chatId),
+          eq(userChatsTable.user_id, userId)
+        )
+      )
+      .returning({
+        userId: userChatsTable.user_id,
+        chatId: userChatsTable.chat_id
+      })
+
+    return result
+  } catch (error: any) {
     throw new Error(error.message)
   }
 }

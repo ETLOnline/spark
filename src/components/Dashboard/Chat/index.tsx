@@ -28,7 +28,9 @@ import { AblyClient } from "@/src/services/realtime/AblyClient"
 import ChatsList from "./components/ChatsList"
 import {
   AddMessageToChatAction,
-  GetChatWithMessagesAction
+  GetChatWithMessagesAction,
+  incrementUnreadCountForChatAction,
+  MarkChatAsReadAction
 } from "@/src/server-actions/Chat/Chat"
 import moment from "moment-timezone"
 import Link from "next/link"
@@ -135,6 +137,11 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     : "chat.create"
   const permissionNamespaceView = currentSpace ? "space.chat.view" : "chat.view"
 
+  const [, , , markAsRead] = useServerAction(MarkChatAsReadAction)
+  const [, , , incrementUnreadCount] = useServerAction(
+    incrementUnreadCountForChatAction
+  )
+
   const canCreate = permissionChecker
     ? permissionChecker?.canAccess(permissionNamespaceCreate)
     : false
@@ -187,6 +194,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
   useEffect(() => {
     if (!currentChat || !authUser) return
+    chatRealTime?.unsubscribe()
 
     const { sendMessage, unsubscribe } = joinChannel(
       currentChat.channel_id,
@@ -199,8 +207,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
               return {
                 ...chat,
                 last_message: message.message,
-                last_message_at: message.created_at,
-                unread_count: 0
+                last_message_at: message.created_at
               }
             }
             return chat
@@ -230,8 +237,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
   useEffect(() => {
     if (!switchedChat) return
-    chatRealTime?.unsubscribe()
-    setChatRealtime(null)
+    // chatRealTime?.unsubscribe()
+    // setChatRealtime(null)
     handleChatSwitch(switchedChat.id)
     setSwitchedChat(null)
   }, [switchedChat])
@@ -248,10 +255,22 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       setCurrentChat(newSwitchedChat.data)
       setMessages(newSwitchedChat.data.messages)
     }
+
+    await markAsRead(chatId)
+
     setMyChats((prevChats) =>
-      prevChats.map((chat) =>
-        chat.id === chatId ? { ...chat, unread_count: 0 } : chat
-      )
+      prevChats.map((chat) => {
+        if (chat.id === chatId) {
+          const updatedUsers = chat.users?.map((uc) => {
+            if (uc.user_id === authUser?.unique_id) {
+              return { ...uc, unread_count: 0 } as SelectUserChat
+            }
+            return uc
+          })
+          return { ...chat, users: updatedUsers }
+        }
+        return chat
+      })
     )
   }
 
@@ -274,11 +293,23 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           const newChats = prevChats.map((chat) => {
             if (chat.id === update.chatId) {
               const isActiveChat = currentChat?.id === update.chatId
+              const updatedUsers = chat.users?.map((uc) => {
+                if (uc.user_id === authUser.unique_id) {
+                  return {
+                    ...uc,
+                    unread_count: isActiveChat
+                      ? uc.unread_count || 0
+                      : (uc.unread_count || 0) + 1
+                  } as SelectUserChat
+                }
+                return uc
+              })
+
               return {
                 ...chat,
                 last_message: update.lastMessage,
                 updated_at: new Date().toISOString(),
-                unread_count: isActiveChat ? 0 : (chat.unread_count || 0) + 1
+                users: updatedUsers
               }
             }
             return chat
@@ -328,18 +359,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       chat_id: currentChat?.id || 0,
       message: newMessage,
       type: "text"
-    }
-
-    const tempMessage: SelectMessage = {
-      id: Date.now(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      deleted_at: null,
-      sender: authUser,
-      type: newMsg.type,
-      chat_id: newMsg.chat_id,
-      sender_id: newMsg.sender_id,
-      message: newMsg.message
     }
 
     setMyChats((prevChats) =>

@@ -9,7 +9,9 @@ import {
   GetMutualChat,
   GetChats,
   updateLastChatMessage,
-  getExistingSingleChat
+  getExistingSingleChat,
+  incrementUnreadCountForChat,
+  markChatAsReadForUser
 } from "@/src/db/data-access/chat/query"
 import { CreateServerAction } from ".."
 import { InsertMessage } from "@/src/db/schema"
@@ -243,6 +245,39 @@ export const GetChatContactsAction = CreateServerAction(
     try {
       const contacts = await getChatContacts(filters)
       return { success: true, data: contacts }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const MarkChatAsReadAction = CreateServerAction(
+  true,
+  async (chat_id: number) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) return { success: false, error: "Unauthorized" }
+
+      const result = await markChatAsReadForUser(chat_id, authUser.unique_id)
+      return { success: true, data: result }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const incrementUnreadCountForChatAction = CreateServerAction(
+  true,
+  async (chat_id: number) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) return { success: false, error: "Unauthorized" }
+
+      const result = await incrementUnreadCountForChat(
+        chat_id,
+        authUser.unique_id
+      )
+      return { success: true, data: result }
     } catch (error) {
       return { error: error }
     }
