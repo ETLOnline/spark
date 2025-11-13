@@ -170,7 +170,7 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
                 )}
               </div>
               <div
-                className={`font-medium ${
+                className={`font-medium truncate ${
                   item.type === "folder"
                     ? "cursor-pointer hover:text-primary"
                     : ""
