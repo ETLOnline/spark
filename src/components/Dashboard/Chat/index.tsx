@@ -348,8 +348,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           ? {
               ...chat,
               last_message: newMsg.message,
-              last_message_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
+              last_message_at: moment().toISOString(),
+              updated_at: moment().toISOString(),
               unread_count: 0
             }
           : chat
