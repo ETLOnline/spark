@@ -9,13 +9,14 @@ import {
   GetMutualChat,
   GetChats,
   updateLastChatMessage,
-  getExistingSingleChat
+  getExistingSingleChat,
+  getExistingGroupName
 } from "@/src/db/data-access/chat/query"
 import { CreateServerAction } from ".."
 import { InsertMessage } from "@/src/db/schema"
 import { AuthUserAction } from "../User/AuthUserAction"
 import { createChatMessage } from "@/src/db/data-access/chat/message/query"
-import { AblyClientRest } from "@/src/services/realtime/AblyClient"
+import pusherServer from "@/src/services/realtime/pusherServer" // Added Pusher Server Client
 import { GetSpaceById } from "@/src/db/data-access/spaces/query"
 import {
   SendChatNotification,
@@ -54,15 +55,17 @@ export const CreatePrivateChatAction = CreateServerAction(
 
       const chatMembers = newChat.users
 
+      // CONVERTED: Ably publish to Pusher trigger
       for (const member of chatMembers) {
-        const userChannel = AblyClientRest.channels.get(
-          `user:${member.user_id}`
+        await pusherServer.trigger(
+          `private-user-${member.user_id}`, // Pusher user channel convention
+          "chat-created",
+          {
+            newChat,
+            initiatorId: user_id,
+            spaceId: space_id
+          }
         )
-        await userChannel.publish("chat-created", {
-          newChat,
-          initiatorId: user_id,
-          spaceId: space_id
-        })
       }
 
       await SendChatNotification(NotificationEvent.CHAT_INVITE, newChat, space)
@@ -83,6 +86,17 @@ export const CreateGroupChatAction = CreateServerAction(
   true,
   async (userIds: string[], chatName: string, space_id?: string) => {
     try {
+      if (space_id) {
+        const existingChat = await getExistingGroupName(chatName, space_id)
+
+        if (existingChat?.name?.toLowerCase() ==chatName.toLocaleLowerCase()) {
+          return {
+            success: false,
+            error:
+              "A group with this name already exists in this space. Please choose a different name."
+          }
+        }
+      }
       const authUser = await AuthUserAction()
       const space = await GetSpaceById(space_id || "")
 
@@ -95,18 +109,19 @@ export const CreateGroupChatAction = CreateServerAction(
       // Get the list of users in the newly created chat
       const chatUsers = chat.users?.map((userChat) => userChat.user) || []
 
-      // Loop through each user and publish the "chat-created" event to their channel
+      // CONVERTED: Ably publish to Pusher trigger
       for (const user of chatUsers) {
         if (!user?.unique_id) continue
-        const userChannel = AblyClientRest.channels.get(
-          `user:${user.unique_id}`
+        
+        await pusherServer.trigger(
+          `private-user-${user.unique_id}`, // Pusher user channel convention
+          "chat-created",
+          {
+            newChat: chat,
+            initiatorId: authUser.unique_id,
+            spaceId: space_id
+          }
         )
-
-        await userChannel.publish("chat-created", {
-          newChat: chat,
-          initiatorId: authUser.unique_id,
-          spaceId: space_id
-        })
       }
 
       await SendChatNotification(NotificationEvent.CHAT_INVITE, chat, space)
@@ -199,26 +214,30 @@ export const AddMessageToChatAction = CreateServerAction(
           }
           // const channelHash = ChatChannelHash(updatedChat.channel_id)
 
-          // send message to channel
-
-          const realtimeChannel = AblyClientRest.channels.get(
-            updatedChat.channel_id
+          // CONVERTED: Ably publish to Pusher trigger for the message itself
+          await pusherServer.trigger(
+            `private-chat-${updatedChat.id}`, // Pusher chat channel convention
+            "new-message", // Event name for new messages
+            { message: newMessage } // The new message data
           )
-          await realtimeChannel.publish("message", newMessage)
 
           const chatUsers = updatedChat.users
 
+          // CONVERTED: Ably publish to Pusher trigger for chat list update
           for (const userChat of chatUsers) {
             const userId = userChat.user_id
 
             if (userId !== authUser.unique_id) {
-              const userNotificationChannel = AblyClientRest.channels.get(
-                `user:${userId}`
+              await pusherServer.trigger(
+                `private-user-${userId}`, // Pusher user channel convention
+                "chat-update", // Event name for chat list updates
+                {
+                  update: { // Pusher data structure wrapper
+                    chatId: updatedChat.id,
+                    lastMessage: newMessage.message
+                  }
+                }
               )
-              await userNotificationChannel.publish("chat-update", {
-                chatId: updatedChat.id,
-                lastMessage: newMessage.message
-              })
             }
           }
 

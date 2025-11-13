@@ -112,6 +112,8 @@ const CreateNewChat = () => {
   const handleCreateNewChat = async () => {
     if (!authUser) return
     setIsCreatingChat(true)
+    setGroupNameError("")
+
     const spaceId = currentSpace && isSpacePage ? currentSpace.id : undefined
     const userIds = selectedContacts.map((contact) => contact.value)
     try {
@@ -119,18 +121,24 @@ const CreateNewChat = () => {
         // Create Group Chat
         if (groupName.trim() === "") {
           setGroupNameError("Group name is required.")
+          setIsCreatingChat(false) 
           return
         } else if (groupName.trim().length > 50) {
           setGroupNameError("Group name must be 50 characters or less.")
+          setIsCreatingChat(false) 
           return
-        } else {
-          setGroupNameError("")
         }
         const response = await CreateGroupChatAction(
           [...userIds, authUser?.unique_id],
           groupName,
           spaceId
         )
+
+        if (response.success === false && response.error) {
+          setGroupNameError(response.error)
+          setIsCreatingChat(false)
+          return
+        }
         if (response.success && response.data) {
           const newChat = response.data
           setMyChats((pre) => [...pre, newChat])
@@ -165,10 +173,14 @@ const CreateNewChat = () => {
           })
         }
       }
+
       setSelectedContacts([])
       setGroupName("")
       setIsGroupChat(false)
       setDialogOpen(false)
+    } catch (e) {
+      console.error("Uncaught error during chat creation:", e)
+      setGroupNameError("An unexpected error occurred.")
     } finally {
       setIsCreatingChat(false)
     }
