@@ -253,6 +253,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     scrollToBottom()
   }, [messages, authUser])
 
+  const runtime = 0
   useEffect(() => {
     if (!authUser) return
 
@@ -270,10 +271,13 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
             if (chat.id === update.chatId) {
               const isActiveChat = currentChat?.id === update.chatId
               const updatedUsers = chat.users?.map((uc) => {
-                if (!isActiveChat && authUser.unique_id !== update.sender_id) {
-                  incrementUnreadCount(update.chatId, uc.user_id)
-                }
                 if (uc.user_id === authUser.unique_id) {
+                  if (
+                    !isActiveChat &&
+                    authUser.unique_id !== update.sender_id
+                  ) {
+                    incrementUnreadCount(update.chatId, uc.user_id)
+                  }
                   return {
                     ...uc,
                     unread_count: isActiveChat
@@ -283,6 +287,12 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                 }
                 return uc
               })
+              return {
+                ...chat,
+                last_message: update.lastMessage,
+                updated_at: new Date().toISOString(),
+                users: updatedUsers
+              }
             }
             return chat
           })
