@@ -2,19 +2,19 @@ import { ScrollArea } from "@radix-ui/react-scroll-area"
 import React, { useMemo } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar"
 import { Badge } from "../../../ui/badge"
-import { useAtom, useAtomValue, useSetAtom } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { chatStore } from "@/src/store/chat/chatStore"
 import { userStore } from "@/src/store/user/userStore"
-import { SelectChat, SelectUser } from "@/src/db/schema"
 import Loader from "../../../common/Loader/Loader"
 import ChatContactItem from "./ChatContactItem"
+import moment from "moment"
 
 const ChatsList = ({ searchQuery = "" }) => {
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
   const authUser = useAtomValue(userStore.AuthUser)
 
   const filteredChats = useMemo(() => {
-    return myChats.filter((chat) => {
+    const chats = myChats.filter((chat) => {
       if (!searchQuery.trim()) return true
       const query = searchQuery.toLowerCase().replace(/\s+/g, "")
       if (
@@ -42,6 +42,10 @@ const ChatsList = ({ searchQuery = "" }) => {
       }
       return false
     })
+
+    return chats.sort(
+      (a, b) => moment(b.updated_at).valueOf() - moment(a.updated_at).valueOf()
+    )
   }, [myChats, searchQuery])
 
   return (

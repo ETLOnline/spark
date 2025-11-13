@@ -517,7 +517,7 @@ export const getExistingGroupName = async (
     if (!space_id) {
       return undefined
     }
-    const chatNamePattern = slugify(chatName);
+    const chatNamePattern = slugify(chatName)
     const existingChat = await db.query.chatsTable.findFirst({
       where: and(
         eq(chatsTable.is_group, 1),

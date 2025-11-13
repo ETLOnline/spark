@@ -89,7 +89,7 @@ export const CreateGroupChatAction = CreateServerAction(
       if (space_id) {
         const existingChat = await getExistingGroupName(chatName, space_id)
 
-        if (existingChat?.name?.toLowerCase() ==chatName.toLocaleLowerCase()) {
+        if (existingChat?.name?.toLowerCase() == chatName.toLocaleLowerCase()) {
           return {
             success: false,
             error:
@@ -112,7 +112,7 @@ export const CreateGroupChatAction = CreateServerAction(
       // CONVERTED: Ably publish to Pusher trigger
       for (const user of chatUsers) {
         if (!user?.unique_id) continue
-        
+
         await pusherServer.trigger(
           `private-user-${user.unique_id}`, // Pusher user channel convention
           "chat-created",
@@ -232,7 +232,8 @@ export const AddMessageToChatAction = CreateServerAction(
                 `private-user-${userId}`, // Pusher user channel convention
                 "chat-update", // Event name for chat list updates
                 {
-                  update: { // Pusher data structure wrapper
+                  update: {
+                    // Pusher data structure wrapper
                     chatId: updatedChat.id,
                     lastMessage: newMessage.message
                   }

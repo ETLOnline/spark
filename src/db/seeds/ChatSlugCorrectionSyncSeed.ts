@@ -8,23 +8,22 @@ export const ChatSlugCorrectionSyncSeed = async () => {
     try {
       // Fetch all chat records
       const chats = await tx.select().from(chatsTable)
-      
+
       console.log(`📊 Found ${chats.length} chats to process`)
-      
+
       // Update each chat with slugified name
       for (const chat of chats) {
         if (chat.name) {
           const slug = slugify(chat.name)
-          
+
           await tx
             .update(chatsTable)
             .set({ chat_slug: slug })
             .where(sql`${chatsTable.id} = ${chat.id}`)
         }
       }
-      
+
       console.log("✅ Chat slugs updated successfully")
-      
     } catch (e) {
       console.error(e)
       tx.rollback()
