@@ -92,15 +92,8 @@ export function SprintManagement() {
   useEffect(() => {
     if (projectId && sprintList.length > 0 && tasks.length === 0) {
       fetchTasks()
-      console.log("Fetching tasks after update...")
     }
   }, [projectId, sprintList])
-
-  useEffect(() => {
-    if (tasks.length > 0) {
-      console.log("Tasks updated:", tasks)
-    }
-  }, [tasks])
 
   useEffect(() => {
     if (tasks.length > 0) {
