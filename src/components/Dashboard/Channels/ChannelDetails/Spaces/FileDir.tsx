@@ -37,6 +37,7 @@ import DirNav from "./DirNav"
 import { FileUpload } from "@/src/components/ui/file-upload"
 import { useSearchParams } from "next/navigation"
 import { CreateNewFileAction } from "@/src/server-actions/FileSharing/FileSharing"
+import { getUniqueFileName } from "./utils/helper"
 
 type FileData = {
   fileName: string
@@ -282,18 +283,33 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
   }
   const handleFileUpload = async () => {
     try {
+      if (!fileData) return
+
+      const currentFolder =
+        currentPath === "/"
+          ? dir
+          : findItemByPath(dir, currentPath)?.children || []
+
+      const existingNames = currentFolder
+        .filter((item) => item.type === "file")
+        .map((item) => item.name.toLowerCase())
+
+      const originalName = fileData.fileName
+
+      const uniqueFileName = getUniqueFileName(originalName, existingNames)
       const createdFile = (
         await createNewFile(
           currentPath === "/"
             ? (currSpace?.id as string)
             : (findItemByPath(dir, currentPath)?.id as number),
-          fileData?.fileName as string,
-          fileData?.fileSize as number,
-          fileData?.fileB64string as string,
-          fileData?.fileType as string,
+          uniqueFileName,
+          fileData.fileSize,
+          fileData.fileB64string,
+          fileData.fileType,
           "spaces"
         )
       )?.data
+
       const newFile: DirItem = {
         id: createdFile?.id as number,
         name: createdFile?.entity_name as string,
@@ -320,19 +336,28 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
       }
 
       setFileData(null)
-
       setIsNewFileDrawerOpen(false)
 
       toast({
-        description: "File created!",
+        description: `File uploaded as "${uniqueFileName}"`,
         duration: 3000
       })
     } catch (error) {
       toast({
         variant: "destructive",
-        description: "Failed to create file",
+        description: "Failed to upload file",
         duration: 3000
       })
+    }
+  }
+  const handleFolderNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    newFolderName.current = value
+
+    if (value.length === 100) {
+      setNewFolderError("Folder name reached 100 characters limit")
+    } else {
+      setNewFolderError("")
     }
   }
 
@@ -399,10 +424,8 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
               <div className="grid gap-4">
                 <Input
                   placeholder="Folder name"
-                  onChange={(e) => {
-                    setNewFolderError("")
-                    newFolderName.current = e.target.value
-                  }}
+                  maxLength={100}
+                  onChange={handleFolderNameChange}
                 />
               </div>
               {newFolderError && (
