@@ -89,10 +89,9 @@ export const CreateGroupChatAction = CreateServerAction(
     try {
       if (space_id) {
         const existingChat = await getExistingGroupName(chatName, space_id)
-        const existingChatNamePattern = slugify(existingChat?.name || "" );
         const chatNamePattern = slugify(chatName);
 
-        if (existingChatNamePattern == chatNamePattern) {
+        if (existingChat?.name_index == chatNamePattern) {
           return {
             success: false,
             error:
