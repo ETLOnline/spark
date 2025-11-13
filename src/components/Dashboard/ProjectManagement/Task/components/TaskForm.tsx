@@ -505,6 +505,7 @@ export default function TaskForm({
                         onChange={field.onChange}
                         image_uploading={true}
                         editable={isEditable}
+                        limit={2000}
                       />
                     ) : (
                       <div

@@ -121,11 +121,11 @@ const CreateNewChat = () => {
         // Create Group Chat
         if (groupName.trim() === "") {
           setGroupNameError("Group name is required.")
-          setIsCreatingChat(false) 
+          setIsCreatingChat(false)
           return
         } else if (groupName.trim().length > 50) {
           setGroupNameError("Group name must be 50 characters or less.")
-          setIsCreatingChat(false) 
+          setIsCreatingChat(false)
           return
         }
         const response = await CreateGroupChatAction(

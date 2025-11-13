@@ -195,6 +195,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             title: "Error",
             description: "Error creating post please try again!"
           })
+          return
         }
       } else if (newPost.type === PostType.poll) {
         let linkedHashtags
@@ -251,6 +252,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             title: "Error",
             description: "Error creating post please try again!"
           })
+          return
         }
       } else if (
         newPost.type === PostType.file ||
@@ -336,6 +338,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             title: "Error",
             description: "Error creating post please try again!"
           })
+          return
         }
       }
       setHashtags([])
@@ -348,7 +351,10 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           title: "Posted!",
           duration: 3000
         })
+
+        setShowCard(false)
       }
+
       setNewPost({
         content: "",
         hashtags: []
