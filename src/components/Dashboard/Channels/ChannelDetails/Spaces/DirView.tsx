@@ -24,9 +24,10 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 type DirViewProps = {
   navigateToFolder: (path: string) => Promise<void>
+  dirItems?: DirItem[]
 }
 
-const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
+const DirView: React.FC<DirViewProps> = ({ navigateToFolder, dirItems }) => {
   const [dir, setDir] = useAtom(spaceStore.dir)
   const currentPath = useAtomValue(spaceStore.currDirPath)
   const [selectedFileId, setSelectedFileId] = useState<number | null>(null)
@@ -39,6 +40,9 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
   const authUser = useAtomValue(userStore.AuthUser)
 
   const getItemsAtCurrPath = (): DirItem[] => {
+    if (dirItems) {
+      return dirItems
+    }
     if (currentPath === "/") {
       return dir
     }

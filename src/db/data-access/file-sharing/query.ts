@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm"
+import { and, eq, isNull, like } from "drizzle-orm"
 import { db } from "../.."
 import { spaceFileDirectoryTable, filesTable } from "../../schema"
 import { space } from "postcss/lib/list"
@@ -42,6 +42,31 @@ export const searchFoldersBySlug = async (
   } catch (error) {
     console.error("Error getting folder by slug:", error)
   }
+}
+
+export async function searchDirectoryContents(
+  id: string | number,
+  searchQuery: string
+) {
+  const searchPattern = `%${searchQuery.trim()}%`
+
+  const whereClause =
+    typeof id === "string"
+      ? and(
+          eq(spaceFileDirectoryTable.space_id, id),
+          like(spaceFileDirectoryTable.entity_name, searchPattern)
+        )
+      : and(
+          eq(spaceFileDirectoryTable.parent_id, id),
+          like(spaceFileDirectoryTable.entity_name, searchPattern)
+        )
+
+  return await db.query.spaceFileDirectoryTable.findMany({
+    where: whereClause,
+    with: {
+      file: true
+    }
+  })
 }
 
 export async function CreateFile(
