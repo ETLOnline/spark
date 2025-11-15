@@ -131,13 +131,7 @@ export const TaskModal = ({
         setInternalTask(undefined)
         setSelectedTask(null)
         setIsChanged(false)
-
-        const newSearchParams = new URLSearchParams(searchParams.toString())
-        newSearchParams.delete("task_id")
-
-        setTimeout(() => {
-          router.push(`${pathName}?${newSearchParams.toString()}`)
-        }, 0)
+        // remove router.push to avoid layout remount on close
       }
     })
 

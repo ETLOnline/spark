@@ -38,20 +38,11 @@ import { Skeleton } from "@/src/components/ui/skeleton"
 interface Props {
   sprint: SelectSprint
   tasks: SelectTask[]
-  isTaskModalOpen: boolean
-  setIsTaskModalOpen: Dispatch<SetStateAction<boolean>>
-  selectedTask: SelectTask | null
-  setSelectedTask: Dispatch<SetStateAction<SelectTask | null>>
+  // parent will open modal and set selected task so it can capture scroll before open
+  onOpenTask?: (task: SelectTask) => void
 }
 
-function SprintBoardCard({
-  sprint,
-  tasks,
-  isTaskModalOpen,
-  setIsTaskModalOpen,
-  selectedTask,
-  setSelectedTask
-}: Props) {
+function SprintBoardCard({ sprint, tasks, onOpenTask }: Props) {
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
   const [filteredTasks, setFilteredTasks] = useState<SelectTask[]>([])
   const [filters, setFilters] = useState<TaskFiltersType | null>(null)
@@ -95,8 +86,7 @@ function SprintBoardCard({
   ])
 
   function handleOnTaskClick(task: SelectTask) {
-    setSelectedTask(task)
-    setIsTaskModalOpen(true)
+    onOpenTask?.(task)
   }
 
   function HandleTaskFilters(filters: TaskFiltersType) {
@@ -175,7 +165,7 @@ function SprintBoardCard({
         <CardHeader className="pb-2">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
             <div>
-              <CardTitle>{sprint.title}</CardTitle>
+              {/* <CardTitle>{sprint.title}</CardTitle> */}
               <CardDescription>
                 {new Date(sprint.start_date).toLocaleDateString()} -{" "}
                 {new Date(sprint.end_date).toLocaleDateString()}

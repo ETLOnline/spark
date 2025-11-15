@@ -6,7 +6,7 @@ import { GetSprintAction } from "@/src/server-actions/Sprint/sprint"
 import { useAtom, useAtomValue } from "jotai"
 import { sprintStore } from "@/src/store/sprint/sprintsStore"
 import Loader from "@/src/components/common/Loader/Loader"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import SprintBoardCard from "./SprintBoardCard"
 import { projectStore } from "@/src/store/project/projectStore"
 import StatusRequiredDialog from "../../StatusRequiredDialog"
@@ -20,8 +20,12 @@ import pusherClient from "@/src/services/realtime/PusherClient"
 import { userStore } from "@/src/store/user/userStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import { SprintStatus, TaskType } from "../../constants/projectManagment"
+import { createPortal } from "react-dom"
 
 function SprintBoard() {
+  const params = useParams()
+  const projectId = (params as { id?: string })?.id
+
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
 
@@ -37,8 +41,86 @@ function SprintBoard() {
   const authUser = useAtomValue(userStore.AuthUser)
   const pusherChannel = useAtomValue(projectStore.pusherChannel)
   const [isInitailDataLoad, setIsInitailDataLoad] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const boardRef = useRef<HTMLDivElement | null>(null)
+  const scrollContainerRef = useRef<HTMLElement | null>(null)
+  const savedScroll = useRef<number>(0)
 
-  const projectId = useParams().id as string
+  // mark client mounted so we can render modal portal
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // find scrollable viewport once mounted (try nearest to boardRef first)
+  useEffect(() => {
+    if (!mounted) return
+    const findScrollContainer = () => {
+      const nearest = (boardRef.current?.closest('[data-scrollable="true"]') ||
+        document.querySelector(
+          '[data-scrollable="true"]'
+        )) as HTMLElement | null
+      scrollContainerRef.current = nearest
+    }
+    findScrollContainer()
+    // also attempt again after a short delay in case layout changes
+    const t = window.setTimeout(findScrollContainer, 100)
+    return () => clearTimeout(t)
+  }, [mounted, boardRef.current])
+
+  // open handler: capture scroll before opening modal (synchronously)
+  function handleOpenTask(task: SelectTask) {
+    const sc =
+      (boardRef.current?.closest(
+        '[data-scrollable="true"]'
+      ) as HTMLElement | null) ||
+      (document.querySelector(
+        '[data-scrollable="true"]'
+      ) as HTMLElement | null) ||
+      scrollContainerRef.current
+    if (sc) savedScroll.current = sc.scrollTop || 0
+
+    // set selected task and open modal immediately
+    setSelectedTask(task)
+    setIsTaskModalOpen(true)
+  }
+
+  // lock body overflow while modal open to prevent layout shifts
+  useEffect(() => {
+    if (isTaskModalOpen) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = ""
+    }
+    return () => {
+      document.body.style.overflow = ""
+    }
+  }, [isTaskModalOpen])
+
+  // restore scroll immediately when modal closes (no timers)
+  useEffect(() => {
+    if (isTaskModalOpen) return // skip while modal is open
+
+    // restore to exact saved position immediately
+    const sc =
+      (boardRef.current?.closest(
+        '[data-scrollable="true"]'
+      ) as HTMLElement | null) ||
+      (document.querySelector('[data-scrollable="true"]') as HTMLElement | null)
+
+    if (sc) {
+      console.log(`[SprintBoard] Restoring scroll to ${savedScroll.current}`)
+      sc.scrollTop = savedScroll.current
+
+      // safety: restore again after TaskModal effects settle
+      setTimeout(() => {
+        if (sc) {
+          sc.scrollTop = savedScroll.current
+        }
+      }, 10)
+    } else {
+      console.warn(`[SprintBoard] Could not find scroll container`)
+    }
+  }, [isTaskModalOpen])
 
   useEffect(() => {
     if (!pusherChannel || !authUser) return
@@ -146,41 +228,47 @@ function SprintBoard() {
 
   return projectStatusList.length > 0 ? (
     <>
-      {getSprintLoading ? (
-        <div className="flex items-center justify-center">
-          <Loader size={LoaderSizes.lg} />
-        </div>
-      ) : sprintList.length === 0 ? (
-        <NoDataCard
-          title="No Active Sprint"
-          description="There are no active sprints for this project. Create and active a new sprint to get started."
-          icon={<Kanban />}
-        />
-      ) : (
-        sprintList.map((sprint) => (
-          <SprintBoardCard
-            sprint={sprint}
-            key={sprint.id}
-            tasks={tasks}
-            isTaskModalOpen={isTaskModalOpen}
-            setIsTaskModalOpen={setIsTaskModalOpen}
-            selectedTask={selectedTask}
-            setSelectedTask={setSelectedTask}
+      <div ref={boardRef} className="h-full">
+        {getSprintLoading ? (
+          <div className="flex items-center justify-center">
+            <Loader size={LoaderSizes.lg} />
+          </div>
+        ) : sprintList.length === 0 ? (
+          <NoDataCard
+            title="No Active Sprint"
+            description="There are no active sprints for this project. Create and active a new sprint to get started."
+            icon={<Kanban />}
           />
-        ))
-      )}
+        ) : (
+          sprintList.map((sprint) => (
+            <SprintBoardCard
+              sprint={sprint}
+              key={sprint.id}
+              tasks={tasks}
+              onOpenTask={handleOpenTask}
+            />
+          ))
+        )}
+      </div>
 
-      <TaskModal
-        isReady={isInitailDataLoad}
-        isTaskModelOpen={isTaskModalOpen}
-        setIsTaskModelOpen={setIsTaskModalOpen}
-        selectedTask={selectedTask || undefined}
-        onUpdateComplete={(task: SelectTask) => {
-          setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
-          setSelectedTask(task)
-        }}
-        onSubTaskCreate={(task: SelectTask) => getTasks()}
-      />
+      {mounted
+        ? createPortal(
+            <TaskModal
+              isReady={isInitailDataLoad}
+              isTaskModelOpen={isTaskModalOpen}
+              setIsTaskModelOpen={setIsTaskModalOpen}
+              selectedTask={selectedTask || undefined}
+              onUpdateComplete={(task: SelectTask) => {
+                setTasks((prev) =>
+                  prev.map((t) => (t.id === task.id ? task : t))
+                )
+                setSelectedTask(task)
+              }}
+              onSubTaskCreate={(task: SelectTask) => getTasks()}
+            />,
+            document.body
+          )
+        : null}
     </>
   ) : (
     <StatusRequiredDialog openDialog={openDialog} />

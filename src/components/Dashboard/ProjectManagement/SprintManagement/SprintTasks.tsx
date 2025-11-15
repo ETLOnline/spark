@@ -164,7 +164,7 @@ function SprintTasks({
     <>
       <div
         key={task.id}
-        className="grid grid-cols-12 gap-2 p-4 border-t items-center hover:bg-muted/50  transition delay-150 duration-300"
+        className="grid  grid-cols-12 gap-2 p-4 border-t items-center hover:bg-muted/50  transition delay-150 duration-300"
       >
         <div className="col-span-1">
           <TooltipProvider>

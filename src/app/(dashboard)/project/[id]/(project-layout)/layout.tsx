@@ -56,7 +56,13 @@ async function layout({ children, params }: Props) {
 
           <div className="col-span-10 overflow-hidden">
             <div className="grid grid-cols-1 h-full">
-              <ScrollArea className="min-h-full px-4">{children}</ScrollArea>
+              {/* preserveKey stable across modal route changes so scroll doesn't reset */}
+              <ScrollArea
+                preserveKey={`project:${projectId}:board-scroll`}
+                className="min-h-full px-4"
+              >
+                {children}
+              </ScrollArea>
             </div>
           </div>
         </>
