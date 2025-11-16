@@ -43,6 +43,7 @@ async function runSeeders() {
       "CheckRolePermissionMismatch",
       "SyncRolePermissionsSeeder",
       "EmailTemplatesSeed",
+      "ChatSlugCorrectionSyncSeed",
       "ChatSlugCorrectionSyncSeed"
     ]
 
