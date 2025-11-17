@@ -36,21 +36,21 @@ import { Image as ImageIcon } from "lucide-react"
 import { AddImageToTaskAction } from "@/src/server-actions/Tasks/Task"
 import Loader from "./Loader/Loader"
 import { LoaderSizes } from "./types/loader-types"
-import type { Editor as TiptapEditor } from "@tiptap/core"
 
 interface RichTextEditorProps {
   value?: string
   onChange?: (content: string) => void
   image_uploading?: boolean
   editable?: boolean
+  limit?: number
 }
 
-const limit = 1000
 export default function RichTextEditor({
   value,
   onChange,
   image_uploading,
-  editable
+  editable,
+  limit = 1000
 }: RichTextEditorProps) {
   const [linkUrl, setLinkUrl] = useState("")
   const [showLinkInput, setShowLinkInput] = useState(false)
@@ -96,6 +96,15 @@ export default function RichTextEditor({
       }
     }
   })
+
+  const isContentEmpty = (html: string) => {
+    if (!html) return true
+    const text = html
+      .replace(/<[^>]*>/g, "")
+      .replace(/&nbsp;/g, "")
+      .trim()
+    return text === ""
+  }
 
   const editor = useEditor({
     extensions: [
@@ -172,7 +181,7 @@ export default function RichTextEditor({
     onUpdate({ editor }) {
       const html = editor.getHTML()
       if (onChange) {
-        onChange(html)
+        onChange(isContentEmpty(html) ? "" : html)
       }
     }
   })
