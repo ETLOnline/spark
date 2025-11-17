@@ -4,6 +4,7 @@ import {
   count,
   desc,
   eq,
+  ilike,
   inArray,
   like,
   ne,
@@ -85,7 +86,7 @@ export const CreateGroupChat = async (
         type: space_id ? "space" : "open",
         name: chatName,
         channel_id: realtimeChannelId,
-        chat_slug: slugify(chatName),
+        name_index: slugify(chatName),
         is_group: 1
       })
       .returning()
@@ -563,11 +564,11 @@ export const getExistingGroupName = async (
     if (!space_id) {
       return undefined
     }
-    const chatNamePattern = slugify(chatName)
+    const chatNameSlugfy = slugify(chatName)
     const existingChat = await db.query.chatsTable.findFirst({
       where: and(
         eq(chatsTable.is_group, 1),
-        eq(chatsTable.chat_slug, chatNamePattern),
+        eq(chatsTable.name_index, chatNameSlugfy),
 
         inArray(
           chatsTable.id,

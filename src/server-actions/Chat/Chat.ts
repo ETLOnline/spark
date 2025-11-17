@@ -26,6 +26,7 @@ import {
 } from "@/src/services/notifications/Chat/utils"
 import { createChatEmailNotification } from "@/src/services/notify/chat/chat"
 import { NotificationEvent } from "@/src/services/notify/types/events"
+import { slugify } from "@/src/utils/helpers"
 
 export const CreatePrivateChatAction = CreateServerAction(
   true,
@@ -90,8 +91,9 @@ export const CreateGroupChatAction = CreateServerAction(
     try {
       if (space_id) {
         const existingChat = await getExistingGroupName(chatName, space_id)
+        const chatNamePattern = slugify(chatName)
 
-        if (existingChat?.name?.toLowerCase() == chatName.toLocaleLowerCase()) {
+        if (existingChat?.name_index == chatNamePattern) {
           return {
             success: false,
             error:

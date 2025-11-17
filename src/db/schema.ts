@@ -197,6 +197,7 @@ export const chatsTable = pgTable("chats", {
   chat_slug: varchar()
     .notNull()
     .$defaultFn(() => randomUUID()),
+  name_index: varchar(),
   name: varchar(),
   type: varchar(),
   avatar: varchar(),

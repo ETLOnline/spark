@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
 import { db } from ".."
 import { chatsTable } from "../schema"
 import { slugify } from "@/src/utils/helpers"
@@ -7,7 +7,10 @@ export const ChatSlugCorrectionSyncSeed = async () => {
   return await db.transaction(async (tx) => {
     try {
       // Fetch all chat records
-      const chats = await tx.select().from(chatsTable)
+      const chats = await tx
+        .select()
+        .from(chatsTable)
+        .where(eq(chatsTable.is_group, 1))
 
       console.log(`📊 Found ${chats.length} chats to process`)
 
@@ -18,7 +21,7 @@ export const ChatSlugCorrectionSyncSeed = async () => {
 
           await tx
             .update(chatsTable)
-            .set({ chat_slug: slug })
+            .set({ name_index: slug })
             .where(sql`${chatsTable.id} = ${chat.id}`)
         }
       }

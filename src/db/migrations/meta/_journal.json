@@ -166,8 +166,8 @@
     {
       "idx": 23,
       "version": "7",
-      "when": 1762851460033,
-      "tag": "0023_2025_11_11_165738__update_the_unread_column",
+      "when": 1763052780533,
+      "tag": "0023_2025_11_14_005259__add_column_name_index_in_chat_table",
       "breakpoints": true
     }
   ]
