@@ -236,7 +236,7 @@ const TagsInput: React.FC<TagsInputProps> = ({
 
   return (
     <div className="relative w-full">
-      <div className="flex flex-wrap gap-2 rounded-md border border-input bg-transparent focus-within:ring-1 focus-within:ring-ring">
+      <div className="flex flex-wrap gap-2 rounded-md border border-input bg-transparent focus-within:ring-1 focus-within:ring-ring p-2">
         {autocomplete
           ? (tags as Tag[]).map(
               (tag, i) =>
