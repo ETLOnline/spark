@@ -46,12 +46,10 @@ function SprintBoard() {
   const scrollContainerRef = useRef<HTMLElement | null>(null)
   const savedScroll = useRef<number>(0)
 
-  // mark client mounted so we can render modal portal
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // find scrollable viewport once mounted (try nearest to boardRef first)
   useEffect(() => {
     if (!mounted) return
     const findScrollContainer = () => {
@@ -62,12 +60,8 @@ function SprintBoard() {
       scrollContainerRef.current = nearest
     }
     findScrollContainer()
-    // also attempt again after a short delay in case layout changes
-    const t = window.setTimeout(findScrollContainer, 100)
-    return () => clearTimeout(t)
   }, [mounted, boardRef.current])
 
-  // open handler: capture scroll before opening modal (synchronously)
   function handleOpenTask(task: SelectTask) {
     const sc =
       (boardRef.current?.closest(
@@ -79,12 +73,10 @@ function SprintBoard() {
       scrollContainerRef.current
     if (sc) savedScroll.current = sc.scrollTop || 0
 
-    // set selected task and open modal immediately
     setSelectedTask(task)
     setIsTaskModalOpen(true)
   }
 
-  // lock body overflow while modal open to prevent layout shifts
   useEffect(() => {
     if (isTaskModalOpen) {
       document.body.style.overflow = "hidden"
@@ -96,11 +88,9 @@ function SprintBoard() {
     }
   }, [isTaskModalOpen])
 
-  // restore scroll immediately when modal closes (no timers)
   useEffect(() => {
-    if (isTaskModalOpen) return // skip while modal is open
+    if (isTaskModalOpen) return
 
-    // restore to exact saved position immediately
     const sc =
       (boardRef.current?.closest(
         '[data-scrollable="true"]'
@@ -108,17 +98,13 @@ function SprintBoard() {
       (document.querySelector('[data-scrollable="true"]') as HTMLElement | null)
 
     if (sc) {
-      console.log(`[SprintBoard] Restoring scroll to ${savedScroll.current}`)
       sc.scrollTop = savedScroll.current
 
-      // safety: restore again after TaskModal effects settle
       setTimeout(() => {
         if (sc) {
           sc.scrollTop = savedScroll.current
         }
       }, 10)
-    } else {
-      console.warn(`[SprintBoard] Could not find scroll container`)
     }
   }, [isTaskModalOpen])
 

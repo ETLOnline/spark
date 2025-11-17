@@ -131,7 +131,6 @@ export const TaskModal = ({
         setInternalTask(undefined)
         setSelectedTask(null)
         setIsChanged(false)
-        // remove router.push to avoid layout remount on close
       }
     })
 

@@ -165,7 +165,7 @@ function SprintBoardCard({ sprint, tasks, onOpenTask }: Props) {
         <CardHeader className="pb-2">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
             <div>
-              {/* <CardTitle>{sprint.title}</CardTitle> */}
+              <CardTitle>{sprint.title}</CardTitle>
               <CardDescription>
                 {new Date(sprint.start_date).toLocaleDateString()} -{" "}
                 {new Date(sprint.end_date).toLocaleDateString()}
