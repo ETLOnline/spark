@@ -88,7 +88,6 @@ function joinChannel(
 
 /**
  * ChatScreen component renders the chat interface including the list of chats and the main chat area.
- * ... (Rest of JSDoc remains the same)
  */
 export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const currentSpace = useAtomValue(spaceStore.currentSpace)
