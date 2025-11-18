@@ -1,13 +1,13 @@
 "use client"
 
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
-
 import { Controller, useForm } from "react-hook-form"
 import { SelectProfile, SelectUser } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { updateUserProfileAction } from "@/src/server-actions/profile/profile"
 import { toast } from "@/src/hooks/use-toast"
 import { z } from "zod"
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useConfirmClose } from "@/src/hooks/useConfirmClose"
 import { UnsavedChangesDialog } from "@/src/components/common/unsavedChangesDialog"
@@ -23,30 +23,27 @@ import {
 import { AlertDialogHeader } from "@/src/components/ui/alert-dialog"
 import { Label } from "@/src/components/ui/label"
 import { Input } from "@/src/components/ui/input"
+import { socialPlatforms } from "@/src/components/ProfileCompletion/constants"
+import { ScrollArea } from "@/src/components/ui/scroll-area"
 
 const socialLinksSchema = z.object({
-  personal_website_url: z
-    .string()
-    .url("Invalid URL")
-    .optional()
-    .or(z.literal("")),
-  github_url: z.string().url("Invalid GitHub URL").optional().or(z.literal("")),
-  linkedin_url: z
-    .string()
-    .url("Invalid LinkedIn URL")
-    .optional()
-    .or(z.literal("")),
-  twitter_url: z
-    .string()
-    .url("Invalid Twitter URL")
-    .optional()
-    .or(z.literal("")),
-  instagram_url: z
-    .string()
-    .url("Invalid Instagram URL")
-    .optional()
-    .or(z.literal(""))
+  personal_website_url: z.string().url().optional().or(z.literal("")),
+  github_url: z.string().url().optional().or(z.literal("")),
+  linkedin_url: z.string().url().optional().or(z.literal("")),
+  twitter_url: z.string().url().optional().or(z.literal("")),
+  instagram_url: z.string().url().optional().or(z.literal(""))
 })
+
+const platformToFieldMap: Record<
+  string,
+  keyof z.infer<typeof socialLinksSchema>
+> = {
+  website: "personal_website_url",
+  github: "github_url",
+  linkedin: "linkedin_url",
+  twitter: "twitter_url",
+  instagram: "instagram_url"
+}
 
 interface Props {
   user: SelectUser
@@ -69,7 +66,7 @@ export default function EditSocialLinksModal({
     resolver: zodResolver(socialLinksSchema)
   })
 
-  const error = form.formState.errors
+  const errors = form.formState.errors
   const isDirty = form.formState.isDirty
 
   useEffect(() => {
@@ -86,17 +83,10 @@ export default function EditSocialLinksModal({
 
   async function handleSubmit(data: any) {
     try {
-      const payload = {
-        ...data
-      }
-
-      const res = await submitUserProfile(user.unique_id, payload)
+      const res = await submitUserProfile(user.unique_id, data)
 
       if (res?.success) {
-        setprofile((prev) => ({
-          ...prev!,
-          ...payload
-        }))
+        setprofile((prev) => ({ ...prev!, ...data }))
 
         toast({ title: "Social links updated", duration: 2000 })
         setIsDialogOpen(false)
@@ -116,22 +106,22 @@ export default function EditSocialLinksModal({
       onClose: () => setIsDialogOpen(false)
     })
 
-  const handleDialogChange = (open: boolean) => {
-    if (open) setIsDialogOpen(true)
-    else handleClose(false)
-  }
-
   return (
     <>
-      <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={(open) =>
+          open ? setIsDialogOpen(true) : handleClose(false)
+        }
+      >
         <DialogTrigger asChild>
-          <Button variant="edit" size={"sm"}>
+          <Button variant="edit" size="sm">
             Edit
           </Button>
         </DialogTrigger>
 
         <DialogContent
-          className="sm:max-w-[450px]"
+          className="sm:max-w-[450px] px-6 py-6"
           onInteractOutside={(e) => e.preventDefault()}
         >
           <AlertDialogHeader>
@@ -140,116 +130,56 @@ export default function EditSocialLinksModal({
               Update your website and social media URLs.
             </DialogDescription>
           </AlertDialogHeader>
+          <ScrollArea className="h-96 overflow-auto pr-3">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-4 mt-4"
+            >
+              {socialPlatforms.map((platform) => {
+                const fieldName = platformToFieldMap[platform.key]
 
-          <form onSubmit={form.handleSubmit(handleSubmit)}>
-            <div className="grid gap-4 py-4">
-              {/* Website */}
-              <div className="flex flex-col gap-2">
-                <Label className="font-semibold">Website</Label>
-                <Controller
-                  name="personal_website_url"
-                  control={form.control}
-                  defaultValue=""
-                  render={({ field }) => (
-                    <Input placeholder="https://yourwebsite.com" {...field} />
-                  )}
-                />
-                {error.personal_website_url && (
-                  <p className="text-red-500 text-sm">
-                    {String(error.personal_website_url.message)}
-                  </p>
-                )}
-              </div>
+                return (
+                  <div key={platform.key} className="flex flex-col gap-2 ">
+                    <Label className="font-semibold flex items-center gap-2">
+                      {platform.label}
+                    </Label>
 
-              {/* GitHub */}
-              <div className="flex flex-col gap-2">
-                <Label className="font-semibold">GitHub</Label>
-                <Controller
-                  name="github_url"
-                  control={form.control}
-                  defaultValue=""
-                  render={({ field }) => (
-                    <Input
-                      placeholder="https://github.com/username"
-                      {...field}
+                    <Controller
+                      name={fieldName}
+                      control={form.control}
+                      defaultValue=""
+                      render={({ field }) => (
+                        <Input
+                          {...field}
+                          placeholder={platform.placeholder}
+                          className="border-gray-600 text-white placeholder-gray-400"
+                        />
+                      )}
                     />
-                  )}
-                />
-                {error.github_url && (
-                  <p className="text-red-500 text-sm">
-                    {String(error.github_url.message)}
-                  </p>
-                )}
-              </div>
 
-              {/* LinkedIn */}
-              <div className="flex flex-col gap-2">
-                <Label className="font-semibold">LinkedIn</Label>
-                <Controller
-                  name="linkedin_url"
-                  control={form.control}
-                  defaultValue=""
-                  render={({ field }) => (
-                    <Input
-                      placeholder="https://linkedin.com/in/username"
-                      {...field}
-                    />
-                  )}
-                />
-                {error.linkedin_url && (
-                  <p className="text-red-500 text-sm">
-                    {String(error.linkedin_url.message)}
-                  </p>
-                )}
-              </div>
+                    {errors[fieldName] && (
+                      <p className="text-red-500 text-sm">
+                        {String(errors[fieldName]?.message)}
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
 
-              {/* Twitter */}
-              <div className="flex flex-col gap-2">
-                <Label className="font-semibold">Twitter</Label>
-                <Controller
-                  name="twitter_url"
-                  control={form.control}
-                  defaultValue=""
-                  render={({ field }) => (
-                    <Input
-                      placeholder="https://twitter.com/username"
-                      {...field}
-                    />
-                  )}
-                />
-                {error.twitter_url && (
-                  <p className="text-red-500 text-sm">
-                    {String(error.twitter_url.message)}
-                  </p>
-                )}
-              </div>
-
-              {/* Instagram */}
-              <div className="flex flex-col gap-2">
-                <Label className="font-semibold">Instagram</Label>
-                <Controller
-                  name="instagram_url"
-                  control={form.control}
-                  defaultValue=""
-                  render={({ field }) => (
-                    <Input
-                      placeholder="https://instagram.com/username"
-                      {...field}
-                    />
-                  )}
-                />
-                {error.instagram_url && (
-                  <p className="text-red-500 text-sm">
-                    {String(error.instagram_url.message)}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button loading={submitLoading}>Save changes</Button>
-            </DialogFooter>
-          </form>
+              <DialogFooter>
+                <Button
+                  loading={submitLoading}
+                  disabled={
+                    submitLoading ||
+                    Object.values(form.watch()).every((value) => !value)
+                  }
+                  className="w-full"
+                >
+                  Save changes
+                </Button>
+              </DialogFooter>
+            </form>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
