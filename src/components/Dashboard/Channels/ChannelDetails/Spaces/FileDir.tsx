@@ -39,6 +39,7 @@ import DirNav from "./DirNav"
 import { FileUpload } from "@/src/components/ui/file-upload"
 import { useSearchParams } from "next/navigation"
 import { getUniqueFileName } from "./utils/helper"
+import moment from "moment-timezone"
 
 type FileData = {
   fileName: string
@@ -118,9 +119,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
                 id: item.id,
                 name: item.entity_name,
                 type: item.entity_type as "file" | "folder",
-                updatedAt: new Date(item.created_at as string)
-                  .toISOString()
-                  .split("T")[0],
+                updatedAt: moment(item.created_at).format("YYYY-MM-DD"),
                 path: `/${item.entity_name}`,
                 size: item.file?.file_size
                   ? formatFileSize(item.file?.file_size)
