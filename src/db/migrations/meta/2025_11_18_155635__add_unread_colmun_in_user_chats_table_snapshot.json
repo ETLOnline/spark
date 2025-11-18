@@ -1,6 +1,6 @@
 {
-  "id": "ff5aadf9-fe9e-4ce3-91de-7551c582c696",
-  "prevId": "d55ab94c-15a0-4db2-929a-b320513f9f0a",
+  "id": "e5f42bc1-f901-4305-8467-355abefc9a75",
+  "prevId": "454839ac-4ff6-4f8d-ba93-3b2e98270551",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -688,6 +688,12 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
+        },
+        "name_index": {
+          "name": "name_index",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
         },
         "name": {
           "name": "name",
