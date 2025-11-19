@@ -4,8 +4,7 @@ import {
   CreateFolder,
   GetDirectoryContents,
   DeleteFile,
-  searchFoldersBySlug,
-  searchDirectoryContents
+  searchFoldersBySlug
 } from "@/src/db/data-access/file-sharing/query"
 import {
   base64ToBuffer,
@@ -46,25 +45,6 @@ export const SearchFolderBySlugAction = CreateServerAction(
       return {
         success: false,
         error: "Failed to search folder"
-      }
-    }
-  }
-)
-
-export const SearchDirectoryContentsAction = CreateServerAction(
-  true,
-  async (id: string | number, searchQuery: string) => {
-    try {
-      const results = await searchDirectoryContents(id, searchQuery)
-      return {
-        success: true,
-        data: results
-      }
-    } catch (error) {
-      console.error("Error searching directory contents:", error)
-      return {
-        success: false,
-        error: "Failed to search directory contents"
       }
     }
   }

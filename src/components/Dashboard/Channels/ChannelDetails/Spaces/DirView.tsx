@@ -24,10 +24,10 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 type DirViewProps = {
   navigateToFolder: (path: string) => Promise<void>
-  dirItems?: DirItem[]
+  searchQuery: string  
 }
 
-const DirView: React.FC<DirViewProps> = ({ navigateToFolder, dirItems }) => {
+const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
   const [dir, setDir] = useAtom(spaceStore.dir)
   const currentPath = useAtomValue(spaceStore.currDirPath)
   const [selectedFileId, setSelectedFileId] = useState<number | null>(null)
@@ -35,38 +35,25 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, dirItems }) => {
 
   const [deleteFileLoading, , , deleteFile] = useServerAction(DeleteFileAction)
 
-  // Safe atom access with fallbacks
   const currSpace = useAtomValue(spaceStore?.currentSpace)
   const authUser = useAtomValue(userStore.AuthUser)
 
   const getItemsAtCurrPath = (): DirItem[] => {
-    if (dirItems) {
-      return dirItems
-    }
-    if (currentPath === "/") {
-      return dir
-    }
-
+    if (currentPath === "/") return dir
     return findItemsByPath(dir, currentPath)
   }
 
   const findItemsByPath = (items: DirItem[], path: string): DirItem[] => {
     for (const item of items) {
       if (item.type === "folder") {
-        if (item.path === path) {
-          return item.children || []
-        }
+        if (item.path === path) return item.children || []
 
         if (item.children) {
           const found = findItemsByPath(item.children, path)
-
-          if (found.length > 0) {
-            return found
-          }
+          if (found.length > 0) return found
         }
       }
     }
-
     return []
   }
   const { permissionChecker } = usePermissionChecker(
@@ -95,12 +82,8 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, dirItems }) => {
       )
 
       if (result?.success) {
-        // Remove the file from the local state
-        const removeFileFromPath = (
-          items: DirItem[],
-          targetId: number
-        ): DirItem[] => {
-          return items
+        const removeFileFromPath = (items: DirItem[], targetId: number): DirItem[] =>
+          items
             .filter((item) => item.id !== targetId)
             .map((item) => ({
               ...item,
@@ -108,7 +91,6 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, dirItems }) => {
                 ? removeFileFromPath(item.children, targetId)
                 : undefined
             }))
-        }
 
         setDir(removeFileFromPath(dir, selectedFileId))
 
@@ -144,6 +126,11 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, dirItems }) => {
   const gridCols = hasActions
     ? "grid-cols-[auto_1fr_auto_auto_auto]"
     : "grid-cols-[auto_1fr_auto_auto]"
+
+  const filteredItems = getItemsAtCurrPath().filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   return (
     <div className="p-4">
       <div
@@ -155,13 +142,14 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, dirItems }) => {
         <div className="text-center w-24">Updated</div>
         {hasActions && <div className="text-center w-16">Actions</div>}
       </div>
+
       <div className="divide-y">
-        {getItemsAtCurrPath().length === 0 ? (
+        {filteredItems.length === 0 ? (
           <div className="py-8 text-center text-muted-foreground">
-            This folder is empty
+            No matching files or folders
           </div>
         ) : (
-          getItemsAtCurrPath().map((item) => (
+          filteredItems.map((item) => (
             <div
               key={item.id}
               className={`grid ${gridCols} gap-4 items-center py-3 px-2 hover:bg-muted/50 rounded-md`}
@@ -184,11 +172,7 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, dirItems }) => {
                 }
               >
                 {item.type === "file" && item.url ? (
-                  <Link
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <Link href={item.url} target="_blank" rel="noopener noreferrer">
                     {item.name}
                   </Link>
                 ) : (

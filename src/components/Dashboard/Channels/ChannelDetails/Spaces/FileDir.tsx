@@ -24,13 +24,12 @@ import {
   CreateNewFolderAction,
   GetDirectoryContentsAction,
   SearchFolderBySlugAction,
-  CreateNewFileAction,
-  SearchDirectoryContentsAction
+  CreateNewFileAction
 } from "@/src/server-actions/FileSharing/FileSharing"
 import { useParams } from "next/navigation"
 import { DirItem } from "./types/spaces-types"
 import { formatFileSize, slugify } from "@/src/utils/helpers"
-import { useAtom, useAtomValue } from "jotai"
+import { useAtom } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { SelectSpaceFileDirectory } from "@/src/db/schema"
 import { useToast } from "@/src/hooks/use-toast"
@@ -64,10 +63,9 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
   const [currentPath, setCurrentPath] = useAtom(spaceStore.currDirPath)
   const [currSpace, setCurrSpace] = useAtom(spaceStore.selectedSpace)
 
-  const [searchQuery, setSearchQuery] = useState<string>("")
-  const [currentViewItems, setCurrentViewItems] = useState<DirItem[]>([])
-
   const [fileData, setFileData] = useState<FileData | null>(null)
+
+  const [searchQuery, setSearchQuery] = useState("")
 
   const searchParams = useSearchParams()
 
@@ -88,9 +86,6 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
 
   const [dirContentLoading, dirContent, dirContentError, getDirContent] =
     useServerAction(GetDirectoryContentsAction)
-    
-  const [searchLoading, searchData, searchError, searchDirectoryContentsAction] =
-    useServerAction(SearchDirectoryContentsAction)
 
   const [
     createFolderLoading,
@@ -139,55 +134,19 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
       }
     })()
   }, [])
+
   
-  useEffect(() => {
-    const fetchOrFilterItems = async () => {
-      const currentDirId = currentPath === "/"
-        ? currSpace?.id
-        : findItemByPath(dir, currentPath)?.id
-        
-      if (!currentDirId) return
+  const getCurrentFolderItems = () => {
+    if (currentPath === "/") return dir
 
-      if (searchQuery.trim()) {
-        const result = await searchDirectoryContentsAction(
-          currentDirId,
-          searchQuery.trim()
-        )
-        
-        if (result?.success && result.data) {
-          const formattedData: DirItem[] = result.data.map((item) => ({
-            id: item.id,
-            name: item.entity_name,
-            type: item.entity_type as "file" | "folder",
-            updatedAt: new Date(item.created_at as string)
-              .toISOString()
-              .split("T")[0],
-            path: `${currentPath === "/" ? "" : currentPath}/${item.entity_name}`, 
-            size: item.file?.file_size
-              ? formatFileSize(item.file?.file_size)
-              : "",
-            url: item.file?.file_path,
-            children: [],
-            created_by: item.created_by || undefined
-          }))
-          setCurrentViewItems(formattedData)
-        } else {
-            setCurrentViewItems([])
-        }
-      } else {
-        if (currentPath === "/") {
-          setCurrentViewItems(dir)
-        } else {
-          setCurrentViewItems(findItemByPath(dir, currentPath)?.children || [])
-        }
-      }
-    }
-    
-    if (currSpace) {
-      fetchOrFilterItems()
-    }
+    const folder = findItemByPath(dir, currentPath)
+    return folder?.children || []
+  }
 
-  }, [searchQuery, currentPath, dir, currSpace])
+  
+  const filteredItems = getCurrentFolderItems().filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   const createFolder = async () => {
     try {
@@ -268,7 +227,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
   const navigateToFolder = async (path: string) => {
     const selectedFolder = findItemByPath(dir, path)
 
-    if (selectedFolder && selectedFolder.type === "folder" && !selectedFolder.children?.length) {
+    if (selectedFolder && selectedFolder.type === "folder") {
       try {
         const result = await getDirContent(selectedFolder.id)
 
@@ -316,16 +275,13 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
         console.error("Error fetching folder contents:", error)
       }
     }
-    
-    setSearchQuery(""); 
+
     setCurrentPath(path)
   }
 
   const processFileForUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // ... (processFileForUpload logic remains the same)
     const file = e.target.files?.[0]
     if (file) {
-      // Convert file to Base64
       const reader = new FileReader()
       reader.onloadend = () => {
         const base64String = reader.result as string
@@ -339,6 +295,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
       reader.readAsDataURL(file)
     }
   }
+
   const handleFileUpload = async () => {
     try {
       if (!fileData) return
@@ -424,18 +381,18 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
       <div className="flex justify-between items-center mb-4">
         <DirNav navigateToFolder={navigateToFolder} />
         <div className="flex gap-4 items-center">
-          {/* Search Input Field */}
-          <div className="relative">
+          {/* 🔍 NEW — Search Input */}
+          <div className="relative w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search in current folder"
+              className="pl-9"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
             />
           </div>
 
-          {/* add new file drawer */}
+          {/* Upload File Drawer */}
           <Drawer
             open={isNewFileDrawerOpen}
             onOpenChange={setIsNewFileDrawerOpen}
@@ -475,7 +432,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
             </DrawerContent>
           </Drawer>
 
-          {/* add new folder dialog */}
+          {/* Create Folder Dialog */}
           <Dialog
             open={isNewFolderDialogOpen}
             onOpenChange={setIsNewFolderDialogOpen}
@@ -523,15 +480,17 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
           </Dialog>
         </div>
       </div>
+
       <Card>
-        {dirContentLoading || spaceLoading || searchLoading ? (
+        {dirContentLoading || spaceLoading ? (
           <div className="w-full p-10 flex justify-center">
             <Loader size={LoaderSizes.xl} />
           </div>
         ) : (
-          <DirView 
-            navigateToFolder={navigateToFolder} 
-            dirItems={currentViewItems}
+          // 🔍 Pass filtered items into DirView
+          <DirView
+            navigateToFolder={navigateToFolder}
+            searchQuery={searchQuery}
           />
         )}
       </Card>
