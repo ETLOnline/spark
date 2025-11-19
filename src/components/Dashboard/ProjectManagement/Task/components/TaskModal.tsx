@@ -131,6 +131,14 @@ export const TaskModal = ({
         setInternalTask(undefined)
         setSelectedTask(null)
         setIsChanged(false)
+
+        const params = new URLSearchParams(searchParams.toString())
+        params.delete("task_id")
+
+        const newQuery = params.toString()
+        const newUrl = newQuery ? `${pathName}?${newQuery}` : pathName
+
+        router.replace(newUrl, { scroll: false })
       }
     })
 
