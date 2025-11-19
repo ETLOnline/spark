@@ -547,3 +547,56 @@ export const getExistingGroupName = async (
     throw new Error(error.message)
   }
 }
+
+/**
+ * Extracts mentioned user IDs from message content
+ * Supports formats like: @[John Doe](user_id_123)
+ * @param message - The message content
+ * @returns Array of unique user IDs that were mentioned
+ */
+export const extractMentionsFromMessage = (message: string): string[] => {
+  const mentionRegex = /@\[([^\]]+)\]\(([^)]+)\)/g
+  const mentions: string[] = []
+  
+  let match
+  while ((match = mentionRegex.exec(message)) !== null) {
+    const userId = match[2] 
+    if (userId && !mentions.includes(userId)) {
+      mentions.push(userId)
+    }
+  }
+  
+  return mentions
+}
+
+/**
+ * Checks if a message mentions a specific user
+ * @param message - The message content or mentions array
+ * @param userId - The user ID to check
+ * @returns true if the user is mentioned
+ */
+export const isUserMentioned = (
+  message: string | string[] | undefined,
+  userId: string
+): boolean => {
+  if (!message) return false
+  
+  if (Array.isArray(message)) {
+    
+    return message.includes(userId)
+  }
+  
+  
+  const mentions = extractMentionsFromMessage(message)
+  return mentions.includes(userId)
+}
+
+/**
+ * Format message for display by replacing mention syntax with readable text
+ * @param message - The raw message with mention syntax
+ * @returns Formatted message for display
+ */
+export const formatMessageWithMentions = (message: string): string => {
+  
+  return message.replace(/@\[([^\]]+)\]\(([^)]+)\)/g, '@$1')
+}

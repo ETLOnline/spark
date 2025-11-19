@@ -13,15 +13,14 @@ import {
 import { Input } from "@/src/components/ui/input"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger } from "@/src/components/ui/sheet"
-import { Menu, PlusCircle, Search, Send, SmileIcon } from "lucide-react"
+import { Menu, Send, Search } from "lucide-react"
 import { useAtom, useAtomValue } from "jotai"
 import { chatStore } from "@/src/store/chat/chatStore"
 import {
   InsertMessage,
   SelectChat,
   SelectMessage,
-  SelectUser,
-  SelectUserChat
+  SelectUser
 } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
 import ChatsList from "./components/ChatsList"
@@ -33,19 +32,14 @@ import moment from "moment-timezone"
 import Link from "next/link"
 import Loader from "../../common/Loader/Loader"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
 import { getUserRole, isOnlyEmoji } from "@/src/utils/helpers"
 import CreateNewChat from "./components/CreateNewChat"
 import Avvvatars from "avvvatars-react"
-import {
-  EmojiPicker,
-  EmojiPickerContent,
-  EmojiPickerFooter,
-  EmojiPickerSearch
-} from "../../ui/emoji-picker"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import pusherClient from "@/src/services/realtime/PusherClient"
+import RichTextEditor from "../../common/TiptapRichEditor"
+import { MessageContent } from "./components/MessageContent"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -55,7 +49,8 @@ interface ChatScreenProps {
 type ChatUpdatePayload = {
   chatId: number
   lastMessage: string
-}
+  wasMentioned?: boolean
+  }
 
 /**
  * Joins a specified channel for a chat.
@@ -107,7 +102,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     : false
 
   const [messages, setMessages] = useState<SelectMessage[]>([])
-  const [newMessage, setNewMessage] = useState("")
+  const [messageContent, setMessageContent] = useState("")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useAtom(
     chatStore.isMobileMenuOpen
   )
@@ -121,8 +116,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     unsubscribe: () => void
   } | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>("")
-
   const [chatContact, setChatContact] = useState<SelectUser | null>(null)
+  const [availableUsers, setAvailableUsers] = useState<SelectUser[]>([])
   const [
     fetchingChatMessages,
     switchedChatState,
@@ -138,7 +133,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
   useEffect(() => {
     setCurrentChat(currentChatSSR || null)
-
     setMyChats(allChatsSSR || [])
     initialChatLoadRef.current = true
     const initialMessages = currentChatSSR?.messages || []
@@ -159,32 +153,54 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     initialChatLoadRef.current = false
   }, [])
 
+  
+  useEffect(() => {
+    if (!currentChat) {
+      setAvailableUsers([])
+      return
+    }
+
+    
+    if (currentChat.is_group === 1) {
+      
+      const chatUsers = currentChat.users
+        ?.map((u) => u.user)
+        .filter((user): user is SelectUser => Boolean(user)) as SelectUser[]
+      
+      console.log('Group chat users extracted:', chatUsers?.length, chatUsers)
+      
+      if (chatUsers && chatUsers.length > 0) {
+        setAvailableUsers(chatUsers)
+      } else {
+        setAvailableUsers([])
+      }
+    } else {
+      
+      setAvailableUsers([])
+    }
+  }, [currentChat])
+
   useEffect(() => {
     if (!currentChat || !authUser) return
 
-    const { unsubscribe } = joinChannel(
-      currentChat.id, // Use chat ID for Pusher channel naming
-      (message) => {
-        setMessages((prev) => [...prev, message])
+    const { unsubscribe } = joinChannel(currentChat.id, (message) => {
+      setMessages((prev) => [...prev, message])
 
-        // Update the last message and unread count in the chat list
-        setMyChats((prevChats) => {
-          const updatedChats = prevChats.map((chat) => {
-            if (chat.id === message.chat_id) {
-              return {
-                ...chat,
-                last_message: message.message,
-                last_message_at: message.created_at,
-                // Only reset unread count if we are currently viewing the chat
-                unread_count: 0
-              }
+      setMyChats((prevChats) => {
+        const updatedChats = prevChats.map((chat) => {
+          if (chat.id === message.chat_id) {
+            return {
+              ...chat,
+              last_message: message.message,
+              last_message_at: message.created_at,
+              unread_count: 0
             }
-            return chat
-          })
-          return updatedChats
+          }
+          return chat
         })
-      }
-    )
+        return updatedChats
+      })
+    })
 
     setChatRealtime({ unsubscribe })
 
@@ -212,16 +228,26 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     setSwitchedChat(null)
   }, [switchedChat])
 
-  /**
-   * Handles switching to a different chat by fetching the chat data and its messages.
-   * ...
-   */
   const handleChatSwitch = async (chatId: number) => {
     initialChatLoadRef.current = true
+    
+    setAvailableUsers([])
+    setMessageContent("")
     const newSwitchedChat = await fetchChatWithMessages(chatId)
     if (newSwitchedChat && newSwitchedChat.data) {
-      setCurrentChat(newSwitchedChat.data)
-      setMessages(newSwitchedChat.data.messages)
+     
+      const transformedMessages = (
+        newSwitchedChat.data.messages?.map((msg) => ({
+          ...msg,
+          mentions: msg.mentions ?? undefined
+        })) || []
+      ) as SelectMessage[]
+      const transformedChat = {
+        ...newSwitchedChat.data,
+        messages: transformedMessages
+      } as SelectChat
+      setCurrentChat(transformedChat)
+      setMessages(transformedMessages)
     }
     setMyChats((prevChats) =>
       prevChats.map((chat) =>
@@ -241,7 +267,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     const userChannel = pusherClient.subscribe(userChannelName)
 
     userChannel.bind("chat-update", (data: { update: ChatUpdatePayload }) => {
-      const update = data.update as ChatUpdatePayload
+      const update = data.update
 
       setMyChats((prevChats) => {
         const updatedChat = prevChats.find((chat) => chat.id === update.chatId)
@@ -254,7 +280,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                 ...chat,
                 last_message: update.lastMessage,
                 updated_at: new Date().toISOString(),
-                // Increment unread count only if not active chat
                 unread_count: isActiveChat ? 0 : (chat.unread_count || 0) + 1
               }
             }
@@ -265,6 +290,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         return prevChats
       })
     })
+
 
     userChannel.bind(
       "chat-created",
@@ -286,20 +312,24 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       userChannel.unbind_all()
       pusherClient.unsubscribe(userChannelName)
     }
-  }, [authUser, setMyChats, currentChat])
-
-  /**
-   * Handles the sending of a new message in the chat.
-   * ...
-   */
+  }, [authUser, setMyChats, currentChat, currentSpace])
   const handleSendMessage = async () => {
-    if (newMessage.trim() === "" || !currentChat || !authUser) return
-    const messageContent = newMessage
+    if (messageContent.trim() === "" || !currentChat || !authUser) return
+
+    const formattedContent = messageContent
+      .replace(
+        /<span[^>]*data-type="mention"[^>]*data-id="([^"]*)"[^>]*data-label="([^"]*)"[^>]*>@[^<]*<\/span>/g,
+        "@[$2]($1)"
+      )
+      .replace(/<p[^>]*>/g, "")
+      .replace(/<\/p>/g, "")
+      .replace(/<br\s*\/?>/g, "\n")
+      .trim()
 
     const newMsg: InsertMessage = {
       sender_id: authUser?.unique_id || "",
       chat_id: currentChat?.id || 0,
-      message: messageContent,
+      message: formattedContent,
       type: "text"
     }
 
@@ -308,7 +338,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         chat.id === currentChat.id
           ? {
               ...chat,
-              last_message: newMsg.message,
+              last_message: formattedContent,
               last_message_at: moment().toISOString(),
               updated_at: moment().toISOString(),
               unread_count: 0
@@ -316,8 +346,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           : chat
       )
     )
+    
+    setMessageContent("")
 
-    setNewMessage("")
     await addMessageToChat(newMsg, currentSpace?.id)
   }
 
@@ -341,13 +372,11 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           </div>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden p-0">
-          {/* ChatsList component will now display the properly sorted myChats */}
           {canView && <ChatsList searchQuery={searchQuery} />}
         </CardContent>
       </Card>
 
       {/* Main chat area */}
-      {/* ... (rest of the component JSX remains the same) ... */}
       {canView && (
         <Card className="flex-1 flex flex-col h-full">
           <CardHeader className="flex flex-row items-center justify-between py-4">
@@ -373,7 +402,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       <Input placeholder="Search chats..." className="pl-8" />
                     </div>
                   </CardHeader>
-                  <ChatsList />
+                  <ChatsList searchQuery={searchQuery} />
                 </SheetContent>
               </Sheet>
               {currentChat ? (
@@ -462,7 +491,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                     {messages.map((message) => (
                       <div
                         key={message.id}
-                        className={`group mb-4 flex items-center ${
+                        className={`group mb-4 flex items-start ${
                           message.sender_id === authUser?.unique_id
                             ? "justify-end"
                             : "justify-start"
@@ -492,10 +521,15 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                 ~ {message.sender?.first_name}
                               </p>
                             ) : null}
-                            <p className="text-sm">{message.message}</p>
+                            {/* Use MessageContent to render mentions with highlighting */}
+                            <MessageContent
+                              content={message.message}
+                              currentUserId={authUser?.unique_id}
+                              users={availableUsers}
+                            />
                           </div>
                         )}
-                        <p className="text-xs ml-2 text-right hidden group-hover:block">
+                        <p className="text-xs ml-2 mt-2 text-right hidden group-hover:block">
                           {moment
                             .utc(message.created_at)
                             .local()
@@ -512,47 +546,34 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                 )}
               </CardContent>
               <CardFooter className="p-4">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    handleSendMessage()
-                  }}
-                  onChange={(e) => {
-                    e.preventDefault()
-                  }}
-                  className="flex w-full space-x-2"
-                >
-                  <Input
-                    placeholder="Type a message..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Popover>
-                    <PopoverTrigger>
-                      <SmileIcon />
-                    </PopoverTrigger>
-                    <PopoverContent side="top" align="end" className="p-0">
-                      <EmojiPicker
-                        className="h-[342px]"
-                        onEmojiSelect={({ emoji }: any) =>
-                          setNewMessage(`${newMessage}${emoji}`)
-                        }
-                      >
-                        <EmojiPickerSearch />
-                        <EmojiPickerContent />
-                        <EmojiPickerFooter />
-                      </EmojiPicker>
-                    </PopoverContent>
-                  </Popover>
-                  <Button type="submit" size="icon">
+                <div className="flex w-full space-x-2 items-end">
+                  {/* Use RichTextEditor with mention support - mentions only work in group chats */}
+                  <div className="flex-1" key={currentChat?.id || 'no-chat'}>
+                    <RichTextEditor
+                      value={messageContent}
+                      onChange={setMessageContent}
+                      showMentions={currentChat?.is_group === 1 && availableUsers.length > 0}
+                      mentionUsers={availableUsers}
+                      showToolbar={false}
+                      minHeight="60px"
+                      limit={5000}
+                      editable={!newMessageLoading}
+                    />
+                  </div>
+
+                  <Button
+                    type="button"
+                    size="icon"
+                    disabled={newMessageLoading}
+                    onClick={handleSendMessage}
+                  >
                     {newMessageLoading ? (
                       <Loader />
                     ) : (
                       <Send className="h-4 w-4" />
                     )}
                   </Button>
-                </form>
+                </div>
               </CardFooter>
             </>
           ) : null}

@@ -1,10 +1,11 @@
 "use client"
 
-import { useEditor, EditorContent } from "@tiptap/react"
+import { useEditor, EditorContent, ReactRenderer } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Link from "@tiptap/extension-link"
 import Underline from "@tiptap/extension-underline"
 import TextAlign from "@tiptap/extension-text-align"
+import Mention from "@tiptap/extension-mention"
 import { Button } from "@/src/components/ui/button"
 import { Separator } from "@/src/components/ui/separator"
 import {
@@ -25,9 +26,17 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  AlignJustify
+  AlignJustify,
+  AtSign
 } from "lucide-react"
-import { useEffect, useState } from "react"
+import {
+  useEffect,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useRef
+} from "react"
 import Heading from "@tiptap/extension-heading"
 import "./RichEditorFormat.css"
 import CharacterCount from "@tiptap/extension-character-count"
@@ -36,6 +45,11 @@ import { Image as ImageIcon } from "lucide-react"
 import { AddImageToTaskAction } from "@/src/server-actions/Tasks/Task"
 import Loader from "./Loader/Loader"
 import { LoaderSizes } from "./types/loader-types"
+import { SelectUser } from "@/src/db/schema"
+import tippy from "tippy.js"
+import MentionList, {
+  MentionListHandle
+} from "../Dashboard/Chat/components/MentionList"
 
 interface RichTextEditorProps {
   value?: string
@@ -43,6 +57,10 @@ interface RichTextEditorProps {
   image_uploading?: boolean
   editable?: boolean
   limit?: number
+  mentionUsers?: SelectUser[]
+  showMentions?: boolean
+  minHeight?: string
+  showToolbar?: boolean
 }
 
 export default function RichTextEditor({
@@ -50,11 +68,21 @@ export default function RichTextEditor({
   onChange,
   image_uploading,
   editable,
-  limit = 1000
+  limit = 1000,
+  mentionUsers = [],
+  showMentions = false,
+  minHeight = "200px",
+  showToolbar = true
 }: RichTextEditorProps) {
   const [linkUrl, setLinkUrl] = useState("")
   const [showLinkInput, setShowLinkInput] = useState(false)
   const [loading, setLoading] = useState(false)
+  const editorRef = useRef<any>(null)
+
+  const editorKey = useMemo(
+    () => `${showMentions}-${mentionUsers.length}`,
+    [showMentions, mentionUsers.length]
+  )
 
   const CustomImage = Image.extend({
     addNodeView() {
@@ -106,8 +134,9 @@ export default function RichTextEditor({
     return text === ""
   }
 
-  const editor = useEditor({
-    extensions: [
+ 
+  const extensions = useMemo(() => {
+    const baseExtensions: any[] = [
       StarterKit,
       Underline,
       Link.configure({ openOnClick: false }),
@@ -121,7 +150,138 @@ export default function RichTextEditor({
           class: "CustomImage"
         }
       })
-    ],
+    ]
+
+    if (showMentions && mentionUsers.length > 0) {
+      console.log(
+        "Adding Mention extension to editor, users:",
+        mentionUsers.length
+      )
+      baseExtensions.push(
+        Mention.configure({
+          HTMLAttributes: {
+            class:
+              "mention bg-primary/10 text-primary px-1 py-0.5 rounded font-medium"
+          },
+          suggestion: {
+            items: ({ query, editor }: { query: string; editor: any }) => {
+             
+              if (!mentionUsers || mentionUsers.length === 0) {
+                console.warn("No mention users available")
+                return []
+              }
+
+             
+              const mentionedUserIds = new Set<string>()
+
+              try {
+                if (editor && editor.state && editor.state.doc) {
+                 
+                  editor.state.doc.descendants((node: any) => {
+                    if (node.type.name === "mention" && node.attrs.id) {
+                      mentionedUserIds.add(node.attrs.id)
+                    }
+                  })
+                  console.log(
+                    "Already mentioned user IDs:",
+                    Array.from(mentionedUserIds)
+                  )
+                }
+              } catch (error) {
+                console.warn("Could not check for existing mentions:", error)
+              }
+
+             
+              const filtered = mentionUsers
+                .filter((user) => {
+                 
+                  if (mentionedUserIds.has(user.unique_id)) {
+                    console.log(
+                      "Skipping already mentioned user:",
+                      user.first_name,
+                      user.last_name
+                    )
+                    return false
+                  }
+                 
+                  const fullName =
+                    `${user.first_name} ${user.last_name}`.toLowerCase()
+                  return (
+                    fullName.includes(query.toLowerCase()) ||
+                    user.email?.toLowerCase().includes(query.toLowerCase())
+                  )
+                })
+                .slice(0, 5)
+
+              return filtered
+            },
+            render: () => {
+              let component: ReactRenderer
+              let popup: any
+
+              return {
+                onStart: (props: any) => {
+                  component = new ReactRenderer(MentionList, {
+                    props,
+                    editor: props.editor
+                  })
+
+                  if (!props.clientRect) {
+                    return
+                  }
+
+                  popup = tippy("body", {
+                    getReferenceClientRect: props.clientRect,
+                    appendTo: () => document.body,
+                    content: component.element,
+                    showOnCreate: true,
+                    interactive: true,
+                    trigger: "manual",
+                    placement: "top-start"
+                  })
+                },
+
+                onUpdate(props: any) {
+                  component.updateProps(props)
+
+                  if (!props.clientRect) {
+                    return
+                  }
+
+                  popup[0].setProps({
+                    getReferenceClientRect: props.clientRect
+                  })
+                },
+
+                onKeyDown(props: any) {
+                  if (props.event.key === "Escape") {
+                    popup[0].hide()
+                    return true
+                  }
+
+                  return (
+                    (component.ref as MentionListHandle | null)?.onKeyDown?.(
+                      props
+                    ) || false
+                  )
+                },
+
+                onExit() {
+                  popup[0].destroy()
+                  component.destroy()
+                }
+              }
+            }
+          }
+        })
+      )
+    }
+
+    return baseExtensions
+  }, [showMentions, mentionUsers, limit])
+
+  const editor = useEditor({
+    extensions,
     content: value,
     editable,
     editorProps: {
@@ -187,10 +347,35 @@ export default function RichTextEditor({
   })
 
   useEffect(() => {
-    if (editor && value !== undefined && value !== editor.getHTML()) {
-      editor.commands.setContent(value, false)
+    if (editor) {
+      editorRef.current = editor
+      if (value !== undefined && value !== editor.getHTML()) {
+        editor.commands.setContent(value, false)
+      }
     }
   }, [value, editor])
+
+  useEffect(() => {
+    if (editor) {
+      const currentExtensions = editor.extensionManager.extensions.map(
+        (ext) => ext.name
+      )
+      const hasMention = currentExtensions.includes("mention")
+      const shouldHaveMention = showMentions && mentionUsers.length > 0
+      if (hasMention !== shouldHaveMention) {
+        console.log(
+          "Mention extension state mismatch, recreating editor. hasMention:",
+          hasMention,
+          "shouldHaveMention:",
+          shouldHaveMention
+        )
+        editor.destroy()
+        return () => {
+
+        }
+      }
+    }
+  }, [editor, showMentions, mentionUsers.length])
 
   if (!editor) {
     return null
@@ -256,259 +441,287 @@ export default function RichTextEditor({
   }
 
   return (
-    <div className="w-full  mx-auto border rounded-lg shadow-sm">
-      {/* Toolbar */}
-      <div className="border-b p-2 flex flex-wrap items-center gap-1">
-        {/* Text Formatting */}
-        <Button
-          type="button"
-          variant={editor.isActive("bold") ? "default" : "ghost"}
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBold().run()}
-        >
-          <Bold className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant={editor.isActive("italic") ? "default" : "ghost"}
-          size="sm"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-        >
-          <Italic className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant={editor.isActive("underline") ? "default" : "ghost"}
-          size="sm"
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-        >
-          <UnderlineIcon className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant={editor.isActive("strike") ? "default" : "ghost"}
-          size="sm"
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-        >
-          <Strikethrough className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant={editor.isActive("code") ? "default" : "ghost"}
-          size="sm"
-          onClick={() => editor.chain().focus().toggleCode().run()}
-        >
-          <Code className="h-4 w-4" />
-        </Button>
+    <div className="w-full mx-auto border rounded-lg shadow-sm">
+      {showToolbar && (
+        <>
+          <div className="border-b p-2 flex flex-wrap items-center gap-1">
+            {/* Text Formatting */}
+            <Button
+              type="button"
+              variant={editor.isActive("bold") ? "default" : "ghost"}
+              size="sm"
+              onClick={() => editor.chain().focus().toggleBold().run()}
+            >
+              <Bold className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant={editor.isActive("italic") ? "default" : "ghost"}
+              size="sm"
+              onClick={() => editor.chain().focus().toggleItalic().run()}
+            >
+              <Italic className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant={editor.isActive("underline") ? "default" : "ghost"}
+              size="sm"
+              onClick={() => editor.chain().focus().toggleUnderline().run()}
+            >
+              <UnderlineIcon className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant={editor.isActive("strike") ? "default" : "ghost"}
+              size="sm"
+              onClick={() => editor.chain().focus().toggleStrike().run()}
+            >
+              <Strikethrough className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant={editor.isActive("code") ? "default" : "ghost"}
+              size="sm"
+              onClick={() => editor.chain().focus().toggleCode().run()}
+            >
+              <Code className="h-4 w-4" />
+            </Button>
 
-        <Separator orientation="vertical" className="h-6" />
-
-        {/* Headings */}
-        <Button
-          type="button"
-          variant={
-            editor.isActive("heading", { level: 1 }) ? "default" : "ghost"
-          }
-          size="sm"
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 1 }).run()
-          }
-        >
-          <Heading1 className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant={
-            editor.isActive("heading", { level: 2 }) ? "default" : "ghost"
-          }
-          size="sm"
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 2 }).run()
-          }
-        >
-          <Heading2 className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant={
-            editor.isActive("heading", { level: 3 }) ? "default" : "ghost"
-          }
-          size="sm"
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 3 }).run()
-          }
-        >
-          <Heading3 className="h-4 w-4" />
-        </Button>
-
-        <Separator orientation="vertical" className="h-6" />
-
-        {/* Lists */}
-        <Button
-          type="button"
-          variant={editor.isActive("bulletList") ? "default" : "ghost"}
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-        >
-          <List className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant={editor.isActive("orderedList") ? "default" : "ghost"}
-          size="sm"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        >
-          <ListOrdered className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant={editor.isActive("blockquote") ? "default" : "ghost"}
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        >
-          <Quote className="h-4 w-4" />
-        </Button>
-
-        <Separator orientation="vertical" className="h-6" />
-
-        {/* Text Alignment */}
-        <Button
-          type="button"
-          variant={editor.isActive({ textAlign: "left" }) ? "default" : "ghost"}
-          size="sm"
-          onClick={() => editor.chain().focus().setTextAlign("left").run()}
-        >
-          <AlignLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant={
-            editor.isActive({ textAlign: "center" }) ? "default" : "ghost"
-          }
-          size="sm"
-          onClick={() => editor.chain().focus().setTextAlign("center").run()}
-        >
-          <AlignCenter className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant={
-            editor.isActive({ textAlign: "right" }) ? "default" : "ghost"
-          }
-          size="sm"
-          onClick={() => editor.chain().focus().setTextAlign("right").run()}
-        >
-          <AlignRight className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant={
-            editor.isActive({ textAlign: "justify" }) ? "default" : "ghost"
-          }
-          size="sm"
-          onClick={() => editor.chain().focus().setTextAlign("justify").run()}
-        >
-          <AlignJustify className="h-4 w-4" />
-        </Button>
-
-        {image_uploading ? (
-          <>
             <Separator orientation="vertical" className="h-6" />
 
+            {/* Headings */}
+            <Button
+              type="button"
+              variant={
+                editor.isActive("heading", { level: 1 }) ? "default" : "ghost"
+              }
+              size="sm"
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 1 }).run()
+              }
+            >
+              <Heading1 className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant={
+                editor.isActive("heading", { level: 2 }) ? "default" : "ghost"
+              }
+              size="sm"
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 2 }).run()
+              }
+            >
+              <Heading2 className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant={
+                editor.isActive("heading", { level: 3 }) ? "default" : "ghost"
+              }
+              size="sm"
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 3 }).run()
+              }
+            >
+              <Heading3 className="h-4 w-4" />
+            </Button>
+
+            <Separator orientation="vertical" className="h-6" />
+
+            {/* Lists */}
+            <Button
+              type="button"
+              variant={editor.isActive("bulletList") ? "default" : "ghost"}
+              size="sm"
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant={editor.isActive("orderedList") ? "default" : "ghost"}
+              size="sm"
+              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            >
+              <ListOrdered className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant={editor.isActive("blockquote") ? "default" : "ghost"}
+              size="sm"
+              onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            >
+              <Quote className="h-4 w-4" />
+            </Button>
+
+            <Separator orientation="vertical" className="h-6" />
+
+            {/* Text Alignment */}
+            <Button
+              type="button"
+              variant={
+                editor.isActive({ textAlign: "left" }) ? "default" : "ghost"
+              }
+              size="sm"
+              onClick={() => editor.chain().focus().setTextAlign("left").run()}
+            >
+              <AlignLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant={
+                editor.isActive({ textAlign: "center" }) ? "default" : "ghost"
+              }
+              size="sm"
+              onClick={() =>
+                editor.chain().focus().setTextAlign("center").run()
+              }
+            >
+              <AlignCenter className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant={
+                editor.isActive({ textAlign: "right" }) ? "default" : "ghost"
+              }
+              size="sm"
+              onClick={() => editor.chain().focus().setTextAlign("right").run()}
+            >
+              <AlignRight className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant={
+                editor.isActive({ textAlign: "justify" }) ? "default" : "ghost"
+              }
+              size="sm"
+              onClick={() =>
+                editor.chain().focus().setTextAlign("justify").run()
+              }
+            >
+              <AlignJustify className="h-4 w-4" />
+            </Button>
+
+            {image_uploading ? (
+              <>
+                <Separator orientation="vertical" className="h-6" />
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    handleUploadImage()
+                  }}
+                >
+                  <ImageIcon className="h-4 w-4" />
+                </Button>
+              </>
+            ) : null}
+
+            <Separator orientation="vertical" className="h-6" />
+
+            {/* Link */}
+            <Button
+              type="button"
+              variant={editor.isActive("link") ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setShowLinkInput(!showLinkInput)}
+            >
+              <LinkIcon className="h-4 w-4" />
+            </Button>
+
+            {showMentions && (
+              <>
+                <Separator orientation="vertical" className="h-6" />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    editor.chain().focus().insertContent("@").run()
+                  }}
+                  title="Mention someone"
+                >
+                  <AtSign className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+
+            <Separator orientation="vertical" className="h-6" />
+
+            {/* Undo/Redo */}
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => {
-                handleUploadImage()
-              }}
+              onClick={() => editor.chain().focus().undo().run()}
+              disabled={!editor.can().undo()}
             >
-              <ImageIcon className="h-4 w-4" />
+              <Undo className="h-4 w-4" />
             </Button>
-          </>
-        ) : null}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().redo().run()}
+              disabled={!editor.can().redo()}
+            >
+              <Redo className="h-4 w-4" />
+            </Button>
+          </div>
 
-        <Separator orientation="vertical" className="h-6" />
-
-        {/* Link */}
-        <Button
-          type="button"
-          variant={editor.isActive("link") ? "default" : "ghost"}
-          size="sm"
-          onClick={() => setShowLinkInput(!showLinkInput)}
-        >
-          <LinkIcon className="h-4 w-4" />
-        </Button>
-
-        <Separator orientation="vertical" className="h-6" />
-
-        {/* Undo/Redo */}
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().undo().run()}
-          disabled={!editor.can().undo()}
-        >
-          <Undo className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().redo().run()}
-          disabled={!editor.can().redo()}
-        >
-          <Redo className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Link Input */}
-      {showLinkInput && (
-        <div className="border-b p-3 flex items-center gap-2">
-          <input
-            type="url"
-            placeholder="Enter URL..."
-            value={linkUrl}
-            onChange={(e) => setLinkUrl(e.target.value)}
-            className="flex-1 px-3 py-1 border rounded text-sm"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                addLink()
-              }
-            }}
-          />
-          <Button type="button" size="sm" onClick={addLink}>
-            Add Link
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={removeLink}
-          >
-            Remove Link
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={() => setShowLinkInput(false)}
-          >
-            Cancel
-          </Button>
-        </div>
+          {/* Link Input */}
+          {showLinkInput && (
+            <div className="border-b p-3 flex items-center gap-2">
+              <input
+                type="url"
+                placeholder="Enter URL..."
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                className="flex-1 px-3 py-1 border rounded text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    addLink()
+                  }
+                }}
+              />
+              <Button type="button" size="sm" onClick={addLink}>
+                Add Link
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={removeLink}
+              >
+                Remove Link
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowLinkInput(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Editor Content */}
-
-      <div className="relative rich-editor">
+      <div
+        className="relative rich-editor"
+        key={`editor-wrapper-${showMentions}-${mentionUsers.length}`}
+      >
         <div
           className="tiptap-editor-wrapper"
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
         >
-          <EditorContent editor={editor} className="min-h-[200px]" />
+          <EditorContent editor={editor} style={{ minHeight }} />
         </div>
         {loading ? (
           <div className="absolute inset-0 bg-transparent backdrop-blur-sm z-50 flex flex-col items-center justify-center p-4 text-center">

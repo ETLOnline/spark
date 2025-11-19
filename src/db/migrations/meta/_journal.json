@@ -169,6 +169,13 @@
       "when": 1763052780533,
       "tag": "0023_2025_11_14_005259__add_column_name_index_in_chat_table",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1763512550937,
+      "tag": "0024_2025_11_19_083550__add_column_for_mentions_users_in_messages",
+      "breakpoints": true
     }
   ]
 }
