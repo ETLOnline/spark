@@ -20,7 +20,6 @@ import pusherClient from "@/src/services/realtime/PusherClient"
 import { userStore } from "@/src/store/user/userStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import { SprintStatus, TaskType } from "../../constants/projectManagment"
-import { createPortal } from "react-dom"
 
 function SprintBoard() {
   const params = useParams()
@@ -41,26 +40,9 @@ function SprintBoard() {
   const authUser = useAtomValue(userStore.AuthUser)
   const pusherChannel = useAtomValue(projectStore.pusherChannel)
   const [isInitailDataLoad, setIsInitailDataLoad] = useState(false)
-  const [mounted, setMounted] = useState(false)
   const boardRef = useRef<HTMLDivElement | null>(null)
   const scrollContainerRef = useRef<HTMLElement | null>(null)
   const savedScroll = useRef<number>(0)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!mounted) return
-    const findScrollContainer = () => {
-      const nearest = (boardRef.current?.closest('[data-scrollable="true"]') ||
-        document.querySelector(
-          '[data-scrollable="true"]'
-        )) as HTMLElement | null
-      scrollContainerRef.current = nearest
-    }
-    findScrollContainer()
-  }, [mounted, boardRef.current])
 
   function handleOpenTask(task: SelectTask) {
     const sc =
@@ -76,17 +58,6 @@ function SprintBoard() {
     setSelectedTask(task)
     setIsTaskModalOpen(true)
   }
-
-  useEffect(() => {
-    if (isTaskModalOpen) {
-      document.body.style.overflow = "hidden"
-    } else {
-      document.body.style.overflow = ""
-    }
-    return () => {
-      document.body.style.overflow = ""
-    }
-  }, [isTaskModalOpen])
 
   useEffect(() => {
     if (isTaskModalOpen) return
@@ -237,24 +208,17 @@ function SprintBoard() {
         )}
       </div>
 
-      {mounted
-        ? createPortal(
-            <TaskModal
-              isReady={isInitailDataLoad}
-              isTaskModelOpen={isTaskModalOpen}
-              setIsTaskModelOpen={setIsTaskModalOpen}
-              selectedTask={selectedTask || undefined}
-              onUpdateComplete={(task: SelectTask) => {
-                setTasks((prev) =>
-                  prev.map((t) => (t.id === task.id ? task : t))
-                )
-                setSelectedTask(task)
-              }}
-              onSubTaskCreate={(task: SelectTask) => getTasks()}
-            />,
-            document.body
-          )
-        : null}
+      <TaskModal
+        isReady={isInitailDataLoad}
+        isTaskModelOpen={isTaskModalOpen}
+        setIsTaskModelOpen={setIsTaskModalOpen}
+        selectedTask={selectedTask || undefined}
+        onUpdateComplete={(task: SelectTask) => {
+          setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
+          setSelectedTask(task)
+        }}
+        onSubTaskCreate={(task: SelectTask) => getTasks()}
+      />
     </>
   ) : (
     <StatusRequiredDialog openDialog={openDialog} />
