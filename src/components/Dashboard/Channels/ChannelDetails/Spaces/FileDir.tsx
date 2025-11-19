@@ -135,7 +135,6 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
     })()
   }, [])
 
-  
   const getCurrentFolderItems = () => {
     if (currentPath === "/") return dir
 
@@ -143,7 +142,6 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
     return folder?.children || []
   }
 
-  
   const filteredItems = getCurrentFolderItems().filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -487,7 +485,6 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
             <Loader size={LoaderSizes.xl} />
           </div>
         ) : (
-          // 🔍 Pass filtered items into DirView
           <DirView
             navigateToFolder={navigateToFolder}
             searchQuery={searchQuery}
