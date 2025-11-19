@@ -293,7 +293,6 @@ export const incrementUnreadCountForChatAction = CreateServerAction(
   true,
   async (chat_id: number, user_id: string) => {
     try {
-      console.log(chat_id, user_id)
       const result = await incrementUnreadCountForChat(chat_id, user_id)
       return { success: true, data: result }
     } catch (error) {

@@ -212,8 +212,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
   useEffect(() => {
     if (!switchedChat) return
-    // chatRealTime?.unsubscribe()
-    // setChatRealtime(null)
     handleChatSwitch(switchedChat.id)
     setSwitchedChat(null)
   }, [switchedChat])
