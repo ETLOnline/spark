@@ -202,7 +202,6 @@ export const chatsTable = pgTable("chats", {
   type: varchar(),
   avatar: varchar(),
   last_message: varchar(),
-  unread_count: integer().notNull().default(0),
   is_group: integer().notNull().default(0),
   ...timestamps
 })
@@ -253,7 +252,8 @@ export type SelectMessage = typeof messagesTable.$inferSelect & {
 
 export const userChatsTable = pgTable("user_chats", {
   user_id: varchar().notNull(),
-  chat_id: integer().notNull()
+  chat_id: integer().notNull(),
+  unread_count: integer().notNull().default(0)
 })
 
 export const userChatsRelations = relations(userChatsTable, ({ one }) => ({

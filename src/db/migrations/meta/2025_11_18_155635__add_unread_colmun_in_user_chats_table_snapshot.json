@@ -1,6 +1,6 @@
 {
-  "id": "454839ac-4ff6-4f8d-ba93-3b2e98270551",
-  "prevId": "d55ab94c-15a0-4db2-929a-b320513f9f0a",
+  "id": "e5f42bc1-f901-4305-8467-355abefc9a75",
+  "prevId": "454839ac-4ff6-4f8d-ba93-3b2e98270551",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -718,13 +718,6 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": false
-        },
-        "unread_count": {
-          "name": "unread_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
         },
         "is_group": {
           "name": "is_group",
@@ -3269,6 +3262,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "unread_count": {
+          "name": "unread_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         }
       },
       "indexes": {},
