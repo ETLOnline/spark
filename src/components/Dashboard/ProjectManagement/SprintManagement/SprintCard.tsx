@@ -22,6 +22,7 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { ToUpperCase } from "@/src/utils/helpers"
 import { TaskFiltersType } from "../types/taskFilters.type"
 import TaskFilters from "../TaskFilter/TaskFilters"
+import { TaskType } from "../constants/projectManagment"
 
 interface Props {
   sprint: SelectSprint
@@ -64,7 +65,8 @@ export default function SprintCardPage({
       priority: filters?.priority,
       type: filters?.type,
       status: filters?.status,
-      assignee: filters?.assignee
+      assignee: filters?.assignee,
+      excludedTypes: [TaskType.SUBTASK]
     })
     if (tasks?.success && tasks.data) {
       setFilteredTasks(tasks.data.tasks)
