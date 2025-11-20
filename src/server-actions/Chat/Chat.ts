@@ -15,7 +15,10 @@ import {
 import { CreateServerAction } from ".."
 import { InsertMessage } from "@/src/db/schema"
 import { AuthUserAction } from "../User/AuthUserAction"
-import { createChatMessage } from "@/src/db/data-access/chat/message/query"
+import {
+  createChatMessage,
+  deleteChatMessage
+} from "@/src/db/data-access/chat/message/query"
 import pusherServer from "@/src/services/realtime/pusherServer" // Added Pusher Server Client
 import { GetSpaceById } from "@/src/db/data-access/spaces/query"
 import {
@@ -89,7 +92,7 @@ export const CreateGroupChatAction = CreateServerAction(
     try {
       if (space_id) {
         const existingChat = await getExistingGroupName(chatName, space_id)
-        const chatNamePattern = slugify(chatName);
+        const chatNamePattern = slugify(chatName)
 
         if (existingChat?.name_index == chatNamePattern) {
           return {
@@ -255,6 +258,37 @@ export const AddMessageToChatAction = CreateServerAction(
       }
     } catch (error) {
       return { error: error }
+    }
+  }
+)
+export const DeleteMessageFromChatAction = CreateServerAction(
+  true,
+  async (msg_id: number, chat_id: number, sender_id: string) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) {
+        return { success: false, error: "Unauthorized" }
+      }
+
+      const deletedMessage = await deleteChatMessage(msg_id, chat_id, sender_id)
+
+      if (deletedMessage) {
+        // Trigger Pusher event to everyone in this chat
+        await pusherServer.trigger(
+          `private-chat-${chat_id}`, // Chat-specific channel
+          "message-deleted", // Event name
+          {
+            id: msg_id, // ID of deleted message
+            chat_id
+          }
+        )
+
+        return { success: true, data: deletedMessage }
+      } else {
+        return { success: false, error: "Failed to delete message" }
+      }
+    } catch (error) {
+      return { error }
     }
   }
 )

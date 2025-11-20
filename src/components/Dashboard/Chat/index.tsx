@@ -13,7 +13,16 @@ import {
 import { Input } from "@/src/components/ui/input"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger } from "@/src/components/ui/sheet"
-import { Menu, PlusCircle, Search, Send, SmileIcon } from "lucide-react"
+import {
+  ChevronDown,
+  Edit,
+  Menu,
+  PlusCircle,
+  Search,
+  Send,
+  SmileIcon,
+  Trash2
+} from "lucide-react"
 import { useAtom, useAtomValue } from "jotai"
 import { chatStore } from "@/src/store/chat/chatStore"
 import {
@@ -27,6 +36,7 @@ import { userStore } from "@/src/store/user/userStore"
 import ChatsList from "./components/ChatsList"
 import {
   AddMessageToChatAction,
+  DeleteMessageFromChatAction,
   GetChatWithMessagesAction
 } from "@/src/server-actions/Chat/Chat"
 import moment from "moment-timezone"
@@ -46,6 +56,13 @@ import {
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import pusherClient from "@/src/services/realtime/PusherClient"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "../../ui/dropdown-menu"
+import { toast } from "@/src/hooks/use-toast"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -66,13 +83,18 @@ type ChatUpdatePayload = {
  */
 function joinChannel(
   chatId: number,
-  onMessageReceived: (message: SelectMessage) => void
+  onMessageReceived: (message: SelectMessage) => void,
+  onMessageDeleted?: (msgId: number) => void
 ) {
   const channelName = `private-chat-${chatId}`
   const channel = pusherClient.subscribe(channelName)
 
   channel.bind("new-message", (data: { message: SelectMessage }) => {
     onMessageReceived(data.message)
+  })
+
+  channel.bind("message-deleted", (data: { id: number }) => {
+    onMessageDeleted?.(data.id)
   })
 
   function unsubscribe() {
@@ -135,7 +157,12 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     newMessageError,
     addMessageToChat
   ] = useServerAction(AddMessageToChatAction)
-
+  const [
+    deletedMessageLoading,
+    deletedMessageState,
+    deletedMessageError,
+    deleteMessageFromChat
+  ] = useServerAction(DeleteMessageFromChatAction)
   useEffect(() => {
     setCurrentChat(currentChatSSR || null)
 
@@ -321,6 +348,25 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     await addMessageToChat(newMsg, currentSpace?.id)
   }
 
+  const handleDelteMsg = async (msg: SelectMessage) => {
+    try {
+      if (
+        authUser?.unique_id === msg.sender_id &&
+        currentChat?.id === msg.chat_id
+      ) {
+        await deleteMessageFromChat(msg.id, currentChat.id, authUser.unique_id)
+
+        // setMessages((prev) => prev.filter((m) => m.id !== msg.id));
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete message.",
+        variant: "destructive"
+      })
+    }
+  }
+
   return (
     <div className="flex h-[calc(100vh-7rem)] gap-4">
       {/* Contacts list - visible on desktop, hidden on mobile */}
@@ -480,7 +526,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                           </div>
                         ) : (
                           <div
-                            className={`rounded-lg p-3 max-w-[70%] ${
+                            className={`rounded-lg pl-2 max-w-[70%] ${
                               message.sender_id === authUser?.unique_id
                                 ? "bg-primary text-primary-foreground"
                                 : "bg-muted"
@@ -492,7 +538,40 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                 ~ {message.sender?.first_name}
                               </p>
                             ) : null}
-                            <p className="text-sm">{message.message}</p>
+                            <div className="text-sm flex items-center justify-center gap-1 ">
+                              {message.message}
+                              <div className="self-end ">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="  "
+                                    >
+                                      <ChevronDown className="" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+
+                                  <DropdownMenuContent
+                                    align="end"
+                                    className="w-40"
+                                  >
+                                    <DropdownMenuItem>
+                                      <Edit className="mr-2 h-4 w-4" />
+                                      Edit
+                                    </DropdownMenuItem>
+
+                                    <DropdownMenuItem
+                                      onClick={() => handleDelteMsg(message)}
+                                      className="text-red-600 focus:text-red-600"
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </div>
                           </div>
                         )}
                         <p className="text-xs ml-2 text-right hidden group-hover:block">
