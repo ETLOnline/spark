@@ -52,6 +52,7 @@ export const TaskModal = ({
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [taskIdFromUrl, setTaskIdFromUrl] = useState<string | null>(null)
   const [statuses] = useAtom(projectStore.projectStatusList)
+  const [refetchComments, setRefetchComments] = useState(false)
   const { createTaskLoading, updateTaskLoading, handleSubmit } = useTaskHook({
     selectedTask,
     sprintId,
@@ -62,6 +63,7 @@ export const TaskModal = ({
     onUpdateComplete: (task) => {
       onUpdateComplete?.(task)
       setIsChanged(false)
+      setRefetchComments(true)
     }
   })
 
@@ -168,6 +170,8 @@ export const TaskModal = ({
             setIsChanged={setIsChanged}
             onSubTaskCreate={onSubTaskCreate}
             isSprintCompleted={isSprintCompleted}
+            refetchComments={refetchComments}
+            setRefetchComments={setRefetchComments}
           />
         </DialogContent>
       </Dialog>

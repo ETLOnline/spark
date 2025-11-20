@@ -1,4 +1,4 @@
-import { InsertTaskStatus } from "@/src/db/schema"
+import { InsertTaskStatus, SelectTask } from "@/src/db/schema"
 
 export enum TaskType {
   STORY = "story",
@@ -207,3 +207,45 @@ export const sprintStatuses = [
     badgeVariants: "secondary"
   }
 ]
+
+const fieldsToCompare: (keyof SelectTask)[] = [
+  "task_title",
+  "status",
+  "task_priority",
+  "assignee",
+  "assignor",
+  "task_type",
+  "story_points"
+]
+
+export const TaskHistory = (oldTask: SelectTask, newTask: SelectTask) => {
+  const changes: { key: string; old: any; new: any }[] = []
+
+  const isEqual = (a: any, b: any) => JSON.stringify(a) === JSON.stringify(b)
+
+  fieldsToCompare.forEach((key) => {
+    if (!isEqual(oldTask[key], newTask[key])) {
+      if (key === "assignee" || key === "assignor") {
+        changes.push({
+          key,
+          old: `${oldTask[key]?.first_name ?? ""} ${oldTask[key]?.last_name ?? ""}`,
+          new: `${newTask[key]?.first_name ?? ""} ${newTask[key]?.last_name ?? ""}`
+        })
+      } else if (key === "status") {
+        changes.push({
+          key,
+          old: oldTask[key]?.name ?? "",
+          new: newTask[key]?.name ?? ""
+        })
+      } else {
+        changes.push({
+          key,
+          old: oldTask[key],
+          new: newTask[key]
+        })
+      }
+    }
+  })
+
+  return changes
+}
