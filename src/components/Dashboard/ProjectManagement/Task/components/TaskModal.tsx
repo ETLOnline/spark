@@ -119,9 +119,10 @@ export const TaskModal = ({
 
   useEffect(() => {
     if (isTaskModelOpen && internalTask?.id) {
-      router.push(
-        pathName + "?" + new URLSearchParams({ task_id: internalTask.id })
-      )
+      const newSearchParams = new URLSearchParams(searchParams.toString())
+      newSearchParams.set("task_id", internalTask?.id)
+
+      router.push(`${pathName}?${newSearchParams.toString()}`)
     }
   }, [isTaskModelOpen, internalTask?.id])
 

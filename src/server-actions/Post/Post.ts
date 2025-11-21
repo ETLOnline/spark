@@ -14,7 +14,9 @@ import {
   GetPosts,
   GetPostById,
   DeletePost,
-  AddPostFileLink
+  AddPostFileLink,
+  UpdatePost,
+  RemoveHashtagFromPostLink
 } from "@/src/db/data-access/post/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
@@ -52,6 +54,21 @@ export const CreatePostAction = CreateServerAction(
       } else {
         throw new Error("Unauthorized", { cause: 401 })
       }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error
+      }
+    }
+  }
+)
+
+export const UpdatePostAction = CreateServerAction(
+  true,
+  async (postId: string, content: string) => {
+    try {
+      const updatedPost = await UpdatePost(postId, content)
+      return { success: true, data: updatedPost }
     } catch (error: any) {
       return {
         success: false,
@@ -161,7 +178,12 @@ export const CreatePollPostAction = CreateServerAction(
 
 export const ToggleLikeAction = CreateServerAction(
   true,
-  async (postId: string, isLiked: boolean, likes: number, space_id?: string) => {
+  async (
+    postId: string,
+    isLiked: boolean,
+    likes: number,
+    space_id?: string
+  ) => {
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (userId) {
@@ -195,7 +217,12 @@ export const ToggleLikeAction = CreateServerAction(
 
 export const CreateCommentAction = CreateServerAction(
   true,
-  async (postId: string, content: string, comments: number, space_id?:string) => {
+  async (
+    postId: string,
+    content: string,
+    comments: number,
+    space_id?: string
+  ) => {
     try {
       const user = await AuthUserAction()
       if (user?.unique_id) {
@@ -333,6 +360,21 @@ export const LinkHashtagsToPostAction = CreateServerAction(
       return {
         success: false,
         error: error.message || "Failed to link hashtags"
+      }
+    }
+  }
+)
+
+export const UnlinkHashtagsFromPostAction = CreateServerAction(
+  true,
+  async (postId: string, hashtagIds: number[]) => {
+    try {
+      await RemoveHashtagFromPostLink(postId, hashtagIds)
+      return { success: true }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to unlink hashtags"
       }
     }
   }

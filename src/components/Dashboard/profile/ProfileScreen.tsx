@@ -8,15 +8,17 @@ import {
   LinkIcon,
   UserIcon,
   MailIcon,
-  PhoneIcon,
-  MapPinIcon,
   Plus,
-  UserPlus,
   PencilIcon,
   GraduationCap,
   SquarePen,
   ListX,
-  FlameKindling
+  FlameKindling,
+  Github,
+  Linkedin,
+  Twitter,
+  Instagram,
+  Globe
 } from "lucide-react"
 import {
   SelectCertificate,
@@ -59,6 +61,8 @@ import ChangeCoverImageDialog from "./changeCoverImageDialog"
 import Image from "next/image"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
+import EditSocialLinksModal from "./user/SocialLinksModal"
+import { SocialLinkItem } from "./user/SocialLinkItem"
 
 type ProfileScreenProps = {
   tab?: string
@@ -476,6 +480,74 @@ export default function ProfileScreen({
                 </div>
               </CardContent>
             </Card>
+            {/* Socail Links */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  Social Links
+                  {authUser?.unique_id === user?.unique_id && (
+                    <EditSocialLinksModal
+                      user={user}
+                      profile={profile as SelectProfile}
+                      setprofile={setProfile}
+                    />
+                  )}
+                </CardTitle>
+              </CardHeader>
+
+              <CardContent className="space-y-3">
+                {!profile?.github_url &&
+                  !profile?.linkedin_url &&
+                  !profile?.instagram_url &&
+                  !profile?.twitter_url &&
+                  !profile?.personal_website_url && (
+                    <p className="text-muted-foreground text-center">
+                      No social links added
+                    </p>
+                  )}
+
+                {profile?.personal_website_url && (
+                  <SocialLinkItem
+                    icon={<Globe className="h-4 w-4" />}
+                    label="Website"
+                    url={profile.personal_website_url}
+                  />
+                )}
+
+                {profile?.github_url && (
+                  <SocialLinkItem
+                    icon={<Github className="h-4 w-4" />}
+                    label="GitHub"
+                    url={profile.github_url}
+                  />
+                )}
+
+                {profile?.linkedin_url && (
+                  <SocialLinkItem
+                    icon={<Linkedin className="h-4 w-4" />}
+                    label="LinkedIn"
+                    url={profile.linkedin_url}
+                  />
+                )}
+
+                {profile?.twitter_url && (
+                  <SocialLinkItem
+                    icon={<Twitter className="h-4 w-4" />}
+                    label="Twitter"
+                    url={profile.twitter_url}
+                  />
+                )}
+
+                {profile?.instagram_url && (
+                  <SocialLinkItem
+                    icon={<Instagram className="h-4 w-4" />}
+                    label="Instagram"
+                    url={profile.instagram_url}
+                  />
+                )}
+              </CardContent>
+            </Card>
+
             {/* Qualifications & Certifications */}
             <Card>
               <CardHeader>
