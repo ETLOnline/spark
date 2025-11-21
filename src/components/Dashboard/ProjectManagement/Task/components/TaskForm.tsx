@@ -75,6 +75,8 @@ interface Props {
   setIsChanged?: Dispatch<SetStateAction<boolean>>
   onSubTaskCreate?: (task: SelectTask) => void
   isSprintCompleted?: boolean
+  refetchComments?: boolean
+  setRefetchComments?: Dispatch<SetStateAction<boolean>>
 }
 
 const projectSchema = z.object({
@@ -97,7 +99,9 @@ export default function TaskForm({
   loading = false,
   setIsChanged,
   onSubTaskCreate,
-  isSprintCompleted
+  isSprintCompleted,
+  refetchComments,
+  setRefetchComments
 }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null)
   const [usersList, setUsersList] = useState<(SelectUser | null)[]>([])
@@ -574,6 +578,8 @@ export default function TaskForm({
                   <TaskComment
                     taskId={selectedTask.id}
                     isSprintCompleted={isSprintCompleted}
+                    refetchComments={refetchComments}
+                    setRefetchComments={setRefetchComments}
                   />
                 </div>
               )}

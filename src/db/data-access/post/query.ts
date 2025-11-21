@@ -36,6 +36,20 @@ export const CreatePost = async (post: InsertPost) => {
   return await db.insert(postsTable).values(post).returning()
 }
 
+export const UpdatePost = async (postId: string, content: string) => {
+  try {
+    const updatedPost = await db
+      .update(postsTable)
+      .set({ content })
+      .where(eq(postsTable.id, postId))
+      .returning()
+
+    return updatedPost[0]
+  } catch (error: any) {
+    throw new Error(error)
+  }
+}
+
 export const GetPostById = async (postId: string) => {
   try {
     return await db.query.postsTable.findFirst({
@@ -310,6 +324,24 @@ export const AddHashtagToPostLink = async (
       return { post_id: postId, hashtag_id: tag.id }
     })
   )
+}
+
+export const RemoveHashtagFromPostLink = async (
+  postId: string,
+  hashtagId: number[]
+) => {
+  try {
+    const removedHashtags = await db
+      .delete(postHashtagsTable)
+      .where(
+        and(
+          eq(postHashtagsTable.post_id, postId),
+          inArray(postHashtagsTable.hashtag_id, hashtagId)
+        )
+      )
+  } catch (error: any) {
+    throw new Error(error)
+  }
 }
 
 export const SearchHashtags = async (searchTerm: string) => {
