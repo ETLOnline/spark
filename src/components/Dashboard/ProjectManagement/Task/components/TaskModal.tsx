@@ -52,6 +52,7 @@ export const TaskModal = ({
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [taskIdFromUrl, setTaskIdFromUrl] = useState<string | null>(null)
   const [statuses] = useAtom(projectStore.projectStatusList)
+  const [refetchComments, setRefetchComments] = useState(false)
   const { createTaskLoading, updateTaskLoading, handleSubmit } = useTaskHook({
     selectedTask,
     sprintId,
@@ -62,6 +63,7 @@ export const TaskModal = ({
     onUpdateComplete: (task) => {
       onUpdateComplete?.(task)
       setIsChanged(false)
+      setRefetchComments(true)
     }
   })
 
@@ -117,9 +119,10 @@ export const TaskModal = ({
 
   useEffect(() => {
     if (isTaskModelOpen && internalTask?.id) {
-      router.push(
-        pathName + "?" + new URLSearchParams({ task_id: internalTask.id })
-      )
+      const newSearchParams = new URLSearchParams(searchParams.toString())
+      newSearchParams.set("task_id", internalTask?.id)
+
+      router.push(`${pathName}?${newSearchParams.toString()}`)
     }
   }, [isTaskModelOpen, internalTask?.id])
 
@@ -168,6 +171,8 @@ export const TaskModal = ({
             setIsChanged={setIsChanged}
             onSubTaskCreate={onSubTaskCreate}
             isSprintCompleted={isSprintCompleted}
+            refetchComments={refetchComments}
+            setRefetchComments={setRefetchComments}
           />
         </DialogContent>
       </Dialog>
