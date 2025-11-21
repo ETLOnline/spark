@@ -17,7 +17,8 @@ import { InsertMessage } from "@/src/db/schema"
 import { AuthUserAction } from "../User/AuthUserAction"
 import {
   createChatMessage,
-  deleteChatMessage
+  deleteChatMessage,
+  editChatMessage
 } from "@/src/db/data-access/chat/message/query"
 import pusherServer from "@/src/services/realtime/pusherServer" // Added Pusher Server Client
 import { GetSpaceById } from "@/src/db/data-access/spaces/query"
@@ -293,6 +294,50 @@ export const DeleteMessageFromChatAction = CreateServerAction(
   }
 )
 
+export const EditChaMessagetAction = CreateServerAction(
+  true,
+  async (
+    msg_id: number,
+    chat_id: number,
+    sender_id: string,
+    new_content: string,
+    old_content: string
+  ) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) {
+        return { success: false, error: "Unauthorized" }
+      }
+
+      const editedMessage = await editChatMessage(
+        msg_id,
+        chat_id,
+        sender_id,
+        new_content,
+        old_content
+      )
+
+      if (editedMessage) {
+        // Trigger Pusher event to everyone in this chat
+        await pusherServer.trigger(
+          `private-chat-${chat_id}`, // Chat-specific channel
+          "message-edited", // Event name
+          {
+            id: msg_id, // ID of edited message
+            chat_id,
+            new_content
+          }
+        )
+
+        return { success: true, data: editedMessage }
+      } else {
+        return { success: false, error: "Failed to edit message" }
+      }
+    } catch (error) {
+      return { error }
+    }
+  }
+)
 export const GetChatContactsAction = CreateServerAction(
   true,
   async (filters: ChatContactFilters) => {
@@ -301,6 +346,32 @@ export const GetChatContactsAction = CreateServerAction(
       return { success: true, data: contacts }
     } catch (error) {
       return { error: error }
+    }
+  }
+)
+
+// New: send typing indicator to chat channel
+export const SendTypingIndicatorAction = CreateServerAction(
+  true,
+  async (chat_id: number, isTyping: boolean) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) {
+        return { success: false, error: "Unauthorized" }
+      }
+
+      await pusherServer.trigger(
+        `private-chat-${chat_id}`, // same chat channel convention
+        "typing", // event name
+        {
+          userId: authUser.unique_id,
+          isTyping
+        }
+      )
+
+      return { success: true }
+    } catch (error) {
+      return { error }
     }
   }
 )

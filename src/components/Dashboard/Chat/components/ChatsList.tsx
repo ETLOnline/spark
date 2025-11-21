@@ -9,9 +9,37 @@ import Loader from "../../../common/Loader/Loader"
 import ChatContactItem from "./ChatContactItem"
 import moment from "moment"
 
-const ChatsList = ({ searchQuery = "" }) => {
+const ChatsList = ({
+  searchQuery = "",
+  onlineUsers,
+  typingUsers
+}: {
+  searchQuery: string
+  onlineUsers: Set<string>
+  typingUsers?: Set<string>
+}) => {
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
   const authUser = useAtomValue(userStore.AuthUser)
+  // helper to compute simple typing label for a chat (first few names or "typing...")
+  const computeTypingLabel = (chat: (typeof myChats)[number]) => {
+    if (!typingUsers || typingUsers.size === 0) return ""
+    // gather user ids in this chat except auth user
+    const memberIds = (chat.users || []).map((u) => u.user_id).filter(Boolean)
+    const typers = memberIds.filter(
+      (id) => typingUsers.has(id) && id !== authUser?.unique_id
+    )
+    if (typers.length === 0) return ""
+    // for private chats show generic "typing..." otherwise show names (up to 3)
+    if (!chat.is_group) return "typing..."
+    const names = chat.users
+      ?.filter((u) => typers.includes(u.user_id))
+      .map((u) => u.user?.first_name)
+      .filter(Boolean)
+      .slice(0, 3)
+    return names && names.length > 0
+      ? `${names.join(", ")} typing...`
+      : "typing..."
+  }
 
   const filteredChats = useMemo(() => {
     const chats = myChats.filter((chat) => {
@@ -54,7 +82,12 @@ const ChatsList = ({ searchQuery = "" }) => {
         <div className="overflow-y-auto h-full space-y-1 ">
           {filteredChats.length > 0 ? (
             filteredChats.map((chat) => (
-              <ChatContactItem key={chat.id} chat={chat} />
+              <ChatContactItem
+                typingLabel={computeTypingLabel(chat)}
+                onlineUsers={onlineUsers}
+                key={chat.id}
+                chat={chat}
+              />
             ))
           ) : (
             <div className="text-center text-muted-foreground py-8">

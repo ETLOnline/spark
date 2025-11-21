@@ -37,7 +37,9 @@ import ChatsList from "./components/ChatsList"
 import {
   AddMessageToChatAction,
   DeleteMessageFromChatAction,
-  GetChatWithMessagesAction
+  EditChaMessagetAction,
+  GetChatWithMessagesAction,
+  SendTypingIndicatorAction
 } from "@/src/server-actions/Chat/Chat"
 import moment from "moment-timezone"
 import Link from "next/link"
@@ -63,6 +65,7 @@ import {
   DropdownMenuTrigger
 } from "../../ui/dropdown-menu"
 import { toast } from "@/src/hooks/use-toast"
+import EditMessageModal from "./components/EditMessageModal"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -84,7 +87,9 @@ type ChatUpdatePayload = {
 function joinChannel(
   chatId: number,
   onMessageReceived: (message: SelectMessage) => void,
-  onMessageDeleted?: (msgId: number) => void
+  onMessageDeleted?: (msgId: number) => void,
+  onMessageEdited?: (msgId: number, newContent: string) => void,
+  onTyping?: (userId: string, isTyping: boolean) => void
 ) {
   const channelName = `private-chat-${chatId}`
   const channel = pusherClient.subscribe(channelName)
@@ -96,7 +101,16 @@ function joinChannel(
   channel.bind("message-deleted", (data: { id: number }) => {
     onMessageDeleted?.(data.id)
   })
-
+  channel.bind(
+    "message-edited",
+    (data: { id: number; new_content: string }) => {
+      onMessageEdited?.(data.id, data.new_content)
+    }
+  )
+  channel.bind("typing", (data: { userId: string; isTyping: boolean }) => {
+    console.debug("[Chat] received typing event", channelName, data)
+    onTyping?.(data.userId, data.isTyping)
+  })
   function unsubscribe() {
     channel.unbind_all()
     pusherClient.unsubscribe(channelName)
@@ -138,6 +152,14 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const [currentChat, setCurrentChat] = useAtom(chatStore.currentChat)
   const [switchedChat, setSwitchedChat] = useAtom(chatStore.switchedChat)
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
+  const [editingMessage, setEditingMessage] = useState<SelectMessage | null>(
+    null
+  )
+  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set())
+  const [isOnline, setIsOnline] = useState<boolean>(false)
+  const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set())
+  const typingTimeoutRef = useRef<number | null>(null)
+  const isTypingRef = useRef<boolean>(false)
   const authUser = useAtomValue(userStore.AuthUser)
   const [chatRealTime, setChatRealtime] = useState<{
     unsubscribe: () => void
@@ -163,6 +185,10 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     deletedMessageError,
     deleteMessageFromChat
   ] = useServerAction(DeleteMessageFromChatAction)
+
+  const [, , , updateChatMsg] = useServerAction(EditChaMessagetAction)
+  const [, , , sendTypingIndicator] = useServerAction(SendTypingIndicatorAction)
+
   useEffect(() => {
     setCurrentChat(currentChatSSR || null)
 
@@ -189,46 +215,53 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   useEffect(() => {
     if (!currentChat || !authUser) return
 
+    // Stop previous subscription (if any)
+    chatRealTime?.unsubscribe()
+
+    // Subscribe to real-time messages for this chat
     const { unsubscribe } = joinChannel(
-      currentChat.id, // Use chat ID for Pusher channel naming
+      currentChat.id,
       (message) => {
         setMessages((prev) => [...prev, message])
 
-        // Update the last message and unread count in the chat list
-        setMyChats((prevChats) => {
-          const updatedChats = prevChats.map((chat) => {
-            if (chat.id === message.chat_id) {
-              return {
-                ...chat,
-                last_message: message.message,
-                last_message_at: message.created_at,
-                // Only reset unread count if we are currently viewing the chat
-                unread_count: 0
-              }
-            }
-            return chat
-          })
-          return updatedChats
+        setMyChats((prevChats) =>
+          prevChats.map((chat) =>
+            chat.id === message.chat_id
+              ? {
+                  ...chat,
+                  last_message: message.message,
+                  last_message_at: message.created_at,
+                  unread_count: 0 // active chat
+                }
+              : chat
+          )
+        )
+      },
+      (deletedMsgId) => {
+        setMessages((prev) => prev.filter((msg) => msg.id !== deletedMsgId))
+      },
+      (editedMsgId, newContent) => {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === editedMsgId ? { ...msg, message: newContent } : msg
+          )
+        )
+      },
+      (userId?: string, isTyping?: boolean) => {
+        // typing indicator callback
+        if (!userId || userId === authUser?.unique_id) return
+        setTypingUsers((prev) => {
+          const newSet = new Set(prev)
+          if (isTyping) newSet.add(userId)
+          else newSet.delete(userId)
+          return newSet
         })
       }
     )
 
     setChatRealtime({ unsubscribe })
 
-    if (!currentChat.is_group) {
-      const chatContact = currentChat.users?.find(
-        (user) => user.user_id !== authUser?.unique_id
-      )?.user
-      setChatContact(chatContact || null)
-    }
-
-    const channelName = `presence-chat-${currentChat.id}`
-    const presenceChannel = pusherClient.subscribe(channelName)
-
-    return () => {
-      unsubscribe()
-      presenceChannel.unsubscribe()
-    }
+    return () => unsubscribe()
   }, [currentChat?.id, authUser])
 
   useEffect(() => {
@@ -315,14 +348,147 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     }
   }, [authUser, setMyChats, currentChat])
 
+  useEffect(() => {
+    if (!authUser) return
+
+    const presenceChannel = pusherClient.subscribe("presence-online-users")
+
+    presenceChannel.bind("pusher:subscription_succeeded", (members: any) => {
+      const currentOnline = new Set<string>()
+      members.each((member: any) => currentOnline.add(member.id))
+      setOnlineUsers(currentOnline)
+    })
+
+    presenceChannel.bind("pusher:member_added", (member: any) => {
+      setOnlineUsers((prev) => new Set(prev).add(member.id))
+    })
+
+    presenceChannel.bind("pusher:member_removed", (member: any) => {
+      setOnlineUsers((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(member.id)
+        return newSet
+      })
+    })
+
+    return () => {
+      presenceChannel.unbind_all()
+      pusherClient.unsubscribe("presence-online-users")
+    }
+  }, [authUser])
+
+  useEffect(() => {
+    if (authUser) {
+      setIsOnline(onlineUsers.has(authUser.unique_id))
+    }
+  }, [onlineUsers, authUser])
+
   /**
    * Handles the sending of a new message in the chat.
    * ...
    */
+
+  const handleInputChange = (val: string) => {
+    setNewMessage(val)
+
+    if (!currentChat) return
+
+    console.debug(
+      "[Chat] handleInputChange: chatId=",
+      currentChat.id,
+      "isTypingRef=",
+      isTypingRef.current
+    )
+    // send start typing once
+    if (!isTypingRef.current) {
+      isTypingRef.current = true
+      sendTypingIndicator(currentChat.id, true)
+        .then(() =>
+          console.debug(
+            "[Chat] sendTypingIndicator(start) sent",
+            currentChat.id
+          )
+        )
+        .catch((e) =>
+          console.error("[Chat] sendTypingIndicator(start) error", e)
+        )
+    }
+
+    // clear previous timeout
+    if (typingTimeoutRef.current) {
+      window.clearTimeout(typingTimeoutRef.current)
+    }
+
+    // stop typing after 2s of inactivity
+    typingTimeoutRef.current = window.setTimeout(() => {
+      if (isTypingRef.current) {
+        isTypingRef.current = false
+        sendTypingIndicator(currentChat.id, false)
+          .then(() =>
+            console.debug(
+              "[Chat] sendTypingIndicator(stop) sent",
+              currentChat.id
+            )
+          )
+          .catch((e) =>
+            console.error("[Chat] sendTypingIndicator(stop) error", e)
+          )
+      }
+    }, 2000)
+  }
+
+  // ensure we send stop-typing on submit/unmount
+  const stopTypingNow = () => {
+    if (!currentChat) return
+    if (typingTimeoutRef.current) {
+      window.clearTimeout(typingTimeoutRef.current)
+      typingTimeoutRef.current = null
+    }
+    if (isTypingRef.current) {
+      isTypingRef.current = false
+      sendTypingIndicator(currentChat.id, false)
+        .then(() =>
+          console.debug(
+            "[Chat] stopTypingNow: sendTypingIndicator(stop) sent",
+            currentChat.id
+          )
+        )
+        .catch((e) =>
+          console.error("[Chat] stopTypingNow: sendTypingIndicator error", e)
+        )
+    }
+  }
+  useEffect(() => {
+    return () => {
+      stopTypingNow()
+    }
+  }, [])
+  // UI: compute typing label
+  const typingLabel = (() => {
+    if (!currentChat) return ""
+    const typers = Array.from(typingUsers)
+    if (typers.length === 0) return ""
+    // private chat: show contact typing
+    if (!currentChat.is_group) {
+      if (chatContact && typers.includes(chatContact.unique_id))
+        return "typing..."
+      return "typing..."
+    }
+
+    // group: show first names of typers (resolve from chat users)
+    const names = currentChat.users
+      ?.filter((u) => typers.includes(u.user_id))
+      .map((u) => u.user?.first_name)
+      .filter(Boolean)
+      .slice(0, 3)
+    return names && names.length > 0
+      ? `${names.join(", ")} typing...`
+      : "typing..."
+  })()
   const handleSendMessage = async () => {
     if (newMessage.trim() === "" || !currentChat || !authUser) return
     const messageContent = newMessage
-
+    stopTypingNow()
     const newMsg: InsertMessage = {
       sender_id: authUser?.unique_id || "",
       chat_id: currentChat?.id || 0,
@@ -367,6 +533,31 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     }
   }
 
+  const handleEditMsg = (msg: SelectMessage) => {
+    setEditingMessage(msg)
+  }
+  const closeEditModal = () => setEditingMessage(null)
+
+  const handleSaveEditedMessage = async (updatedText: string) => {
+    if (!editingMessage || !currentChat) return
+
+    await updateChatMsg(
+      editingMessage.id,
+      currentChat.id,
+      authUser!.unique_id,
+      updatedText,
+      editingMessage.message
+    )
+
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === editingMessage.id ? { ...msg, message: updatedText } : msg
+      )
+    )
+
+    closeEditModal()
+  }
+
   return (
     <div className="flex h-[calc(100vh-7rem)] gap-4">
       {/* Contacts list - visible on desktop, hidden on mobile */}
@@ -388,7 +579,13 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden p-0">
           {/* ChatsList component will now display the properly sorted myChats */}
-          {canView && <ChatsList searchQuery={searchQuery} />}
+          {canView && (
+            <ChatsList
+              typingUsers={typingUsers}
+              onlineUsers={onlineUsers}
+              searchQuery={searchQuery}
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -419,7 +616,10 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       <Input placeholder="Search chats..." className="pl-8" />
                     </div>
                   </CardHeader>
-                  <ChatsList />
+                  <ChatsList
+                    searchQuery={searchQuery}
+                    onlineUsers={onlineUsers}
+                  />
                 </SheetContent>
               </Sheet>
               {currentChat ? (
@@ -556,10 +756,15 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                     align="end"
                                     className="w-40"
                                   >
-                                    <DropdownMenuItem>
-                                      <Edit className="mr-2 h-4 w-4" />
-                                      Edit
-                                    </DropdownMenuItem>
+                                    {message.sender_id ===
+                                      authUser?.unique_id && (
+                                      <DropdownMenuItem
+                                        onClick={() => handleEditMsg(message)}
+                                      >
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        Edit
+                                      </DropdownMenuItem>
+                                    )}
 
                                     <DropdownMenuItem
                                       onClick={() => handleDelteMsg(message)}
@@ -604,7 +809,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                   <Input
                     placeholder="Type a message..."
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    // onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={(e) => handleInputChange(e.target.value)}
                     className="flex-1"
                   />
                   <Popover>
@@ -636,6 +842,13 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
             </>
           ) : null}
         </Card>
+      )}
+      {editingMessage && (
+        <EditMessageModal
+          message={editingMessage}
+          onSave={handleSaveEditedMessage}
+          onClose={closeEditModal}
+        />
       )}
     </div>
   )

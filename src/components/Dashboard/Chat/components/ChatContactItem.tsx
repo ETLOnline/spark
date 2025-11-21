@@ -7,7 +7,15 @@ import { userStore } from "@/src/store/user/userStore"
 import Avvvatars from "avvvatars-react"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 
-const ChatContactItem = ({ chat }: { chat: SelectChat }) => {
+const ChatContactItem = ({
+  chat,
+  onlineUsers,
+  typingLabel
+}: {
+  chat: SelectChat
+  onlineUsers: Set<string>
+  typingLabel?: string
+}) => {
   const authUser = useAtomValue(userStore.AuthUser)
   const [currentChat, setCurrentChat] = useAtom(chatStore.currentChat)
   const setSwtichedChat = useSetAtom(chatStore.switchedChat)
@@ -16,9 +24,13 @@ const ChatContactItem = ({ chat }: { chat: SelectChat }) => {
   const filteredContact = chat?.users?.find(
     (user) => user.user_id !== authUser?.unique_id
   )
+  console.log("ChatContactItem rendered", filteredContact)
   if (!filteredContact) return null
   const chatContact = filteredContact?.user || null
   if (!chatContact) return null
+  const isContactOnline = filteredContact
+    ? onlineUsers.has(filteredContact?.user_id)
+    : false
 
   return (
     <div
@@ -45,9 +57,9 @@ const ChatContactItem = ({ chat }: { chat: SelectChat }) => {
               </AvatarFallback>
             </>
           ) : null}
-          {/* {chat.online && (
-              <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></span>
-            )} */}
+          {isContactOnline && (
+            <span className="absolute bottom-0 z-10 right-0 h-3 w-3 rounded-full bg-red-500 border-2 border-white"></span>
+          )}
         </Avatar>
       )}
       <div className="flex-1 max-w-[80%]">
@@ -57,7 +69,11 @@ const ChatContactItem = ({ chat }: { chat: SelectChat }) => {
             : `${chatContact?.first_name} ${chatContact?.last_name}`}
         </p>
         <p className="text-sm text-muted-foreground truncate">
-          {chat?.last_message}
+          {typingLabel && chat.id === currentChat?.id ? (
+            <span className="italic">{typingLabel}</span>
+          ) : (
+            chat?.last_message
+          )}
         </p>
       </div>
       {(chat?.unread_count || 0) > 0 && (
