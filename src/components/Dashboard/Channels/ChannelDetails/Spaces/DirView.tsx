@@ -24,7 +24,7 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 type DirViewProps = {
   navigateToFolder: (path: string) => Promise<void>
-  searchQuery: string  
+  searchQuery: string
 }
 
 const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
@@ -82,7 +82,10 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
       )
 
       if (result?.success) {
-        const removeFileFromPath = (items: DirItem[], targetId: number): DirItem[] =>
+        const removeFileFromPath = (
+          items: DirItem[],
+          targetId: number
+        ): DirItem[] =>
           items
             .filter((item) => item.id !== targetId)
             .map((item) => ({
@@ -172,7 +175,11 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
                 }
               >
                 {item.type === "file" && item.url ? (
-                  <Link href={item.url} target="_blank" rel="noopener noreferrer">
+                  <Link
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     {item.name}
                   </Link>
                 ) : (

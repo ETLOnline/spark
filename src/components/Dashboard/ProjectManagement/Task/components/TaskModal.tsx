@@ -120,9 +120,7 @@ export const TaskModal = ({
       const newSearchParams = new URLSearchParams(searchParams.toString())
       newSearchParams.set("task_id", internalTask?.id)
 
-      router.push(
-        `${pathName}?${newSearchParams.toString()}`,
-      )
+      router.push(`${pathName}?${newSearchParams.toString()}`)
     }
   }, [isTaskModelOpen, internalTask?.id])
 

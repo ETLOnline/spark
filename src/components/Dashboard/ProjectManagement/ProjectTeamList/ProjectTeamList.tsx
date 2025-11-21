@@ -319,13 +319,11 @@ export default function ProjectTeamList({
     }
   }
 
-  const projectUserIds = new Set(
-    usersList.map((u) => u.user_id)
-  );
+  const projectUserIds = new Set(usersList.map((u) => u.user_id))
 
   const availableSpaceUsers = spaceUsers.filter(
     (spaceUser) => !projectUserIds.has(spaceUser.unique_id)
-  );
+  )
 
   const options: MultiSelectOption[] = availableSpaceUsers.map((u) => ({
     label: `${u.first_name} ${u.last_name}`,
