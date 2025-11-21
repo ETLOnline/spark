@@ -148,6 +148,7 @@ export default function MultiSelect({
                   {options.map((option) => (
                     <CommandItem
                       key={option.value}
+                      value={option.value}
                       onSelect={() => toggleOption(option)}
                     >
                       <Checkbox
