@@ -176,6 +176,13 @@
       "when": 1763452596357,
       "tag": "0024_2025_11_18_155635__add_unread_colmun_in_user_chats_table",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1763736274339,
+      "tag": "0025_2025_11_21_194429__update_task_comment_table_for_task_history",
+      "breakpoints": true
     }
   ]
 }

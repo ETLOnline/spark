@@ -7,7 +7,8 @@ import {
   varchar,
   json,
   boolean,
-  text
+  text,
+  jsonb
 } from "drizzle-orm/pg-core"
 // import { integer, primaryKey, pgTable, varchar } from "drizzle-orm/sqlite-core"
 
@@ -1365,6 +1366,8 @@ export const taskCommentsTable = pgTable("task_comments", {
   content: varchar().notNull(),
   user_id: varchar().notNull(),
   task_id: varchar().notNull(),
+  task_history: jsonb(),
+  type: varchar(),
   ...timestamps
 })
 
