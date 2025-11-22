@@ -12,8 +12,7 @@ import {
   getExistingSingleChat,
   incrementUnreadCountForChat,
   markChatAsReadForUser,
-  getExistingGroupName,
-  extractMentionsFromMessage
+  getExistingGroupName
 } from "@/src/db/data-access/chat/query"
 import { CreateServerAction } from ".."
 import { InsertMessage } from "@/src/db/schema"
@@ -28,6 +27,7 @@ import {
 import { createChatEmailNotification } from "@/src/services/notify/chat/chat"
 import { NotificationEvent } from "@/src/services/notify/types/events"
 import { slugify } from "@/src/utils/helpers"
+import { extractMentionsFromMessage } from "@/src/services/realtime/utils/helper"
 
 export const CreatePrivateChatAction = CreateServerAction(
   true,
@@ -211,7 +211,7 @@ export const AddMessageToChatAction = CreateServerAction(
         const newMessagePlayload = {
           ...message,
           sender_id: authUser.unique_id,
-          mentions: mentions.length > 0 ? mentions : undefined // 👈 Add mentions to payload
+          mentions: mentions.length > 0 ? mentions : undefined 
         }     
         const newMessage = await createChatMessage(newMessagePlayload)
         if (newMessage) {

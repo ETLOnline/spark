@@ -1,4 +1,5 @@
 import { SelectUser } from "@/src/db/schema"
+import { MentionChatRegex } from "../constants"
 
 interface MessageContentProps {
   content: string
@@ -12,7 +13,7 @@ export const MessageContent = ({
   users
 }: MessageContentProps) => {
   const renderMessageWithMentions = (text: string) => {
-    const mentionRegex = /@\[([^\]]+)\]\(([^)]+)\)/g
+    const mentionRegex = MentionChatRegex;
     const parts: React.ReactNode[] = []
     let lastIndex = 0
     let match
@@ -70,7 +71,7 @@ export const MessageContentWithAvatars = ({
   }
 
   const renderMessageWithMentions = (text: string) => {
-    const mentionRegex = /@\[([^\]]+)\]\(([^)]+)\)/g
+    const mentionRegex = MentionChatRegex
     const parts: React.ReactNode[] = []
     let lastIndex = 0
     let match

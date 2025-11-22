@@ -218,8 +218,8 @@ export const chatsRelations = relations(chatsTable, ({ many }) => ({
 
 export type InsertChat = typeof chatsTable.$inferInsert
 export type SelectChat = InferSelectModel<typeof chatsTable> & {
-  messages?: SelectMessage[] | null
-  users?: SelectUserChat[] | null
+  messages?: SelectMessage[]
+  users?: SelectUserChat[]
 }
 export type SelectChatWithRelation = typeof chatsRelations
 
@@ -250,8 +250,8 @@ export type InsertMessage = typeof messagesTable.$inferInsert & {
   mentions?: string[] // 👈 Allow mentions when inserting
 }
 export type SelectMessage = typeof messagesTable.$inferSelect & {
-  chat?: SelectChat | null
-  sender?: SelectUser | null
+  chat?: SelectChat
+  sender?: SelectUser 
   mentions?: string[] | null
 }
 
