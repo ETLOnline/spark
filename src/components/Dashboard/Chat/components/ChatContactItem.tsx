@@ -7,7 +7,7 @@ import { chatStore } from "@/src/store/chat/chatStore"
 import { userStore } from "@/src/store/user/userStore"
 import Avvvatars from "avvvatars-react"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
-import { AtSign } from "lucide-react" 
+import { AtSign } from "lucide-react"
 import { useMemo } from "react"
 
 interface ChatContactItemProps {
@@ -30,6 +30,12 @@ const ChatContactItem = ({ chat }: ChatContactItemProps) => {
     const mentionRegex = new RegExp(`@\\[[^\\]]+\\]\\(${authUserId}\\)`, "g")
     return mentionRegex.test(chat.last_message)
   }, [chat.last_message, authUserId])
+
+  const currentUserChatRecord = chat?.users?.find(
+    (user) => user.user_id === authUser?.unique_id
+  )
+
+  const unreadCount = currentUserChatRecord?.unread_count || 0
 
   if (!filteredContact) return null
   const chatContact = filteredContact?.user || null
@@ -75,7 +81,7 @@ const ChatContactItem = ({ chat }: ChatContactItemProps) => {
           {chat?.last_message}
         </p>
       </div>
-      
+
       {/* NEW: Show badges container */}
       <div className="flex items-center gap-1 ml-auto">
         {/* NEW: Show @ badge if user is mentioned */}
@@ -89,9 +95,9 @@ const ChatContactItem = ({ chat }: ChatContactItemProps) => {
         )}
 
         {/* Show unread count */}
-        {(chat?.unread_count || 0) > 0 && (
-          <Badge variant="default" className="rounded-full px-2 py-1">
-            {chat?.unread_count}
+        {unreadCount > 0 && (
+          <Badge variant="secondary" className="rounded-full px-2 py-1">
+            {unreadCount}
           </Badge>
         )}
       </div>

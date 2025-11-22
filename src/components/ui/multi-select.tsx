@@ -17,6 +17,7 @@ import Loader from "../common/Loader/Loader"
 import { Textarea } from "./textarea"
 import { Badge } from "./badge"
 import { CircleMinus, Cross, CrossIcon } from "lucide-react"
+import { ScrollArea } from "./scroll-area"
 
 export type MultiSelectOption = { label: string; value: string }
 
@@ -115,38 +116,51 @@ export default function MultiSelect({
               <CommandEmpty>No results found.</CommandEmpty>
             )}
             {options.length > 0 && (
-              <CommandGroup>
-                {hasAnySelected ? (
-                  <CommandItem
-                    onSelect={deselectAll}
-                    className="text-muted-foreground"
-                  >
-                    <Checkbox checked={hasAnySelected} className="mr-2" />
-                    Deselect All
-                  </CommandItem>
-                ) : (
-                  <CommandItem
-                    onSelect={selectAll}
-                    className="text-muted-foreground"
-                  >
-                    <Checkbox checked={false} className="mr-2" />
-                    Select All
-                  </CommandItem>
-                )}
-                {options.map((option) => (
-                  <CommandItem
-                    key={option.value}
-                    onSelect={() => toggleOption(option)}
-                  >
-                    <Checkbox
-                      checked={selectedValues.includes(option.value)}
-                      onCheckedChange={() => toggleOption(option)}
-                      className="mr-2"
-                    />
-                    {option.label}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+              <ScrollArea
+                className="max-h-[220px]"
+                // mouse wheel / touchpad wheel (including two-finger)
+                onWheel={(e) => {
+                  // allow native scrolling inside this div even if children try to capture events
+                  const el = e.currentTarget as HTMLDivElement
+                  // scroll by the wheel delta
+                  el.scrollTop += e.deltaY
+                  // do not call preventDefault — just let this handler move the scroll
+                }}
+              >
+                <CommandGroup>
+                  {hasAnySelected ? (
+                    <CommandItem
+                      onSelect={deselectAll}
+                      className="text-muted-foreground"
+                    >
+                      <Checkbox checked={hasAnySelected} className="mr-2" />
+                      Deselect All
+                    </CommandItem>
+                  ) : (
+                    <CommandItem
+                      onSelect={selectAll}
+                      className="text-muted-foreground"
+                    >
+                      <Checkbox checked={false} className="mr-2" />
+                      Select All
+                    </CommandItem>
+                  )}
+                  {options.map((option) => (
+                    <CommandItem
+                      key={option.value}
+                      value={option.value}
+                      onSelect={() => toggleOption(option)}
+                    >
+                      <Checkbox
+                        checked={selectedValues.includes(option.value)}
+                        onCheckedChange={() => toggleOption(option)}
+                        className="mr-2"
+                      />
+                      {option.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </ScrollArea>
             )}
           </Command>
         </PopoverContent>

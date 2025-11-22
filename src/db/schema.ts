@@ -7,7 +7,8 @@ import {
   varchar,
   json,
   boolean,
-  text
+  text,
+  jsonb
 } from "drizzle-orm/pg-core"
 // import { integer, primaryKey, pgTable, varchar } from "drizzle-orm/sqlite-core"
 
@@ -202,7 +203,6 @@ export const chatsTable = pgTable("chats", {
   type: varchar(),
   avatar: varchar(),
   last_message: varchar(),
-  unread_count: integer().notNull().default(0),
   is_group: integer().notNull().default(0),
   ...timestamps
 })
@@ -257,7 +257,8 @@ export type SelectMessage = typeof messagesTable.$inferSelect & {
 
 export const userChatsTable = pgTable("user_chats", {
   user_id: varchar().notNull(),
-  chat_id: integer().notNull()
+  chat_id: integer().notNull(),
+  unread_count: integer().notNull().default(0)
 })
 
 export const userChatsRelations = relations(userChatsTable, ({ one }) => ({
@@ -1369,6 +1370,8 @@ export const taskCommentsTable = pgTable("task_comments", {
   content: varchar().notNull(),
   user_id: varchar().notNull(),
   task_id: varchar().notNull(),
+  task_history: jsonb(),
+  type: varchar(),
   ...timestamps
 })
 

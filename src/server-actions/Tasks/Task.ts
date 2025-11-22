@@ -37,10 +37,10 @@ import {
   base64ToBuffer,
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
-import { AuthUserAction } from "../User/AuthUserAction"
 import { SendTaskNotifications } from "@/src/services/notifications/Tasks/utils"
 import { NotificationEvent } from "@/src/services/notify/types/events"
 import { addProjectRecentActivity } from "@/src/utils/taskHelpr"
+import { AddTaskHistoryAction } from "./TaskHistory"
 
 export const CreateTaskAction = CreateServerAction(
   true,
@@ -164,9 +164,9 @@ export const UpdateTaskAction = CreateServerAction(
   true,
   async (taskId: string, updatedData: Partial<SelectTask>) => {
     try {
-      const UpdatedTask = await UpdateTask(taskId, updatedData)
-
       const oldTask = await GetTaskById(taskId)
+
+      const UpdatedTask = await UpdateTask(taskId, updatedData)
 
       if (UpdatedTask) {
         await SendTaskNotifications(NotificationEvent.UPDATE_TASK, UpdatedTask)
@@ -184,6 +184,8 @@ export const UpdateTaskAction = CreateServerAction(
           UpdatedTask,
           oldTask
         )
+
+        await AddTaskHistoryAction(oldTask, UpdatedTask)
 
         return { success: true, data: UpdatedTask }
       }
@@ -344,7 +346,10 @@ export const CreateTaskCommentAction = CreateServerAction(
 
       const task = await GetTaskById(task_id)
 
-      const newComment = await createTaskComment(commentData)
+      const newComment = await createTaskComment({
+        ...commentData,
+        type: "comment"
+      })
 
       if (task) {
         await SendTaskNotifications("task_commented", task)

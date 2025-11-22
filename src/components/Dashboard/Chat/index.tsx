@@ -20,13 +20,16 @@ import {
   InsertMessage,
   SelectChat,
   SelectMessage,
-  SelectUser
+  SelectUser,
+  SelectUserChat
 } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
 import ChatsList from "./components/ChatsList"
 import {
   AddMessageToChatAction,
-  GetChatWithMessagesAction
+  GetChatWithMessagesAction,
+  incrementUnreadCountForChatAction,
+  MarkChatAsReadAction
 } from "@/src/server-actions/Chat/Chat"
 import moment from "moment-timezone"
 import Link from "next/link"
@@ -50,7 +53,8 @@ type ChatUpdatePayload = {
   chatId: number
   lastMessage: string
   wasMentioned?: boolean
-  }
+  sender_id: string
+}
 
 /**
  * Joins a specified channel for a chat.
@@ -80,7 +84,6 @@ function joinChannel(
 
 /**
  * ChatScreen component renders the chat interface including the list of chats and the main chat area.
- * ... (Rest of JSDoc remains the same)
  */
 export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const currentSpace = useAtomValue(spaceStore.currentSpace)
@@ -93,6 +96,11 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     ? "space.chat.create"
     : "chat.create"
   const permissionNamespaceView = currentSpace ? "space.chat.view" : "chat.view"
+
+  const [, , , markAsRead] = useServerAction(MarkChatAsReadAction)
+  const [, , , incrementUnreadCount] = useServerAction(
+    incrementUnreadCountForChatAction
+  )
 
   const canCreate = permissionChecker
     ? permissionChecker?.canAccess(permissionNamespaceCreate)
@@ -182,6 +190,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
   useEffect(() => {
     if (!currentChat || !authUser) return
+    chatRealTime?.unsubscribe()
 
     const { unsubscribe } = joinChannel(currentChat.id, (message) => {
       setMessages((prev) => [...prev, message])
@@ -222,8 +231,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
   useEffect(() => {
     if (!switchedChat) return
-    chatRealTime?.unsubscribe()
-    setChatRealtime(null)
     handleChatSwitch(switchedChat.id)
     setSwitchedChat(null)
   }, [switchedChat])
@@ -249,10 +256,22 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       setCurrentChat(transformedChat)
       setMessages(transformedMessages)
     }
+
+    await markAsRead(chatId)
+
     setMyChats((prevChats) =>
-      prevChats.map((chat) =>
-        chat.id === chatId ? { ...chat, unread_count: 0 } : chat
-      )
+      prevChats.map((chat) => {
+        if (chat.id === chatId) {
+          const updatedUsers = chat.users?.map((uc) => {
+            if (uc.user_id === authUser?.unique_id) {
+              return { ...uc, unread_count: 0 } as SelectUserChat
+            }
+            return uc
+          })
+          return { ...chat, users: updatedUsers }
+        }
+        return chat
+      })
     )
   }
 
@@ -260,6 +279,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     scrollToBottom()
   }, [messages, authUser])
 
+  const runtime = 0
   useEffect(() => {
     if (!authUser) return
 
@@ -276,11 +296,28 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           const newChats = prevChats.map((chat) => {
             if (chat.id === update.chatId) {
               const isActiveChat = currentChat?.id === update.chatId
+              const updatedUsers = chat.users?.map((uc) => {
+                if (uc.user_id === authUser.unique_id) {
+                  if (
+                    !isActiveChat &&
+                    authUser.unique_id !== update.sender_id
+                  ) {
+                    incrementUnreadCount(update.chatId, uc.user_id)
+                  }
+                  return {
+                    ...uc,
+                    unread_count: isActiveChat
+                      ? uc.unread_count || 0
+                      : (uc.unread_count || 0) + 1
+                  } as SelectUserChat
+                }
+                return uc
+              })
               return {
                 ...chat,
                 last_message: update.lastMessage,
                 updated_at: new Date().toISOString(),
-                unread_count: isActiveChat ? 0 : (chat.unread_count || 0) + 1
+                users: updatedUsers
               }
             }
             return chat
