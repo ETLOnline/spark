@@ -1,6 +1,12 @@
 import { MentionChatRegex } from "@/src/components/Dashboard/Chat/constants"
 import { RealtimeChannelPrefix } from "../types/prefix"
 
+export interface MentionToken {
+  type: "text" | "mention"
+  value: string
+  userId?: string
+}
+
 export function getRealtimeSystemNotificationChannel(userId: string) {
   return `${RealtimeChannelPrefix.SystemNotification}${userId}`
 }
@@ -25,4 +31,37 @@ export const extractMentionsFromMessage = (message: string): string[] => {
   }
   
   return mentions
+}
+
+export const parseMentions = (text: string): MentionToken[] => {
+  const tokens: MentionToken[] = []
+  const regex = new RegExp(MentionChatRegex.source, "g")
+  let lastIndex = 0
+  let match
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      tokens.push({
+        type: "text",
+        value: text.substring(lastIndex, match.index),
+      })
+    }
+
+    tokens.push({
+      type: "mention",
+      value: match[1],    // displayName
+      userId: match[2],   // user_id
+    })
+
+    lastIndex = match.index + match[0].length
+  }
+
+  if (lastIndex < text.length) {
+    tokens.push({
+      type: "text",
+      value: text.substring(lastIndex),
+    })
+  }
+
+  return tokens
 }

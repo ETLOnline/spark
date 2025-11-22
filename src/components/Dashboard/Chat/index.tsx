@@ -41,7 +41,7 @@ import Avvvatars from "avvvatars-react"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import pusherClient from "@/src/services/realtime/PusherClient"
-import RichTextEditor from "../../common/TiptapRichEditor"
+import Tiptap from "@/src/components/common/TiptapRichEditor"
 import { MessageContent } from "./components/MessageContent"
 
 interface ChatScreenProps {
@@ -161,29 +161,28 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     initialChatLoadRef.current = false
   }, [])
 
-  
   useEffect(() => {
     if (!currentChat) {
       setAvailableUsers([])
       return
     }
 
-    
     if (currentChat.is_group === 1) {
-      
       const chatUsers = currentChat.users
         ?.map((u) => u.user)
-        .filter((user): user is SelectUser => Boolean(user)) as SelectUser[]
-      
-      console.log('Group chat users extracted:', chatUsers?.length, chatUsers)
-      
+        .filter((user): user is SelectUser => Boolean(user))
+        .filter(
+          (user) => user.unique_id !== authUser?.unique_id
+        ) as SelectUser[]
+
+      console.log("Group chat users extracted:", chatUsers?.length, chatUsers)
+
       if (chatUsers && chatUsers.length > 0) {
         setAvailableUsers(chatUsers)
       } else {
         setAvailableUsers([])
       }
     } else {
-      
       setAvailableUsers([])
     }
   }, [currentChat])
@@ -237,18 +236,17 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
   const handleChatSwitch = async (chatId: number) => {
     initialChatLoadRef.current = true
-    
+
     setAvailableUsers([])
     setMessageContent("")
     const newSwitchedChat = await fetchChatWithMessages(chatId)
     if (newSwitchedChat && newSwitchedChat.data) {
-     
-      const transformedMessages = (
-        newSwitchedChat.data.messages?.map((msg) => ({
+      const transformedMessages = (newSwitchedChat.data.messages?.map(
+        (msg) => ({
           ...msg,
           mentions: msg.mentions ?? undefined
-        })) || []
-      ) as SelectMessage[]
+        })
+      ) || []) as SelectMessage[]
       const transformedChat = {
         ...newSwitchedChat.data,
         messages: transformedMessages
@@ -328,7 +326,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       })
     })
 
-
     userChannel.bind(
       "chat-created",
       (data: { newChat: SelectChat; initiatorId: string; spaceId: string }) => {
@@ -383,7 +380,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           : chat
       )
     )
-    
+
     setMessageContent("")
 
     await addMessageToChat(newMsg, currentSpace?.id)
@@ -561,8 +558,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                             {/* Use MessageContent to render mentions with highlighting */}
                             <MessageContent
                               content={message.message}
-                              currentUserId={authUser?.unique_id}
-                              users={availableUsers}
                             />
                           </div>
                         )}
@@ -585,11 +580,14 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
               <CardFooter className="p-4">
                 <div className="flex w-full space-x-2 items-end">
                   {/* Use RichTextEditor with mention support - mentions only work in group chats */}
-                  <div className="flex-1" key={currentChat?.id || 'no-chat'}>
-                    <RichTextEditor
+                  <div className="flex-1" key={currentChat?.id || "no-chat"}>
+                    <Tiptap
                       value={messageContent}
                       onChange={setMessageContent}
-                      showMentions={currentChat?.is_group === 1 && availableUsers.length > 0}
+                      image_uploading={false}
+                      showMentions={
+                        currentChat?.is_group === 1 && availableUsers.length > 0
+                      }
                       mentionUsers={availableUsers}
                       showToolbar={false}
                       minHeight="60px"

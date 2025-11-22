@@ -3,6 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Badge } from "@/src/components/ui/badge"
 import { SelectChat } from "@/src/db/schema"
+import { parseMentions } from "@/src/services/realtime/utils/helper"
 import { chatStore } from "@/src/store/chat/chatStore"
 import { userStore } from "@/src/store/user/userStore"
 import Avvvatars from "avvvatars-react"
@@ -36,6 +37,10 @@ const ChatContactItem = ({ chat }: ChatContactItemProps) => {
   )
 
   const unreadCount = currentUserChatRecord?.unread_count || 0
+  const tokens = parseMentions(chat.last_message || "")
+  const lastMessage = tokens
+  .map((t) => (t.type === "mention" ? `@${t.value}` : t.value))
+  .join("")
 
   if (!filteredContact) return null
   const chatContact = filteredContact?.user || null
@@ -78,14 +83,14 @@ const ChatContactItem = ({ chat }: ChatContactItemProps) => {
             : `${chatContact?.first_name} ${chatContact?.last_name}`}
         </p>
         <p className="text-sm text-muted-foreground truncate">
-          {chat?.last_message}
+          {lastMessage}
         </p>
       </div>
 
       {/* NEW: Show badges container */}
       <div className="flex items-center gap-1 ml-auto">
         {/* NEW: Show @ badge if user is mentioned */}
-        {isCurrentUserMentioned && (
+        {isCurrentUserMentioned && unreadCount > 0 && (
           <Badge
             variant="secondary"
             className="rounded-full px-2 py-1 bg-primary/10 text-primary"
