@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Dispatch, SetStateAction } from "react"
 import { Button } from "@/src/components/ui/button"
 import Tiptap from "@/src/components/common/TiptapRichEditor"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
@@ -18,12 +18,16 @@ import { formatRelativeTime } from "@/src/utils/helpers"
 interface TaskCommentFormProps {
   taskId: string
   isSprintCompleted?: boolean
+  refetchComments?: boolean
+  setRefetchComments?: Dispatch<SetStateAction<boolean>>
 }
 const COMMENTS_PER_LOAD = 4
 
 export function TaskComment({
   taskId,
-  isSprintCompleted
+  isSprintCompleted,
+  refetchComments,
+  setRefetchComments
 }: TaskCommentFormProps) {
   const authUser = useAtomValue(userStore.AuthUser)
   const userId = authUser?.unique_id
@@ -44,11 +48,24 @@ export function TaskComment({
   const [loadingComments, getCommentsRes, getCommentsErr, triggerGetComments] =
     useServerAction(GetTaskCommentsAction)
 
+  const GetComments = () => {
+    triggerGetComments({
+      taskId,
+      limit: COMMENTS_PER_LOAD,
+      offset
+    })
+  }
+
   useEffect(() => {
-    if (taskId) {
-      triggerGetComments({ taskId, limit: COMMENTS_PER_LOAD, offset })
-    }
+    GetComments()
   }, [taskId, offset])
+
+  useEffect(() => {
+    if (refetchComments) {
+      GetComments()
+      setRefetchComments?.(false)
+    }
+  }, [refetchComments])
 
   useEffect(() => {
     if (createCommentRes?.success && createCommentRes?.data) {
@@ -63,13 +80,17 @@ export function TaskComment({
         ...createCommentRes.data,
         user: authUser as SelectUser
       }
-      setComments((prevComments) => [newCommentWithUser, ...prevComments])
+      setComments((prevComments) =>
+        prevComments.some((c) => c.id === newCommentWithUser.id)
+          ? prevComments
+          : [...prevComments, newCommentWithUser]
+      )
     }
   }, [createCommentRes, authUser])
 
   useEffect(() => {
     if (getCommentsRes?.success && getCommentsRes?.data) {
-      setComments((prevComments) => [...prevComments, ...getCommentsRes.data])
+      setComments(getCommentsRes.data)
 
       if (getCommentsRes.data.length < COMMENTS_PER_LOAD) {
         setHasMoreComments(false)
@@ -172,10 +193,37 @@ export function TaskComment({
                         : ""}
                     </div>
                   </div>
-                  <div
-                    className="text-sm rich-editor"
-                    dangerouslySetInnerHTML={{ __html: comment.content }}
-                  />
+                  {comment.type === "history" ? (
+                    <div className="text-sm space-y-3">
+                      {Array.isArray(comment.task_history)
+                        ? comment.task_history.map((item: any, i: number) => (
+                            <div
+                              key={i}
+                              className="border-l-2 border-muted pl-3"
+                            >
+                              <div className="font-semibold text-foreground">
+                                {item.key}:
+                              </div>
+
+                              <div className="text-muted-foreground flex items-center gap-2 mt-0.5">
+                                <span className="line-through opacity-70">
+                                  {item.old === " " ? "N/A" : item.old}
+                                </span>
+                                <span>→</span>
+                                <span className="s text-foreground">
+                                  {item.new}
+                                </span>
+                              </div>
+                            </div>
+                          ))
+                        : null}
+                    </div>
+                  ) : (
+                    <div
+                      className="text-sm rich-editor"
+                      dangerouslySetInnerHTML={{ __html: comment.content }}
+                    />
+                  )}
                 </div>
               </CardContent>
             </Card>

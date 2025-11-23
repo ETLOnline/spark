@@ -39,6 +39,8 @@ import {
   DeleteMessageFromChatAction,
   EditChaMessagetAction,
   GetChatWithMessagesAction,
+  incrementUnreadCountForChatAction,
+  MarkChatAsReadAction,
   SendTypingIndicatorAction
 } from "@/src/server-actions/Chat/Chat"
 import moment from "moment-timezone"
@@ -75,6 +77,7 @@ interface ChatScreenProps {
 type ChatUpdatePayload = {
   chatId: number
   lastMessage: string
+  sender_id: string
 }
 
 /**
@@ -121,7 +124,6 @@ function joinChannel(
 
 /**
  * ChatScreen component renders the chat interface including the list of chats and the main chat area.
- * ... (Rest of JSDoc remains the same)
  */
 export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const currentSpace = useAtomValue(spaceStore.currentSpace)
@@ -134,6 +136,11 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     ? "space.chat.create"
     : "chat.create"
   const permissionNamespaceView = currentSpace ? "space.chat.view" : "chat.view"
+
+  const [, , , markAsRead] = useServerAction(MarkChatAsReadAction)
+  const [, , , incrementUnreadCount] = useServerAction(
+    incrementUnreadCountForChatAction
+  )
 
   const canCreate = permissionChecker
     ? permissionChecker?.canAccess(permissionNamespaceCreate)
@@ -214,50 +221,30 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
   useEffect(() => {
     if (!currentChat || !authUser) return
+    chatRealTime?.unsubscribe()
 
     // Stop previous subscription (if any)
     chatRealTime?.unsubscribe()
 
     // Subscribe to real-time messages for this chat
-    const { unsubscribe } = joinChannel(
-      currentChat.id,
-      (message) => {
-        setMessages((prev) => [...prev, message])
+    const { unsubscribe } = joinChannel(currentChat.id, (message) => {
+      setMessages((prev) => [...prev, message])
 
-        setMyChats((prevChats) =>
-          prevChats.map((chat) =>
-            chat.id === message.chat_id
-              ? {
-                  ...chat,
-                  last_message: message.message,
-                  last_message_at: message.created_at,
-                  unread_count: 0 // active chat
-                }
-              : chat
-          )
-        )
-      },
-      (deletedMsgId) => {
-        setMessages((prev) => prev.filter((msg) => msg.id !== deletedMsgId))
-      },
-      (editedMsgId, newContent) => {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === editedMsgId ? { ...msg, message: newContent } : msg
-          )
-        )
-      },
-      (userId?: string, isTyping?: boolean) => {
-        // typing indicator callback
-        if (!userId || userId === authUser?.unique_id) return
-        setTypingUsers((prev) => {
-          const newSet = new Set(prev)
-          if (isTyping) newSet.add(userId)
-          else newSet.delete(userId)
-          return newSet
+      // Update the last message and unread count in the chat list
+      setMyChats((prevChats) => {
+        const updatedChats = prevChats.map((chat) => {
+          if (chat.id === message.chat_id) {
+            return {
+              ...chat,
+              last_message: message.message,
+              last_message_at: message.created_at
+            }
+          }
+          return chat
         })
-      }
-    )
+        return updatedChats
+      })
+    })
 
     setChatRealtime({ unsubscribe })
 
@@ -266,8 +253,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
   useEffect(() => {
     if (!switchedChat) return
-    chatRealTime?.unsubscribe()
-    setChatRealtime(null)
     handleChatSwitch(switchedChat.id)
     setSwitchedChat(null)
   }, [switchedChat])
@@ -283,10 +268,22 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       setCurrentChat(newSwitchedChat.data)
       setMessages(newSwitchedChat.data.messages)
     }
+
+    await markAsRead(chatId)
+
     setMyChats((prevChats) =>
-      prevChats.map((chat) =>
-        chat.id === chatId ? { ...chat, unread_count: 0 } : chat
-      )
+      prevChats.map((chat) => {
+        if (chat.id === chatId) {
+          const updatedUsers = chat.users?.map((uc) => {
+            if (uc.user_id === authUser?.unique_id) {
+              return { ...uc, unread_count: 0 } as SelectUserChat
+            }
+            return uc
+          })
+          return { ...chat, users: updatedUsers }
+        }
+        return chat
+      })
     )
   }
 
@@ -294,6 +291,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     scrollToBottom()
   }, [messages, authUser])
 
+  const runtime = 0
   useEffect(() => {
     if (!authUser) return
 
@@ -310,12 +308,28 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           const newChats = prevChats.map((chat) => {
             if (chat.id === update.chatId) {
               const isActiveChat = currentChat?.id === update.chatId
+              const updatedUsers = chat.users?.map((uc) => {
+                if (uc.user_id === authUser.unique_id) {
+                  if (
+                    !isActiveChat &&
+                    authUser.unique_id !== update.sender_id
+                  ) {
+                    incrementUnreadCount(update.chatId, uc.user_id)
+                  }
+                  return {
+                    ...uc,
+                    unread_count: isActiveChat
+                      ? uc.unread_count || 0
+                      : (uc.unread_count || 0) + 1
+                  } as SelectUserChat
+                }
+                return uc
+              })
               return {
                 ...chat,
                 last_message: update.lastMessage,
                 updated_at: new Date().toISOString(),
-                // Increment unread count only if not active chat
-                unread_count: isActiveChat ? 0 : (chat.unread_count || 0) + 1
+                users: updatedUsers
               }
             }
             return chat
@@ -619,6 +633,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                   <ChatsList
                     searchQuery={searchQuery}
                     onlineUsers={onlineUsers}
+                    typingUsers={typingUsers}
                   />
                 </SheetContent>
               </Sheet>

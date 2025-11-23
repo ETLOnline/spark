@@ -24,7 +24,13 @@ const ChatContactItem = ({
   const filteredContact = chat?.users?.find(
     (user) => user.user_id !== authUser?.unique_id
   )
-  console.log("ChatContactItem rendered", filteredContact)
+
+  const currentUserChatRecord = chat?.users?.find(
+    (user) => user.user_id === authUser?.unique_id
+  )
+
+  const unreadCount = currentUserChatRecord?.unread_count || 0
+
   if (!filteredContact) return null
   const chatContact = filteredContact?.user || null
   if (!chatContact) return null
@@ -76,9 +82,9 @@ const ChatContactItem = ({
           )}
         </p>
       </div>
-      {(chat?.unread_count || 0) > 0 && (
+      {unreadCount > 0 && (
         <Badge variant="secondary" className="rounded-full px-2 py-1">
-          {chat?.unread_count}
+          {unreadCount}
         </Badge>
       )}
     </div>

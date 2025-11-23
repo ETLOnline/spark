@@ -1,4 +1,4 @@
-import { FolderPlus, Upload } from "lucide-react"
+import { FolderPlus, Upload, Search } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -23,12 +23,13 @@ import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
 import {
   CreateNewFolderAction,
   GetDirectoryContentsAction,
-  SearchFolderBySlugAction
+  SearchFolderBySlugAction,
+  CreateNewFileAction
 } from "@/src/server-actions/FileSharing/FileSharing"
 import { useParams } from "next/navigation"
 import { DirItem } from "./types/spaces-types"
 import { formatFileSize, slugify } from "@/src/utils/helpers"
-import { useAtom, useAtomValue } from "jotai"
+import { useAtom } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { SelectSpaceFileDirectory } from "@/src/db/schema"
 import { useToast } from "@/src/hooks/use-toast"
@@ -36,8 +37,8 @@ import DirView from "./DirView"
 import DirNav from "./DirNav"
 import { FileUpload } from "@/src/components/ui/file-upload"
 import { useSearchParams } from "next/navigation"
-import { CreateNewFileAction } from "@/src/server-actions/FileSharing/FileSharing"
 import { getUniqueFileName } from "./utils/helper"
+import moment from "moment-timezone"
 
 type FileData = {
   fileName: string
@@ -64,6 +65,8 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
 
   const [fileData, setFileData] = useState<FileData | null>(null)
 
+  const [searchQuery, setSearchQuery] = useState("")
+
   const searchParams = useSearchParams()
 
   const [createFileLoading, createdFile, createFileError, createNewFile] =
@@ -83,6 +86,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
 
   const [dirContentLoading, dirContent, dirContentError, getDirContent] =
     useServerAction(GetDirectoryContentsAction)
+
   const [
     createFolderLoading,
     createdFolder,
@@ -110,9 +114,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
                 id: item.id,
                 name: item.entity_name,
                 type: item.entity_type as "file" | "folder",
-                updatedAt: new Date(item.created_at as string)
-                  .toISOString()
-                  .split("T")[0],
+                updatedAt: moment(item.created_at).format("YYYY-MM-DD"),
                 path: `/${item.entity_name}`,
                 size: item.file?.file_size
                   ? formatFileSize(item.file?.file_size)
@@ -132,6 +134,17 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
       }
     })()
   }, [])
+
+  const getCurrentFolderItems = () => {
+    if (currentPath === "/") return dir
+
+    const folder = findItemByPath(dir, currentPath)
+    return folder?.children || []
+  }
+
+  const filteredItems = getCurrentFolderItems().filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   const createFolder = async () => {
     try {
@@ -267,7 +280,6 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
   const processFileForUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Convert file to Base64
       const reader = new FileReader()
       reader.onloadend = () => {
         const base64String = reader.result as string
@@ -281,6 +293,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
       reader.readAsDataURL(file)
     }
   }
+
   const handleFileUpload = async () => {
     try {
       if (!fileData) return
@@ -365,8 +378,19 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
     <section className="directory">
       <div className="flex justify-between items-center mb-4">
         <DirNav navigateToFolder={navigateToFolder} />
-        <div className="flex gap-4">
-          {/* add new file drawer */}
+        <div className="flex gap-4 items-center">
+          {/* 🔍 NEW — Search Input */}
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search in current folder"
+              className="pl-9"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          {/* Upload File Drawer */}
           <Drawer
             open={isNewFileDrawerOpen}
             onOpenChange={setIsNewFileDrawerOpen}
@@ -406,7 +430,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
             </DrawerContent>
           </Drawer>
 
-          {/* add new folder dialog */}
+          {/* Create Folder Dialog */}
           <Dialog
             open={isNewFolderDialogOpen}
             onOpenChange={setIsNewFolderDialogOpen}
@@ -454,13 +478,17 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
           </Dialog>
         </div>
       </div>
+
       <Card>
         {dirContentLoading || spaceLoading ? (
           <div className="w-full p-10 flex justify-center">
             <Loader size={LoaderSizes.xl} />
           </div>
         ) : (
-          <DirView navigateToFolder={navigateToFolder} />
+          <DirView
+            navigateToFolder={navigateToFolder}
+            searchQuery={searchQuery}
+          />
         )}
       </Card>
     </section>
