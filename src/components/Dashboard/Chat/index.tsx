@@ -223,28 +223,83 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     if (!currentChat || !authUser) return
     chatRealTime?.unsubscribe()
 
-    // Stop previous subscription (if any)
-    chatRealTime?.unsubscribe()
+    const { unsubscribe } = joinChannel(
+      currentChat.id,
+      (message) => {
+        setMessages((prev) => [...prev, message])
 
-    // Subscribe to real-time messages for this chat
-    const { unsubscribe } = joinChannel(currentChat.id, (message) => {
-      setMessages((prev) => [...prev, message])
-
-      // Update the last message and unread count in the chat list
-      setMyChats((prevChats) => {
-        const updatedChats = prevChats.map((chat) => {
-          if (chat.id === message.chat_id) {
-            return {
-              ...chat,
-              last_message: message.message,
-              last_message_at: message.created_at
+        setMyChats((prevChats) => {
+          const updatedChats = prevChats.map((chat) => {
+            if (chat.id === message.chat_id) {
+              return {
+                ...chat,
+                last_message: message.message,
+                last_message_at: message.created_at
+              }
             }
-          }
-          return chat
+            return chat
+          })
+          return updatedChats
         })
-        return updatedChats
-      })
-    })
+      },
+      (msgId) => {
+        // Handle message deletion on receiver side - mark as deleted instead of removing
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === msgId
+              ? { ...m, is_deleted: 1, message: "This message was deleted" }
+              : m
+          )
+        )
+
+        // Update the chat list to mark last_message_deleted if this was the last message
+        setMyChats((prevChats) => {
+          return prevChats.map((chat) => {
+            if (chat.id === currentChat?.id) {
+              // Check if the deleted message was the last message
+              const lastMessageInChat = messages[messages.length - 1]
+              if (lastMessageInChat?.id === msgId) {
+                return {
+                  ...chat,
+                  last_message_deleted: 1
+                }
+              }
+            }
+            return chat
+          })
+        })
+      },
+      (msgId, newContent) => {
+        // Handle message editing on receiver side
+        setMessages((prev) =>
+          prev.map((m) => (m.id === msgId ? { ...m, message: newContent } : m))
+        )
+      },
+      (userId, isTyping) => {
+        console.debug("[Chat] typing handler called:", userId, isTyping)
+        setTypingUsers((prev) => {
+          const updated = new Set(prev)
+          if (isTyping) {
+            updated.add(userId)
+            console.debug(
+              "[Chat] added typer:",
+              userId,
+              "total typers:",
+              updated.size
+            )
+          } else {
+            updated.delete(userId)
+            console.debug(
+              "[Chat] removed typer:",
+              userId,
+              "total typers:",
+              updated.size
+            )
+          }
+          return updated
+        })
+      }
+    )
 
     setChatRealtime({ unsubscribe })
 
@@ -263,6 +318,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
    */
   const handleChatSwitch = async (chatId: number) => {
     initialChatLoadRef.current = true
+    // Clear typing users when switching chats
+    setTypingUsers(new Set())
     const newSwitchedChat = await fetchChatWithMessages(chatId)
     if (newSwitchedChat && newSwitchedChat.data) {
       setCurrentChat(newSwitchedChat.data)
@@ -452,7 +509,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   }
 
   // ensure we send stop-typing on submit/unmount
-  const stopTypingNow = () => {
+  const stopTypingNow = useCallback(() => {
     if (!currentChat) return
     if (typingTimeoutRef.current) {
       window.clearTimeout(typingTimeoutRef.current)
@@ -471,12 +528,12 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           console.error("[Chat] stopTypingNow: sendTypingIndicator error", e)
         )
     }
-  }
+  }, [currentChat, sendTypingIndicator])
   useEffect(() => {
     return () => {
       stopTypingNow()
     }
-  }, [])
+  }, [currentChat, sendTypingIndicator])
   // UI: compute typing label
   const typingLabel = (() => {
     if (!currentChat) return ""
@@ -536,7 +593,30 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       ) {
         await deleteMessageFromChat(msg.id, currentChat.id, authUser.unique_id)
 
-        // setMessages((prev) => prev.filter((m) => m.id !== msg.id));
+        // Mark message as deleted locally
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === msg.id
+              ? { ...m, is_deleted: 1, message: "This message was deleted" }
+              : m
+          )
+        )
+
+        // Update chat list if this was the last message
+        setMyChats((prevChats) =>
+          prevChats.map((chat) => {
+            if (
+              chat.id === currentChat.id &&
+              chat.last_message === msg.message
+            ) {
+              return {
+                ...chat,
+                last_message_deleted: 1
+              }
+            }
+            return chat
+          })
+        )
       }
     } catch (error) {
       toast({
@@ -729,7 +809,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                             : "justify-start"
                         }`}
                       >
-                        {isOnlyEmoji(message.message) ? (
+                        {isOnlyEmoji(message.message) && !message.is_deleted ? (
                           <div className="">
                             {message.sender_id !== authUser?.unique_id &&
                             currentChat.is_group ? (
@@ -753,44 +833,54 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                 ~ {message.sender?.first_name}
                               </p>
                             ) : null}
-                            <div className="text-sm flex items-center justify-center gap-1 ">
-                              {message.message}
-                              <div className="self-end ">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="  "
-                                    >
-                                      <ChevronDown className="" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-
-                                  <DropdownMenuContent
-                                    align="end"
-                                    className="w-40"
-                                  >
-                                    {message.sender_id ===
-                                      authUser?.unique_id && (
-                                      <DropdownMenuItem
-                                        onClick={() => handleEditMsg(message)}
+                            <div className="text-sm flex items-center justify-center  ">
+                              {message.is_deleted ? (
+                                <span className="italic">
+                                  {message.sender_id === authUser?.unique_id
+                                    ? "You deleted this message"
+                                    : "This message was deleted"}
+                                </span>
+                              ) : (
+                                message.message
+                              )}
+                              {!message.is_deleted && (
+                                <div className="self-end ">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="  "
                                       >
-                                        <Edit className="mr-2 h-4 w-4" />
-                                        Edit
-                                      </DropdownMenuItem>
-                                    )}
+                                        <ChevronDown className="" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
 
-                                    <DropdownMenuItem
-                                      onClick={() => handleDelteMsg(message)}
-                                      className="text-red-600 focus:text-red-600"
+                                    <DropdownMenuContent
+                                      align="end"
+                                      className="w-40"
                                     >
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
+                                      {message.sender_id ===
+                                        authUser?.unique_id && (
+                                        <DropdownMenuItem
+                                          onClick={() => handleEditMsg(message)}
+                                        >
+                                          <Edit className="mr-2 h-4 w-4" />
+                                          Edit
+                                        </DropdownMenuItem>
+                                      )}
+
+                                      <DropdownMenuItem
+                                        onClick={() => handleDelteMsg(message)}
+                                        className="text-red-600 focus:text-red-600"
+                                      >
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
+                              )}
                             </div>
                           </div>
                         )}

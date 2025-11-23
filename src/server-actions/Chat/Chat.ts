@@ -274,7 +274,12 @@ export const DeleteMessageFromChatAction = CreateServerAction(
         return { success: false, error: "Unauthorized" }
       }
 
-      const deletedMessage = await deleteChatMessage(msg_id, chat_id, sender_id)
+      const deletedMessage = await deleteChatMessage(
+        msg_id,
+        chat_id,
+        sender_id,
+        authUser.unique_id
+      )
 
       if (deletedMessage) {
         // Trigger Pusher event to everyone in this chat
@@ -283,7 +288,9 @@ export const DeleteMessageFromChatAction = CreateServerAction(
           "message-deleted", // Event name
           {
             id: msg_id, // ID of deleted message
-            chat_id
+            chat_id,
+            is_deleted: true,
+            deleted_by: authUser.unique_id
           }
         )
 

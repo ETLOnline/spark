@@ -28,11 +28,16 @@ export const createChatMessage = async (newMessage: InsertMessage) => {
 export const deleteChatMessage = async (
   msg_id: number,
   chat_id: number,
-  sender_id: string
+  sender_id: string,
+  deleted_by_user_id: string
 ) => {
   try {
     const deleted = await db
-      .delete(messagesTable)
+      .update(messagesTable)
+      .set({
+        is_deleted: 1,
+        deleted_by: deleted_by_user_id
+      })
       .where(
         and(
           eq(messagesTable.id, msg_id),
@@ -41,7 +46,7 @@ export const deleteChatMessage = async (
         )
       )
       .returning()
-    return true
+    return deleted.length > 0 ? deleted[0] : null
   } catch (error: any) {
     throw new Error(error.message)
   }
