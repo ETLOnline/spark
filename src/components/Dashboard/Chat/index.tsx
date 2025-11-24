@@ -16,6 +16,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/src/components/ui/sheet"
 import {
   ChevronDown,
   Edit,
+  FileIcon,
   Menu,
   PlusCircle,
   Search,
@@ -41,6 +42,7 @@ import {
   GetChatWithMessagesAction,
   incrementUnreadCountForChatAction,
   MarkChatAsReadAction,
+  sendFilesAndImagesInChatAction,
   SendTypingIndicatorAction
 } from "@/src/server-actions/Chat/Chat"
 import moment from "moment-timezone"
@@ -68,6 +70,8 @@ import {
 } from "../../ui/dropdown-menu"
 import { toast } from "@/src/hooks/use-toast"
 import EditMessageModal from "./components/EditMessageModal"
+import AttachmentModal from "./components/AttachmentModal"
+import Image from "next/image"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -167,6 +171,10 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set())
   const typingTimeoutRef = useRef<number | null>(null)
   const isTypingRef = useRef<boolean>(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [showAttachmentModal, setShowAttachmentModal] = useState(false)
   const authUser = useAtomValue(userStore.AuthUser)
   const [chatRealTime, setChatRealtime] = useState<{
     unsubscribe: () => void
@@ -195,6 +203,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
   const [, , , updateChatMsg] = useServerAction(EditChaMessagetAction)
   const [, , , sendTypingIndicator] = useServerAction(SendTypingIndicatorAction)
+  const [uploadLoding, , , uploadAttachment] = useServerAction(
+    sendFilesAndImagesInChatAction
+  )
 
   useEffect(() => {
     setCurrentChat(currentChatSSR || null)
@@ -243,7 +254,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         })
       },
       (msgId) => {
-        // Handle message deletion on receiver side - mark as deleted instead of removing
         setMessages((prev) =>
           prev.map((m) =>
             m.id === msgId
@@ -251,23 +261,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
               : m
           )
         )
-
-        // Update the chat list to mark last_message_deleted if this was the last message
-        setMyChats((prevChats) => {
-          return prevChats.map((chat) => {
-            if (chat.id === currentChat?.id) {
-              // Check if the deleted message was the last message
-              const lastMessageInChat = messages[messages.length - 1]
-              if (lastMessageInChat?.id === msgId) {
-                return {
-                  ...chat,
-                  last_message_deleted: 1
-                }
-              }
-            }
-            return chat
-          })
-        })
       },
       (msgId, newContent) => {
         // Handle message editing on receiver side
@@ -454,6 +447,12 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     }
   }, [onlineUsers, authUser])
 
+  useEffect(() => {
+    if (imageUrl) {
+      setShowAttachmentModal(true)
+    }
+  }, [imageUrl])
+
   /**
    * Handles the sending of a new message in the chat.
    * ...
@@ -505,7 +504,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
             console.error("[Chat] sendTypingIndicator(stop) error", e)
           )
       }
-    }, 2000)
+    }, 5000)
   }
 
   // ensure we send stop-typing on submit/unmount
@@ -533,7 +532,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     return () => {
       stopTypingNow()
     }
-  }, [currentChat, sendTypingIndicator])
+  }, [currentChat, sendTypingIndicator, stopTypingNow])
   // UI: compute typing label
   const typingLabel = (() => {
     if (!currentChat) return ""
@@ -557,14 +556,25 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       : "typing..."
   })()
   const handleSendMessage = async () => {
-    if (newMessage.trim() === "" || !currentChat || !authUser) return
-    const messageContent = newMessage
+    // Check if there's a message to send or an attachment
+    if ((newMessage.trim() === "" && !imageUrl) || !currentChat || !authUser) {
+      return
+    }
+
     stopTypingNow()
+
+    const messageContent = imageUrl || newMessage
+    const messageType = selectedFile?.type?.startsWith("image/")
+      ? "image"
+      : selectedFile
+        ? "file"
+        : "text"
+
     const newMsg: InsertMessage = {
       sender_id: authUser?.unique_id || "",
       chat_id: currentChat?.id || 0,
       message: messageContent,
-      type: "text"
+      type: messageType
     }
 
     setMyChats((prevChats) =>
@@ -582,6 +592,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     )
 
     setNewMessage("")
+    setImageUrl(null)
+    setSelectedFile(null)
     await addMessageToChat(newMsg, currentSpace?.id)
   }
 
@@ -652,6 +664,44 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     closeEditModal()
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setSelectedFile(file)
+    const reader = new FileReader()
+    reader.onloadend = async () => {
+      const base64 = reader.result as string
+      try {
+        const res = await uploadAttachment(file.name, base64, file.type)
+        console.log("File upload response:", res)
+        if (res?.success && res.data) {
+          setImageUrl(res.data.fileUrl)
+        }
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Something went wrong",
+          duration: 3000
+        })
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleSendAttachment = async () => {
+    await handleSendMessage()
+    setShowAttachmentModal(false)
+  }
+
+  const closeAttachmentModal = () => {
+    setShowAttachmentModal(false)
+    setImageUrl(null)
+    setSelectedFile(null)
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
+
   return (
     <div className="flex h-[calc(100vh-7rem)] gap-4">
       {/* Contacts list - visible on desktop, hidden on mobile */}
@@ -684,7 +734,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       </Card>
 
       {/* Main chat area */}
-      {/* ... (rest of the component JSX remains the same) ... */}
       {canView && (
         <Card className="flex-1 flex flex-col h-full">
           <CardHeader className="flex flex-row items-center justify-between py-4">
@@ -824,7 +873,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                             className={`rounded-lg pl-2 max-w-[70%] ${
                               message.sender_id === authUser?.unique_id
                                 ? "bg-primary text-primary-foreground"
-                                : "bg-muted"
+                                : "bg-muted pr-2"
                             }`}
                           >
                             {message.sender_id !== authUser?.unique_id &&
@@ -841,46 +890,83 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                     : "This message was deleted"}
                                 </span>
                               ) : (
-                                message.message
-                              )}
-                              {!message.is_deleted && (
-                                <div className="self-end ">
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="  "
-                                      >
-                                        <ChevronDown className="" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
+                                <>
+                                  {message.type === "image" && (
+                                    <Image
+                                      src={message.message}
+                                      alt="Post image"
+                                      className="rounded-lg max-h-96 w-full object-cover bg-gradient-to-r from-accent to-secondary"
+                                      width={1000}
+                                      height={1000}
+                                      style={{ objectFit: "contain" }}
+                                    />
+                                  )}
 
-                                    <DropdownMenuContent
-                                      align="end"
-                                      className="w-40"
-                                    >
-                                      {message.sender_id ===
-                                        authUser?.unique_id && (
-                                        <DropdownMenuItem
-                                          onClick={() => handleEditMsg(message)}
+                                  {message.type === "file" && (
+                                    <Link href={message.message}>
+                                      <div
+                                        className={`flex items-center ${message.sender_id === authUser.unique_id ? "bg-primary text-primary-foreground" : "bg-muted"}  space-x-2 p-2 rounded-lg `}
+                                      >
+                                        <FileIcon className="h-8 w-8" />
+                                        <span className="font-medium">
+                                          {"mazhar.pdf"}
+                                        </span>
+                                        <span className="text-xs ">
+                                          {/* {formatFileSize(pot?.file?.file_size)} */}
+                                          224k
+                                        </span>
+                                      </div>
+                                    </Link>
+                                  )}
+
+                                  {message.type === "text" && (
+                                    <span>{message.message}</span>
+                                  )}
+                                </>
+                              )}
+                              {!message.is_deleted &&
+                                message.sender_id === authUser?.unique_id && (
+                                  <div className="self-start">
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="opacity-0  group-hover:opacity-100 transform -translate-y-2 group-hover:translate-y-0 transition-all duration-200"
                                         >
-                                          <Edit className="mr-2 h-4 w-4" />
-                                          Edit
-                                        </DropdownMenuItem>
-                                      )}
+                                          <ChevronDown />
+                                        </Button>
+                                      </DropdownMenuTrigger>
 
-                                      <DropdownMenuItem
-                                        onClick={() => handleDelteMsg(message)}
-                                        className="text-red-600 focus:text-red-600"
+                                      <DropdownMenuContent
+                                        align="end"
+                                        className="w-40"
                                       >
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Delete
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </div>
-                              )}
+                                        {message.type !== "image" &&
+                                          message.type !== "file" && (
+                                            <DropdownMenuItem
+                                              onClick={() =>
+                                                handleEditMsg(message)
+                                              }
+                                            >
+                                              <Edit className="mr-2 h-4 w-4" />
+                                              Edit
+                                            </DropdownMenuItem>
+                                          )}
+
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            handleDelteMsg(message)
+                                          }
+                                          className="text-red-600 focus:text-red-600"
+                                        >
+                                          <Trash2 className="mr-2 h-4 w-4" />
+                                          Delete
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
+                                )}
                             </div>
                           </div>
                         )}
@@ -914,10 +1000,25 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                   <Input
                     placeholder="Type a message..."
                     value={newMessage}
-                    // onChange={(e) => setNewMessage(e.target.value)}
                     onChange={(e) => handleInputChange(e.target.value)}
                     className="flex-1"
                   />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,application/*"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Attach file"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                  </Button>
                   <Popover>
                     <PopoverTrigger>
                       <SmileIcon />
@@ -953,6 +1054,16 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           message={editingMessage}
           onSave={handleSaveEditedMessage}
           onClose={closeEditModal}
+        />
+      )}
+      {imageUrl && (
+        <AttachmentModal
+          open={showAttachmentModal}
+          onClose={closeAttachmentModal}
+          file={selectedFile}
+          onSend={handleSendAttachment}
+          sending={uploadLoding}
+          imageUrl={imageUrl}
         />
       )}
     </div>

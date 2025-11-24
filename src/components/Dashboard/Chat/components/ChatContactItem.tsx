@@ -52,21 +52,25 @@ const ChatContactItem = ({
       {chat?.is_group ? (
         <Avvvatars value={chat.name || ""} style="shape" />
       ) : (
-        <Avatar className="h-10 w-10 relative bg-white">
-          {!chat?.is_group && chatContact ? (
-            <>
-              {chatContact?.profile_url ? (
-                <AvatarImage src={chatContact.profile_url} />
-              ) : null}
+        <div className="relative h-10 w-10">
+          <Avatar className="h-10 w-10 bg-white">
+            {chatContact?.profile_url ? (
+              <AvatarImage src={chatContact.profile_url} />
+            ) : (
               <AvatarFallback>
                 {chatContact.first_name.charAt(0)}
               </AvatarFallback>
-            </>
-          ) : null}
+            )}
+          </Avatar>
+
           {isContactOnline && (
-            <span className="absolute bottom-0 z-10 right-0 h-3 w-3 rounded-full bg-red-500 border-2 border-white"></span>
+            <span
+              className="absolute bottom-0 right-0 z-50 
+                     h-3 w-3 rounded-full bg-green-500 
+                     border-2 border-white"
+            ></span>
           )}
-        </Avatar>
+        </div>
       )}
       <div className="flex-1 max-w-[80%]">
         <p className="font-medium">

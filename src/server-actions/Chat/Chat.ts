@@ -31,6 +31,10 @@ import {
 import { createChatEmailNotification } from "@/src/services/notify/chat/chat"
 import { NotificationEvent } from "@/src/services/notify/types/events"
 import { slugify } from "@/src/utils/helpers"
+import {
+  base64ToBuffer,
+  uploadFileAndSaveMetadata
+} from "@/src/services/storage/utils/fileUtils"
 
 export const CreatePrivateChatAction = CreateServerAction(
   true,
@@ -282,12 +286,11 @@ export const DeleteMessageFromChatAction = CreateServerAction(
       )
 
       if (deletedMessage) {
-        // Trigger Pusher event to everyone in this chat
         await pusherServer.trigger(
-          `private-chat-${chat_id}`, // Chat-specific channel
-          "message-deleted", // Event name
+          `private-chat-${chat_id}`,
+          "message-deleted",
           {
-            id: msg_id, // ID of deleted message
+            id: msg_id,
             chat_id,
             is_deleted: true,
             deleted_by: authUser.unique_id
@@ -328,12 +331,11 @@ export const EditChaMessagetAction = CreateServerAction(
       )
 
       if (editedMessage) {
-        // Trigger Pusher event to everyone in this chat
         await pusherServer.trigger(
-          `private-chat-${chat_id}`, // Chat-specific channel
-          "message-edited", // Event name
+          `private-chat-${chat_id}`,
+          "message-edited",
           {
-            id: msg_id, // ID of edited message
+            id: msg_id,
             chat_id,
             new_content
           }
@@ -395,18 +397,42 @@ export const SendTypingIndicatorAction = CreateServerAction(
         return { success: false, error: "Unauthorized" }
       }
 
-      await pusherServer.trigger(
-        `private-chat-${chat_id}`, // same chat channel convention
-        "typing", // event name
-        {
-          userId: authUser.unique_id,
-          isTyping
-        }
-      )
+      await pusherServer.trigger(`private-chat-${chat_id}`, "typing", {
+        userId: authUser.unique_id,
+        isTyping
+      })
 
       return { success: true }
     } catch (error) {
       return { error }
+    }
+  }
+)
+
+export const sendFilesAndImagesInChatAction = CreateServerAction(
+  true,
+  async (fileName: string, fileB64string: string, fileType: string) => {
+    try {
+      const fileBuffer = base64ToBuffer(fileB64string)
+
+      const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(
+        fileBuffer,
+        fileName,
+        fileType,
+        "attachments"
+      )
+
+      if (!fileUrl || !fileRecord) {
+        throw new Error("Upload failed: missing fileUrl or file metadata.")
+      }
+
+      return { success: true, data: { fileUrl, fileRecord } }
+    } catch (error: any) {
+      console.error("Error updating profile picture:", error)
+      return {
+        success: false,
+        error: error.message || "Failed to update profile picture"
+      }
     }
   }
 )

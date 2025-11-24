@@ -80,7 +80,6 @@ export const editChatMessage = async (
       )
       .returning()
 
-    console.log("editMessge", updated)
     if (updated.length > 0) {
       const message = await db.query.messagesTable.findFirst({
         where: eq(messagesTable.id, updated[0].id),
