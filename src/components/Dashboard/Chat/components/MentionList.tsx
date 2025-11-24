@@ -14,7 +14,9 @@ export interface MentionListHandle {
 const MentionList = forwardRef<MentionListHandle, any>((props, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
-
+  
+  const activeIndex = hoverIndex !== null ? hoverIndex : selectedIndex
+  
   const selectItem = (index: number) => {
     const item = props.items[index]
     if (item) {
@@ -26,7 +28,7 @@ const MentionList = forwardRef<MentionListHandle, any>((props, ref) => {
   }
 
   const upHandler = () => {
-    setHoverIndex(null)
+    setHoverIndex(null) 
     setSelectedIndex(
       (selectedIndex + props.items.length - 1) % props.items.length
     )
@@ -37,7 +39,7 @@ const MentionList = forwardRef<MentionListHandle, any>((props, ref) => {
     setSelectedIndex((selectedIndex + 1) % props.items.length)
   }
 
-  const enterHandler = () => selectItem(selectedIndex)
+  const enterHandler = () => selectItem(activeIndex)
 
   useEffect(() => {
     setSelectedIndex(0)
@@ -69,22 +71,20 @@ const MentionList = forwardRef<MentionListHandle, any>((props, ref) => {
     <div className="bg-popover border rounded-lg shadow-lg p-2 w-80 max-h-64 overflow-y-auto z-50">
       {props.items.length ? (
         props.items.map((item: SelectUser, index: number) => {
-          const isSelected = index === selectedIndex
-          const isHovered = hoverIndex === index
-
-          const className = isSelected
-            ? "bg-primary text-primary-foreground"
-            : isHovered
-            ? "bg-accent text-accent-foreground"
-            : "hover:bg-accent hover:text-accent-foreground"
-
+          const isCurrentActive = index === activeIndex
+          
           return (
             <button
               key={item.unique_id}
               onMouseEnter={() => setHoverIndex(index)}
               onMouseLeave={() => setHoverIndex(null)}
               onClick={() => selectItem(index)}
-              className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 transition-colors ${className}`}
+              className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 transition-colors 
+                ${isCurrentActive 
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-accent hover:text-accent-foreground" 
+                }`}
+              data-mention-index={index} 
             >
               <div className="flex-1 min-w-0">
                 <div className="font-medium truncate">

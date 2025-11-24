@@ -363,12 +363,7 @@ export default function RichTextEditor({
       const hasMention = currentExtensions.includes("mention")
       const shouldHaveMention = showMentions && mentionUsers.length > 0
       if (hasMention !== shouldHaveMention) {
-        console.log(
-          "Mention extension state mismatch, recreating editor. hasMention:",
-          hasMention,
-          "shouldHaveMention:",
-          shouldHaveMention
-        )
+
         editor.destroy()
         return () => {
 

@@ -170,7 +170,7 @@ export const GetChats = async (
             ? eq(chatsTable.is_group, 0)
             : undefined
         ),
-      orderBy: (chatsTable) => desc(chatsTable.created_at),
+      orderBy: (chatsTable) => desc(chatsTable.updated_at),
       with: {
         users: {
           with: {
