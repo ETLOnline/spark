@@ -1,15 +1,12 @@
 import { parseMentions } from "@/src/services/realtime/utils/helper"
 
-
 interface MessageContentProps {
   content: string
 }
 
 export const MessageContent = ({ content }: MessageContentProps) => {
-  
   const renderMessageWithMentions = (text: string) => {
     const tokens = parseMentions(text)
-
     return tokens.map((t, i) => {
       if (t.type === "mention") {
         return (
@@ -21,8 +18,12 @@ export const MessageContent = ({ content }: MessageContentProps) => {
           </span>
         )
       }
-
-      return <span key={i}>{t.value}</span>
+      return (
+        <span 
+          key={i} 
+          dangerouslySetInnerHTML={{ __html: t.value }}
+        />
+      )
     })
   }
 

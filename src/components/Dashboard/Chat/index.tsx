@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect, useCallback, useMemo } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Button } from "@/src/components/ui/button"
 import {
@@ -124,16 +124,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     : false
 
   const [messages, setMessages] = useState<SelectMessage[]>([])
-  const [simpleMessage, setSimpleMessage] = useState("")
   const [richMessageContent, setRichMessageContent] = useState("")
-  const [useRichEditor, setUseRichEditor] = useState(false)
-
-  const [mentionQuery, setMentionQuery] = useState<{
-    text: string
-    startIndex: number
-  } | null>(null)
-  const [activeIndex, setActiveIndex] = useState(0)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [showRichEditorToolbar, setShowRichEditorToolbar] = useState(false)
+  const [isMentionActive, setIsMentionActive] = useState(false)
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useAtom(
     chatStore.isMobileMenuOpen
@@ -260,11 +253,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     initialChatLoadRef.current = true
 
     setAvailableUsers([])
-    setSimpleMessage("")
     setRichMessageContent("")
-    setUseRichEditor(false)
-    setMentionQuery(null)
-    setActiveIndex(0)
+    setShowRichEditorToolbar(false)
 
     const newSwitchedChat = await fetchChatWithMessages(chatId)
     if (newSwitchedChat && newSwitchedChat.data) {
@@ -373,35 +363,26 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       pusherClient.unsubscribe(userChannelName)
     }
   }, [authUser, setMyChats, currentChat, currentSpace])
+
   const handleSendMessage = async () => {
     let contentToSend: string
     let messageToUpdateChatList: string
 
-    if (useRichEditor) {
-      if (richMessageContent.trim() === "" || !currentChat || !authUser) return
+    if (richMessageContent.trim() === "" || !currentChat || !authUser) return
 
-      contentToSend = richMessageContent
-        .replace(
-          /<span[^>]*data-type="mention"[^>]*data-id="([^"]*)"[^>]*data-label="([^"]*)"[^>]*>@[^<]*<\/span>/g,
-          "@[ $2 ]($1)"
-        )
-        .replace(/<p[^>]*>/g, "")
-        .replace(/<\/p>/g, "\n")
-        .replace(/<br\s*\/?>/g, "\n")
-        .trim()
+    contentToSend = richMessageContent
+      .replace(
+        /<span[^>]*data-type="mention"[^>]*data-id="([^"]*)"[^>]*data-label="([^"]*)"[^>]*>@[^<]*<\/span>/g,
+        "@[ $2 ]($1)"
+      )
+      .replace(/<p[^>]*>/g, "")
+      .replace(/<\/p>/g, "\n")
+      .replace(/<br\s*\/?>/g, "\n")
+      .trim()
 
-      messageToUpdateChatList = richMessageContent.includes("<p>")
-        ? "Rich text message"
-        : contentToSend
-    } else {
-      if (simpleMessage.trim() === "" || !currentChat || !authUser) return
-
-      contentToSend = simpleMessage
-        .replace(/@\s*\[\s*(.*?)\s*\]\s*\((.*?)\)/g, "@[$1]($2)")
-        .trim()
-
-      messageToUpdateChatList = contentToSend
-    }
+    messageToUpdateChatList = richMessageContent.includes("<p>")
+      ? "Rich text message"
+      : contentToSend
 
     if (contentToSend === "") return
 
@@ -426,132 +407,15 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       )
     )
 
-    if (useRichEditor) {
-      setRichMessageContent("")
-    } else {
-      setSimpleMessage("")
-      setMentionQuery(null)
-      setActiveIndex(0)
-    }
+    setRichMessageContent("")
 
     await addMessageToChat(newMsg, currentSpace?.id)
   }
 
-  const currentMessageContent = useRichEditor
-    ? richMessageContent
-    : simpleMessage
+  const currentMessageContent = richMessageContent
 
   const handleEmojiSelect = (emoji: string) => {
-    if (useRichEditor) {
-      setRichMessageContent((prev) => `${prev}${emoji}`)
-    } else {
-      setSimpleMessage((prev) => `${prev}${emoji}`)
-    }
-  }
-
-  const handleSimpleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setSimpleMessage(value)
-
-    if (currentChat?.is_group !== 1 || !availableUsers.length) {
-      setMentionQuery(null)
-      setActiveIndex(0)
-      return
-    }
-
-    const cursorPosition = inputRef.current?.selectionStart || value.length
-    const textBeforeCursor = value.substring(0, cursorPosition)
-
-    const mentionRegex = /@([a-zA-Z0-9\s]*)$/
-    const match = textBeforeCursor.match(mentionRegex)
-
-    if (match) {
-      const query = match[1]
-      const startIndex = match.index || 0
-
-      if (startIndex === 0 || /\s/.test(textBeforeCursor[startIndex - 1])) {
-        setMentionQuery({ text: query, startIndex })
-        setActiveIndex(0)
-        return
-      }
-    }
-
-    setMentionQuery(null)
-    setActiveIndex(0)
-  }
-
-  const filteredMentions = useMemo(() => {
-    if (!mentionQuery || !availableUsers.length) return []
-    const query = mentionQuery.text.toLowerCase()
-
-    const existingMentionIds =
-      simpleMessage
-        .match(/@\[.*?\]\((.*?)\)/g)
-        ?.map((m) => m.match(/\((.*?)\)/)?.[1])
-        .filter(Boolean) || []
-
-    return availableUsers
-      .filter((user) => {
-        if (existingMentionIds.includes(user.unique_id)) return false
-
-        const fullName = `${user.first_name} ${user.last_name}`.toLowerCase()
-        return (
-          fullName.includes(query) || user.email?.toLowerCase().includes(query)
-        )
-      })
-      .slice(0, 5)
-  }, [mentionQuery, availableUsers, simpleMessage])
-
-  const insertMention = (user: SelectUser) => {
-    if (!mentionQuery) return
-
-    const mentionTag = `@[${user.first_name} ${user.last_name}](${user.unique_id})`
-
-    const startOfQuery = mentionQuery.startIndex
-
-    const messageWithoutSpace =
-      simpleMessage.substring(0, startOfQuery) +
-      mentionTag +
-      simpleMessage.substring(startOfQuery + mentionQuery.text.length + 1)
-
-    const newSimpleMessage =
-      messageWithoutSpace.slice(0, startOfQuery + mentionTag.length) +
-      " " +
-      messageWithoutSpace.slice(startOfQuery + mentionTag.length)
-
-    setSimpleMessage(newSimpleMessage)
-    setMentionQuery(null)
-    setActiveIndex(0)
-
-    setTimeout(() => {
-      const input = inputRef.current
-      if (input) {
-        const newCursorPos = startOfQuery + mentionTag.length + 1
-        input.setSelectionRange(newCursorPos, newCursorPos)
-        input.focus()
-      }
-    }, 0)
-  }
-
-  const handleMentionKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!mentionQuery || filteredMentions.length === 0) return
-
-    if (e.key === "ArrowDown") {
-      e.preventDefault()
-      setActiveIndex((prev) => (prev + 1) % filteredMentions.length)
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault()
-      setActiveIndex(
-        (prev) => (prev - 1 + filteredMentions.length) % filteredMentions.length
-      )
-    } else if (e.key === "Enter") {
-      e.preventDefault()
-      insertMention(filteredMentions[activeIndex])
-    } else if (e.key === "Escape") {
-      e.preventDefault()
-      setMentionQuery(null)
-      setActiveIndex(0)
-    }
+    setRichMessageContent((prev) => `${prev}${emoji}`)
   }
 
   return (
@@ -750,96 +614,40 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                   }}
                   className="flex w-full space-x-2 items-end"
                 >
-                  {useRichEditor ? (
-                    <div className="flex-1" key={currentChat?.id || "no-chat"}>
-                      <RichTextEditor
-                        value={richMessageContent}
-                        onChange={setRichMessageContent}
-                        image_uploading={false}
-                        showMentions={
-                          currentChat?.is_group === 1 &&
-                          availableUsers.length > 0
-                        }
-                        mentionUsers={availableUsers}
-                        showToolbar={true}
-                        minHeight="60px"
-                        limit={5000}
-                        editable={!newMessageLoading}
-                      />
-                    </div>
-                  ) : (
-                    <Input
-                      ref={inputRef}
-                      placeholder="Type a message..."
-                      value={simpleMessage.replace(
-                        /@\[(.*?)\]\((.*?)\)/g,
-                        "@$1"
-                      )}
-                      onChange={handleSimpleInputChange}
-                      onKeyDown={handleMentionKeyDown}
-                      className="flex-1 min-h-[40px] h-auto py-2"
-                      disabled={newMessageLoading}
-                      autoComplete="off"
+                  <div className="flex-1" key={currentChat?.id || "no-chat"}>
+                    <RichTextEditor
+                      value={richMessageContent}
+                      onChange={setRichMessageContent}
+                      image_uploading={false}
+                      showMentions={
+                        currentChat?.is_group === 1 &&
+                        availableUsers.length > 0
+                      }
+                      mentionUsers={availableUsers}
+                      showToolbar={showRichEditorToolbar}
+                      minHeight="60px"
+                      limit={5000}
+                      editable={!newMessageLoading}
+                      onEnterPress={handleSendMessage}
+                      onMentionStateChange={setIsMentionActive}
                     />
-                  )}
-
-                  {mentionQuery &&
-                    filteredMentions.length > 0 &&
-                    currentChat?.is_group === 1 && (
-                      <div
-                        className="absolute bottom-[calc(100%+8px)] left-4 right-20 w-[90%] md:w-80 z-10 
-                   bg-popover border rounded-lg shadow-lg p-2 max-h-64 overflow-y-auto"
-                      >
-                        {filteredMentions.map((user, index) => (
-                          <button
-                            key={user.unique_id}
-                            type="button"
-                            onMouseEnter={() => setActiveIndex(index)}
-                            className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 transition-colors 
-                            ${
-                              index === activeIndex
-                                ? "bg-primary text-primary-foreground"
-                                : "hover:bg-accent hover:text-accent-foreground"
-                            }`}
-                            onClick={() => insertMention(user)}
-                          >
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium truncate">
-                                {user.first_name} {user.last_name}
-                              </div>
-                              <div className="text-xs text-muted-foreground truncate">
-                                {user.email}
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                  </div>
 
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     title={
-                      useRichEditor
-                        ? "Switch to Simple Input"
-                        : "Switch to Rich Editor"
+                      showRichEditorToolbar
+                        ? "Hide Formatting Menu (Enter sends)"
+                        : "Show Formatting Menu (Enter adds line)"
                     }
                     onClick={() => {
-                      const nextUseRichEditor = !useRichEditor
-                      setUseRichEditor(nextUseRichEditor)
-
-                      setMentionQuery(null)
-                      setActiveIndex(0)
-
-                      setSimpleMessage("")
-                      setRichMessageContent("")
-                      setMentionQuery(null)
-                      setActiveIndex(0)
+                      setShowRichEditorToolbar((prev) => !prev)
                     }}
                     className="p-1"
                   >
-                    {useRichEditor ? (
+                    {showRichEditorToolbar ? (
                       <PencilLine className="h-5 w-5" />
                     ) : (
                       <PlusCircle className="h-5 w-5" />

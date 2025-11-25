@@ -61,6 +61,8 @@ interface RichTextEditorProps {
   showMentions?: boolean
   minHeight?: string
   showToolbar?: boolean
+  onEnterPress?: () => void
+  onMentionStateChange?: (isActive: boolean) => void
 }
 
 export default function RichTextEditor({
@@ -72,12 +74,15 @@ export default function RichTextEditor({
   mentionUsers = [],
   showMentions = false,
   minHeight = "200px",
-  showToolbar = true
+  showToolbar = true,
+  onEnterPress,
+  onMentionStateChange
 }: RichTextEditorProps) {
   const [linkUrl, setLinkUrl] = useState("")
   const [showLinkInput, setShowLinkInput] = useState(false)
   const [loading, setLoading] = useState(false)
   const editorRef = useRef<any>(null)
+  const mentionActiveRef = useRef(false)
 
   const editorKey = useMemo(
     () => `${showMentions}-${mentionUsers.length}`,
@@ -90,7 +95,7 @@ export default function RichTextEditor({
         // Create wrapper
         const dom = document.createElement("div")
         dom.className =
-          "tiptap-image-wrapper relative inline-block group max-w-full overflow-hidden align-middle **max-w-xs**"
+          "tiptap-image-wrapper relative inline-block group max-w-full overflow-hidden align-middle max-w-xs"
 
         // Create image
         const img = document.createElement("img")
@@ -134,7 +139,6 @@ export default function RichTextEditor({
     return text === ""
   }
 
- 
   const extensions = useMemo(() => {
     const baseExtensions: any[] = [
       StarterKit,
@@ -165,18 +169,15 @@ export default function RichTextEditor({
           },
           suggestion: {
             items: ({ query, editor }: { query: string; editor: any }) => {
-             
               if (!mentionUsers || mentionUsers.length === 0) {
                 console.warn("No mention users available")
                 return []
               }
 
-             
               const mentionedUserIds = new Set<string>()
 
               try {
                 if (editor && editor.state && editor.state.doc) {
-                 
                   editor.state.doc.descendants((node: any) => {
                     if (node.type.name === "mention" && node.attrs.id) {
                       mentionedUserIds.add(node.attrs.id)
@@ -191,10 +192,8 @@ export default function RichTextEditor({
                 console.warn("Could not check for existing mentions:", error)
               }
 
-             
               const filtered = mentionUsers
                 .filter((user) => {
-                 
                   if (mentionedUserIds.has(user.unique_id)) {
                     console.log(
                       "Skipping already mentioned user:",
@@ -203,7 +202,6 @@ export default function RichTextEditor({
                     )
                     return false
                   }
-                 
                   const fullName =
                     `${user.first_name} ${user.last_name}`.toLowerCase()
                   return (
@@ -221,6 +219,9 @@ export default function RichTextEditor({
 
               return {
                 onStart: (props: any) => {
+                  mentionActiveRef.current = true
+                  onMentionStateChange?.(true)
+                  
                   component = new ReactRenderer(MentionList, {
                     props,
                     editor: props.editor
@@ -256,6 +257,8 @@ export default function RichTextEditor({
                 onKeyDown(props: any) {
                   if (props.event.key === "Escape") {
                     popup[0].hide()
+                    mentionActiveRef.current = false
+                    onMentionStateChange?.(false)
                     return true
                   }
 
@@ -267,6 +270,8 @@ export default function RichTextEditor({
                 },
 
                 onExit() {
+                  mentionActiveRef.current = false
+                  onMentionStateChange?.(false)
                   popup[0].destroy()
                   component.destroy()
                 }
@@ -278,7 +283,7 @@ export default function RichTextEditor({
     }
 
     return baseExtensions
-  }, [showMentions, mentionUsers, limit])
+  }, [showMentions, mentionUsers, limit, onMentionStateChange])
 
   const editor = useEditor({
     extensions,
@@ -289,7 +294,14 @@ export default function RichTextEditor({
         class:
           "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none p-4"
       },
-
+      handleKeyDown: (view, event) => {
+        if (event.key === "Enter" && !event.shiftKey && !mentionActiveRef.current && !showToolbar) {
+          event.preventDefault()
+          onEnterPress?.()
+          return true
+        }
+        return false
+      },
       handlePaste(view, event) {
         if (!image_uploading) return false
 
@@ -363,11 +375,8 @@ export default function RichTextEditor({
       const hasMention = currentExtensions.includes("mention")
       const shouldHaveMention = showMentions && mentionUsers.length > 0
       if (hasMention !== shouldHaveMention) {
-
         editor.destroy()
-        return () => {
-
-        }
+        return () => {}
       }
     }
   }, [editor, showMentions, mentionUsers.length])
