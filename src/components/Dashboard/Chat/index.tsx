@@ -34,7 +34,7 @@ import {
   SelectUserChat
 } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
-import ChatsList from "./components/ChatsList"
+import { ChatsList } from "./components/ChatsList"
 import {
   AddMessageToChatAction,
   DeleteMessageFromChatAction,
@@ -166,8 +166,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const [editingMessage, setEditingMessage] = useState<SelectMessage | null>(
     null
   )
-  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set())
-  const [isOnline, setIsOnline] = useState<boolean>(false)
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set())
   const typingTimeoutRef = useRef<number | null>(null)
   const isTypingRef = useRef<boolean>(false)
@@ -263,7 +261,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         )
       },
       (msgId, newContent) => {
-        // Handle message editing on receiver side
         setMessages((prev) =>
           prev.map((m) => (m.id === msgId ? { ...m, message: newContent } : m))
         )
@@ -274,20 +271,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           const updated = new Set(prev)
           if (isTyping) {
             updated.add(userId)
-            console.debug(
-              "[Chat] added typer:",
-              userId,
-              "total typers:",
-              updated.size
-            )
           } else {
             updated.delete(userId)
-            console.debug(
-              "[Chat] removed typer:",
-              userId,
-              "total typers:",
-              updated.size
-            )
           }
           return updated
         })
@@ -341,7 +326,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     scrollToBottom()
   }, [messages, authUser])
 
-  const runtime = 0
   useEffect(() => {
     if (!authUser) return
 
@@ -413,75 +397,20 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   }, [authUser, setMyChats, currentChat])
 
   useEffect(() => {
-    if (!authUser) return
-
-    const presenceChannel = pusherClient.subscribe("presence-online-users")
-
-    presenceChannel.bind("pusher:subscription_succeeded", (members: any) => {
-      const currentOnline = new Set<string>()
-      members.each((member: any) => currentOnline.add(member.id))
-      setOnlineUsers(currentOnline)
-    })
-
-    presenceChannel.bind("pusher:member_added", (member: any) => {
-      setOnlineUsers((prev) => new Set(prev).add(member.id))
-    })
-
-    presenceChannel.bind("pusher:member_removed", (member: any) => {
-      setOnlineUsers((prev) => {
-        const newSet = new Set(prev)
-        newSet.delete(member.id)
-        return newSet
-      })
-    })
-
-    return () => {
-      presenceChannel.unbind_all()
-      pusherClient.unsubscribe("presence-online-users")
-    }
-  }, [authUser])
-
-  useEffect(() => {
-    if (authUser) {
-      setIsOnline(onlineUsers.has(authUser.unique_id))
-    }
-  }, [onlineUsers, authUser])
-
-  useEffect(() => {
     if (imageUrl) {
       setShowAttachmentModal(true)
     }
   }, [imageUrl])
-
-  /**
-   * Handles the sending of a new message in the chat.
-   * ...
-   */
 
   const handleInputChange = (val: string) => {
     setNewMessage(val)
 
     if (!currentChat) return
 
-    console.debug(
-      "[Chat] handleInputChange: chatId=",
-      currentChat.id,
-      "isTypingRef=",
-      isTypingRef.current
-    )
     // send start typing once
     if (!isTypingRef.current) {
       isTypingRef.current = true
       sendTypingIndicator(currentChat.id, true)
-        .then(() =>
-          console.debug(
-            "[Chat] sendTypingIndicator(start) sent",
-            currentChat.id
-          )
-        )
-        .catch((e) =>
-          console.error("[Chat] sendTypingIndicator(start) error", e)
-        )
     }
 
     // clear previous timeout
@@ -605,29 +534,12 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       ) {
         await deleteMessageFromChat(msg.id, currentChat.id, authUser.unique_id)
 
-        // Mark message as deleted locally
         setMessages((prev) =>
           prev.map((m) =>
             m.id === msg.id
               ? { ...m, is_deleted: 1, message: "This message was deleted" }
               : m
           )
-        )
-
-        // Update chat list if this was the last message
-        setMyChats((prevChats) =>
-          prevChats.map((chat) => {
-            if (
-              chat.id === currentChat.id &&
-              chat.last_message === msg.message
-            ) {
-              return {
-                ...chat,
-                last_message_deleted: 1
-              }
-            }
-            return chat
-          })
         )
       }
     } catch (error) {
@@ -676,7 +588,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         const res = await uploadAttachment(file.name, base64, file.type)
         console.log("File upload response:", res)
         if (res?.success && res.data) {
-          setImageUrl(res.data.fileUrl)
+          setImageUrl(res.data.fileRecord?.file_path)
         }
       } catch (error) {
         toast({
@@ -724,11 +636,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         <CardContent className="flex-1 overflow-hidden p-0">
           {/* ChatsList component will now display the properly sorted myChats */}
           {canView && (
-            <ChatsList
-              typingUsers={typingUsers}
-              onlineUsers={onlineUsers}
-              searchQuery={searchQuery}
-            />
+            <ChatsList typingUsers={typingUsers} searchQuery={searchQuery} />
           )}
         </CardContent>
       </Card>
@@ -761,7 +669,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                   </CardHeader>
                   <ChatsList
                     searchQuery={searchQuery}
-                    onlineUsers={onlineUsers}
                     typingUsers={typingUsers}
                   />
                 </SheetContent>

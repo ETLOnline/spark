@@ -35,8 +35,7 @@ export const deleteChatMessage = async (
     const deleted = await db
       .update(messagesTable)
       .set({
-        is_deleted: 1,
-        deleted_by: deleted_by_user_id
+        is_deleted: 1
       })
       .where(
         and(

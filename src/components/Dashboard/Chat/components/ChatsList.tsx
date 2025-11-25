@@ -8,18 +8,23 @@ import { userStore } from "@/src/store/user/userStore"
 import Loader from "../../../common/Loader/Loader"
 import ChatContactItem from "./ChatContactItem"
 import moment from "moment"
+import { useOnlineStatus } from "@/src/components/providers/OnlineStatusProvider"
+import { spaceStore } from "@/src/store/space/spaceStore"
 
-const ChatsList = ({
+export const ChatsList = ({
   searchQuery = "",
-  onlineUsers,
   typingUsers
 }: {
   searchQuery: string
-  onlineUsers: Set<string>
   typingUsers?: Set<string>
 }) => {
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
   const authUser = useAtomValue(userStore.AuthUser)
+  const { globalOnlineUsers, spaceOnlineUsers } = useOnlineStatus()
+  const currentSpace = useAtomValue(spaceStore.currentSpace)
+
+  const onlineUsers = currentSpace ? spaceOnlineUsers : globalOnlineUsers
+
   const computeTypingLabel = (chat: (typeof myChats)[number]) => {
     if (!typingUsers || typingUsers.size === 0) return ""
     const memberIds = (chat.users || []).map((u) => u.user_id).filter(Boolean)
@@ -100,5 +105,3 @@ const ChatsList = ({
     </ScrollArea>
   )
 }
-
-export default ChatsList

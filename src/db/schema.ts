@@ -230,7 +230,6 @@ export const messagesTable = pgTable("messages", {
   sender_id: varchar().notNull(),
   message: varchar().notNull(),
   is_deleted: integer().notNull().default(0),
-  deleted_by: varchar(),
   ...timestamps
 })
 
