@@ -365,12 +365,10 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   }, [authUser, setMyChats, currentChat, currentSpace])
 
   const handleSendMessage = async () => {
-    let contentToSend: string
-    let messageToUpdateChatList: string
 
     if (richMessageContent.trim() === "" || !currentChat || !authUser) return
 
-    contentToSend = richMessageContent
+    const contentToSend = richMessageContent
       .replace(
         /<span[^>]*data-type="mention"[^>]*data-id="([^"]*)"[^>]*data-label="([^"]*)"[^>]*>@[^<]*<\/span>/g,
         "@[ $2 ]($1)"
@@ -380,7 +378,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       .replace(/<br\s*\/?>/g, "\n")
       .trim()
 
-    messageToUpdateChatList = richMessageContent.includes("<p>")
+    const messageToUpdateChatList = richMessageContent.includes("<p>")
       ? "Rich text message"
       : contentToSend
 
