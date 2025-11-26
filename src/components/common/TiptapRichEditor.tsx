@@ -63,7 +63,7 @@ interface RichTextEditorProps {
   showToolbar?: boolean
   onEnterPress?: () => void
   onMentionStateChange?: (isActive: boolean) => void
-  showFooter: boolean
+  showFooter?: boolean
 }
 
 export default function RichTextEditor({
