@@ -113,12 +113,12 @@ export const SendMessageNotification = async (
     const notificationBody = tokens
       .map((t) => (t.type === "mention" ? `@${t.value}` : t.value))
       .join("")
-
+      const cleanBody = notificationBody.replace(/<[^>]*>/g, '');
     const notificationPayload: NotificationPayload = {
       receivers: nonPresentReciversIds || [],
       template: {
         title: `Spark- ${authUser.first_name} ${authUser.last_name} sent you a message`,
-        body: notificationBody,
+        body: cleanBody,
         deep_link: createAbsoluteUrl(CTALink),
         icon: authUser.profile_url || ""
       }

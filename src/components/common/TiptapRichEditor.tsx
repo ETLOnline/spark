@@ -63,6 +63,7 @@ interface RichTextEditorProps {
   showToolbar?: boolean
   onEnterPress?: () => void
   onMentionStateChange?: (isActive: boolean) => void
+  showFooter: boolean
 }
 
 export default function RichTextEditor({
@@ -76,13 +77,15 @@ export default function RichTextEditor({
   minHeight = "200px",
   showToolbar = true,
   onEnterPress,
-  onMentionStateChange
+  onMentionStateChange,
+  showFooter = true
 }: RichTextEditorProps) {
   const [linkUrl, setLinkUrl] = useState("")
   const [showLinkInput, setShowLinkInput] = useState(false)
   const [loading, setLoading] = useState(false)
   const editorRef = useRef<any>(null)
   const mentionActiveRef = useRef(false)
+  minHeight = showToolbar ? "200px" : "30px"
 
   const editorKey = useMemo(
     () => `${showMentions}-${mentionUsers.length}`,
@@ -221,7 +224,7 @@ export default function RichTextEditor({
                 onStart: (props: any) => {
                   mentionActiveRef.current = true
                   onMentionStateChange?.(true)
-                  
+
                   component = new ReactRenderer(MentionList, {
                     props,
                     editor: props.editor
@@ -295,7 +298,12 @@ export default function RichTextEditor({
           "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none p-4"
       },
       handleKeyDown: (view, event) => {
-        if (event.key === "Enter" && !event.shiftKey && !mentionActiveRef.current && !showToolbar) {
+        if (
+          event.key === "Enter" &&
+          !event.shiftKey &&
+          !mentionActiveRef.current &&
+          !showToolbar
+        ) {
           event.preventDefault()
           onEnterPress?.()
           return true
@@ -735,12 +743,13 @@ export default function RichTextEditor({
       </div>
 
       {/* Footer */}
-      <div className="border-t p-2 text-xs text-gray-500 flex justify-between">
-        <span>Rich Text Editor powered by Tiptap</span>
-        <span>
-          {editor.storage.characterCount.characters()} / {limit} characters
-        </span>
-      </div>
+      {showFooter && (
+        <div className="border-t p-2 text-xs text-gray-500 flex justify-between">
+          <span>
+            {editor.storage.characterCount.characters()} / {limit} characters
+          </span>
+        </div>
+      )}
     </div>
   )
 }

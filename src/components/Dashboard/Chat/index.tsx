@@ -628,6 +628,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       editable={!newMessageLoading}
                       onEnterPress={handleSendMessage}
                       onMentionStateChange={setIsMentionActive}
+                      showFooter={false}
                     />
                   </div>
 
@@ -643,13 +644,13 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                     onClick={() => {
                       setShowRichEditorToolbar((prev) => !prev)
                     }}
-                    className="p-1"
+                    className={`p-1 ${
+                      showRichEditorToolbar
+                        ? "bg-secondary" : "hover:bg-secondary/50"
+                    }`}
                   >
-                    {showRichEditorToolbar ? (
-                      <PencilLine className="h-5 w-5" />
-                    ) : (
-                      <PlusCircle className="h-5 w-5" />
-                    )}
+                    <PencilLine className="h-5 w-5" />
+                    <span className="sr-only">Toggle Formatting Menu</span>
                   </Button>
 
                   <Popover>

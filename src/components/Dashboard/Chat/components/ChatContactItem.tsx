@@ -39,8 +39,8 @@ const ChatContactItem = ({ chat }: ChatContactItemProps) => {
   const unreadCount = currentUserChatRecord?.unread_count || 0
   const tokens = parseMentions(chat.last_message || "")
   const lastMessage = tokens
-  .map((t) => (t.type === "mention" ? `@${t.value}` : t.value))
-  .join("")
+    .map((t) => (t.type === "mention" ? `@${t.value}` : t.value))
+    .join("")
 
   if (!filteredContact) return null
   const chatContact = filteredContact?.user || null
@@ -82,9 +82,10 @@ const ChatContactItem = ({ chat }: ChatContactItemProps) => {
             ? chat.name
             : `${chatContact?.first_name} ${chatContact?.last_name}`}
         </p>
-        <p className="text-sm text-muted-foreground truncate">
-          {lastMessage}
-        </p>
+        <p
+          className="text-sm text-muted-foreground truncate"
+          dangerouslySetInnerHTML={{ __html: lastMessage }}
+        />
       </div>
 
       {/* NEW: Show badges container */}
