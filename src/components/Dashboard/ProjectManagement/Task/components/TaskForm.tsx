@@ -445,7 +445,7 @@ export default function TaskForm({
       <div className="grid grid-cols-12 gap-2 ">
         {/* Main content area (left side) */}
         <ScrollArea className="h-[80vh] col-span-12 md:col-span-9">
-          <div className="flex-1 px-4">
+          <div className=" px-4">
             <div className="space-y-6">
               {/* Task title */}
               <div className="space-y-2">
@@ -454,8 +454,10 @@ export default function TaskForm({
                     name="task_title"
                     defaultValue=""
                     control={form.control}
-                    render={({ field }) =>
-                      activeField === "title" ? (
+                    render={({ field }) => {
+                      const isContainSpace = field.value.includes(" ")
+
+                      return activeField === "title" ? (
                         <Input
                           id="task_title"
                           {...field}
@@ -480,14 +482,16 @@ export default function TaskForm({
                             )}
                           </div>
 
-                          <span>
+                          <span
+                            className={`${isContainSpace ? "break-words" : "break-all"}`}
+                          >
                             {field.value
                               ? field.value
                               : " Click to add title..."}
                           </span>
                         </div>
                       )
-                    }
+                    }}
                   />
                 </div>
               </div>
