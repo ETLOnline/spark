@@ -365,7 +365,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   }, [authUser, setMyChats, currentChat, currentSpace])
 
   const handleSendMessage = async () => {
-
     if (richMessageContent.trim() === "" || !currentChat || !authUser) return
 
     const contentToSend = richMessageContent
@@ -618,17 +617,17 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       onChange={setRichMessageContent}
                       image_uploading={false}
                       showMentions={
-                        currentChat?.is_group === 1 &&
-                        availableUsers.length > 0
+                        currentChat?.is_group === 1 && availableUsers.length > 0
                       }
                       mentionUsers={availableUsers}
                       showToolbar={showRichEditorToolbar}
-                      minHeight="60px"
+                      minHeight={`${showRichEditorToolbar ? "100px" : "30px"}`}
                       limit={5000}
                       editable={!newMessageLoading}
                       onEnterPress={handleSendMessage}
                       onMentionStateChange={setIsMentionActive}
                       showFooter={false}
+                      isScrollAble={true}
                     />
                   </div>
 
@@ -646,7 +645,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                     }}
                     className={`p-1 ${
                       showRichEditorToolbar
-                        ? "bg-secondary" : "hover:bg-secondary/50"
+                        ? "bg-secondary"
+                        : "hover:bg-secondary/50"
                     }`}
                   >
                     <PencilLine className="h-5 w-5" />
