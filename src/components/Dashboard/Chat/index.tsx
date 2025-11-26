@@ -18,7 +18,7 @@ import {
   Edit,
   FileIcon,
   Menu,
-  PlusCircle,
+  Paperclip,
   Search,
   Send,
   SmileIcon,
@@ -69,7 +69,6 @@ import {
   DropdownMenuTrigger
 } from "../../ui/dropdown-menu"
 import { toast } from "@/src/hooks/use-toast"
-import EditMessageModal from "./components/EditMessageModal"
 import AttachmentModal from "./components/AttachmentModal"
 import Image from "next/image"
 
@@ -409,13 +408,37 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     }, 2000)
   }
   const handleSendMessage = async () => {
-    if (
-      (newMessage.trim() === "" && !fileString) ||
-      !currentChat ||
-      !authUser
-    ) {
-      return
+    if (!currentChat || !authUser) return
+
+    // ✨ editing mode
+    if (editingMessage) {
+      if (!newMessage.trim()) return
+
+      try {
+        await updateChatMsg(
+          editingMessage.id,
+          currentChat.id,
+          authUser.unique_id,
+          newMessage,
+          editingMessage.message
+        )
+
+        setEditingMessage(null)
+        setNewMessage("")
+
+        return
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to update message.",
+          variant: "destructive"
+        })
+        return
+      }
     }
+
+    // ✨ sending new message
+    if (newMessage.trim() === "" && !fileString) return
 
     try {
       const messageContent = fileString || newMessage
@@ -426,18 +449,17 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           : "text"
 
       const newMsg: InsertMessage = {
-        sender_id: authUser?.unique_id || "",
-        chat_id: currentChat?.id || 0,
+        sender_id: authUser.unique_id,
+        chat_id: currentChat.id,
         message: messageContent,
         type: messageType
       }
 
+      await addMessageToChat(newMsg, currentSpace?.id)
+
       setNewMessage("")
       setFileString(null)
       setSelectedFile(null)
-
-      await addMessageToChat(newMsg, currentSpace?.id)
-
       setShowAttachmentModal(false)
     } catch (error) {
       toast({
@@ -460,27 +482,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       toast({
         title: "Error",
         description: "Failed to delete message.",
-        variant: "destructive"
-      })
-    }
-  }
-
-  const handleSaveEditedMessage = async (updatedText: string) => {
-    if (!editingMessage || !currentChat || !authUser) return
-
-    try {
-      await updateChatMsg(
-        editingMessage.id,
-        currentChat.id,
-        authUser.unique_id,
-        updatedText,
-        editingMessage.message
-      )
-      setEditingMessage(null)
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save edited message.",
         variant: "destructive"
       })
     }
@@ -770,9 +771,12 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                         {message.type !== "image" &&
                                           message.type !== "file" && (
                                             <DropdownMenuItem
-                                              onClick={() =>
+                                              onClick={() => {
                                                 setEditingMessage(message)
-                                              }
+                                                handleInputChange(
+                                                  message.message
+                                                )
+                                              }}
                                             >
                                               <Edit className="mr-2 h-4 w-4" />
                                               Edit
@@ -842,7 +846,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                     onClick={() => fileInputRef.current?.click()}
                     title="Attach file"
                   >
-                    <PlusCircle className="h-4 w-4" />
+                    <Paperclip className="h-4 w-4" />
                   </Button>
                   <Popover>
                     <PopoverTrigger>
@@ -873,13 +877,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
             </>
           ) : null}
         </Card>
-      )}
-      {editingMessage && (
-        <EditMessageModal
-          message={editingMessage}
-          onSave={handleSaveEditedMessage}
-          onClose={() => setEditingMessage(null)}
-        />
       )}
 
       <AttachmentModal
