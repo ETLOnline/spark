@@ -169,10 +169,7 @@ export default function EditSocialLinksModal({
               <DialogFooter>
                 <Button
                   loading={submitLoading}
-                  disabled={
-                    submitLoading ||
-                    Object.values(form.watch()).every((value) => !value)
-                  }
+                  disabled={submitLoading}
                   className="w-full"
                 >
                   Save changes

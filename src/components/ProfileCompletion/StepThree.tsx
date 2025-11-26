@@ -43,9 +43,8 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
         github_url: data.github,
         instagram_url: data.instagram,
         twitter_url: data.twitter,
-        personal_website_url: data.personal_website
+        personal_website_url: data.website
       }
-
       const hasAnyLink = Object.values(socialPlatforms).some(
         (val) => val && val.trim() !== ""
       )
