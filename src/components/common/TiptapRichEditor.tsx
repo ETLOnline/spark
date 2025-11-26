@@ -64,6 +64,8 @@ interface RichTextEditorProps {
   onEnterPress?: () => void
   onMentionStateChange?: (isActive: boolean) => void
   showFooter?: boolean
+  maxHeight?: string
+  isScrollAble?: boolean
 }
 
 export default function RichTextEditor({
@@ -75,6 +77,8 @@ export default function RichTextEditor({
   mentionUsers = [],
   showMentions = false,
   minHeight = "200px",
+  maxHeight,
+  isScrollAble = false,
   showToolbar = true,
   onEnterPress,
   onMentionStateChange,
@@ -85,7 +89,6 @@ export default function RichTextEditor({
   const [loading, setLoading] = useState(false)
   const editorRef = useRef<any>(null)
   const mentionActiveRef = useRef(false)
-  minHeight = showToolbar ? "200px" : "30px"
 
   const editorKey = useMemo(
     () => `${showMentions}-${mentionUsers.length}`,
@@ -295,7 +298,7 @@ export default function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none p-4"
+          "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none p-1"
       },
       handleKeyDown: (view, event) => {
         if (
@@ -729,11 +732,18 @@ export default function RichTextEditor({
         key={`editor-wrapper-${showMentions}-${mentionUsers.length}`}
       >
         <div
-          className="tiptap-editor-wrapper"
+          className="tiptap-editor-wrapper p-1"
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
         >
-          <EditorContent editor={editor} style={{ minHeight }} />
+          <EditorContent
+            editor={editor}
+            style={{
+              minHeight: minHeight,
+              maxHeight: isScrollAble ? (maxHeight ?? "250px") : "",
+              overflowY: isScrollAble ? "auto" : "visible"
+            }}
+          />
         </div>
         {loading ? (
           <div className="absolute inset-0 bg-transparent backdrop-blur-sm z-50 flex flex-col items-center justify-center p-4 text-center">
