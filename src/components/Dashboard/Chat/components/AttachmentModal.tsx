@@ -12,13 +12,14 @@ import {
 import Image from "next/image"
 import { FileIcon } from "lucide-react"
 import { formatFileSize } from "@/src/utils/helpers"
+import Loader from "@/src/components/common/Loader/Loader"
 
 interface Props {
   open: boolean
   onClose: () => void
   onSend: () => Promise<void>
   sending?: boolean
-  imageUrl: string
+  fileString: string | null
   file?: File | null
 }
 
@@ -27,9 +28,10 @@ export default function AttachmentModal({
   onClose,
   onSend,
   sending,
-  imageUrl,
+  fileString,
   file
 }: Props) {
+  const [fileUrl, fileName, fileSize] = (fileString ?? "").split(",")
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
@@ -43,7 +45,7 @@ export default function AttachmentModal({
               {file.type.startsWith("image/") ? (
                 <div className="w-full max-h-64 overflow-hidden rounded-lg bg-muted flex items-center justify-center">
                   <img
-                    src={imageUrl}
+                    src={fileUrl ?? undefined}
                     alt={file.name}
                     className="w-full h-full object-contain max-w-sm max-h-64"
                   />
@@ -62,6 +64,8 @@ export default function AttachmentModal({
                 {file.name}
               </p>
             </div>
+          ) : sending ? (
+            <Loader />
           ) : (
             <div className="text-center text-sm text-muted-foreground">
               No attachment selected

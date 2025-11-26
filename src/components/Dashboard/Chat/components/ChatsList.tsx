@@ -16,7 +16,7 @@ export const ChatsList = ({
   typingUsers
 }: {
   searchQuery: string
-  typingUsers?: Set<string>
+  typingUsers?: Record<number, Set<string>>
 }) => {
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
   const authUser = useAtomValue(userStore.AuthUser)
@@ -26,21 +26,22 @@ export const ChatsList = ({
   const onlineUsers = currentSpace ? spaceOnlineUsers : globalOnlineUsers
 
   const computeTypingLabel = (chat: (typeof myChats)[number]) => {
-    if (!typingUsers || typingUsers.size === 0) return ""
+    if (!typingUsers) return ""
+    const chatTypers = typingUsers[chat.id] || new Set<string>()
+    if (chatTypers.size === 0) return ""
+
     const memberIds = (chat.users || []).map((u) => u.user_id).filter(Boolean)
     const typers = memberIds.filter(
-      (id) => typingUsers.has(id) && id !== authUser?.unique_id
+      (id) => chatTypers.has(id) && id !== authUser?.unique_id
     )
     if (typers.length === 0) return ""
     if (!chat.is_group) return "typing..."
-    const names = chat.users
-      ?.filter((u) => typers.includes(u.user_id))
+    const names = (chat.users || [])
+      .filter((u) => typers.includes(u.user_id))
       .map((u) => u.user?.first_name)
       .filter(Boolean)
       .slice(0, 3)
-    return names && names.length > 0
-      ? `${names.join(", ")} typing...`
-      : "typing..."
+    return names.length > 0 ? `${names.join(", ")} typing...` : "typing..."
   }
 
   const filteredChats = useMemo(() => {

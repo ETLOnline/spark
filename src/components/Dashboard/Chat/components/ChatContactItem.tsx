@@ -79,11 +79,13 @@ const ChatContactItem = ({
             : `${chatContact?.first_name} ${chatContact?.last_name}`}
         </p>
         <p className="text-sm text-muted-foreground truncate">
-          {typingLabel && chat.id === currentChat?.id ? (
-            <span className="italic">{typingLabel}</span>
-          ) : (
-            chat?.last_message
-          )}
+          <p className="text-sm text-muted-foreground truncate">
+            {typingLabel ? (
+              <span className="italic">{typingLabel}</span>
+            ) : (
+              chat?.last_message
+            )}
+          </p>
         </p>
       </div>
       {unreadCount > 0 && (

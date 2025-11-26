@@ -50,7 +50,7 @@ import Link from "next/link"
 import Loader from "../../common/Loader/Loader"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
-import { getUserRole, isOnlyEmoji } from "@/src/utils/helpers"
+import { formatFileSize, getUserRole, isOnlyEmoji } from "@/src/utils/helpers"
 import CreateNewChat from "./components/CreateNewChat"
 import Avvvatars from "avvvatars-react"
 import {
@@ -96,7 +96,7 @@ function joinChannel(
   onMessageReceived: (message: SelectMessage) => void,
   onMessageDeleted?: (msgId: number) => void,
   onMessageEdited?: (msgId: number, newContent: string) => void,
-  onTyping?: (userId: string, isTyping: boolean) => void
+  onTyping?: (userId: string, isTyping: boolean, chatId: number) => void
 ) {
   const channelName = `private-chat-${chatId}`
   const channel = pusherClient.subscribe(channelName)
@@ -115,8 +115,7 @@ function joinChannel(
     }
   )
   channel.bind("typing", (data: { userId: string; isTyping: boolean }) => {
-    console.debug("[Chat] received typing event", channelName, data)
-    onTyping?.(data.userId, data.isTyping)
+    onTyping?.(data.userId, data.isTyping, chatId)
   })
   function unsubscribe() {
     channel.unbind_all()
@@ -166,18 +165,18 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const [editingMessage, setEditingMessage] = useState<SelectMessage | null>(
     null
   )
-  const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set())
-  const typingTimeoutRef = useRef<number | null>(null)
-  const isTypingRef = useRef<boolean>(false)
+  const [typingUsers, setTypingUsers] = useState<Record<number, Set<string>>>(
+    {}
+  )
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [fileString, setFileString] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [showAttachmentModal, setShowAttachmentModal] = useState(false)
   const authUser = useAtomValue(userStore.AuthUser)
-  const [chatRealTime, setChatRealtime] = useState<{
-    unsubscribe: () => void
-  } | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>("")
+  type ChatRealtime = { chatId: number; unsubscribe: () => void }[]
+  const [chatRealTime, setChatRealtime] = useState<ChatRealtime>([])
 
   const [chatContact, setChatContact] = useState<SelectUser | null>(null)
   const [
@@ -229,60 +228,59 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   }, [])
 
   useEffect(() => {
-    if (!currentChat || !authUser) return
-    chatRealTime?.unsubscribe()
+    if (!authUser) return
 
-    const { unsubscribe } = joinChannel(
-      currentChat.id,
-      (message) => {
-        setMessages((prev) => [...prev, message])
-
-        setMyChats((prevChats) => {
-          const updatedChats = prevChats.map((chat) => {
-            if (chat.id === message.chat_id) {
-              return {
-                ...chat,
-                last_message: message.message,
-                last_message_at: message.created_at
-              }
-            }
-            return chat
-          })
-          return updatedChats
-        })
-      },
-      (msgId) => {
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === msgId
-              ? { ...m, is_deleted: 1, message: "This message was deleted" }
-              : m
+    chatRealTime?.forEach((ch) => ch.unsubscribe())
+    const subscriptions = myChats.map((chat) => {
+      const { unsubscribe } = joinChannel(
+        chat.id,
+        (message) => {
+          setMessages((prev) => [...prev, message])
+          setMyChats((prevChats) =>
+            prevChats.map((c) =>
+              c.id === message.chat_id
+                ? {
+                    ...c,
+                    last_message: message.message,
+                    last_message_at: message.created_at
+                  }
+                : c
+            )
           )
-        )
-      },
-      (msgId, newContent) => {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === msgId ? { ...m, message: newContent } : m))
-        )
-      },
-      (userId, isTyping) => {
-        console.debug("[Chat] typing handler called:", userId, isTyping)
-        setTypingUsers((prev) => {
-          const updated = new Set(prev)
-          if (isTyping) {
-            updated.add(userId)
-          } else {
-            updated.delete(userId)
-          }
-          return updated
-        })
-      }
-    )
+        },
+        (msgId) => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === msgId
+                ? { ...m, is_deleted: 1, message: "This message was deleted" }
+                : m
+            )
+          )
+        },
+        (msgId, newContent) => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === msgId ? { ...m, message: newContent } : m
+            )
+          )
+        },
+        (userId: string, isTyping: boolean, chatId: number) => {
+          setTypingUsers((prev) => {
+            const updated = { ...prev }
+            if (!updated[chatId]) updated[chatId] = new Set<string>()
+            if (isTyping) updated[chatId].add(userId)
+            else updated[chatId].delete(userId)
+            return updated
+          })
+        }
+      )
+      return { chatId: chat.id, unsubscribe }
+    })
 
-    setChatRealtime({ unsubscribe })
+    setChatRealtime(subscriptions)
 
-    return () => unsubscribe()
-  }, [currentChat?.id, authUser])
+    return () => subscriptions.forEach((s) => s.unsubscribe())
+  }, [myChats, authUser])
 
   useEffect(() => {
     if (!switchedChat) return
@@ -296,8 +294,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
    */
   const handleChatSwitch = async (chatId: number) => {
     initialChatLoadRef.current = true
-    // Clear typing users when switching chats
-    setTypingUsers(new Set())
     const newSwitchedChat = await fetchChatWithMessages(chatId)
     if (newSwitchedChat && newSwitchedChat.data) {
       setCurrentChat(newSwitchedChat.data)
@@ -396,134 +392,60 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     }
   }, [authUser, setMyChats, currentChat])
 
-  useEffect(() => {
-    if (imageUrl) {
-      setShowAttachmentModal(true)
-    }
-  }, [imageUrl])
-
-  const handleInputChange = (val: string) => {
+  const handleInputChange = async (val: string) => {
     setNewMessage(val)
 
     if (!currentChat) return
 
-    // send start typing once
-    if (!isTypingRef.current) {
-      isTypingRef.current = true
-      sendTypingIndicator(currentChat.id, true)
+    await sendTypingIndicator(currentChat.id, true)
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
     }
 
-    // clear previous timeout
-    if (typingTimeoutRef.current) {
-      window.clearTimeout(typingTimeoutRef.current)
-    }
-
-    // stop typing after 2s of inactivity
-    typingTimeoutRef.current = window.setTimeout(() => {
-      if (isTypingRef.current) {
-        isTypingRef.current = false
-        sendTypingIndicator(currentChat.id, false)
-          .then(() =>
-            console.debug(
-              "[Chat] sendTypingIndicator(stop) sent",
-              currentChat.id
-            )
-          )
-          .catch((e) =>
-            console.error("[Chat] sendTypingIndicator(stop) error", e)
-          )
-      }
-    }, 5000)
-  }
-
-  // ensure we send stop-typing on submit/unmount
-  const stopTypingNow = useCallback(() => {
-    if (!currentChat) return
-    if (typingTimeoutRef.current) {
-      window.clearTimeout(typingTimeoutRef.current)
+    typingTimeoutRef.current = setTimeout(async () => {
+      await sendTypingIndicator(currentChat.id, false)
       typingTimeoutRef.current = null
-    }
-    if (isTypingRef.current) {
-      isTypingRef.current = false
-      sendTypingIndicator(currentChat.id, false)
-        .then(() =>
-          console.debug(
-            "[Chat] stopTypingNow: sendTypingIndicator(stop) sent",
-            currentChat.id
-          )
-        )
-        .catch((e) =>
-          console.error("[Chat] stopTypingNow: sendTypingIndicator error", e)
-        )
-    }
-  }, [currentChat, sendTypingIndicator])
-  useEffect(() => {
-    return () => {
-      stopTypingNow()
-    }
-  }, [currentChat, sendTypingIndicator, stopTypingNow])
-  // UI: compute typing label
-  const typingLabel = (() => {
-    if (!currentChat) return ""
-    const typers = Array.from(typingUsers)
-    if (typers.length === 0) return ""
-    // private chat: show contact typing
-    if (!currentChat.is_group) {
-      if (chatContact && typers.includes(chatContact.unique_id))
-        return "typing..."
-      return "typing..."
-    }
-
-    // group: show first names of typers (resolve from chat users)
-    const names = currentChat.users
-      ?.filter((u) => typers.includes(u.user_id))
-      .map((u) => u.user?.first_name)
-      .filter(Boolean)
-      .slice(0, 3)
-    return names && names.length > 0
-      ? `${names.join(", ")} typing...`
-      : "typing..."
-  })()
+    }, 2000)
+  }
   const handleSendMessage = async () => {
-    // Check if there's a message to send or an attachment
-    if ((newMessage.trim() === "" && !imageUrl) || !currentChat || !authUser) {
+    if (
+      (newMessage.trim() === "" && !fileString) ||
+      !currentChat ||
+      !authUser
+    ) {
       return
     }
 
-    stopTypingNow()
+    try {
+      const messageContent = fileString || newMessage
+      const messageType = selectedFile?.type?.startsWith("image/")
+        ? "image"
+        : selectedFile
+          ? "file"
+          : "text"
 
-    const messageContent = imageUrl || newMessage
-    const messageType = selectedFile?.type?.startsWith("image/")
-      ? "image"
-      : selectedFile
-        ? "file"
-        : "text"
+      const newMsg: InsertMessage = {
+        sender_id: authUser?.unique_id || "",
+        chat_id: currentChat?.id || 0,
+        message: messageContent,
+        type: messageType
+      }
 
-    const newMsg: InsertMessage = {
-      sender_id: authUser?.unique_id || "",
-      chat_id: currentChat?.id || 0,
-      message: messageContent,
-      type: messageType
+      setNewMessage("")
+      setFileString(null)
+      setSelectedFile(null)
+
+      await addMessageToChat(newMsg, currentSpace?.id)
+
+      setShowAttachmentModal(false)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send message.",
+        variant: "destructive"
+      })
     }
-
-    setMyChats((prevChats) =>
-      prevChats.map((chat) =>
-        chat.id === currentChat.id
-          ? {
-              ...chat,
-              last_message: newMsg.message,
-              last_message_at: moment().toISOString(),
-              updated_at: moment().toISOString(),
-              unread_count: 0
-            }
-          : chat
-      )
-    )
-
-    setNewMessage("")
-    setImageUrl(null)
-    setSelectedFile(null)
-    await addMessageToChat(newMsg, currentSpace?.id)
   }
 
   const handleDelteMsg = async (msg: SelectMessage) => {
@@ -533,14 +455,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         currentChat?.id === msg.chat_id
       ) {
         await deleteMessageFromChat(msg.id, currentChat.id, authUser.unique_id)
-
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === msg.id
-              ? { ...m, is_deleted: 1, message: "This message was deleted" }
-              : m
-          )
-        )
       }
     } catch (error) {
       toast({
@@ -551,44 +465,41 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     }
   }
 
-  const handleEditMsg = (msg: SelectMessage) => {
-    setEditingMessage(msg)
-  }
-  const closeEditModal = () => setEditingMessage(null)
-
   const handleSaveEditedMessage = async (updatedText: string) => {
-    if (!editingMessage || !currentChat) return
+    if (!editingMessage || !currentChat || !authUser) return
 
-    await updateChatMsg(
-      editingMessage.id,
-      currentChat.id,
-      authUser!.unique_id,
-      updatedText,
-      editingMessage.message
-    )
-
-    setMessages((prev) =>
-      prev.map((msg) =>
-        msg.id === editingMessage.id ? { ...msg, message: updatedText } : msg
+    try {
+      await updateChatMsg(
+        editingMessage.id,
+        currentChat.id,
+        authUser.unique_id,
+        updatedText,
+        editingMessage.message
       )
-    )
-
-    closeEditModal()
+      setEditingMessage(null)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save edited message.",
+        variant: "destructive"
+      })
+    }
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-
     setSelectedFile(file)
     const reader = new FileReader()
     reader.onloadend = async () => {
       const base64 = reader.result as string
       try {
         const res = await uploadAttachment(file.name, base64, file.type)
-        console.log("File upload response:", res)
         if (res?.success && res.data) {
-          setImageUrl(res.data.fileRecord?.file_path)
+          setShowAttachmentModal(true)
+          const { fileRecord } = res.data
+          const fileString = `${fileRecord.file_path},${fileRecord.file_name},${fileRecord.file_size}`
+          setFileString(fileString)
         }
       } catch (error) {
         toast({
@@ -602,14 +513,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     reader.readAsDataURL(file)
   }
 
-  const handleSendAttachment = async () => {
-    await handleSendMessage()
-    setShowAttachmentModal(false)
-  }
-
   const closeAttachmentModal = () => {
     setShowAttachmentModal(false)
-    setImageUrl(null)
+    setFileString(null)
     setSelectedFile(null)
     if (fileInputRef.current) fileInputRef.current.value = ""
   }
@@ -798,33 +704,45 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                 </span>
                               ) : (
                                 <>
-                                  {message.type === "image" && (
-                                    <Image
-                                      src={message.message}
-                                      alt="Post image"
-                                      className="rounded-lg max-h-96 w-full object-cover bg-gradient-to-r from-accent to-secondary"
-                                      width={1000}
-                                      height={1000}
-                                      style={{ objectFit: "contain" }}
-                                    />
-                                  )}
+                                  {message.type === "image" &&
+                                    message.message.split(",").length === 3 &&
+                                    (() => {
+                                      const [fileUrl, fileName, fileSize] =
+                                        message.message.split(",")
 
-                                  {message.type === "file" && (
-                                    <Link href={message.message}>
-                                      <div
-                                        className={`flex items-center ${message.sender_id === authUser.unique_id ? "bg-primary text-primary-foreground" : "bg-muted"}  space-x-2 p-2 rounded-lg `}
-                                      >
-                                        <FileIcon className="h-8 w-8" />
-                                        <span className="font-medium">
-                                          {"mazhar.pdf"}
-                                        </span>
-                                        <span className="text-xs ">
-                                          {/* {formatFileSize(pot?.file?.file_size)} */}
-                                          224k
-                                        </span>
-                                      </div>
-                                    </Link>
-                                  )}
+                                      return (
+                                        <Image
+                                          src={fileUrl}
+                                          alt="Post image"
+                                          className="rounded-lg max-h-96 w-full object-cover bg-gradient-to-r from-accent to-secondary"
+                                          width={1000}
+                                          height={1000}
+                                          style={{ objectFit: "contain" }}
+                                        />
+                                      )
+                                    })()}
+
+                                  {message.type === "file" &&
+                                    message.message.split(",").length === 3 &&
+                                    (() => {
+                                      const [fileUrl, fileName, fileSize] =
+                                        message.message.split(",")
+                                      return (
+                                        <Link href={fileUrl} target="_blank">
+                                          <div
+                                            className={`flex items-center ${message.sender_id === authUser.unique_id ? "bg-primary text-primary-foreground" : "bg-muted"} space-x-2 p-2 rounded-lg`}
+                                          >
+                                            <FileIcon className="h-8 w-8" />
+                                            <span className="font-medium">
+                                              {fileName}
+                                            </span>
+                                            <span className="text-xs">
+                                              {formatFileSize(Number(fileSize))}
+                                            </span>
+                                          </div>
+                                        </Link>
+                                      )
+                                    })()}
 
                                   {message.type === "text" && (
                                     <span>{message.message}</span>
@@ -853,7 +771,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                           message.type !== "file" && (
                                             <DropdownMenuItem
                                               onClick={() =>
-                                                handleEditMsg(message)
+                                                setEditingMessage(message)
                                               }
                                             >
                                               <Edit className="mr-2 h-4 w-4" />
@@ -960,19 +878,18 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         <EditMessageModal
           message={editingMessage}
           onSave={handleSaveEditedMessage}
-          onClose={closeEditModal}
+          onClose={() => setEditingMessage(null)}
         />
       )}
-      {imageUrl && (
-        <AttachmentModal
-          open={showAttachmentModal}
-          onClose={closeAttachmentModal}
-          file={selectedFile}
-          onSend={handleSendAttachment}
-          sending={uploadLoding}
-          imageUrl={imageUrl}
-        />
-      )}
+
+      <AttachmentModal
+        open={showAttachmentModal}
+        onClose={closeAttachmentModal}
+        file={selectedFile}
+        onSend={handleSendMessage}
+        sending={newMessageLoading}
+        fileString={fileString ?? ""}
+      />
     </div>
   )
 }
