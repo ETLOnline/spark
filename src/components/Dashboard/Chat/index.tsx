@@ -616,7 +616,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                     <RichTextEditor
                       value={richMessageContent}
                       onChange={setRichMessageContent}
-                      image_uploading={false}
+                      image_uploading={true}
+                      entity="chats"
                       showMentions={
                         currentChat?.is_group === 1 && availableUsers.length > 0
                       }
