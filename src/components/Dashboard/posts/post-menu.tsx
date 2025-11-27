@@ -1,4 +1,4 @@
-import { MoreVertical, Trash } from "lucide-react"
+import { Edit3, MoreVertical, Trash } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -88,7 +88,8 @@ const PostMenu = ({ post, spaceId }: PostMenuProps) => {
             </DropdownMenuItem>
             {isPostOwner ? (
               <DropdownMenuItem onClick={() => setIsEditModalOpen(true)}>
-                Edit Post
+                <Edit3 className="mr-2 h-4 w-4" />
+                Edit
               </DropdownMenuItem>
             ) : null}
           </DropdownMenuContent>

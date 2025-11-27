@@ -27,6 +27,7 @@ import {
 import { createChatEmailNotification } from "@/src/services/notify/chat/chat"
 import { NotificationEvent } from "@/src/services/notify/types/events"
 import { slugify } from "@/src/utils/helpers"
+import { extractMentionsFromMessage } from "@/src/services/realtime/utils/helper"
 
 export const CreatePrivateChatAction = CreateServerAction(
   true,
@@ -189,6 +190,9 @@ export const GetChatBySlugWithMessagesAction = CreateServerAction(
   async (slug: string) => {
     try {
       const chat = await GetChatBySlugWithMessages(slug)
+      if(!chat){
+        return { success: false, data: undefined }
+      }
       return { success: true, data: chat }
     } catch (error) {
       return { error: error }
@@ -202,13 +206,15 @@ export const AddMessageToChatAction = CreateServerAction(
     try {
       const authUser = await AuthUserAction()
       if (authUser) {
+        const mentions = extractMentionsFromMessage(message.message)
+        
         const newMessagePlayload = {
           ...message,
-          sender_id: authUser.unique_id
-        }
+          sender_id: authUser.unique_id,
+          mentions: mentions.length > 0 ? mentions : undefined 
+        }     
         const newMessage = await createChatMessage(newMessagePlayload)
         if (newMessage) {
-          // update last message on chat
           const updatedChat = await updateLastChatMessage(
             newMessage.chat_id,
             newMessage.message
@@ -232,14 +238,17 @@ export const AddMessageToChatAction = CreateServerAction(
             const userId = userChat.user_id
 
             if (userId !== authUser.unique_id) {
+
+              const wasMentioned = mentions.includes(userId)
+              
               await pusherServer.trigger(
-                `private-user-${userId}`, // Pusher user channel convention
-                "chat-update", // Event name for chat list updates
+                `private-user-${userId}`,
+                "chat-update",
                 {
                   update: {
-                    // Pusher data structure wrapper
                     chatId: updatedChat.id,
                     lastMessage: newMessage.message,
+                    wasMentioned: wasMentioned,
                     sender_id: authUser.unique_id
                   }
                 }
@@ -248,6 +257,7 @@ export const AddMessageToChatAction = CreateServerAction(
           }
 
           const space = await GetSpaceById(space_id || "")
+
 
           await SendMessageNotification(updatedChat, space)
 
