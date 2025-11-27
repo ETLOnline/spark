@@ -31,4 +31,4 @@ export const socialPlatforms = [
     icon: Instagram,
     placeholder: "https://instagram.com/username"
   }
-]
+] as const

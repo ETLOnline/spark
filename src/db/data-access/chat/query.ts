@@ -7,6 +7,7 @@ import {
   ilike,
   inArray,
   like,
+  ne,
   or,
   sql,
   SQLWrapper
@@ -22,6 +23,7 @@ import {
 } from "../../schema"
 import { randomUUID } from "crypto"
 import { slugify } from "@/src/utils/helpers"
+import { MentionChatRegex } from "@/src/components/Dashboard/Chat/constants"
 
 export const CreatePrivateChat = async (
   user_id: string,
@@ -168,7 +170,7 @@ export const GetChats = async (
             ? eq(chatsTable.is_group, 0)
             : undefined
         ),
-      orderBy: (chatsTable) => desc(chatsTable.created_at),
+      orderBy: (chatsTable) => desc(chatsTable.updated_at),
       with: {
         users: {
           with: {
@@ -510,6 +512,51 @@ export const getExistingSingleChat = async (
   }
 }
 
+export const incrementUnreadCountForChat = async (
+  chatId: number,
+  user_id: string
+) => {
+  try {
+    // 1. Increment the unread_count for all users who are NOT the sender
+    const result = await db
+      .update(userChatsTable)
+      .set({
+        unread_count: sql`${userChatsTable.unread_count} + 1`
+      })
+      .where(
+        and(
+          eq(userChatsTable.chat_id, chatId),
+          eq(userChatsTable.user_id, user_id)
+        )
+      )
+
+    return result
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
+
+export const markChatAsReadForUser = async (chatId: number, userId: string) => {
+  try {
+    const [result] = await db
+      .update(userChatsTable)
+      .set({ unread_count: 0 })
+      .where(
+        and(
+          eq(userChatsTable.chat_id, chatId),
+          eq(userChatsTable.user_id, userId)
+        )
+      )
+      .returning({
+        userId: userChatsTable.user_id,
+        chatId: userChatsTable.chat_id
+      })
+
+    return result
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
 export const getExistingGroupName = async (
   chatName: string,
   space_id?: string

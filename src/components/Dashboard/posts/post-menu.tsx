@@ -1,4 +1,4 @@
-import { MoreVertical, Trash } from "lucide-react"
+import { Edit3, MoreVertical, Trash } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,8 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { userStore } from "@/src/store/user/userStore"
 import { SelectPost } from "@/src/db/schema"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import UpdatePostModal from "./updatePostModal"
+import { useState } from "react"
 
 interface PostMenuProps {
   post: SelectPost
@@ -29,6 +31,7 @@ const PostMenu = ({ post, spaceId }: PostMenuProps) => {
     spaceId
   )
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const permissionNamespaceCreate = spaceId
     ? "space.posting.delete"
     : "posting.delete"
@@ -68,19 +71,36 @@ const PostMenu = ({ post, spaceId }: PostMenuProps) => {
 
   if (shouldShowDeleteButton) {
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm">
-            <MoreVertical className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
-            <Trash className="mr-2 h-4 w-4" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              className="text-destructive"
+              onClick={handleDelete}
+            >
+              <Trash className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+            {isPostOwner ? (
+              <DropdownMenuItem onClick={() => setIsEditModalOpen(true)}>
+                <Edit3 className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <UpdatePostModal
+          selectedPost={post}
+          openDialog={isEditModalOpen}
+          setOpenDialog={setIsEditModalOpen}
+        />
+      </>
     )
   } else {
     // If no permission, return null (don't render anything)

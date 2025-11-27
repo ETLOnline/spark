@@ -34,6 +34,7 @@ import BoardTaskCard from "./BoardTaskCard"
 import { createPortal } from "react-dom"
 import { toast } from "@/src/hooks/use-toast"
 import { Skeleton } from "@/src/components/ui/skeleton"
+import { TaskType } from "../../constants/projectManagment"
 
 interface Props {
   sprint: SelectSprint
@@ -92,7 +93,8 @@ function SprintBoardCard({
           priority: filters?.priority,
           type: filters?.type,
           status: filters?.status,
-          assignee: filters?.assignee
+          assignee: filters?.assignee,
+          excludedTypes: [TaskType.EPIC]
         })
         if (tasks?.success && tasks.data) {
           setFilteredTasks(tasks.data.tasks)
