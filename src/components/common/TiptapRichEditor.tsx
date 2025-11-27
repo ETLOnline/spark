@@ -42,7 +42,6 @@ import "./RichEditorFormat.css"
 import CharacterCount from "@tiptap/extension-character-count"
 import Image from "@tiptap/extension-image"
 import { Image as ImageIcon } from "lucide-react"
-import { AddImageToTaskAction } from "@/src/server-actions/Tasks/Task"
 import Loader from "./Loader/Loader"
 import { LoaderSizes } from "./types/loader-types"
 import { SelectUser } from "@/src/db/schema"
@@ -50,11 +49,13 @@ import tippy from "tippy.js"
 import MentionList, {
   MentionListHandle
 } from "../Dashboard/Chat/components/MentionList"
+import { AddImageToStorageAction } from "@/src/server-actions/storage/storage"
 
 interface RichTextEditorProps {
   value?: string
   onChange?: (content: string) => void
   image_uploading?: boolean
+  entity?: string
   editable?: boolean
   limit?: number
   mentionUsers?: SelectUser[]
@@ -72,6 +73,7 @@ export default function RichTextEditor({
   value,
   onChange,
   image_uploading,
+  entity,
   editable,
   limit = 1000,
   mentionUsers = [],
@@ -330,10 +332,11 @@ export default function RichTextEditor({
               const base64String = reader.result as string
 
               try {
-                const res = await AddImageToTaskAction(
+                const res = await AddImageToStorageAction(
                   file.name,
                   base64String,
-                  file.type
+                  file.type,
+                  entity || "general"
                 )
                 if (res.success && res.data) {
                   editor
@@ -428,10 +431,11 @@ export default function RichTextEditor({
         const base64String = reader.result as string
 
         try {
-          const res = await AddImageToTaskAction(
+          const res = await AddImageToStorageAction(
             file.name,
             base64String,
-            file.type
+            file.type,
+            entity || "general"
           )
 
           if (res.success && res.data) {

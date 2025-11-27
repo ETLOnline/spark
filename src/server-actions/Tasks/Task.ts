@@ -387,23 +387,3 @@ export const GetTaskCommentsAction = CreateServerAction(
     }
   }
 )
-
-export const AddImageToTaskAction = CreateServerAction(
-  true,
-  async (fileName: string, fileB64string: string, fileType: string) => {
-    try {
-      const fileBuffer = base64ToBuffer(fileB64string)
-
-      const { fileUrl } = await uploadFileAndSaveMetadata(
-        fileBuffer,
-        fileName,
-        fileType,
-        "tasks"
-      )
-
-      return { success: true, data: fileUrl }
-    } catch (error) {
-      return { error: error }
-    }
-  }
-)

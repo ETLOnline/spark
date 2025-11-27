@@ -508,6 +508,7 @@ export default function TaskForm({
                         value={field.value}
                         onChange={field.onChange}
                         image_uploading={true}
+                        entity="tasks"
                         editable={isEditable}
                         limit={2000}
                       />
