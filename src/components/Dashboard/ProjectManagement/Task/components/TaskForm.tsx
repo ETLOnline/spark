@@ -84,7 +84,11 @@ const projectSchema = z.object({
   description: z.string().optional(),
   task_type: z.string().min(1, "Required"),
   task_priority: z.string().min(1, "Required"),
-  story_points: z.string().optional(),
+  story_points: z
+    .number()
+    .max(100, "Story points cannot be more than 100")
+    .transform((value) => value.toString())
+    .optional(),
   status_id: z.string().optional(),
   assign_to: z.string().optional(),
   assign_by: z.string().optional(),
@@ -925,52 +929,48 @@ export default function TaskForm({
                     </div>
 
                     {/* Story Points */}
+                    {/* Story Points */}
                     <div className="space-y-2">
                       <Label>Story Points</Label>
                       <Controller
                         name="story_points"
                         defaultValue=""
                         control={form.control}
-                        render={({ field }) =>
-                          activeField === "points" ? (
-                            <Input
-                              disabled={!isEditable}
-                              id="story_points"
-                              type="number"
-                              min={0}
-                              placeholder="Select Points"
-                              {...field}
-                              className="col-span-3"
-                            />
-                          ) : (
-                            <div
-                              className=" py-2 cursor-pointer flex items-center gap-2"
-                              onClick={() => {
-                                setActiveField("points")
-                                requestAnimationFrame(() => {
-                                  document
-                                    .getElementById("story_points")
-                                    ?.focus()
-                                })
-                              }}
-                            >
-                              <div>
-                                {errors.story_points && (
-                                  <span className="text-red-500 text-sm flex items-center gap-2">
-                                    <CircleAlert size={16} />
-                                    {String(errors.story_points.message)}
-                                  </span>
-                                )}
+                        render={({ field }) => (
+                          <div>
+                            {activeField === "points" ? (
+                              <Input
+                                {...field}
+                                id="story_points"
+                                type="number"
+                                min={0}
+                                disabled={!isEditable}
+                                placeholder="Select Points"
+                                onBlur={() => setActiveField(null)}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value, 10)
+                                  field.onChange(isNaN(val) ? "" : val)
+                                }}
+                              />
+                            ) : (
+                              <div
+                                className="py-2 cursor-pointer flex items-center gap-2"
+                                onClick={() => setActiveField("points")}
+                              >
+                                <BarChart2 className="h-5 w-5 text-gray-500" />
+                                <span>{field.value || "Select Points"}</span>
                               </div>
-                              <BarChart2 className="h-5 w-5 text-gray-500" />
-                              <span>{field.value || "Select Points"}</span>
-                            </div>
-                          )
-                        }
+                            )}
+                            {errors.story_points && (
+                              <span className="text-red-500 text-sm flex items-center gap-2 mt-1">
+                                <CircleAlert size={16} />
+                                {String(errors.story_points.message)}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       />
                     </div>
-
-                    {/* Parent Task Selector */}
 
                     {/* Parent Task Selector */}
                     <div className="space-y-2">
