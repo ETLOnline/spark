@@ -165,7 +165,8 @@ export async function GetTasks(filters?: taskQueryFilters) {
         assignor: true,
         status: true,
         parentTask: true,
-        subTasks: true
+        subTasks: true,
+        creator: true
       }
     })
 
@@ -213,7 +214,8 @@ export async function GetTaskById(taskId: string) {
         assignor: true,
         status: true,
         parentTask: true,
-        subTasks: true
+        subTasks: true,
+        creator: true
       }
     })
 
@@ -232,7 +234,8 @@ export async function GetTaskByIds(taskId: string[]) {
         assignor: true,
         status: true,
         parentTask: true,
-        subTasks: true
+        subTasks: true,
+        creator: true
       }
     })
 
