@@ -57,6 +57,7 @@ import {
   EmojiPickerFooter,
   EmojiPickerSearch
 } from "../../ui/emoji-picker"
+import "@/src/components/common/RichEditorFormat.css"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -572,7 +573,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                           </div>
                         ) : (
                           <div
-                            className={`rounded-lg p-3 max-w-[70%] ${
+                            className={`rounded-lg p-3 max-w-[70%] rich-editor ${
                               message.sender_id === authUser?.unique_id
                                 ? "bg-primary text-primary-foreground"
                                 : "bg-muted"
