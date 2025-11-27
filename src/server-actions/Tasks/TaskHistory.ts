@@ -12,6 +12,10 @@ export const AddTaskHistoryAction = CreateServerAction(
 
       const history = TaskHistory(oldTask, newTask)
 
+      if (history.length === 0) {
+        return { success: true, data: null }
+      }
+
       const payload: InsertTaskComment = {
         task_id: newTask.id,
         user_id: authUser.unique_id,
