@@ -1,7 +1,5 @@
 import { ScrollArea } from "@radix-ui/react-scroll-area"
 import React, { useMemo } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar"
-import { Badge } from "../../../ui/badge"
 import { useAtom, useAtomValue } from "jotai"
 import { chatStore } from "@/src/store/chat/chatStore"
 import { userStore } from "@/src/store/user/userStore"
@@ -46,12 +44,12 @@ const ChatsList = ({ searchQuery = "" }) => {
     return chats.sort(
       (a, b) => moment(b.updated_at).valueOf() - moment(a.updated_at).valueOf()
     )
-  }, [myChats, searchQuery])
+  }, [myChats, searchQuery, authUser])
 
   return (
-    <ScrollArea className="h-[calc(100vh-15rem)] px-2  pb-5">
+    <ScrollArea className="h-[calc(100vh-15rem)] px-2 pb-5">
       {authUser ? (
-        <div className="overflow-y-auto h-full space-y-1 ">
+        <div className="overflow-y-auto h-full space-y-1">
           {filteredChats.length > 0 ? (
             filteredChats.map((chat) => (
               <ChatContactItem key={chat.id} chat={chat} />

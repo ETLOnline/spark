@@ -60,6 +60,7 @@
     "@tiptap/extension-image": "^2.26.1",
     "@tiptap/extension-link": "^2.24.1",
     "@tiptap/extension-list-item": "^2.24.1",
+    "@tiptap/extension-mention": "^2.27.1",
     "@tiptap/extension-placeholder": "^2.24.1",
     "@tiptap/extension-table": "^2.24.1",
     "@tiptap/extension-task-list": "^2.24.1",
