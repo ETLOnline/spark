@@ -555,7 +555,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                     {messages.map((message) => (
                       <div
                         key={message.id}
-                        className={`group mb-4 flex items-start ${
+                        className={`mb-4 flex items-start ${
                           message.sender_id === authUser?.unique_id
                             ? "justify-end"
                             : "justify-start"
@@ -572,28 +572,30 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                             <p className="text-4xl">{message.message}</p>
                           </div>
                         ) : (
-                          <div
-                            className={`rounded-lg p-3 max-w-[70%] rich-editor ${
-                              message.sender_id === authUser?.unique_id
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted"
-                            }`}
-                          >
-                            {message.sender_id !== authUser?.unique_id &&
-                            currentChat.is_group ? (
-                              <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">
-                                ~ {message.sender?.first_name}
-                              </p>
-                            ) : null}
-                            <MessageContent content={message.message} />
+                          <div className=" group flex items-center">
+                            <div
+                              className={`rounded-lg p-3  rich-editor ${
+                                message.sender_id === authUser?.unique_id
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-muted"
+                              }`}
+                            >
+                              {message.sender_id !== authUser?.unique_id &&
+                              currentChat.is_group ? (
+                                <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">
+                                  ~ {message.sender?.first_name}
+                                </p>
+                              ) : null}
+                              <MessageContent content={message.message} />
+                            </div>
+                            <p className="text-xs ml-2 mt-2 text-right hidden group-hover:block">
+                              {moment
+                                .utc(message.created_at)
+                                .local()
+                                .format("hh:mm A")}
+                            </p>
                           </div>
                         )}
-                        <p className="text-xs ml-2 mt-2 text-right hidden group-hover:block">
-                          {moment
-                            .utc(message.created_at)
-                            .local()
-                            .format("hh:mm A")}
-                        </p>
                       </div>
                     ))}
                     <div ref={messagesEndRef} />
