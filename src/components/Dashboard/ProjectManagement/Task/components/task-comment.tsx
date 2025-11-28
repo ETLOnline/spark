@@ -129,6 +129,8 @@ export function TaskComment({
                 value={commentContent}
                 onChange={setCommentContent}
                 editable={!isSprintCompleted}
+                image_uploading={true}
+                entity="task-comments"
               />
               <div className="flex gap-2 justify-end">
                 <Button

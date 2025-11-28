@@ -140,10 +140,17 @@ export default function RichTextEditor({
 
   const isContentEmpty = (html: string) => {
     if (!html) return true
+
+    // 1️⃣ If an image exists → NOT empty
+    if (/<img\s+[^>]*src=["']([^"']+)["'][^>]*>/gi.test(html)) {
+      return false
+    }
+    // 2️⃣ Remove tags and check text
     const text = html
       .replace(/<[^>]*>/g, "")
       .replace(/&nbsp;/g, "")
       .trim()
+
     return text === ""
   }
 
