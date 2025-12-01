@@ -229,6 +229,7 @@ export const messagesTable = pgTable("messages", {
   type: varchar().notNull(),
   sender_id: varchar().notNull(),
   message: varchar().notNull(),
+  mentions: varchar("mentions").array(),
   ...timestamps
 })
 
@@ -245,10 +246,13 @@ export const messagesRelations = relations(messagesTable, ({ one }) => ({
   })
 }))
 
-export type InsertMessage = typeof messagesTable.$inferInsert
+export type InsertMessage = typeof messagesTable.$inferInsert & {
+  mentions?: string[] // 👈 Allow mentions when inserting
+}
 export type SelectMessage = typeof messagesTable.$inferSelect & {
   chat?: SelectChat
   sender?: SelectUser
+  mentions?: string[] | null
 }
 
 export const userChatsTable = pgTable("user_chats", {

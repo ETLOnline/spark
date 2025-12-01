@@ -183,6 +183,13 @@
       "when": 1763736274339,
       "tag": "0025_2025_11_21_194429__update_task_comment_table_for_task_history",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1763781924573,
+      "tag": "0026_2025_11_22_112523__add_mention_column_in_the_chats_table",
+      "breakpoints": true
     }
   ]
 }

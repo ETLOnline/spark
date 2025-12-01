@@ -13,7 +13,14 @@ import {
 import { Input } from "@/src/components/ui/input"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger } from "@/src/components/ui/sheet"
-import { Menu, PlusCircle, Search, Send, SmileIcon } from "lucide-react"
+import {
+  Menu,
+  Send,
+  Search,
+  SmileIcon,
+  PencilLine,
+  PlusCircle
+} from "lucide-react"
 import { useAtom, useAtomValue } from "jotai"
 import { chatStore } from "@/src/store/chat/chatStore"
 import {
@@ -35,19 +42,22 @@ import moment from "moment-timezone"
 import Link from "next/link"
 import Loader from "../../common/Loader/Loader"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
 import { getUserRole, isOnlyEmoji } from "@/src/utils/helpers"
 import CreateNewChat from "./components/CreateNewChat"
 import Avvvatars from "avvvatars-react"
+import { spaceStore } from "@/src/store/space/spaceStore"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import pusherClient from "@/src/services/realtime/PusherClient"
+import RichTextEditor from "@/src/components/common/TiptapRichEditor"
+import { MessageContent } from "./components/MessageContent"
+import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
 import {
   EmojiPicker,
   EmojiPickerContent,
   EmojiPickerFooter,
   EmojiPickerSearch
 } from "../../ui/emoji-picker"
-import { spaceStore } from "@/src/store/space/spaceStore"
-import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import pusherClient from "@/src/services/realtime/PusherClient"
+import "@/src/components/common/RichEditorFormat.css"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -57,6 +67,7 @@ interface ChatScreenProps {
 type ChatUpdatePayload = {
   chatId: number
   lastMessage: string
+  wasMentioned?: boolean
   sender_id: string
 }
 
@@ -114,7 +125,10 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     : false
 
   const [messages, setMessages] = useState<SelectMessage[]>([])
-  const [newMessage, setNewMessage] = useState("")
+  const [richMessageContent, setRichMessageContent] = useState("")
+  const [showRichEditorToolbar, setShowRichEditorToolbar] = useState(false)
+  const [isMentionActive, setIsMentionActive] = useState(false)
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useAtom(
     chatStore.isMobileMenuOpen
   )
@@ -128,8 +142,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     unsubscribe: () => void
   } | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>("")
-
   const [chatContact, setChatContact] = useState<SelectUser | null>(null)
+  const [availableUsers, setAvailableUsers] = useState<SelectUser[]>([])
   const [
     fetchingChatMessages,
     switchedChatState,
@@ -145,7 +159,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
   useEffect(() => {
     setCurrentChat(currentChatSSR || null)
-
     setMyChats(allChatsSSR || [])
     initialChatLoadRef.current = true
     const initialMessages = currentChatSSR?.messages || []
@@ -167,30 +180,51 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   }, [])
 
   useEffect(() => {
+    if (!currentChat) {
+      setAvailableUsers([])
+      return
+    }
+
+    if (currentChat.is_group === 1) {
+      const chatUsers = currentChat.users
+        ?.map((u) => u.user)
+        .filter((user): user is SelectUser => Boolean(user))
+        .filter(
+          (user) => user.unique_id !== authUser?.unique_id
+        ) as SelectUser[]
+
+      if (chatUsers && chatUsers.length > 0) {
+        setAvailableUsers(chatUsers)
+      } else {
+        setAvailableUsers([])
+      }
+    } else {
+      setAvailableUsers([])
+    }
+  }, [currentChat])
+
+  useEffect(() => {
     if (!currentChat || !authUser) return
     chatRealTime?.unsubscribe()
 
-    const { unsubscribe } = joinChannel(
-      currentChat.id, // Use chat ID for Pusher channel naming
-      (message) => {
-        setMessages((prev) => [...prev, message])
+    const { unsubscribe } = joinChannel(currentChat.id, (message) => {
+      setMessages((prev) => [...prev, message])
 
-        // Update the last message and unread count in the chat list
-        setMyChats((prevChats) => {
-          const updatedChats = prevChats.map((chat) => {
-            if (chat.id === message.chat_id) {
-              return {
-                ...chat,
-                last_message: message.message,
-                last_message_at: message.created_at
-              }
+      setMyChats((prevChats) => {
+        const updatedChats = prevChats.map((chat) => {
+          if (chat.id === message.chat_id) {
+            return {
+              ...chat,
+              last_message: message.message,
+              last_message_at: message.created_at,
+              unread_count: 0
             }
-            return chat
-          })
-          return updatedChats
+          }
+          return chat
         })
-      }
-    )
+        return updatedChats
+      })
+    })
 
     setChatRealtime({ unsubscribe })
 
@@ -216,16 +250,27 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     setSwitchedChat(null)
   }, [switchedChat])
 
-  /**
-   * Handles switching to a different chat by fetching the chat data and its messages.
-   * ...
-   */
   const handleChatSwitch = async (chatId: number) => {
     initialChatLoadRef.current = true
+
+    setAvailableUsers([])
+    setRichMessageContent("")
+    setShowRichEditorToolbar(false)
+
     const newSwitchedChat = await fetchChatWithMessages(chatId)
     if (newSwitchedChat && newSwitchedChat.data) {
-      setCurrentChat(newSwitchedChat.data)
-      setMessages(newSwitchedChat.data.messages)
+      const transformedMessages = (newSwitchedChat.data.messages?.map(
+        (msg) => ({
+          ...msg,
+          mentions: msg.mentions ?? undefined
+        })
+      ) || []) as SelectMessage[]
+      const transformedChat = {
+        ...newSwitchedChat.data,
+        messages: transformedMessages
+      } as SelectChat
+      setCurrentChat(transformedChat)
+      setMessages(transformedMessages)
     }
 
     await markAsRead(chatId)
@@ -250,7 +295,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     scrollToBottom()
   }, [messages, authUser])
 
-  const runtime = 0
   useEffect(() => {
     if (!authUser) return
 
@@ -258,7 +302,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     const userChannel = pusherClient.subscribe(userChannelName)
 
     userChannel.bind("chat-update", (data: { update: ChatUpdatePayload }) => {
-      const update = data.update as ChatUpdatePayload
+      const update = data.update
 
       setMyChats((prevChats) => {
         const updatedChat = prevChats.find((chat) => chat.id === update.chatId)
@@ -319,20 +363,31 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       userChannel.unbind_all()
       pusherClient.unsubscribe(userChannelName)
     }
-  }, [authUser, setMyChats, currentChat])
+  }, [authUser, setMyChats, currentChat, currentSpace])
 
-  /**
-   * Handles the sending of a new message in the chat.
-   * ...
-   */
   const handleSendMessage = async () => {
-    if (newMessage.trim() === "" || !currentChat || !authUser) return
-    const messageContent = newMessage
+    if (richMessageContent.trim() === "" || !currentChat || !authUser) return
+
+    const contentToSend = richMessageContent
+      .replace(
+        /<span[^>]*data-type="mention"[^>]*data-id="([^"]*)"[^>]*data-label="([^"]*)"[^>]*>@[^<]*<\/span>/g,
+        "@[ $2 ]($1)"
+      )
+      .replace(/<p[^>]*>/g, "")
+      .replace(/<\/p>/g, "\n")
+      .replace(/<br\s*\/?>/g, "\n")
+      .trim()
+
+    const messageToUpdateChatList = richMessageContent.includes("<p>")
+      ? "Rich text message"
+      : contentToSend
+
+    if (contentToSend === "") return
 
     const newMsg: InsertMessage = {
       sender_id: authUser?.unique_id || "",
       chat_id: currentChat?.id || 0,
-      message: messageContent,
+      message: contentToSend,
       type: "text"
     }
 
@@ -341,7 +396,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         chat.id === currentChat.id
           ? {
               ...chat,
-              last_message: newMsg.message,
+              last_message: messageToUpdateChatList,
               last_message_at: moment().toISOString(),
               updated_at: moment().toISOString(),
               unread_count: 0
@@ -350,8 +405,15 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       )
     )
 
-    setNewMessage("")
+    setRichMessageContent("")
+
     await addMessageToChat(newMsg, currentSpace?.id)
+  }
+
+  const currentMessageContent = richMessageContent
+
+  const handleEmojiSelect = (emoji: string) => {
+    setRichMessageContent((prev) => `${prev}${emoji}`)
   }
 
   return (
@@ -374,13 +436,11 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           </div>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden p-0">
-          {/* ChatsList component will now display the properly sorted myChats */}
           {canView && <ChatsList searchQuery={searchQuery} />}
         </CardContent>
       </Card>
 
       {/* Main chat area */}
-      {/* ... (rest of the component JSX remains the same) ... */}
       {canView && (
         <Card className="flex-1 flex flex-col h-full">
           <CardHeader className="flex flex-row items-center justify-between py-4">
@@ -406,7 +466,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       <Input placeholder="Search chats..." className="pl-8" />
                     </div>
                   </CardHeader>
-                  <ChatsList />
+                  <ChatsList searchQuery={searchQuery} />
                 </SheetContent>
               </Sheet>
               {currentChat ? (
@@ -495,7 +555,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                     {messages.map((message) => (
                       <div
                         key={message.id}
-                        className={`group mb-4 flex items-center ${
+                        className={`group mb-4 flex items-start ${
                           message.sender_id === authUser?.unique_id
                             ? "justify-end"
                             : "justify-start"
@@ -513,7 +573,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                           </div>
                         ) : (
                           <div
-                            className={`rounded-lg p-3 max-w-[70%] ${
+                            className={`rounded-lg p-3 max-w-[70%] rich-editor ${
                               message.sender_id === authUser?.unique_id
                                 ? "bg-primary text-primary-foreground"
                                 : "bg-muted"
@@ -525,7 +585,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                 ~ {message.sender?.first_name}
                               </p>
                             ) : null}
-                            <p className="text-sm">{message.message}</p>
+                            <MessageContent content={message.message} />
                           </div>
                         )}
                         <div className="text-xs ml-2 text-right hidden group-hover:block">
@@ -549,32 +609,74 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                   </div>
                 )}
               </CardContent>
-              <CardFooter className="p-4">
+              <CardFooter className="p-4 relative">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault()
                     handleSendMessage()
                   }}
-                  onChange={(e) => {
-                    e.preventDefault()
-                  }}
-                  className="flex w-full space-x-2"
+                  className="flex w-full space-x-2 items-end"
                 >
-                  <Input
-                    placeholder="Type a message..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    className="flex-1"
-                  />
+                  <div className="flex-1" key={currentChat?.id || "no-chat"}>
+                    <RichTextEditor
+                      value={richMessageContent}
+                      onChange={setRichMessageContent}
+                      image_uploading={true}
+                      entity="chats"
+                      showMentions={
+                        currentChat?.is_group === 1 && availableUsers.length > 0
+                      }
+                      mentionUsers={availableUsers}
+                      showToolbar={showRichEditorToolbar}
+                      minHeight={`${showRichEditorToolbar ? "100px" : "30px"}`}
+                      limit={5000}
+                      editable={!newMessageLoading}
+                      onEnterPress={handleSendMessage}
+                      onMentionStateChange={setIsMentionActive}
+                      showFooter={false}
+                      isScrollAble={true}
+                    />
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    title={
+                      showRichEditorToolbar
+                        ? "Hide Formatting Menu (Enter sends)"
+                        : "Show Formatting Menu (Enter adds line)"
+                    }
+                    onClick={() => {
+                      setShowRichEditorToolbar((prev) => !prev)
+                    }}
+                    className={`p-1 ${
+                      showRichEditorToolbar
+                        ? "bg-secondary"
+                        : "hover:bg-secondary/50"
+                    }`}
+                  >
+                    <PencilLine className="h-5 w-5" />
+                    <span className="sr-only">Toggle Formatting Menu</span>
+                  </Button>
+
                   <Popover>
-                    <PopoverTrigger>
-                      <SmileIcon />
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        title="Insert Emoji"
+                        className="p-1"
+                      >
+                        <SmileIcon className="h-5 w-5" />
+                      </Button>
                     </PopoverTrigger>
                     <PopoverContent side="top" align="end" className="p-0">
                       <EmojiPicker
                         className="h-[342px]"
                         onEmojiSelect={({ emoji }: any) =>
-                          setNewMessage(`${newMessage}${emoji}`)
+                          handleEmojiSelect(emoji)
                         }
                       >
                         <EmojiPickerSearch />
@@ -583,7 +685,14 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       </EmojiPicker>
                     </PopoverContent>
                   </Popover>
-                  <Button type="submit" size="icon">
+
+                  <Button
+                    type="submit"
+                    size="icon"
+                    disabled={
+                      newMessageLoading || currentMessageContent.trim() === ""
+                    }
+                  >
                     {newMessageLoading ? (
                       <Loader />
                     ) : (
