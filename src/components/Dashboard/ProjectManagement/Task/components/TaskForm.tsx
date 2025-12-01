@@ -946,6 +946,7 @@ export default function TaskForm({
                                 min={0}
                                 disabled={!isEditable}
                                 placeholder="Select Points"
+                                max={100}
                                 onBlur={() => setActiveField(null)}
                                 onChange={(e) => {
                                   const val = parseInt(e.target.value, 10)
