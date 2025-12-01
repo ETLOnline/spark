@@ -14,15 +14,12 @@ import { Input } from "@/src/components/ui/input"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger } from "@/src/components/ui/sheet"
 import {
-  ChevronDown,
-  Edit,
-  FileIcon,
   Menu,
-  Paperclip,
-  Search,
   Send,
+  Search,
   SmileIcon,
-  Trash2
+  PencilLine,
+  PlusCircle
 } from "lucide-react"
 import { useAtom, useAtomValue } from "jotai"
 import { chatStore } from "@/src/store/chat/chatStore"
@@ -49,28 +46,22 @@ import moment from "moment-timezone"
 import Link from "next/link"
 import Loader from "../../common/Loader/Loader"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
-import { formatFileSize, getUserRole, isOnlyEmoji } from "@/src/utils/helpers"
+import { getUserRole, isOnlyEmoji } from "@/src/utils/helpers"
 import CreateNewChat from "./components/CreateNewChat"
 import Avvvatars from "avvvatars-react"
+import { spaceStore } from "@/src/store/space/spaceStore"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import pusherClient from "@/src/services/realtime/PusherClient"
+import RichTextEditor from "@/src/components/common/TiptapRichEditor"
+import { MessageContent } from "./components/MessageContent"
+import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
 import {
   EmojiPicker,
   EmojiPickerContent,
   EmojiPickerFooter,
   EmojiPickerSearch
 } from "../../ui/emoji-picker"
-import { spaceStore } from "@/src/store/space/spaceStore"
-import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import pusherClient from "@/src/services/realtime/PusherClient"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "../../ui/dropdown-menu"
-import { toast } from "@/src/hooks/use-toast"
-import AttachmentModal from "./components/AttachmentModal"
-import Image from "next/image"
+import "@/src/components/common/RichEditorFormat.css"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -80,6 +71,7 @@ interface ChatScreenProps {
 type ChatUpdatePayload = {
   chatId: number
   lastMessage: string
+  wasMentioned?: boolean
   sender_id: string
 }
 
@@ -152,7 +144,10 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     : false
 
   const [messages, setMessages] = useState<SelectMessage[]>([])
-  const [newMessage, setNewMessage] = useState("")
+  const [richMessageContent, setRichMessageContent] = useState("")
+  const [showRichEditorToolbar, setShowRichEditorToolbar] = useState(false)
+  const [isMentionActive, setIsMentionActive] = useState(false)
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useAtom(
     chatStore.isMobileMenuOpen
   )
@@ -174,10 +169,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const [showAttachmentModal, setShowAttachmentModal] = useState(false)
   const authUser = useAtomValue(userStore.AuthUser)
   const [searchQuery, setSearchQuery] = useState<string>("")
-  type ChatRealtime = { chatId: number; unsubscribe: () => void }[]
-  const [chatRealTime, setChatRealtime] = useState<ChatRealtime>([])
-
   const [chatContact, setChatContact] = useState<SelectUser | null>(null)
+  const [availableUsers, setAvailableUsers] = useState<SelectUser[]>([])
   const [
     fetchingChatMessages,
     switchedChatState,
@@ -205,7 +198,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
   useEffect(() => {
     setCurrentChat(currentChatSSR || null)
-
     setMyChats(allChatsSSR || [])
     initialChatLoadRef.current = true
     const initialMessages = currentChatSSR?.messages || []
@@ -227,58 +219,52 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   }, [])
 
   useEffect(() => {
-    if (!authUser) return
+    if (!currentChat) {
+      setAvailableUsers([])
+      return
+    }
 
-    chatRealTime?.forEach((ch) => ch.unsubscribe())
-    const subscriptions = myChats.map((chat) => {
-      const { unsubscribe } = joinChannel(
-        chat.id,
-        (message) => {
-          setMessages((prev) => [...prev, message])
-          setMyChats((prevChats) =>
-            prevChats.map((c) =>
-              c.id === message.chat_id
-                ? {
-                    ...c,
-                    last_message: message.message,
-                    last_message_at: message.created_at
-                  }
-                : c
-            )
-          )
-        },
-        (msgId) => {
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === msgId
-                ? { ...m, is_deleted: 1, message: "This message was deleted" }
-                : m
-            )
-          )
-        },
-        (msgId, newContent) => {
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === msgId ? { ...m, message: newContent } : m
-            )
-          )
-        },
-        (userId: string, isTyping: boolean, chatId: number) => {
-          setTypingUsers((prev) => {
-            const updated = { ...prev }
-            if (!updated[chatId]) updated[chatId] = new Set<string>()
-            if (isTyping) updated[chatId].add(userId)
-            else updated[chatId].delete(userId)
-            return updated
-          })
-        }
-      )
-      return { chatId: chat.id, unsubscribe }
+    if (currentChat.is_group === 1) {
+      const chatUsers = currentChat.users
+        ?.map((u) => u.user)
+        .filter((user): user is SelectUser => Boolean(user))
+        .filter(
+          (user) => user.unique_id !== authUser?.unique_id
+        ) as SelectUser[]
+
+      if (chatUsers && chatUsers.length > 0) {
+        setAvailableUsers(chatUsers)
+      } else {
+        setAvailableUsers([])
+      }
+    } else {
+      setAvailableUsers([])
+    }
+  }, [currentChat])
+
+  useEffect(() => {
+    if (!currentChat || !authUser) return
+
+    const { unsubscribe } = joinChannel(currentChat.id, (message) => {
+      setMessages((prev) => [...prev, message])
+
+      setMyChats((prevChats) => {
+        const updatedChats = prevChats.map((chat) => {
+          if (chat.id === message.chat_id) {
+            return {
+              ...chat,
+              last_message: message.message,
+              last_message_at: message.created_at,
+              unread_count: 0
+            }
+          }
+          return chat
+        })
+        return updatedChats
+      })
     })
 
-    setChatRealtime(subscriptions)
-
-    return () => subscriptions.forEach((s) => s.unsubscribe())
+    // return () => subscriptions.forEach((s) => s.unsubscribe())
   }, [myChats, authUser])
 
   useEffect(() => {
@@ -287,16 +273,27 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     setSwitchedChat(null)
   }, [switchedChat])
 
-  /**
-   * Handles switching to a different chat by fetching the chat data and its messages.
-   * ...
-   */
   const handleChatSwitch = async (chatId: number) => {
     initialChatLoadRef.current = true
+
+    setAvailableUsers([])
+    setRichMessageContent("")
+    setShowRichEditorToolbar(false)
+
     const newSwitchedChat = await fetchChatWithMessages(chatId)
     if (newSwitchedChat && newSwitchedChat.data) {
-      setCurrentChat(newSwitchedChat.data)
-      setMessages(newSwitchedChat.data.messages)
+      const transformedMessages = (newSwitchedChat.data.messages?.map(
+        (msg) => ({
+          ...msg,
+          mentions: msg.mentions ?? undefined
+        })
+      ) || []) as SelectMessage[]
+      const transformedChat = {
+        ...newSwitchedChat.data,
+        messages: transformedMessages
+      } as SelectChat
+      setCurrentChat(transformedChat)
+      setMessages(transformedMessages)
     }
 
     await markAsRead(chatId)
@@ -328,7 +325,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     const userChannel = pusherClient.subscribe(userChannelName)
 
     userChannel.bind("chat-update", (data: { update: ChatUpdatePayload }) => {
-      const update = data.update as ChatUpdatePayload
+      const update = data.update
 
       setMyChats((prevChats) => {
         const updatedChat = prevChats.find((chat) => chat.id === update.chatId)
@@ -389,136 +386,57 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       userChannel.unbind_all()
       pusherClient.unsubscribe(userChannelName)
     }
-  }, [authUser, setMyChats, currentChat])
+  }, [authUser, setMyChats, currentChat, currentSpace])
 
-  const handleInputChange = async (val: string) => {
-    setNewMessage(val)
-
-    if (!currentChat) return
-
-    await sendTypingIndicator(currentChat.id, true)
-
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current)
-    }
-
-    typingTimeoutRef.current = setTimeout(async () => {
-      await sendTypingIndicator(currentChat.id, false)
-      typingTimeoutRef.current = null
-    }, 2000)
-  }
   const handleSendMessage = async () => {
-    if (!currentChat || !authUser) return
+    if (richMessageContent.trim() === "" || !currentChat || !authUser) return
 
-    // ✨ editing mode
-    if (editingMessage) {
-      if (!newMessage.trim()) return
+    const contentToSend = richMessageContent
+      .replace(
+        /<span[^>]*data-type="mention"[^>]*data-id="([^"]*)"[^>]*data-label="([^"]*)"[^>]*>@[^<]*<\/span>/g,
+        "@[ $2 ]($1)"
+      )
+      .replace(/<p[^>]*>/g, "")
+      .replace(/<\/p>/g, "\n")
+      .replace(/<br\s*\/?>/g, "\n")
+      .trim()
 
-      try {
-        await updateChatMsg(
-          editingMessage.id,
-          currentChat.id,
-          authUser.unique_id,
-          newMessage,
-          editingMessage.message
-        )
+    const messageToUpdateChatList = richMessageContent.includes("<p>")
+      ? "Rich text message"
+      : contentToSend
 
-        setEditingMessage(null)
-        setNewMessage("")
+    if (contentToSend === "") return
 
-        return
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update message.",
-          variant: "destructive"
-        })
-        return
-      }
+    const newMsg: InsertMessage = {
+      sender_id: authUser?.unique_id || "",
+      chat_id: currentChat?.id || 0,
+      message: contentToSend,
+      type: "text"
     }
 
-    // ✨ sending new message
-    if (newMessage.trim() === "" && !fileString) return
+    setMyChats((prevChats) =>
+      prevChats.map((chat) =>
+        chat.id === currentChat.id
+          ? {
+              ...chat,
+              last_message: messageToUpdateChatList,
+              last_message_at: moment().toISOString(),
+              updated_at: moment().toISOString(),
+              unread_count: 0
+            }
+          : chat
+      )
+    )
 
-    try {
-      const messageContent = fileString || newMessage
-      const messageType = selectedFile?.type?.startsWith("image/")
-        ? "image"
-        : selectedFile
-          ? "file"
-          : "text"
+    setRichMessageContent("")
 
-      const newMsg: InsertMessage = {
-        sender_id: authUser.unique_id,
-        chat_id: currentChat.id,
-        message: messageContent,
-        type: messageType
-      }
-
-      await addMessageToChat(newMsg, currentSpace?.id)
-
-      setNewMessage("")
-      setFileString(null)
-      setSelectedFile(null)
-      setShowAttachmentModal(false)
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send message.",
-        variant: "destructive"
-      })
-    }
+    await addMessageToChat(newMsg, currentSpace?.id)
   }
 
-  const handleDelteMsg = async (msg: SelectMessage) => {
-    try {
-      if (
-        authUser?.unique_id === msg.sender_id &&
-        currentChat?.id === msg.chat_id
-      ) {
-        await deleteMessageFromChat(msg.id, currentChat.id, authUser.unique_id)
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete message.",
-        variant: "destructive"
-      })
-    }
-  }
+  const currentMessageContent = richMessageContent
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setSelectedFile(file)
-    const reader = new FileReader()
-    reader.onloadend = async () => {
-      const base64 = reader.result as string
-      try {
-        const res = await uploadAttachment(file.name, base64, file.type)
-        if (res?.success && res.data) {
-          setShowAttachmentModal(true)
-          const { fileRecord } = res.data
-          const fileString = `${fileRecord.file_path},${fileRecord.file_name},${fileRecord.file_size}`
-          setFileString(fileString)
-        }
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Something went wrong",
-          duration: 3000
-        })
-      }
-    }
-    reader.readAsDataURL(file)
-  }
-
-  const closeAttachmentModal = () => {
-    setShowAttachmentModal(false)
-    setFileString(null)
-    setSelectedFile(null)
-    if (fileInputRef.current) fileInputRef.current.value = ""
+  const handleEmojiSelect = (emoji: string) => {
+    setRichMessageContent((prev) => `${prev}${emoji}`)
   }
 
   return (
@@ -541,10 +459,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           </div>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden p-0">
-          {/* ChatsList component will now display the properly sorted myChats */}
-          {canView && (
-            <ChatsList typingUsers={typingUsers} searchQuery={searchQuery} />
-          )}
+          {canView && <ChatsList searchQuery={searchQuery} />}
         </CardContent>
       </Card>
 
@@ -574,10 +489,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       <Input placeholder="Search chats..." className="pl-8" />
                     </div>
                   </CardHeader>
-                  <ChatsList
-                    searchQuery={searchQuery}
-                    typingUsers={typingUsers}
-                  />
+                  <ChatsList searchQuery={searchQuery} />
                 </SheetContent>
               </Sheet>
               {currentChat ? (
@@ -666,7 +578,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                     {messages.map((message) => (
                       <div
                         key={message.id}
-                        className={`group mb-4 flex items-center ${
+                        className={`group mb-4 flex items-start ${
                           message.sender_id === authUser?.unique_id
                             ? "justify-end"
                             : "justify-start"
@@ -684,7 +596,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                           </div>
                         ) : (
                           <div
-                            className={`rounded-lg pl-2 max-w-[70%] ${
+                            className={`rounded-lg p-3 max-w-[70%] rich-editor ${
                               message.sender_id === authUser?.unique_id
                                 ? "bg-primary text-primary-foreground"
                                 : "bg-muted pr-2"
@@ -696,110 +608,10 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                 ~ {message.sender?.first_name}
                               </p>
                             ) : null}
-                            <div className="text-sm flex items-center justify-center  ">
-                              {message.is_deleted ? (
-                                <span className="italic">
-                                  {message.sender_id === authUser?.unique_id
-                                    ? "You deleted this message"
-                                    : "This message was deleted"}
-                                </span>
-                              ) : (
-                                <>
-                                  {message.type === "image" &&
-                                    message.message.split(",").length === 3 &&
-                                    (() => {
-                                      const [fileUrl, fileName, fileSize] =
-                                        message.message.split(",")
-
-                                      return (
-                                        <Image
-                                          src={fileUrl}
-                                          alt="Post image"
-                                          className="rounded-lg max-h-96 w-full object-cover bg-gradient-to-r from-accent to-secondary"
-                                          width={1000}
-                                          height={1000}
-                                          style={{ objectFit: "contain" }}
-                                        />
-                                      )
-                                    })()}
-
-                                  {message.type === "file" &&
-                                    message.message.split(",").length === 3 &&
-                                    (() => {
-                                      const [fileUrl, fileName, fileSize] =
-                                        message.message.split(",")
-                                      return (
-                                        <Link href={fileUrl} target="_blank">
-                                          <div
-                                            className={`flex items-center ${message.sender_id === authUser.unique_id ? "bg-primary text-primary-foreground" : "bg-muted"} space-x-2 p-2 rounded-lg`}
-                                          >
-                                            <FileIcon className="h-8 w-8" />
-                                            <span className="font-medium">
-                                              {fileName}
-                                            </span>
-                                            <span className="text-xs">
-                                              {formatFileSize(Number(fileSize))}
-                                            </span>
-                                          </div>
-                                        </Link>
-                                      )
-                                    })()}
-
-                                  {message.type === "text" && (
-                                    <span>{message.message}</span>
-                                  )}
-                                </>
-                              )}
-                              {!message.is_deleted &&
-                                message.sender_id === authUser?.unique_id && (
-                                  <div className="self-start">
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className="opacity-0  group-hover:opacity-100 transform -translate-y-2 group-hover:translate-y-0 transition-all duration-200"
-                                        >
-                                          <ChevronDown />
-                                        </Button>
-                                      </DropdownMenuTrigger>
-
-                                      <DropdownMenuContent
-                                        align="end"
-                                        className="w-40"
-                                      >
-                                        {message.type !== "image" &&
-                                          message.type !== "file" && (
-                                            <DropdownMenuItem
-                                              onClick={() => {
-                                                setEditingMessage(message)
-                                                handleInputChange(
-                                                  message.message
-                                                )
-                                              }}
-                                            >
-                                              <Edit className="mr-2 h-4 w-4" />
-                                              Edit
-                                            </DropdownMenuItem>
-                                          )}
-
-                                        <DropdownMenuItem
-                                          onClick={() =>
-                                            handleDelteMsg(message)
-                                          }
-                                          className="text-red-600 focus:text-red-600"
-                                        >
-                                          <Trash2 className="mr-2 h-4 w-4" />
-                                          Delete
-                                        </DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  </div>
-                                )}
-                            </div>
+                            <MessageContent content={message.message} />
                           </div>
                         )}
-                        <p className="text-xs ml-2 text-right hidden group-hover:block">
+                        <p className="text-xs ml-2 mt-2 text-right hidden group-hover:block">
                           {moment
                             .utc(message.created_at)
                             .local()
@@ -815,48 +627,74 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                   </div>
                 )}
               </CardContent>
-              <CardFooter className="p-4">
+              <CardFooter className="p-4 relative">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault()
                     handleSendMessage()
                   }}
-                  onChange={(e) => {
-                    e.preventDefault()
-                  }}
-                  className="flex w-full space-x-2"
+                  className="flex w-full space-x-2 items-end"
                 >
-                  <Input
-                    placeholder="Type a message..."
-                    value={newMessage}
-                    onChange={(e) => handleInputChange(e.target.value)}
-                    className="flex-1"
-                  />
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*,application/*"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
+                  <div className="flex-1" key={currentChat?.id || "no-chat"}>
+                    <RichTextEditor
+                      value={richMessageContent}
+                      onChange={setRichMessageContent}
+                      image_uploading={true}
+                      entity="chats"
+                      showMentions={
+                        currentChat?.is_group === 1 && availableUsers.length > 0
+                      }
+                      mentionUsers={availableUsers}
+                      showToolbar={showRichEditorToolbar}
+                      minHeight={`${showRichEditorToolbar ? "100px" : "30px"}`}
+                      limit={5000}
+                      editable={!newMessageLoading}
+                      onEnterPress={handleSendMessage}
+                      onMentionStateChange={setIsMentionActive}
+                      showFooter={false}
+                      isScrollAble={true}
+                    />
+                  </div>
+
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => fileInputRef.current?.click()}
-                    title="Attach file"
+                    title={
+                      showRichEditorToolbar
+                        ? "Hide Formatting Menu (Enter sends)"
+                        : "Show Formatting Menu (Enter adds line)"
+                    }
+                    onClick={() => {
+                      setShowRichEditorToolbar((prev) => !prev)
+                    }}
+                    className={`p-1 ${
+                      showRichEditorToolbar
+                        ? "bg-secondary"
+                        : "hover:bg-secondary/50"
+                    }`}
                   >
-                    <Paperclip className="h-4 w-4" />
+                    <PencilLine className="h-5 w-5" />
+                    <span className="sr-only">Toggle Formatting Menu</span>
                   </Button>
+
                   <Popover>
-                    <PopoverTrigger>
-                      <SmileIcon />
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        title="Insert Emoji"
+                        className="p-1"
+                      >
+                        <SmileIcon className="h-5 w-5" />
+                      </Button>
                     </PopoverTrigger>
                     <PopoverContent side="top" align="end" className="p-0">
                       <EmojiPicker
                         className="h-[342px]"
                         onEmojiSelect={({ emoji }: any) =>
-                          setNewMessage(`${newMessage}${emoji}`)
+                          handleEmojiSelect(emoji)
                         }
                       >
                         <EmojiPickerSearch />
@@ -865,7 +703,14 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       </EmojiPicker>
                     </PopoverContent>
                   </Popover>
-                  <Button type="submit" size="icon">
+
+                  <Button
+                    type="submit"
+                    size="icon"
+                    disabled={
+                      newMessageLoading || currentMessageContent.trim() === ""
+                    }
+                  >
                     {newMessageLoading ? (
                       <Loader />
                     ) : (
@@ -878,15 +723,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           ) : null}
         </Card>
       )}
-
-      <AttachmentModal
-        open={showAttachmentModal}
-        onClose={closeAttachmentModal}
-        file={selectedFile}
-        onSend={handleSendMessage}
-        sending={newMessageLoading}
-        fileString={fileString ?? ""}
-      />
     </div>
   )
 }

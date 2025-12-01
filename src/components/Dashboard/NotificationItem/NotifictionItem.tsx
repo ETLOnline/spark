@@ -58,9 +58,10 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
         >
           <p className="text-sm font-medium truncate">{activity.title}</p>
           {activity.body && (
-            <p className="text-xs text-muted-foreground break-words">
-              {activity.body}
-            </p>
+            <p
+              className="text-xs text-muted-foreground break-words"
+              dangerouslySetInnerHTML={{ __html: activity.body }}
+            />
           )}
           {size === "sm" ? null : (
             <p className="text-xs text-muted-foreground">

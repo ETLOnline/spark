@@ -86,5 +86,17 @@ export function useOnlineStatus() {
   if (!context) {
     throw new Error("useOnlineStatus must be used within OnlineStatusProvider")
   }
-  return context
+
+  const { globalOnlineUsers, spaceOnlineUsers } = context
+  const currentSpace = useAtomValue(spaceStore.currentSpace)
+
+  // Helper function you can reuse anywhere
+  const getOnlineUsers = () => {
+    return currentSpace ? spaceOnlineUsers : globalOnlineUsers
+  }
+
+  return {
+    ...context,
+    getOnlineUsers
+  }
 }

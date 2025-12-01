@@ -23,6 +23,7 @@ import {
 } from "../../schema"
 import { randomUUID } from "crypto"
 import { slugify } from "@/src/utils/helpers"
+import { MentionChatRegex } from "@/src/components/Dashboard/Chat/constants"
 
 export const CreatePrivateChat = async (
   user_id: string,
@@ -169,7 +170,7 @@ export const GetChats = async (
             ? eq(chatsTable.is_group, 0)
             : undefined
         ),
-      orderBy: (chatsTable) => desc(chatsTable.created_at),
+      orderBy: (chatsTable) => desc(chatsTable.updated_at),
       with: {
         users: {
           with: {

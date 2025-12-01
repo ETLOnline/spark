@@ -7,6 +7,7 @@ import {
 } from "../PushNotification.utils"
 import { SendSystemNotification } from "../../system-notification/SystemNotification.utils"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
+import { parseMentions } from "../../realtime/utils/helper"
 
 type PusherUsersResponse = {
   users: { id: string }[]
@@ -108,12 +109,16 @@ export const SendMessageNotification = async (
             !presenceChannelUsers.users.find((user) => user.id === userId)
         )
         .map((userId) => userId)
-
+    const tokens = parseMentions(message.last_message || "")
+    const notificationBody = tokens
+      .map((t) => (t.type === "mention" ? `@${t.value}` : t.value))
+      .join("")
+    const cleanBody = notificationBody.replace(/<[^>]*>/g, "")
     const notificationPayload: NotificationPayload = {
       receivers: nonPresentReciversIds || [],
       template: {
         title: `Spark- ${authUser.first_name} ${authUser.last_name} sent you a message`,
-        body: message.last_message || "",
+        body: cleanBody,
         deep_link: createAbsoluteUrl(CTALink),
         icon: authUser.profile_url || ""
       }
