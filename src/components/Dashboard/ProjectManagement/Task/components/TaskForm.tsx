@@ -85,10 +85,13 @@ const projectSchema = z.object({
   task_type: z.string().min(1, "Required"),
   task_priority: z.string().min(1, "Required"),
   story_points: z
-    .number()
-    .max(100, "Story points cannot be more than 100")
-    .transform((value) => value.toString())
-    .optional(),
+    .union([z.number(), z.string()])
+    .refine((value) => {
+      const num = Number(value)
+      return !isNaN(num) && num <= 100
+    }, "Story points cannot be more than 100")
+    .transform((value) => value.toString()),
+
   status_id: z.string().optional(),
   assign_to: z.string().optional(),
   assign_by: z.string().optional(),
