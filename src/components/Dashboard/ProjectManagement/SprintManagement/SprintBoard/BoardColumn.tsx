@@ -13,26 +13,11 @@ interface Props {
 }
 
 function BoardColumn({ sprint, status, tasks, onTaskClick, setTasks }: Props) {
-  const scrollRef = React.useRef<HTMLDivElement | null>(null)
-  const [savedScroll, setSavedScroll] = useState(0)
   const { setNodeRef } = useDroppable({
     id: status?.id || "",
     data: { statusId: status?.id }
   })
 
-  useEffect(() => {
-    return () => {
-      if (scrollRef.current) {
-        setSavedScroll(scrollRef.current.scrollTop)
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = savedScroll
-    }
-  }, [tasks])
   const columnTasks = tasks.filter((t) => t.status_id === status?.id)
 
   const filteredTasks = columnTasks.filter((task) =>
@@ -43,13 +28,9 @@ function BoardColumn({ sprint, status, tasks, onTaskClick, setTasks }: Props) {
 
   return (
     <div
-  ref={setNodeRef}
-  className="w-[33%] bg-muted/50 p-2 pb-4 rounded-xl flex-shrink-0"
->
-  <div
-    ref={scrollRef}
-    className="space-y-2 overflow-y-auto max-h-[calc(100vh-150px)] pr-1"
-  >
+      ref={setNodeRef}
+      className="w-[33%] bg-muted/50 p-2 pb-4 rounded-xl flex-shrink-0 space-y-2"
+    >
       <div className="font-medium text-sm mb-4 text-center">{status?.name}</div>
       {filteredTasks.map((task) => (
         <BoardTaskCard
@@ -62,7 +43,6 @@ function BoardColumn({ sprint, status, tasks, onTaskClick, setTasks }: Props) {
       ))}
 
       {/* task modal */}
-    </div>
     </div>
   )
 }
