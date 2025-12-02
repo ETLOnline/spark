@@ -146,7 +146,6 @@ function BacklogItems({ task }: Props) {
   }
 
   const isParentAvailable = task.parentTask
-
   return (
     <>
       <div
@@ -218,10 +217,27 @@ function BacklogItems({ task }: Props) {
         </div>
 
         <div className="col-span-1 text-center">
-          {task.story_points && task.story_points !== "0"
-            ? task.story_points
-            : "-"}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <div className="truncate max-w-[50px] mx-auto">
+                  {task.story_points && task.story_points !== "0"
+                    ? task.story_points
+                    : "-"}
+                </div>
+              </TooltipTrigger>
+
+              <TooltipContent>
+                <span>
+                  {task.story_points && task.story_points !== "0"
+                    ? task.story_points
+                    : "-"}
+                </span>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
+
         <div className="col-span-1 text-center">
           {task.assign_to ? (
             <div className="flex justify-center items-center">
