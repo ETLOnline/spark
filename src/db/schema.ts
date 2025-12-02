@@ -251,7 +251,7 @@ export type InsertMessage = typeof messagesTable.$inferInsert & {
 }
 export type SelectMessage = typeof messagesTable.$inferSelect & {
   chat?: SelectChat
-  sender?: SelectUser 
+  sender?: SelectUser
   mentions?: string[] | null
 }
 

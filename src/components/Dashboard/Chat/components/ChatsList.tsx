@@ -57,10 +57,7 @@ const ChatsList = ({ searchQuery = "" }) => {
             </div>
           ) : filteredChats.length > 0 ? (
             filteredChats.map((chat) => (
-              <ChatContactItem
-                key={chat.id}
-                chat={chat}
-              />
+              <ChatContactItem key={chat.id} chat={chat} />
             ))
           ) : (
             <div className="text-center text-muted-foreground py-8">

@@ -588,12 +588,20 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                               ) : null}
                               <MessageContent content={message.message} />
                             </div>
-                            <p className="text-xs ml-2 mt-2 text-right hidden group-hover:block">
-                              {moment
-                                .utc(message.created_at)
-                                .local()
-                                .format("hh:mm A")}
-                            </p>
+                            <div className="text-xs ml-2 mt-2 text-right hidden group-hover:block">
+                              <p>
+                                {moment
+                                  .utc(message.created_at)
+                                  .local()
+                                  .format("hh:mm A")}
+                              </p>
+                              <p>
+                                {moment
+                                  .utc(message.created_at)
+                                  .local()
+                                  .fromNow()}
+                              </p>
+                            </div>
                           </div>
                         )}
                       </div>
