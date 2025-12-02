@@ -6,8 +6,6 @@ import { userStore } from "@/src/store/user/userStore"
 import Loader from "../../../common/Loader/Loader"
 import ChatContactItem from "./ChatContactItem"
 import moment from "moment"
-import { useOnlineStatus } from "@/src/components/providers/OnlineStatusProvider"
-import { spaceStore } from "@/src/store/space/spaceStore"
 
 export const ChatsList = ({
   searchQuery = "",
@@ -18,30 +16,6 @@ export const ChatsList = ({
 }) => {
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
   const authUser = useAtomValue(userStore.AuthUser)
-  const { globalOnlineUsers, spaceOnlineUsers } = useOnlineStatus()
-  const currentSpace = useAtomValue(spaceStore.currentSpace)
-
-  const onlineUsers = currentSpace ? spaceOnlineUsers : globalOnlineUsers
-
-  const computeTypingLabel = (chat: (typeof myChats)[number]) => {
-    if (!typingUsers) return ""
-    const chatTypers = typingUsers[chat.id] || new Set<string>()
-    if (chatTypers.size === 0) return ""
-
-    const memberIds = (chat.users || []).map((u) => u.user_id).filter(Boolean)
-    const typers = memberIds.filter(
-      (id) => chatTypers.has(id) && id !== authUser?.unique_id
-    )
-    if (typers.length === 0) return ""
-    if (!chat.is_group) return "typing..."
-    const names = (chat.users || [])
-      .filter((u) => typers.includes(u.user_id))
-      .map((u) => u.user?.first_name)
-      .filter(Boolean)
-      .slice(0, 3)
-    return names.length > 0 ? `${names.join(", ")} typing...` : "typing..."
-  }
-
   const filteredChats = useMemo(() => {
     const chats = myChats.filter((chat) => {
       if (!searchQuery.trim()) return true
@@ -83,7 +57,11 @@ export const ChatsList = ({
         <div className="overflow-y-auto h-full space-y-1">
           {filteredChats.length > 0 ? (
             filteredChats.map((chat) => (
-              <ChatContactItem key={chat.id} chat={chat} />
+              <ChatContactItem
+                key={chat.id}
+                typingUsers={typingUsers}
+                chat={chat}
+              />
             ))
           ) : (
             <div className="text-center text-muted-foreground py-8">

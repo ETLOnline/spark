@@ -90,7 +90,6 @@ export function useOnlineStatus() {
   const { globalOnlineUsers, spaceOnlineUsers } = context
   const currentSpace = useAtomValue(spaceStore.currentSpace)
 
-  // Helper function you can reuse anywhere
   const getOnlineUsers = () => {
     return currentSpace ? spaceOnlineUsers : globalOnlineUsers
   }

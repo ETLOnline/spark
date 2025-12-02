@@ -19,7 +19,12 @@ import {
   Search,
   SmileIcon,
   PencilLine,
-  PlusCircle
+  ChevronDown,
+  Edit,
+  FileIcon,
+  Paperclip,
+  Trash2,
+  X
 } from "lucide-react"
 import { useAtom, useAtomValue } from "jotai"
 import { chatStore } from "@/src/store/chat/chatStore"
@@ -46,7 +51,7 @@ import moment from "moment-timezone"
 import Link from "next/link"
 import Loader from "../../common/Loader/Loader"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { getUserRole, isOnlyEmoji } from "@/src/utils/helpers"
+import { formatFileSize, getUserRole, isOnlyEmoji } from "@/src/utils/helpers"
 import CreateNewChat from "./components/CreateNewChat"
 import Avvvatars from "avvvatars-react"
 import { spaceStore } from "@/src/store/space/spaceStore"
@@ -62,6 +67,16 @@ import {
   EmojiPickerSearch
 } from "../../ui/emoji-picker"
 import "@/src/components/common/RichEditorFormat.css"
+import { toast } from "@/src/hooks/use-toast"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "../../ui/dropdown-menu"
+import { FileUpload } from "../../ui/file-upload"
+import Image from "next/image"
+import { useOnlineStatus } from "../../providers/OnlineStatusProvider"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -162,15 +177,21 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const [typingUsers, setTypingUsers] = useState<Record<number, Set<string>>>(
     {}
   )
+
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [fileString, setFileString] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [showAttachmentModal, setShowAttachmentModal] = useState(false)
   const authUser = useAtomValue(userStore.AuthUser)
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [chatContact, setChatContact] = useState<SelectUser | null>(null)
   const [availableUsers, setAvailableUsers] = useState<SelectUser[]>([])
+  const [openAttachment, setOpenAttachment] = useState<boolean>(false)
+  type ChatRealtime = { chatId: number; unsubscribe: () => void }[]
+
+  const [chatRealTime, setChatRealtime] = useState<ChatRealtime>([])
+  const { getOnlineUsers } = useOnlineStatus()
+
   const [
     fetchingChatMessages,
     switchedChatState,
@@ -243,28 +264,70 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   }, [currentChat])
 
   useEffect(() => {
-    if (!currentChat || !authUser) return
+    if (!authUser || !myChats.length) return
 
-    const { unsubscribe } = joinChannel(currentChat.id, (message) => {
-      setMessages((prev) => [...prev, message])
+    // Unsubscribe old channels
+    chatRealTime?.forEach((c) => c.unsubscribe())
 
-      setMyChats((prevChats) => {
-        const updatedChats = prevChats.map((chat) => {
-          if (chat.id === message.chat_id) {
-            return {
-              ...chat,
-              last_message: message.message,
-              last_message_at: message.created_at,
-              unread_count: 0
-            }
-          }
-          return chat
-        })
-        return updatedChats
-      })
+    const subscriptions = myChats.map((chat) => {
+      const { unsubscribe } = joinChannel(
+        chat.id,
+
+        // NEW MESSAGE
+        (message) => {
+          setMessages((prev) => [...prev, message])
+
+          setMyChats((prevChats) =>
+            prevChats.map((c) =>
+              c.id === message.chat_id
+                ? {
+                    ...c,
+                    last_message: message.message,
+                    last_message_at: message.created_at
+                  }
+                : c
+            )
+          )
+        },
+
+        // DELETE
+        (msgId) => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === msgId
+                ? { ...m, is_deleted: 1, message: "This message was deleted" }
+                : m
+            )
+          )
+        },
+
+        // EDIT
+        (msgId, newContent) => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === msgId ? { ...m, message: newContent } : m
+            )
+          )
+        },
+
+        // TYPING
+        (userId, isTyping, chatId) => {
+          setTypingUsers((prev) => {
+            const updated = { ...prev }
+            if (!updated[chatId]) updated[chatId] = new Set()
+            if (isTyping) updated[chatId].add(userId)
+            else updated[chatId].delete(userId)
+            return updated
+          })
+        }
+      )
+
+      return { chatId: chat.id, unsubscribe }
     })
 
-    // return () => subscriptions.forEach((s) => s.unsubscribe())
+    setChatRealtime(subscriptions)
+
+    return () => subscriptions.forEach((s) => s.unsubscribe())
   }, [myChats, authUser])
 
   useEffect(() => {
@@ -389,48 +452,76 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   }, [authUser, setMyChats, currentChat, currentSpace])
 
   const handleSendMessage = async () => {
-    if (richMessageContent.trim() === "" || !currentChat || !authUser) return
+    try {
+      if (!currentChat || !authUser) return
 
-    const contentToSend = richMessageContent
-      .replace(
-        /<span[^>]*data-type="mention"[^>]*data-id="([^"]*)"[^>]*data-label="([^"]*)"[^>]*>@[^<]*<\/span>/g,
-        "@[ $2 ]($1)"
-      )
-      .replace(/<p[^>]*>/g, "")
-      .replace(/<\/p>/g, "\n")
-      .replace(/<br\s*\/?>/g, "\n")
-      .trim()
+      let type: "text" | "image" | "file" = "text"
+      let messageToSend = ""
 
-    const messageToUpdateChatList = richMessageContent.includes("<p>")
-      ? "Rich text message"
-      : contentToSend
+      if (fileString) {
+        const [file_path, file_name, file_size, file_type] =
+          fileString.split(",")
 
-    if (contentToSend === "") return
+        if (file_type.startsWith("image/")) type = "image"
+        else type = "file"
 
-    const newMsg: InsertMessage = {
-      sender_id: authUser?.unique_id || "",
-      chat_id: currentChat?.id || 0,
-      message: contentToSend,
-      type: "text"
+        messageToSend = fileString
+      } else {
+        const contentToSend = richMessageContent
+          .replace(
+            /<span[^>]*data-type="mention"[^>]*data-id="([^"]*)"[^>]*data-label="([^"]*)"[^>]*>@[^<]*<\/span>/g,
+            "@[ $2 ]($1)"
+          )
+          .replace(/<p[^>]*>/g, "")
+          .replace(/<\/p>/g, "\n")
+          .replace(/<br\s*\/?>/g, "\n")
+          .trim()
+
+        if (contentToSend === "") return
+
+        messageToSend = contentToSend
+      }
+
+      if (editingMessage) {
+        await updateChatMsg(
+          editingMessage.id,
+          currentChat.id,
+          authUser.unique_id,
+          messageToSend,
+          editingMessage.message
+        )
+
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === editingMessage.id
+              ? { ...msg, message: messageToSend, type }
+              : msg
+          )
+        )
+
+        setEditingMessage(null)
+      } else {
+        const newMsg: InsertMessage = {
+          sender_id: authUser.unique_id,
+          chat_id: currentChat.id,
+          message: messageToSend,
+          type
+        }
+
+        await addMessageToChat(newMsg, currentSpace?.id)
+      }
+
+      setRichMessageContent("")
+      setFileString("")
+      setOpenAttachment(false)
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to send message",
+        duration: 3000
+      })
     }
-
-    setMyChats((prevChats) =>
-      prevChats.map((chat) =>
-        chat.id === currentChat.id
-          ? {
-              ...chat,
-              last_message: messageToUpdateChatList,
-              last_message_at: moment().toISOString(),
-              updated_at: moment().toISOString(),
-              unread_count: 0
-            }
-          : chat
-      )
-    )
-
-    setRichMessageContent("")
-
-    await addMessageToChat(newMsg, currentSpace?.id)
   }
 
   const currentMessageContent = richMessageContent
@@ -438,6 +529,74 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const handleEmojiSelect = (emoji: string) => {
     setRichMessageContent((prev) => `${prev}${emoji}`)
   }
+  const handleDelteMsg = async (msg: SelectMessage) => {
+    try {
+      if (
+        authUser?.unique_id === msg.sender_id &&
+        currentChat?.id === msg.chat_id
+      ) {
+        await deleteMessageFromChat(msg.id, currentChat.id, authUser.unique_id)
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete message.",
+        variant: "destructive"
+      })
+    }
+  }
+  const handleFileUpload = (files: File[]) => {
+    const file = files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onloadend = async () => {
+      const base64 = reader.result as string
+      try {
+        const res = await uploadAttachment(file.name, base64, file.type)
+        if (res?.success && res.data) {
+          const { fileRecord } = res.data
+          setRichMessageContent(fileRecord.file_name)
+          const fileString = `${fileRecord.file_path},${fileRecord.file_name},${fileRecord.file_size},${fileRecord.file_type}`
+          setFileString(fileString)
+        }
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Something went wrong",
+          duration: 3000
+        })
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleTyping = async () => {
+    if (!currentChat || !authUser) return
+
+    await sendTypingIndicator(currentChat.id, true)
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+
+    typingTimeoutRef.current = setTimeout(async () => {
+      await sendTypingIndicator(currentChat.id, false)
+      typingTimeoutRef.current = null
+    }, 2000)
+  }
+
+  const users = getOnlineUsers()
+
+  const isContactOnline = (() => {
+    const chat = myChats.find((c) => c.id === currentChat?.id)
+    if (!chat) return false
+
+    const otherUser = chat.users?.find(
+      (user) => user.user_id !== authUser?.unique_id
+    )
+
+    return otherUser ? users.has(otherUser.user_id) : false
+  })()
 
   return (
     <div className="flex h-[calc(100vh-7rem)] gap-4">
@@ -459,7 +618,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           </div>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden p-0">
-          {canView && <ChatsList searchQuery={searchQuery} />}
+          {canView && (
+            <ChatsList typingUsers={typingUsers} searchQuery={searchQuery} />
+          )}
         </CardContent>
       </Card>
 
@@ -489,68 +650,101 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       <Input placeholder="Search chats..." className="pl-8" />
                     </div>
                   </CardHeader>
-                  <ChatsList searchQuery={searchQuery} />
+                  <ChatsList
+                    typingUsers={typingUsers}
+                    searchQuery={searchQuery}
+                  />
                 </SheetContent>
               </Sheet>
-              {currentChat ? (
-                <Link
-                  href={
-                    currentChat.is_group
-                      ? "#"
-                      : `/profile/${chatContact?.unique_id}`
-                  }
-                >
-                  <div className="flex ">
-                    {currentChat.is_group ? (
-                      <Avvvatars value={currentChat.name || ""} style="shape" />
-                    ) : (
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage
-                          src={
-                            currentChat && !currentChat.is_group
-                              ? chatContact?.profile_url || undefined
-                              : undefined
-                          }
-                          alt={currentChat.name || ""}
-                        />
-                        <AvatarFallback>
-                          {currentChat && !currentChat.is_group
-                            ? chatContact?.first_name[0]
-                            : currentChat.name}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                    <div className="ml-4 space-y-1">
-                      {!currentChat?.is_group && chatContact ? (
-                        <>
-                          <p className="text-sm font-medium leading-none">{`${chatContact?.first_name} ${chatContact?.last_name}`}</p>
-                          <p className="text-sm text-muted-foreground truncate">
-                            {getUserRole(chatContact, currentSpace?.id)}
-                          </p>
-                        </>
-                      ) : null}
+              {currentChat
+                ? (() => {
+                    const otherUser = !currentChat.is_group
+                      ? currentChat.users?.find(
+                          (u) => u.user?.unique_id !== authUser?.unique_id
+                        )?.user
+                      : null
 
-                      {currentChat?.is_group ? (
-                        <>
-                          <p className="text-sm font-medium leading-none">
-                            {currentChat.name}
-                          </p>
-                          <p className="text-sm text-muted-foreground truncate">
-                            Group Chat (
-                            {currentChat.users
-                              ?.map(
-                                (user) =>
-                                  `${user.user?.first_name} ${user.user?.last_name}`
-                              )
-                              .join(", ")}
-                            )
-                          </p>
-                        </>
-                      ) : null}
-                    </div>
-                  </div>
-                </Link>
-              ) : null}
+                    return (
+                      <Link
+                        href={
+                          currentChat.is_group
+                            ? "#"
+                            : `/profile/${otherUser?.unique_id}`
+                        }
+                      >
+                        <div className="flex">
+                          {/* AVATAR */}
+                          {currentChat.is_group ? (
+                            <Avvvatars
+                              value={currentChat.name || "Group"}
+                              style="shape"
+                            />
+                          ) : (
+                            <div className="relative h-9 w-9">
+                              <Avatar className="h-9 w-9">
+                                <AvatarImage
+                                  src={otherUser?.profile_url || undefined}
+                                />
+                                <AvatarFallback>
+                                  {otherUser?.first_name?.[0]}
+                                </AvatarFallback>
+                              </Avatar>
+
+                              {isContactOnline && (
+                                <span className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-white rounded-full"></span>
+                              )}
+                            </div>
+                          )}
+
+                          <div className="ml-4 space-y-1">
+                            {/* PRIVATE CHAT */}
+                            {!currentChat.is_group && otherUser ? (
+                              <>
+                                <p className="text-sm font-medium leading-none">
+                                  {otherUser.first_name} {otherUser.last_name}
+                                </p>
+
+                                {(() => {
+                                  const role = getUserRole(
+                                    otherUser,
+                                    currentSpace?.id
+                                  )
+
+                                  return role ? (
+                                    <p className="text-sm text-muted-foreground truncate">
+                                      {role}
+                                    </p>
+                                  ) : (
+                                    <p className="text-sm text-muted-foreground truncate">
+                                      {/* Hide or show fallback here */}
+                                    </p>
+                                  )
+                                })()}
+                              </>
+                            ) : (
+                              <>
+                                <p className="text-sm font-medium leading-none">
+                                  {currentChat.name}
+                                </p>
+
+                                <p className="text-sm text-muted-foreground truncate">
+                                  Group Chat (
+                                  {currentChat.users
+                                    ?.map(
+                                      (u) =>
+                                        `${u.user?.first_name} ${u.user?.last_name}`
+                                    )
+                                    .join(",")}
+                                  )
+                                </p>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    )
+                  })()
+                : null}
             </div>
 
             {/* calling options for future */}
@@ -578,25 +772,25 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                     {messages.map((message) => (
                       <div
                         key={message.id}
-                        className={`group mb-4 flex items-start ${
+                        className={`mb-4 flex items-start ${
                           message.sender_id === authUser?.unique_id
                             ? "justify-end"
                             : "justify-start"
                         }`}
                       >
                         {isOnlyEmoji(message.message) && !message.is_deleted ? (
-                          <div className="">
+                          <div>
                             {message.sender_id !== authUser?.unique_id &&
-                            currentChat.is_group ? (
-                              <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">
-                                ~ {message.sender?.first_name}
-                              </p>
-                            ) : null}
+                              currentChat.is_group && (
+                                <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">
+                                  ~ {message.sender?.first_name}
+                                </p>
+                              )}
                             <p className="text-4xl">{message.message}</p>
                           </div>
                         ) : (
                           <div
-                            className={`rounded-lg p-3 max-w-[70%] rich-editor ${
+                            className={`group rounded-lg rich-editor pl-1 justify-center items-center flex  ${
                               message.sender_id === authUser?.unique_id
                                 ? "bg-primary text-primary-foreground"
                                 : "bg-muted pr-2"
@@ -608,9 +802,113 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                 ~ {message.sender?.first_name}
                               </p>
                             ) : null}
-                            <MessageContent content={message.message} />
+
+                            <div className="flex flex-col p-1">
+                              {message.is_deleted ? (
+                                <span className="italic text-sm">
+                                  {message.sender_id === authUser?.unique_id
+                                    ? "You deleted this message"
+                                    : "This message was deleted"}
+                                </span>
+                              ) : (
+                                <>
+                                  {message.type === "image" &&
+                                    message.message.split(",").length === 4 &&
+                                    (() => {
+                                      const [
+                                        file_path,
+                                        file_name,
+                                        file_size,
+                                        file_type
+                                      ] = message.message.split(",")
+                                      return (
+                                        <Image
+                                          src={file_path}
+                                          alt="Post image"
+                                          className="rounded-lg max-h-96 w-full object-cover bg-gradient-to-r from-accent to-secondary"
+                                          width={1000}
+                                          height={1000}
+                                          style={{ objectFit: "contain" }}
+                                        />
+                                      )
+                                    })()}
+                                  {message.type === "file" &&
+                                    message.message.split(",").length === 4 &&
+                                    (() => {
+                                      const [fileUrl, fileName, fileSize] =
+                                        message.message.split(",")
+                                      return (
+                                        <Link href={fileUrl} target="_blank">
+                                          <div
+                                            className={`flex items-center ${message.sender_id === authUser.unique_id ? "bg-primary text-primary-foreground" : "bg-muted text-white"} space-x-2 p-2 rounded-lg`}
+                                          >
+                                            <FileIcon className="h-8 w-8" />
+                                            <span className="font-medium">
+                                              {fileName}
+                                            </span>
+                                            <span className="text-xs">
+                                              {formatFileSize(Number(fileSize))}
+                                            </span>
+                                          </div>
+                                        </Link>
+                                      )
+                                    })()}
+
+                                  {message.type === "text" && (
+                                    <MessageContent content={message.message} />
+                                  )}
+                                </>
+                              )}
+                            </div>
+
+                            {/* Edit/Delete dropdown for non-deleted messages by authUser */}
+                            {!message.is_deleted &&
+                              message.sender_id === authUser?.unique_id && (
+                                <div className="self-start ml-2">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="opacity-0 group-hover:opacity-100 transform -translate-y-2 group-hover:translate-y-0 transition-all duration-200"
+                                      >
+                                        <ChevronDown />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+
+                                    <DropdownMenuContent
+                                      align="end"
+                                      className="w-40"
+                                    >
+                                      {message.type !== "image" &&
+                                        message.type !== "file" && (
+                                          <DropdownMenuItem
+                                            onClick={() => {
+                                              setEditingMessage(message)
+                                              setRichMessageContent(
+                                                message.message
+                                              )
+                                            }}
+                                          >
+                                            <Edit className="mr-2 h-4 w-4" />
+                                            Edit
+                                          </DropdownMenuItem>
+                                        )}
+                                      <DropdownMenuItem
+                                        onClick={() => handleDelteMsg(message)}
+                                        className="text-red-600 focus:text-red-600"
+                                      >
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
+                              )}
                           </div>
                         )}
+
+                        {/* Timestamp */}
                         <p className="text-xs ml-2 mt-2 text-right hidden group-hover:block">
                           {moment
                             .utc(message.created_at)
@@ -619,6 +917,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                         </p>
                       </div>
                     ))}
+
+                    {/* Scroll to bottom */}
                     <div ref={messagesEndRef} />
                   </ScrollArea>
                 ) : (
@@ -633,27 +933,46 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                     e.preventDefault()
                     handleSendMessage()
                   }}
-                  className="flex w-full space-x-2 items-end"
+                  className="flex w-full space-x-2 items-end relative"
                 >
                   <div className="flex-1" key={currentChat?.id || "no-chat"}>
-                    <RichTextEditor
-                      value={richMessageContent}
-                      onChange={setRichMessageContent}
-                      image_uploading={true}
-                      entity="chats"
-                      showMentions={
-                        currentChat?.is_group === 1 && availableUsers.length > 0
-                      }
-                      mentionUsers={availableUsers}
-                      showToolbar={showRichEditorToolbar}
-                      minHeight={`${showRichEditorToolbar ? "100px" : "30px"}`}
-                      limit={5000}
-                      editable={!newMessageLoading}
-                      onEnterPress={handleSendMessage}
-                      onMentionStateChange={setIsMentionActive}
-                      showFooter={false}
-                      isScrollAble={true}
-                    />
+                    {openAttachment ? (
+                      <div className=" flex flex-col">
+                        <Button
+                          onClick={() => setOpenAttachment(false)}
+                          className=" bg-muted w-12 h-12 self-end"
+                        >
+                          <X className="text-white w-12 h-12" />
+                        </Button>
+                        <FileUpload
+                          accept="image/*,application/*"
+                          onChange={handleFileUpload}
+                        />
+                      </div>
+                    ) : (
+                      <RichTextEditor
+                        value={richMessageContent}
+                        onChange={(val) => {
+                          setRichMessageContent(val)
+                          handleTyping()
+                        }}
+                        image_uploading={true}
+                        entity="chats"
+                        showMentions={
+                          currentChat?.is_group === 1 &&
+                          availableUsers.length > 0
+                        }
+                        mentionUsers={availableUsers}
+                        showToolbar={showRichEditorToolbar}
+                        minHeight={`${showRichEditorToolbar ? "100px" : "30px"}`}
+                        limit={5000}
+                        editable={!newMessageLoading}
+                        onEnterPress={handleSendMessage}
+                        onMentionStateChange={setIsMentionActive}
+                        showFooter={false}
+                        isScrollAble={true}
+                      />
+                    )}
                   </div>
 
                   <Button
@@ -676,6 +995,16 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                   >
                     <PencilLine className="h-5 w-5" />
                     <span className="sr-only">Toggle Formatting Menu</span>
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setOpenAttachment(true)}
+                    title="Attach file"
+                  >
+                    <Paperclip className="h-4 w-4" />
                   </Button>
 
                   <Popover>

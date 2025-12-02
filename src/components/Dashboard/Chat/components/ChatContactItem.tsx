@@ -8,23 +8,24 @@ import { parseMentions } from "@/src/services/realtime/utils/helper"
 import { chatStore } from "@/src/store/chat/chatStore"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
+import { computeTypingLabel } from "@/src/utils/clientHelper"
 import Avvvatars from "avvvatars-react"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { AtSign } from "lucide-react"
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 
 interface ChatContactItemProps {
   chat: SelectChat
+  typingUsers?: Record<number, Set<string>>
 }
 
-const ChatContactItem = ({ chat }: ChatContactItemProps) => {
+const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
   const authUser = useAtomValue(userStore.AuthUser)
   const authUserId = authUser?.unique_id
   const [currentChat, setCurrentChat] = useAtom(chatStore.currentChat)
   const setSwtichedChat = useSetAtom(chatStore.switchedChat)
   const setIsMobileMenuOpen = useSetAtom(chatStore.isMobileMenuOpen)
   const { getOnlineUsers } = useOnlineStatus()
-  const onlineUsers = getOnlineUsers()
 
   const users = getOnlineUsers()
 
@@ -52,8 +53,32 @@ const ChatContactItem = ({ chat }: ChatContactItemProps) => {
   const chatContact = filteredContact?.user || null
   if (!chatContact) return null
   const isContactOnline = filteredContact
-    ? onlineUsers.has(filteredContact?.user_id)
+    ? users.has(filteredContact?.user_id)
     : false
+  const typingLabel = computeTypingLabel({ chat, typingUsers, authUserId })
+
+  const parseLastMessageType = () => {
+    const raw = chat.last_message
+    if (!raw) return { type: "text", content: lastMessage }
+
+    const parts = raw.split(",")
+
+    if (parts.length < 4) {
+      return { type: "text", content: lastMessage }
+    }
+
+    const url = parts[0]
+    const filename = parts[1]
+    const mime = parts[3]
+
+    if (mime.startsWith("image/")) {
+      return { type: "image", filename }
+    }
+
+    return { type: "file", filename }
+  }
+
+  const lastMessageInfo = parseLastMessageType()
 
   return (
     <div
@@ -95,15 +120,38 @@ const ChatContactItem = ({ chat }: ChatContactItemProps) => {
             ? chat.name
             : `${chatContact?.first_name} ${chatContact?.last_name}`}
         </p>
-        <p
-          className="text-sm text-muted-foreground truncate"
-          dangerouslySetInnerHTML={{ __html: lastMessage }}
-        />
+
+        {typingLabel ? (
+          <p className="text-sm text-primary truncate animate-pulse">
+            {typingLabel}
+          </p>
+        ) : (
+          <>
+            {lastMessageInfo.type === "text" && (
+              <p
+                className="text-sm text-muted-foreground truncate"
+                dangerouslySetInnerHTML={{
+                  __html: lastMessageInfo.content ?? ""
+                }}
+              />
+            )}
+
+            {lastMessageInfo.type === "image" && (
+              <p className="text-sm text-muted-foreground truncate">
+                {lastMessageInfo.filename}
+              </p>
+            )}
+
+            {lastMessageInfo.type === "file" && (
+              <p className="text-sm text-muted-foreground truncate">
+                {lastMessageInfo.filename}
+              </p>
+            )}
+          </>
+        )}
       </div>
 
-      {/* NEW: Show badges container */}
       <div className="flex items-center gap-1 ml-auto">
-        {/* NEW: Show @ badge if user is mentioned */}
         {isCurrentUserMentioned && unreadCount > 0 && (
           <Badge
             variant="secondary"
@@ -113,7 +161,6 @@ const ChatContactItem = ({ chat }: ChatContactItemProps) => {
           </Badge>
         )}
 
-        {/* Show unread count */}
         {unreadCount > 0 && (
           <Badge variant="secondary" className="rounded-full px-2 py-1">
             {unreadCount}
