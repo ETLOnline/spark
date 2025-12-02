@@ -90,7 +90,7 @@ export function TaskComment({
 
   useEffect(() => {
     if (getCommentsRes?.success && getCommentsRes?.data) {
-      setComments(getCommentsRes.data)
+      setComments((prevComments) => [...prevComments, ...getCommentsRes.data])
 
       if (getCommentsRes.data.length < COMMENTS_PER_LOAD) {
         setHasMoreComments(false)
