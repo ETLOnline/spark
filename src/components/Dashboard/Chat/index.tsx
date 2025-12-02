@@ -58,6 +58,12 @@ import {
   EmojiPickerSearch
 } from "../../ui/emoji-picker"
 import "@/src/components/common/RichEditorFormat.css"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from "../../ui/dialog"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -128,6 +134,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const [richMessageContent, setRichMessageContent] = useState("")
   const [showRichEditorToolbar, setShowRichEditorToolbar] = useState(false)
   const [isMentionActive, setIsMentionActive] = useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useAtom(
     chatStore.isMobileMenuOpen
@@ -417,122 +424,132 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   }
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] gap-4">
-      {/* Contacts list - visible on desktop, hidden on mobile */}
-      <Card className="w-80 flex-shrink-0 border-r hidden md:flex md:flex-col h-full">
-        <CardHeader className="px-3">
-          <CardTitle className="flex items-center justify-between">
-            Chats
-            {canCreate && <CreateNewChat />}
-          </CardTitle>
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search chats..."
-              className="pl-8"
-            />
-          </div>
-        </CardHeader>
-        <CardContent className="flex-1 overflow-hidden p-0">
-          {canView && <ChatsList searchQuery={searchQuery} />}
-        </CardContent>
-      </Card>
-
-      {/* Main chat area */}
-      {canView && (
-        <Card className="flex-1 flex flex-col h-full">
-          <CardHeader className="flex flex-row items-center justify-between py-4">
-            <div className="flex items-center">
-              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                <SheetTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="md:hidden mr-2"
-                  >
-                    <Menu />
-                    <span className="sr-only">Toggle contacts</span>
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-[80%] sm:w-[385px] p-0">
-                  <CardHeader>
-                    <CardTitle>
-                      Chats <CreateNewChat />
-                    </CardTitle>
-                    <div className="relative">
-                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="Search chats..." className="pl-8" />
-                    </div>
-                  </CardHeader>
-                  <ChatsList searchQuery={searchQuery} />
-                </SheetContent>
-              </Sheet>
-              {currentChat ? (
-                <Link
-                  href={
-                    currentChat.is_group
-                      ? "#"
-                      : `/profile/${chatContact?.unique_id}`
-                  }
-                >
-                  <div className="flex ">
-                    {currentChat.is_group ? (
-                      <Avvvatars value={currentChat.name || ""} style="shape" />
-                    ) : (
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage
-                          src={
-                            currentChat && !currentChat.is_group
-                              ? chatContact?.profile_url || undefined
-                              : undefined
-                          }
-                          alt={currentChat.name || ""}
-                        />
-                        <AvatarFallback>
-                          {currentChat && !currentChat.is_group
-                            ? chatContact?.first_name[0]
-                            : currentChat.name}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                    <div className="ml-4 space-y-1">
-                      {!currentChat?.is_group && chatContact ? (
-                        <>
-                          <p className="text-sm font-medium leading-none">{`${chatContact?.first_name} ${chatContact?.last_name}`}</p>
-                          <p className="text-sm text-muted-foreground truncate">
-                            {getUserRole(chatContact, currentSpace?.id)}
-                          </p>
-                        </>
-                      ) : null}
-
-                      {currentChat?.is_group ? (
-                        <>
-                          <p className="text-sm font-medium leading-none">
-                            {currentChat.name}
-                          </p>
-                          <p className="text-sm text-muted-foreground truncate">
-                            Group Chat (
-                            {currentChat.users
-                              ?.map(
-                                (user) =>
-                                  `${user.user?.first_name} ${user.user?.last_name}`
-                              )
-                              .join(", ")}
-                            )
-                          </p>
-                        </>
-                      ) : null}
-                    </div>
-                  </div>
-                </Link>
-              ) : null}
+    <>
+      <div className="flex h-[calc(100vh-7rem)] gap-4">
+        {/* Contacts list - visible on desktop, hidden on mobile */}
+        <Card className="w-80 flex-shrink-0 border-r hidden md:flex md:flex-col h-full">
+          <CardHeader className="px-3">
+            <CardTitle className="flex items-center justify-between">
+              Chats
+              {canCreate && <CreateNewChat />}
+            </CardTitle>
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search chats..."
+                className="pl-8"
+              />
             </div>
+          </CardHeader>
+          <CardContent className="flex-1 overflow-hidden p-0">
+            {canView && <ChatsList searchQuery={searchQuery} />}
+          </CardContent>
+        </Card>
 
-            {/* calling options for future */}
+        {/* Main chat area */}
+        {canView && (
+          <Card className="flex-1 flex flex-col h-full">
+            <CardHeader className="flex flex-row items-center justify-between py-4">
+              <div className="flex items-center">
+                <Sheet
+                  open={isMobileMenuOpen}
+                  onOpenChange={setIsMobileMenuOpen}
+                >
+                  <SheetTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="md:hidden mr-2"
+                    >
+                      <Menu />
+                      <span className="sr-only">Toggle contacts</span>
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent
+                    side="left"
+                    className="w-[80%] sm:w-[385px] p-0"
+                  >
+                    <CardHeader>
+                      <CardTitle>
+                        Chats <CreateNewChat />
+                      </CardTitle>
+                      <div className="relative">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="Search chats..." className="pl-8" />
+                      </div>
+                    </CardHeader>
+                    <ChatsList searchQuery={searchQuery} />
+                  </SheetContent>
+                </Sheet>
+                {currentChat ? (
+                  <Link
+                    href={
+                      currentChat.is_group
+                        ? "#"
+                        : `/profile/${chatContact?.unique_id}`
+                    }
+                  >
+                    <div className="flex ">
+                      {currentChat.is_group ? (
+                        <Avvvatars
+                          value={currentChat.name || ""}
+                          style="shape"
+                        />
+                      ) : (
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage
+                            src={
+                              currentChat && !currentChat.is_group
+                                ? chatContact?.profile_url || undefined
+                                : undefined
+                            }
+                            alt={currentChat.name || ""}
+                          />
+                          <AvatarFallback>
+                            {currentChat && !currentChat.is_group
+                              ? chatContact?.first_name[0]
+                              : currentChat.name}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      <div className="ml-4 space-y-1">
+                        {!currentChat?.is_group && chatContact ? (
+                          <>
+                            <p className="text-sm font-medium leading-none">{`${chatContact?.first_name} ${chatContact?.last_name}`}</p>
+                            <p className="text-sm text-muted-foreground truncate">
+                              {getUserRole(chatContact, currentSpace?.id)}
+                            </p>
+                          </>
+                        ) : null}
 
-            {/* <div className="flex items-center space-x-2">
+                        {currentChat?.is_group ? (
+                          <div onClick={() => setIsDialogOpen(true)}>
+                            <p className="text-sm font-medium leading-none">
+                              {currentChat.name}
+                            </p>
+                            <p className="text-sm text-muted-foreground truncate whitespace-normal line-clamp-1">
+                              Group Chat (
+                              {currentChat.users
+                                ?.map(
+                                  (user) =>
+                                    `${user.user?.first_name} ${user.user?.last_name}`
+                                )
+                                .join(", ")}
+                              )
+                            </p>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </Link>
+                ) : null}
+              </div>
+
+              {/* calling options for future */}
+
+              {/* <div className="flex items-center space-x-2">
               <Button variant="ghost" size="icon">
                 <Phone className="h-4 w-4" />
                 <span className="sr-only">Start voice call</span>
@@ -546,170 +563,207 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                 <span className="sr-only">More options</span>
               </Button>
             </div> */}
-          </CardHeader>
-          {currentChat ? (
-            <>
-              <CardContent className="flex-1 min-h-0 p-4 flex flex-col">
-                {authUser && currentChat && !fetchingChatMessages ? (
-                  <ScrollArea className="flex-1 pr-4 mt-2">
-                    {messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`mb-4 flex items-start ${
-                          message.sender_id === authUser?.unique_id
-                            ? "justify-end"
-                            : "justify-start"
-                        }`}
-                      >
-                        {isOnlyEmoji(message.message) ? (
-                          <div className="">
-                            {message.sender_id !== authUser?.unique_id &&
-                            currentChat.is_group ? (
-                              <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">
-                                ~ {message.sender?.first_name}
-                              </p>
-                            ) : null}
-                            <p className="text-4xl">{message.message}</p>
-                          </div>
-                        ) : (
-                          <div className=" group flex items-center">
-                            <div
-                              className={`rounded-lg p-3  rich-editor ${
-                                message.sender_id === authUser?.unique_id
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-muted"
-                              }`}
-                            >
+            </CardHeader>
+            {currentChat ? (
+              <>
+                <CardContent className="flex-1 min-h-0 p-4 flex flex-col">
+                  {authUser && currentChat && !fetchingChatMessages ? (
+                    <ScrollArea className="flex-1 pr-4 mt-2">
+                      {messages.map((message) => (
+                        <div
+                          key={message.id}
+                          className={`mb-4 flex items-start ${
+                            message.sender_id === authUser?.unique_id
+                              ? "justify-end"
+                              : "justify-start"
+                          }`}
+                        >
+                          {isOnlyEmoji(message.message) ? (
+                            <div className="">
                               {message.sender_id !== authUser?.unique_id &&
                               currentChat.is_group ? (
                                 <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">
                                   ~ {message.sender?.first_name}
                                 </p>
                               ) : null}
-                              <MessageContent content={message.message} />
+                              <p className="text-4xl">{message.message}</p>
                             </div>
-                            <div className="text-xs ml-2 mt-2 text-right hidden group-hover:block">
-                              <p>
-                                {moment
-                                  .utc(message.created_at)
-                                  .local()
-                                  .format("hh:mm A")}
-                              </p>
-                              <p>
-                                {moment
-                                  .utc(message.created_at)
-                                  .local()
-                                  .fromNow()}
-                              </p>
+                          ) : (
+                            <div className=" group flex items-center">
+                              <div
+                                className={`rounded-lg p-3  rich-editor ${
+                                  message.sender_id === authUser?.unique_id
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-muted"
+                                }`}
+                              >
+                                {message.sender_id !== authUser?.unique_id &&
+                                currentChat.is_group ? (
+                                  <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">
+                                    ~ {message.sender?.first_name}
+                                  </p>
+                                ) : null}
+                                <MessageContent content={message.message} />
+                              </div>
+                              <div className="text-xs ml-2 mt-2 text-right hidden group-hover:block">
+                                <p>
+                                  {moment
+                                    .utc(message.created_at)
+                                    .local()
+                                    .format("hh:mm A")}
+                                </p>
+                                <p>
+                                  {moment
+                                    .utc(message.created_at)
+                                    .local()
+                                    .fromNow()}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                    <div ref={messagesEndRef} />
-                  </ScrollArea>
-                ) : (
-                  <div className="flex h-full items-center justify-center">
-                    <Loader />
-                  </div>
-                )}
-              </CardContent>
-              <CardFooter className="p-4 relative">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    handleSendMessage()
-                  }}
-                  className="flex w-full space-x-2 items-end"
-                >
-                  <div className="flex-1" key={currentChat?.id || "no-chat"}>
-                    <RichTextEditor
-                      value={richMessageContent}
-                      onChange={setRichMessageContent}
-                      image_uploading={true}
-                      entity="chats"
-                      showMentions={
-                        currentChat?.is_group === 1 && availableUsers.length > 0
-                      }
-                      mentionUsers={availableUsers}
-                      showToolbar={showRichEditorToolbar}
-                      minHeight={`${showRichEditorToolbar ? "100px" : "30px"}`}
-                      limit={5000}
-                      editable={!newMessageLoading}
-                      onEnterPress={handleSendMessage}
-                      onMentionStateChange={setIsMentionActive}
-                      showFooter={false}
-                      isScrollAble={true}
-                    />
-                  </div>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    title={
-                      showRichEditorToolbar
-                        ? "Hide Formatting Menu (Enter sends)"
-                        : "Show Formatting Menu (Enter adds line)"
-                    }
-                    onClick={() => {
-                      setShowRichEditorToolbar((prev) => !prev)
-                    }}
-                    className={`p-1 ${
-                      showRichEditorToolbar
-                        ? "bg-secondary"
-                        : "hover:bg-secondary/50"
-                    }`}
-                  >
-                    <PencilLine className="h-5 w-5" />
-                    <span className="sr-only">Toggle Formatting Menu</span>
-                  </Button>
-
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        title="Insert Emoji"
-                        className="p-1"
-                      >
-                        <SmileIcon className="h-5 w-5" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent side="top" align="end" className="p-0">
-                      <EmojiPicker
-                        className="h-[342px]"
-                        onEmojiSelect={({ emoji }: any) =>
-                          handleEmojiSelect(emoji)
-                        }
-                      >
-                        <EmojiPickerSearch />
-                        <EmojiPickerContent />
-                        <EmojiPickerFooter />
-                      </EmojiPicker>
-                    </PopoverContent>
-                  </Popover>
-
-                  <Button
-                    type="submit"
-                    size="icon"
-                    disabled={
-                      newMessageLoading || currentMessageContent.trim() === ""
-                    }
-                  >
-                    {newMessageLoading ? (
+                          )}
+                        </div>
+                      ))}
+                      <div ref={messagesEndRef} />
+                    </ScrollArea>
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
                       <Loader />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
-                </form>
-              </CardFooter>
-            </>
-          ) : null}
-        </Card>
-      )}
-    </div>
+                    </div>
+                  )}
+                </CardContent>
+                <CardFooter className="p-4 relative">
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      handleSendMessage()
+                    }}
+                    className="flex w-full space-x-2 items-end"
+                  >
+                    <div className="flex-1" key={currentChat?.id || "no-chat"}>
+                      <RichTextEditor
+                        value={richMessageContent}
+                        onChange={setRichMessageContent}
+                        image_uploading={true}
+                        entity="chats"
+                        showMentions={
+                          currentChat?.is_group === 1 &&
+                          availableUsers.length > 0
+                        }
+                        mentionUsers={availableUsers}
+                        showToolbar={showRichEditorToolbar}
+                        minHeight={`${showRichEditorToolbar ? "100px" : "30px"}`}
+                        limit={5000}
+                        editable={!newMessageLoading}
+                        onEnterPress={handleSendMessage}
+                        onMentionStateChange={setIsMentionActive}
+                        showFooter={false}
+                        isScrollAble={true}
+                      />
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      title={
+                        showRichEditorToolbar
+                          ? "Hide Formatting Menu (Enter sends)"
+                          : "Show Formatting Menu (Enter adds line)"
+                      }
+                      onClick={() => {
+                        setShowRichEditorToolbar((prev) => !prev)
+                      }}
+                      className={`p-1 ${
+                        showRichEditorToolbar
+                          ? "bg-secondary"
+                          : "hover:bg-secondary/50"
+                      }`}
+                    >
+                      <PencilLine className="h-5 w-5" />
+                      <span className="sr-only">Toggle Formatting Menu</span>
+                    </Button>
+
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          title="Insert Emoji"
+                          className="p-1"
+                        >
+                          <SmileIcon className="h-5 w-5" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent side="top" align="end" className="p-0">
+                        <EmojiPicker
+                          className="h-[342px]"
+                          onEmojiSelect={({ emoji }: any) =>
+                            handleEmojiSelect(emoji)
+                          }
+                        >
+                          <EmojiPickerSearch />
+                          <EmojiPickerContent />
+                          <EmojiPickerFooter />
+                        </EmojiPicker>
+                      </PopoverContent>
+                    </Popover>
+
+                    <Button
+                      type="submit"
+                      size="icon"
+                      disabled={
+                        newMessageLoading || currentMessageContent.trim() === ""
+                      }
+                    >
+                      {newMessageLoading ? (
+                        <Loader />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </form>
+                </CardFooter>
+              </>
+            ) : null}
+          </Card>
+        )}
+      </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Group Members</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[80vh]">
+            {currentChat?.users?.map((member) => (
+              <Link
+                href={`/profile/${member.user_id}`}
+                key={member.user_id}
+                className="flex flex-row items-center gap-2 mb-2 p-2 hover:bg-muted/55 hover:cursor-pointer rounded-md"
+              >
+                <Avatar>
+                  <AvatarImage
+                    src={member.user?.profile_url || undefined}
+                    alt={member.user?.first_name}
+                  />
+                  <AvatarFallback>{member.user?.first_name}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p>
+                    {member.user?.first_name} {member.user?.last_name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {member.user
+                      ? getUserRole(member.user, currentSpace?.id)
+                      : ""}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
