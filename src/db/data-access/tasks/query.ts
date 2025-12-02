@@ -487,8 +487,8 @@ export async function createTaskComment(
 
 export async function getTaskCommentsByTaskId(
   taskId: string,
-  limit: number,
-  offset: number
+  limit?: number,
+  offset?: number
 ): Promise<SelectTaskComment[]> {
   try {
     const comments = await db.query.taskCommentsTable.findMany({

@@ -20,6 +20,7 @@ interface TaskCommentFormProps {
   isSprintCompleted?: boolean
   refetchComments?: boolean
   setRefetchComments?: Dispatch<SetStateAction<boolean>>
+  projectUsers: SelectUser[]
 }
 const COMMENTS_PER_LOAD = 4
 
@@ -27,7 +28,8 @@ export function TaskComment({
   taskId,
   isSprintCompleted,
   refetchComments,
-  setRefetchComments
+  setRefetchComments,
+  projectUsers
 }: TaskCommentFormProps) {
   const authUser = useAtomValue(userStore.AuthUser)
   const userId = authUser?.unique_id
@@ -119,6 +121,10 @@ export function TaskComment({
     setOffset((prevOffset) => prevOffset + COMMENTS_PER_LOAD)
   }
 
+  const availableUsers = projectUsers.filter(
+    (user) => user.unique_id !== authUser?.unique_id
+  )
+
   return (
     <>
       <div className="grid gap-4">
@@ -131,6 +137,8 @@ export function TaskComment({
                 editable={!isSprintCompleted}
                 image_uploading={true}
                 entity="task-comments"
+                showMentions={availableUsers.length > 0}
+                mentionUsers={availableUsers}
               />
               <div className="flex gap-2 justify-end">
                 <Button

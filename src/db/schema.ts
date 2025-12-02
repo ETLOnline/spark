@@ -107,7 +107,7 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
     relationName: "userToHostedEvents" // User can host many events
   }),
   TaskCreator: many(taskTable, {
-    relationName: "taskToUser"
+    relationName: "taskCreator"
   })
 }))
 
@@ -1381,6 +1381,7 @@ export const taskCommentsTable = pgTable("task_comments", {
   task_id: varchar().notNull(),
   task_history: jsonb(),
   type: varchar(),
+  mentions: varchar("mentions").array(),
   ...timestamps
 })
 
