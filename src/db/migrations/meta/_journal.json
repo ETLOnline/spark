@@ -194,6 +194,7 @@
     {
       "idx": 27,
       "version": "7",
+
       "when": 1763781924573,
       "tag": "0026_2025_11_22_112523__add_mention_column_in_the_chats_table",
       "breakpoints": true

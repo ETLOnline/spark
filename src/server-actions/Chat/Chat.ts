@@ -436,7 +436,6 @@ export const sendFilesAndImagesInChatAction = CreateServerAction(
 
       return { success: true, data: { fileUrl, fileRecord } }
     } catch (error: any) {
-      console.error("Error updating profile picture:", error)
       return {
         success: false,
         error: error.message || "Failed to update profile picture"

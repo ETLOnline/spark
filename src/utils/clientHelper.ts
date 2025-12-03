@@ -228,3 +228,29 @@ export function computeTypingLabel({
 
   return names.length > 0 ? `${names.join(", ")} typing...` : "typing..."
 }
+
+import { parseMentions } from "@/src/services/realtime/utils/helper"
+
+export function parseLastMessageType(rawMessage: string | null) {
+  if (!rawMessage) return { type: "text", content: "" }
+
+  const tokens = parseMentions(rawMessage || "")
+  const lastMessage = tokens
+    .map((t) => (t.type === "mention" ? `@${t.value}` : t.value))
+    .join("")
+
+  const parts = rawMessage.split(",")
+
+  if (parts.length < 4) {
+    return { type: "text", content: lastMessage }
+  }
+
+  const filename = parts[1]
+  const mime = parts[3]
+
+  if (mime?.startsWith("image/")) {
+    return { type: "image", filename }
+  }
+
+  return { type: "file", filename }
+}

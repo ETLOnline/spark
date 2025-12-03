@@ -6,13 +6,15 @@ import { Badge } from "@/src/components/ui/badge"
 import { SelectChat } from "@/src/db/schema"
 import { parseMentions } from "@/src/services/realtime/utils/helper"
 import { chatStore } from "@/src/store/chat/chatStore"
-import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
-import { computeTypingLabel } from "@/src/utils/clientHelper"
+import {
+  computeTypingLabel,
+  parseLastMessageType
+} from "@/src/utils/clientHelper"
 import Avvvatars from "avvvatars-react"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { AtSign } from "lucide-react"
-import { useEffect, useMemo } from "react"
+import { useMemo } from "react"
 
 interface ChatContactItemProps {
   chat: SelectChat
@@ -33,52 +35,30 @@ const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
     (user) => user.user_id !== authUser?.unique_id
   )
 
+  const chatContact = filteredContact?.user || null
+
   const isCurrentUserMentioned = useMemo(() => {
     if (!authUserId || !chat.last_message) return false
     const mentionRegex = new RegExp(`@\\[[^\\]]+\\]\\(${authUserId}\\)`, "g")
     return mentionRegex.test(chat.last_message)
   }, [chat.last_message, authUserId])
 
+  const lastMessageInfo = useMemo(() => {
+    return parseLastMessageType(chat.last_message)
+  }, [chat.last_message])
+
+  const typingLabel = computeTypingLabel({ chat, typingUsers, authUserId })
+
+  if (!filteredContact) return null
+  if (!chatContact) return null
+
+  const isContactOnline = users.has(filteredContact.user_id)
+
   const currentUserChatRecord = chat?.users?.find(
     (user) => user.user_id === authUser?.unique_id
   )
 
   const unreadCount = currentUserChatRecord?.unread_count || 0
-  const tokens = parseMentions(chat.last_message || "")
-  const lastMessage = tokens
-    .map((t) => (t.type === "mention" ? `@${t.value}` : t.value))
-    .join("")
-
-  if (!filteredContact) return null
-  const chatContact = filteredContact?.user || null
-  if (!chatContact) return null
-  const isContactOnline = filteredContact
-    ? users.has(filteredContact?.user_id)
-    : false
-  const typingLabel = computeTypingLabel({ chat, typingUsers, authUserId })
-
-  const parseLastMessageType = () => {
-    const raw = chat.last_message
-    if (!raw) return { type: "text", content: lastMessage }
-
-    const parts = raw.split(",")
-
-    if (parts.length < 4) {
-      return { type: "text", content: lastMessage }
-    }
-
-    const url = parts[0]
-    const filename = parts[1]
-    const mime = parts[3]
-
-    if (mime.startsWith("image/")) {
-      return { type: "image", filename }
-    }
-
-    return { type: "file", filename }
-  }
-
-  const lastMessageInfo = parseLastMessageType()
 
   return (
     <div
@@ -114,6 +94,7 @@ const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
           )}
         </div>
       )}
+
       <div className="flex-1 max-w-[60%]">
         <p className="font-medium truncate">
           {chat.is_group

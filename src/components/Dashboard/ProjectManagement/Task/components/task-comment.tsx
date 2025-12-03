@@ -196,26 +196,35 @@ export function TaskComment({
                   {comment.type === "history" ? (
                     <div className="text-sm space-y-3">
                       {Array.isArray(comment.task_history)
-                        ? comment.task_history.map((item: any, i: number) => (
-                            <div
-                              key={i}
-                              className="border-l-2 border-muted pl-3"
-                            >
-                              <div className="font-semibold text-foreground">
-                                {item.key}:
-                              </div>
+                        ? comment.task_history.map((item: any, i: number) => {
+                            const oldConstainSpace = item.old.includes(" ")
+                            const newConstainSpace = item.new.includes(" ")
 
-                              <div className="text-muted-foreground flex items-center gap-2 mt-0.5">
-                                <span className="line-through opacity-70">
-                                  {item.old === " " ? "N/A" : item.old}
-                                </span>
-                                <span>→</span>
-                                <span className="s text-foreground">
-                                  {item.new}
-                                </span>
+                            return (
+                              <div
+                                key={i}
+                                className="border-l-2 border-muted pl-3"
+                              >
+                                <div className="font-semibold text-foreground">
+                                  {item.key}:
+                                </div>
+
+                                <div className="text-muted-foreground flex items-center gap-2 mt-0.5">
+                                  <span
+                                    className={`line-through opacity-70 ${oldConstainSpace ? "break-words" : "break-all"}`}
+                                  >
+                                    {item.old === " " ? "N/A" : item.old}
+                                  </span>
+                                  <span>→</span>
+                                  <span
+                                    className={`${newConstainSpace ? "break-words" : "break-all"}`}
+                                  >
+                                    {item.new}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          ))
+                            )
+                          })
                         : null}
                     </div>
                   ) : (
