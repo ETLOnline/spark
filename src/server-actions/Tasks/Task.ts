@@ -12,8 +12,6 @@ import {
   taskQueryFilters,
   UpdateTask,
   UpdateTaskStatus,
-  createTaskComment,
-  getTaskCommentsByTaskId,
   UpdateTasksSprint,
   GetBacklogTaskCount,
   GetSprintTaskCount,
@@ -325,72 +323,6 @@ export const DeleteTaskStatusAction = CreateServerAction(
       return { success: true }
     } catch (error) {
       return { error: error }
-    }
-  }
-)
-
-export const CreateTaskCommentAction = CreateServerAction(
-  true,
-  async (input) => {
-    try {
-      const { task_id, user_id, content } = input
-
-      const formatComment = formatContent(content || "")
-
-      const mentionedUsers = extractMentionsFromMessage(formatComment)
-
-      const commentData: InsertTaskComment = {
-        task_id: task_id,
-        user_id: user_id,
-        content: content,
-        mentions: mentionedUsers
-      }
-
-      const newComment = await createTaskComment({
-        ...commentData,
-        type: "comment"
-      })
-
-      const task = await GetTaskById(task_id)
-
-      if (task) {
-        await SendTaskNotifications(
-          "task_commented",
-          task,
-          undefined,
-          newComment
-        )
-        await addProjectRecentActivity("task_commented", task)
-      }
-
-      if (newComment) {
-        return { success: true, data: newComment }
-      } else {
-        return { success: false, error: "Failed to create comment." }
-      }
-    } catch (e: any) {
-      console.error("Server action error creating task comment:", e)
-      return {
-        success: false,
-        error: e.message || "An unexpected error occurred."
-      }
-    }
-  }
-)
-
-export const GetTaskCommentsAction = CreateServerAction(
-  true,
-  async (filter) => {
-    try {
-      const { taskId, limit, offset } = filter
-      const comments = await getTaskCommentsByTaskId(taskId, limit, offset)
-      return { success: true, data: comments }
-    } catch (e: any) {
-      console.error("Server action error fetching task comments:", e)
-      return {
-        success: false,
-        error: e.message || "An unexpected error occurred."
-      }
     }
   }
 )

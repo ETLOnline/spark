@@ -9,7 +9,7 @@ import { NotificationEvent } from "@/src/services/notify/types/events"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 import { formatContent } from "@/src/utils/helpers"
 import { extractMentionsFromMessage } from "../../realtime/utils/helper"
-import { getTaskCommentsByTaskId } from "@/src/db/data-access/tasks/query"
+import { getTaskCommentsByTaskId } from "@/src/db/data-access/tasks/taskComments/query"
 
 export const SendTaskNotifications = async (
   event_type: string,
