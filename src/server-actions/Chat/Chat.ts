@@ -31,11 +31,11 @@ import {
 import { createChatEmailNotification } from "@/src/services/notify/chat/chat"
 import { NotificationEvent } from "@/src/services/notify/types/events"
 import { slugify } from "@/src/utils/helpers"
+import { extractMentionsFromMessage } from "@/src/services/realtime/utils/helper"
 import {
   base64ToBuffer,
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
-import { extractMentionsFromMessage } from "@/src/services/realtime/utils/helper"
 
 export const CreatePrivateChatAction = CreateServerAction(
   true,

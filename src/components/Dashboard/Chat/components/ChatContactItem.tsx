@@ -32,10 +32,11 @@ const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
   const users = getOnlineUsers()
 
   const filteredContact = chat?.users?.find(
-    (user) => user.user_id !== authUser?.unique_id
+    (user) => user?.user_id !== authUser?.unique_id
   )
-
-  const chatContact = filteredContact?.user || null
+  const lastMessageInfo = useMemo(() => {
+    return parseLastMessageType(chat.last_message)
+  }, [chat.last_message])
 
   const isCurrentUserMentioned = useMemo(() => {
     if (!authUserId || !chat.last_message) return false
@@ -43,23 +44,16 @@ const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
     return mentionRegex.test(chat.last_message)
   }, [chat.last_message, authUserId])
 
-  const lastMessageInfo = useMemo(() => {
-    return parseLastMessageType(chat.last_message)
-  }, [chat.last_message])
-
-  const typingLabel = computeTypingLabel({ chat, typingUsers, authUserId })
-
-  if (!filteredContact) return null
-  if (!chatContact) return null
-
-  const isContactOnline = users.has(filteredContact.user_id)
-
   const currentUserChatRecord = chat?.users?.find(
     (user) => user.user_id === authUser?.unique_id
   )
 
   const unreadCount = currentUserChatRecord?.unread_count || 0
-
+  const typingLabel = computeTypingLabel({ chat, typingUsers, authUserId })
+  const isContactOnline =
+    filteredContact?.user?.unique_id !== undefined
+      ? users.has(filteredContact.user.unique_id)
+      : false
   return (
     <div
       key={chat.id}
@@ -76,11 +70,11 @@ const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
       ) : (
         <div className="relative h-10 w-10">
           <Avatar className="h-10 w-10 bg-white">
-            {chatContact?.profile_url ? (
-              <AvatarImage src={chatContact.profile_url} />
+            {filteredContact?.user?.profile_url ? (
+              <AvatarImage src={filteredContact?.user?.profile_url} />
             ) : (
               <AvatarFallback>
-                {chatContact.first_name.charAt(0)}
+                {filteredContact?.user?.first_name.charAt(0)}
               </AvatarFallback>
             )}
           </Avatar>
@@ -94,14 +88,12 @@ const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
           )}
         </div>
       )}
-
       <div className="flex-1 max-w-[60%]">
         <p className="font-medium truncate">
           {chat.is_group
             ? chat.name
-            : `${chatContact?.first_name} ${chatContact?.last_name}`}
+            : `${filteredContact?.user?.first_name} ${filteredContact?.user?.last_name}`}
         </p>
-
         {typingLabel ? (
           <p className="text-sm text-primary truncate animate-pulse">
             {typingLabel}
@@ -116,13 +108,11 @@ const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
                 }}
               />
             )}
-
             {lastMessageInfo.type === "image" && (
               <p className="text-sm text-muted-foreground truncate">
                 {lastMessageInfo.filename}
               </p>
             )}
-
             {lastMessageInfo.type === "file" && (
               <p className="text-sm text-muted-foreground truncate">
                 {lastMessageInfo.filename}
@@ -132,7 +122,9 @@ const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
         )}
       </div>
 
+      {/* NEW: Show badges container */}
       <div className="flex items-center gap-1 ml-auto">
+        {/* NEW: Show @ badge if user is mentioned */}
         {isCurrentUserMentioned && unreadCount > 0 && (
           <Badge
             variant="secondary"
@@ -142,6 +134,7 @@ const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
           </Badge>
         )}
 
+        {/* Show unread count */}
         {unreadCount > 0 && (
           <Badge variant="secondary" className="rounded-full px-2 py-1">
             {unreadCount}
