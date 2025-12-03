@@ -11,7 +11,6 @@ export function getRealtimeSystemNotificationChannel(userId: string) {
   return `${RealtimeChannelPrefix.SystemNotification}${userId}`
 }
 
-
 /**
  * Extracts mentioned user IDs from message content
  * Supports formats like: @[John Doe](user_id_123)
@@ -21,15 +20,15 @@ export function getRealtimeSystemNotificationChannel(userId: string) {
 export const extractMentionsFromMessage = (message: string): string[] => {
   const mentionRegex = MentionChatRegex
   const mentions: string[] = []
-  
+
   let match
   while ((match = mentionRegex.exec(message)) !== null) {
-    const userId = match[2] 
+    const userId = match[2]
     if (userId && !mentions.includes(userId)) {
       mentions.push(userId)
     }
   }
-  
+
   return mentions
 }
 
@@ -43,14 +42,14 @@ export const parseMentions = (text: string): MentionToken[] => {
     if (match.index > lastIndex) {
       tokens.push({
         type: "text",
-        value: text.substring(lastIndex, match.index),
+        value: text.substring(lastIndex, match.index)
       })
     }
 
     tokens.push({
       type: "mention",
-      value: match[1],    // displayName
-      userId: match[2],   // user_id
+      value: match[1], // displayName
+      userId: match[2] // user_id
     })
 
     lastIndex = match.index + match[0].length
@@ -59,7 +58,7 @@ export const parseMentions = (text: string): MentionToken[] => {
   if (lastIndex < text.length) {
     tokens.push({
       type: "text",
-      value: text.substring(lastIndex),
+      value: text.substring(lastIndex)
     })
   }
 

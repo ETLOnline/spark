@@ -113,7 +113,7 @@ export const SendMessageNotification = async (
     const notificationBody = tokens
       .map((t) => (t.type === "mention" ? `@${t.value}` : t.value))
       .join("")
-      const cleanBody = notificationBody.replace(/<[^>]*>/g, '');
+    const cleanBody = notificationBody.replace(/<[^>]*>/g, "")
     const notificationPayload: NotificationPayload = {
       receivers: nonPresentReciversIds || [],
       template: {
