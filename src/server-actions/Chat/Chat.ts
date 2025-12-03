@@ -190,7 +190,7 @@ export const GetChatBySlugWithMessagesAction = CreateServerAction(
   async (slug: string) => {
     try {
       const chat = await GetChatBySlugWithMessages(slug)
-      if(!chat){
+      if (!chat) {
         return { success: false, data: undefined }
       }
       return { success: true, data: chat }
@@ -207,12 +207,12 @@ export const AddMessageToChatAction = CreateServerAction(
       const authUser = await AuthUserAction()
       if (authUser) {
         const mentions = extractMentionsFromMessage(message.message)
-        
+
         const newMessagePlayload = {
           ...message,
           sender_id: authUser.unique_id,
-          mentions: mentions.length > 0 ? mentions : undefined 
-        }     
+          mentions: mentions.length > 0 ? mentions : undefined
+        }
         const newMessage = await createChatMessage(newMessagePlayload)
         if (newMessage) {
           const updatedChat = await updateLastChatMessage(
@@ -238,9 +238,8 @@ export const AddMessageToChatAction = CreateServerAction(
             const userId = userChat.user_id
 
             if (userId !== authUser.unique_id) {
-
               const wasMentioned = mentions.includes(userId)
-              
+
               await pusherServer.trigger(
                 `private-user-${userId}`,
                 "chat-update",
@@ -257,7 +256,6 @@ export const AddMessageToChatAction = CreateServerAction(
           }
 
           const space = await GetSpaceById(space_id || "")
-
 
           await SendMessageNotification(updatedChat, space)
 

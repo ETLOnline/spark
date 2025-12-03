@@ -10,6 +10,7 @@ import moment from "moment"
 const ChatsList = ({ searchQuery = "" }) => {
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
   const authUser = useAtomValue(userStore.AuthUser)
+  const isLoadingChats = !myChats || myChats.length === 0
 
   const filteredChats = useMemo(() => {
     const chats = myChats.filter((chat) => {
@@ -50,12 +51,13 @@ const ChatsList = ({ searchQuery = "" }) => {
     <ScrollArea className="h-[calc(100vh-15rem)] px-2 pb-5">
       {authUser ? (
         <div className="overflow-y-auto h-full space-y-1">
-          {filteredChats.length > 0 ? (
+          {isLoadingChats ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader />
+            </div>
+          ) : filteredChats.length > 0 ? (
             filteredChats.map((chat) => (
-              <ChatContactItem
-                key={chat.id}
-                chat={chat}
-              />
+              <ChatContactItem key={chat.id} chat={chat} />
             ))
           ) : (
             <div className="text-center text-muted-foreground py-8">
