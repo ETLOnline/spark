@@ -36,6 +36,7 @@ export type taskQueryFilters = {
   priority?: string[]
   type?: string[]
   assignee?: string[]
+  creator?: string[]
   status?: string[]
   parent_id?: string
   excludedTypes?: string[]
@@ -133,6 +134,10 @@ export async function GetTasks(filters?: taskQueryFilters) {
         } else if (hasEmptyString) {
           whereClauses.push(isNull(taskTable.assign_to))
         }
+      }
+
+      if (filters.creator && filters.creator.length > 0) {
+        whereClauses.push(inArray(taskTable.created_by, filters.creator))
       }
 
       if (filters.status && filters.status.length > 0) {

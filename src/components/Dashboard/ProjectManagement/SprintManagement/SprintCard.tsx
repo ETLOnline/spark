@@ -66,6 +66,7 @@ export default function SprintCardPage({
       type: filters?.type,
       status: filters?.status,
       assignee: filters?.assignee,
+      creator: filters?.creator,
       excludedTypes: [TaskType.SUBTASK]
     })
     if (tasks?.success && tasks.data) {
@@ -82,7 +83,8 @@ export default function SprintCardPage({
     filters?.assignee,
     filters?.priority,
     filters?.type,
-    filters?.status
+    filters?.status,
+    filters?.creator
   ])
 
   useEffect(() => {
@@ -98,7 +100,9 @@ export default function SprintCardPage({
           (!filters.status?.length ||
             filters.status.includes(t.status_id || "")) &&
           (!filters.assignee?.length ||
-            filters.assignee.includes(t.assign_to || ""))
+            filters.assignee.includes(t.assign_to || "")) &&
+          (!filters.creator?.length ||
+            filters.creator.includes(t.created_by || ""))
         )
       })
 
