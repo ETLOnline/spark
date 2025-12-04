@@ -279,19 +279,14 @@ export const AddMessageToChatAction = CreateServerAction(
 )
 export const DeleteMessageFromChatAction = CreateServerAction(
   true,
-  async (msg_id: number, chat_id: number, sender_id: string) => {
+  async (msg_id: number, chat_id: number) => {
     try {
       const authUser = await AuthUserAction()
       if (!authUser) {
         return { success: false, error: "Unauthorized" }
       }
 
-      const deletedMessage = await deleteChatMessage(
-        msg_id,
-        chat_id,
-        sender_id,
-        authUser.unique_id
-      )
+      const deletedMessage = await deleteChatMessage(msg_id)
 
       if (deletedMessage) {
         await pusherServer.trigger(
@@ -317,26 +312,14 @@ export const DeleteMessageFromChatAction = CreateServerAction(
 
 export const EditChaMessagetAction = CreateServerAction(
   true,
-  async (
-    msg_id: number,
-    chat_id: number,
-    sender_id: string,
-    new_content: string,
-    old_content: string
-  ) => {
+  async (msg_id: number, chat_id: number, new_content: string) => {
     try {
       const authUser = await AuthUserAction()
       if (!authUser) {
         return { success: false, error: "Unauthorized" }
       }
 
-      const editedMessage = await editChatMessage(
-        msg_id,
-        chat_id,
-        sender_id,
-        new_content,
-        old_content
-      )
+      const editedMessage = await editChatMessage(msg_id, new_content)
 
       if (editedMessage) {
         await pusherServer.trigger(

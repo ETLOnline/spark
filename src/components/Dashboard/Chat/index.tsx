@@ -459,7 +459,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
   const handleSendMessage = async () => {
     try {
-      if (!currentChat || !authUser) return
+      if (!currentChat || !authUser || newMessageLoading) return
 
       let type: "text" | "image" | "file" = "text"
       let messageToSend = ""
@@ -489,13 +489,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       }
 
       if (editingMessage) {
-        await updateChatMsg(
-          editingMessage.id,
-          currentChat.id,
-          authUser.unique_id,
-          messageToSend,
-          editingMessage.message
-        )
+        await updateChatMsg(editingMessage.id, currentChat.id, messageToSend)
 
         setEditingMessage(null)
       } else {
@@ -533,7 +527,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         authUser?.unique_id === msg.sender_id &&
         currentChat?.id === msg.chat_id
       ) {
-        await deleteMessageFromChat(msg.id, currentChat.id, authUser.unique_id)
+        await deleteMessageFromChat(msg.id, currentChat.id)
       }
     } catch (error) {
       toast({
@@ -570,17 +564,19 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     reader.readAsDataURL(file)
   }
 
-  const handleTyping = async () => {
+  const handleTyping = () => {
     if (!currentChat || !authUser) return
 
-    await sendTypingIndicator(currentChat.id, true)
+    if (!typingTimeoutRef.current) {
+      sendTypingIndicator(currentChat.id, true)
+    }
 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
 
-    typingTimeoutRef.current = setTimeout(async () => {
-      await sendTypingIndicator(currentChat.id, false)
+    typingTimeoutRef.current = setTimeout(() => {
+      sendTypingIndicator(currentChat.id, false)
       typingTimeoutRef.current = null
-    }, 1000)
+    }, 700)
   }
 
   const users = getOnlineUsers()
@@ -973,6 +969,15 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                     <div className="flex-1" key={currentChat?.id || "no-chat"}>
                       {openAttachment ? (
                         <div className=" flex flex-col">
+                          <Button
+                            onClick={() => {
+                              setOpenAttachment(false)
+                              setRichMessageContent("")
+                            }}
+                            className=" bg-muted w-12 h-12 self-end"
+                          >
+                            <X className="text-white w-12 h-12" />
+                          </Button>
                           <FileUpload
                             accept="image/*,application/*"
                             onChange={handleFileUpload}
@@ -1033,6 +1038,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       size="icon"
                       onClick={() => setOpenAttachment((pre) => !pre)}
                       title="Attach file"
+                      disabled={openAttachment}
                     >
                       <Paperclip className="h-4 w-4" />
                     </Button>
