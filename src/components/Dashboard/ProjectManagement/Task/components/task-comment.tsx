@@ -1,25 +1,45 @@
 "use client"
-import { useState, useEffect, Dispatch, SetStateAction } from "react"
+import { useState, useEffect, Dispatch, SetStateAction, use } from "react"
 import { Button } from "@/src/components/ui/button"
 import Tiptap from "@/src/components/common/TiptapRichEditor"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import {
-  CreateTaskCommentAction,
-  GetTaskCommentsAction
-} from "@/src/server-actions/Tasks/Task"
 import { useToast } from "@/src/hooks/use-toast"
 import { SelectTaskComment, SelectUser } from "@/src/db/schema"
 import { Card, CardContent } from "@/src/components/ui/card"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { formatRelativeTime } from "@/src/utils/helpers"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/src/components/ui/dropdown-menu"
+import { MoreVertical } from "lucide-react"
+import {
+  CreateTaskCommentAction,
+  DeleteTaskCommentAction,
+  GetTaskCommentsAction,
+  UpdateTaskCommentAction
+} from "@/src/server-actions/Tasks/TaskComment"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/src/components/ui/alert-dialog"
 
 interface TaskCommentFormProps {
   taskId: string
   isSprintCompleted?: boolean
   refetchComments?: boolean
   setRefetchComments?: Dispatch<SetStateAction<boolean>>
+  projectUsers: SelectUser[]
 }
 const COMMENTS_PER_LOAD = 4
 
@@ -27,16 +47,21 @@ export function TaskComment({
   taskId,
   isSprintCompleted,
   refetchComments,
-  setRefetchComments
+  setRefetchComments,
+  projectUsers
 }: TaskCommentFormProps) {
   const authUser = useAtomValue(userStore.AuthUser)
   const userId = authUser?.unique_id
   const { toast } = useToast()
   const [commentContent, setCommentContent] = useState("")
+  const [isAddingComment, setIsAddingComment] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [comments, setComments] = useState<SelectTaskComment[]>([])
   const [offset, setOffset] = useState(0)
   const [hasMoreComments, setHasMoreComments] = useState(true)
+  const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false)
+  const [CommentToDelete, setCommentToDelete] = useState<number | null>(null)
+  const [CommentToUpdate, setCommentToUpdate] = useState<number | null>(null)
   const [totalCount, setTotalCount] = useState(0)
 
   const [
@@ -48,6 +73,14 @@ export function TaskComment({
 
   const [loadingComments, getCommentsRes, getCommentsErr, triggerGetComments] =
     useServerAction(GetTaskCommentsAction)
+
+  const [updateCommentLoading, , , UpdateComment] = useServerAction(
+    UpdateTaskCommentAction
+  )
+
+  const [DeleteCommentLoading, , , DeleteComment] = useServerAction(
+    DeleteTaskCommentAction
+  )
 
   const GetComments = (reset = false) => {
     triggerGetComments({
@@ -78,7 +111,7 @@ export function TaskComment({
   useEffect(() => {
     if (createCommentRes?.success && createCommentRes?.data) {
       setCommentContent("")
-      setIsEditing(false)
+      setIsAddingComment(false)
       toast({
         title: "Comment added successfully",
         duration: 3000
@@ -121,6 +154,14 @@ export function TaskComment({
     }
   }, [getCommentsRes, offset])
 
+  const handleSubmit = () => {
+    if (isAddingComment) {
+      handleAddComment()
+    } else if (isEditing) {
+      handleUpdateCommment()
+    }
+  }
+
   const handleAddComment = () => {
     if (commentContent.trim()) {
       triggerCreateComment({
@@ -135,16 +176,81 @@ export function TaskComment({
     setOffset((prev) => prev + COMMENTS_PER_LOAD)
   }
 
+  const availableUsers = projectUsers.filter(
+    (user) => user.unique_id !== authUser?.unique_id
+  )
+
+  const handleDeleteComment = async (commentId: number | null) => {
+    try {
+      if (!commentId) return
+
+      await DeleteComment(commentId)
+
+      setComments((prevComments) =>
+        prevComments.filter((comment) => comment.id !== commentId)
+      )
+
+      toast({
+        title: "Comment deleted successfully",
+        duration: 3000
+      })
+    } catch {
+      toast({
+        title: "Error deleting comment",
+        description: "An error occurred while trying to delete the comment.",
+        duration: 3000,
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleUpdateCommment = async () => {
+    try {
+      if (!commentContent.trim() || !CommentToUpdate) return
+
+      const res = await UpdateComment(CommentToUpdate, commentContent)
+
+      if (res?.success && res?.data) {
+        setComments((prevComments) =>
+          prevComments.map((comment) =>
+            comment.id === CommentToUpdate
+              ? (res.data as SelectTaskComment)
+              : comment
+          )
+        )
+        setIsEditing(false)
+        toast({
+          title: "Comment updated successfully",
+          duration: 3000
+        })
+      }
+    } catch {
+      toast({
+        title: "Error updating comment",
+        description: "An error occurred while trying to update the comment.",
+        duration: 3000,
+        variant: "destructive"
+      })
+    }
+  }
+
+  const loading =
+    creatingComment || updateCommentLoading || DeleteCommentLoading
+
   return (
     <>
       <div className="grid gap-4">
         <div className="grid gap-2">
-          {isEditing ? (
+          {isAddingComment || isEditing ? (
             <div className="space-y-3">
               <Tiptap
                 value={commentContent}
                 onChange={setCommentContent}
                 editable={!isSprintCompleted}
+                image_uploading={true}
+                entity="task-comments"
+                showMentions={availableUsers.length > 0}
+                mentionUsers={availableUsers}
               />
               <div className="flex gap-2 justify-end">
                 <Button
@@ -153,6 +259,7 @@ export function TaskComment({
                   onClick={() => {
                     setCommentContent("")
                     setIsEditing(false)
+                    setIsAddingComment(false)
                   }}
                   disabled={creatingComment}
                 >
@@ -160,22 +267,22 @@ export function TaskComment({
                 </Button>
                 <Button
                   type="button"
-                  onClick={handleAddComment}
+                  onClick={handleSubmit}
                   disabled={
                     !commentContent.trim() ||
                     creatingComment ||
                     isSprintCompleted
                   }
-                  loading={creatingComment}
+                  loading={loading}
                 >
-                  {creatingComment ? "Adding..." : "Comment"}
+                  {isEditing ? "Update Comment" : "Comment"}
                 </Button>
               </div>
             </div>
           ) : (
             <div
               className="min-h-[80px] border border-input rounded-md p-3 cursor-pointer hover:bg-card transition-colors flex items-center text-muted-foreground"
-              onClick={() => setIsEditing(true)}
+              onClick={() => setIsAddingComment(true)}
             >
               Write your comment here...
             </div>
@@ -185,41 +292,41 @@ export function TaskComment({
 
       {/* LISTING THE COMMENTS */}
       <div className="grid gap-4 mt-4">
-        {comments.length > 0 ? (
+        {isEditing ? null : comments.length > 0 ? (
           comments.map((comment) => (
             <Card
               key={`${comment.id}-${comment.created_at}`}
               className="bg-card text-foreground border border-border"
             >
               <CardContent className="p-4 flex items-start gap-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage
-                    src={comment?.user?.profile_url || "/placeholder-user.jpg"}
-                  />
-                  <AvatarFallback>
-                    {comment?.user?.first_name[0]}
-                    {comment?.user?.last_name[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="grid gap-1 flex-1">
-                  <div className="flex items-center gap-2">
-                    <div className="font-semibold">
-                      {comment?.user?.first_name} {comment?.user?.last_name}
+                <div className="flex flex-row items-center gap-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage
+                      src={
+                        comment?.user?.profile_url || "/placeholder-user.jpg"
+                      }
+                    />
+                    <AvatarFallback>
+                      {comment?.user?.first_name[0]}
+                      {comment?.user?.last_name[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="grid gap-1 flex-1">
+                    <div className="flex items-center gap-2">
+                      <div className="font-semibold">
+                        {comment?.user?.first_name} {comment?.user?.last_name}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {comment?.created_at
+                          ? formatRelativeTime(comment?.created_at)
+                          : ""}
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {comment?.created_at
-                        ? formatRelativeTime(comment?.created_at)
-                        : ""}
-                    </div>
-                  </div>
-                  {comment.type === "history" ? (
-                    <div className="text-sm space-y-3">
-                      {Array.isArray(comment.task_history)
-                        ? comment.task_history.map((item: any, i: number) => {
-                            const oldConstainSpace = item.old.includes(" ")
-                            const newConstainSpace = item.new.includes(" ")
-
-                            return (
+                    {comment.type === "history" &&
+                    authUser?.unique_id === comment.user_id ? (
+                      <div className="text-sm space-y-3">
+                        {Array.isArray(comment.task_history)
+                          ? comment.task_history.map((item: any, i: number) => (
                               <div
                                 key={i}
                                 className="border-l-2 border-muted pl-3"
@@ -229,30 +336,55 @@ export function TaskComment({
                                 </div>
 
                                 <div className="text-muted-foreground flex items-center gap-2 mt-0.5">
-                                  <span
-                                    className={`line-through opacity-70 ${oldConstainSpace ? "break-words" : "break-all"}`}
-                                  >
+                                  <span className="line-through opacity-70">
                                     {item.old === " " ? "N/A" : item.old}
                                   </span>
                                   <span>→</span>
-                                  <span
-                                    className={`${newConstainSpace ? "break-words" : "break-all"}`}
-                                  >
+                                  <span className="s text-foreground">
                                     {item.new}
                                   </span>
                                 </div>
                               </div>
-                            )
-                          })
-                        : null}
-                    </div>
-                  ) : (
-                    <div
-                      className="text-sm rich-editor"
-                      dangerouslySetInnerHTML={{ __html: comment.content }}
-                    />
-                  )}
+                            ))
+                          : null}
+                      </div>
+                    ) : (
+                      <div
+                        className="text-sm rich-editor"
+                        dangerouslySetInnerHTML={{ __html: comment.content }}
+                      />
+                    )}
+                  </div>
                 </div>
+                {comment.type === "comment" ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setIsEditing(true)
+                          setCommentContent(comment.content)
+                          setCommentToUpdate(comment.id)
+                        }}
+                      >
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setIsConfirmDeleteOpen(true)
+                          setCommentToDelete(comment.id)
+                        }}
+                        className="text-red-600"
+                      >
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : null}
               </CardContent>
             </Card>
           ))
@@ -279,6 +411,30 @@ export function TaskComment({
         )}
       </div>
       {/* LISTING COMMENT END HERE */}
+
+      {/* Confirmation Modal for deleting a comment */}
+      <AlertDialog
+        open={isConfirmDeleteOpen}
+        onOpenChange={setIsConfirmDeleteOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Comment </AlertDialogTitle>
+            <AlertDialogDescription>
+              By leaving this, you will also be removed from related spaces.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              loading={DeleteCommentLoading}
+              onClick={async () => handleDeleteComment(CommentToDelete)}
+            >
+              Delete Comment
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

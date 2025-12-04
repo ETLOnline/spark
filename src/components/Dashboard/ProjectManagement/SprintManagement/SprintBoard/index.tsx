@@ -41,7 +41,7 @@ function SprintBoard() {
   const projectId = useParams().id as string
 
   const scrollRef = useRef<HTMLDivElement>(null)
-  const [savedScroll, setSavedScroll] = useState(0) 
+  const [savedScroll, setSavedScroll] = useState(0)
   useEffect(() => {
     if (scrollRef.current) {
       if (isTaskModalOpen) {
@@ -55,7 +55,7 @@ function SprintBoard() {
     return () => {
       document.body.style.overflow = "auto"
     }
-  }, [isTaskModalOpen, savedScroll]) 
+  }, [isTaskModalOpen, savedScroll])
   useEffect(() => {
     if (!pusherChannel || !authUser) return
 

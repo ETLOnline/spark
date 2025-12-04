@@ -64,7 +64,9 @@ export const TaskModal = ({
       onUpdateComplete?.(task)
       setIsChanged(false)
       setRefetchComments(true)
-    }
+    },
+    setIsTaskModelOpen,
+    setSelectedTask
   })
 
   const [isChanged, setIsChanged] = useState(false)

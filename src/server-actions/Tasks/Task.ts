@@ -12,8 +12,6 @@ import {
   taskQueryFilters,
   UpdateTask,
   UpdateTaskStatus,
-  createTaskComment,
-  getTaskCommentsByTaskId,
   UpdateTasksSprint,
   GetBacklogTaskCount,
   GetSprintTaskCount,
@@ -29,18 +27,15 @@ import {
   SelectTask
 } from "@/src/db/schema"
 import { getProjectById } from "@/src/db/data-access/project-management/query"
-import { getInitials } from "@/src/utils/helpers"
+import { formatContent, getInitials } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { createTaskNotification } from "@/src/services/notify/task/task"
-import {
-  base64ToBuffer,
-  uploadFileAndSaveMetadata
-} from "@/src/services/storage/utils/fileUtils"
 import { SendTaskNotifications } from "@/src/services/notifications/Tasks/utils"
 import { NotificationEvent } from "@/src/services/notify/types/events"
 import { addProjectRecentActivity } from "@/src/utils/taskHelpr"
 import { AddTaskHistoryAction } from "./TaskHistory"
+import { extractMentionsFromMessage } from "@/src/services/realtime/utils/helper"
 
 export const CreateTaskAction = CreateServerAction(
   true,
@@ -328,62 +323,6 @@ export const DeleteTaskStatusAction = CreateServerAction(
       return { success: true }
     } catch (error) {
       return { error: error }
-    }
-  }
-)
-
-export const CreateTaskCommentAction = CreateServerAction(
-  true,
-  async (input) => {
-    try {
-      const { task_id, user_id, content } = input
-
-      const commentData: InsertTaskComment = {
-        task_id: task_id,
-        user_id: user_id,
-        content: content
-      }
-
-      const task = await GetTaskById(task_id)
-
-      const newComment = await createTaskComment({
-        ...commentData,
-        type: "comment"
-      })
-
-      if (task) {
-        await SendTaskNotifications("task_commented", task)
-        await addProjectRecentActivity("task_commented", task)
-      }
-
-      if (newComment) {
-        return { success: true, data: newComment }
-      } else {
-        return { success: false, error: "Failed to create comment." }
-      }
-    } catch (e: any) {
-      console.error("Server action error creating task comment:", e)
-      return {
-        success: false,
-        error: e.message || "An unexpected error occurred."
-      }
-    }
-  }
-)
-
-export const GetTaskCommentsAction = CreateServerAction(
-  true,
-  async (filter) => {
-    try {
-      const { taskId, limit, offset } = filter
-      const comments = await getTaskCommentsByTaskId(taskId, limit, offset)
-      return { success: true, data: comments }
-    } catch (e: any) {
-      console.error("Server action error fetching task comments:", e)
-      return {
-        success: false,
-        error: e.message || "An unexpected error occurred."
-      }
     }
   }
 )

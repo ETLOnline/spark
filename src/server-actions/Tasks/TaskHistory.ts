@@ -2,7 +2,7 @@ import { InsertTask, InsertTaskComment, SelectTask } from "@/src/db/schema"
 import { CreateServerAction } from ".."
 import { TaskHistory } from "@/src/components/Dashboard/ProjectManagement/constants/projectManagment"
 import { AuthUserAction } from "../User/AuthUserAction"
-import { createTaskComment } from "@/src/db/data-access/tasks/query"
+import { createTaskComment } from "@/src/db/data-access/tasks/taskComments/query"
 
 export const AddTaskHistoryAction = CreateServerAction(
   true,

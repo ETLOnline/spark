@@ -376,3 +376,15 @@ export async function prepareContactData(
 
   return { payload, sendingTo }
 }
+
+export const formatContent = (content: string) => {
+  return content
+    .replace(
+      /<span[^>]*data-type="mention"[^>]*data-id="([^"]*)"[^>]*data-label="([^"]*)"[^>]*>@[^<]*<\/span>/g,
+      "@[ $2 ]($1)"
+    )
+    .replace(/<p[^>]*>/g, "")
+    .replace(/<\/p>/g, "\n")
+    .replace(/<br\s*\/?>/g, "\n")
+    .trim()
+}

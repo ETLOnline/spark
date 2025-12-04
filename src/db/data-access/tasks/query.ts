@@ -16,7 +16,6 @@ import {
 import { db } from "../.."
 import {
   InsertTask,
-  InsertTaskComment,
   InsertTaskStatus,
   SelectTask,
   SelectTaskComment,
@@ -37,6 +36,7 @@ export type taskQueryFilters = {
   priority?: string[]
   type?: string[]
   assignee?: string[]
+  creator?: string[]
   status?: string[]
   parent_id?: string
   excludedTypes?: string[]
@@ -136,6 +136,10 @@ export async function GetTasks(filters?: taskQueryFilters) {
         }
       }
 
+      if (filters.creator && filters.creator.length > 0) {
+        whereClauses.push(inArray(taskTable.created_by, filters.creator))
+      }
+
       if (filters.status && filters.status.length > 0) {
         whereClauses.push(inArray(taskTable.status_id, filters.status))
       }
@@ -165,7 +169,8 @@ export async function GetTasks(filters?: taskQueryFilters) {
         assignor: true,
         status: true,
         parentTask: true,
-        subTasks: true
+        subTasks: true,
+        creator: true
       }
     })
 
@@ -213,7 +218,8 @@ export async function GetTaskById(taskId: string) {
         assignor: true,
         status: true,
         parentTask: true,
-        subTasks: true
+        subTasks: true,
+        creator: true
       }
     })
 
@@ -232,7 +238,8 @@ export async function GetTaskByIds(taskId: string[]) {
         assignor: true,
         status: true,
         parentTask: true,
-        subTasks: true
+        subTasks: true,
+        creator: true
       }
     })
 
@@ -464,50 +471,5 @@ export async function DeleteTaskStatus(statusId: string) {
     await db.delete(TaskStatusTable).where(eq(TaskStatusTable.id, statusId))
   } catch (e: any) {
     throw new Error(e.message)
-  }
-}
-
-export async function createTaskComment(
-  commentData: InsertTaskComment
-): Promise<SelectTaskComment | null> {
-  try {
-    const [newComment] = await db
-      .insert(taskCommentsTable)
-      .values(commentData)
-      .returning()
-    return newComment || null
-  } catch (error) {
-    console.error("Error creating task comment:", error)
-    return null
-  }
-}
-
-export async function getTaskCommentsByTaskId(
-  taskId: string,
-  limit: number,
-  offset: number
-): Promise<{ comments: SelectTaskComment[]; totalCount: number }> {
-  try {
-    // 1. Paginated comments
-    const comments = await db.query.taskCommentsTable.findMany({
-      where: eq(taskCommentsTable.task_id, taskId),
-      with: { user: true },
-      orderBy: desc(taskCommentsTable.id),
-      limit,
-      offset
-    })
-
-    // 2. Count total comments
-    const totalCountResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(taskCommentsTable)
-      .where(eq(taskCommentsTable.task_id, taskId))
-
-    const totalCount = totalCountResult[0]?.count ?? 0
-
-    return { comments, totalCount }
-  } catch (error) {
-    console.error(`Error fetching comments for task ${taskId}:`, error)
-    return { comments: [], totalCount: 0 }
   }
 }
