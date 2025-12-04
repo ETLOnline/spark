@@ -29,6 +29,8 @@ import ConfirmationDialog from "../Task/components/ConfirmationDialog"
 import { SprintStatus, TaskType } from "../constants/projectManagment"
 
 export function SprintManagement() {
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const [savedScroll, setSavedScroll] = useState(0)
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false)
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
@@ -63,6 +65,19 @@ export function SprintManagement() {
   const projectId = useParams().id as string
   const router = useRouter()
 
+  useEffect(() => {
+    return () => {
+      if (scrollRef.current) {
+        setSavedScroll(scrollRef.current.scrollTop)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = savedScroll
+    }
+  }, [tasks])
   // Get Sprints
   useEffect(() => {
     const fetchSprints = async () => {
@@ -220,7 +235,10 @@ export function SprintManagement() {
         </div>
       </div>
 
-      <div className="space-y-4 print:space-y-3">
+      <div
+        ref={scrollRef}
+        className="space-y-4 print:space-y-3 overflow-y-auto max-h-[calc(100vh-200px)]"
+      >
         {getSprintLoading ? (
           <div className="flex justify-center items-center">
             <Loader size={LoaderSizes.lg} />

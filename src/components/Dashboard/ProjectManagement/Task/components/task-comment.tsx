@@ -33,7 +33,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/src/components/ui/alert-dialog"
-import { auth } from "@clerk/nextjs/server"
 
 interface TaskCommentFormProps {
   taskId: string
@@ -63,6 +62,7 @@ export function TaskComment({
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false)
   const [CommentToDelete, setCommentToDelete] = useState<number | null>(null)
   const [CommentToUpdate, setCommentToUpdate] = useState<number | null>(null)
+  const [totalCount, setTotalCount] = useState(0)
 
   const [
     creatingComment,
@@ -82,21 +82,28 @@ export function TaskComment({
     DeleteTaskCommentAction
   )
 
-  const GetComments = () => {
+  const GetComments = (reset = false) => {
     triggerGetComments({
       taskId,
       limit: COMMENTS_PER_LOAD,
-      offset
+      offset: reset ? 0 : offset
     })
   }
 
   useEffect(() => {
     GetComments()
-  }, [taskId, offset])
+  }, [taskId])
+
+  useEffect(() => {
+    if (offset > 0) GetComments()
+  }, [offset])
 
   useEffect(() => {
     if (refetchComments) {
-      GetComments()
+      setComments([])
+      setOffset(0)
+      setHasMoreComments(true)
+      GetComments(true)
       setRefetchComments?.(false)
     }
   }, [refetchComments])
@@ -114,25 +121,38 @@ export function TaskComment({
         ...createCommentRes.data,
         user: authUser as SelectUser
       }
-      setComments((prevComments) =>
-        prevComments.some((c) => c.id === newCommentWithUser.id)
-          ? prevComments
-          : [...prevComments, newCommentWithUser]
-      )
+
+      setComments((prev) => {
+        if (prev.some((c) => c.id === newCommentWithUser.id)) return prev
+        return [...prev, newCommentWithUser]
+      })
+
+      setTotalCount((prev) => prev + 1)
     }
   }, [createCommentRes, authUser])
 
   useEffect(() => {
     if (getCommentsRes?.success && getCommentsRes?.data) {
-      setComments(getCommentsRes.data)
+      const { comments: newComments, totalCount: serverTotal } =
+        getCommentsRes.data
 
-      if (getCommentsRes.data.length < COMMENTS_PER_LOAD) {
-        setHasMoreComments(false)
+      setTotalCount(serverTotal)
+
+      if (offset === 0) {
+        setComments(newComments)
       } else {
-        setHasMoreComments(true)
+        setComments((prev) => {
+          const existingIds = new Set(prev.map((c) => c.id))
+          const filtered = newComments.filter((c) => !existingIds.has(c.id))
+          return [...prev, ...filtered]
+        })
+      }
+
+      if (comments.length + newComments.length >= serverTotal) {
+        setHasMoreComments(false)
       }
     }
-  }, [getCommentsRes])
+  }, [getCommentsRes, offset])
 
   const handleSubmit = () => {
     if (isAddingComment) {
@@ -152,14 +172,8 @@ export function TaskComment({
     }
   }
 
-  const handleCancel = () => {
-    setCommentContent("")
-    setIsAddingComment(false)
-    setIsEditing(false)
-  }
-
   const handleLoadMore = () => {
-    setOffset((prevOffset) => prevOffset + COMMENTS_PER_LOAD)
+    setOffset((prev) => prev + COMMENTS_PER_LOAD)
   }
 
   const availableUsers = projectUsers.filter(
@@ -242,7 +256,11 @@ export function TaskComment({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={handleCancel}
+                  onClick={() => {
+                    setCommentContent("")
+                    setIsEditing(false)
+                    setIsAddingComment(false)
+                  }}
                   disabled={creatingComment}
                 >
                   Cancel
