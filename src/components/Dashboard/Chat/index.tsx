@@ -770,182 +770,190 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                 <CardContent className="flex-1 min-h-0 p-4 flex flex-col">
                   {authUser && currentChat && !fetchingChatMessages ? (
                     <ScrollArea className="flex-1 pr-4 mt-2">
-                      {messages.map((message) => (
-                        <div
-                          key={message.id}
-                          className={`mb-4 flex items-start ${
-                            message.sender_id === authUser?.unique_id
-                              ? "justify-end"
-                              : "justify-start"
-                          }`}
-                        >
-                          {isOnlyEmoji(message.message) ? (
-                            <div className="">
-                              {message.sender_id !== authUser?.unique_id &&
-                              currentChat.is_group ? (
-                                <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">
-                                  ~ {message.sender?.first_name}
-                                </p>
-                              ) : null}
-                              <p className="text-4xl">{message.message}</p>
-                            </div>
-                          ) : (
-                            <div className="flex group gap-2">
-                              <div className="relative group flex flex-col">
-                                {/* MESSAGE BUBBLE */}
-                                <div
-                                  className={`rounded-lg py-2 pl-2 rich-editor flex gap-1 flex-col pr-6 ${
-                                    message.sender_id === authUser?.unique_id
-                                      ? "bg-primary text-primary-foreground"
-                                      : "bg-muted"
-                                  }`}
-                                >
-                                  {message.sender_id !== authUser?.unique_id &&
-                                  currentChat.is_group ? (
-                                    <p className="text-sm font-semibold mb-1 text-muted-foreground">
-                                      ~ {message.sender?.first_name}
-                                    </p>
-                                  ) : null}
+                      {messages
+                        .filter((msg) => msg.chat_id === currentChat?.id)
+                        .map((message) => (
+                          <div
+                            key={message.id}
+                            className={`mb-4 flex items-start ${
+                              message.sender_id === authUser?.unique_id
+                                ? "justify-end"
+                                : "justify-start"
+                            }`}
+                          >
+                            {isOnlyEmoji(message.message) ? (
+                              <div className="">
+                                {message.sender_id !== authUser?.unique_id &&
+                                currentChat.is_group ? (
+                                  <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">
+                                    ~ {message.sender?.first_name}
+                                  </p>
+                                ) : null}
+                                <p className="text-4xl">{message.message}</p>
+                              </div>
+                            ) : (
+                              <div className="flex group gap-2">
+                                <div className="relative group flex flex-col">
+                                  {/* MESSAGE BUBBLE */}
+                                  <div
+                                    className={`rounded-lg py-2 pl-2 rich-editor flex gap-1 flex-col pr-6 ${
+                                      message.sender_id === authUser?.unique_id
+                                        ? "bg-primary text-primary-foreground"
+                                        : "bg-muted"
+                                    }`}
+                                  >
+                                    {message.sender_id !==
+                                      authUser?.unique_id &&
+                                    currentChat.is_group ? (
+                                      <p className="text-sm font-semibold mb-1 text-muted-foreground">
+                                        ~ {message.sender?.first_name}
+                                      </p>
+                                    ) : null}
 
-                                  {message.is_deleted ? (
-                                    <span className="italic text-sm">
-                                      {message.sender_id === authUser?.unique_id
-                                        ? "You deleted this message"
-                                        : "This message was deleted"}
-                                    </span>
-                                  ) : (
-                                    <>
-                                      {message.type === "image" &&
-                                        (() => {
-                                          const parts =
-                                            message.message?.split(",") || []
-                                          if (parts.length !== 4) return null
+                                    {message.is_deleted ? (
+                                      <span className="italic text-sm">
+                                        {message.sender_id ===
+                                        authUser?.unique_id
+                                          ? "You deleted this message"
+                                          : "This message was deleted"}
+                                      </span>
+                                    ) : (
+                                      <>
+                                        {message.type === "image" &&
+                                          (() => {
+                                            const parts =
+                                              message.message?.split(",") || []
+                                            if (parts.length !== 4) return null
 
-                                          const [file_path, file_name] = parts
-                                          return (
-                                            <Image
-                                              src={file_path}
-                                              alt={file_name || "Image"}
-                                              className="rounded-lg max-h-96 w-full object-cover bg-gradient-to-r from-accent to-secondary"
-                                              width={1000}
-                                              height={1000}
-                                              style={{ objectFit: "contain" }}
-                                            />
-                                          )
-                                        })()}
+                                            const [file_path, file_name] = parts
+                                            return (
+                                              <Image
+                                                src={file_path}
+                                                alt={file_name || "Image"}
+                                                className="rounded-lg max-h-96 w-full object-cover bg-gradient-to-r from-accent to-secondary"
+                                                width={1000}
+                                                height={1000}
+                                                style={{ objectFit: "contain" }}
+                                              />
+                                            )
+                                          })()}
 
-                                      {message.type === "file" &&
-                                        (() => {
-                                          const parts =
-                                            message.message?.split(",") || []
-                                          if (parts.length !== 4) return null
+                                        {message.type === "file" &&
+                                          (() => {
+                                            const parts =
+                                              message.message?.split(",") || []
+                                            if (parts.length !== 4) return null
 
-                                          const [fileUrl, fileName, fileSize] =
-                                            parts
+                                            const [
+                                              fileUrl,
+                                              fileName,
+                                              fileSize
+                                            ] = parts
 
-                                          return (
-                                            <Link
-                                              href={fileUrl}
-                                              target="_blank"
-                                            >
-                                              <div
-                                                className={`flex items-center ${
-                                                  message.sender_id ===
-                                                  authUser?.unique_id
-                                                    ? "bg-primary text-primary-foreground"
-                                                    : "bg-muted text-white"
-                                                } space-x-2 p-2 rounded-lg`}
+                                            return (
+                                              <Link
+                                                href={fileUrl}
+                                                target="_blank"
                                               >
-                                                <FileIcon className="h-8 w-8" />
-                                                <span className="font-medium">
-                                                  {fileName}
-                                                </span>
-                                                <span className="text-xs">
-                                                  {formatFileSize(
-                                                    Number(fileSize)
-                                                  )}
-                                                </span>
-                                              </div>
-                                            </Link>
-                                          )
-                                        })()}
+                                                <div
+                                                  className={`flex items-center ${
+                                                    message.sender_id ===
+                                                    authUser?.unique_id
+                                                      ? "bg-primary text-primary-foreground"
+                                                      : "bg-muted text-white"
+                                                  } space-x-2 p-2 rounded-lg`}
+                                                >
+                                                  <FileIcon className="h-8 w-8" />
+                                                  <span className="font-medium">
+                                                    {fileName}
+                                                  </span>
+                                                  <span className="text-xs">
+                                                    {formatFileSize(
+                                                      Number(fileSize)
+                                                    )}
+                                                  </span>
+                                                </div>
+                                              </Link>
+                                            )
+                                          })()}
 
-                                      {message.type === "text" && (
-                                        <MessageContent
-                                          content={message.message}
-                                        />
-                                      )}
-                                    </>
-                                  )}
+                                        {message.type === "text" && (
+                                          <MessageContent
+                                            content={message.message}
+                                          />
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+
+                                  {/* DROPDOWN TOP RIGHT */}
+                                  {!message.is_deleted &&
+                                    message.sender_id ===
+                                      authUser?.unique_id && (
+                                      <div className="absolute self-end">
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              className="opacity-0 group-hover:opacity-100 hover:bg-transparent transform -translate-y-2 group-hover:translate-y-0 transition-all duration-200"
+                                            >
+                                              <ChevronDown className="w-4 h-4 text-black" />
+                                            </Button>
+                                          </DropdownMenuTrigger>
+
+                                          <DropdownMenuContent
+                                            align="end"
+                                            className="w-40"
+                                          >
+                                            {message.type === "text" && (
+                                              <DropdownMenuItem
+                                                onClick={() => {
+                                                  setEditingMessage(message)
+                                                  setRichMessageContent(
+                                                    message.message
+                                                  )
+                                                }}
+                                              >
+                                                <Edit className="mr-2 h-4 w-4" />{" "}
+                                                Edit
+                                              </DropdownMenuItem>
+                                            )}
+
+                                            <DropdownMenuItem
+                                              onClick={() =>
+                                                handleDelteMsg(message)
+                                              }
+                                              className="text-red-600"
+                                            >
+                                              <Trash2 className="mr-2 h-4 w-4" />{" "}
+                                              Delete
+                                            </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      </div>
+                                    )}
                                 </div>
 
-                                {/* DROPDOWN TOP RIGHT INSIDE BUBBLE */}
-                                {!message.is_deleted &&
-                                  message.sender_id === authUser?.unique_id && (
-                                    <div className="absolute self-end">
-                                      <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="opacity-0 group-hover:opacity-100 hover:bg-transparent transform -translate-y-2 group-hover:translate-y-0 transition-all duration-200"
-                                          >
-                                            <ChevronDown className="w-4 h-4 text-black" />
-                                          </Button>
-                                        </DropdownMenuTrigger>
-
-                                        <DropdownMenuContent
-                                          align="end"
-                                          className="w-40"
-                                        >
-                                          {message.type === "text" && (
-                                            <DropdownMenuItem
-                                              onClick={() => {
-                                                setEditingMessage(message)
-                                                setRichMessageContent(
-                                                  message.message
-                                                )
-                                              }}
-                                            >
-                                              <Edit className="mr-2 h-4 w-4" />{" "}
-                                              Edit
-                                            </DropdownMenuItem>
-                                          )}
-
-                                          <DropdownMenuItem
-                                            onClick={() =>
-                                              handleDelteMsg(message)
-                                            }
-                                            className="text-red-600"
-                                          >
-                                            <Trash2 className="mr-2 h-4 w-4" />{" "}
-                                            Delete
-                                          </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                      </DropdownMenu>
-                                    </div>
-                                  )}
+                                {/* TIME */}
+                                <div className="text-xs text-right hidden group-hover:block">
+                                  <p>
+                                    {moment
+                                      .utc(message.created_at)
+                                      .local()
+                                      .format("hh:mm A")}
+                                  </p>
+                                  <p>
+                                    {moment
+                                      .utc(message.created_at)
+                                      .local()
+                                      .fromNow()}
+                                  </p>
+                                </div>
                               </div>
-                              {/* TIME RIGHT SIDE */}
-
-                              <div className="text-xs text-right hidden group-hover:block">
-                                <p>
-                                  {moment
-                                    .utc(message.created_at)
-                                    .local()
-                                    .format("hh:mm A")}
-                                </p>
-                                <p>
-                                  {moment
-                                    .utc(message.created_at)
-                                    .local()
-                                    .fromNow()}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                            )}
+                          </div>
+                        ))}
                       <div ref={messagesEndRef} />
                     </ScrollArea>
                   ) : (
@@ -965,12 +973,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                     <div className="flex-1" key={currentChat?.id || "no-chat"}>
                       {openAttachment ? (
                         <div className=" flex flex-col">
-                          <Button
-                            onClick={() => setOpenAttachment(false)}
-                            className=" bg-muted w-12 h-12 self-end"
-                          >
-                            <X className="text-white w-12 h-12" />
-                          </Button>
                           <FileUpload
                             accept="image/*,application/*"
                             onChange={handleFileUpload}
@@ -1013,6 +1015,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       }
                       onClick={() => {
                         setShowRichEditorToolbar((prev) => !prev)
+                        setOpenAttachment(false)
                       }}
                       className={`p-1 ${
                         showRichEditorToolbar
@@ -1028,7 +1031,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      onClick={() => setOpenAttachment(true)}
+                      onClick={() => setOpenAttachment((pre) => !pre)}
                       title="Attach file"
                     >
                       <Paperclip className="h-4 w-4" />

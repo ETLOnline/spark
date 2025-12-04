@@ -51,6 +51,7 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
       searchedItem,
       orderList,
       assignee: filters?.assignee,
+      creator: filters?.creator,
       priority: filters?.priority,
       type: filters?.type,
       status: filters?.status,
@@ -69,7 +70,13 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
 
   useEffect(() => {
     if (filters) fatchTasks()
-  }, [filters?.assignee, filters?.priority, filters?.type, filters?.status])
+  }, [
+    filters?.assignee,
+    filters?.priority,
+    filters?.type,
+    filters?.status,
+    filters?.creator
+  ])
 
   useEffect(() => {
     if (!pusherChannel || !authUser) return

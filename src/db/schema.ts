@@ -94,7 +94,7 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   tasksAssignedTo: many(taskTable, {
     relationName: "taskAssignee"
   }),
-  tasksCreatedBy: many(taskTable, {
+  tasksAssignor: many(taskTable, {
     relationName: "taskAssignor"
   }),
   certificates: many(certificatesTable, {
@@ -105,6 +105,9 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
   hostedEvents: many(eventsTable, {
     relationName: "userToHostedEvents" // User can host many events
+  }),
+  TaskCreator: many(taskTable, {
+    relationName: "taskCreator"
   })
 }))
 
@@ -1047,6 +1050,7 @@ export type SelectTask = typeof taskTable.$inferSelect & {
   status?: InferSelectModel<typeof TaskStatusTable> | null
   parentTask?: SelectTask | null
   subTasks?: SelectTask[]
+  creator?: SelectUser | null
 }
 
 export const taskRelations = relations(taskTable, ({ one, many }) => ({
@@ -1075,6 +1079,11 @@ export const taskRelations = relations(taskTable, ({ one, many }) => ({
   }),
   subTasks: many(taskTable, {
     relationName: "taskParent"
+  }),
+  creator: one(usersTable, {
+    fields: [taskTable.created_by],
+    references: [usersTable.unique_id],
+    relationName: "taskCreator"
   })
 }))
 
@@ -1374,6 +1383,7 @@ export const taskCommentsTable = pgTable("task_comments", {
   task_id: varchar().notNull(),
   task_history: jsonb(),
   type: varchar(),
+  mentions: varchar("mentions").array(),
   ...timestamps
 })
 

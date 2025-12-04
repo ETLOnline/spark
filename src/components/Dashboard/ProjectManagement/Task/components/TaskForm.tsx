@@ -592,6 +592,7 @@ export default function TaskForm({
                     isSprintCompleted={isSprintCompleted}
                     refetchComments={refetchComments}
                     setRefetchComments={setRefetchComments}
+                    projectUsers={usersList.filter((user) => user !== null)}
                   />
                 </div>
               )}
@@ -979,6 +980,41 @@ export default function TaskForm({
                           </div>
                         )}
                       />
+                    </div>
+
+                    {/* Task Creator */}
+                    <div className="space-y-2">
+                      <Label>Creator</Label>
+                      {selectedTask ? (
+                        <Link
+                          href={`/profile/${selectedTask?.creator?.unique_id}`}
+                          className="flex flex-row gap-2 items-center  hover:cursor-pointer"
+                        >
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage
+                              src={
+                                selectedTask?.creator?.profile_url ||
+                                "/placeholder.svg"
+                              }
+                              alt={selectedTask?.creator?.first_name}
+                            />
+                            <AvatarFallback className="text-xs">
+                              {selectedTask?.creator?.first_name[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>
+                            {selectedTask?.creator?.first_name}{" "}
+                            {selectedTask?.creator?.last_name}
+                          </span>
+                        </Link>
+                      ) : (
+                        <div className="flex flex-row gap-2 items-center text-muted-foreground">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback>?</AvatarFallback>
+                          </Avatar>
+                          <span>No creator</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Parent Task Selector */}
