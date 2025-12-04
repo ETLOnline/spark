@@ -26,9 +26,10 @@ export const SendTaskNotifications = async (
 
     const taskComments = await getTaskCommentsByTaskId(task.id)
 
-    const commentAuthors = taskComments.map((c) => c.user_id) || []
+    const commentAuthors = taskComments.comments.map((c) => c.user_id) || []
     const commentMentionedUsers =
-      taskComments.flatMap((c) => c.mentions || []).filter(Boolean) || []
+      taskComments.comments.flatMap((c) => c.mentions || []).filter(Boolean) ||
+      []
 
     const allCommentRelatedUsers = [
       ...new Set([...commentAuthors, ...commentMentionedUsers])

@@ -4,7 +4,7 @@ import {
   SelectTaskComment,
   taskCommentsTable
 } from "@/src/db/schema"
-import { desc, eq } from "drizzle-orm"
+import { desc, eq, sql } from "drizzle-orm"
 
 export async function createTaskComment(
   commentData: InsertTaskComment
@@ -25,24 +25,31 @@ export async function getTaskCommentsByTaskId(
   taskId: string,
   limit?: number,
   offset?: number
-): Promise<SelectTaskComment[]> {
+): Promise<{ comments: SelectTaskComment[]; totalCount: number }> {
   try {
+    // 1. Paginated comments
     const comments = await db.query.taskCommentsTable.findMany({
       where: eq(taskCommentsTable.task_id, taskId),
-      with: {
-        user: true
-      },
+      with: { user: true },
       orderBy: desc(taskCommentsTable.id),
-      limit: limit,
-      offset: offset
+      limit,
+      offset
     })
-    return comments
+
+    // 2. Count total comments
+    const totalCountResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(taskCommentsTable)
+      .where(eq(taskCommentsTable.task_id, taskId))
+
+    const totalCount = totalCountResult[0]?.count ?? 0
+
+    return { comments, totalCount }
   } catch (error) {
     console.error(`Error fetching comments for task ${taskId}:`, error)
-    return []
+    return { comments: [], totalCount: 0 }
   }
 }
-
 export function getTaskCommentById(taskCommentId: number) {
   try {
     const comment = db.query.taskCommentsTable.findFirst({
