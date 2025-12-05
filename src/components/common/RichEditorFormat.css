@@ -88,6 +88,6 @@
 }
 
 .rich-editor {
-  word-break: normal;
-  overflow-wrap: break-word;
+  white-space: pre-wrap; /* keeps spaces + line breaks */
+  word-break: break-word;
 }

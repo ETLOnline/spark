@@ -3,7 +3,7 @@ import React, {
   useState,
   useEffect,
   useImperativeHandle,
-  forwardRef,
+  forwardRef
 } from "react"
 import type { KeyboardEvent } from "react"
 
@@ -14,21 +14,21 @@ export interface MentionListHandle {
 const MentionList = forwardRef<MentionListHandle, any>((props, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
-  
+
   const activeIndex = hoverIndex !== null ? hoverIndex : selectedIndex
-  
+
   const selectItem = (index: number) => {
     const item = props.items[index]
     if (item) {
       props.command({
         id: item.unique_id,
-        label: `${item.first_name} ${item.last_name}`,
+        label: `${item.first_name} ${item.last_name}`
       })
     }
   }
 
   const upHandler = () => {
-    setHoverIndex(null) 
+    setHoverIndex(null)
     setSelectedIndex(
       (selectedIndex + props.items.length - 1) % props.items.length
     )
@@ -64,7 +64,7 @@ const MentionList = forwardRef<MentionListHandle, any>((props, ref) => {
       }
 
       return false
-    },
+    }
   }))
 
   return (
@@ -72,7 +72,7 @@ const MentionList = forwardRef<MentionListHandle, any>((props, ref) => {
       {props.items.length ? (
         props.items.map((item: SelectUser, index: number) => {
           const isCurrentActive = index === activeIndex
-          
+
           return (
             <button
               key={item.unique_id}
@@ -80,11 +80,12 @@ const MentionList = forwardRef<MentionListHandle, any>((props, ref) => {
               onMouseLeave={() => setHoverIndex(null)}
               onClick={() => selectItem(index)}
               className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 transition-colors 
-                ${isCurrentActive 
+                ${
+                  isCurrentActive
                     ? "bg-primary text-primary-foreground"
-                    : "hover:bg-accent hover:text-accent-foreground" 
+                    : "hover:bg-accent hover:text-accent-foreground"
                 }`}
-              data-mention-index={index} 
+              data-mention-index={index}
             >
               <div className="flex-1 min-w-0">
                 <div className="font-medium truncate">

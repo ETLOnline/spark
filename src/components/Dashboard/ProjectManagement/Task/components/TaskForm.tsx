@@ -84,7 +84,14 @@ const projectSchema = z.object({
   description: z.string().optional(),
   task_type: z.string().min(1, "Required"),
   task_priority: z.string().min(1, "Required"),
-  story_points: z.string().optional(),
+  story_points: z
+    .union([z.number(), z.string()])
+    .refine((value) => {
+      const num = Number(value)
+      return !isNaN(num) && num <= 100
+    }, "Story points cannot be more than 100")
+    .transform((value) => value.toString()),
+
   status_id: z.string().optional(),
   assign_to: z.string().optional(),
   assign_by: z.string().optional(),
@@ -445,7 +452,7 @@ export default function TaskForm({
       <div className="grid grid-cols-12 gap-2 ">
         {/* Main content area (left side) */}
         <ScrollArea className="h-[80vh] col-span-12 md:col-span-9">
-          <div className="flex-1 px-4">
+          <div className=" px-4">
             <div className="space-y-6">
               {/* Task title */}
               <div className="space-y-2">
@@ -454,8 +461,10 @@ export default function TaskForm({
                     name="task_title"
                     defaultValue=""
                     control={form.control}
-                    render={({ field }) =>
-                      activeField === "title" ? (
+                    render={({ field }) => {
+                      const isContainSpace = field.value.includes(" ")
+
+                      return activeField === "title" ? (
                         <Input
                           id="task_title"
                           {...field}
@@ -480,14 +489,16 @@ export default function TaskForm({
                             )}
                           </div>
 
-                          <span>
+                          <span
+                            className={`${isContainSpace ? "break-words" : "break-all"}`}
+                          >
                             {field.value
                               ? field.value
                               : " Click to add title..."}
                           </span>
                         </div>
                       )
-                    }
+                    }}
                   />
                 </div>
               </div>
@@ -581,6 +592,7 @@ export default function TaskForm({
                     isSprintCompleted={isSprintCompleted}
                     refetchComments={refetchComments}
                     setRefetchComments={setRefetchComments}
+                    projectUsers={usersList.filter((user) => user !== null)}
                   />
                 </div>
               )}
@@ -926,52 +938,84 @@ export default function TaskForm({
                     </div>
 
                     {/* Story Points */}
+                    {/* Story Points */}
                     <div className="space-y-2">
                       <Label>Story Points</Label>
                       <Controller
                         name="story_points"
                         defaultValue=""
                         control={form.control}
-                        render={({ field }) =>
-                          activeField === "points" ? (
-                            <Input
-                              disabled={!isEditable}
-                              id="story_points"
-                              type="number"
-                              min={0}
-                              placeholder="Select Points"
-                              {...field}
-                              className="col-span-3"
-                            />
-                          ) : (
-                            <div
-                              className=" py-2 cursor-pointer flex items-center gap-2"
-                              onClick={() => {
-                                setActiveField("points")
-                                requestAnimationFrame(() => {
-                                  document
-                                    .getElementById("story_points")
-                                    ?.focus()
-                                })
-                              }}
-                            >
-                              <div>
-                                {errors.story_points && (
-                                  <span className="text-red-500 text-sm flex items-center gap-2">
-                                    <CircleAlert size={16} />
-                                    {String(errors.story_points.message)}
-                                  </span>
-                                )}
+                        render={({ field }) => (
+                          <div>
+                            {activeField === "points" ? (
+                              <Input
+                                {...field}
+                                id="story_points"
+                                type="number"
+                                min={0}
+                                disabled={!isEditable}
+                                placeholder="Select Points"
+                                max={100}
+                                onBlur={() => setActiveField(null)}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value, 10)
+                                  field.onChange(isNaN(val) ? "" : val)
+                                }}
+                              />
+                            ) : (
+                              <div
+                                className="py-2 cursor-pointer flex items-center gap-2"
+                                onClick={() => setActiveField("points")}
+                              >
+                                <BarChart2 className="h-5 w-5 text-gray-500" />
+                                <span>{field.value || "Select Points"}</span>
                               </div>
-                              <BarChart2 className="h-5 w-5 text-gray-500" />
-                              <span>{field.value || "Select Points"}</span>
-                            </div>
-                          )
-                        }
+                            )}
+                            {errors.story_points && (
+                              <span className="text-red-500 text-sm flex items-center gap-2 mt-1">
+                                <CircleAlert size={16} />
+                                {String(errors.story_points.message)}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       />
                     </div>
 
-                    {/* Parent Task Selector */}
+                    {/* Task Creator */}
+                    <div className="space-y-2">
+                      <Label>Creator</Label>
+                      {selectedTask ? (
+                        <Link
+                          href={`/profile/${selectedTask?.creator?.unique_id}`}
+                          className="flex flex-row gap-2 items-center  hover:cursor-pointer"
+                        >
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage
+                              src={
+                                selectedTask?.creator?.profile_url ||
+                                "/placeholder.svg"
+                              }
+                              alt={selectedTask?.creator?.first_name}
+                            />
+                            <AvatarFallback className="text-xs">
+                              {selectedTask?.creator?.first_name[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>
+                            {selectedTask?.creator?.first_name}{" "}
+                            {selectedTask?.creator?.last_name}
+                          </span>
+                        </Link>
+                      ) : (
+                        <div className="flex flex-row gap-2 items-center text-muted-foreground">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback>?</AvatarFallback>
+                          </Avatar>
+                          <span>No creator</span>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Parent Task Selector */}
                     <div className="space-y-2">

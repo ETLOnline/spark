@@ -26,6 +26,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { useAtomValue, useSetAtom } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
 import { TaskFiltersType } from "../types/taskFilters.type"
+import { ScrollArea } from "@/src/components/ui/scroll-area"
 
 interface Props {
   projectId: string
@@ -43,6 +44,9 @@ function TaskFilters({ projectId, onApplyFilters }: Props) {
   )
   const [usersList, setUsersList] = useState<(SelectUser | null)[]>([])
   const statusList = useAtomValue(projectStore.projectStatusList)
+  const [selectedCretors, setSelectedCreators] = useState<MultiSelectOption[]>(
+    []
+  )
 
   const [tasksLoading, tasksData, tasksError, GetTasks] = useServerAction(
     GetBacklogTasksAction
@@ -66,6 +70,7 @@ function TaskFilters({ projectId, onApplyFilters }: Props) {
 
     onApplyFilters({
       assignee: selectedAssignee.map((a) => a.value),
+      creator: selectedCretors.map((c) => c.value),
       priority: selectedPriority.map((p) => p.value),
       type: selectedType.map((t) => t.value),
       status: selectedStatus.map((s) => s.value)
@@ -85,6 +90,13 @@ function TaskFilters({ projectId, onApplyFilters }: Props) {
       status: []
     })
   }
+
+  const CreatorOptions: MultiSelectOption[] = [
+    ...usersList.map((user) => ({
+      label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
+      value: user?.unique_id ?? ""
+    }))
+  ]
 
   const AssigneeOptions: MultiSelectOption[] = [
     {
@@ -121,73 +133,86 @@ function TaskFilters({ projectId, onApplyFilters }: Props) {
         </Button>
       </DrawerTrigger>
       <DrawerContent>
-        <div className="mx-auto w-full max-w-sm">
-          <DrawerHeader>
-            <DrawerTitle>Filter Tasks</DrawerTitle>
-            <DrawerDescription>
-              Filter tasks by assignee, priority, type, or search by title
-            </DrawerDescription>
-          </DrawerHeader>
+        <ScrollArea className="h-screen">
+          <div className="mx-auto w-full max-w-sm">
+            <DrawerHeader>
+              <DrawerTitle>Filter Tasks</DrawerTitle>
+              <DrawerDescription>
+                Filter tasks by assignee, priority, type, or search by title
+              </DrawerDescription>
+            </DrawerHeader>
 
-          <div className="p-4 space-y-4">
-            {/* Assignee Filter */}
-            <div className="space-y-2">
-              <Label>Assignee</Label>
-              <MultiSelect
-                options={AssigneeOptions}
-                selected={selectedAssignee}
-                onChange={setSelectedAssignee}
-                placeholder="Select Assignee"
-              />
+            <div className="p-4 space-y-4">
+              {/* Assignee Filter */}
+              <div className="space-y-2">
+                <Label>Assignee</Label>
+                <MultiSelect
+                  options={AssigneeOptions}
+                  selected={selectedAssignee}
+                  onChange={setSelectedAssignee}
+                  placeholder="Select Assignee"
+                />
+              </div>
+
+              {/* Creator Filter */}
+              <div className="space-y-2">
+                <Label>Creator</Label>
+                <MultiSelect
+                  options={CreatorOptions}
+                  selected={selectedCretors}
+                  onChange={setSelectedCreators}
+                  placeholder="Select Creator"
+                />
+              </div>
+
+              {/* Priority Filter */}
+              <div className="space-y-2">
+                <Label>Priority</Label>
+
+                <MultiSelect
+                  options={PriorityOptions}
+                  selected={selectedPriority}
+                  onChange={setSelectedPriority}
+                />
+              </div>
+
+              {/* Type Filter */}
+              <div className="space-y-2">
+                <Label>Type</Label>
+
+                <MultiSelect
+                  options={TypeOptions}
+                  selected={selectedType}
+                  onChange={setSelectedType}
+                />
+              </div>
+
+              {/* Status Filter */}
+
+              <div className="space-y-2">
+                <Label>Status</Label>
+
+                <MultiSelect
+                  options={StatusOptions}
+                  selected={selectedStatus}
+                  onChange={setSelectedStatus}
+                />
+              </div>
             </div>
 
-            {/* Priority Filter */}
-            <div className="space-y-2">
-              <Label>Priority</Label>
+            <DrawerFooter>
+              <DrawerClose asChild>
+                <Button variant="outline" onClick={clearFilters}>
+                  Clear Filters
+                </Button>
+              </DrawerClose>
 
-              <MultiSelect
-                options={PriorityOptions}
-                selected={selectedPriority}
-                onChange={setSelectedPriority}
-              />
-            </div>
-
-            {/* Type Filter */}
-            <div className="space-y-2">
-              <Label>Type</Label>
-
-              <MultiSelect
-                options={TypeOptions}
-                selected={selectedType}
-                onChange={setSelectedType}
-              />
-            </div>
-
-            {/* Status Filter */}
-
-            <div className="space-y-2">
-              <Label>Status</Label>
-
-              <MultiSelect
-                options={StatusOptions}
-                selected={selectedStatus}
-                onChange={setSelectedStatus}
-              />
-            </div>
+              <DrawerClose asChild>
+                <Button onClick={applyFilters}>Apply Filters</Button>
+              </DrawerClose>
+            </DrawerFooter>
           </div>
-
-          <DrawerFooter>
-            <DrawerClose asChild>
-              <Button variant="outline" onClick={clearFilters}>
-                Clear Filters
-              </Button>
-            </DrawerClose>
-
-            <DrawerClose asChild>
-              <Button onClick={applyFilters}>Apply Filters</Button>
-            </DrawerClose>
-          </DrawerFooter>
-        </div>
+        </ScrollArea>
       </DrawerContent>
     </Drawer>
   )
