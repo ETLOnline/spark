@@ -1,12 +1,12 @@
 "use client"
-import React from "react"
+import React, { useRef, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetSprintAction } from "@/src/server-actions/Sprint/sprint"
 import { useAtom, useAtomValue } from "jotai"
 import { sprintStore } from "@/src/store/sprint/sprintsStore"
 import Loader from "@/src/components/common/Loader/Loader"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import SprintBoardCard from "./SprintBoardCard"
 import { projectStore } from "@/src/store/project/projectStore"
 import StatusRequiredDialog from "../../StatusRequiredDialog"
@@ -40,6 +40,22 @@ function SprintBoard() {
 
   const projectId = useParams().id as string
 
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [savedScroll, setSavedScroll] = useState(0)
+  useEffect(() => {
+    if (scrollRef.current) {
+      if (isTaskModalOpen) {
+        setSavedScroll(scrollRef.current.scrollTop)
+        document.body.style.overflow = "hidden"
+      } else {
+        scrollRef.current.scrollTop = savedScroll
+        document.body.style.overflow = "auto"
+      }
+    }
+    return () => {
+      document.body.style.overflow = "auto"
+    }
+  }, [isTaskModalOpen, savedScroll])
   useEffect(() => {
     if (!pusherChannel || !authUser) return
 
@@ -145,7 +161,11 @@ function SprintBoard() {
   }, [projectId, sprintList])
 
   return projectStatusList.length > 0 ? (
-    <>
+    <div
+      ref={scrollRef}
+      className="space-y-4 print:space-y-3 overflow-y-auto"
+      style={{ height: "calc(100vh - 100px)" }}
+    >
       {getSprintLoading ? (
         <div className="flex items-center justify-center">
           <Loader size={LoaderSizes.lg} />
@@ -181,7 +201,7 @@ function SprintBoard() {
         }}
         onSubTaskCreate={(task: SelectTask) => getTasks()}
       />
-    </>
+    </div>
   ) : (
     <StatusRequiredDialog openDialog={openDialog} />
   )

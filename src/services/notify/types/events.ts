@@ -7,6 +7,6 @@ export enum NotificationEvent {
   TASK_COMMENTED = "task_commented",
   PROJECT_INVITE = "project_invite",
   POST_LIKE = "post_like",
-  POST_COMMENT = "post_comment"
-
+  POST_COMMENT = "post_comment",
+  MENTION_IN_COMMENT = "mention_in_comment"
 }

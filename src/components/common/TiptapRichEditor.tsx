@@ -50,6 +50,7 @@ import MentionList, {
   MentionListHandle
 } from "../Dashboard/Chat/components/MentionList"
 import { AddImageToStorageAction } from "@/src/server-actions/storage/storage"
+import HardBreak from "@tiptap/extension-hard-break"
 
 interface RichTextEditorProps {
   value?: string
@@ -140,16 +141,26 @@ export default function RichTextEditor({
 
   const isContentEmpty = (html: string) => {
     if (!html) return true
+
+    // 1️⃣ If an image exists → NOT empty
+    if (/<img\s+[^>]*src=["']([^"']+)["'][^>]*>/gi.test(html)) {
+      return false
+    }
+    // 2️⃣ Remove tags and check text
     const text = html
       .replace(/<[^>]*>/g, "")
       .replace(/&nbsp;/g, "")
       .trim()
+
     return text === ""
   }
 
   const extensions = useMemo(() => {
     const baseExtensions: any[] = [
-      StarterKit,
+      StarterKit.configure({
+        // Disable default hard break handling from StarterKit
+        hardBreak: false
+      }),
       Underline,
       Link.configure({ openOnClick: false }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
@@ -161,14 +172,30 @@ export default function RichTextEditor({
         HTMLAttributes: {
           class: "CustomImage"
         }
+      }),
+      // HardBreak for <br> insertion
+      HardBreak.extend({
+        addKeyboardShortcuts() {
+          return {
+            Enter: ({ editor }) => {
+              const { empty } = editor.state.selection
+              const node = editor.state.selection.$from.node()
+              const isNodeEmpty = node.textContent === ""
+
+              if (empty && isNodeEmpty) {
+                // If current line is empty, insert <br>
+                return editor.chain().insertContent("<br>").run()
+              }
+
+              // Otherwise, default behavior (new paragraph)
+              return editor.chain().splitBlock().run()
+            }
+          }
+        }
       })
     ]
 
     if (showMentions && mentionUsers.length > 0) {
-      console.log(
-        "Adding Mention extension to editor, users:",
-        mentionUsers.length
-      )
       baseExtensions.push(
         Mention.configure({
           HTMLAttributes: {

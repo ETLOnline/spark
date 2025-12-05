@@ -18,12 +18,7 @@ export const MessageContent = ({ content }: MessageContentProps) => {
           </span>
         )
       }
-      return (
-        <span 
-          key={i} 
-          dangerouslySetInnerHTML={{ __html: t.value }}
-        />
-      )
+      return <span key={i} dangerouslySetInnerHTML={{ __html: t.value }} />
     })
   }
 

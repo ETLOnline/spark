@@ -1,3 +1,4 @@
+import { Button } from "@/src/components/ui/button"
 import { InsertTask, SelectTask } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
@@ -8,7 +9,6 @@ import {
 } from "@/src/server-actions/Tasks/Task"
 import { projectStore } from "@/src/store/project/projectStore"
 import { userStore } from "@/src/store/user/userStore"
-import { prepareTaskEmailData } from "@/src/utils/clientHelper"
 import { useAtom, useAtomValue } from "jotai"
 import { useParams } from "next/navigation"
 
@@ -18,6 +18,8 @@ interface TaskHookProps {
   onCreateComplete?: (task: SelectTask) => void
   onUpdateComplete?: (task: SelectTask) => void
   pageName?: string
+  setIsTaskModelOpen?: (val: boolean) => void // <-- add this
+  setSelectedTask?: (task: SelectTask | null) => void
 }
 
 const useTaskHook = ({
@@ -25,7 +27,9 @@ const useTaskHook = ({
   sprintId,
   onCreateComplete,
   onUpdateComplete,
-  pageName
+  pageName,
+  setIsTaskModelOpen,
+  setSelectedTask
 }: TaskHookProps) => {
   const [statuses, setStatuses] = useAtom(projectStore.projectStatusList)
 
@@ -54,36 +58,66 @@ const useTaskHook = ({
 
   async function handleCreateTask(data: InsertTask) {
     try {
-      if (authUser) {
-        const payload = {
-          ...data,
-          created_by: authUser?.unique_id,
-          project_id: projectId || "",
-          sprint_id: sprintId || null,
-          assign_to: data.assign_to || null,
-          assign_by: data.assign_by || authUser?.unique_id,
-          parent_task_id: data.parent_task_id || null
-        }
-        const task = await CreateTask(payload, pageName)
-        if (task?.success && task.data) {
-          if (onCreateComplete) {
-            onCreateComplete(task.data)
-          }
-          toast({
-            title: "Task created successfully",
-            description: "Your new task has been added to the project",
-            duration: 2000
-          })
-        } else {
-          toast({
-            title: "Unable to create task.Please try again.",
-            variant: "destructive",
-            duration: 2000
-          })
-        }
+      if (!authUser) return
+
+      const payload = {
+        ...data,
+        created_by: authUser.unique_id,
+        project_id: projectId || "",
+        sprint_id: sprintId || null,
+        assign_to: data.assign_to || null,
+        assign_by: data.assign_by || authUser.unique_id,
+        parent_task_id: data.parent_task_id || null
       }
-    } catch {
-      console.log("Error in creating task")
+
+      const task = await CreateTask(payload, pageName)
+
+      if (task?.success && task.data) {
+        // 1️⃣ Call callback
+        if (onCreateComplete) onCreateComplete(task.data)
+
+        // 2️⃣ Close the modal immediately
+        if (setIsTaskModelOpen) setIsTaskModelOpen(false)
+        if (setSelectedTask) setSelectedTask(null)
+
+        // 3️⃣ Show toast with button
+        toast({
+          title: "Task created successfully",
+          description: (
+            <div className="flex flex-col gap-2">
+              <span>
+                {" "}
+                Task #{task.data.task_num} has been created. Click the button
+                below to view it.
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  if (setSelectedTask) setSelectedTask(task.data as SelectTask)
+                  if (setIsTaskModelOpen) setIsTaskModelOpen(true)
+                }}
+              >
+                View Task
+              </Button>
+            </div>
+          ),
+          duration: 4000
+        })
+      } else {
+        toast({
+          title: "Unable to create task. Please try again.",
+          variant: "destructive",
+          duration: 2000
+        })
+      }
+    } catch (err) {
+      console.error("Error creating task:", err)
+      toast({
+        title: "Error creating task",
+        variant: "destructive",
+        duration: 2000
+      })
     }
   }
 

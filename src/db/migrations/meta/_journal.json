@@ -190,6 +190,13 @@
       "when": 1763781924573,
       "tag": "0026_2025_11_22_112523__add_mention_column_in_the_chats_table",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1764606527543,
+      "tag": "0027_2025_12_01_212844__add_mention_column_in_task_comments",
+      "breakpoints": true
     }
   ]
 }
