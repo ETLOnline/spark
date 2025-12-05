@@ -305,8 +305,23 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                 : m
             )
           )
-        },
 
+          setMyChats((prevChats) =>
+            prevChats.map((chat) => {
+              const chatMessages = messages.filter((m) => m.chat_id === chat.id)
+              const lastMsg = chatMessages[chatMessages.length - 1]
+
+              if (lastMsg?.id === msgId) {
+                return {
+                  ...chat,
+                  last_message: "This message was deleted",
+                  last_message_type: "text"
+                }
+              }
+              return chat
+            })
+          )
+        },
         // EDIT
         (msgId, newContent) => {
           setMessages((prev) =>
