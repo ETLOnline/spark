@@ -288,6 +288,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
               c.id === message.chat_id
                 ? {
                     ...c,
+                    messages: [...(c.messages || []), message],
                     last_message: message.message,
                     last_message_at: message.created_at
                   }
@@ -308,17 +309,20 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
           setMyChats((prevChats) =>
             prevChats.map((chat) => {
-              const chatMessages = messages.filter((m) => m.chat_id === chat.id)
-              const lastMsg = chatMessages[chatMessages.length - 1]
+              if (!chat.messages) return chat
 
-              if (lastMsg?.id === msgId) {
-                return {
-                  ...chat,
-                  last_message: "This message was deleted",
-                  last_message_type: "text"
-                }
+              const updatedMessages = chat.messages.map((m) =>
+                m.id === msgId
+                  ? { ...m, is_deleted: 1, message: "This message was deleted" }
+                  : m
+              )
+
+              return {
+                ...chat,
+                messages: updatedMessages,
+                last_message:
+                  updatedMessages[updatedMessages.length - 1]?.message ?? ""
               }
-              return chat
             })
           )
         },
@@ -592,6 +596,12 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       sendTypingIndicator(currentChat.id, false)
       typingTimeoutRef.current = null
     }, 700)
+  }
+
+  const handleAttachment = () => {
+    setOpenAttachment((pre) => !pre)
+    setRichMessageContent("")
+    setFileString("")
   }
 
   const users = getOnlineUsers()
@@ -984,15 +994,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                     <div className="flex-1" key={currentChat?.id || "no-chat"}>
                       {openAttachment ? (
                         <div className=" flex flex-col">
-                          <Button
-                            onClick={() => {
-                              setOpenAttachment(false)
-                              setRichMessageContent("")
-                            }}
-                            className=" bg-muted w-12 h-12 self-end"
-                          >
-                            <X className="text-white w-12 h-12" />
-                          </Button>
                           <FileUpload
                             accept="image/*,application/*"
                             onChange={handleFileUpload}
@@ -1051,9 +1052,13 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      onClick={() => setOpenAttachment((pre) => !pre)}
+                      onClick={handleAttachment}
                       title="Attach file"
-                      disabled={openAttachment}
+                      className={`p-1 ${
+                        openAttachment
+                          ? "bg-secondary"
+                          : "hover:bg-secondary/50"
+                      }`}
                     >
                       <Paperclip className="h-4 w-4" />
                     </Button>

@@ -35,8 +35,17 @@ const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
     (user) => user?.user_id !== authUser?.unique_id
   )
   const lastMessageInfo = useMemo(() => {
-    return parseLastMessageType(chat.last_message)
-  }, [chat.last_message])
+    if (!chat?.messages?.length) return null
+
+    const lastMsg = chat.messages[chat.messages.length - 1]
+    console.log("lastMsg", lastMsg)
+
+    if (lastMsg.is_deleted === 1) {
+      return parseLastMessageType("This message was deleted")
+    }
+
+    return parseLastMessageType(lastMsg.message)
+  }, [chat?.messages])
 
   const isCurrentUserMentioned = useMemo(() => {
     if (!authUserId || !chat.last_message) return false
@@ -47,7 +56,6 @@ const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
   const currentUserChatRecord = chat?.users?.find(
     (user) => user.user_id === authUser?.unique_id
   )
-
   const unreadCount = currentUserChatRecord?.unread_count || 0
   const typingLabel = computeTypingLabel({ chat, typingUsers, authUserId })
   const isContactOnline =
@@ -100,22 +108,22 @@ const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
           </p>
         ) : (
           <>
-            {lastMessageInfo.type === "text" && (
+            {lastMessageInfo?.type === "text" && (
               <p
                 className="text-sm text-muted-foreground truncate"
                 dangerouslySetInnerHTML={{
-                  __html: lastMessageInfo.content ?? ""
+                  __html: lastMessageInfo?.content ?? ""
                 }}
               />
             )}
-            {lastMessageInfo.type === "image" && (
+            {lastMessageInfo?.type === "image" && (
               <p className="text-sm text-muted-foreground truncate">
-                {lastMessageInfo.filename}
+                {lastMessageInfo?.filename}
               </p>
             )}
-            {lastMessageInfo.type === "file" && (
+            {lastMessageInfo?.type === "file" && (
               <p className="text-sm text-muted-foreground truncate">
-                {lastMessageInfo.filename}
+                {lastMessageInfo?.filename}
               </p>
             )}
           </>
