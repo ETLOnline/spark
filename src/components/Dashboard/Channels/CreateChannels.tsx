@@ -353,7 +353,7 @@ function CreateChannels({
           className="max-w-[95vw] sm:max-w-[425px]"
           onInteractOutside={(e) => e.preventDefault()}
         >
-          <DialogHeader>
+          <DialogHeader className="px-3">
             <DialogTitle>
               {editChannel === true ? "Edit Channel" : "Create Channel"}
             </DialogTitle>
