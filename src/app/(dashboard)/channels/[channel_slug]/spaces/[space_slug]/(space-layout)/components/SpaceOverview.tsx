@@ -20,10 +20,11 @@ import CreateShortcut from "@/src/components/common/Shortcut/components/CreateSh
 
 interface SpaceOverviewProps {
   features?: SelectSpaceFeature[]
+  hasAnyFeatureAccess: boolean
   space: SelectSpace
 }
 
-function SpaceOverview({ features, space }: SpaceOverviewProps) {
+function SpaceOverview({ features,hasAnyFeatureAccess, space }: SpaceOverviewProps) {
   const [isEditDetail, setIsEditDetail] = useState(false)
   const [content, setContent] = useState("")
 
@@ -116,6 +117,7 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
                     </span>
                     <span className="text-sm">members</span>
                   </div>
+                  {hasAnyFeatureAccess && 
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <CircleCheckBig className="h-4 w-4 text-green-500" />
                     <span className="font-medium text-foreground">
@@ -123,6 +125,7 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
                     </span>
                     <span className="text-sm">active features</span>
                   </div>
+                  }
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Clock className="w-4 h-4 text-blue-500 " />
                     <span className="font-medium text-foreground">{0}</span>
