@@ -603,6 +603,12 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     setRichMessageContent("")
     setFileString("")
   }
+  const handleRichEditor = () => {
+    setShowRichEditorToolbar((prev) => !prev)
+    setOpenAttachment(false)
+    setFileString("")
+    setRichMessageContent("")
+  }
 
   const users = getOnlineUsers()
 
@@ -1034,10 +1040,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                           ? "Hide Formatting Menu (Enter sends)"
                           : "Show Formatting Menu (Enter adds line)"
                       }
-                      onClick={() => {
-                        setShowRichEditorToolbar((prev) => !prev)
-                        setOpenAttachment(false)
-                      }}
+                      onClick={handleRichEditor}
                       className={`p-1 ${
                         showRichEditorToolbar
                           ? "bg-secondary"

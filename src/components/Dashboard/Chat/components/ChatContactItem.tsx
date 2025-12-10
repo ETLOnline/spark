@@ -38,7 +38,6 @@ const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
     if (!chat?.messages?.length) return null
 
     const lastMsg = chat.messages[chat.messages.length - 1]
-    console.log("lastMsg", lastMsg)
 
     if (lastMsg.is_deleted === 1) {
       return parseLastMessageType("This message was deleted")
@@ -108,23 +107,20 @@ const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
           </p>
         ) : (
           <>
-            {lastMessageInfo?.type === "text" && (
+            {lastMessageInfo?.type === "text" ? (
               <p
                 className="text-sm text-muted-foreground truncate"
                 dangerouslySetInnerHTML={{
                   __html: lastMessageInfo?.content ?? ""
                 }}
               />
-            )}
-            {lastMessageInfo?.type === "image" && (
-              <p className="text-sm text-muted-foreground truncate">
-                {lastMessageInfo?.filename}
-              </p>
-            )}
-            {lastMessageInfo?.type === "file" && (
-              <p className="text-sm text-muted-foreground truncate">
-                {lastMessageInfo?.filename}
-              </p>
+            ) : (
+              (lastMessageInfo?.type === "image" ||
+                lastMessageInfo?.type === "file") && (
+                <p className="text-sm text-muted-foreground truncate">
+                  {lastMessageInfo?.filename}
+                </p>
+              )
             )}
           </>
         )}
