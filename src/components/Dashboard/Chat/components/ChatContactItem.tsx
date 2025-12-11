@@ -1,11 +1,16 @@
 "use client"
 
+import { useOnlineStatus } from "@/src/components/providers/OnlineStatusProvider"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Badge } from "@/src/components/ui/badge"
 import { SelectChat } from "@/src/db/schema"
 import { parseMentions } from "@/src/services/realtime/utils/helper"
 import { chatStore } from "@/src/store/chat/chatStore"
 import { userStore } from "@/src/store/user/userStore"
+import {
+  computeTypingLabel,
+  parseLastMessageType
+} from "@/src/utils/clientHelper"
 import Avvvatars from "avvvatars-react"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { AtSign } from "lucide-react"
@@ -13,18 +18,33 @@ import { useMemo } from "react"
 
 interface ChatContactItemProps {
   chat: SelectChat
+  typingUsers?: Record<number, Set<string>>
 }
 
-const ChatContactItem = ({ chat }: ChatContactItemProps) => {
+const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
   const authUser = useAtomValue(userStore.AuthUser)
   const authUserId = authUser?.unique_id
   const [currentChat, setCurrentChat] = useAtom(chatStore.currentChat)
   const setSwtichedChat = useSetAtom(chatStore.switchedChat)
   const setIsMobileMenuOpen = useSetAtom(chatStore.isMobileMenuOpen)
+  const { getOnlineUsers } = useOnlineStatus()
+
+  const users = getOnlineUsers()
 
   const filteredContact = chat?.users?.find(
-    (user) => user.user_id !== authUser?.unique_id
+    (user) => user?.user_id !== authUser?.unique_id
   )
+  const lastMessageInfo = useMemo(() => {
+    if (!chat?.messages?.length) return null
+
+    const lastMsg = chat.messages[chat.messages.length - 1]
+
+    if (lastMsg.is_deleted === 1) {
+      return parseLastMessageType("This message was deleted")
+    }
+
+    return parseLastMessageType(lastMsg.message)
+  }, [chat?.messages])
 
   const isCurrentUserMentioned = useMemo(() => {
     if (!authUserId || !chat.last_message) return false
@@ -35,17 +55,12 @@ const ChatContactItem = ({ chat }: ChatContactItemProps) => {
   const currentUserChatRecord = chat?.users?.find(
     (user) => user.user_id === authUser?.unique_id
   )
-
   const unreadCount = currentUserChatRecord?.unread_count || 0
-  const tokens = parseMentions(chat.last_message || "")
-  const lastMessage = tokens
-    .map((t) => (t.type === "mention" ? `@${t.value}` : t.value))
-    .join("")
-
-  if (!filteredContact) return null
-  const chatContact = filteredContact?.user || null
-  if (!chatContact) return null
-
+  const typingLabel = computeTypingLabel({ chat, typingUsers, authUserId })
+  const isContactOnline =
+    filteredContact?.user?.unique_id !== undefined
+      ? users.has(filteredContact.user.unique_id)
+      : false
   return (
     <div
       key={chat.id}
@@ -60,32 +75,55 @@ const ChatContactItem = ({ chat }: ChatContactItemProps) => {
       {chat?.is_group ? (
         <Avvvatars value={chat.name || ""} style="shape" />
       ) : (
-        <Avatar className="h-10 w-10 relative bg-white">
-          {!chat?.is_group && chatContact ? (
-            <>
-              {chatContact?.profile_url ? (
-                <AvatarImage src={chatContact.profile_url} />
-              ) : null}
+        <div className="relative h-10 w-10">
+          <Avatar className="h-10 w-10 bg-white">
+            {filteredContact?.user?.profile_url ? (
+              <AvatarImage src={filteredContact?.user?.profile_url} />
+            ) : (
               <AvatarFallback>
-                {chatContact.first_name.charAt(0)}
+                {filteredContact?.user?.first_name.charAt(0)}
               </AvatarFallback>
-            </>
-          ) : null}
-          {/* {chat.online && (
-              <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></span>
-            )} */}
-        </Avatar>
+            )}
+          </Avatar>
+
+          {isContactOnline && (
+            <span
+              className="absolute bottom-0 right-0 z-50 
+                     h-3 w-3 rounded-full bg-green-500 
+                     border-2 border-white"
+            ></span>
+          )}
+        </div>
       )}
       <div className="flex-1 max-w-[60%]">
         <p className="font-medium truncate">
           {chat.is_group
             ? chat.name
-            : `${chatContact?.first_name} ${chatContact?.last_name}`}
+            : `${filteredContact?.user?.first_name} ${filteredContact?.user?.last_name}`}
         </p>
-        <p
-          className="text-sm text-muted-foreground truncate"
-          dangerouslySetInnerHTML={{ __html: lastMessage }}
-        />
+        {typingLabel ? (
+          <p className="text-sm text-primary truncate animate-pulse">
+            {typingLabel}
+          </p>
+        ) : (
+          <>
+            {lastMessageInfo?.type === "text" ? (
+              <p
+                className="text-sm text-muted-foreground truncate"
+                dangerouslySetInnerHTML={{
+                  __html: lastMessageInfo?.content ?? ""
+                }}
+              />
+            ) : (
+              (lastMessageInfo?.type === "image" ||
+                lastMessageInfo?.type === "file") && (
+                <p className="text-sm text-muted-foreground truncate">
+                  {lastMessageInfo?.filename}
+                </p>
+              )
+            )}
+          </>
+        )}
       </div>
 
       {/* NEW: Show badges container */}

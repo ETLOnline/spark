@@ -184,7 +184,8 @@ export const GetChats = async (
               }
             }
           }
-        }
+        },
+        messages: true
       }
     })
     return chats
