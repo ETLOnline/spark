@@ -4,6 +4,7 @@ import { useDropzone } from "react-dropzone"
 import { cn } from "@/src/lib/utils"
 import Image from "next/image"
 import { CloudUpload, X } from "lucide-react"
+import { Button } from "./button"
 
 const mainVariant = {
   initial: {
@@ -112,13 +113,13 @@ export const FileUpload = ({
                     "shadow-sm"
                   )}
                 >
-                  <button 
+                  <Button 
                     onClick={handleRemove} 
                     className="absolute top-1 right-1 p-1 rounded-full text-neutral-400 hover:text-red-500 transition-colors z-10"
                     aria-label="Remove File"
                   >
                     <X className="h-4 w-4" />
-                  </button>
+                  </Button>
                   {file.type.startsWith("image/") ? (
                     <div className="rounded-md overflow-hidden">
                       <Image
