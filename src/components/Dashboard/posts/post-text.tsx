@@ -10,6 +10,7 @@ import { usePostNavigation } from "@/src/hooks/usePostNavigation"
 import { useEffect, useRef, useState } from "react"
 import { Button } from "../../ui/button"
 import { ChevronDown, ChevronUp } from "lucide-react"
+import { useExpandableText } from "@/src/hooks/useExpandableText"
 
 type Props = {
   post: SelectPost
@@ -18,30 +19,12 @@ type Props = {
 
 const TextPost: React.FC<Props> = ({ post, spaceId }) => {
   const { navigateToPost } = usePostNavigation()
-  const [expanded, setExpanded] = useState(false)
-  const [showToggle, setShowToggle] = useState(false)
-  const contentRef = useRef<HTMLParagraphElement>(null)
 
   const content = post.content ?? ""
-  useEffect(() => {
-    if (contentRef.current) {
-      const el = contentRef.current
-
-      const prevClamp = el.style.webkitLineClamp
-      el.style.webkitLineClamp = "unset"
-
-      const fullHeight = el.scrollHeight
-
-      el.style.webkitLineClamp = prevClamp
-
-      const lineHeight = parseFloat(getComputedStyle(el).lineHeight)
-      const maxHeight = lineHeight * 6
-
-      if (fullHeight > maxHeight) {
-        setShowToggle(true)
-      }
-    }
-  }, [content])
+  const { contentRef, expanded, showToggle, toggle } = useExpandableText(
+    6,
+    content
+  )
 
   const handleContentClick = () => {
     navigateToPost(post.id, spaceId)
@@ -62,10 +45,7 @@ const TextPost: React.FC<Props> = ({ post, spaceId }) => {
 
         {showToggle && (
           <Button
-            onClick={(e) => {
-              e.stopPropagation()
-              setExpanded(!expanded)
-            }}
+            onClick={toggle}
             variant="ghost"
             size="lg"
             className="mt-2 font-medium rounded-full mx-auto flex items-center gap-1"

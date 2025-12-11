@@ -4,6 +4,7 @@ import { formatRelativeTime } from "@/src/utils/helpers"
 import { Button } from "../../ui/button"
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
+import { useExpandableText } from "@/src/hooks/useExpandableText"
 
 type Props = {
   comment: SelectComment
@@ -11,29 +12,11 @@ type Props = {
 
 const PostComments: React.FC<Props> = ({ comment }) => {
   const name = `${comment.commentor.first_name} ${comment.commentor.last_name}`
-  const [expanded, setExpanded] = useState(false)
-  const [showToggle, setShowToggle] = useState(false)
-  const contentRef = useRef<HTMLParagraphElement>(null)
 
-  useEffect(() => {
-    if (contentRef.current) {
-      const el = contentRef.current
-
-      const prevClamp = el.style.webkitLineClamp
-      el.style.webkitLineClamp = "unset"
-
-      const fullHeight = el.scrollHeight
-
-      el.style.webkitLineClamp = prevClamp
-
-      const lineHeight = parseFloat(getComputedStyle(el).lineHeight)
-      const maxHeight = lineHeight * 3
-
-      if (fullHeight > maxHeight) {
-        setShowToggle(true)
-      }
-    }
-  }, [comment.content])
+  const { contentRef, expanded, showToggle, toggle } = useExpandableText(
+    3,
+    comment.content
+  )
 
   return (
     <div className="rounded-[15px] bg-card flex flex-col w-full gap-2">
@@ -60,13 +43,11 @@ const PostComments: React.FC<Props> = ({ comment }) => {
       >
         {comment.content}
       </p>
+
       {showToggle && (
         <div className="flex justify-center my-1">
           <Button
-            onClick={(e) => {
-              e.stopPropagation()
-              setExpanded(!expanded)
-            }}
+            onClick={toggle}
             className="font-medium rounded-full flex items-center gap-1"
             variant="ghost"
             size="sm"
