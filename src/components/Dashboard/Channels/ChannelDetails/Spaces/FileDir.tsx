@@ -78,6 +78,19 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
 
   const spaceSlug = params.space_slug as string
   const channelSlug = params.channel_slug as string
+  const MAX_FOLDER_DEPTH = 5;
+  const getCurrentDepth = () => {
+    return currentPath.split('/').filter(Boolean).length;
+  };
+  const handleDialogClose = (open: boolean) => {
+    setIsNewFolderDialogOpen(open);
+    if (!open) {
+      setNewFolderError("");
+      newFolderName.current = "";
+    }
+  };
+  
+  const isMaxDepthReached = getCurrentDepth() < MAX_FOLDER_DEPTH;
 
   const { toast } = useToast()
 
@@ -147,6 +160,10 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
   )
 
   const createFolder = async () => {
+    if (!isMaxDepthReached) {
+      setNewFolderError("Maximum folder depth (5 levels) reached");
+      return;
+    }
     try {
       const parentFolderId = findItemByPath(dir, currentPath)?.id
       const FolderName = newFolderName.current.trim()
@@ -433,7 +450,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
           {/* Create Folder Dialog */}
           <Dialog
             open={isNewFolderDialogOpen}
-            onOpenChange={setIsNewFolderDialogOpen}
+            onOpenChange={handleDialogClose}
           >
             <DialogTrigger asChild>
               <Button>
