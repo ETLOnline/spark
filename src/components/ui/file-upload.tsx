@@ -3,7 +3,8 @@ import { motion } from "framer-motion"
 import { useDropzone } from "react-dropzone"
 import { cn } from "@/src/lib/utils"
 import Image from "next/image"
-import { CloudUpload } from "lucide-react"
+import { CloudUpload, X } from "lucide-react"
+import { Button } from "./button"
 
 const mainVariant = {
   initial: {
@@ -28,9 +29,11 @@ const secondaryVariant = {
 
 export const FileUpload = ({
   onChange,
+  onRemove,
   accept
 }: {
   onChange?: (files: File[]) => void
+  onRemove?: () => void
   accept?: string
 }) => {
   const [files, setFiles] = useState<File[]>([])
@@ -45,8 +48,23 @@ export const FileUpload = ({
     }
   }
 
+  const handleRemove = (e: React.MouseEvent<HTMLButtonElement>) => {
+    
+    e.stopPropagation() 
+  
+    setFiles([])
+    if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+    }
+    if (onRemove) {
+        onRemove()
+    }
+  }
+
   const handleClick = () => {
-    fileInputRef.current?.click()
+    if (files.length === 0) { 
+        fileInputRef.current?.click()
+    }
   }
 
   const { getRootProps, isDragActive } = useDropzone({
@@ -62,7 +80,7 @@ export const FileUpload = ({
   return (
     <div className="w-full" {...getRootProps()}>
       <motion.div
-        onClick={handleClick}
+        onClick={handleClick} 
         whileHover="animate"
         className="p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
       >
@@ -80,10 +98,10 @@ export const FileUpload = ({
         </div>
         <div className="flex flex-col items-center justify-center">
           <p className="relative font-sans font-bold text-neutral-700 dark:text-neutral-300 text-base">
-            Upload file
+            {files.length > 0 ? files[0].name : "Upload file"} 
           </p>
           <p className="relative font-sans font-normal text-neutral-400 dark:text-neutral-400 text-base mt-2">
-            Drag or drop your files here or click to upload
+            {files.length > 0 ? "Click the X to remove or upload a new file" : "Drag or drop your files here or click to upload"}
           </p>
           <div className="relative w-full mt-10 max-w-xl mx-auto">
             {files.length > 0 &&
@@ -95,6 +113,13 @@ export const FileUpload = ({
                     "shadow-sm"
                   )}
                 >
+                  <Button 
+                    onClick={handleRemove} 
+                    className="absolute top-1 right-1 p-1 rounded-full text-neutral-400 hover:text-red-500 transition-colors z-10"
+                    aria-label="Remove File"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                   {file.type.startsWith("image/") ? (
                     <div className="rounded-md overflow-hidden">
                       <Image

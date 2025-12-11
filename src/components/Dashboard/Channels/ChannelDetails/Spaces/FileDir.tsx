@@ -310,6 +310,10 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
       reader.readAsDataURL(file)
     }
   }
+  
+  const handleRemoveFile = () => {
+    setFileData(null)
+  }
 
   const handleFileUpload = async () => {
     try {
@@ -430,6 +434,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
                             target: { files: [...files] }
                           } as unknown as React.ChangeEvent<HTMLInputElement>)
                         }}
+                        onRemove={handleRemoveFile}
                         key={createdFile?.data?.id}
                       />
                       <Button

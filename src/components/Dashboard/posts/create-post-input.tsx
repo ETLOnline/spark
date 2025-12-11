@@ -43,7 +43,18 @@ const CreatePostInput: React.FC<Props> = ({
     }
   }
 
-  return type === "text" ? (
+  const handleRemoveFile = () => {
+    setNewPost({
+      ...newPost,
+      type: PostType.text, 
+      fileName: undefined,
+      fileSize: undefined,
+      fileType: undefined,
+      fileBase64: undefined
+    })
+  }
+
+  return type === PostType.text ? (
     <Textarea
       placeholder="What's on your mind?"
       value={newPost.content as string}
@@ -57,7 +68,7 @@ const CreatePostInput: React.FC<Props> = ({
       required
       className="min-h-[100px]"
     />
-  ) : type === "image" ? (
+  ) : type === PostType.image ? (
     <div className="flex flex-col space-y-4">
       <div className="flex flex-col justify-center items-center pt-4">
         <FileUpload
@@ -66,6 +77,7 @@ const CreatePostInput: React.FC<Props> = ({
               target: { files: [...files] }
             } as unknown as React.ChangeEvent<HTMLInputElement>)
           }}
+          onRemove={handleRemoveFile}
           accept="image/*"
         />
       </div>
@@ -81,7 +93,7 @@ const CreatePostInput: React.FC<Props> = ({
         className="min-h-[60px]"
       />
     </div>
-  ) : type === "poll" ? (
+  ) : type === PostType.poll ? (
     <div className="flex flex-col space-y-2">
       <Textarea
         placeholder="Enter your poll question"
@@ -111,6 +123,7 @@ const CreatePostInput: React.FC<Props> = ({
             target: { files: [...files] }
           } as unknown as React.ChangeEvent<HTMLInputElement>)
         }}
+        onRemove={handleRemoveFile}
       />
       <Textarea
         placeholder="Add a description..."
