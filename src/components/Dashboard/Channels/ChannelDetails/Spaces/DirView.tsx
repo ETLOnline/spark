@@ -142,7 +142,7 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
         <div>Type</div>
         <div>Name</div>
         <div className="text-center w-20">Size</div>
-        <div className="text-center w-24">Updated</div>
+        <div className="text-center w-24">Last Updated</div>
         {hasActions && <div className="text-center w-16">Actions</div>}
       </div>
 
