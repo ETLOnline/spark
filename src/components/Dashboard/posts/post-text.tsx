@@ -1,16 +1,12 @@
 import { CardContent, CardFooter } from "../../ui/card"
 import PostInteractions from "./post-interactions"
 import { Separator } from "@/src/components/ui/separator"
-import PostComments from "./post-comments"
 import PostCommentForm from "./post-comment-form"
-import { SelectComment, SelectPost } from "@/src/db/schema"
+import { SelectPost } from "@/src/db/schema"
 import { Badge } from "../../ui/badge"
 import PostCommentsSection from "./post-comments-section"
 import { usePostNavigation } from "@/src/hooks/usePostNavigation"
-import { useEffect, useRef, useState } from "react"
-import { Button } from "../../ui/button"
-import { ChevronDown, ChevronUp } from "lucide-react"
-import { useExpandableText } from "@/src/hooks/useExpandableText"
+import ExpandableText from "./ExpandableText"
 
 type Props = {
   post: SelectPost
@@ -21,10 +17,6 @@ const TextPost: React.FC<Props> = ({ post, spaceId }) => {
   const { navigateToPost } = usePostNavigation()
 
   const content = post.content ?? ""
-  const { contentRef, expanded, showToggle, toggle } = useExpandableText(
-    6,
-    content
-  )
 
   const handleContentClick = () => {
     navigateToPost(post.id, spaceId)
@@ -36,28 +28,7 @@ const TextPost: React.FC<Props> = ({ post, spaceId }) => {
         className={spaceId !== "shared" ? "cursor-pointer" : ""}
         onClick={spaceId !== "shared" ? handleContentClick : undefined}
       >
-        <p
-          ref={contentRef}
-          className={`text-justify break-words whitespace-pre-wrap ${expanded ? "" : "line-clamp-6"}`}
-        >
-          {content}
-        </p>
-
-        {showToggle && (
-          <Button
-            onClick={toggle}
-            variant="ghost"
-            size="lg"
-            className="mt-2 font-medium rounded-full mx-auto flex items-center gap-1"
-          >
-            {expanded ? "Show Less" : "Read More"}
-            {expanded ? (
-              <ChevronUp className="w-4 h-4" />
-            ) : (
-              <ChevronDown className="w-4 h-4" />
-            )}
-          </Button>
-        )}
+        <ExpandableText content={content} lines={6} />
 
         <div className="mt-4 flex flex-wrap gap-2">
           {post.hashtags &&
