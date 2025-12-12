@@ -38,7 +38,6 @@ import { useRouter, useSearchParams } from "next/navigation"
 import ChannelsContextMenu from "@/src/components/Dashboard/Channels/ChannelDetails/ChannelsContextMenu"
 import Link from "next/link"
 import { userStore } from "@/src/store/user/userStore"
-import Overlay from "../common/Overlay/PrivatePage"
 import { communityStore } from "@/src/store/community/communityStore"
 import { useSetAtom } from "jotai"
 import { InviteUserDialog } from "../UserListAndInvite/UserInviteDialog"
@@ -293,9 +292,6 @@ export default function CommunityDetailsClient({
   return (
     <div className="min-h-screen bg-background relative">
       {/* Added relative for the overlay positioning */}
-      {showAccessDeniedOverlay && (
-        <Overlay page="Community" pageHref="/communities" />
-      )}
       <div className="flex flex-col min-h-screen">
         {/* Community Header Banner */}
         <div className="relative sm:h-44 h-36 shadow-sm rounded-lg overflow-hidden">
