@@ -37,9 +37,9 @@ import { useToast } from "@/src/hooks/use-toast"
 import TagsInput from "../../TagsInput/TagsInput"
 import { userStore } from "@/src/store/user/userStore"
 import {
-  CreateFilePostAction,
   CreatePollPostAction,
   CreatePostAction,
+  CreateFilesPostAction,
   LinkHashtagsToPostAction
 } from "@/src/server-actions/Post/Post"
 import useHashtags from "../profile/hooks/useHashtags"
@@ -79,11 +79,11 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   const [createPostLoading, createdPost, createPostError, createPost] =
     useServerAction(CreatePostAction)
   const [
-    createFilePostLoading,
-    createdFilePost,
-    createFilePostError,
-    createFilePost
-  ] = useServerAction(CreateFilePostAction)
+    createFilesPostLoading,
+    createdFilesPost,
+    createFilesPostError,
+    createFilesPost
+  ] = useServerAction(CreateFilesPostAction)
   const [
     createPollPostLoading,
     createdPollPost,
@@ -97,7 +97,6 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     linkHashtagsToPost
   ] = useServerAction(LinkHashtagsToPostAction)
 
-  // calling the permissoins
   const { permissionChecker } = usePermissionChecker(
     variant == "spaces" ? "scoped" : "global",
     "SPACE",
@@ -108,6 +107,34 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   const canCreate = permissionChecker
     ? permissionChecker?.canAccess(permissionNamespace)
     : false
+
+  const resetForm = () => {
+    setNewPost({
+      content: "",
+      type: PostType.text,
+      hashtags: [],
+      images: [],
+      fileName: undefined,
+      fileSize: undefined,
+      fileType: undefined,
+      fileBase64: undefined
+    })
+    setPollOptions([])
+    setHashtags([])
+  }
+
+  const handleTabChange = (value: string) => {
+    resetForm()
+    setNewPost((prev) => ({
+      ...prev,
+      type: value as PostType
+    }))
+  }
+
+  const handleCloseModal = () => {
+    resetForm()
+    setShowCard(false)
+  }
   const validatePost = (
     post: typeof newPost,
     pollOptions: string[]
@@ -124,9 +151,13 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         break
 
       case PostType.file:
-      case PostType.image:
         if (!post.fileBase64 || !post.fileName)
           return "Please select a file to upload"
+        break
+
+      case PostType.image:
+        if (!post.images || post.images.length === 0)
+          return "Please select at least one image to upload"
         break
     }
     return null
@@ -258,87 +289,172 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         newPost.type === PostType.file ||
         newPost.type === PostType.image
       ) {
-        if (!newPost.fileBase64 || !newPost.fileName) {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Please select a file to upload"
-          })
-          return
-        }
+        // Handle image posts with multiple images
+        if (newPost.type === PostType.image) {
+          if (!newPost.images || newPost.images.length === 0) {
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: "Please select at least one image to upload"
+            })
+            return
+          }
 
-        let filePostData
+          // Create ONE post for all images
+          const imageData = newPost.images.map((image) => ({
+            fileName: image.name,
+            fileSize: image.size,
+            fileType: image.type,
+            fileBase64: image.base64
+          }))
 
-        if (variant === "spaces") {
-          filePostData = {
-            type: newPost.type,
-            fileSize: newPost.fileSize as number,
-            fileName: newPost.fileName as string,
-            fileType: newPost.fileType as string,
-            fileBase64: newPost.fileBase64,
-            content: newPost.content,
+          const imagePostData = {
+            files: imageData,
+            type: PostType.image,
+            content: (newPost.content as string) || "",
             category: newPost.category,
-            entityType: "space",
-            entityId: currentSpace?.id ?? "",
-            folderPath: "spaces"
+            entityType: variant === "spaces" ? "space" : "",
+            entityId: variant === "spaces" ? (currentSpace?.id ?? "") : "",
+            folderPath: variant === "spaces" ? "spaces" : "posts"
           }
-        } else {
-          filePostData = {
-            type: newPost.type,
-            fileSize: newPost.fileSize as number,
-            fileName: newPost.fileName as string,
-            fileType: newPost.fileType as string,
-            fileBase64: newPost.fileBase64,
-            content: newPost.content,
-            category: "",
-            entityType: "",
-            entityId: "",
-            folderPath: "posts"
-          }
-        }
 
-        const post = await createFilePost(filePostData)
+          const post = await createFilesPost(imagePostData)
 
-        if (post && post.data) {
-          let linkedHashtags
-          if (hashtags.length) {
-            linkedHashtags = await linkHashtagsToPost(
-              post.data.id,
-              hashtags.length
-                ? hashtags
-                    .filter((tag) => !tag.deleted)
-                    .map((tag) => {
-                      return {
-                        name: tag.name,
-                        count: tag.count,
-                        status: tag.status
-                      }
-                    })
-                : []
-            )
-            if (linkedHashtags?.error) {
-              console.error(
-                "Error linking hashtags to post:",
-                linkedHashtags.error
+          if (post && post.data) {
+            let linkedHashtags
+            if (hashtags.length) {
+              linkedHashtags = await linkHashtagsToPost(
+                post.data.id,
+                hashtags.length
+                  ? hashtags
+                      .filter((tag) => !tag.deleted)
+                      .map((tag) => {
+                        return {
+                          name: tag.name,
+                          count: tag.count,
+                          status: tag.status
+                        }
+                      })
+                  : []
               )
+              if (linkedHashtags?.error) {
+                console.error(
+                  "Error linking hashtags to post:",
+                  linkedHashtags.error
+                )
+              }
+            }
+            postData = {
+              ...post.data,
+              author: authUser as SelectUser,
+              hashtags: linkedHashtags?.data?.length
+                ? [...linkedHashtags?.data]
+                : [],
+              postComments: []
+            }
+          } else if (post?.error) {
+            console.error("Error creating post:", post.error)
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: "Error creating post please try again!"
+            })
+            return
+          }
+        } else if (newPost.type === PostType.file) {
+          // Handle file posts (single file)
+          if (!newPost.fileBase64 || !newPost.fileName) {
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: "Please select a file to upload"
+            })
+            return
+          }
+
+          let filePostData
+
+          if (variant === "spaces") {
+            filePostData = {
+              type: newPost.type,
+              fileSize: newPost.fileSize as number,
+              fileName: newPost.fileName as string,
+              fileType: newPost.fileType as string,
+              fileBase64: newPost.fileBase64,
+              content: newPost.content,
+              category: newPost.category,
+              entityType: "space",
+              entityId: currentSpace?.id ?? "",
+              folderPath: "spaces"
+            }
+          } else {
+            filePostData = {
+              type: newPost.type,
+              fileSize: newPost.fileSize as number,
+              fileName: newPost.fileName as string,
+              fileType: newPost.fileType as string,
+              fileBase64: newPost.fileBase64,
+              content: newPost.content,
+              category: "",
+              entityType: "",
+              entityId: "",
+              folderPath: "posts"
             }
           }
-          postData = {
-            ...post.data,
-            author: authUser as SelectUser,
-            hashtags: linkedHashtags?.data?.length
-              ? [...linkedHashtags?.data]
-              : [],
-            postComments: []
-          }
-        } else if (post?.error) {
-          console.error("Error creating post:", post.error)
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Error creating post please try again!"
+
+          const post = await createFilesPost({
+            ...filePostData,
+            files: [
+              {
+                fileName: filePostData.fileName,
+                fileSize: filePostData.fileSize,
+                fileType: filePostData.fileType,
+                fileBase64: filePostData.fileBase64
+              }
+            ]
           })
-          return
+
+          if (post && post.data) {
+            let linkedHashtags
+            if (hashtags.length) {
+              linkedHashtags = await linkHashtagsToPost(
+                post.data.id,
+                hashtags.length
+                  ? hashtags
+                      .filter((tag) => !tag.deleted)
+                      .map((tag) => {
+                        return {
+                          name: tag.name,
+                          count: tag.count,
+                          status: tag.status
+                        }
+                      })
+                  : []
+              )
+              if (linkedHashtags?.error) {
+                console.error(
+                  "Error linking hashtags to post:",
+                  linkedHashtags.error
+                )
+              }
+            }
+            postData = {
+              ...post.data,
+              author: authUser as SelectUser,
+              hashtags: linkedHashtags?.data?.length
+                ? [...linkedHashtags?.data]
+                : [],
+              postComments: []
+            }
+          } else if (post?.error) {
+            console.error("Error creating post:", post.error)
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: "Error creating post please try again!"
+            })
+            return
+          }
         }
       }
       setHashtags([])
@@ -357,8 +473,10 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
 
       setNewPost({
         content: "",
-        hashtags: []
+        hashtags: [],
+        images: []
       })
+      setPollOptions([])
     } catch (error) {
       console.error(error)
       toast({
@@ -390,11 +508,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         <Card className="bg-background shadow-lg">
           <CardHeader className="flex flex-row justify-between items-center">
             <h2 className="text-2xl font-bold">Create a Post</h2>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setShowCard(false)}
-            >
+            <Button variant="outline" size="icon" onClick={handleCloseModal}>
               <X className="h-4 w-4" />
             </Button>
           </CardHeader>
@@ -403,12 +517,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
               <Tabs
                 defaultValue="text"
                 className="w-full"
-                onValueChange={(value) =>
-                  setNewPost((prev) => ({
-                    ...prev,
-                    type: value as PostType
-                  }))
-                }
+                onValueChange={handleTabChange}
               >
                 <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="text">Text</TabsTrigger>
@@ -466,7 +575,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                     type={PostType.image}
                     setNewPost={setNewPost}
                     newPost={newPost}
-                    key={createdFilePost?.data?.id}
+                    key={createdFilesPost?.data?.id}
                   />
                 </TabsContent>
                 <TabsContent value="poll">
@@ -483,7 +592,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                     type={PostType.file}
                     setNewPost={setNewPost}
                     newPost={newPost}
-                    key={createdFilePost?.data?.id}
+                    key={createdFilesPost?.data?.id}
                   />
                 </TabsContent>
               </Tabs>
@@ -505,14 +614,14 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 type="submit"
                 disabled={
                   createPostLoading ||
-                  createFilePostLoading ||
+                  createFilesPostLoading ||
                   createPollPostLoading
                     ? true
                     : false
                 }
                 loading={
                   createPostLoading ||
-                  createFilePostLoading ||
+                  createFilesPostLoading ||
                   createPollPostLoading
                     ? true
                     : false

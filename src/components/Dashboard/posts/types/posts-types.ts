@@ -28,6 +28,15 @@ export type PostFile = Omit<Post, "content"> & {
 
 export type PostPoll = Post & { options: string[] }
 
+export interface ImageFile {
+  id: string
+  file: File
+  base64: string
+  name: string
+  size: number
+  type: string
+}
+
 export interface NewPost {
   content?: string
   type?: PostType
@@ -37,6 +46,7 @@ export interface NewPost {
   fileSize?: number
   fileType?: string
   fileBase64?: string
+  images?: ImageFile[]
 }
 
 export type Comment = {

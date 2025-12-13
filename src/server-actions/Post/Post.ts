@@ -78,28 +78,83 @@ export const UpdatePostAction = CreateServerAction(
   }
 )
 
-export const CreateFilePostAction = CreateServerAction(
+export const CreateFilesPostAction = CreateServerAction(
   true,
-  async (args: CreateFilePostParams) => {
-    const {
-      type,
-      fileSize,
-      fileName,
-      fileType,
-      fileBase64,
-      content,
-      category,
-      entityType,
-      entityId,
-      folderPath
-    } = args
+  async (args: {
+    type?: string
+    files: Array<{
+      fileName: string
+      fileSize: number
+      fileType: string
+      fileBase64: string
+    }>
+    content?: string
+    category?: string
+    entityType?: string
+    entityId?: string
+    folderPath?: string
+  }) => {
+    const { files, content, category, entityType, entityId, folderPath, type } =
+      args
     try {
       const userId = (await AuthUserAction())?.unique_id
       if (!userId) throw new Error("Unauthorized", { cause: 401 })
 
+      if (!files || files.length === 0) {
+        throw new Error("No files provided")
+      }
+
+      // If there are multiple files, treat it as an image post (existing behavior)
+      if (files.length > 1) {
+        // Create a single post for all images
+        const postData = await CreatePost({
+          type: type || "image",
+          user_id: userId,
+          content,
+          category,
+          entity_type: entityType,
+          entity_id: entityId
+        })
+
+        if (!postData || postData.length === 0) {
+          throw new Error("Failed to create post")
+        }
+
+        const postId = postData[0].id
+        const fileRecords: any[] = []
+
+        for (const file of files) {
+          const fileBuffer = base64ToBuffer(file.fileBase64)
+          const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(
+            fileBuffer,
+            file.fileName,
+            file.fileType,
+            folderPath == "spaces" ? "spaces" : "posts"
+          )
+
+          await AddPostFileLink(postId, fileRecord.id)
+          fileRecords.push({ ...fileRecord, url: fileUrl })
+        }
+
+        return {
+          success: true,
+          data: {
+            ...postData[0],
+            files: fileRecords,
+            file:
+              fileRecords && fileRecords.length > 0 ? fileRecords[0] : undefined
+          }
+        }
+      }
+
+      // Single file case
+      const single = files[0]
+      const postType =
+        type || (single.fileType?.startsWith("image/") ? "image" : "file")
+
       // Create post in DB
       const postData = await CreatePost({
-        type,
+        type: postType,
         user_id: userId,
         content,
         category,
@@ -111,11 +166,11 @@ export const CreateFilePostAction = CreateServerAction(
         throw new Error("Failed to create post")
       }
 
-      const fileBuffer = base64ToBuffer(fileBase64)
+      const fileBuffer = base64ToBuffer(single.fileBase64)
       const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(
         fileBuffer,
-        fileName,
-        fileType,
+        single.fileName,
+        single.fileType,
         folderPath == "spaces" ? "spaces" : "posts"
       )
 
@@ -126,6 +181,7 @@ export const CreateFilePostAction = CreateServerAction(
         data: {
           ...postData[0],
           file: fileRecord,
+          files: [fileRecord],
           url: fileUrl
         }
       }
@@ -291,9 +347,41 @@ export const GetPostsAction = CreateServerAction(
       const sanitizedPosts = posts.map((post) => ({
         ...post,
         hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
-        file: post.file?.postFile
+        files: post.files?.map((f: any) => f.postFile) || [],
+        file:
+          post.files && post.files.length > 0
+            ? post.files[0].postFile
+            : undefined
       }))
-      return { success: true, data: sanitizedPosts }
+
+      // Merge consecutive posts from the same author with same type/content and close timestamps
+      const mergedPosts: any[] = []
+      for (const p of sanitizedPosts) {
+        const last = mergedPosts[mergedPosts.length - 1]
+        if (
+          last &&
+          last.author?.unique_id === p.author?.unique_id &&
+          last.type === p.type &&
+          (last.content || "").trim() === (p.content || "").trim() &&
+          Math.abs(
+            new Date(last.created_at || "").getTime() -
+              new Date(p.created_at || "").getTime()
+          ) <= 5000
+        ) {
+          last.files = [...(last.files || []), ...(p.files || [])]
+          last.created_at = new Date(
+            Math.min(
+              new Date(last.created_at || "").getTime(),
+              new Date(p.created_at || "").getTime()
+            )
+          ).toISOString()
+          last.file =
+            last.files && last.files.length > 0 ? last.files[0] : last.file
+        } else {
+          mergedPosts.push({ ...p })
+        }
+      }
+      return { success: true, data: mergedPosts }
     } catch (error: any) {
       return {
         success: false,
@@ -321,9 +409,41 @@ export const GetSpacePostsAction = CreateServerAction(
       const sanitizedPosts = posts.map((post) => ({
         ...post,
         hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
-        file: post.file?.postFile
+        files: post.files?.map((f: any) => f.postFile) || [],
+        file:
+          post.files && post.files.length > 0
+            ? post.files[0].postFile
+            : undefined
       }))
-      return { success: true, data: sanitizedPosts }
+
+      // Merge consecutive space posts from the same author with same type/content and close timestamps
+      const mergedPosts: any[] = []
+      for (const p of sanitizedPosts) {
+        const last = mergedPosts[mergedPosts.length - 1]
+        if (
+          last &&
+          last.author?.unique_id === p.author?.unique_id &&
+          last.type === p.type &&
+          (last.content || "").trim() === (p.content || "").trim() &&
+          Math.abs(
+            new Date(last.created_at || "").getTime() -
+              new Date(p.created_at || "").getTime()
+          ) <= 5000
+        ) {
+          last.files = [...(last.files || []), ...(p.files || [])]
+          last.created_at = new Date(
+            Math.min(
+              new Date(last.created_at || "").getTime(),
+              new Date(p.created_at || "").getTime()
+            )
+          ).toISOString()
+          last.file =
+            last.files && last.files.length > 0 ? last.files[0] : last.file
+        } else {
+          mergedPosts.push({ ...p })
+        }
+      }
+      return { success: true, data: mergedPosts }
     } catch (error: any) {
       return {
         success: false,
@@ -422,7 +542,11 @@ export const GetPostByIdAction = CreateServerAction(
         const sanitizedPost = {
           ...post,
           hashtags: post.hashtags.map((hashtag) => hashtag.hashtag),
-          file: post.file?.postFile
+          files: post.files?.map((f: any) => f.postFile) || [],
+          file:
+            post.files && post.files.length > 0
+              ? post.files[0].postFile
+              : undefined
         }
         return { success: true, data: sanitizedPost }
       } else {

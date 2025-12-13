@@ -567,10 +567,8 @@ export const postsRelations = relations(postsTable, ({ one, many }) => ({
   options: many(pollOptionsTable, {
     relationName: "pollToPost"
   }),
-  file: one(postFilesTable, {
-    fields: [postsTable.id],
-    references: [postFilesTable.post_id],
-    relationName: "postToFile"
+  files: many(postFilesTable, {
+    relationName: "postToFiles"
   }),
   space: one(spacesTable, {
     fields: [postsTable.entity_id],
@@ -587,7 +585,8 @@ export type SelectPost = typeof postsTable.$inferSelect & {
   postLikes?: SelectLike[]
 }
 export type SelectFilePost = SelectPost & {
-  file: SelectFile
+  file?: SelectFile
+  files?: SelectFile[]
 }
 export type SelectPollPost = SelectPost & {
   options: SelectPollOption[]
@@ -744,7 +743,7 @@ export const postFilesRelations = relations(postFilesTable, ({ one }) => ({
   post: one(postsTable, {
     fields: [postFilesTable.post_id],
     references: [postsTable.id],
-    relationName: "postToFile"
+    relationName: "postToFiles"
   }),
   postFile: one(filesTable, {
     fields: [postFilesTable.file_id],
