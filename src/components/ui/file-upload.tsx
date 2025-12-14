@@ -4,6 +4,7 @@ import { useDropzone } from "react-dropzone"
 import { cn } from "@/src/lib/utils"
 import Image from "next/image"
 import { CloudUpload, X, GripVertical } from "lucide-react"
+import moment from "moment"
 
 const mainVariant = {
   initial: {
@@ -251,34 +252,50 @@ export const FileUpload = ({
                 )}
               >
                 {/* File Info */}
-                <motion.div layout className="flex-1 min-w-0">
-                  <div className="flex flex-col gap-2">
+                <motion.div
+                  layout
+                  className={cn(
+                    "relative overflow-hidden bg-white dark:bg-neutral-900 flex flex-col items-start justify-start md:h-24 p-4 w-full mx-auto rounded-md",
+                    "shadow-sm"
+                  )}
+                >
+                  <div className="flex justify-between w-full items-center gap-4">
                     <motion.p
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       layout
-                      className="text-sm font-medium text-neutral-700 dark:text-neutral-300 truncate"
+                      className="text-base text-neutral-700 dark:text-neutral-300 truncate max-w-xs"
                     >
                       {items[0].name}
                     </motion.p>
-                    <div className="flex gap-2 flex-wrap">
-                      <motion.span
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        layout
-                        className="px-2 py-1 rounded-md bg-gray-100 dark:bg-neutral-800 text-xs text-neutral-600 dark:text-neutral-400"
-                      >
-                        {(items[0].size / (1024 * 1024)).toFixed(2)} MB
-                      </motion.span>
-                      <motion.span
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        layout
-                        className="px-2 py-1 rounded-md bg-gray-100 dark:bg-neutral-800 text-xs text-neutral-600 dark:text-neutral-400"
-                      >
-                        {items[0].type}
-                      </motion.span>
-                    </div>
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      layout
+                      className="rounded-lg px-2 py-1 w-fit flex-shrink-0 text-sm text-neutral-600 dark:bg-neutral-800 dark:text-white shadow-input"
+                    >
+                      {(items[0].size / (1024 * 1024)).toFixed(2)} MB
+                    </motion.p>
+                  </div>
+
+                  <div className="flex text-sm md:flex-row flex-col items-start md:items-center w-full mt-2 justify-between text-neutral-600 dark:text-neutral-400">
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      layout
+                      className="px-1 py-0.5 rounded-md bg-gray-100 dark:bg-neutral-800 "
+                    >
+                      {items[0].type}
+                    </motion.p>
+
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      layout
+                    >
+                      modified{" "}
+                      {moment(items[0].lastModified).format("MMM D, YYYY")}
+                    </motion.p>
                   </div>
                 </motion.div>
 
