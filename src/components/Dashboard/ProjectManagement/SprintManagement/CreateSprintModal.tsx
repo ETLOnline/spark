@@ -116,6 +116,15 @@ function CreateSprintModal({
   }, [selectedSprint, isCreateSprintOpen])
 
   function submitData(data: any) {
+    data.title = data.title.trim()
+    if (!data.title) {
+      form.setError("title", {
+        type: "manual",
+        message: "Sprint name required"
+      })
+      return
+    }
+
     if (selectedSprint) {
       handleUpdateSprint(data)
     } else {

@@ -17,7 +17,11 @@ import {
 import { CreateServerAction } from ".."
 import { InsertMessage } from "@/src/db/schema"
 import { AuthUserAction } from "../User/AuthUserAction"
-import { createChatMessage } from "@/src/db/data-access/chat/message/query"
+import {
+  createChatMessage,
+  deleteChatMessage,
+  editChatMessage
+} from "@/src/db/data-access/chat/message/query"
 import pusherServer from "@/src/services/realtime/pusherServer" // Added Pusher Server Client
 import { GetSpaceById } from "@/src/db/data-access/spaces/query"
 import {
@@ -28,6 +32,10 @@ import { createChatEmailNotification } from "@/src/services/notify/chat/chat"
 import { NotificationEvent } from "@/src/services/notify/types/events"
 import { slugify } from "@/src/utils/helpers"
 import { extractMentionsFromMessage } from "@/src/services/realtime/utils/helper"
+import {
+  base64ToBuffer,
+  uploadFileAndSaveMetadata
+} from "@/src/services/storage/utils/fileUtils"
 
 export const CreatePrivateChatAction = CreateServerAction(
   true,
@@ -269,7 +277,70 @@ export const AddMessageToChatAction = CreateServerAction(
     }
   }
 )
+export const DeleteMessageFromChatAction = CreateServerAction(
+  true,
+  async (msg_id: number, chat_id: number) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) {
+        return { success: false, error: "Unauthorized" }
+      }
 
+      const deletedMessage = await deleteChatMessage(msg_id)
+
+      if (deletedMessage) {
+        await pusherServer.trigger(
+          `private-chat-${chat_id}`,
+          "message-deleted",
+          {
+            id: msg_id,
+            chat_id,
+            is_deleted: true,
+            deleted_by: authUser.unique_id
+          }
+        )
+
+        return { success: true, data: deletedMessage }
+      } else {
+        return { success: false, error: "Failed to delete message" }
+      }
+    } catch (error) {
+      return { error }
+    }
+  }
+)
+
+export const EditChaMessagetAction = CreateServerAction(
+  true,
+  async (msg_id: number, chat_id: number, new_content: string) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) {
+        return { success: false, error: "Unauthorized" }
+      }
+
+      const editedMessage = await editChatMessage(msg_id, new_content)
+
+      if (editedMessage) {
+        await pusherServer.trigger(
+          `private-chat-${chat_id}`,
+          "message-edited",
+          {
+            id: msg_id,
+            chat_id,
+            new_content
+          }
+        )
+
+        return { success: true, data: editedMessage }
+      } else {
+        return { success: false, error: "Failed to edit message" }
+      }
+    } catch (error) {
+      return { error }
+    }
+  }
+)
 export const GetChatContactsAction = CreateServerAction(
   true,
   async (filters: ChatContactFilters) => {
@@ -305,6 +376,53 @@ export const incrementUnreadCountForChatAction = CreateServerAction(
       return { success: true, data: result }
     } catch (error) {
       return { error: error }
+    }
+  }
+)
+export const SendTypingIndicatorAction = CreateServerAction(
+  true,
+  async (chat_id: number, isTyping: boolean) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) {
+        return { success: false, error: "Unauthorized" }
+      }
+
+      await pusherServer.trigger(`private-chat-${chat_id}`, "typing", {
+        userId: authUser.unique_id,
+        isTyping
+      })
+
+      return { success: true }
+    } catch (error) {
+      return { error }
+    }
+  }
+)
+
+export const sendFilesAndImagesInChatAction = CreateServerAction(
+  true,
+  async (fileName: string, fileB64string: string, fileType: string) => {
+    try {
+      const fileBuffer = base64ToBuffer(fileB64string)
+
+      const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(
+        fileBuffer,
+        fileName,
+        fileType,
+        "attachments"
+      )
+
+      if (!fileUrl || !fileRecord) {
+        throw new Error("Upload failed: missing fileUrl or file metadata.")
+      }
+
+      return { success: true, data: { fileUrl, fileRecord } }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to update profile picture"
+      }
     }
   }
 )

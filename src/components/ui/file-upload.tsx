@@ -5,6 +5,7 @@ import { cn } from "@/src/lib/utils"
 import Image from "next/image"
 import { CloudUpload, X, GripVertical } from "lucide-react"
 import moment from "moment"
+import { Button } from "./button"
 
 const mainVariant = {
   initial: {
@@ -27,17 +28,13 @@ const secondaryVariant = {
   }
 }
 
-export const FileUpload = ({
-  onChange,
-  accept,
-  multiple = false,
-  fileType = "file"
-}: {
+export const FileUpload: React.FC<{
   onChange?: (files: File[]) => void
+  onRemove?: () => void
   accept?: string
   multiple?: boolean
   fileType?: "file" | "image"
-}) => {
+}> = ({ onChange, onRemove, accept, multiple = false, fileType = "file" }) => {
   const [files, setFiles] = useState<File[]>([])
   const [items, setItems] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -81,23 +78,27 @@ export const FileUpload = ({
     const updatedFiles = files.filter((_, i) => i !== index)
     setFiles(updatedFiles)
     setItems(updatedFiles)
-    if (onChange) {
-      onChange(updatedFiles)
+    if (onChange) onChange(updatedFiles)
+
+    // If we've removed the last file, call onRemove and reset input value
+    if (updatedFiles.length === 0) {
+      if (fileInputRef.current) fileInputRef.current.value = ""
+      if (onRemove) onRemove()
     }
   }
 
   const handleReorder = (newOrder: File[]) => {
     setItems(newOrder)
     setFiles(newOrder)
-    if (onChange) {
-      onChange(newOrder)
-    }
+    if (onChange) onChange(newOrder)
   }
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleClick = (e?: React.MouseEvent) => {
+    e?.stopPropagation()
     fileInputRef.current?.click()
   }
+
+  const firstItem = items[0]
 
   const { getRootProps, isDragActive } = useDropzone({
     multiple: multiple,
@@ -111,11 +112,9 @@ export const FileUpload = ({
   return (
     <div className="w-full" {...getRootProps()}>
       <motion.div
-        whileHover={items.length === 0 ? "animate" : undefined}
-        className={cn(
-          "p-10 group/file block rounded-lg w-full relative overflow-hidden",
-          items.length === 0 && "cursor-pointer"
-        )}
+        onClick={handleClick}
+        whileHover="animate"
+        className="p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
       >
         <input
           ref={fileInputRef}
@@ -131,18 +130,19 @@ export const FileUpload = ({
         </div>
         <div className="flex flex-col items-center justify-center">
           <p className="relative font-sans font-bold text-neutral-700 dark:text-neutral-300 text-base">
-            Upload file
+            {files.length > 0 ? files[0].name : "Upload file"}
           </p>
           <p className="relative font-sans font-normal text-neutral-400 dark:text-neutral-400 text-base mt-2">
-            Drag or drop your files here or click to upload
+            {files.length > 0
+              ? "Click the X to remove or upload a new file"
+              : "Drag or drop your files here or click to upload"}
           </p>
           <div
             className="relative w-full mt-10 max-w-xl mx-auto"
             onClick={(e) => {
-              if (items.length === 0) {
-                e.stopPropagation()
-                handleClick(e)
-              }
+              e.stopPropagation()
+              // if no items, trigger file picker
+              if (items.length === 0) handleClick()
             }}
           >
             {/* image preview  */}
@@ -240,7 +240,7 @@ export const FileUpload = ({
                 </AnimatePresence>
               </Reorder.Group>
             )}
-            {/* file preview */}
+            {/* file preview (single) */}
             {items.length > 0 && !multiple && (
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -266,7 +266,7 @@ export const FileUpload = ({
                       layout
                       className="text-base text-neutral-700 dark:text-neutral-300 truncate max-w-xs"
                     >
-                      {items[0].name}
+                      {firstItem?.name}
                     </motion.p>
                     <motion.p
                       initial={{ opacity: 0 }}
@@ -274,7 +274,7 @@ export const FileUpload = ({
                       layout
                       className="rounded-lg px-2 py-1 w-fit flex-shrink-0 text-sm text-neutral-600 dark:bg-neutral-800 dark:text-white shadow-input"
                     >
-                      {(items[0].size / (1024 * 1024)).toFixed(2)} MB
+                      {(firstItem?.size / (1024 * 1024)).toFixed(2)} MB
                     </motion.p>
                   </div>
 
@@ -285,7 +285,7 @@ export const FileUpload = ({
                       layout
                       className="px-1 py-0.5 rounded-md bg-gray-100 dark:bg-neutral-800 "
                     >
-                      {items[0].type}
+                      {firstItem?.type}
                     </motion.p>
 
                     <motion.p
@@ -294,26 +294,23 @@ export const FileUpload = ({
                       layout
                     >
                       modified{" "}
-                      {moment(items[0].lastModified).format("MMM D, YYYY")}
+                      {moment(firstItem?.lastModified).format("MMM D, YYYY")}
                     </motion.p>
                   </div>
                 </motion.div>
-
-                {/* Remove Button - Only show for multiple images */}
-                {multiple && fileType === "image" && (
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={(e: any) => {
-                      e.stopPropagation()
-                      removeFile(0)
-                    }}
-                    className="flex-shrink-0 p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30 text-red-500 transition-colors"
-                    type="button"
-                  >
-                    <X className="h-5 w-5" />
-                  </motion.button>
-                )}
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={(e: any) => {
+                    e.stopPropagation()
+                    removeFile(0)
+                  }}
+                  className="absolute top-10 right-2 p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30 text-red-500 transition-colors z-10"
+                  type="button"
+                  aria-label="Remove file"
+                >
+                  <X className="h-5 w-5" />
+                </motion.button>
               </motion.div>
             )}
             {items.length > 0 && multiple && fileType === "image" && (

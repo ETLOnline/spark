@@ -29,6 +29,7 @@ import { CreateFilePostParams } from "@/src/services/storage/types/interface"
 import { NotificationEvent } from "@/src/services/notify/types/events"
 import { SendPostLikeOrCommentNotification } from "@/src/services/notifications/Post/utlis"
 import { GetSpaceById } from "@/src/db/data-access/spaces/query"
+import moment from "moment"
 
 export const CreatePostAction = CreateServerAction(
   true,
@@ -364,17 +365,13 @@ export const GetPostsAction = CreateServerAction(
           last.type === p.type &&
           (last.content || "").trim() === (p.content || "").trim() &&
           Math.abs(
-            new Date(last.created_at || "").getTime() -
-              new Date(p.created_at || "").getTime()
+            moment(last.created_at).valueOf() - moment(p.created_at).valueOf()
           ) <= 5000
         ) {
           last.files = [...(last.files || []), ...(p.files || [])]
-          last.created_at = new Date(
-            Math.min(
-              new Date(last.created_at || "").getTime(),
-              new Date(p.created_at || "").getTime()
-            )
-          ).toISOString()
+          last.created_at = moment
+            .min(moment(last.created_at), moment(p.created_at))
+            .toISOString()
           last.file =
             last.files && last.files.length > 0 ? last.files[0] : last.file
         } else {
@@ -426,17 +423,13 @@ export const GetSpacePostsAction = CreateServerAction(
           last.type === p.type &&
           (last.content || "").trim() === (p.content || "").trim() &&
           Math.abs(
-            new Date(last.created_at || "").getTime() -
-              new Date(p.created_at || "").getTime()
+            moment(last.created_at).valueOf() - moment(p.created_at).valueOf()
           ) <= 5000
         ) {
           last.files = [...(last.files || []), ...(p.files || [])]
-          last.created_at = new Date(
-            Math.min(
-              new Date(last.created_at || "").getTime(),
-              new Date(p.created_at || "").getTime()
-            )
-          ).toISOString()
+          last.created_at = moment
+            .min(moment(last.created_at), moment(p.created_at))
+            .toISOString()
           last.file =
             last.files && last.files.length > 0 ? last.files[0] : last.file
         } else {

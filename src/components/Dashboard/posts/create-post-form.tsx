@@ -123,6 +123,12 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     setHashtags([])
   }
 
+  const isSpaceVariant = variant === "spaces"
+  const entityType = isSpaceVariant ? "space" : ""
+  const entityId = isSpaceVariant ? (currentSpace?.id ?? "") : ""
+  const folderPath = isSpaceVariant ? "spaces" : "posts"
+  const postCategory = isSpaceVariant ? newPost.category : ""
+
   const handleTabChange = (value: string) => {
     resetForm()
     setNewPost((prev) => ({
@@ -313,9 +319,9 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             type: PostType.image,
             content: (newPost.content as string) || "",
             category: newPost.category,
-            entityType: variant === "spaces" ? "space" : "",
-            entityId: variant === "spaces" ? (currentSpace?.id ?? "") : "",
-            folderPath: variant === "spaces" ? "spaces" : "posts"
+            entityType,
+            entityId,
+            folderPath
           }
 
           const post = await createFilesPost(imagePostData)
@@ -372,34 +378,17 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             return
           }
 
-          let filePostData
-
-          if (variant === "spaces") {
-            filePostData = {
-              type: newPost.type,
-              fileSize: newPost.fileSize as number,
-              fileName: newPost.fileName as string,
-              fileType: newPost.fileType as string,
-              fileBase64: newPost.fileBase64,
-              content: newPost.content,
-              category: newPost.category,
-              entityType: "space",
-              entityId: currentSpace?.id ?? "",
-              folderPath: "spaces"
-            }
-          } else {
-            filePostData = {
-              type: newPost.type,
-              fileSize: newPost.fileSize as number,
-              fileName: newPost.fileName as string,
-              fileType: newPost.fileType as string,
-              fileBase64: newPost.fileBase64,
-              content: newPost.content,
-              category: "",
-              entityType: "",
-              entityId: "",
-              folderPath: "posts"
-            }
+          const filePostData = {
+            type: newPost.type,
+            fileSize: newPost.fileSize as number,
+            fileName: newPost.fileName as string,
+            fileType: newPost.fileType as string,
+            fileBase64: newPost.fileBase64,
+            content: newPost.content,
+            category: postCategory,
+            entityType,
+            entityId,
+            folderPath
           }
 
           const post = await createFilesPost({

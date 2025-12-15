@@ -31,6 +31,7 @@ const CreatePostInput: React.FC<Props> = ({
       setSelectedImages([])
       setNewPost({
         ...newPost,
+        type: PostType.text,
         fileName: undefined,
         fileSize: undefined,
         fileType: undefined,
@@ -41,25 +42,33 @@ const CreatePostInput: React.FC<Props> = ({
     }
 
     if (type === PostType.image) {
+      // Reuse existing processed images when possible (for reorder/remove), otherwise read new ones
       const imagePromises = files
         .filter((file) => file.type.startsWith("image/"))
-        .map(
-          (file) =>
-            new Promise<ImageFile>((resolve) => {
-              const reader = new FileReader()
-              reader.onloadend = () => {
-                resolve({
-                  id: Math.random().toString(36).substr(2, 9),
-                  file,
-                  base64: reader.result as string,
-                  name: file.name,
-                  size: file.size,
-                  type: file.type
-                })
-              }
-              reader.readAsDataURL(file)
-            })
-        )
+        .map((file) => {
+          const existing = selectedImages.find(
+            (si) =>
+              si.name === file.name &&
+              si.size === file.size &&
+              si.type === file.type
+          )
+          if (existing) return Promise.resolve(existing)
+
+          return new Promise<ImageFile>((resolve) => {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+              resolve({
+                id: Math.random().toString(36).substr(2, 9),
+                file,
+                base64: reader.result as string,
+                name: file.name,
+                size: file.size,
+                type: file.type
+              })
+            }
+            reader.readAsDataURL(file)
+          })
+        })
 
       const processedImages = await Promise.all(imagePromises)
       setSelectedImages(processedImages)
@@ -87,7 +96,20 @@ const CreatePostInput: React.FC<Props> = ({
     reader.readAsDataURL(file)
   }
 
-  return type === "text" ? (
+  const handleRemoveFile = () => {
+    setSelectedImages([])
+    setNewPost({
+      ...newPost,
+      type: PostType.text,
+      fileName: undefined,
+      fileSize: undefined,
+      fileType: undefined,
+      fileBase64: undefined,
+      images: undefined
+    })
+  }
+
+  return type === PostType.text ? (
     <Textarea
       placeholder="What's on your mind?"
       value={newPost.content as string}
@@ -101,11 +123,12 @@ const CreatePostInput: React.FC<Props> = ({
       required
       className="min-h-[100px]"
     />
-  ) : type === "image" ? (
+  ) : type === PostType.image ? (
     <div className="flex flex-col space-y-4">
       <div className="flex flex-col justify-center items-center pt-4">
         <FileUpload
           onChange={(files: File[]) => handleFiles(files)}
+          onRemove={handleRemoveFile}
           accept="image/*"
           multiple={true}
           fileType="image"
@@ -123,7 +146,7 @@ const CreatePostInput: React.FC<Props> = ({
         className="min-h-[60px]"
       />
     </div>
-  ) : type === "poll" ? (
+  ) : type === PostType.poll ? (
     <div className="flex flex-col space-y-2">
       <Textarea
         placeholder="Enter your poll question"
@@ -149,6 +172,7 @@ const CreatePostInput: React.FC<Props> = ({
     <div className="flex flex-col space-y-4">
       <FileUpload
         onChange={(files: File[]) => handleFiles(files)}
+        onRemove={handleRemoveFile}
         fileType="file"
       />
       <Textarea

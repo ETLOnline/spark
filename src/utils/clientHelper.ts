@@ -1,5 +1,10 @@
 import { CommunityDetailData } from "../db/data-access/communities/query"
-import { SelectChannel, SelectCommunity, SelectSpace } from "../db/schema"
+import {
+  SelectChannel,
+  SelectChat,
+  SelectCommunity,
+  SelectSpace
+} from "../db/schema"
 import { isEntityChannel, isEntityCommunity, isEntitySpace } from "./helpers"
 
 export type RawUserPerms = {
@@ -190,4 +195,62 @@ export function createAbsoluteUrl(relativePath: string): string {
 export function getSiteLogoUrl(): string {
   const LOGO_PATH = "/logo/spark-logo-animated-themed.gif"
   return createAbsoluteUrl(LOGO_PATH)
+}
+export function computeTypingLabel({
+  chat,
+  typingUsers,
+  authUserId
+}: {
+  chat: SelectChat
+  typingUsers: Record<string, Set<string>> | undefined
+  authUserId: string | null | undefined
+}): string {
+  if (!typingUsers) return ""
+
+  const chatTypers = typingUsers[chat.id] || new Set<string>()
+  if (chatTypers.size === 0) return ""
+
+  const memberIds = (chat.users || []).map((u) => u.user_id).filter(Boolean)
+
+  const typers = memberIds.filter(
+    (id) => chatTypers.has(id) && id !== authUserId
+  )
+
+  if (typers.length === 0) return ""
+
+  if (!chat.is_group) return "typing..."
+
+  const names = (chat.users || [])
+    .filter((u) => typers.includes(u.user_id))
+    .map((u) => u.user?.first_name)
+    .filter(Boolean)
+    .slice(0, 3)
+
+  return names.length > 0 ? `${names.join(", ")} typing...` : "typing..."
+}
+
+import { parseMentions } from "@/src/services/realtime/utils/helper"
+
+export function parseLastMessageType(rawMessage: string | null) {
+  if (!rawMessage) return { type: "text", content: "" }
+
+  const tokens = parseMentions(rawMessage || "")
+  const lastMessage = tokens
+    .map((t) => (t.type === "mention" ? `@${t.value}` : t.value))
+    .join("")
+
+  const parts = rawMessage.split(",")
+
+  if (parts.length < 4) {
+    return { type: "text", content: lastMessage }
+  }
+
+  const filename = parts[1]
+  const mime = parts[3]
+
+  if (mime?.startsWith("image/")) {
+    return { type: "image", filename }
+  }
+
+  return { type: "file", filename }
 }
