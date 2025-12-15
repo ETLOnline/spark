@@ -25,7 +25,7 @@ const PostCommentsSection: React.FC<PostCommentsSectionProps> = ({
   return (
     <div className="w-full">
       {showAll ? (
-        <ScrollArea className="h-[400px] w-full">
+        <ScrollArea className="h-[400px] w-full pr-3">
           <div className="space-y-4">
             {displayedComments.map((comment) => (
               <PostComments key={comment.id} comment={comment} />

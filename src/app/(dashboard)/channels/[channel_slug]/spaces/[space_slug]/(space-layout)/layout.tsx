@@ -5,7 +5,7 @@ import SpaceSidebar from "./components/SpaceSidebar"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
 import { isSuperAdmin } from "@/src/utils/helpers"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import Overlay from "@/src/components/common/Overlay/OverLay"
+import PrivatePage from "@/src/components/common/Overlay/PrivatePage"
 
 interface Props {
   params: Promise<{
@@ -41,13 +41,13 @@ async function Layout({ params, children }: Props) {
 
   const showAccessDeniedOverlay =
     currentSpace.data?.space_type === "private" && !isUserMember && !superAdmin
-
+    if(showAccessDeniedOverlay){
+      return (
+        <PrivatePage page="space" pageHref={`/channels/${channel_slug}/spaces`} />
+      )
+    }
   return (
-    <div className="min-h-[calc(100vh-6rem)] bg-background relative">
-      {/* Added relative for the overlay positioning */}
-      {showAccessDeniedOverlay && (
-        <Overlay page="space" pageHref={`/channels/${channel_slug}/spaces`} />
-      )}
+    <div className="min-h-[calc(100vh-6rem)] bg-background">
       <div className="grid grid-cols-12 w-full h-[calc(100vh-6rem)] overflow-hidden">
         <div className="col-span-2 border-r p-2 pl-0 overflow-y-auto">
           <SpaceSidebar space={currentSpace.data} />

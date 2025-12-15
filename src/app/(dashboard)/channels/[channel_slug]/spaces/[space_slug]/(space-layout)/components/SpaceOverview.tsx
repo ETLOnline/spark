@@ -17,6 +17,8 @@ import { UpdateSpaceAction } from "@/src/server-actions/Space/Space"
 import { toast } from "@/src/hooks/use-toast"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
+import StarterKit from "@tiptap/starter-kit"
+import { Editor } from "@tiptap/react"
 
 interface SpaceOverviewProps {
   features?: SelectSpaceFeature[]
@@ -73,6 +75,16 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
         duration: 3000
       })
     }
+  }
+
+  const normalizeHTMLForRender = (html: string) => {
+    const editor = new Editor({
+      content: html,
+      extensions: [StarterKit]
+    })
+    const normalized = editor.getHTML()
+    editor.destroy()
+    return normalized
   }
 
   return (
@@ -153,17 +165,21 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
                 <Card
                   className="p-4 cursor-pointer"
                   onClick={() => setIsEditDetail(true)}
-                  dangerouslySetInnerHTML={{
-                    __html: content ?? ""
-                  }}
-                />
+                >
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: normalizeHTMLForRender(content) ?? ""
+                    }}
+                  />
+                </Card>
               ) : (
-                <Card
-                  className="p-4"
-                  dangerouslySetInnerHTML={{
-                    __html: content ?? ""
-                  }}
-                />
+                <Card className="p-4">
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: normalizeHTMLForRender(content) ?? ""
+                    }}
+                  />
+                </Card>
               )}
             </div>
           </div>

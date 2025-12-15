@@ -207,7 +207,7 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
                 View Spaces
               </DropdownMenuItem>
             )}
-            {!superAdmin && !isChannelMember && (
+            {!superAdmin && !isChannelMember &&  channel.channel_type === "public" &&(
               <DropdownMenuItem
                 onClick={handleJoinChannel}
                 disabled={joinLoading}

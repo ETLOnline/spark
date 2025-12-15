@@ -7,7 +7,13 @@ import Loader from "../../../common/Loader/Loader"
 import ChatContactItem from "./ChatContactItem"
 import moment from "moment"
 
-const ChatsList = ({ searchQuery = "" }) => {
+export const ChatsList = ({
+  searchQuery = "",
+  typingUsers
+}: {
+  searchQuery: string
+  typingUsers?: Record<number, Set<string>>
+}) => {
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
   const authUser = useAtomValue(userStore.AuthUser)
   const isLoadingChats = !myChats || myChats.length === 0
@@ -57,7 +63,11 @@ const ChatsList = ({ searchQuery = "" }) => {
             </div>
           ) : filteredChats.length > 0 ? (
             filteredChats.map((chat) => (
-              <ChatContactItem key={chat.id} chat={chat} />
+              <ChatContactItem
+                key={chat.id}
+                typingUsers={typingUsers}
+                chat={chat}
+              />
             ))
           ) : (
             <div className="text-center text-muted-foreground py-8">

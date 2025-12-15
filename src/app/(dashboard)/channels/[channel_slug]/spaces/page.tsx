@@ -17,7 +17,7 @@ import { GetSpacesAction } from "@/src/server-actions/Space/Space"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { SelectChannel, SelectSpace } from "@/src/db/schema"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import Overlay from "@/src/components/common/Overlay/OverLay"
+import PrivatePage from "@/src/components/common/Overlay/PrivatePage"
 import { communityStore } from "@/src/store/community/communityStore"
 import {
   AttachChannelUserAction,
@@ -195,13 +195,16 @@ export default function ChannelPage() {
     selectedChannel?.channel_type === "private" &&
     !isUserMember &&
     !isSuperAdmin
-
+  if (showAccessDeniedOverlay) {
+    return (
+      <PrivatePage
+        page="Channel"
+        pageHref={`/communities/${community?.slug}`}
+      />
+    )
+  }
   return (
     <div className="min-h-screen bg-background relative">
-      {/* Added relative for the overlay positioning */}
-      {showAccessDeniedOverlay && (
-        <Overlay page="Channel" pageHref={`/communities/${community?.slug}`} />
-      )}
       <div className="flex min-h-screen flex-col">
         <main className="flex-1 p-4 sm:p-6">
           <div className="space-y-6">

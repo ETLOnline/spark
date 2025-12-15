@@ -263,7 +263,7 @@ function ProjectFormModal({
           className="max-w-2xl"
           onInteractOutside={(e) => e.preventDefault()}
         >
-          <DialogHeader>
+          <DialogHeader className="p-2">
             <DialogTitle>
               {isEditing ? "Update Project" : "Create a New Project"}
             </DialogTitle>
@@ -274,7 +274,7 @@ function ProjectFormModal({
           </DialogHeader>
           <ScrollArea className=" max-h-[80vh] overflow-auto">
             <form onSubmit={form.handleSubmit(projectSubmit)} className="p-2">
-              <div className="grid gap-4 py-4">
+              <div className="grid gap-4 ">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <div className="flex flex-col gap-2 w-full col-span-4">
                     <Label htmlFor="project_name">Title</Label>

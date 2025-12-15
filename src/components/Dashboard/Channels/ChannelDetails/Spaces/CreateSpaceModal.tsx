@@ -287,7 +287,7 @@ function CreateSpaceModal({
     <div className="flex justify-center">
       <Dialog open={spaceFormModelVisibility} onOpenChange={handleClose}>
         <DialogContent onInteractOutside={(e) => e.preventDefault()}>
-          <DialogHeader>
+          <DialogHeader className="px-3">
             <DialogTitle>
               {editSpace === true ? "Edit Space" : "Create Space"}
             </DialogTitle>
@@ -297,7 +297,7 @@ function CreateSpaceModal({
                 : "You can create Spaces."}
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="h-[80vh] w-full p-3">
+          <ScrollArea className="h-[80vh] overflow-auto p-3">
             <form onSubmit={form.handleSubmit(submitData)}>
               <div className="grid gap-4 py-4">
                 {/* Space Name */}
