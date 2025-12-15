@@ -8,19 +8,27 @@ type Props = {
   className?: string
 }
 
-const ExpandableText: React.FC<Props> = ({ content, lines, className }) => {
+const ExpandableText: React.FC<Props> = ({ content, lines = 6, className }) => {
   const { contentRef, expanded, showToggle, toggle } = useExpandableText(
     lines,
     content
   )
 
+  const clampStyle: React.CSSProperties | undefined = !expanded
+    ? ({
+        display: "-webkit-box",
+        WebkitLineClamp: String(lines) as any,
+        WebkitBoxOrient: "vertical" as any,
+        overflow: "hidden"
+      } as React.CSSProperties)
+    : undefined
+
   return (
     <>
       <p
         ref={contentRef}
-        className={`${className ?? ""} text-justify whitespace-pre-wrap break-words ${
-          expanded ? "" : `line-clamp-${lines}`
-        }`}
+        style={clampStyle}
+        className={`${className ?? ""} text-justify whitespace-pre-wrap break-words`}
       >
         {content}
       </p>
