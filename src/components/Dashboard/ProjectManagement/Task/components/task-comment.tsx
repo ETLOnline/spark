@@ -322,8 +322,7 @@ export function TaskComment({
                           : ""}
                       </div>
                     </div>
-                    {comment.type === "history" &&
-                    authUser?.unique_id === comment.user_id ? (
+                    {comment.type === "history" ? (
                       <div className="text-sm space-y-3">
                         {Array.isArray(comment.task_history)
                           ? comment.task_history.map((item: any, i: number) => (
@@ -356,7 +355,7 @@ export function TaskComment({
                     )}
                   </div>
                 </div>
-                {comment.type === "comment" ? (
+                {comment.type === "comment" && comment.user_id === userId ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm">
