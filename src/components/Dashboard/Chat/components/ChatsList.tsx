@@ -1,5 +1,5 @@
 import { ScrollArea } from "@radix-ui/react-scroll-area"
-import React, { useMemo } from "react"
+import React, { useMemo, useState, useEffect } from "react"
 import { useAtom, useAtomValue } from "jotai"
 import { chatStore } from "@/src/store/chat/chatStore"
 import { userStore } from "@/src/store/user/userStore"
@@ -16,9 +16,25 @@ export const ChatsList = ({
 }) => {
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
   const authUser = useAtomValue(userStore.AuthUser)
-  const isLoadingChats = !myChats || myChats.length === 0
+  const [isLoadingChats, setIsLoadingChats] = useState(true)
+  const isInitialMount = React.useRef(true)
+
+  useEffect(() => {
+    if (isInitialMount.current) {
+      if (myChats !== null && myChats !== undefined) {
+        const timer = setTimeout(() => {
+          setIsLoadingChats(false)
+          isInitialMount.current = false
+        }, 300)
+        return () => clearTimeout(timer)
+      }
+    } else {
+      setIsLoadingChats(false)
+    }
+  }, [myChats])
 
   const filteredChats = useMemo(() => {
+    if (!myChats) return []
     const chats = myChats.filter((chat) => {
       if (!searchQuery.trim()) return true
       const query = searchQuery.toLowerCase().replace(/\s+/g, "")
@@ -27,7 +43,7 @@ export const ChatsList = ({
         chat.name?.toLowerCase().replace(/\s+/g, "").includes(query)
       )
         return true
-
+      
       if (!chat.is_group && chat.users) {
         const contact = chat.users.find(
           (u) => u.user?.unique_id !== authUser?.unique_id
@@ -47,7 +63,7 @@ export const ChatsList = ({
       }
       return false
     })
-
+    
     return chats.sort(
       (a, b) => moment(b.updated_at).valueOf() - moment(a.updated_at).valueOf()
     )

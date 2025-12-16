@@ -24,8 +24,6 @@ import {
   FileIcon,
   Paperclip,
   Trash2,
-  X,
-  PlusCircle
 } from "lucide-react"
 import { useAtom, useAtomValue } from "jotai"
 import { chatStore } from "@/src/store/chat/chatStore"
@@ -46,7 +44,9 @@ import {
   incrementUnreadCountForChatAction,
   MarkChatAsReadAction,
   sendFilesAndImagesInChatAction,
-  SendTypingIndicatorAction
+  SendTypingIndicatorAction,
+  AddUserToGroupChatAction,
+  RemoveUserFromGroupChatAction
 } from "@/src/server-actions/Chat/Chat"
 import moment from "moment-timezone"
 import Link from "next/link"
@@ -78,12 +78,8 @@ import {
 import { FileUpload } from "../../ui/file-upload"
 import Image from "next/image"
 import { useOnlineStatus } from "../../providers/OnlineStatusProvider"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from "../../ui/dialog"
+import { GroupMembersDialog } from "./components/GroupMembersDialog"
+import { GetSpaceUsersAction } from "@/src/server-actions/Space/Space"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -169,7 +165,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const [richMessageContent, setRichMessageContent] = useState("")
   const [showRichEditorToolbar, setShowRichEditorToolbar] = useState(false)
   const [isMentionActive, setIsMentionActive] = useState(false)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isGroupMembersDialogOpen, setIsGroupMembersDialogOpen] = useState(false)
+  const [spaceUsers, setSpaceUsers] = useState<SelectUser[]>([])
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useAtom(
     chatStore.isMobileMenuOpen
@@ -224,6 +221,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const [uploadLoding, , , uploadAttachment] = useServerAction(
     sendFilesAndImagesInChatAction
   )
+  const [, , , addUserToGroup] = useServerAction(AddUserToGroupChatAction)
+  const [, , , removeUserFromGroup] = useServerAction(RemoveUserFromGroupChatAction)
+  const [, , , getSpaceUsers] = useServerAction(GetSpaceUsersAction)
 
   useEffect(() => {
     setCurrentChat(currentChatSSR || null)
@@ -268,6 +268,22 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       setAvailableUsers([])
     }
   }, [currentChat])
+
+  useEffect(() => {
+    if (isGroupMembersDialogOpen && currentSpace?.id) {
+      getSpaceUsers(currentSpace.id).then((result) => {
+        if (result?.success && result.data) {
+          const users = result.data
+            .map((spaceMember) => spaceMember.user)
+            .filter(
+              (user: SelectUser) => user !== null && user !== undefined
+            )
+
+          setSpaceUsers(users)
+        }
+      })
+    }
+  }, [isGroupMembersDialogOpen, currentSpace])
 
   useEffect(() => {
     if (!authUser || !myChats.length) return
@@ -456,17 +472,60 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
     userChannel.bind(
       "chat-created",
-      (data: { newChat: SelectChat; initiatorId: string; spaceId: string }) => {
-        const { newChat, initiatorId, spaceId } = data
+      (data: { 
+        newChat?: SelectChat
+        chatId?: number
+        initiatorId: string
+        spaceId?: string
+        shouldFetch?: boolean 
+      }) => {
+        const { newChat, chatId, initiatorId, spaceId, shouldFetch } = data
+        
         if (initiatorId === authUser?.unique_id) {
           return
         }
         const currentSpaceId = currentSpace?.id
 
-        if (currentSpaceId === spaceId) {
+        if (spaceId && currentSpaceId !== spaceId) {
+          return
+        }
+        if (shouldFetch && chatId) {
+          fetchChatWithMessages(chatId).then((result) => {
+            if (result?.success && result.data) {
+              const fetchedChat = result.data as SelectChat
+              setMyChats((prevChats) => {
+                const exists = prevChats.some(c => c.id === chatId)
+                if (exists) {
+                  return prevChats.map(c => c.id === chatId ? fetchedChat : c)
+                } else {
+                  return [fetchedChat, ...prevChats]
+                }
+              })
+              setSwitchedChat(fetchedChat)
+            }
+          })
+        } else if (newChat) {
           setMyChats((prevChats) => [newChat, ...prevChats])
           setSwitchedChat(newChat)
         }
+      }
+    )
+
+    userChannel.bind(
+      "chat-removed",
+      (data: { chatId: number; removedBy: string }) => {
+        const { chatId, removedBy } = data
+        setMyChats((prevChats) => prevChats.filter((chat) => chat.id !== chatId))
+        if (currentChat?.id === chatId) {
+          setCurrentChat(null)
+          setMessages([])
+        }
+
+        toast({
+          title: "Removed from group",
+          description: "You have been removed from the group chat",
+          duration: 3000
+        })
       }
     )
 
@@ -610,6 +669,60 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     setRichMessageContent("")
   }
 
+  const handleAddMemberToGroup = async (userId: string) => {
+    if (!currentChat?.id) return
+
+    try {
+      const result = await addUserToGroup(currentChat.id, userId)
+
+      if (result?.success) {
+        toast({
+          title: "Success",
+          description: "User added to group",
+          duration: 3000
+        })
+
+        await handleChatSwitch(currentChat.id)
+      } else {
+        throw new Error(result?.error || "Failed to add user")
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to add user to group",
+        duration: 3000
+      })
+    }
+  }
+
+  const handleRemoveMemberFromGroup = async (userId: string) => {
+    if (!currentChat?.id) return
+
+    try {
+      const result = await removeUserFromGroup(currentChat.id, userId)
+
+      if (result?.success) {
+        toast({
+          title: "Success",
+          description: "User removed from group",
+          duration: 3000
+        })
+
+        await handleChatSwitch(currentChat.id)
+      } else {
+        throw new Error(result?.error || "Failed to remove user")
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to remove user from group",
+        duration: 3000
+      })
+    }
+  }
+
   const users = getOnlineUsers()
 
   const isContactOnline = (() => {
@@ -654,7 +767,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         {canView && (
           <Card className="flex-1 flex flex-col h-full">
             <CardHeader className="flex flex-row items-center justify-between py-4">
-              <div className="flex items-center">
+              <div className="flex items-center flex-1">
                 <Sheet
                   open={isMobileMenuOpen}
                   onOpenChange={setIsMobileMenuOpen}
@@ -697,100 +810,88 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                         : null
 
                       return (
-                        <Link
-                          href={
-                            currentChat.is_group
-                              ? "#"
-                              : `/profile/${otherUser?.unique_id}`
-                          }
-                        >
-                          <div className="flex">
-                            {/* AVATAR */}
-                            {currentChat.is_group ? (
-                              <Avvvatars
-                                value={currentChat.name || "Group"}
-                                style="shape"
-                              />
-                            ) : (
-                              <div className="relative h-9 w-9">
-                                <Avatar className="h-9 w-9">
-                                  <AvatarImage
-                                    src={otherUser?.profile_url || undefined}
-                                  />
-                                  <AvatarFallback>
-                                    {otherUser?.first_name?.[0]}
-                                  </AvatarFallback>
-                                </Avatar>
+                        <div className="flex items-center justify-between w-full">
+                          <Link
+                            href={
+                              currentChat.is_group
+                                ? "#"
+                                : `/profile/${otherUser?.unique_id}`
+                            }
+                          >
+                            <div className="flex">
+                              {/* AVATAR */}
+                              {currentChat.is_group ? (
+                                <Avvvatars
+                                  value={currentChat.name || "Group"}
+                                  style="shape"
+                                />
+                              ) : (
+                                <div className="relative h-9 w-9">
+                                  <Avatar className="h-9 w-9">
+                                    <AvatarImage
+                                      src={otherUser?.profile_url || undefined}
+                                    />
+                                    <AvatarFallback>
+                                      {otherUser?.first_name?.[0]}
+                                    </AvatarFallback>
+                                  </Avatar>
 
-                                {isContactOnline && (
-                                  <span className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-white rounded-full"></span>
+                                  {isContactOnline && (
+                                    <span className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-white rounded-full"></span>
+                                  )}
+                                </div>
+                              )}
+
+                              <div className="ml-4 space-y-1">
+                                {/* PRIVATE CHAT */}
+                                {!currentChat.is_group && otherUser ? (
+                                  <>
+                                    <p className="text-sm font-medium leading-none">
+                                      {otherUser.first_name}{" "}
+                                      {otherUser.last_name}
+                                    </p>
+
+                                    {(() => {
+                                      const role = getUserRole(
+                                        otherUser,
+                                        currentSpace?.id
+                                      )
+
+                                      return role ? (
+                                        <p className="text-sm text-muted-foreground truncate">
+                                          {role}
+                                        </p>
+                                      ) : null
+                                    })()}
+                                  </>
+                                ) : (
+                                  <>
+                                    <p className="text-sm font-medium leading-none">
+                                      {currentChat.name}
+                                    </p>
+
+                                    <p className="text-sm text-muted-foreground truncate">
+                                      {currentChat.users?.length || 0} members
+                                    </p>
+                                  </>
                                 )}
                               </div>
-                            )}
-
-                            <div className="ml-4 space-y-1">
-                              {/* PRIVATE CHAT */}
-                              {!currentChat.is_group && otherUser ? (
-                                <>
-                                  <p className="text-sm font-medium leading-none">
-                                    {otherUser.first_name} {otherUser.last_name}
-                                  </p>
-
-                                  {(() => {
-                                    const role = getUserRole(
-                                      otherUser,
-                                      currentSpace?.id
-                                    )
-
-                                    return role ? (
-                                      <p className="text-sm text-muted-foreground truncate">
-                                        {role}
-                                      </p>
-                                    ) : null
-                                  })()}
-                                </>
-                              ) : (
-                                <>
-                                  <p className="text-sm font-medium leading-none">
-                                    {currentChat.name}
-                                  </p>
-
-                                  <p className="text-sm text-muted-foreground truncate">
-                                    Group Chat (
-                                    {currentChat.users
-                                      ?.map(
-                                        (u) =>
-                                          `${u.user?.first_name} ${u.user?.last_name}`
-                                      )
-                                      .join(",")}
-                                    )
-                                  </p>
-                                </>
-                              )}
                             </div>
-                          </div>
-                        </Link>
+                          </Link>
+
+                          {/* Group Members Button */}
+                          {currentChat.is_group && (
+                            <CreateNewChat
+                              mode="manage"
+                              currentChat={currentChat}
+                              onSuccess={() => handleChatSwitch(currentChat.id)}
+                            />
+                          )}
+                        </div>
                       )
                     })()
                   : null}
               </div>
-
-              {/* calling options for future */}
-
-              {/* <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="icon">
-                <Phone className="h-4 w-4" />
-                <span className="sr-only">Start voice call</span>
-              </Button>
-              <Button variant="ghost" size="icon">
-                <Video className="h-4 w-4" />
-                <span className="sr-only">Start video call</span>
-              </Button>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-4 w-4" />
-                <span className="sr-only">More options</span>
-              </Button>
-            </div> */}
             </CardHeader>
             {currentChat ? (
               <>
@@ -1112,40 +1213,15 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         )}
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Group Members</DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="h-[80vh]">
-            {currentChat?.users?.map((member) => (
-              <Link
-                href={`/profile/${member.user_id}`}
-                key={member.user_id}
-                className="flex flex-row items-center gap-2 mb-2 p-2 hover:bg-muted/55 hover:cursor-pointer rounded-md"
-              >
-                <Avatar>
-                  <AvatarImage
-                    src={member.user?.profile_url || undefined}
-                    alt={member.user?.first_name}
-                  />
-                  <AvatarFallback>{member.user?.first_name}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p>
-                    {member.user?.first_name} {member.user?.last_name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {member.user
-                      ? getUserRole(member.user, currentSpace?.id)
-                      : ""}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
+      <GroupMembersDialog
+        isOpen={isGroupMembersDialogOpen}
+        onOpenChange={setIsGroupMembersDialogOpen}
+        currentChatId={currentChat?.id || 0}
+        members={currentChat?.users || []}
+        allSpaceUsers={spaceUsers}
+        onAddMember={handleAddMemberToGroup}
+        onRemoveMember={handleRemoveMemberFromGroup}
+      />
     </>
   )
 }

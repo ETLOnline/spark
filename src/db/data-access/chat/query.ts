@@ -19,7 +19,8 @@ import {
   spacesTable,
   userChatsTable,
   userContactsTable,
-  usersTable
+  usersTable,
+  SpaceUsersTable
 } from "../../schema"
 import { randomUUID } from "crypto"
 import { slugify } from "@/src/utils/helpers"
@@ -592,6 +593,115 @@ export const getExistingGroupName = async (
     return existingChat
   } catch (error: any) {
     console.error("Error during group name check:", error.message)
+    throw new Error(error.message)
+  }
+}
+
+/**
+ * Add a user to a group chat
+ */
+export const addUserToGroupChat = async (chatId: number, userId: string) => {
+  try {
+    const chat = await db.query.chatsTable.findFirst({
+      where: eq(chatsTable.id, chatId),
+      with: {
+        users: true
+      }
+    })
+
+    if (!chat) {
+      throw new Error("Chat not found")
+    }
+
+    if (!chat.is_group) {
+      throw new Error("This is not a group chat")
+    }
+
+    const existingUserChat = await db.query.userChatsTable.findFirst({
+      where: and(
+        eq(userChatsTable.chat_id, chatId),
+        eq(userChatsTable.user_id, userId)
+      )
+    })
+
+    if (existingUserChat) {
+      throw new Error("User is already in this chat")
+    }
+
+    const [newUserChat] = await db
+      .insert(userChatsTable)
+      .values({
+        user_id: userId,
+        chat_id: chatId,
+        unread_count: 0
+      })
+      .returning()
+
+    await db
+      .update(chatsTable)
+      .set({
+        updated_at: new Date().toISOString()
+      })
+      .where(eq(chatsTable.id, chatId))
+
+    return newUserChat
+  } catch (error: any) {
+    console.error("Error adding user to group chat:", error)
+    throw new Error(error.message)
+  }
+}
+
+/**
+ * Remove a user from a group chat
+ */
+export const removeUserFromGroupChat = async (
+  chatId: number,
+  userId: string
+) => {
+  try {
+    const chat = await db.query.chatsTable.findFirst({
+      where: eq(chatsTable.id, chatId),
+      with: {
+        users: true
+      }
+    })
+
+    if (!chat) {
+      throw new Error("Chat not found")
+    }
+
+    if (!chat.is_group) {
+      throw new Error("This is not a group chat")
+    }
+
+    if (chat.users && chat.users.length === 1) {
+      throw new Error("Cannot remove the last member from the group")
+    }
+
+    const deleted = await db
+      .delete(userChatsTable)
+      .where(
+        and(
+          eq(userChatsTable.chat_id, chatId),
+          eq(userChatsTable.user_id, userId)
+        )
+      )
+      .returning()
+
+    if (!deleted.length) {
+      throw new Error("User not found in this chat")
+    }
+
+    await db
+      .update(chatsTable)
+      .set({
+        updated_at: new Date().toISOString()
+      })
+      .where(eq(chatsTable.id, chatId))
+
+    return deleted[0]
+  } catch (error: any) {
+    console.error("Error removing user from group chat:", error)
     throw new Error(error.message)
   }
 }
