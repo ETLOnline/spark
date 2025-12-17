@@ -283,7 +283,7 @@ export function TaskComment({
                 editable={!isSprintCompleted}
                 image_uploading={true}
                 entity="task-comments"
-                showMentions={availableUsers.length > 0}
+                showMentions={true}
                 mentionUsers={availableUsers}
               />
               <div className="flex gap-2 justify-end">

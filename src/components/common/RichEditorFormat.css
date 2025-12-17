@@ -73,13 +73,22 @@
   text-decoration: underline;
 }
 
+.rich-editor img {
+  display: inline-block;
+  margin: 5px;
+  max-width: 100%;
+  height: auto;
+}
+
 .tiptap-image-wrapper {
   width: fit-content;
+  margin: 10px;
 }
 
 .tiptap-image-wrapper img {
   width: auto;
   height: 200px;
+  margin: 10px;
 }
 
 .tiptap-image-wrapper img:hover {
