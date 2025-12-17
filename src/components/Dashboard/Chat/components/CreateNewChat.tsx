@@ -150,7 +150,7 @@ const CreateNewChat = ({
         []
       : []
 
-  const canRemoveMembers = (currentChat?.users?.length || 0) > 2
+  const canRemoveMembers = (currentChat?.users?.length || 0) > 2 && canDelete 
 
   const handleRemoveExistingMember = async (userId: string) => {
     if (!currentChat?.id) return
@@ -349,7 +349,7 @@ const CreateNewChat = ({
                           </p>
                         </div>
                       </div>
-                      {canRemoveMembers && canDelete && (
+                      {canRemoveMembers && (
                         <Button
                           variant="ghost"
                           size="icon"
@@ -364,7 +364,7 @@ const CreateNewChat = ({
                     </div>
                   ))}
                 </ScrollArea>
-                {!canRemoveMembers && canDelete && (
+                {!canRemoveMembers && (
                   <p className="text-xs text-muted-foreground">
                     Cannot remove members. Group must have at least 2 members.
                   </p>
