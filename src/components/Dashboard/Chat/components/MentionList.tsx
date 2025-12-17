@@ -68,7 +68,7 @@ const MentionList = forwardRef<MentionListHandle, any>((props, ref) => {
   }))
 
   return (
-    <div className="bg-popover border rounded-lg shadow-lg p-2 w-80 max-h-64 overflow-y-auto z-50 g">
+    <div className="bg-popover border rounded-lg shadow-lg p-2 w-80 max-h-64 overflow-y-auto z-50">
       {props.items.length ? (
         props.items.map((item: SelectUser, index: number) => {
           const isCurrentActive = index === activeIndex
