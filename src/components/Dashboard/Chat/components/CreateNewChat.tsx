@@ -39,13 +39,15 @@ import { Label } from "@/src/components/ui/label"
 interface CreateNewChatProps {
   mode?: "create" | "manage"
   currentChat?: SelectChat | null
-  onSuccess?: () => void
+  onSuccess?: () => void,
+  canDelete?:boolean
 }
 
 const CreateNewChat = ({
   mode = "create",
   currentChat = null,
-  onSuccess
+  onSuccess,
+  canDelete
 }: CreateNewChatProps) => {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedContacts, setSelectedContacts] = useState<MultiSelectOption[]>(
@@ -347,7 +349,7 @@ const CreateNewChat = ({
                           </p>
                         </div>
                       </div>
-                      {canRemoveMembers && (
+                      {canRemoveMembers && canDelete && (
                         <Button
                           variant="ghost"
                           size="icon"
@@ -362,7 +364,7 @@ const CreateNewChat = ({
                     </div>
                   ))}
                 </ScrollArea>
-                {!canRemoveMembers && (
+                {!canRemoveMembers && canDelete && (
                   <p className="text-xs text-muted-foreground">
                     Cannot remove members. Group must have at least 2 members.
                   </p>

@@ -78,7 +78,6 @@ import {
 import { FileUpload } from "../../ui/file-upload"
 import Image from "next/image"
 import { useOnlineStatus } from "../../providers/OnlineStatusProvider"
-import { GroupMembersDialog } from "./components/GroupMembersDialog"
 import { GetSpaceUsersAction } from "@/src/server-actions/Space/Space"
 
 interface ChatScreenProps {
@@ -148,6 +147,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     ? "space.chat.create"
     : "chat.create"
   const permissionNamespaceView = currentSpace ? "space.chat.view" : "chat.view"
+  const permissionDelete = currentSpace ? "space.user.remove" : "chat.delete"
 
   const [, , , markAsRead] = useServerAction(MarkChatAsReadAction)
   const [, , , incrementUnreadCount] = useServerAction(
@@ -159,6 +159,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     : false
   const canView = permissionChecker
     ? permissionChecker?.canAccess(permissionNamespaceView)
+    : false
+  const canDelete = permissionChecker
+    ? permissionChecker?.canAccess(permissionDelete)
     : false
 
   const [messages, setMessages] = useState<SelectMessage[]>([])
@@ -885,6 +888,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                               mode="manage"
                               currentChat={currentChat}
                               onSuccess={() => handleChatSwitch(currentChat.id)}
+                              canDelete={canDelete}
                             />
                           )}
                         </div>
@@ -1213,15 +1217,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         )}
       </div>
 
-      <GroupMembersDialog
-        isOpen={isGroupMembersDialogOpen}
-        onOpenChange={setIsGroupMembersDialogOpen}
-        currentChatId={currentChat?.id || 0}
-        members={currentChat?.users || []}
-        allSpaceUsers={spaceUsers}
-        onAddMember={handleAddMemberToGroup}
-        onRemoveMember={handleRemoveMemberFromGroup}
-      />
     </>
   )
 }
