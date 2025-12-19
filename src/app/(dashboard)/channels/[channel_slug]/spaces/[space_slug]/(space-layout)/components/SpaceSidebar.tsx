@@ -29,12 +29,14 @@ import {
 import { useToast } from "@/src/hooks/use-toast"
 import "./../../../../../../style.css"
 import { getRoleIdOnMatch } from "@/src/services/realtime/utils/helper"
+import { useAuthUser } from "@/src/hooks/useAuthUser"
 
 interface Props {
   space: SelectSpace
 }
 
 function SpaceSidebar({ space }: Props) {
+  const { refreshAuthUser } = useAuthUser()
   const pathname = usePathname()
   const pageType = useSearchParams()
   const { setOpen: setSideBarCollapse } = useSidebar()
@@ -64,6 +66,7 @@ function SpaceSidebar({ space }: Props) {
         const res = await joinSpace(space.id, currentUserId)
         if (res?.success) {
           setIsSpaceMember(true)
+          await refreshAuthUser()
           toast({
             title: "Space Joined",
             description: "You have successfully joined the Space!",
