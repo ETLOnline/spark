@@ -63,8 +63,9 @@ function SpaceFeatures({ features, space }: Props) {
   const canViewProject = permissionChecker
     ? permissionChecker.canAccess("space.project.view")
     : false
-  // Function to check if user has permission for a specific feature
 
+    const hasAnyFeatureAccess = canViewChat || canViewPost || canViewFileSharing || canViewProject
+  // Function to check if user has permission for a specific feature
   const hasFeaturePermission = (featureSlug: string): boolean => {
     switch (featureSlug) {
       case "posts":
@@ -136,7 +137,7 @@ function SpaceFeatures({ features, space }: Props) {
     return <>{renderFeatureModule(pageType)}</>
   }
 
-  return <SpaceOverview features={features} space={space} />
+  return <SpaceOverview features={features} hasAnyFeatureAccess={hasAnyFeatureAccess} space={space} />
 }
 
 export default SpaceFeatures

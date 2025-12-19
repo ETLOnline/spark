@@ -1,8 +1,9 @@
 import { Textarea } from "@/src/components/ui/textarea"
-import { NewPost, PostType } from "./types/posts-types"
+import { NewPost, PostType, ImageFile } from "./types/posts-types"
 import TagsInput from "../../TagsInput/TagsInput"
 import "./create-post-input.css"
 import { FileUpload } from "../../ui/file-upload"
+import { useState } from "react"
 
 type PollOptionsSetter = (
   tags: string[] | ((tags: string[]) => string[])
@@ -23,34 +24,88 @@ const CreatePostInput: React.FC<Props> = ({
   pollOptions,
   setPollOptions
 }) => {
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      // Convert file to Base64
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const base64String = reader.result as string
-        setNewPost({
-          ...newPost,
-          type: file.type.startsWith("image/") ? PostType.image : PostType.file,
-          fileName: file.name,
-          fileSize: file.size,
-          fileType: file.type,
-          fileBase64: base64String
-        })
-      }
-      reader.readAsDataURL(file)
+  const [selectedImages, setSelectedImages] = useState<ImageFile[]>([])
+
+  const handleFiles = async (files: File[]) => {
+    if (!files || files.length === 0) {
+      setSelectedImages([])
+      setNewPost({
+        ...newPost,
+        type: PostType.text,
+        fileName: undefined,
+        fileSize: undefined,
+        fileType: undefined,
+        fileBase64: undefined,
+        images: undefined
+      })
+      return
     }
+
+    if (type === PostType.image) {
+      // Reuse existing processed images when possible (for reorder/remove), otherwise read new ones
+      const imagePromises = files
+        .filter((file) => file.type.startsWith("image/"))
+        .map((file) => {
+          const existing = selectedImages.find(
+            (si) =>
+              si.name === file.name &&
+              si.size === file.size &&
+              si.type === file.type
+          )
+          if (existing) return Promise.resolve(existing)
+
+          return new Promise<ImageFile>((resolve) => {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+              resolve({
+                id: Math.random().toString(36).substr(2, 9),
+                file,
+                base64: reader.result as string,
+                name: file.name,
+                size: file.size,
+                type: file.type
+              })
+            }
+            reader.readAsDataURL(file)
+          })
+        })
+
+      const processedImages = await Promise.all(imagePromises)
+      setSelectedImages(processedImages)
+      setNewPost({
+        ...newPost,
+        type: PostType.image,
+        images: processedImages
+      })
+      return
+    }
+
+    const file = files[0]
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const base64String = reader.result as string
+      setNewPost({
+        ...newPost,
+        type: file.type.startsWith("image/") ? PostType.image : PostType.file,
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        fileBase64: base64String
+      })
+    }
+    reader.readAsDataURL(file)
   }
 
   const handleRemoveFile = () => {
+    setSelectedImages([])
     setNewPost({
       ...newPost,
-      type: PostType.text, 
+      type: PostType.text,
       fileName: undefined,
       fileSize: undefined,
       fileType: undefined,
-      fileBase64: undefined
+      fileBase64: undefined,
+      images: undefined
     })
   }
 
@@ -72,13 +127,11 @@ const CreatePostInput: React.FC<Props> = ({
     <div className="flex flex-col space-y-4">
       <div className="flex flex-col justify-center items-center pt-4">
         <FileUpload
-          onChange={(files: File[]) => {
-            handleFileUpload({
-              target: { files: [...files] }
-            } as unknown as React.ChangeEvent<HTMLInputElement>)
-          }}
+          onChange={(files: File[]) => handleFiles(files)}
           onRemove={handleRemoveFile}
           accept="image/*"
+          multiple={true}
+          fileType="image"
         />
       </div>
       <Textarea
@@ -118,12 +171,9 @@ const CreatePostInput: React.FC<Props> = ({
   ) : (
     <div className="flex flex-col space-y-4">
       <FileUpload
-        onChange={(files: File[]) => {
-          handleFileUpload({
-            target: { files: [...files] }
-          } as unknown as React.ChangeEvent<HTMLInputElement>)
-        }}
+        onChange={(files: File[]) => handleFiles(files)}
         onRemove={handleRemoveFile}
+        fileType="file"
       />
       <Textarea
         placeholder="Add a description..."

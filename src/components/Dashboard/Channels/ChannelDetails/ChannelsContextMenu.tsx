@@ -207,16 +207,18 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
                 View Spaces
               </DropdownMenuItem>
             )}
-            {!superAdmin && !isChannelMember &&  channel.channel_type === "public" &&(
-              <DropdownMenuItem
-                onClick={handleJoinChannel}
-                disabled={joinLoading}
-                className=" hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground"
-              >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                {joinLoading ? "Joining..." : "Join Channel"}
-              </DropdownMenuItem>
-            )}
+            {!superAdmin &&
+              !isChannelMember &&
+              channel.channel_type === "public" && (
+                <DropdownMenuItem
+                  onClick={handleJoinChannel}
+                  disabled={joinLoading}
+                  className=" hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  {joinLoading ? "Joining..." : "Join Channel"}
+                </DropdownMenuItem>
+              )}
 
             {!superAdmin && isChannelMember && (
               <DropdownMenuItem

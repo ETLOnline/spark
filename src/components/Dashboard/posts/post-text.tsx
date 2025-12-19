@@ -5,7 +5,6 @@ import PostCommentForm from "./post-comment-form"
 import { SelectPost } from "@/src/db/schema"
 import { Badge } from "../../ui/badge"
 import PostCommentsSection from "./post-comments-section"
-import { usePostNavigation } from "@/src/hooks/usePostNavigation"
 import ExpandableText from "./ExpandableText"
 
 type Props = {
@@ -14,20 +13,11 @@ type Props = {
 }
 
 const TextPost: React.FC<Props> = ({ post, spaceId }) => {
-  const { navigateToPost } = usePostNavigation()
-
   const content = post.content ?? ""
-
-  const handleContentClick = () => {
-    navigateToPost(post.id, spaceId)
-  }
 
   return (
     <>
-      <CardContent
-        className={spaceId !== "shared" ? "cursor-pointer" : ""}
-        onClick={spaceId !== "shared" ? handleContentClick : undefined}
-      >
+      <CardContent>
         <ExpandableText content={content} lines={6} />
 
         <div className="mt-4 flex flex-wrap gap-2">

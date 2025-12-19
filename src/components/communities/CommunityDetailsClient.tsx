@@ -284,10 +284,8 @@ export default function CommunityDetailsClient({
   }
 
   const encodedCommunitySlug = encodeURIComponent(community.slug)
-  if(showAccessDeniedOverlay){
-    return (
-      <PrivatePage page="Community" pageHref="/communities" />
-    )
+  if (showAccessDeniedOverlay) {
+    return <PrivatePage page="Community" pageHref="/communities" />
   }
   return (
     <div className="min-h-screen bg-background relative">

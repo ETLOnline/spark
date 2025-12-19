@@ -78,19 +78,19 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
 
   const spaceSlug = params.space_slug as string
   const channelSlug = params.channel_slug as string
-  const MAX_FOLDER_DEPTH = 5;
+  const MAX_FOLDER_DEPTH = 5
   const getCurrentDepth = () => {
-    return currentPath.split('/').filter(Boolean).length;
-  };
+    return currentPath.split("/").filter(Boolean).length
+  }
   const handleDialogClose = (open: boolean) => {
-    setIsNewFolderDialogOpen(open);
+    setIsNewFolderDialogOpen(open)
     if (!open) {
-      setNewFolderError("");
-      newFolderName.current = "";
+      setNewFolderError("")
+      newFolderName.current = ""
     }
-  };
-  
-  const isMaxDepthReached = getCurrentDepth() < MAX_FOLDER_DEPTH;
+  }
+
+  const isMaxDepthReached = getCurrentDepth() < MAX_FOLDER_DEPTH
 
   const { toast } = useToast()
 
@@ -161,8 +161,8 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
 
   const createFolder = async () => {
     if (!isMaxDepthReached) {
-      setNewFolderError("Maximum folder depth (5 levels) reached");
-      return;
+      setNewFolderError("Maximum folder depth (5 levels) reached")
+      return
     }
     try {
       const parentFolderId = findItemByPath(dir, currentPath)?.id
@@ -310,7 +310,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
       reader.readAsDataURL(file)
     }
   }
-  
+
   const handleRemoveFile = () => {
     setFileData(null)
   }
@@ -453,10 +453,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
           </Drawer>
 
           {/* Create Folder Dialog */}
-          <Dialog
-            open={isNewFolderDialogOpen}
-            onOpenChange={handleDialogClose}
-          >
+          <Dialog open={isNewFolderDialogOpen} onOpenChange={handleDialogClose}>
             <DialogTrigger asChild>
               <Button>
                 <FolderPlus className="mr-2 h-4 w-4" />
