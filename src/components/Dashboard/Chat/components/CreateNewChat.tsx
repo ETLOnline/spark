@@ -12,7 +12,6 @@ import MultiSelect, {
 } from "@/src/components/ui/multi-select"
 import { Button } from "@/src/components/ui/button"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { FindUserWildCardAction } from "@/src/server-actions/User/FindUserWildCardAction"
 import {
   CreateGroupChatAction,
   CreatePrivateChatAction,
@@ -23,7 +22,7 @@ import {
 import { useParams } from "next/navigation"
 import { useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
-import { useDebounce, useDebouncedCallback } from "use-debounce"
+import { useDebouncedCallback } from "use-debounce"
 import { SelectChat, SelectUser } from "@/src/db/schema"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { ChatContactFilters } from "@/src/db/data-access/chat/query"
@@ -71,7 +70,7 @@ const CreateNewChat = ({
   const [groupName, setGroupName] = useState<string>("")
   const [groupNameError, setGroupNameError] = useState<string>("")
   const [options, setOptions] = useState<MultiSelectOption[]>([])
-  const { space_slug, channel_slug } = useParams()
+  const { space_slug } = useParams()
   const currentSpace = useAtomValue(spaceStore.currentSpace)
   const [contactFilter, setContactFilter] = useState<ChatContactFilters>()
 
@@ -125,13 +124,13 @@ const CreateNewChat = ({
         setContactFilter({ user_id: authUser?.unique_id, limit: 10 })
       }
     }
-  }, [authUser?.unique_id, currentSpace])
+  }, [authUser?.unique_id, currentSpace, isSpacePage])
 
   useEffect(() => {
     if (contactFilter) {
       getUserList(contactFilter)
     }
-  }, [contactFilter])
+  }, [contactFilter, currentChat])
 
   useEffect(() => {
     if (isManageMode) {
@@ -160,6 +159,7 @@ const CreateNewChat = ({
           description: "Member removed from group",
           duration: 3000
         })
+        if (contactFilter) await getUserList(contactFilter)
         onSuccess?.()
       } else {
         throw new Error(result?.error || "Failed to remove member")
@@ -207,20 +207,11 @@ const CreateNewChat = ({
           description: `Added ${selectedContacts.length} member(s) to the group`,
           duration: 3000
         })
+        setSelectedContacts([])
+        if (contactFilter) await getUserList(contactFilter)
 
         onSuccess?.()
-        resetAndClose()
       } else if (isGroupChat) {
-        // Create Group Chat
-        if (groupName.trim() === "") {
-          setGroupNameError("Group name is required.")
-          setIsCreatingChat(false)
-          return
-        } else if (groupName.trim().length > 50) {
-          setGroupNameError("Group name must be 50 characters or less.")
-          setIsCreatingChat(false)
-          return
-        }
         const response = await CreateGroupChatAction(
           [...userIds, authUser?.unique_id],
           groupName,
@@ -238,9 +229,9 @@ const CreateNewChat = ({
           switchChat(newChat)
           setIsMobileMenuOpen(false)
           setGroupName("")
+          resetAndClose()
         }
       } else {
-        // Create Direct Chat
         const response = await CreatePrivateChatAction(
           authUser?.unique_id,
           userIds[0],
@@ -251,8 +242,9 @@ const CreateNewChat = ({
           setMyChats((pre) => [...pre, newChat])
           switchChat(newChat)
           setIsMobileMenuOpen(false)
+          resetAndClose()
         }
-        if (response.success == false && response.existingChat) {
+        if (response.success === false && response.existingChat) {
           switchChat(response.data)
           setIsMobileMenuOpen(false)
           toast({
@@ -260,18 +252,15 @@ const CreateNewChat = ({
             variant: "destructive",
             duration: 3000
           })
+          resetAndClose()
         }
-        if (response.success == false && response.error) {
+        if (response.success === false && response.error) {
           toast({
             title: response.error,
             variant: "destructive",
             duration: 3000
           })
         }
-      }
-
-      if (!isManageMode) {
-        resetAndClose()
       }
     } catch (e) {
       console.error("Uncaught error during chat operation:", e)
@@ -317,7 +306,6 @@ const CreateNewChat = ({
           </DialogHeader>
 
           <div className="min-h-[425px] space-y-4">
-            {/* Current Members Section (only in manage mode) */}
             {isManageMode && currentMembers.length > 0 && (
               <div className="space-y-2">
                 <Label className="text-sm font-medium">
@@ -368,7 +356,6 @@ const CreateNewChat = ({
               </div>
             )}
 
-            {/* Add Members Section - Conditional Visibility */}
             {(!isManageMode || (isManageMode && isCreator)) && (
               <div className="space-y-2">
                 <Label className="text-sm font-medium">
@@ -390,7 +377,6 @@ const CreateNewChat = ({
               </div>
             )}
 
-            {/* Group Name Input (only for create mode with groups) */}
             {!isManageMode && isGroupChat && (
               <>
                 <Input
@@ -408,7 +394,6 @@ const CreateNewChat = ({
               </>
             )}
 
-            {/* Empty State Image (only for create mode) */}
             {!isManageMode && selectedContacts.length < 2 && (
               <div className="flex items-center justify-center">
                 <Image
@@ -420,7 +405,6 @@ const CreateNewChat = ({
               </div>
             )}
 
-            {/* No available users message (for manage mode) */}
             {isManageMode && isCreator && options.length === 0 && !loading && (
               <div className="flex items-center justify-center text-muted-foreground text-sm py-8">
                 All users are already in the group
@@ -436,7 +420,6 @@ const CreateNewChat = ({
               <Button
                 onClick={handleCreateNewChat}
                 disabled={selectedContacts.length === 0 || isCreatingChat}
-                loading={isCreatingChat}
               >
                 {isManageMode
                   ? "Add Members"
