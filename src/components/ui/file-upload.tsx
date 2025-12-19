@@ -5,6 +5,7 @@ import { cn } from "@/src/lib/utils"
 import { CloudUpload } from "lucide-react"
 import PreviewItem from "./file-upload/PreviewItem"
 import { resolveAccept } from "@/src/utils/clientHelper"
+import { toast } from "@/src/hooks/use-toast"
 
 const mainVariant = {
   initial: {
@@ -98,8 +99,15 @@ export const FileUpload: React.FC<{
     multiple,
     accept: resolvedAccept as any,
     onDrop: (acceptedFiles) => handleFileChange(acceptedFiles),
-    onDropRejected: (error) => {
-      console.log(error)
+    onDropRejected: (fileRejections) => {
+      fileRejections.forEach((fr) =>
+        fr.errors.forEach((err) =>
+          toast({
+            title: "File not accepted",
+            description: err.message
+          })
+        )
+      )
     }
   })
 
