@@ -360,7 +360,7 @@ const CreateNewChat = ({
                     </div>
                   ))}
                 </ScrollArea>
-                {!canRemoveMembers && (
+                {isCreator && !canRemoveMembers && (
                   <p className="text-xs text-muted-foreground">
                     Cannot remove members. Group must have at least 2 members.
                   </p>
@@ -368,25 +368,27 @@ const CreateNewChat = ({
               </div>
             )}
 
-            {/* Add Members / Select Contacts Section */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">
-                {isManageMode ? "Add Members" : "Select Contacts"}
-              </Label>
-              <MultiSelect
-                className="w-full"
-                onQueryChange={async (query) => await handleQuerySearch(query)}
-                options={options}
-                selected={selectedContacts}
-                onChange={(value) => {
-                  setSelectedContacts(value)
-                }}
-                placeholder={
-                  isManageMode ? "Search users to add..." : "Select Contacts"
-                }
-                loading={loading}
-              />
-            </div>
+            {/* Add Members Section - Conditional Visibility */}
+            {(!isManageMode || (isManageMode && isCreator)) && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">
+                  {isManageMode ? "Add Members" : "Select Contacts"}
+                </Label>
+                <MultiSelect
+                  className="w-full"
+                  onQueryChange={async (query) => await handleQuerySearch(query)}
+                  options={options}
+                  selected={selectedContacts}
+                  onChange={(value) => {
+                    setSelectedContacts(value)
+                  }}
+                  placeholder={
+                    isManageMode ? "Search users to add..." : "Select Contacts"
+                  }
+                  loading={loading}
+                />
+              </div>
+            )}
 
             {/* Group Name Input (only for create mode with groups) */}
             {!isManageMode && isGroupChat && (
@@ -419,7 +421,7 @@ const CreateNewChat = ({
             )}
 
             {/* No available users message (for manage mode) */}
-            {isManageMode && options.length === 0 && !loading && (
+            {isManageMode && isCreator && options.length === 0 && !loading && (
               <div className="flex items-center justify-center text-muted-foreground text-sm py-8">
                 All users are already in the group
               </div>
@@ -428,17 +430,19 @@ const CreateNewChat = ({
 
           <div className="flex justify-end space-x-2">
             <Button variant="outline" onClick={resetAndClose}>
-              Cancel
+              {(!isManageMode || isCreator) ? "Cancel" : "Close"}
             </Button>
-            <Button
-              onClick={handleCreateNewChat}
-              disabled={selectedContacts.length === 0 || isCreatingChat}
-              loading={isCreatingChat}
-            >
-              {isManageMode
-                ? "Add Members"
-                : `Start ${isGroupChat ? "Group" : "Direct"} Chat`}
-            </Button>
+            {(!isManageMode || (isManageMode && isCreator)) && (
+              <Button
+                onClick={handleCreateNewChat}
+                disabled={selectedContacts.length === 0 || isCreatingChat}
+                loading={isCreatingChat}
+              >
+                {isManageMode
+                  ? "Add Members"
+                  : `Start ${isGroupChat ? "Group" : "Direct"} Chat`}
+              </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>
