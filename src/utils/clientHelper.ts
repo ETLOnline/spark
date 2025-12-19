@@ -196,6 +196,16 @@ export function getSiteLogoUrl(): string {
   const LOGO_PATH = "/logo/spark-logo-animated-themed.gif"
   return createAbsoluteUrl(LOGO_PATH)
 }
+export function resolveAccept(
+  accept?: string,
+  fileType?: "file" | "image"
+): string | undefined {
+  const nonImageAccept =
+    ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,.7z,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint"
+
+  if (accept) return accept
+  return fileType === "image" ? "image/*" : nonImageAccept
+}
 export function computeTypingLabel({
   chat,
   typingUsers,

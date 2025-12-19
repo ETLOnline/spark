@@ -212,10 +212,11 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 : []
             )
             if (linkedHashtags?.error) {
-              console.error(
-                "Error linking hashtags to post:",
-                linkedHashtags.error
-              )
+              toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Error linking hashtags to post"
+              })
             }
           }
           postData = {
@@ -269,10 +270,11 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 : []
             )
             if (linkedHashtags?.error) {
-              console.error(
-                "Error linking hashtags to post:",
-                linkedHashtags.error
-              )
+              toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Error linking hashtags to post"
+              })
             }
           }
           postData = {
@@ -344,10 +346,11 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                   : []
               )
               if (linkedHashtags?.error) {
-                console.error(
-                  "Error linking hashtags to post:",
-                  linkedHashtags.error
-                )
+                toast({
+                  variant: "destructive",
+                  title: "Error",
+                  description: "Error linking hashtags to post"
+                })
               }
             }
             postData = {
@@ -359,7 +362,6 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
               postComments: []
             }
           } else if (post?.error) {
-            console.error("Error creating post:", post.error)
             toast({
               variant: "destructive",
               title: "Error",
@@ -421,10 +423,11 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                   : []
               )
               if (linkedHashtags?.error) {
-                console.error(
-                  "Error linking hashtags to post:",
-                  linkedHashtags.error
-                )
+                toast({
+                  variant: "destructive",
+                  title: "Error",
+                  description: "Error linking hashtags to post"
+                })
               }
             }
             postData = {
@@ -436,7 +439,6 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
               postComments: []
             }
           } else if (post?.error) {
-            console.error("Error creating post:", post.error)
             toast({
               variant: "destructive",
               title: "Error",
@@ -467,7 +469,6 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
       })
       setPollOptions([])
     } catch (error) {
-      console.error(error)
       toast({
         variant: "destructive",
         title: "Error",

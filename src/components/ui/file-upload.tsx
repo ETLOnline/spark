@@ -4,6 +4,7 @@ import { useDropzone } from "react-dropzone"
 import { cn } from "@/src/lib/utils"
 import { CloudUpload } from "lucide-react"
 import PreviewItem from "./file-upload/PreviewItem"
+import { resolveAccept } from "@/src/utils/clientHelper"
 
 const mainVariant = {
   initial: {
@@ -37,12 +38,20 @@ export const FileUpload: React.FC<{
   const [items, setItems] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const firstItem = items[0]
+  const resolvedAccept = resolveAccept(accept, fileType)
 
   const handleFileChange = (newFiles: File[]) => {
-    // Filter files based on fileType (images only when requested)
+    if (!newFiles || newFiles.length === 0) return
+
     let filtered = newFiles
     if (fileType === "image") {
       filtered = newFiles.filter((f) => f.type.startsWith("image/"))
+    } else if (fileType === "file") {
+      filtered = newFiles.filter((f) => !f.type.startsWith("image/"))
+      if (filtered.length === 0) {
+        if (fileInputRef.current) fileInputRef.current.value = ""
+        return
+      }
     }
 
     if (!multiple) {
@@ -87,7 +96,7 @@ export const FileUpload: React.FC<{
   const { getRootProps, isDragActive } = useDropzone({
     noClick: true,
     multiple,
-    accept: accept as any,
+    accept: resolvedAccept as any,
     onDrop: (acceptedFiles) => handleFileChange(acceptedFiles),
     onDropRejected: (error) => {
       console.log(error)
@@ -108,7 +117,7 @@ export const FileUpload: React.FC<{
           onChange={(e) => handleFileChange(Array.from(e.target.files || []))}
           className="hidden"
           multiple={multiple}
-          accept={accept}
+          accept={resolvedAccept}
         />
         <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,white,transparent)]">
           <GridPattern />
