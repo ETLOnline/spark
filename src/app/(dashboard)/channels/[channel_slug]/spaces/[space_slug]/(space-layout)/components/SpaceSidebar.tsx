@@ -287,7 +287,7 @@ function SpaceSidebar({ space }: Props) {
             ))
           ) : (
             <SidebarMenuItem className="p-2 text-sm text-gray-500">
-              No features available
+              {!isSpaceMember ? "Join this Space to view Active Features." : "No features available."}
             </SidebarMenuItem>
           )}
 
