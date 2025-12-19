@@ -24,10 +24,11 @@ import { isEntityUser } from "@/src/utils/clientHelper"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   AttachSpaceUserAction,
-  LeaveSpaceAction
+  DetachSpaceUserAction
 } from "@/src/server-actions/Space/Space"
 import { useToast } from "@/src/hooks/use-toast"
 import "./../../../../../../style.css"
+import { getRoleIdOnMatch } from "@/src/services/realtime/utils/helper"
 
 interface Props {
   space: SelectSpace
@@ -41,13 +42,14 @@ function SpaceSidebar({ space }: Props) {
   const [spaceFeatures, setSpaceFeatures] = useState<SelectSpaceFeature[]>([])
   const { toast } = useToast()
   const router = useRouter()
-  const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
+  const authUser = useAtomValue(userStore.AuthUser)
   const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
   const [joinLoading, , , joinSpace] = useServerAction(AttachSpaceUserAction)
-  const [leaveLoading, , , leaveSpace] = useServerAction(LeaveSpaceAction)
+  const [leaveLoading, , , leaveSpace] = useServerAction(DetachSpaceUserAction)
 
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [isSpaceMember, setIsSpaceMember] = useState<boolean>(false)
+  const currentUserId = authUser?.unique_id
 
   useEffect(() => {
     if (currentUserId !== undefined) {
@@ -79,9 +81,18 @@ function SpaceSidebar({ space }: Props) {
   }
 
   const handleLeaveSpace = async () => {
-    if (space.id && currentUserId) {
+    if (!authUser?.roles) {
+      toast({
+        title: "Error",
+        description: "Failed to leave Space",
+        variant: "destructive"
+      })
+      return
+    }
+    const role_id = getRoleIdOnMatch(authUser?.roles, space.id)
+    if (space.id && currentUserId && role_id) {
       try {
-        const res = await leaveSpace(space.id, currentUserId)
+        const res = await leaveSpace(space.id, currentUserId, role_id)
         if (res?.success) {
           setIsSpaceMember(false)
           toast({
@@ -287,7 +298,9 @@ function SpaceSidebar({ space }: Props) {
             ))
           ) : (
             <SidebarMenuItem className="p-2 text-sm text-gray-500">
-              {!isSpaceMember ? "Join this Space to view Active Features." : "No features available."}
+              {!isSpaceMember
+                ? "Join this Space to view Active Features."
+                : "No features available."}
             </SidebarMenuItem>
           )}
 
