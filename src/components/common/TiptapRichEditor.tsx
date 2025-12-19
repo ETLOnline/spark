@@ -275,6 +275,8 @@ export default function RichTextEditor({
                     trigger: "manual",
                     placement: "top-start"
                   })
+                  popup[0].popper.style.zIndex = "99999"
+                  popup[0].popper.style.pointerEvents = "auto"
                 },
 
                 onUpdate(props: any) {

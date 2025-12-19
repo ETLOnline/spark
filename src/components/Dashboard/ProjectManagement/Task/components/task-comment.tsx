@@ -33,6 +33,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/src/components/ui/alert-dialog"
+import ImageLightbox from "@/src/components/common/LightBox"
 
 interface TaskCommentFormProps {
   taskId: string
@@ -63,6 +64,10 @@ export function TaskComment({
   const [CommentToDelete, setCommentToDelete] = useState<number | null>(null)
   const [CommentToUpdate, setCommentToUpdate] = useState<number | null>(null)
   const [totalCount, setTotalCount] = useState(0)
+
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxImages, setLightboxImages] = useState<string[]>([])
+  const [lightboxIndex, setLightboxIndex] = useState(0)
 
   const [
     creatingComment,
@@ -237,6 +242,35 @@ export function TaskComment({
   const loading =
     creatingComment || updateCommentLoading || DeleteCommentLoading
 
+  const handleCommentImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement
+
+    // ✅ Only react to IMG clicks
+    if (target.tagName !== "IMG") return
+
+    // ⛔ Stop ONLY image click from bubbling
+    e.preventDefault()
+    e.stopPropagation()
+
+    // 🛑 If lightbox already open, do nothing
+    if (lightboxOpen) return
+
+    const img = target as HTMLImageElement
+
+    const commentContent = img.closest(".rich-editor")
+    if (!commentContent) return
+
+    const images = Array.from(commentContent.querySelectorAll("img")).map(
+      (img) => img.src
+    )
+
+    const index = images.indexOf(img.src)
+
+    setLightboxImages(images)
+    setLightboxIndex(index >= 0 ? index : 0)
+    setLightboxOpen(true)
+  }
+
   return (
     <>
       <div className="grid gap-4">
@@ -249,7 +283,7 @@ export function TaskComment({
                 editable={!isSprintCompleted}
                 image_uploading={true}
                 entity="task-comments"
-                showMentions={availableUsers.length > 0}
+                showMentions={true}
                 mentionUsers={availableUsers}
               />
               <div className="flex gap-2 justify-end">
@@ -351,6 +385,9 @@ export function TaskComment({
                     ) : (
                       <div
                         className="text-sm rich-editor"
+                        onClick={
+                          lightboxOpen ? undefined : handleCommentImageClick
+                        }
                         dangerouslySetInnerHTML={{ __html: comment.content }}
                       />
                     )}
@@ -411,6 +448,14 @@ export function TaskComment({
         )}
       </div>
       {/* LISTING COMMENT END HERE */}
+
+      {/* LIGHTBOX */}
+      <ImageLightbox
+        open={lightboxOpen}
+        images={lightboxImages}
+        index={lightboxIndex}
+        onClose={() => setLightboxOpen(false)}
+      />
 
       {/* Confirmation Modal for deleting a comment */}
       <AlertDialog
