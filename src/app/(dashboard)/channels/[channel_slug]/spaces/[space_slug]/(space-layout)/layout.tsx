@@ -41,11 +41,11 @@ async function Layout({ params, children }: Props) {
 
   const showAccessDeniedOverlay =
     currentSpace.data?.space_type === "private" && !isUserMember && !superAdmin
-    if(showAccessDeniedOverlay){
-      return (
-        <PrivatePage page="space" pageHref={`/channels/${channel_slug}/spaces`} />
-      )
-    }
+  if (showAccessDeniedOverlay) {
+    return (
+      <PrivatePage page="space" pageHref={`/channels/${channel_slug}/spaces`} />
+    )
+  }
   return (
     <div className="min-h-[calc(100vh-6rem)] bg-background">
       <div className="grid grid-cols-12 w-full h-[calc(100vh-6rem)] overflow-hidden">
