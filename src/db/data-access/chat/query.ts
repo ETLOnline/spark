@@ -446,7 +446,11 @@ export const getChatContacts = async ({
             ? or(
                 like(usersTable.first_name, `%${query}%`),
                 like(usersTable.last_name, `%${query}%`),
-                like(usersTable.email, `%${query}%`)
+                like(usersTable.email, `%${query}%`),
+                ilike(
+                  sql`${usersTable.first_name} || ' ' || ${usersTable.last_name}`,
+                  `%${query}%`
+                )
               )
             : undefined,
           ...whereClause
