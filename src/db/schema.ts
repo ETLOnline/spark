@@ -108,6 +108,9 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
   TaskCreator: many(taskTable, {
     relationName: "taskCreator"
+  }),
+  createdChats: many(chatsTable, {
+    relationName: "chatToCreator"
   })
 }))
 
@@ -207,15 +210,21 @@ export const chatsTable = pgTable("chats", {
   avatar: varchar(),
   last_message: varchar(),
   is_group: integer().notNull().default(0),
+  created_by: varchar(),
   ...timestamps
 })
 
-export const chatsRelations = relations(chatsTable, ({ many }) => ({
+export const chatsRelations = relations(chatsTable, ({ many, one }) => ({
   messages: many(messagesTable, {
     relationName: "messageToChat"
   }),
   users: many(userChatsTable, {
     relationName: "ChatUsers"
+  }),
+  creator: one(usersTable, {
+    fields: [chatsTable.created_by],
+    references: [usersTable.unique_id],
+    relationName: "chatToCreator"
   })
 }))
 
@@ -223,6 +232,7 @@ export type InsertChat = typeof chatsTable.$inferInsert
 export type SelectChat = InferSelectModel<typeof chatsTable> & {
   messages?: SelectMessage[]
   users?: SelectUserChat[]
+  creator?: SelectUser
 }
 export type SelectChatWithRelation = typeof chatsRelations
 

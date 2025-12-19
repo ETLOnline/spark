@@ -1,5 +1,5 @@
 import { ScrollArea } from "@radix-ui/react-scroll-area"
-import React, { useMemo, useState, useEffect } from "react"
+import React, { useMemo, useState, useEffect, useRef } from "react"
 import { useAtom, useAtomValue } from "jotai"
 import { chatStore } from "@/src/store/chat/chatStore"
 import { userStore } from "@/src/store/user/userStore"
@@ -17,7 +17,7 @@ export const ChatsList = ({
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
   const authUser = useAtomValue(userStore.AuthUser)
   const [isLoadingChats, setIsLoadingChats] = useState(true)
-  const isInitialMount = React.useRef(true)
+  const isInitialMount = useRef(true)
 
   useEffect(() => {
     if (isInitialMount.current) {

@@ -14,7 +14,7 @@ import {
   markChatAsReadForUser,
   getExistingGroupName,
   addUserToGroupChat,
-  removeUserFromGroupChat,
+  removeUserFromGroupChat
 } from "@/src/db/data-access/chat/query"
 import { CreateServerAction } from ".."
 import { InsertMessage } from "@/src/db/schema"
@@ -429,7 +429,6 @@ export const sendFilesAndImagesInChatAction = CreateServerAction(
   }
 )
 
-
 /**
  * Add a user to a group chat
  */
@@ -438,21 +437,11 @@ export const AddUserToGroupChatAction = CreateServerAction(
   async (chatId: number, userIdToAdd: string) => {
     try {
       const authUser = await AuthUserAction()
-      if (!authUser) {
-        return {
-          success: false,
-          error: "Unauthorized"
-        }
-      }
+      if (!authUser) return { success: false, error: "Unauthorized" }
 
       const result = await addUserToGroupChat(chatId, userIdToAdd)
-
-      if (!result) {
-        return {
-          success: false,
-          error: "Failed to add user to group"
-        }
-      }
+      if (!result)
+        return { success: false, error: "Failed to add user to group" }
 
       await pusherServer.trigger(
         `private-user-${userIdToAdd}`,
@@ -464,12 +453,13 @@ export const AddUserToGroupChatAction = CreateServerAction(
         }
       )
 
-      return {
-        success: true,
-        data: result
-      }
+      await pusherServer.trigger(`private-chat-${chatId}`, "member-added", {
+        chatId,
+        newUserChat: result
+      })
+
+      return { success: true, data: result }
     } catch (error: any) {
-      console.error("Error adding user to group:", error)
       return {
         success: false,
         error: error.message || "Failed to add user to group"
@@ -486,28 +476,15 @@ export const RemoveUserFromGroupChatAction = CreateServerAction(
   async (chatId: number, userIdToRemove: string) => {
     try {
       const authUser = await AuthUserAction()
-      if (!authUser) {
-        return {
-          success: false,
-          error: "Unauthorized"
-        }
-      }
+      if (!authUser) return { success: false, error: "Unauthorized" }
 
       if (authUser.unique_id === userIdToRemove) {
-        return {
-          success: false,
-          error: "You cannot remove yourself from the group"
-        }
+        return { success: false, error: "You cannot remove yourself" }
       }
 
       const result = await removeUserFromGroupChat(chatId, userIdToRemove)
-
-      if (!result) {
-        return {
-          success: false,
-          error: "Failed to remove user from group"
-        }
-      }
+      if (!result)
+        return { success: false, error: "Failed to remove user from group" }
 
       await pusherServer.trigger(
         `private-user-${userIdToRemove}`,
@@ -518,16 +495,14 @@ export const RemoveUserFromGroupChatAction = CreateServerAction(
         }
       )
 
-      return {
-        success: true,
-        data: result
-      }
+      await pusherServer.trigger(`private-chat-${chatId}`, "member-removed", {
+        chatId,
+        userId: userIdToRemove
+      })
+
+      return { success: true, data: result }
     } catch (error: any) {
-      console.error("Error removing user from group:", error)
-      return {
-        success: false,
-        error: error.message || "Failed to remove user from group"
-      }
+      return { success: false, error: error.message || "Failed to remove user" }
     }
   }
 )

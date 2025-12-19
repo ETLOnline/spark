@@ -23,7 +23,7 @@ import {
   Edit,
   FileIcon,
   Paperclip,
-  Trash2,
+  Trash2
 } from "lucide-react"
 import { useAtom, useAtomValue } from "jotai"
 import { chatStore } from "@/src/store/chat/chatStore"
@@ -45,8 +45,7 @@ import {
   MarkChatAsReadAction,
   sendFilesAndImagesInChatAction,
   SendTypingIndicatorAction,
-  AddUserToGroupChatAction,
-  RemoveUserFromGroupChatAction
+  AddUserToGroupChatAction
 } from "@/src/server-actions/Chat/Chat"
 import moment from "moment-timezone"
 import Link from "next/link"
@@ -104,7 +103,9 @@ function joinChannel(
   onMessageReceived: (message: SelectMessage) => void,
   onMessageDeleted?: (msgId: number) => void,
   onMessageEdited?: (msgId: number, newContent: string) => void,
-  onTyping?: (userId: string, isTyping: boolean, chatId: number) => void
+  onTyping?: (userId: string, isTyping: boolean, chatId: number) => void,
+  onMemberAdded?: (newUserChat: any) => void,
+  onMemberRemoved?: (userId: string) => void
 ) {
   const channelName = `private-chat-${chatId}`
   const channel = pusherClient.subscribe(channelName)
@@ -124,6 +125,14 @@ function joinChannel(
   )
   channel.bind("typing", (data: { userId: string; isTyping: boolean }) => {
     onTyping?.(data.userId, data.isTyping, chatId)
+  })
+
+  channel.bind("member-added", (data: { newUserChat: any }) => {
+    onMemberAdded?.(data.newUserChat)
+  })
+
+  channel.bind("member-removed", (data: { userId: string }) => {
+    onMemberRemoved?.(data.userId)
   })
   function unsubscribe() {
     channel.unbind_all()
@@ -168,7 +177,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const [richMessageContent, setRichMessageContent] = useState("")
   const [showRichEditorToolbar, setShowRichEditorToolbar] = useState(false)
   const [isMentionActive, setIsMentionActive] = useState(false)
-  const [isGroupMembersDialogOpen, setIsGroupMembersDialogOpen] = useState(false)
   const [spaceUsers, setSpaceUsers] = useState<SelectUser[]>([])
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useAtom(
@@ -225,7 +233,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     sendFilesAndImagesInChatAction
   )
   const [, , , addUserToGroup] = useServerAction(AddUserToGroupChatAction)
-  const [, , , removeUserFromGroup] = useServerAction(RemoveUserFromGroupChatAction)
   const [, , , getSpaceUsers] = useServerAction(GetSpaceUsersAction)
 
   useEffect(() => {
@@ -271,22 +278,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       setAvailableUsers([])
     }
   }, [currentChat])
-
-  useEffect(() => {
-    if (isGroupMembersDialogOpen && currentSpace?.id) {
-      getSpaceUsers(currentSpace.id).then((result) => {
-        if (result?.success && result.data) {
-          const users = result.data
-            .map((spaceMember) => spaceMember.user)
-            .filter(
-              (user: SelectUser) => user !== null && user !== undefined
-            )
-
-          setSpaceUsers(users)
-        }
-      })
-    }
-  }, [isGroupMembersDialogOpen, currentSpace])
 
   useEffect(() => {
     if (!authUser || !myChats.length) return
@@ -362,6 +353,44 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
             if (isTyping) updated[chatId].add(userId)
             else updated[chatId].delete(userId)
             return updated
+          })
+        },
+        // NEW: Member Added Handler
+        (newUserChat) => {
+          setMyChats((prev) =>
+            prev.map((c) =>
+              c.id === chat.id
+                ? { ...c, users: [...(c.users || []), newUserChat] }
+                : c
+            )
+          )
+
+          setCurrentChat((prev) => {
+            if (prev?.id === chat.id) {
+              return { ...prev, users: [...(prev.users || []), newUserChat] }
+            }
+            return prev
+          })
+        },
+
+        // NEW: Member Removed Handler
+        (userId) => {
+          setMyChats((prev) =>
+            prev.map((c) =>
+              c.id === chat.id
+                ? { ...c, users: c.users?.filter((u) => u.user_id !== userId) }
+                : c
+            )
+          )
+
+          setCurrentChat((prev) => {
+            if (prev?.id === chat.id) {
+              return {
+                ...prev,
+                users: prev.users?.filter((u) => u.user_id !== userId)
+              }
+            }
+            return prev
           })
         }
       )
@@ -475,15 +504,15 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
     userChannel.bind(
       "chat-created",
-      (data: { 
+      (data: {
         newChat?: SelectChat
         chatId?: number
         initiatorId: string
         spaceId?: string
-        shouldFetch?: boolean 
+        shouldFetch?: boolean
       }) => {
         const { newChat, chatId, initiatorId, spaceId, shouldFetch } = data
-        
+
         if (initiatorId === authUser?.unique_id) {
           return
         }
@@ -497,9 +526,11 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
             if (result?.success && result.data) {
               const fetchedChat = result.data as SelectChat
               setMyChats((prevChats) => {
-                const exists = prevChats.some(c => c.id === chatId)
+                const exists = prevChats.some((c) => c.id === chatId)
                 if (exists) {
-                  return prevChats.map(c => c.id === chatId ? fetchedChat : c)
+                  return prevChats.map((c) =>
+                    c.id === chatId ? fetchedChat : c
+                  )
                 } else {
                   return [fetchedChat, ...prevChats]
                 }
@@ -518,7 +549,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       "chat-removed",
       (data: { chatId: number; removedBy: string }) => {
         const { chatId, removedBy } = data
-        setMyChats((prevChats) => prevChats.filter((chat) => chat.id !== chatId))
+        setMyChats((prevChats) =>
+          prevChats.filter((chat) => chat.id !== chatId)
+        )
         if (currentChat?.id === chatId) {
           setCurrentChat(null)
           setMessages([])
@@ -670,60 +703,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     setOpenAttachment(false)
     setFileString("")
     setRichMessageContent("")
-  }
-
-  const handleAddMemberToGroup = async (userId: string) => {
-    if (!currentChat?.id) return
-
-    try {
-      const result = await addUserToGroup(currentChat.id, userId)
-
-      if (result?.success) {
-        toast({
-          title: "Success",
-          description: "User added to group",
-          duration: 3000
-        })
-
-        await handleChatSwitch(currentChat.id)
-      } else {
-        throw new Error(result?.error || "Failed to add user")
-      }
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to add user to group",
-        duration: 3000
-      })
-    }
-  }
-
-  const handleRemoveMemberFromGroup = async (userId: string) => {
-    if (!currentChat?.id) return
-
-    try {
-      const result = await removeUserFromGroup(currentChat.id, userId)
-
-      if (result?.success) {
-        toast({
-          title: "Success",
-          description: "User removed from group",
-          duration: 3000
-        })
-
-        await handleChatSwitch(currentChat.id)
-      } else {
-        throw new Error(result?.error || "Failed to remove user")
-      }
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to remove user from group",
-        duration: 3000
-      })
-    }
   }
 
   const users = getOnlineUsers()
@@ -883,13 +862,15 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                           </Link>
 
                           {/* Group Members Button */}
-                          {currentChat.is_group && (
+                          {currentChat.is_group ? (
                             <CreateNewChat
                               mode="manage"
                               currentChat={currentChat}
                               onSuccess={() => handleChatSwitch(currentChat.id)}
                               canDelete={canDelete}
                             />
+                          ) : (
+                            ""
                           )}
                         </div>
                       )
@@ -1216,7 +1197,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           </Card>
         )}
       </div>
-
     </>
   )
 }

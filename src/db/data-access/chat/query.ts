@@ -25,6 +25,7 @@ import {
 import { randomUUID } from "crypto"
 import { slugify } from "@/src/utils/helpers"
 import { MentionChatRegex } from "@/src/components/Dashboard/Chat/constants"
+import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 
 export const CreatePrivateChat = async (
   user_id: string,
@@ -37,7 +38,8 @@ export const CreatePrivateChat = async (
       .values({
         type: space_id ? "space" : "open",
         name: "",
-        channel_id: `${user_id}:${contact_id}`
+        channel_id: `${user_id}:${contact_id}`,
+        created_by: user_id
       })
       .returning()
 
@@ -80,6 +82,8 @@ export const CreateGroupChat = async (
   space_id?: string
 ) => {
   try {
+    const user = await AuthUserAction()
+    const creatorID =  user.unique_id
     const realtimeChannelId = randomUUID()
 
     const chat = await db
@@ -89,7 +93,8 @@ export const CreateGroupChat = async (
         name: chatName,
         channel_id: realtimeChannelId,
         name_index: slugify(chatName),
-        is_group: 1
+        is_group: 1,
+        created_by: creatorID
       })
       .returning()
 
@@ -243,10 +248,13 @@ export const GetMutualChat = async (
   }
 }
 
-export const GetChatById = async (chat_id: number) => {
+export const GetChatById = async (chat_id: number, withUsers: boolean = false) => {
   try {
     const chat = await db.query.chatsTable.findFirst({
-      where: eq(chatsTable.id, chat_id)
+      where: eq(chatsTable.id, chat_id),
+      with: {
+        users: withUsers ? true : undefined,
+      },
     })
     return chat
   } catch (error: any) {

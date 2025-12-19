@@ -39,8 +39,8 @@ import { Label } from "@/src/components/ui/label"
 interface CreateNewChatProps {
   mode?: "create" | "manage"
   currentChat?: SelectChat | null
-  onSuccess?: () => void,
-  canDelete?:boolean
+  onSuccess?: () => void
+  canDelete?: boolean
 }
 
 const CreateNewChat = ({
@@ -58,7 +58,7 @@ const CreateNewChat = ({
   const setMyChats = useSetAtom(chatStore.myChats)
   const switchChat = useSetAtom(chatStore.switchedChat)
   const setIsMobileMenuOpen = useSetAtom(chatStore.isMobileMenuOpen)
-  
+
   const [loading, state, error, FindUsers] = useServerAction(
     GetChatContactsAction
   )
@@ -66,7 +66,7 @@ const CreateNewChat = ({
   const [, , , removeUserFromGroup] = useServerAction(
     RemoveUserFromGroupChatAction
   )
-  
+
   const [isGroupChat, setIsGroupChat] = useState(false)
   const [groupName, setGroupName] = useState<string>("")
   const [groupNameError, setGroupNameError] = useState<string>("")
@@ -144,13 +144,9 @@ const CreateNewChat = ({
     }
   }, [selectedContacts, isManageMode, currentChat])
 
-  const currentMembers =
-    isManageMode
-      ? currentChat?.users?.filter((u) => u.user_id !== authUser?.unique_id) ||
-        []
-      : []
-
-  const canRemoveMembers = (currentChat?.users?.length || 0) > 2 && canDelete 
+  const currentMembers = isManageMode ? currentChat?.users || [] : []
+  const isCreator = currentChat?.created_by === authUser?.unique_id
+  const canRemoveMembers = isCreator && (currentChat?.users?.length || 0) > 2
 
   const handleRemoveExistingMember = async (userId: string) => {
     if (!currentChat?.id) return
@@ -349,7 +345,7 @@ const CreateNewChat = ({
                           </p>
                         </div>
                       </div>
-                      {canRemoveMembers && (
+                      {((canRemoveMembers || isCreator ) && authUser?.unique_id !== member.user?.unique_id) && (
                         <Button
                           variant="ghost"
                           size="icon"

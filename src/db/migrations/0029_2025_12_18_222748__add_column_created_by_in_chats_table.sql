@@ -1,0 +1,1 @@
+ALTER TABLE "chats" ADD COLUMN "created_by" varchar;
