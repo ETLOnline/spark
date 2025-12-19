@@ -14,6 +14,7 @@ import { useAtomValue, useSetAtom } from "jotai"
 import {
   AttachSpaceUserAction,
   DeleteSpaceAction,
+  DetachSpaceUserAction,
   LeaveSpaceAction
 } from "@/src/server-actions/Space/Space"
 import { useServerAction } from "@/src/hooks/useServerAction"
@@ -35,6 +36,7 @@ import { userStore } from "@/src/store/user/userStore"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 import clsx from "clsx"
+import { getRoleIdOnMatch } from "@/src/services/realtime/utils/helper"
 
 interface Props {
   space: SelectSpace
@@ -46,9 +48,10 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
     AttachSpaceUserAction
   )
   const [leaveLoading, leaveResult, leaveError, leaveSpace] =
-    useServerAction(LeaveSpaceAction)
+    useServerAction(DetachSpaceUserAction)
 
-  const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
+  const authUser = useAtomValue(userStore.AuthUser)
+  const currentUserId = authUser?.unique_id
   const superAdmin = useAtomValue(userStore.SuperAdmin)
   const [isSpaceMember, setIsSpaceMember] = useState<boolean>(false)
   useEffect(() => {
@@ -85,8 +88,17 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
   }
 
   const handleLeaveSpace = async () => {
-    if (space.id && currentUserId) {
-      const res = await leaveSpace(space.id, currentUserId)
+    if(!authUser?.roles) {
+      toast({
+        title: "Error",
+        description: "Failed to leave Space",
+        variant: "destructive"
+      })
+      return;
+    }
+    const role_id = getRoleIdOnMatch(authUser?.roles, space.id)
+    if (space.id && currentUserId && role_id) {
+      const res = await leaveSpace(space.id, currentUserId, role_id)
       if (res?.success) {
         setIsSpaceMember(false)
         toast({

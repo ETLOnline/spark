@@ -64,3 +64,16 @@ export const parseMentions = (text: string): MentionToken[] => {
 
   return tokens
 }
+
+
+export const getRoleIdOnMatch = (rolesArray: any[], targetEntityId: string) => {
+  let matchedId: number | null = null
+  rolesArray.forEach((data) => {
+    if (matchedId === null) {
+      if (data?.role?.entity_id === targetEntityId) {
+        matchedId = data?.role?.id
+      }
+    }
+  })
+  return matchedId
+}
