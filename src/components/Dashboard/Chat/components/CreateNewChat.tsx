@@ -79,6 +79,8 @@ const CreateNewChat = ({
   const existingMemberIds = new Set(
     currentChat?.users?.map((u) => u.user_id) || []
   )
+  const isCreator = currentChat?.created_by === authUser?.unique_id
+  const hasPermission = !currentChat?.created_by || isCreator
 
   const getOptionsFromUserList = (users: SelectUser[]) => {
     return users
@@ -144,19 +146,17 @@ const CreateNewChat = ({
   }, [selectedContacts, isManageMode, currentChat])
 
   const currentMembers = isManageMode ? currentChat?.users || [] : []
-  const isCreator = currentChat?.created_by === authUser?.unique_id
-  const canRemoveMembers = isCreator && (currentChat?.users?.length || 0) > 2
+  const canRemoveMembers = (currentChat?.users?.length || 0) > 2
 
   const handleRemoveExistingMember = async (userId: string) => {
     if (!currentChat?.id) return
 
     try {
       const result = await removeUserFromGroup(currentChat.id, userId)
-
       if (result?.success) {
         toast({
           title: "Success",
-          description: "Member removed from group",
+          description: "Member removed",
           duration: 3000
         })
         if (contactFilter) await getUserList(contactFilter)
@@ -168,7 +168,7 @@ const CreateNewChat = ({
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to remove member from group",
+        description: "Failed to remove member",
         duration: 3000
       })
     }
@@ -188,7 +188,6 @@ const CreateNewChat = ({
           toast({
             variant: "destructive",
             title: "No users selected",
-            description: "Please select at least one user to add",
             duration: 3000
           })
           setIsCreatingChat(false)
@@ -197,73 +196,47 @@ const CreateNewChat = ({
 
         for (const userId of userIds) {
           const result = await addUserToGroup(currentChat.id, userId)
-          if (!result?.success) {
-            throw new Error(`Failed to add user`)
-          }
+          if (!result?.success) throw new Error(`Failed to add user`)
         }
 
         toast({
           title: "Success",
-          description: `Added ${selectedContacts.length} member(s) to the group`,
+          description: `Added members`,
           duration: 3000
         })
         setSelectedContacts([])
         if (contactFilter) await getUserList(contactFilter)
-
         onSuccess?.()
       } else if (isGroupChat) {
+        // Create Group Logic
         const response = await CreateGroupChatAction(
           [...userIds, authUser?.unique_id],
           groupName,
           spaceId
         )
-
-        if (response.success === false && response.error) {
-          setGroupNameError(response.error)
-          setIsCreatingChat(false)
-          return
-        }
         if (response.success && response.data) {
-          const newChat = response.data
-          setMyChats((pre) => [...pre, newChat])
-          switchChat(newChat)
+          setMyChats((pre) => [...pre, response.data])
+          switchChat(response.data)
           setIsMobileMenuOpen(false)
-          setGroupName("")
           resetAndClose()
+        } else {
+          setGroupNameError("Error")
         }
       } else {
+        // Create Private Logic
         const response = await CreatePrivateChatAction(
           authUser?.unique_id,
           userIds[0],
           spaceId
         )
         if (response.success && response.data) {
-          const newChat = response.data
-          setMyChats((pre) => [...pre, newChat])
-          switchChat(newChat)
-          setIsMobileMenuOpen(false)
-          resetAndClose()
-        }
-        if (response.success === false && response.existingChat) {
+          setMyChats((pre) => [...pre, response.data])
           switchChat(response.data)
           setIsMobileMenuOpen(false)
-          toast({
-            title: "Chat already exists",
-            variant: "destructive",
-            duration: 3000
-          })
           resetAndClose()
-        }
-        if (response.success === false && response.error) {
-          toast({
-            title: response.error,
-            variant: "destructive",
-            duration: 3000
-          })
         }
       }
     } catch (e) {
-      console.error("Uncaught error during chat operation:", e)
       setGroupNameError("An unexpected error occurred.")
     } finally {
       setIsCreatingChat(false)
@@ -280,28 +253,23 @@ const CreateNewChat = ({
 
   return (
     <>
-      {isManageMode ? (
-        <Button
-          onClick={() => setDialogOpen(true)}
-          variant="ghost"
-          size="icon"
-          title="Manage group members"
-        >
+      <Button
+        onClick={() => setDialogOpen(true)}
+        variant="ghost"
+        size={isManageMode ? "icon" : "sm"}
+      >
+        {isManageMode ? (
           <Users className="h-5 w-5" />
-        </Button>
-      ) : (
-        <Button onClick={() => setDialogOpen(true)} variant="ghost" size="sm">
+        ) : (
           <PlusCircle className="h-4 w-4" />
-        </Button>
-      )}
+        )}
+      </Button>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>
-              {isManageMode
-                ? `Manage Members - ${currentChat?.name}`
-                : "Start Chat"}
+              {isManageMode ? `Manage - ${currentChat?.name}` : "Start Chat"}
             </DialogTitle>
           </DialogHeader>
 
@@ -333,97 +301,67 @@ const CreateNewChat = ({
                           </p>
                         </div>
                       </div>
-                      {((canRemoveMembers || isCreator ) && authUser?.unique_id !== member.user?.unique_id) && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() =>
-                            handleRemoveExistingMember(member.user_id)
-                          }
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
+                      {/* Only show remove if user hasPermission AND it's not themselves AND group size > 2 */}
+                      {hasPermission &&
+                        canRemoveMembers &&
+                        authUser?.unique_id !== member.user?.unique_id && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive"
+                            onClick={() =>
+                              handleRemoveExistingMember(member.user_id)
+                            }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                     </div>
                   ))}
                 </ScrollArea>
-                {isCreator && !canRemoveMembers && (
-                  <p className="text-xs text-muted-foreground">
-                    Cannot remove members. Group must have at least 2 members.
-                  </p>
-                )}
               </div>
             )}
 
-            {(!isManageMode || (isManageMode && isCreator)) && (
+            {/* Only show Add section if user hasPermission */}
+            {(!isManageMode || hasPermission) && (
               <div className="space-y-2">
                 <Label className="text-sm font-medium">
                   {isManageMode ? "Add Members" : "Select Contacts"}
                 </Label>
                 <MultiSelect
                   className="w-full"
-                  onQueryChange={async (query) => await handleQuerySearch(query)}
+                  onQueryChange={async (query) =>
+                    await handleQuerySearch(query)
+                  }
                   options={options}
                   selected={selectedContacts}
-                  onChange={(value) => {
-                    setSelectedContacts(value)
-                  }}
-                  placeholder={
-                    isManageMode ? "Search users to add..." : "Select Contacts"
-                  }
+                  onChange={(value) => setSelectedContacts(value)}
+                  placeholder="Search users..."
                   loading={loading}
                 />
               </div>
             )}
 
             {!isManageMode && isGroupChat && (
-              <>
-                <Input
-                  className="w-full"
-                  placeholder="Type Group Name"
-                  value={groupName}
-                  onChange={(e) => setGroupName(e.target.value)}
-                />
-                {groupNameError && (
-                  <p className="text-sm text-red-500">{groupNameError}</p>
-                )}
-                <div className="flex items-center justify-center">
-                  <Avvvatars value={groupName} style="shape" size={100} />
-                </div>
-              </>
-            )}
-
-            {!isManageMode && selectedContacts.length < 2 && (
-              <div className="flex items-center justify-center">
-                <Image
-                  src={"/images/story/chat-story.svg"}
-                  alt="chat"
-                  width={300}
-                  height={300}
-                />
-              </div>
-            )}
-
-            {isManageMode && isCreator && options.length === 0 && !loading && (
-              <div className="flex items-center justify-center text-muted-foreground text-sm py-8">
-                All users are already in the group
-              </div>
+              <Input
+                placeholder="Group Name"
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+              />
             )}
           </div>
 
           <div className="flex justify-end space-x-2">
             <Button variant="outline" onClick={resetAndClose}>
-              {(!isManageMode || isCreator) ? "Cancel" : "Close"}
+              Cancel
             </Button>
-            {(!isManageMode || (isManageMode && isCreator)) && (
+            {(!isManageMode || hasPermission) && (
               <Button
                 onClick={handleCreateNewChat}
                 disabled={selectedContacts.length === 0 || isCreatingChat}
+                loading={isCreatingChat}
               >
-                {isManageMode
-                  ? "Add Members"
-                  : `Start ${isGroupChat ? "Group" : "Direct"} Chat`}
+                {isManageMode ? "Add Members" : "Start Chat"}
               </Button>
             )}
           </div>
