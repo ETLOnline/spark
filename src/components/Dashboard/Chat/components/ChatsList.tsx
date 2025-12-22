@@ -1,5 +1,5 @@
 import { ScrollArea } from "@radix-ui/react-scroll-area"
-import React, { useMemo } from "react"
+import React, { useMemo, useState, useEffect, useRef } from "react"
 import { useAtom, useAtomValue } from "jotai"
 import { chatStore } from "@/src/store/chat/chatStore"
 import { userStore } from "@/src/store/user/userStore"
@@ -7,12 +7,34 @@ import Loader from "../../../common/Loader/Loader"
 import ChatContactItem from "./ChatContactItem"
 import moment from "moment"
 
-const ChatsList = ({ searchQuery = "" }) => {
+export const ChatsList = ({
+  searchQuery = "",
+  typingUsers
+}: {
+  searchQuery: string
+  typingUsers?: Record<number, Set<string>>
+}) => {
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
   const authUser = useAtomValue(userStore.AuthUser)
-  const isLoadingChats = !myChats || myChats.length === 0
+  const [isLoadingChats, setIsLoadingChats] = useState(true)
+  const isInitialMount = useRef(true)
+
+  useEffect(() => {
+    if (isInitialMount.current) {
+      if (myChats !== null && myChats !== undefined) {
+        const timer = setTimeout(() => {
+          setIsLoadingChats(false)
+          isInitialMount.current = false
+        }, 300)
+        return () => clearTimeout(timer)
+      }
+    } else {
+      setIsLoadingChats(false)
+    }
+  }, [myChats])
 
   const filteredChats = useMemo(() => {
+    if (!myChats) return []
     const chats = myChats.filter((chat) => {
       if (!searchQuery.trim()) return true
       const query = searchQuery.toLowerCase().replace(/\s+/g, "")
@@ -21,7 +43,7 @@ const ChatsList = ({ searchQuery = "" }) => {
         chat.name?.toLowerCase().replace(/\s+/g, "").includes(query)
       )
         return true
-
+      
       if (!chat.is_group && chat.users) {
         const contact = chat.users.find(
           (u) => u.user?.unique_id !== authUser?.unique_id
@@ -41,7 +63,7 @@ const ChatsList = ({ searchQuery = "" }) => {
       }
       return false
     })
-
+    
     return chats.sort(
       (a, b) => moment(b.updated_at).valueOf() - moment(a.updated_at).valueOf()
     )
@@ -57,7 +79,11 @@ const ChatsList = ({ searchQuery = "" }) => {
             </div>
           ) : filteredChats.length > 0 ? (
             filteredChats.map((chat) => (
-              <ChatContactItem key={chat.id} chat={chat} />
+              <ChatContactItem
+                key={chat.id}
+                typingUsers={typingUsers}
+                chat={chat}
+              />
             ))
           ) : (
             <div className="text-center text-muted-foreground py-8">

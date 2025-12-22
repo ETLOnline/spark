@@ -17,13 +17,16 @@ import { UpdateSpaceAction } from "@/src/server-actions/Space/Space"
 import { toast } from "@/src/hooks/use-toast"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
+import StarterKit from "@tiptap/starter-kit"
+import { Editor } from "@tiptap/react"
 
 interface SpaceOverviewProps {
   features?: SelectSpaceFeature[]
+  hasAnyFeatureAccess: boolean
   space: SelectSpace
 }
 
-function SpaceOverview({ features, space }: SpaceOverviewProps) {
+function SpaceOverview({ features,hasAnyFeatureAccess, space }: SpaceOverviewProps) {
   const [isEditDetail, setIsEditDetail] = useState(false)
   const [content, setContent] = useState("")
 
@@ -75,6 +78,16 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
     }
   }
 
+  const normalizeHTMLForRender = (html: string) => {
+    const editor = new Editor({
+      content: html,
+      extensions: [StarterKit]
+    })
+    const normalized = editor.getHTML()
+    editor.destroy()
+    return normalized
+  }
+
   return (
     <div>
       <div className="bg-background border-b px-6 py-4 flex items-center justify-between">
@@ -116,6 +129,7 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
                     </span>
                     <span className="text-sm">members</span>
                   </div>
+                  {hasAnyFeatureAccess && 
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <CircleCheckBig className="h-4 w-4 text-green-500" />
                     <span className="font-medium text-foreground">
@@ -123,6 +137,7 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
                     </span>
                     <span className="text-sm">active features</span>
                   </div>
+                  }
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Clock className="w-4 h-4 text-blue-500 " />
                     <span className="font-medium text-foreground">{0}</span>
@@ -153,17 +168,21 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
                 <Card
                   className="p-4 cursor-pointer"
                   onClick={() => setIsEditDetail(true)}
-                  dangerouslySetInnerHTML={{
-                    __html: content ?? ""
-                  }}
-                />
+                >
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: normalizeHTMLForRender(content) ?? ""
+                    }}
+                  />
+                </Card>
               ) : (
-                <Card
-                  className="p-4"
-                  dangerouslySetInnerHTML={{
-                    __html: content ?? ""
-                  }}
-                />
+                <Card className="p-4">
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: normalizeHTMLForRender(content) ?? ""
+                    }}
+                  />
+                </Card>
               )}
             </div>
           </div>

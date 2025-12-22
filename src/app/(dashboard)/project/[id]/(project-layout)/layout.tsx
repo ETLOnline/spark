@@ -7,9 +7,9 @@ import { ScrollArea } from "@/src/components/ui/scroll-area"
 import { GetSpaceById } from "@/src/db/data-access/spaces/query"
 import { getProjectUsers } from "@/src/db/data-access/project-management/query"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import Overlay from "@/src/components/common/Overlay/OverLay"
 import { GetSpaceByIdAction } from "@/src/server-actions/Space/Space"
 import { isSuperAdmin } from "@/src/utils/helpers"
+import PrivatePage from "@/src/components/common/Overlay/PrivatePage"
 
 interface Props {
   children: ReactNode
@@ -61,7 +61,7 @@ async function layout({ children, params }: Props) {
           </div>
         </>
       ) : (
-        <Overlay
+        <PrivatePage
           page="project"
           pageHref={`/channels/${space.data?.channel.channel_slug}/spaces/${space.data?.space_slug}?page-type=project-management`}
         />

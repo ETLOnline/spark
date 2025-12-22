@@ -5,12 +5,19 @@ import { SelectNotification } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { MarkNotificationAsReadAction } from "@/src/server-actions/Notification/Notification"
 import { notificationStore } from "@/src/store/notification/notificationStore"
-import { formatRelativeTime } from "@/src/utils/helpers"
+import moment from "moment-timezone"
 
 type NotificationItemProps = {
   activity: SelectNotification
   children?: React.ReactNode
   size?: "sm" | "lg"
+}
+
+const formatTime = (timestamp: string | Date | null | undefined) => {
+  if (!timestamp) {
+    return ""
+  }
+  return moment.utc(timestamp).local().format("MMM D, hh:mm A")
 }
 
 const NotificationItem: React.FC<NotificationItemProps> = ({
@@ -56,17 +63,15 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
           onClick={markNotificationAsRead}
           className="min-w-0"
         >
+          <p className="text-xs text-muted-foreground">
+            {formatTime(activity.created_at)}
+          </p>
           <p className="text-sm font-medium truncate">{activity.title}</p>
           {activity.body && (
             <p
               className="text-xs text-muted-foreground break-words"
               dangerouslySetInnerHTML={{ __html: activity.body }}
             />
-          )}
-          {size === "sm" ? null : (
-            <p className="text-xs text-muted-foreground">
-              {formatRelativeTime(activity.created_at)}
-            </p>
           )}
         </Link>
       </div>

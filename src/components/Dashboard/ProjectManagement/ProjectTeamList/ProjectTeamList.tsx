@@ -196,7 +196,7 @@ export default function ProjectTeamList({
             duration: 3000
           })
         } else {
-          toast({ title: "All selected users added to project successfully!" })
+          toast({ title: "User(s) added successfully!" })
         }
       } else {
         console.error(

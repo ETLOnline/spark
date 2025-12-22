@@ -38,7 +38,6 @@ import { useRouter, useSearchParams } from "next/navigation"
 import ChannelsContextMenu from "@/src/components/Dashboard/Channels/ChannelDetails/ChannelsContextMenu"
 import Link from "next/link"
 import { userStore } from "@/src/store/user/userStore"
-import Overlay from "../common/Overlay/OverLay"
 import { communityStore } from "@/src/store/community/communityStore"
 import { useSetAtom } from "jotai"
 import { InviteUserDialog } from "../UserListAndInvite/UserInviteDialog"
@@ -66,6 +65,7 @@ import {
 import ChannelCardItem from "../Dashboard/Channels/ChannelCardItem"
 import Image from "next/image"
 import clsx from "clsx"
+import PrivatePage from "../common/Overlay/PrivatePage"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -284,13 +284,12 @@ export default function CommunityDetailsClient({
   }
 
   const encodedCommunitySlug = encodeURIComponent(community.slug)
-
+  if (showAccessDeniedOverlay) {
+    return <PrivatePage page="Community" pageHref="/communities" />
+  }
   return (
     <div className="min-h-screen bg-background relative">
       {/* Added relative for the overlay positioning */}
-      {showAccessDeniedOverlay && (
-        <Overlay page="Community" pageHref="/communities" />
-      )}
       <div className="flex flex-col min-h-screen">
         {/* Community Header Banner */}
         <div className="relative sm:h-44 h-36 shadow-sm rounded-lg overflow-hidden">
