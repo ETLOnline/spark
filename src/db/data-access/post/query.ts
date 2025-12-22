@@ -62,7 +62,7 @@ export const GetPostById = async (postId: string) => {
         },
         hashtags: { with: { hashtag: true } },
         options: { with: { votes: true } },
-        file: { with: { postFile: true } },
+        files: { with: { postFile: true } },
         postLikes: true
       }
     })
@@ -229,7 +229,7 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
           },
           hashtags: { with: { hashtag: true } },
           options: { with: { votes: true } },
-          file: { with: { postFile: true } },
+          files: { with: { postFile: true } },
           postLikes: true
         },
         orderBy:
@@ -260,7 +260,7 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
           },
           hashtags: { with: { hashtag: true } },
           options: { with: { votes: true } },
-          file: { with: { postFile: true } },
+          files: { with: { postFile: true } },
           postLikes: true
         },
         orderBy:
