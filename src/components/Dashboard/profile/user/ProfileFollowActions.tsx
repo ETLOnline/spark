@@ -16,7 +16,7 @@ import {
   GetContactAction
 } from "@/src/server-actions/Contact/Contact"
 import { userStore } from "@/src/store/user/userStore"
-import { joinRequestChannel } from "@/src/utils/helpers"
+import pusherClient from "@/src/services/realtime/PusherClient" // Imported Pusher
 import { useAtomValue } from "jotai"
 import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
@@ -65,23 +65,33 @@ const ProfileFollowActions = ({ user }: Props) => {
     if (authUser && authUser?.unique_id && user && user.unique_id) {
       getContact(authUser.unique_id, user.unique_id)
       getMutualChat(user.unique_id, "open")
-      const { unsubscribe } = joinRequestChannel(
-        authUser.unique_id,
-        (request, activity) => {
-          if (activity !== ActivityType.delRequest) {
-            setConnectionContact({ ...request })
-          } else {
-            setConnectionContact(undefined)
-          }
-        },
-        [
-          ActivityType.acceptRequest,
-          ActivityType.delRequest,
-          ActivityType.request
-        ]
-      )
+      const channel = pusherClient.subscribe(authUser.unique_id)
+
+      const handleIncomingUpdate = (request: any) => {
+        if (
+          request.user_id === user.unique_id ||
+          request.contact_id === user.unique_id
+        ) {
+          setConnectionContact({ ...request })
+        }
+      }
+
+      const handleIncomingDeletion = (request: any) => {
+        if (
+          request.user_id === user.unique_id ||
+          request.contact_id === user.unique_id
+        ) {
+          setConnectionContact(undefined)
+        }
+      }
+
+      channel.bind(ActivityType.request, handleIncomingUpdate)
+      channel.bind(ActivityType.acceptRequest, handleIncomingUpdate)
+      channel.bind(ActivityType.delRequest, handleIncomingDeletion)
+
       return () => {
-        unsubscribe()
+        channel.unbind_all()
+        pusherClient.unsubscribe(authUser.unique_id)
       }
     }
   }, [authUser?.unique_id, user.unique_id])
@@ -142,20 +152,10 @@ const ProfileFollowActions = ({ user }: Props) => {
         connectionContact?.contact_id
       )
       if (res?.success && res?.data) {
-        if (connectionContact) {
-          setConnectionContact({ ...res.data })
-        }
+        setConnectionContact({ ...res.data })
         toast({
           title: "Connection Accepted",
           description: "You have successfully accepted the connection request",
-          duration: 3000
-        })
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Unable to Accept Request!",
-          description:
-            "There was an issue performing the action please try again.",
           duration: 3000
         })
       }
@@ -179,36 +179,14 @@ const ProfileFollowActions = ({ user }: Props) => {
         connectionContact?.contact_id
       )
       if (res?.success) {
-        if (connectionContact) {
-          setConnectionContact({
-            ...connectionContact,
-            is_accepted: 0,
-            is_requested: 0
-          })
-        }
+        setConnectionContact(undefined)
         toast({
           title: "Disconnected!",
           description: "You have successfully disconnected with the user",
           duration: 3000
         })
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Unable to Disconnect!",
-          description:
-            "There was an issue performing the action please try again.",
-          duration: 3000
-        })
       }
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Unable to Disconnect!",
-        description:
-          "There was an issue performing the action please try again.",
-        duration: 3000
-      })
-    }
+    } catch (error) {}
   }
 
   return (
@@ -216,7 +194,13 @@ const ProfileFollowActions = ({ user }: Props) => {
       <Button>Follow</Button>
       {connectionContact && connectionContact.is_accepted ? (
         <>
-          <Button onClick={handledeleteContact}>Disconnect</Button>
+          <Button
+            variant="outline"
+            onClick={handledeleteContact}
+            loading={deleteContactLoading}
+          >
+            Disconnect
+          </Button>
           <Button
             loading={createChatLoading || mutualChatLoading}
             onClick={handleMessage}
@@ -230,11 +214,15 @@ const ProfileFollowActions = ({ user }: Props) => {
       !connectionContact.is_accepted ? (
         <>
           {connectionContact.contact_id === authUser?.unique_id ? (
-            <Button onClick={handleAcceptConnection}>Accept Connection</Button>
+            <Button
+              onClick={handleAcceptConnection}
+              loading={acceptConnectionLoading}
+            >
+              Accept Connection
+            </Button>
           ) : (
-            <Button disabled={acceptConnectionLoading}>
-              {contactLoading || acceptConnectionLoading ? <Loader /> : null}{" "}
-              Connect Requested
+            <Button disabled className="bg-muted text-muted-foreground">
+              {contactLoading ? <Loader /> : null} Connect Requested
             </Button>
           )}
         </>
