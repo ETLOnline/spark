@@ -66,6 +66,7 @@ import ChannelCardItem from "../Dashboard/Channels/ChannelCardItem"
 import Image from "next/image"
 import clsx from "clsx"
 import PrivatePage from "../common/Overlay/PrivatePage"
+import pusherClient from "@/src/services/realtime/PusherClient"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -205,7 +206,11 @@ export default function CommunityDetailsClient({
     channel: SelectChannel
   ) => {
     if (actionType === "create") {
-      setChannels((prevChannels) => [channel, ...prevChannels])
+      setChannels((prevChannels) => {
+        const exists = prevChannels.some((c) => c.id === channel.id)
+        if (exists) return prevChannels
+        return [channel, ...prevChannels]
+      })
       if (pagination) {
         setPagination((prev) => ({
           ...prev!,
@@ -283,6 +288,34 @@ export default function CommunityDetailsClient({
     }
   }
 
+  useEffect(() => {
+    const pusherChannel = pusherClient.subscribe(
+      "broadcast-channels-spaces-update"
+    )
+
+    pusherChannel.bind("channel-add", (newChannel: SelectChannel) => {
+      if (newChannel.community_id === community.id) {
+        onActionComplete("create", newChannel)
+      }
+    })
+
+    pusherChannel.bind("channel-edit", (updatedChannel: SelectChannel) => {
+      if (updatedChannel.community_id === community.id) {
+        onActionComplete("updated", updatedChannel)
+      }
+    })
+
+    pusherChannel.bind("channel-del", (deletedChannel: SelectChannel) => {
+      if (deletedChannel.community_id === community.id) {
+        onActionComplete("deleted", deletedChannel)
+      }
+    })
+
+    return () => {
+      pusherChannel.unbind_all()
+      pusherClient.unsubscribe("broadcast-channels-spaces-update")
+    }
+  }, [community.id])
   const encodedCommunitySlug = encodeURIComponent(community.slug)
   if (showAccessDeniedOverlay) {
     return <PrivatePage page="Community" pageHref="/communities" />
