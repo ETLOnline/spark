@@ -15,7 +15,6 @@ import {
   UpdateSpace,
   updateSpaceUser
 } from "@/src/db/data-access/spaces/query"
-// Removed AblyClientRest
 import { CreateServerAction } from ".."
 import {
   InsertSpace,
@@ -185,7 +184,6 @@ export const UpdateSpaceAction = CreateServerAction(
     try {
       const updatedSpace = await UpdateSpace(spaceID, updatedData)
       
-      // PUSHER TRIGGER: Replace Ably broadcast
       await pusherServer.trigger(BROADCAST_CHANNEL, "space-edit", updatedSpace);
 
       return { success: true, data: updatedSpace }
@@ -201,7 +199,6 @@ export const DeleteSpaceAction = CreateServerAction(
     try {
       await DeleteSpace(deletedSpaceData)
       
-      // PUSHER TRIGGER: Replace Ably broadcast
       await pusherServer.trigger(BROADCAST_CHANNEL, "space-del", deletedSpaceData);
 
       await deleteRoleBasedOnEntityType("SPACE", deletedSpaceData.id)
