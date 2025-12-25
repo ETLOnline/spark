@@ -187,6 +187,35 @@ export default function CommunityDetailsClient({
     isCommunityMember
   ])
 
+  useEffect(() => {
+    const pusherChannel = pusherClient.subscribe(
+      "broadcast-channels-spaces-update"
+    )
+
+    pusherChannel.bind("channel-add", (newChannel: SelectChannel) => {
+      if (newChannel.community_id === community.id) {
+        onActionComplete("create", newChannel)
+      }
+    })
+
+    pusherChannel.bind("channel-edit", (updatedChannel: SelectChannel) => {
+      if (updatedChannel.community_id === community.id) {
+        onActionComplete("updated", updatedChannel)
+      }
+    })
+
+    pusherChannel.bind("channel-del", (deletedChannel: SelectChannel) => {
+      if (deletedChannel.community_id === community.id) {
+        onActionComplete("deleted", deletedChannel)
+      }
+    })
+
+    return () => {
+      pusherChannel.unbind_all()
+      pusherClient.unsubscribe("broadcast-channels-spaces-update")
+    }
+  }, [community.id])
+
   if (
     isCommunityMember === null &&
     community.type === "private" &&
@@ -287,35 +316,6 @@ export default function CommunityDetailsClient({
       })
     }
   }
-
-  useEffect(() => {
-    const pusherChannel = pusherClient.subscribe(
-      "broadcast-channels-spaces-update"
-    )
-
-    pusherChannel.bind("channel-add", (newChannel: SelectChannel) => {
-      if (newChannel.community_id === community.id) {
-        onActionComplete("create", newChannel)
-      }
-    })
-
-    pusherChannel.bind("channel-edit", (updatedChannel: SelectChannel) => {
-      if (updatedChannel.community_id === community.id) {
-        onActionComplete("updated", updatedChannel)
-      }
-    })
-
-    pusherChannel.bind("channel-del", (deletedChannel: SelectChannel) => {
-      if (deletedChannel.community_id === community.id) {
-        onActionComplete("deleted", deletedChannel)
-      }
-    })
-
-    return () => {
-      pusherChannel.unbind_all()
-      pusherClient.unsubscribe("broadcast-channels-spaces-update")
-    }
-  }, [community.id])
   const encodedCommunitySlug = encodeURIComponent(community.slug)
   if (showAccessDeniedOverlay) {
     return <PrivatePage page="Community" pageHref="/communities" />
