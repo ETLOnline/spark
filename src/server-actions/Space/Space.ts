@@ -15,7 +15,7 @@ import {
   UpdateSpace,
   updateSpaceUser
 } from "@/src/db/data-access/spaces/query"
-import { AblyClientRest } from "@/src/services/realtime/AblyClient"
+// Removed AblyClientRest
 import { CreateServerAction } from ".."
 import {
   InsertSpace,
@@ -42,12 +42,15 @@ import { defaultSpaceOverviewTemplate } from "@/src/app/(dashboard)/channels/[ch
 import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import { GetUserPermissionsParsedAction } from "../UserRoles/UserRole"
 import { ensureCommunityMembership } from "../Community/Community"
-import pusherServer from "@/src/services/realtime/pusherServer"
 import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
 import {
   attachCommunityUser,
   getCommunityUsers
 } from "@/src/db/data-access/communities/query"
+import pusherServer from "@/src/services/realtime/pusherServer"
+
+// Define the broadcast channel name constant for cleaner code
+const BROADCAST_CHANNEL = "broadcast-channels-spaces-update";
 
 export const CreateSpaceAction = CreateServerAction(
   true,
@@ -55,10 +58,9 @@ export const CreateSpaceAction = CreateServerAction(
     try {
       const overview = defaultSpaceOverviewTemplate(SpaceData.space_name)
       const newSpace = await CreateSpace({ ...SpaceData, overview: overview })
-      const channel = AblyClientRest.channels.get(
-        "broadcast-channels-spaces-update"
-      )
-      await channel.publish("space-add", newSpace)
+      
+      await pusherServer.trigger(BROADCAST_CHANNEL, "space-add", newSpace);
+
       const result = await createScopedSpaceRolesAndAssignAdmin(
         newSpace.id,
         newSpace.space_name,
@@ -182,10 +184,10 @@ export const UpdateSpaceAction = CreateServerAction(
   async (spaceID: string, updatedData: Partial<SelectSpace>) => {
     try {
       const updatedSpace = await UpdateSpace(spaceID, updatedData)
-      const channel = AblyClientRest.channels.get(
-        "broadcast-channels-spaces-update"
-      )
-      await channel.publish("space-edit", updatedSpace)
+      
+      // PUSHER TRIGGER: Replace Ably broadcast
+      await pusherServer.trigger(BROADCAST_CHANNEL, "space-edit", updatedSpace);
+
       return { success: true, data: updatedSpace }
     } catch (error) {
       return { error: error }
@@ -198,10 +200,10 @@ export const DeleteSpaceAction = CreateServerAction(
   async (deletedSpaceData: SelectSpace) => {
     try {
       await DeleteSpace(deletedSpaceData)
-      const channel = AblyClientRest.channels.get(
-        "broadcast-channels-spaces-update"
-      )
-      await channel.publish("space-del", deletedSpaceData)
+      
+      // PUSHER TRIGGER: Replace Ably broadcast
+      await pusherServer.trigger(BROADCAST_CHANNEL, "space-del", deletedSpaceData);
+
       await deleteRoleBasedOnEntityType("SPACE", deletedSpaceData.id)
       return { success: true }
     } catch (error) {

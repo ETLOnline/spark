@@ -26,6 +26,7 @@ import {
 import { isEntityUser } from "@/src/utils/clientHelper"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 import { useToast } from "@/src/hooks/use-toast"
+import Pusher from "pusher-js"
 import "../spaces/../../../style.css"
 import {
   AlertDialog,
@@ -67,6 +68,66 @@ export default function ChannelPage() {
   )
   const [leaveLoading, leaveResult, leaveError, leaveChannel] =
     useServerAction(LeaveChannelAction)
+
+  useEffect(() => {
+    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
+      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!
+    })
+
+    const channel = pusher.subscribe("broadcast-channels-spaces-update")
+
+    channel.bind("space-add", (newSpace: SelectSpace) => {
+      if (newSpace.channel_id === selectedChannel?.id) {
+        const isUserMember = newSpace.users?.some(
+          (u) => u.user_id === currentUserId
+        )
+
+        if (isUserMember) {
+          setJoinedSpaces((prev) => {
+            if (prev.some((s) => s.id === newSpace.id)) return prev
+            return [...prev, newSpace]
+          })
+        } else {
+          setSpaces((prev) => {
+            if (prev.some((s) => s.id === newSpace.id)) return prev
+            return [...prev, newSpace]
+          })
+        }
+      }
+    })
+
+    channel.bind("space-edit", (updatedSpace: SelectSpace) => {
+      if (updatedSpace.channel_id === selectedChannel?.id) {
+        setSpaces((prev) =>
+          prev.map((space) =>
+            space.id === updatedSpace.id ? updatedSpace : space
+          )
+        )
+        setJoinedSpaces((prev) =>
+          prev.map((space) =>
+            space.id === updatedSpace.id ? updatedSpace : space
+          )
+        )
+      }
+    })
+
+    channel.bind("space-del", (deletedSpace: SelectSpace) => {
+      if (deletedSpace.channel_id === selectedChannel?.id) {
+        setSpaces((prev) =>
+          prev.filter((space) => space.id !== deletedSpace.id)
+        )
+        setJoinedSpaces((prev) =>
+          prev.filter((space) => space.id !== deletedSpace.id)
+        )
+      }
+    })
+
+    return () => {
+      channel.unbind_all()
+      channel.unsubscribe()
+      pusher.disconnect()
+    }
+  }, [selectedChannel?.id, currentUserId])
 
   const handleJoinChannel = async () => {
     if (
