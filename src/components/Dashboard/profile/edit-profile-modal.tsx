@@ -200,6 +200,7 @@ const EditProfileModal: React.FC = () => {
 
   useEffect(() => {
     if (isOpen) {
+      document.body.style.overflow = "hidden"
       // Reset form fields
       form.reset({
         first_name: user?.first_name || "",
@@ -222,6 +223,12 @@ const EditProfileModal: React.FC = () => {
           value: i.id.toString()
         }))
       )
+    } else {
+      document.body.style.overflow = ""
+    }
+
+    return () => {
+      document.body.style.overflow = ""
     }
   }, [isOpen, user, bio, skills, interests])
 
@@ -251,6 +258,7 @@ const EditProfileModal: React.FC = () => {
         <DialogContent
           className="sm:max-w-[530px]  "
           onInteractOutside={(e) => e.preventDefault()}
+          onWheel={(e) => e.stopPropagation()}
         >
           <DialogHeader>
             <DialogTitle>Edit profile</DialogTitle>
