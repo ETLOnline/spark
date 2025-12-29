@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react"
 import { motion, AnimatePresence, Reorder } from "framer-motion"
 import { useDropzone } from "react-dropzone"
 import { cn } from "@/src/lib/utils"
-import { CloudUpload } from "lucide-react"
+import { CloudUpload, X } from "lucide-react"
 import PreviewItem from "./file-upload/PreviewItem"
 import { resolveAccept } from "@/src/utils/clientHelper"
 import { toast } from "@/src/hooks/use-toast"
@@ -28,13 +28,42 @@ const secondaryVariant = {
   }
 }
 
+function getFriendlyAcceptLabel(accept?: string, fileType?: "file" | "image") {
+  if (fileType === "image") return "Images (jpg, png, gif, webp)"
+
+  if (!accept) return "Files (pdf, doc, docx, xls, xlsx, ppt, pptx, txt, zip)"
+
+  // Simplify the accept string into a readable list
+  const parts = accept
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean)
+  const readable = parts
+    .map((p) => {
+      if (p.startsWith(".")) return p
+      const idx = p.lastIndexOf("/")
+      return idx !== -1 ? p.slice(idx + 1) : p
+    })
+    .slice(0, 6)
+
+  return readable.join(", ")
+}
+
 export const FileUpload: React.FC<{
   onChange?: (files: File[]) => void
   onRemove?: () => void
+  onClose?: () => void
   accept?: string
   multiple?: boolean
   fileType?: "file" | "image"
-}> = ({ onChange, onRemove, accept, multiple = false, fileType = "file" }) => {
+}> = ({
+  onChange,
+  onRemove,
+  onClose,
+  accept,
+  multiple = false,
+  fileType = "file"
+}) => {
   const [files, setFiles] = useState<File[]>([])
   const [items, setItems] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -45,13 +74,33 @@ export const FileUpload: React.FC<{
     if (!newFiles || newFiles.length === 0) return
 
     let filtered = newFiles
+    const acceptIncludesImage = (resolvedAccept || "").includes("image/*")
+
     if (fileType === "image") {
+      // Only allow images
       filtered = newFiles.filter((f) => f.type.startsWith("image/"))
-    } else if (fileType === "file") {
-      filtered = newFiles.filter((f) => !f.type.startsWith("image/"))
       if (filtered.length === 0) {
         if (fileInputRef.current) fileInputRef.current.value = ""
+        toast({
+          title: "Invalid file type",
+          description: `Only ${getFriendlyAcceptLabel(resolvedAccept, fileType)} are allowed.`
+        })
         return
+      }
+    } else if (fileType === "file") {
+      // If the accept string explicitly allows images, let images through too.
+      if (acceptIncludesImage) {
+        filtered = newFiles
+      } else {
+        filtered = newFiles.filter((f) => !f.type.startsWith("image/"))
+        if (filtered.length === 0) {
+          if (fileInputRef.current) fileInputRef.current.value = ""
+          toast({
+            title: "Invalid file type",
+            description: `Images are not allowed. Accepted: ${getFriendlyAcceptLabel(resolvedAccept, fileType)}.`
+          })
+          return
+        }
       }
     }
 
@@ -60,7 +109,10 @@ export const FileUpload: React.FC<{
     }
 
     // Update states
-    if (multiple && fileType === "image") {
+    if (
+      multiple &&
+      (fileType === "image" || (fileType === "file" && acceptIncludesImage))
+    ) {
       const next = [...items, ...filtered]
       setItems(next)
       setFiles(next)
@@ -138,6 +190,11 @@ export const FileUpload: React.FC<{
             {files.length > 0
               ? "Click the X to remove or upload a new file"
               : "Drag or drop your files here or click to upload"}
+          </p>
+
+          {/* Accepted types hint */}
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
+            Accepted: {getFriendlyAcceptLabel(resolvedAccept, fileType)}
           </p>
           <div
             className="relative w-full  mt-10 max-w-xl mx-auto"
