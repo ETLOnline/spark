@@ -23,7 +23,7 @@ export const MessageContent = ({ content }: MessageContentProps) => {
   }
 
   return (
-    <p className="text-sm whitespace-pre-wrap break-words">
+    <p className="text-sm whitespace-pre-wrap break-words break-all">
       {renderMessageWithMentions(content)}
     </p>
   )

@@ -2,9 +2,9 @@ import React, { useRef, useState } from "react"
 import { motion, AnimatePresence, Reorder } from "framer-motion"
 import { useDropzone } from "react-dropzone"
 import { cn } from "@/src/lib/utils"
-import { CloudUpload, X } from "lucide-react"
+import { CloudUpload } from "lucide-react"
 import PreviewItem from "./file-upload/PreviewItem"
-import { resolveAccept } from "@/src/utils/clientHelper"
+import { getFriendlyAcceptLabel, resolveAccept } from "@/src/utils/clientHelper"
 import { toast } from "@/src/hooks/use-toast"
 
 const mainVariant = {
@@ -28,42 +28,13 @@ const secondaryVariant = {
   }
 }
 
-function getFriendlyAcceptLabel(accept?: string, fileType?: "file" | "image") {
-  if (fileType === "image") return "Images (jpg, png, gif, webp)"
-
-  if (!accept) return "Files (pdf, doc, docx, xls, xlsx, ppt, pptx, txt, zip)"
-
-  // Simplify the accept string into a readable list
-  const parts = accept
-    .split(",")
-    .map((p) => p.trim())
-    .filter(Boolean)
-  const readable = parts
-    .map((p) => {
-      if (p.startsWith(".")) return p
-      const idx = p.lastIndexOf("/")
-      return idx !== -1 ? p.slice(idx + 1) : p
-    })
-    .slice(0, 6)
-
-  return readable.join(", ")
-}
-
 export const FileUpload: React.FC<{
   onChange?: (files: File[]) => void
   onRemove?: () => void
-  onClose?: () => void
   accept?: string
   multiple?: boolean
   fileType?: "file" | "image"
-}> = ({
-  onChange,
-  onRemove,
-  onClose,
-  accept,
-  multiple = false,
-  fileType = "file"
-}) => {
+}> = ({ onChange, onRemove, accept, multiple = false, fileType = "file" }) => {
   const [files, setFiles] = useState<File[]>([])
   const [items, setItems] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -192,10 +163,6 @@ export const FileUpload: React.FC<{
               : "Drag or drop your files here or click to upload"}
           </p>
 
-          {/* Accepted types hint */}
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
-            Accepted: {getFriendlyAcceptLabel(resolvedAccept, fileType)}
-          </p>
           <div
             className="relative w-full  mt-10 max-w-xl mx-auto"
             onClick={(e) => {

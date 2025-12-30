@@ -416,6 +416,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     setAvailableUsers([])
     setRichMessageContent("")
     setShowRichEditorToolbar(false)
+    setFileString("")
+    setSelectedFile(null)
+    setOpenAttachment(false)
 
     const newSwitchedChat = await fetchChatWithMessages(chatId)
     if (newSwitchedChat && newSwitchedChat.data) {
@@ -653,6 +656,11 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     }
   }
   const handleFileUpload = (files: File[]) => {
+    if (!files || files.length === 0) {
+      setRichMessageContent("")
+      setFileString("")
+      return
+    }
     const file = files[0]
     if (!file) return
 
@@ -910,7 +918,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                 <div className="relative group flex flex-col">
                                   {/* MESSAGE BUBBLE */}
                                   <div
-                                    className={`rounded-lg py-2 pl-2 rich-editor flex gap-1 flex-col pr-6 ${
+                                    className={`rounded-lg py-2 pl-2  flex gap-1 flex-col pr-6 ${
                                       message.sender_id === authUser?.unique_id
                                         ? "bg-primary text-primary-foreground"
                                         : "bg-muted"
@@ -1092,7 +1100,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                             variant="ghost"
                             size="icon"
                             onClick={handleCloseAttachment}
-                            className={`text-foreground self-end bg-secondary`}
+                            className={` bg-primary self-end `}
                           >
                             <X className="h-4 w-4" />
                           </Button>

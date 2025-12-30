@@ -244,6 +244,13 @@ import { parseMentions } from "@/src/services/realtime/utils/helper"
 export function parseLastMessageType(rawMessage: string | null) {
   if (!rawMessage) return { type: "text", content: "" }
 
+  const imgRegex = /<img\s+[^>]*src=(["'])(.*?)\1[^>]*>/i
+  const imgMatch = rawMessage.match(imgRegex)
+  if (imgMatch) {
+    const src = imgMatch[2] || ""
+    return { type: "image", filename: src }
+  }
+
   const tokens = parseMentions(rawMessage || "")
   const lastMessage = tokens
     .map((t) => (t.type === "mention" ? `@${t.value}` : t.value))
@@ -263,4 +270,27 @@ export function parseLastMessageType(rawMessage: string | null) {
   }
 
   return { type: "file", filename }
+}
+
+export function getFriendlyAcceptLabel(
+  accept?: string,
+  fileType?: "file" | "image"
+) {
+  if (fileType === "image") return "Images (jpg, png, gif, webp)"
+
+  if (!accept) return "Files (pdf, doc, docx, xls, xlsx, ppt, pptx, txt, zip)"
+
+  const parts = accept
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean)
+  const readable = parts
+    .map((p) => {
+      if (p.startsWith(".")) return p
+      const idx = p.lastIndexOf("/")
+      return idx !== -1 ? p.slice(idx + 1) : p
+    })
+    .slice(0, 6)
+
+  return readable.join(", ")
 }
