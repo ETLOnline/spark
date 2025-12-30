@@ -918,7 +918,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                 <div className="relative group flex flex-col">
                                   {/* MESSAGE BUBBLE */}
                                   <div
-                                    className={`rounded-lg py-2 pl-2  flex gap-1 flex-col pr-6 ${
+                                    className={`rounded-lg py-2 pl-2 rich-editor  flex gap-1 flex-col pr-6 ${
                                       message.sender_id === authUser?.unique_id
                                         ? "bg-primary text-primary-foreground"
                                         : "bg-muted"

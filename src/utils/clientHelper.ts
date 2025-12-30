@@ -244,7 +244,7 @@ import { parseMentions } from "@/src/services/realtime/utils/helper"
 export function parseLastMessageType(rawMessage: string | null) {
   if (!rawMessage) return { type: "text", content: "" }
 
-  const imgRegex = /<img\s+[^>]*src=(["'])(.*?)\1[^>]*>/i
+  const imgRegex = /<img\s+[^>]*src=(['"])(.*?)\1[^>]*>/i
   const imgMatch = rawMessage.match(imgRegex)
   if (imgMatch) {
     const src = imgMatch[2] || ""
@@ -257,19 +257,25 @@ export function parseLastMessageType(rawMessage: string | null) {
     .join("")
 
   const parts = rawMessage.split(",")
+  if (parts.length >= 4) {
+    const filePath = (parts[0] || "").trim()
+    const filename = (parts[1] || "").trim()
+    const sizeStr = (parts[2] || "").trim()
+    const mime = (parts[3] || "").trim()
 
-  if (parts.length < 4) {
-    return { type: "text", content: lastMessage }
+    const isUrl = /^https?:\/\//i.test(filePath)
+    const isSizeNumeric = /^\d+$/.test(sizeStr)
+    const isMimeLike = mime.includes("/")
+
+    if (isUrl && filename && isSizeNumeric && isMimeLike) {
+      if (mime.startsWith("image/")) {
+        return { type: "image", filename }
+      }
+      return { type: "file", filename }
+    }
   }
 
-  const filename = parts[1]
-  const mime = parts[3]
-
-  if (mime?.startsWith("image/")) {
-    return { type: "image", filename }
-  }
-
-  return { type: "file", filename }
+  return { type: "text", content: lastMessage }
 }
 
 export function getFriendlyAcceptLabel(
