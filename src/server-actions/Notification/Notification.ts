@@ -28,7 +28,6 @@ export const AddNotificationAction = CreateServerAction(
 
       return { success: true, data }
     } catch (error: any) {
-      console.error("Pusher Notification Error:", error)
       return { error: error, success: false }
     }
   }

@@ -26,7 +26,6 @@ import {
 import { isEntityUser } from "@/src/utils/clientHelper"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 import { useToast } from "@/src/hooks/use-toast"
-import Pusher from "pusher-js"
 import "../spaces/../../../style.css"
 import {
   AlertDialog,
@@ -38,6 +37,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/src/components/ui/alert-dialog"
+import pusherClient from "@/src/services/realtime/PusherClient"
 
 export default function ChannelPage() {
   const router = useRouter()
@@ -70,11 +70,7 @@ export default function ChannelPage() {
     useServerAction(LeaveChannelAction)
 
   useEffect(() => {
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!
-    })
-
-    const channel = pusher.subscribe("broadcast-channels-spaces-update")
+    const channel = pusherClient.subscribe("broadcast-channels-spaces-update")
 
     channel.bind("space-add", (newSpace: SelectSpace) => {
       if (newSpace.channel_id === selectedChannel?.id) {
@@ -125,7 +121,6 @@ export default function ChannelPage() {
     return () => {
       channel.unbind_all()
       channel.unsubscribe()
-      pusher.disconnect()
     }
   }, [selectedChannel?.id, currentUserId])
 
