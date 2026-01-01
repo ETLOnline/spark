@@ -21,7 +21,6 @@ import {
   SelectChannel,
   SelectChannelUser
 } from "@/src/db/schema"
-import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 import { AuthUserAction } from "../User/AuthUserAction"
 import { isSuperAdmin } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
@@ -42,10 +41,12 @@ export const CreateChannelAction = CreateServerAction(
   async (channelData: InsertChannel) => {
     try {
       const newChannel = await CreateChannel(channelData)
-      const channel = AblyClientRest.channels.get(
-        "broadcast-channels-spaces-update"
+      await pusherServer.trigger(
+        "broadcast-channels-spaces-update",
+        "channel-add",
+        newChannel
       )
-      await channel.publish("channel-add", newChannel)
+
       const result = await createScopedChannelRolesAndAssignAdmin(
         newChannel.id,
         newChannel.channel_name,
@@ -123,10 +124,12 @@ export const UpdateChannelAction = CreateServerAction(
   async (channelID: string, updatedData: Partial<SelectChannel>) => {
     try {
       const updatedChannel = await UpdateChannel(channelID, updatedData)
-      const channel = AblyClientRest.channels.get(
-        "broadcast-channels-spaces-update"
+      await pusherServer.trigger(
+        "broadcast-channels-spaces-update",
+        "channel-edit",
+        updatedChannel
       )
-      await channel.publish("channel-edit", updatedChannel)
+
       return { success: true, data: updatedChannel }
     } catch (error) {
       return { error: error }
@@ -139,10 +142,12 @@ export const DeleteChannelAction = CreateServerAction(
   async (deletedChannelData: SelectChannel) => {
     try {
       await DeleteChannel(deletedChannelData)
-      const channel = AblyClientRest.channels.get(
-        "broadcast-channels-spaces-update"
+      await pusherServer.trigger(
+        "broadcast-channels-spaces-update",
+        "channel-del",
+        deletedChannelData
       )
-      await channel.publish("channel-del", deletedChannelData)
+
       await deleteRoleBasedOnEntityType("CHANNEL", deletedChannelData.id)
       return { success: true }
     } catch (error) {

@@ -9,30 +9,24 @@ import {
 } from "@/src/db/data-access/contact/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
-import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 import { ActivityType } from "@/src/components/Dashboard/Connections/types/connections.types"
 import { SendConnectionPushNotification } from "@/src/services/notifications/Connections/utils"
 import { createContactEmailNotification } from "@/src/services/notify/contact/contact"
 import { NotificationEvent } from "@/src/services/notify/types/events"
+import pusherServer from "@/src/services/realtime/pusherServer"
 
 export const CreateContactAction = CreateServerAction(
   true,
   async (contact_id: string) => {
     try {
       const user = await AuthUserAction()
-
-      if (!user) {
-        return { error: "Unauthorized", cause: 401 }
-      }
+      if (!user) return { error: "Unauthorized", cause: 401 }
 
       const newRequest = await CreateContact(user.unique_id, contact_id)
-
-      if (!newRequest?.[0]) {
+      if (!newRequest?.[0])
         return { error: "Failed to create contact", success: false }
-      }
 
-      const realTimeChannel = AblyClientRest.channels.get(contact_id)
-      realTimeChannel.publish(ActivityType.request, {
+      await pusherServer.trigger(contact_id, ActivityType.request, {
         ...newRequest[0],
         otherUser: user
       })
@@ -54,10 +48,7 @@ export const CreateContactAction = CreateServerAction(
 
       return { success: true, data: newRequest[0] }
     } catch (error) {
-      return {
-        error,
-        success: false
-      }
+      return { error, success: false }
     }
   }
 )
@@ -73,8 +64,7 @@ export const AcceptConnectionAction = CreateServerAction(
         is_requested: 0
       })
 
-      const realTimeChannel = AblyClientRest.channels.get(user_id)
-      realTimeChannel.publish(ActivityType.acceptRequest, {
+      await pusherServer.trigger(user_id, ActivityType.acceptRequest, {
         ...res[0],
         otherUser: user
       })
@@ -105,15 +95,20 @@ export const DeleteConnectionAction = CreateServerAction(
   true,
   async (user_id: string, contact_id: string) => {
     try {
-      const curreUserId = (await AuthUserAction())?.unique_id
+      const authUser = await AuthUserAction()
+      const currentUserId = authUser?.unique_id
+
       const updatedConnection = await UpdateContact(user_id, contact_id, {
         is_requested: 0,
         is_accepted: 0
       })
-      const realtimeChannel = AblyClientRest.channels.get(
-        curreUserId === user_id ? contact_id : user_id
+      const targetChannel = currentUserId === user_id ? contact_id : user_id
+      await pusherServer.trigger(
+        targetChannel,
+        ActivityType.delRequest,
+        updatedConnection[0]
       )
-      realtimeChannel.publish(ActivityType.delRequest, updatedConnection[0])
+
       return { success: true }
     } catch (error) {
       return { error: error }
@@ -125,12 +120,17 @@ export const DeleteContactAction = CreateServerAction(
   true,
   async (user_id: string, contact_id: string) => {
     try {
-      const curreUserId = (await AuthUserAction())?.unique_id
+      const authUser = await AuthUserAction()
+      const currentUserId = authUser?.unique_id
+
       const deletedConnection = await DeleteContact(user_id, contact_id)
-      const realtimeChannel = AblyClientRest.channels.get(
-        curreUserId === user_id ? contact_id : user_id
+
+      const targetChannel = currentUserId === user_id ? contact_id : user_id
+      await pusherServer.trigger(
+        targetChannel,
+        ActivityType.delRequest,
+        deletedConnection[0]
       )
-      realtimeChannel.publish(ActivityType.delRequest, deletedConnection[0])
       return { success: true }
     } catch (error) {
       return { error: error }

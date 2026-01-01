@@ -9,7 +9,6 @@ import {
   SelectUser,
   SelectUserRole
 } from "../db/schema"
-import { AblyClient } from "../services/realtime/AblyClient"
 import moment from "moment-timezone"
 import { CommunityDetailData } from "../db/data-access/communities/query"
 import pusherClient from "../services/realtime/PusherClient"
@@ -28,15 +27,18 @@ export const joinRequestChannel = (
   onRequestReceived: (request: ProfileActivity, activity: string) => void,
   channelEvents: string[]
 ) => {
-  const channel = AblyClient.channels.get(channelId)
-  // Subscribe to incoming requests
-  channel.subscribe(channelEvents, (message) => {
-    onRequestReceived(message.data, message.name as string)
+  const channel = pusherClient.subscribe(channelId)
+
+  channelEvents.forEach((eventName) => {
+    channel.bind(eventName, (data: ProfileActivity) => {
+      onRequestReceived(data, eventName)
+    })
   })
-  // Return functions to send messages and cleanup
+
   return {
     unsubscribe: () => {
-      channel.unsubscribe(channelEvents)
+      channelEvents.forEach((eventName) => channel.unbind(eventName))
+      pusherClient.unsubscribe(channelId)
     }
   }
 }
@@ -65,20 +67,23 @@ export const killConnection = (
 export const joinNotificationChannel = (
   channelId: string,
   onRequestReceived: (
-    notifcation: InsertNotification,
+    notification: InsertNotification,
     activity: string
   ) => void,
   channelEvents: string[]
 ) => {
-  const channel = AblyClient.channels.get(channelId)
-  // Subscribe to incoming notifications
-  channel.subscribe(channelEvents, (message) => {
-    onRequestReceived(message.data, message.name as string)
+  const channel = pusherClient.subscribe(channelId)
+
+  channelEvents.forEach((eventName) => {
+    channel.bind(eventName, (data: InsertNotification) => {
+      onRequestReceived(data, eventName)
+    })
   })
-  // Return functions to send messages and cleanup
+
   return {
     unsubscribe: () => {
-      channel.unsubscribe()
+      channelEvents.forEach((eventName) => channel.unbind(eventName))
+      pusherClient.unsubscribe(channelId)
     }
   }
 }
@@ -91,15 +96,18 @@ export const joinChannelsAndSpacesChannel = (
   ) => void | Promise<void>,
   channelEvents: string[]
 ) => {
-  const channel = AblyClient.channels.get(channelId)
-  // Subscribe to incoming channel/space updates
-  channel.subscribe(channelEvents, (message) => {
-    onUpdate(message.data, message.name as string)
+  const channel = pusherClient.subscribe(channelId)
+
+  channelEvents.forEach((eventName) => {
+    channel.bind(eventName, (data: SelectChannel | SelectSpace) => {
+      onUpdate(data, eventName)
+    })
   })
-  // Return functions to send messages and cleanup
+
   return {
     unsubscribe: () => {
-      channel.unsubscribe(channelEvents)
+      channelEvents.forEach((eventName) => channel.unbind(eventName))
+      pusherClient.unsubscribe(channelId)
     }
   }
 }
@@ -108,7 +116,7 @@ export const generateUrl = (path: string) => {
   if (typeof window !== "undefined") {
     return `${window.location.origin}${path}`
   }
-  return path // Return just the path on server-side
+  return path
 }
 
 export const getPagePath = (page: string) => {
@@ -355,7 +363,6 @@ export async function prepareContactData(
   contact_id: string,
   event: string
 ): Promise<{ payload: any; sendingTo: string[] } | undefined> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
   const receivedByUser = await FindUserByUniqueIdAction(contact_id)
 
   if (!receivedByUser.data) {
