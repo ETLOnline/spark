@@ -650,7 +650,7 @@ export default function TaskForm({
                               >
                                 <SelectValue placeholder={"Select status"} />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="max-h-[220px] overflow-auto">
                                 {statuses?.map(
                                   (s) =>
                                     s.id && (
