@@ -37,6 +37,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/src/components/ui/alert-dialog"
+import pusherClient from "@/src/services/realtime/PusherClient"
 
 export default function ChannelPage() {
   const router = useRouter()
@@ -67,6 +68,61 @@ export default function ChannelPage() {
   )
   const [leaveLoading, leaveResult, leaveError, leaveChannel] =
     useServerAction(LeaveChannelAction)
+
+  useEffect(() => {
+    const channel = pusherClient.subscribe("broadcast-channels-spaces-update")
+
+    channel.bind("space-add", (newSpace: SelectSpace) => {
+      if (newSpace.channel_id === selectedChannel?.id) {
+        const isUserMember = newSpace.users?.some(
+          (u) => u.user_id === currentUserId
+        )
+
+        if (isUserMember) {
+          setJoinedSpaces((prev) => {
+            if (prev.some((s) => s.id === newSpace.id)) return prev
+            return [...prev, newSpace]
+          })
+        } else {
+          setSpaces((prev) => {
+            if (prev.some((s) => s.id === newSpace.id)) return prev
+            return [...prev, newSpace]
+          })
+        }
+      }
+    })
+
+    channel.bind("space-edit", (updatedSpace: SelectSpace) => {
+      if (updatedSpace.channel_id === selectedChannel?.id) {
+        setSpaces((prev) =>
+          prev.map((space) =>
+            space.id === updatedSpace.id ? updatedSpace : space
+          )
+        )
+        setJoinedSpaces((prev) =>
+          prev.map((space) =>
+            space.id === updatedSpace.id ? updatedSpace : space
+          )
+        )
+      }
+    })
+
+    channel.bind("space-del", (deletedSpace: SelectSpace) => {
+      if (deletedSpace.channel_id === selectedChannel?.id) {
+        setSpaces((prev) =>
+          prev.filter((space) => space.id !== deletedSpace.id)
+        )
+        setJoinedSpaces((prev) =>
+          prev.filter((space) => space.id !== deletedSpace.id)
+        )
+      }
+    })
+
+    return () => {
+      channel.unbind_all()
+      channel.unsubscribe()
+    }
+  }, [selectedChannel?.id, currentUserId])
 
   const handleJoinChannel = async () => {
     if (

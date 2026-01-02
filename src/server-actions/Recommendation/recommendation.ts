@@ -6,8 +6,6 @@ import {
 } from "@/src/db/data-access/recommendation/query"
 import { CreateServerAction } from ".."
 import { SelectRecommendation } from "@/src/db/schema"
-import { AuthUserAction } from "../User/AuthUserAction"
-import { updateUserProfileAction } from "../profile/profile"
 import { updateUserProfile } from "@/src/db/data-access/profile/query"
 import { SelectUserByUniqueId } from "@/src/db/data-access/user/query"
 

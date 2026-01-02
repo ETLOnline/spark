@@ -1,4 +1,5 @@
 import TaskScreenPage from "@/src/components/Dashboard/ProjectManagement/Task/components/TaskScreen"
+import { ScrollArea } from "@/src/components/ui/scroll-area"
 import {
   GetTaskByIdAction,
   GetTaskStatusAction
@@ -21,10 +22,12 @@ async function page({ params }: Props) {
   const currTask = await GetTaskByIdAction(taskId)
 
   return (
-    <TaskScreenPage
-      statuses={projectStatusList.data || []}
-      task={currTask.data}
-    />
+    <ScrollArea className="min-h-full px-4">
+      <TaskScreenPage
+        statuses={projectStatusList.data || []}
+        task={currTask.data}
+      />
+    </ScrollArea>
   )
 }
 

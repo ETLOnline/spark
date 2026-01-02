@@ -242,7 +242,7 @@ const EditProfileModal: React.FC = () => {
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={handleDialogChange} modal={false}>
+      <Dialog open={isOpen} onOpenChange={handleDialogChange}>
         <DialogTrigger asChild>
           <Button variant="edit" size={"sm"} onClick={() => setIsOpen(true)}>
             Edit

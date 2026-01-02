@@ -13,7 +13,7 @@ import {
   ReqType
 } from "./types/connections.types"
 import { useToast } from "@/src/hooks/use-toast"
-import { joinRequestChannel } from "@/src/utils/helpers"
+import pusherClient from "@/src/services/realtime/PusherClient"
 import moment from "moment"
 
 type ConnectionsScreenProps = {
@@ -49,64 +49,88 @@ const ConnectionsScreen: React.FC<ConnectionsScreenProps> = ({
   useEffect(() => {
     setIncomingProfileActivities([...incomingActivities])
     setOutgoingProfileActivities([...outgoingActivities])
-  }, [])
+  }, [incomingActivities, outgoingActivities])
 
   useEffect(() => {
-    if (!user || !user.unique_id) return
-    const { unsubscribe } = joinRequestChannel(
-      user.unique_id,
-      (request, activity) => {
-        if (activity === ActivityType.request) {
-          setIncomingProfileActivities((prev) => [request, ...prev])
-          toast({
-            title: "New Request!",
-            description: `${request.otherUser.first_name} sent you a request.`,
-            duration: 3000
-          })
-        } else if (activity === ActivityType.delRequest) {
-          if (request.contact_id === user.unique_id) {
-            setIncomingProfileActivities((prev) =>
-              prev.filter(
-                (activity) =>
-                  activity.user_id !== request.user_id ||
-                  activity.contact_id !== request.contact_id
-              )
-            )
-          } else {
-            setOutgoingProfileActivities((prev) =>
-              prev.filter(
-                (activity) =>
-                  activity.user_id !== request.user_id ||
-                  activity.contact_id !== request.contact_id
-              )
-            )
-          }
+    if (!user?.unique_id) return
+    const channel = pusherClient.subscribe(user.unique_id)
+    channel.bind(ActivityType.request, (request: ProfileActivity) => {
+      setIncomingProfileActivities((prev) => {
+        const existingIndex = prev.findIndex(
+          (a) =>
+            a.user_id === request.user_id && a.contact_id === request.contact_id
+        )
+
+        if (existingIndex !== -1) {
+          const updated = [...prev]
+          updated[existingIndex] = request
+          return updated
         } else {
-          setOutgoingProfileActivities((prev) =>
-            prev.map((activity) =>
-              activity.user_id === request.user_id &&
-              activity.contact_id === request.contact_id
-                ? {
-                    ...activity,
-                    is_accepted: 1,
-                    is_requested: 0,
-                    updated_at: request.updated_at
-                  }
-                : activity
-            )
-          )
+          return [request, ...prev]
         }
-      },
-      [
-        ActivityType.acceptRequest,
-        ActivityType.delRequest,
-        ActivityType.request
-      ]
-    )
+      })
+
+      toast({
+        title: "New Request!",
+        description: `${request.otherUser?.first_name || "Someone"} sent you a request.`,
+        duration: 3000
+      })
+    })
+
+    channel.bind(ActivityType.delRequest, (request: ProfileActivity) => {
+      if (request.contact_id === user.unique_id) {
+        setIncomingProfileActivities((prev) =>
+          prev.filter(
+            (a) =>
+              !(
+                a.user_id === request.user_id &&
+                a.contact_id === request.contact_id
+              )
+          )
+        )
+      } else {
+        setOutgoingProfileActivities((prev) =>
+          prev.filter(
+            (a) =>
+              !(
+                a.user_id === request.user_id &&
+                a.contact_id === request.contact_id
+              )
+          )
+        )
+      }
+    })
+
+    channel.bind(ActivityType.acceptRequest, (request: ProfileActivity) => {
+      setOutgoingProfileActivities((prev) =>
+        prev.map((activity) =>
+          activity.user_id === request.user_id &&
+          activity.contact_id === request.contact_id
+            ? {
+                ...activity,
+                is_accepted: 1,
+                is_requested: 0,
+                updated_at: request.updated_at
+              }
+            : activity
+        )
+      )
+      toast({
+        title: "Request Accepted!",
+        description: `You are now connected.`,
+        duration: 3000
+      })
+    })
+
     return () => {
-      unsubscribe()
+      channel.unbind_all()
+      pusherClient.unsubscribe(user.unique_id)
     }
-  }, [user])
+  }, [
+    user?.unique_id,
+    setIncomingProfileActivities,
+    setOutgoingProfileActivities
+  ])
 
   return (
     <>

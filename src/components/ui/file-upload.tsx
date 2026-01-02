@@ -4,7 +4,7 @@ import { useDropzone } from "react-dropzone"
 import { cn } from "@/src/lib/utils"
 import { CloudUpload } from "lucide-react"
 import PreviewItem from "./file-upload/PreviewItem"
-import { resolveAccept } from "@/src/utils/clientHelper"
+import { getFriendlyAcceptLabel, resolveAccept } from "@/src/utils/clientHelper"
 import { toast } from "@/src/hooks/use-toast"
 
 const mainVariant = {
@@ -45,13 +45,33 @@ export const FileUpload: React.FC<{
     if (!newFiles || newFiles.length === 0) return
 
     let filtered = newFiles
+    const acceptIncludesImage = (resolvedAccept || "").includes("image/*")
+
     if (fileType === "image") {
+      // Only allow images
       filtered = newFiles.filter((f) => f.type.startsWith("image/"))
-    } else if (fileType === "file") {
-      filtered = newFiles.filter((f) => !f.type.startsWith("image/"))
       if (filtered.length === 0) {
         if (fileInputRef.current) fileInputRef.current.value = ""
+        toast({
+          title: "Invalid file type",
+          description: `Only ${getFriendlyAcceptLabel(resolvedAccept, fileType)} are allowed.`
+        })
         return
+      }
+    } else if (fileType === "file") {
+      // If the accept string explicitly allows images, let images through too.
+      if (acceptIncludesImage) {
+        filtered = newFiles
+      } else {
+        filtered = newFiles.filter((f) => !f.type.startsWith("image/"))
+        if (filtered.length === 0) {
+          if (fileInputRef.current) fileInputRef.current.value = ""
+          toast({
+            title: "Invalid file type",
+            description: `Images are not allowed. Accepted: ${getFriendlyAcceptLabel(resolvedAccept, fileType)}.`
+          })
+          return
+        }
       }
     }
 
@@ -60,7 +80,10 @@ export const FileUpload: React.FC<{
     }
 
     // Update states
-    if (multiple && fileType === "image") {
+    if (
+      multiple &&
+      (fileType === "image" || (fileType === "file" && acceptIncludesImage))
+    ) {
       const next = [...items, ...filtered]
       setItems(next)
       setFiles(next)
@@ -139,6 +162,7 @@ export const FileUpload: React.FC<{
               ? "Click the X to remove or upload a new file"
               : "Drag or drop your files here or click to upload"}
           </p>
+
           <div
             className="relative w-full  mt-10 max-w-xl mx-auto"
             onClick={(e) => {

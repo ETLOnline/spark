@@ -25,6 +25,7 @@ import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { useAtomValue } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
 import StatusRequiredDialog from "@/src/components/Dashboard/ProjectManagement/StatusRequiredDialog"
+import { ScrollArea } from "@/src/components/ui/scroll-area"
 
 const TeamPage: React.FC = () => {
   const params = useParams<{ id: string }>()
@@ -128,14 +129,16 @@ const TeamPage: React.FC = () => {
   if (!currProject || !currSpace) return <NotFound />
 
   return projectStatusList.length > 0 ? (
-    <div className="p-6">
-      <ProjectTeamList
-        projectId={currProject.id}
-        spaceId={currSpace.id}
-        projectUsers={projectUsers}
-        projectCreatorId={currProject.created_by}
-      />
-    </div>
+    <ScrollArea className="min-h-full px-4">
+      <div className="p-6">
+        <ProjectTeamList
+          projectId={currProject.id}
+          spaceId={currSpace.id}
+          projectUsers={projectUsers}
+          projectCreatorId={currProject.created_by}
+        />
+      </div>
+    </ScrollArea>
   ) : (
     <StatusRequiredDialog openDialog={openDialog} />
   )

@@ -18,6 +18,8 @@ import { AddRecommendationAction } from "@/src/server-actions/Recommendation/rec
 import { SelectRecommendation } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import NoDataCard from "../Channels/ChannelDetails/NoDataCard"
+import z from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
 
 interface RecommendationsModalProps {
   userId: string
@@ -26,6 +28,14 @@ interface RecommendationsModalProps {
   setRecommendations: Dispatch<SetStateAction<SelectRecommendation[]>>
   setAverageRating: Dispatch<SetStateAction<string | null | undefined>>
 }
+
+const recommendationSchema = z.object({
+  recommendation: z.string().optional(),
+  rating: z
+    .number()
+    .min(1, "Rating must be at least 1")
+    .max(5, "Rating cannot be more than 5")
+})
 
 function RecommendationsModal({
   userId,
@@ -41,7 +51,9 @@ function RecommendationsModal({
     AddRecommendationAction
   )
 
-  const form = useForm()
+  const form = useForm({
+    resolver: zodResolver(recommendationSchema)
+  })
 
   const isRecommended = recommendations.some(
     (rec) => rec.recommender_id === authUserId
@@ -117,25 +129,34 @@ function RecommendationsModal({
                 <Label htmlFor="rating" className="font-semibold">
                   Kindle Sticks
                 </Label>
-                <div className="flex flex-row gap-1">
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <Controller
-                      key={index + 1}
-                      name="rating"
-                      control={form.control}
-                      defaultValue={0}
-                      render={({ field: { value, onChange } }) => (
-                        <FlameKindling
-                          key={index + 1}
-                          onMouseEnter={() => setHovered(index + 1)}
-                          onMouseLeave={() => setHovered(null)}
-                          onClick={() => onChange(index + 1)}
-                          className={`w-10 h-10 cursor-pointer transition-colors ${(hovered ?? value) >= index + 1 ? "text-[#92400e] fill-[#fde68a]" : "fill-none"}`}
-                          strokeWidth={1.5}
-                        />
-                      )}
-                    />
-                  ))}
+                <div>
+                  <div className="flex flex-row gap-1">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <Controller
+                        key={index + 1}
+                        name="rating"
+                        control={form.control}
+                        defaultValue={0}
+                        render={({ field: { value, onChange } }) => (
+                          <FlameKindling
+                            key={index + 1}
+                            onMouseEnter={() => setHovered(index + 1)}
+                            onMouseLeave={() => setHovered(null)}
+                            onClick={() => onChange(index + 1)}
+                            className={`w-10 h-10 cursor-pointer transition-colors ${(hovered ?? value) >= index + 1 ? "text-[#92400e] fill-[#fde68a]" : "fill-none"}`}
+                            strokeWidth={1.5}
+                          />
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <div>
+                    {form.formState.errors.rating && (
+                      <span className="text-red-500 text-sm">
+                        {String(form.formState.errors.rating.message)}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-2">
