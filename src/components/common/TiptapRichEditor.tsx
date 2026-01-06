@@ -154,6 +154,12 @@ export default function RichTextEditor({
 
     return text === ""
   }
+  const applyPopupStyles = (popup: any) => {
+    if (popup?.[0]?.popper) {
+      popup[0].popper.style.zIndex = "99999"
+      popup[0].popper.style.pointerEvents = "auto"
+    }
+  }
 
   const extensions = useMemo(() => {
     const baseExtensions: any[] = [
@@ -275,8 +281,8 @@ export default function RichTextEditor({
                     trigger: "manual",
                     placement: "top-start"
                   })
-                  popup[0].popper.style.zIndex = "99999"
-                  popup[0].popper.style.pointerEvents = "auto"
+
+                  applyPopupStyles(popup)
                 },
 
                 onUpdate(props: any) {
@@ -289,6 +295,7 @@ export default function RichTextEditor({
                   popup[0].setProps({
                     getReferenceClientRect: props.clientRect
                   })
+                  applyPopupStyles(popup)
                 },
 
                 onKeyDown(props: any) {

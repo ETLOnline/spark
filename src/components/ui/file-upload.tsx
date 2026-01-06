@@ -2,10 +2,11 @@ import React, { useRef, useState } from "react"
 import { motion, AnimatePresence, Reorder } from "framer-motion"
 import { useDropzone } from "react-dropzone"
 import { cn } from "@/src/lib/utils"
-import { CloudUpload } from "lucide-react"
+import { CloudUpload, X } from "lucide-react"
 import PreviewItem from "./file-upload/PreviewItem"
 import { getFriendlyAcceptLabel, resolveAccept } from "@/src/utils/clientHelper"
 import { toast } from "@/src/hooks/use-toast"
+import { Button } from "./button"
 
 const mainVariant = {
   initial: {
@@ -34,7 +35,17 @@ export const FileUpload: React.FC<{
   accept?: string
   multiple?: boolean
   fileType?: "file" | "image"
-}> = ({ onChange, onRemove, accept, multiple = false, fileType = "file" }) => {
+  showClose?: boolean
+  onClose?: () => void
+}> = ({
+  onChange,
+  onRemove,
+  accept,
+  multiple = false,
+  fileType = "file",
+  showClose = false,
+  onClose
+}) => {
   const [files, setFiles] = useState<File[]>([])
   const [items, setItems] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -135,12 +146,29 @@ export const FileUpload: React.FC<{
   })
 
   return (
-    <div className="w-full" {...getRootProps()}>
+    <div className="w-full " {...getRootProps()}>
       <motion.div
         onClick={handleClick}
         whileHover="animate"
         className="p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
       >
+        {showClose && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={(e: any) => {
+              e.stopPropagation()
+              e.preventDefault()
+              onClose?.()
+            }}
+            className="absolute top-2 right-2 z-10 "
+            aria-label="Close"
+          >
+            <X className="w-6 h-6 text-red-500" />
+            <span className="sr-only">Close</span>
+          </Button>
+        )}
         <input
           ref={fileInputRef}
           id="file-upload-handle"
