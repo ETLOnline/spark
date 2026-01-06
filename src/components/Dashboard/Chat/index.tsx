@@ -1100,7 +1100,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                             variant="ghost"
                             size="icon"
                             onClick={handleCloseAttachment}
-                            className={` bg-primary self-end `}
+                            className={` bg-primary/50 self-center `}
                           >
                             <X className="h-4 w-4" />
                           </Button>
