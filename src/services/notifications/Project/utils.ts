@@ -3,6 +3,7 @@ import { sendPushNotification } from "../PushNotification.utils"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { SendSystemNotification } from "../../system-notification/SystemNotification.utils"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
+import { getInitials } from "@/src/utils/helpers"
 
 export const SendProjectNotifications = async (
   event_type: string,
@@ -19,7 +20,9 @@ export const SendProjectNotifications = async (
         title: `Added to Project: ${project?.project_name}`,
         body: `${authUser.first_name} ${authUser.last_name} added you to the project "${project?.project_name}".`,
         deep_link: createAbsoluteUrl(`/project/${project?.id}/board`),
-        icon: authUser.profile_url || undefined
+        icon:
+          authUser.profile_url ||
+          getInitials(`${authUser.first_name} ${authUser.last_name}`)
       }
     }
 
