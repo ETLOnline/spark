@@ -1095,18 +1095,11 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                     <div className="flex-1" key={currentChat?.id || "no-chat"}>
                       {openAttachment ? (
                         <div className=" flex flex-col">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={handleCloseAttachment}
-                            className={` bg-primary/50 self-center `}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
                           <FileUpload
                             accept="image/*,application/*"
                             onChange={handleFileUpload}
+                            showClose={true}
+                            onClose={handleCloseAttachment}
                           />
                         </div>
                       ) : (
