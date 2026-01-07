@@ -193,7 +193,7 @@ function SprintBoardCard({
   }
 
   return (
-    <>
+    <div className="px-6">
       <Card key={sprint.id} className="mb-6 ">
         <CardHeader className="pb-2">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
@@ -255,7 +255,7 @@ function SprintBoardCard({
           <SprintStatus />
         </CardFooter>
       </Card>
-    </>
+    </div>
   )
 }
 

@@ -244,23 +244,59 @@ import { parseMentions } from "@/src/services/realtime/utils/helper"
 export function parseLastMessageType(rawMessage: string | null) {
   if (!rawMessage) return { type: "text", content: "" }
 
+  const imgRegex = /<img\s+[^>]*src=(['"])(.*?)\1[^>]*>/i
+  const imgMatch = rawMessage.match(imgRegex)
+  if (imgMatch) {
+    const src = imgMatch[2] || ""
+    return { type: "image", filename: src }
+  }
+
   const tokens = parseMentions(rawMessage || "")
   const lastMessage = tokens
     .map((t) => (t.type === "mention" ? `@${t.value}` : t.value))
     .join("")
 
   const parts = rawMessage.split(",")
+  if (parts.length >= 4) {
+    const filePath = (parts[0] || "").trim()
+    const filename = (parts[1] || "").trim()
+    const sizeStr = (parts[2] || "").trim()
+    const mime = (parts[3] || "").trim()
 
-  if (parts.length < 4) {
-    return { type: "text", content: lastMessage }
+    const isUrl = /^https?:\/\//i.test(filePath)
+    const isSizeNumeric = /^\d+$/.test(sizeStr)
+    const isMimeLike = mime.includes("/")
+
+    if (isUrl && filename && isSizeNumeric && isMimeLike) {
+      if (mime.startsWith("image/")) {
+        return { type: "image", filename }
+      }
+      return { type: "file", filename }
+    }
   }
 
-  const filename = parts[1]
-  const mime = parts[3]
+  return { type: "text", content: lastMessage }
+}
 
-  if (mime?.startsWith("image/")) {
-    return { type: "image", filename }
-  }
+export function getFriendlyAcceptLabel(
+  accept?: string,
+  fileType?: "file" | "image"
+) {
+  if (fileType === "image") return "Images (jpg, png, gif, webp)"
 
-  return { type: "file", filename }
+  if (!accept) return "Files (pdf, doc, docx, xls, xlsx, ppt, pptx, txt, zip)"
+
+  const parts = accept
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean)
+  const readable = parts
+    .map((p) => {
+      if (p.startsWith(".")) return p
+      const idx = p.lastIndexOf("/")
+      return idx !== -1 ? p.slice(idx + 1) : p
+    })
+    .slice(0, 6)
+
+  return readable.join(", ")
 }

@@ -102,7 +102,7 @@ const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
             : `${filteredContact?.user?.first_name} ${filteredContact?.user?.last_name}`}
         </p>
         {typingLabel ? (
-          <p className="text-sm text-primary truncate animate-pulse">
+          <p className="text-sm text-foreground truncate animate-pulse">
             {typingLabel}
           </p>
         ) : (
@@ -118,7 +118,7 @@ const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
               (lastMessageInfo?.type === "image" ||
                 lastMessageInfo?.type === "file") && (
                 <p className="text-sm text-muted-foreground truncate">
-                  {lastMessageInfo?.filename}
+                  Shared a file
                 </p>
               )
             )}

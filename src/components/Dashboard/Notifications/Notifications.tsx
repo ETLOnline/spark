@@ -69,10 +69,10 @@ const Notifications: React.FC = () => {
   useEffect(() => {
     if (!userId) return
 
-    const ChannelName = getRealtimeSystemNotificationChannel(userId)
-    if (!ChannelName) return
+    const channelName = getRealtimeSystemNotificationChannel(userId)
+    if (!channelName) return
 
-    const channel = pusherClient.subscribe(ChannelName)
+    const channel = pusherClient.subscribe(channelName)
 
     channel.bind("system-notifications", (data: SelectNotification) => {
       playNotificationSound()
@@ -80,17 +80,21 @@ const Notifications: React.FC = () => {
     })
 
     // Resync on reconnect
-    pusherClient.connection.bind("connected", async () => {
+    const handleReconnect = async () => {
       try {
         const fresh = (await getNotifications())?.data
         if (fresh) setNotifications(fresh)
       } catch (err) {
         console.error("Failed to resync notifications:", err)
       }
-    })
+    }
+
+    pusherClient.connection.bind("connected", handleReconnect)
 
     return () => {
-      pusherClient.unsubscribe(`${userId}`)
+      channel.unbind("system-notifications")
+      pusherClient.connection.unbind("connected", handleReconnect)
+      pusherClient.unsubscribe(channelName)
     }
   }, [userId])
 

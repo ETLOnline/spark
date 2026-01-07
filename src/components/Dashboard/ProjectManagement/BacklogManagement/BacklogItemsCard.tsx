@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react"
 import BacklogItems from "./BacklogItems"
 import { useAtom, useAtomValue } from "jotai"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { useParams, useSearchParams } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
@@ -31,22 +31,26 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
   )
   const pusherChannel = useAtomValue(projectStore.pusherChannel)
   const authUser = useAtomValue(userStore.AuthUser)
-  const [searchParamsPage, setSearchParamsPage] = useState<string | null>(null)
+  const [previousSearchedItem, setPreviousSearchedItem] = useState<string>("")
+  const [previousFilters, setPreviousFilters] = useState<TaskFiltersType | null>(null)
 
   const projectId = useParams().id as string
   const searchParams = useSearchParams()
+  const router = useRouter()
 
-  useEffect(() => {
-    if (searchParams.get("page")) {
-      setSearchParamsPage(searchParams.get("page"))
+  const fatchTasks = async (resetPage: boolean = false) => {
+    let page = parseInt(searchParams.get("page") || "1", 10)
+    
+    if (resetPage) {
+      page = 1
+      const params = new URLSearchParams(searchParams.toString())
+      params.set("page", "1")
+      router.replace(`?${params.toString()}`, { scroll: false })
     }
-  }, [searchParams])
 
-  const fatchTasks = async () => {
-    const page = parseInt(searchParams.get("page") || "1", 10)
     const res = await GetTasks({
       project_id: projectId,
-      page: page ? page : 1,
+      page: page,
       limit: limit,
       searchedItem,
       orderList,
@@ -65,18 +69,32 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
   }
 
   useEffect(() => {
-    if (searchedItem || orderList) fatchTasks()
-  }, [searchedItem, orderList, searchParamsPage, limit])
+    if (searchedItem !== previousSearchedItem) {
+      setPreviousSearchedItem(searchedItem)
+      fatchTasks(true)
+    }
+  }, [searchedItem])
 
   useEffect(() => {
-    if (filters) fatchTasks()
-  }, [
-    filters?.assignee,
-    filters?.priority,
-    filters?.type,
-    filters?.status,
-    filters?.creator
-  ])
+    const filtersChanged = 
+      filters?.assignee !== previousFilters?.assignee ||
+      filters?.creator !== previousFilters?.creator ||
+      filters?.priority !== previousFilters?.priority ||
+      filters?.type !== previousFilters?.type ||
+      filters?.status !== previousFilters?.status
+
+    if (filtersChanged && filters !== null) {
+      setPreviousFilters(filters)
+      fatchTasks(true)
+    }
+  }, [filters])
+
+  useEffect(() => {
+    const page = searchParams.get("page")
+    if (page || orderList || limit) {
+      fatchTasks(false)
+    }
+  }, [searchParams.get("page"), orderList, limit])
 
   useEffect(() => {
     if (!pusherChannel || !authUser) return

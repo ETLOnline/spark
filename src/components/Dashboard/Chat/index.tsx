@@ -23,7 +23,8 @@ import {
   Edit,
   FileIcon,
   Paperclip,
-  Trash2
+  Trash2,
+  X
 } from "lucide-react"
 import { useAtom, useAtomValue } from "jotai"
 import { chatStore } from "@/src/store/chat/chatStore"
@@ -415,6 +416,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     setAvailableUsers([])
     setRichMessageContent("")
     setShowRichEditorToolbar(false)
+    setFileString("")
+    setSelectedFile(null)
+    setOpenAttachment(false)
 
     const newSwitchedChat = await fetchChatWithMessages(chatId)
     if (newSwitchedChat && newSwitchedChat.data) {
@@ -652,6 +656,11 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     }
   }
   const handleFileUpload = (files: File[]) => {
+    if (!files || files.length === 0) {
+      setRichMessageContent("")
+      setFileString("")
+      return
+    }
     const file = files[0]
     if (!file) return
 
@@ -693,8 +702,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     }, 700)
   }
 
-  const handleAttachment = () => {
-    setOpenAttachment((pre) => !pre)
+  const handleCloseAttachment = () => {
+    setOpenAttachment(false)
     setRichMessageContent("")
     setFileString("")
   }
@@ -909,7 +918,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                 <div className="relative group flex flex-col">
                                   {/* MESSAGE BUBBLE */}
                                   <div
-                                    className={`rounded-lg py-2 pl-2 rich-editor flex gap-1 flex-col pr-6 ${
+                                    className={`rounded-lg py-2 pl-2 rich-editor  flex gap-1 flex-col pr-6 ${
                                       message.sender_id === authUser?.unique_id
                                         ? "bg-primary text-primary-foreground"
                                         : "bg-muted"
@@ -1089,6 +1098,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                           <FileUpload
                             accept="image/*,application/*"
                             onChange={handleFileUpload}
+                            showClose={true}
+                            onClose={handleCloseAttachment}
                           />
                         </div>
                       ) : (
@@ -1141,13 +1152,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      onClick={handleAttachment}
+                      disabled={openAttachment}
+                      onClick={() => setOpenAttachment(true)}
                       title="Attach file"
-                      className={`p-1 ${
-                        openAttachment
-                          ? "bg-secondary"
-                          : "hover:bg-secondary/50"
-                      }`}
                     >
                       <Paperclip className="h-4 w-4" />
                     </Button>

@@ -2,10 +2,11 @@ import React, { useRef, useState } from "react"
 import { motion, AnimatePresence, Reorder } from "framer-motion"
 import { useDropzone } from "react-dropzone"
 import { cn } from "@/src/lib/utils"
-import { CloudUpload } from "lucide-react"
+import { CloudUpload, X } from "lucide-react"
 import PreviewItem from "./file-upload/PreviewItem"
-import { resolveAccept } from "@/src/utils/clientHelper"
+import { getFriendlyAcceptLabel, resolveAccept } from "@/src/utils/clientHelper"
 import { toast } from "@/src/hooks/use-toast"
+import { Button } from "./button"
 
 const mainVariant = {
   initial: {
@@ -34,7 +35,17 @@ export const FileUpload: React.FC<{
   accept?: string
   multiple?: boolean
   fileType?: "file" | "image"
-}> = ({ onChange, onRemove, accept, multiple = false, fileType = "file" }) => {
+  showClose?: boolean
+  onClose?: () => void
+}> = ({
+  onChange,
+  onRemove,
+  accept,
+  multiple = false,
+  fileType = "file",
+  showClose = false,
+  onClose
+}) => {
   const [files, setFiles] = useState<File[]>([])
   const [items, setItems] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -45,13 +56,33 @@ export const FileUpload: React.FC<{
     if (!newFiles || newFiles.length === 0) return
 
     let filtered = newFiles
+    const acceptIncludesImage = (resolvedAccept || "").includes("image/*")
+
     if (fileType === "image") {
+      // Only allow images
       filtered = newFiles.filter((f) => f.type.startsWith("image/"))
-    } else if (fileType === "file") {
-      filtered = newFiles.filter((f) => !f.type.startsWith("image/"))
       if (filtered.length === 0) {
         if (fileInputRef.current) fileInputRef.current.value = ""
+        toast({
+          title: "Invalid file type",
+          description: `Only ${getFriendlyAcceptLabel(resolvedAccept, fileType)} are allowed.`
+        })
         return
+      }
+    } else if (fileType === "file") {
+      // If the accept string explicitly allows images, let images through too.
+      if (acceptIncludesImage) {
+        filtered = newFiles
+      } else {
+        filtered = newFiles.filter((f) => !f.type.startsWith("image/"))
+        if (filtered.length === 0) {
+          if (fileInputRef.current) fileInputRef.current.value = ""
+          toast({
+            title: "Invalid file type",
+            description: `Images are not allowed. Accepted: ${getFriendlyAcceptLabel(resolvedAccept, fileType)}.`
+          })
+          return
+        }
       }
     }
 
@@ -60,7 +91,10 @@ export const FileUpload: React.FC<{
     }
 
     // Update states
-    if (multiple && fileType === "image") {
+    if (
+      multiple &&
+      (fileType === "image" || (fileType === "file" && acceptIncludesImage))
+    ) {
       const next = [...items, ...filtered]
       setItems(next)
       setFiles(next)
@@ -112,12 +146,29 @@ export const FileUpload: React.FC<{
   })
 
   return (
-    <div className="w-full" {...getRootProps()}>
+    <div className="w-full " {...getRootProps()}>
       <motion.div
         onClick={handleClick}
         whileHover="animate"
         className="p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
       >
+        {showClose && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={(e: any) => {
+              e.stopPropagation()
+              e.preventDefault()
+              onClose?.()
+            }}
+            className="absolute top-2 right-2 z-10 "
+            aria-label="Close"
+          >
+            <X className="w-6 h-6 text-red-500" />
+            <span className="sr-only">Close</span>
+          </Button>
+        )}
         <input
           ref={fileInputRef}
           id="file-upload-handle"
@@ -139,6 +190,7 @@ export const FileUpload: React.FC<{
               ? "Click the X to remove or upload a new file"
               : "Drag or drop your files here or click to upload"}
           </p>
+
           <div
             className="relative w-full  mt-10 max-w-xl mx-auto"
             onClick={(e) => {
