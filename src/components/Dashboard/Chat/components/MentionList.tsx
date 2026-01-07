@@ -68,7 +68,16 @@ const MentionList = forwardRef<MentionListHandle, any>((props, ref) => {
   }))
 
   return (
-    <div className="bg-popover border rounded-lg shadow-lg p-2 w-80 max-h-64 overflow-y-auto z-50">
+    <div
+      className="bg-popover border rounded-lg shadow-lg p-2 w-80 max-h-64 overflow-y-auto z-50"
+      onMouseDown={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+      }}
+      onWheel={(e) => {
+        e.stopPropagation()
+      }}
+    >
       {props.items.length ? (
         props.items.map((item: SelectUser, index: number) => {
           const isCurrentActive = index === activeIndex
@@ -78,11 +87,9 @@ const MentionList = forwardRef<MentionListHandle, any>((props, ref) => {
               key={item.unique_id}
               onMouseEnter={() => setHoverIndex(index)}
               onMouseLeave={() => setHoverIndex(null)}
-              onPointerDown={(e) => {
+              onMouseDown={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                setHoverIndex(index)
-                selectItem(index)
               }}
               onClick={() => selectItem(index)}
               className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 transition-colors 

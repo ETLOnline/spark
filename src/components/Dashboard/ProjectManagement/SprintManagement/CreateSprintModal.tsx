@@ -20,6 +20,7 @@ import {
   GetSprintCountAction,
   UpdateSprintAction
 } from "@/src/server-actions/Sprint/sprint"
+import { GetProjectByIdAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { sprintStore } from "@/src/store/sprint/sprintsStore"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAtom } from "jotai"
@@ -36,36 +37,76 @@ interface Props {
   selectedSprint?: SelectSprint | null
 }
 
-const sprintSchema = z
-  .object({
-    title: z.string().min(1, "Required").max(50, "Title is too long"),
-    start_date: z
-      .string()
-      .min(1, "Required")
-      .refine(
-        (value) =>
-          !value || moment(value).isSameOrAfter(moment().startOf("day")),
-        { message: "Date must not be in the past" }
-      ),
-    end_date: z
-      .string()
-      .min(1, "Required")
-      .refine(
-        (value) =>
-          !value || moment(value).isSameOrAfter(moment().startOf("day")),
-        { message: "End date must not be in the past" }
-      )
-  })
-  .refine(
-    (data) => {
-      if (!data.start_date || !data.end_date) return true
-      return moment(data.end_date).isSameOrAfter(moment(data.start_date))
-    },
-    {
-      message: "End date must be after start date",
-      path: ["end_date"]
-    }
-  )
+const createSprintSchema = (projectDates?: {
+  project_startDate?: string
+  project_targetDate?: string
+}) =>
+  z
+    .object({
+      title: z.string().min(1, "Required").max(50, "Title is too long"),
+      start_date: z
+        .string()
+        .min(1, "Required")
+        .refine(
+          (value) => {
+            if (!value) return true
+            const formats = ["YYYY-MM-DD", "DD-MM-YYYY"]
+            const projectStart = projectDates?.project_startDate
+              ? moment(projectDates.project_startDate, formats, true).startOf(
+                  "day"
+                )
+              : null
+            const minStart = projectStart ?? moment().startOf("day")
+            return moment(value, "YYYY-MM-DD").isSameOrAfter(minStart)
+          },
+          { message: "Start date must be on or after project start date " }
+        ),
+      end_date: z.string().min(1, "Required")
+    })
+    .refine(
+      (data) => {
+        if (!data.start_date || !data.end_date) return true
+        return moment(data.end_date, "YYYY-MM-DD").isSameOrAfter(
+          moment(data.start_date, "YYYY-MM-DD")
+        )
+      },
+      {
+        message: "End date must be after start date",
+        path: ["end_date"]
+      }
+    )
+    .superRefine((data, ctx) => {
+      if (!projectDates?.project_startDate || !projectDates?.project_targetDate)
+        return
+      const formats = ["YYYY-MM-DD", "DD-MM-YYYY"]
+      const projectStart = moment(
+        projectDates.project_startDate,
+        formats,
+        true
+      ).startOf("day")
+      const projectEnd = moment(
+        projectDates.project_targetDate,
+        formats,
+        true
+      ).endOf("day")
+      const start = moment(data.start_date, "YYYY-MM-DD")
+      const end = moment(data.end_date, "YYYY-MM-DD")
+      if (!start.isValid() || !end.isValid()) return
+      if (start.isBefore(projectStart)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["start_date"],
+          message: `Start date must be on or after project start date`
+        })
+      }
+      if (end.isAfter(projectEnd)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["end_date"],
+          message: `End date must be on or before project end date `
+        })
+      }
+    })
 
 function CreateSprintModal({
   isCreateSprintOpen,
@@ -81,6 +122,38 @@ function CreateSprintModal({
     useServerAction(UpdateSprintAction)
 
   const projectId = useParams().id as string
+
+  const [projectDates, setProjectDates] = useState<{
+    project_startDate?: string
+    project_targetDate?: string
+  } | null>(null)
+
+  useEffect(() => {
+    if (!projectId || !isCreateSprintOpen) return
+    const fetchProjectDates = async () => {
+      try {
+        const res = await GetProjectByIdAction(projectId)
+        if (res?.success && res.data) {
+          setProjectDates({
+            project_startDate: res.data.project_startDate,
+            project_targetDate: res.data.project_targetDate
+          })
+        }
+      } catch (err) {
+        toast({
+          title: "Unable to fetch project details",
+          duration: 3000,
+          variant: "destructive"
+        })
+      }
+    }
+    fetchProjectDates()
+  }, [projectId, isCreateSprintOpen])
+
+  const sprintSchema = React.useMemo(
+    () => createSprintSchema(projectDates ?? undefined),
+    [projectDates]
+  )
 
   const form = useForm({
     resolver: zodResolver(sprintSchema)
@@ -265,10 +338,17 @@ function CreateSprintModal({
                     )}
                   />
                   <div>
-                    {formError.start_date && (
+                    {formError.start_date ? (
                       <p className="text-sm text-red-500">
                         {formError.start_date.message}
                       </p>
+                    ) : (
+                      projectDates && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          Project timeline: {projectDates.project_startDate} —{" "}
+                          {projectDates.project_targetDate}
+                        </p>
+                      )
                     )}
                   </div>
                 </div>
@@ -294,10 +374,17 @@ function CreateSprintModal({
                   />
 
                   <div>
-                    {formError.end_date && (
+                    {formError.end_date ? (
                       <p className="text-sm text-red-500">
                         {formError.end_date.message}
                       </p>
+                    ) : (
+                      projectDates && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          Project timeline: {projectDates.project_startDate} —{" "}
+                          {projectDates.project_targetDate}
+                        </p>
+                      )
                     )}
                   </div>
                 </div>
