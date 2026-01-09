@@ -349,11 +349,8 @@ function CreateChannels({
             </Button>
           )}
         </DialogTrigger>
-        <DialogContent
-          className="max-w-[95vw] sm:max-w-[425px]"
-          onInteractOutside={(e) => e.preventDefault()}
-        >
-          <DialogHeader className="px-3">
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
             <DialogTitle>
               {editChannel === true ? "Edit Channel" : "Create Channel"}
             </DialogTitle>
@@ -363,7 +360,7 @@ function CreateChannels({
                 : "You can create Channels."}
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="h-[80vh] w-full p-3">
+          <ScrollArea className="h-[80vh] w-full pr-3">
             <form onSubmit={form.handleSubmit(channelSubmit)}>
               <div className="grid gap-4 py-4">
                 {/* Channel Name */}
