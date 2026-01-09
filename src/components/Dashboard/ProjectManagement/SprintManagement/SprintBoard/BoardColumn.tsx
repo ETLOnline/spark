@@ -36,7 +36,7 @@ function BoardColumn({ sprint, status, tasks, onTaskClick, setTasks }: Props) {
       <div className="flex flex-row justify-between mb-4">
         <div className="font-medium text-sm text-center">{status?.name}</div>
         <div className="text-xs text-center ">
-          {taskCount} {taskCount === 1 || taskCount === 0 ? "task" : "tasks"}
+          {taskCount} {taskCount === 1 ? "task" : "tasks"}
         </div>
       </div>
       {filteredTasks.map((task) => (
