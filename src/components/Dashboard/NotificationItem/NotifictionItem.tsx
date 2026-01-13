@@ -6,6 +6,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { MarkNotificationAsReadAction } from "@/src/server-actions/Notification/Notification"
 import { notificationStore } from "@/src/store/notification/notificationStore"
 import moment from "moment-timezone"
+import { useEffect, useRef, useState } from "react"
 
 type NotificationItemProps = {
   activity: SelectNotification
@@ -27,6 +28,18 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
 }) => {
   const [, , , markAsRead] = useServerAction(MarkNotificationAsReadAction)
   const setNotifications = useSetAtom(notificationStore.notifications)
+
+  const [expanded, setExpanded] = useState(false)
+  const [isOverflowing, setIsOverflowing] = useState(false)
+  const bodyRef = useRef<HTMLParagraphElement>(null)
+
+  useEffect(() => {
+    if (bodyRef.current) {
+      setIsOverflowing(
+        bodyRef.current.scrollHeight > bodyRef.current.clientHeight
+      )
+    }
+  }, [activity.body])
 
   const markNotificationAsRead = () => {
     markAsRead(activity.id)
@@ -68,10 +81,28 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
           </p>
           <p className="text-sm font-medium truncate">{activity.title}</p>
           {activity.body && (
-            <p
-              className="text-xs text-muted-foreground break-words"
-              dangerouslySetInnerHTML={{ __html: activity.body }}
-            />
+            <>
+              <p
+                ref={bodyRef}
+                className={`text-xs text-muted-foreground break-words transition-all ${
+                  expanded ? "" : "line-clamp-3"
+                }`}
+                dangerouslySetInnerHTML={{ __html: activity.body }}
+              />
+
+              {isOverflowing && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setExpanded((prev) => !prev)
+                  }}
+                  className="mt-1 text-xs font-medium text-sky-600 hover:underline"
+                >
+                  {expanded ? "Show less" : "Show more"}
+                </button>
+              )}
+            </>
           )}
         </Link>
       </div>

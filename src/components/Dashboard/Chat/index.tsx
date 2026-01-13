@@ -163,6 +163,12 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const [, , , incrementUnreadCount] = useServerAction(
     incrementUnreadCountForChatAction
   )
+  const [expandedMessages, setExpandedMessages] = useState<
+    Record<number, boolean>
+  >({})
+  const [overflowMessages, setOverflowMessages] = useState<
+    Record<number, boolean>
+  >({})
 
   const canCreate = permissionChecker
     ? permissionChecker?.canAccess(permissionNamespaceCreate)
@@ -727,6 +733,68 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     return otherUser ? users.has(otherUser.user_id) : false
   })()
 
+  const MAX_MESSAGE_LENGTH = 300
+
+  const toggleMessage = (id: number) => {
+    setExpandedMessages((prev) => ({
+      ...prev,
+      [id]: !prev[id]
+    }))
+  }
+
+  const CollapsibleMessage = ({
+    messageId,
+    children
+  }: {
+    messageId: number
+    children: React.ReactNode
+  }) => {
+    const ref = useRef<HTMLDivElement>(null)
+    const isExpanded = expandedMessages[messageId]
+
+    useEffect(() => {
+      if (!ref.current) return
+
+      const isOverflowing = ref.current.scrollHeight > 120
+
+      setOverflowMessages((prev) => {
+        if (prev[messageId] === isOverflowing) return prev
+
+        return {
+          ...prev,
+          [messageId]: isOverflowing
+        }
+      })
+    }, [messageId])
+
+    return (
+      <div className="space-y-1">
+        <div
+          ref={ref}
+          className={`overflow-hidden transition-all duration-200 ${
+            isExpanded ? "max-h-none" : "max-h-[120px]"
+          }`}
+        >
+          {children}
+        </div>
+
+        {overflowMessages[messageId] && (
+          <button
+            onClick={() =>
+              setExpandedMessages((prev) => ({
+                ...prev,
+                [messageId]: !prev[messageId]
+              }))
+            }
+            className="text-xs text-blue-500 hover:underline"
+          >
+            {isExpanded ? "Show less" : "Show more"}
+          </button>
+        )}
+      </div>
+    )
+  }
+
   return (
     <>
       <div className="flex h-[calc(100vh-7rem)] gap-4">
@@ -915,7 +983,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                               </div>
                             ) : (
                               <div className="flex group gap-2">
-                                <div className="relative group flex flex-col">
+                                <div className="relative group flex flex-col max-w-xl">
                                   {/* MESSAGE BUBBLE */}
                                   <div
                                     className={`rounded-lg py-2 pl-2 rich-editor  flex gap-1 flex-col pr-6 ${
@@ -1000,9 +1068,13 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                           })()}
 
                                         {message.type === "text" && (
-                                          <MessageContent
-                                            content={message.message}
-                                          />
+                                          <CollapsibleMessage
+                                            messageId={message.id}
+                                          >
+                                            <MessageContent
+                                              content={message.message}
+                                            />
+                                          </CollapsibleMessage>
                                         )}
                                       </>
                                     )}
