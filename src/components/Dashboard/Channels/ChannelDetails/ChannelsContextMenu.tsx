@@ -44,6 +44,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/src/components/ui/alert-dialog"
+import useShortcut from "@/src/components/common/Shortcut/hooks/useShortcut"
 
 interface ChannelProps {
   channel: SelectChannel
@@ -66,6 +67,8 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
   const [joinLoading, joinResult, joinError, joinChannel] = useServerAction(
     AttachChannelUserAction
   )
+  const {getShortcuts} = useShortcut()
+
   const [leaveLoading, leaveResult, leaveError, leaveChannel] =
     useServerAction(LeaveChannelAction)
 
@@ -103,6 +106,7 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
       if (res?.success) {
         setIsChannelMember(false)
         setIsCommunityMember?.(false)
+        await getShortcuts()
 
         toast({
           title: "Channel Left",
@@ -255,7 +259,8 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
               type="channel"
               entity={{
                 slug: channel?.channel_slug ?? "",
-                title: `${channel?.community?.title} - ${channel?.channel_name}`
+                title: `${channel?.channel_name}`,
+                entity_id: channel?.id ?? "",
               }}
               ctaType="menuItem"
             />

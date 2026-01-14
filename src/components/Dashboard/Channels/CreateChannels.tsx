@@ -47,6 +47,7 @@ import { slugify } from "@/src/utils/helpers"
 import { ScrollArea } from "../../ui/scroll-area"
 import { UnsavedChangesDialog } from "../../common/unsavedChangesDialog"
 import { useConfirmClose } from "@/src/hooks/useConfirmClose"
+import useShortcut from "../../common/Shortcut/hooks/useShortcut"
 
 const channelSchema = z.object({
   channel_name: z
@@ -106,6 +107,7 @@ function CreateChannels({
   ] = useServerAction(IsSlugAvailableAction)
 
   const { toast } = useToast()
+  const {getShortcuts} = useShortcut()
 
   const form = useForm({
     resolver: zodResolver(channelSchema),
@@ -295,6 +297,7 @@ function CreateChannels({
         updatedChannel.data &&
         !(updatedChannel.data instanceof Error)
       ) {
+        await getShortcuts()
         setChannelFormModelVisibility(false)
         onActionComplete?.("updated", updatedChannel.data as SelectChannel)
         toast({

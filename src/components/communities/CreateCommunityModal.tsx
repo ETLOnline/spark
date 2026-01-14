@@ -45,6 +45,7 @@ import { slugify } from "@/src/utils/helpers"
 import { ScrollArea } from "../ui/scroll-area"
 import { UnsavedChangesDialog } from "../common/unsavedChangesDialog"
 import { useConfirmClose } from "@/src/hooks/useConfirmClose"
+import useShortcut from "../common/Shortcut/hooks/useShortcut"
 
 const communitySchema = z.object({
   title: z
@@ -103,6 +104,7 @@ export default function CreateCommunityModal({
   )
 
   const { toast } = useToast()
+  const {getShortcuts} = useShortcut()
 
   const form = useForm<CommunityFormData>({
     resolver: zodResolver(communitySchema),
@@ -372,6 +374,7 @@ export default function CreateCommunityModal({
       )
 
       if (updatedCommunity?.success && updatedCommunity.data) {
+        getShortcuts()
         setCommunities((currentCommunities) => {
           if (!currentCommunities) return null
           return {

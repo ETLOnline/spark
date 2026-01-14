@@ -35,6 +35,7 @@ import { ensureCommunityMembership } from "../Community/Community"
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
 import { attachCommunityUser } from "@/src/db/data-access/communities/query"
+import { deleteShortcutsByUrlAction, UpdateShortcutTitleAction } from "../Shortcut/Shortcut"
 
 export const CreateChannelAction = CreateServerAction(
   true,
@@ -124,6 +125,11 @@ export const UpdateChannelAction = CreateServerAction(
   async (channelID: string, updatedData: Partial<SelectChannel>) => {
     try {
       const updatedChannel = await UpdateChannel(channelID, updatedData)
+      if (updatedChannel instanceof Error) {
+        throw updatedChannel
+      }
+      await UpdateShortcutTitleAction(channelID, "channel", updatedChannel?.channel_name)
+
       await pusherServer.trigger(
         "broadcast-channels-spaces-update",
         "channel-edit",
@@ -256,6 +262,10 @@ export const LeaveChannelAction = CreateServerAction(
       if (!deleted) {
         return { success: false, error: "Failed to leave the channel" }
       }
+      const channel = await GetChannelById(channelId)
+      if (channel?.channel_slug) {
+        await deleteShortcutsByUrlAction(userId, "channel", `${channel.channel_slug}`)
+      }
       return { success: true }
     } catch (error: any) {
       return { success: false, error: error.message || error }
@@ -267,8 +277,13 @@ export const DettachChannelUserAction = CreateServerAction(
   true,
   async (channelId: string, userId: string, roleId: number) => {
     try {
+      const channel = await GetChannelById(channelId)
       const channelUser = await dettachChannelUser(channelId, userId)
       const deleteRole = await deleteUserRole(userId, roleId)
+      if (channel?.channel_slug) {
+        await deleteShortcutsByUrlAction(userId, "channel", `${channel.channel_slug}`)
+      }
+
       pusherServer.trigger(`user-${userId}`, "update-role", deleteRole)
       return { success: true }
     } catch (error) {

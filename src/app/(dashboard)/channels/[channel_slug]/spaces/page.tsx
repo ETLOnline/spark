@@ -38,6 +38,7 @@ import {
   AlertDialogTitle
 } from "@/src/components/ui/alert-dialog"
 import pusherClient from "@/src/services/realtime/PusherClient"
+import useShortcut from "@/src/components/common/Shortcut/hooks/useShortcut"
 
 export default function ChannelPage() {
   const router = useRouter()
@@ -68,6 +69,8 @@ export default function ChannelPage() {
   )
   const [leaveLoading, leaveResult, leaveError, leaveChannel] =
     useServerAction(LeaveChannelAction)
+  const {getShortcuts} = useShortcut()
+
 
   useEffect(() => {
     const channel = pusherClient.subscribe("broadcast-channels-spaces-update")
@@ -160,6 +163,7 @@ export default function ChannelPage() {
         const res = await leaveChannel(selectedChannel.id, currentUserId)
         if (res?.success) {
           setIsChannelMember(false)
+          getShortcuts()
           toast({
             title: "Channel Left",
             description: "You have left the channel and its spaces.",
@@ -323,7 +327,8 @@ export default function ChannelPage() {
                   type="channel"
                   entity={{
                     slug: selectedChannel?.channel_slug ?? "",
-                    title: `${selectedChannel?.community?.title} - ${selectedChannel?.channel_name}`
+                    title: `${selectedChannel?.channel_name}`,
+                    entity_id:selectedChannel?.id ?? ""
                   }}
                 />
               </div>

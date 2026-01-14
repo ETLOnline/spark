@@ -10,6 +10,7 @@ interface CreateShortcutProps {
   entity: {
     slug: string
     title: string
+    entity_id:string
   }
   ctaType?: "button" | "menuItem"
 }
@@ -35,7 +36,8 @@ const CreateShortcut = ({
     const newShortcut: Partial<InsertShortcut> = {
       type,
       url: entity.slug,
-      title: entity.title
+      title: entity.title,
+      entity_id: entity.entity_id
     }
 
     await createShortcut(newShortcut)

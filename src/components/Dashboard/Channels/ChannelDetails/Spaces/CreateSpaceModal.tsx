@@ -1,6 +1,7 @@
 "use client"
 
 import Loader from "@/src/components/common/Loader/Loader"
+import useShortcut from "@/src/components/common/Shortcut/hooks/useShortcut"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { UnsavedChangesDialog } from "@/src/components/common/unsavedChangesDialog"
 import { Button } from "@/src/components/ui/button"
@@ -97,6 +98,7 @@ function CreateSpaceModal({
     addUpdateSpaceError,
     updateSpace
   ] = useServerAction(UpdateSpaceAction)
+  const {getShortcuts} = useShortcut()
 
   const form = useForm({
     resolver: zodResolver(spaceSchema)
@@ -253,6 +255,7 @@ function CreateSpaceModal({
       )
 
       if (updatedSpace?.success && updatedSpace.data) {
+        getShortcuts()
         setSpaces((prevSpace) =>
           prevSpace.map((space) =>
             space.id === selectedSpace?.id

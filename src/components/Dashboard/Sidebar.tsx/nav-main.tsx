@@ -72,7 +72,7 @@ export default function NavMain({
                         <CollapsibleContent>
                           <SidebarMenuSub>
                             {item.items?.map((subItem) => (
-                              <SidebarMenuSubItem key={subItem.title}>
+                              <SidebarMenuSubItem key={subItem.url}>
                                 <SidebarMenuSubButton asChild>
                                   <Link href={subItem.url}>
                                     {subItem.icon ? <subItem.icon /> : null}

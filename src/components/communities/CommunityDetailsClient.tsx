@@ -67,6 +67,7 @@ import Image from "next/image"
 import clsx from "clsx"
 import PrivatePage from "../common/Overlay/PrivatePage"
 import pusherClient from "@/src/services/realtime/PusherClient"
+import useShortcut from "../common/Shortcut/hooks/useShortcut"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -111,6 +112,7 @@ export default function CommunityDetailsClient({
     "COMMUNITY",
     community?.id
   )
+  const {getShortcuts} = useShortcut()
 
   useEffect(() => {
     if (community) {
@@ -301,6 +303,7 @@ export default function CommunityDetailsClient({
       const res = await leaveCommunity(community.id, currentUserId)
 
       if (res?.success) {
+        await getShortcuts()
         toast({
           title: "Left community",
           description: "You have left the community, its channels, and spaces.",
@@ -452,7 +455,8 @@ export default function CommunityDetailsClient({
                   type="community"
                   entity={{
                     slug: community?.slug ?? "",
-                    title: community?.title ?? ""
+                    title: community?.title ?? "",
+                    entity_id:community?.id ?? ""
                   }}
                 />
               </div>

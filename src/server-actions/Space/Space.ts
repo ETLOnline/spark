@@ -47,6 +47,7 @@ import {
   getCommunityUsers
 } from "@/src/db/data-access/communities/query"
 import pusherServer from "@/src/services/realtime/pusherServer"
+import { deleteShortcutsByUrlAction, UpdateShortcutTitleAction } from "../Shortcut/Shortcut"
 
 // Define the broadcast channel name constant for cleaner code
 const BROADCAST_CHANNEL = "broadcast-channels-spaces-update";
@@ -183,6 +184,10 @@ export const UpdateSpaceAction = CreateServerAction(
   async (spaceID: string, updatedData: Partial<SelectSpace>) => {
     try {
       const updatedSpace = await UpdateSpace(spaceID, updatedData)
+      if (updatedSpace instanceof Error) {
+        throw updatedSpace
+      }
+      await UpdateShortcutTitleAction(spaceID,"space", updatedSpace?.space_name)
       
       await pusherServer.trigger(BROADCAST_CHANNEL, "space-edit", updatedSpace);
 
@@ -339,25 +344,20 @@ export const AttachSpaceUserAction = CreateServerAction(
   }
 )
 
-export const LeaveSpaceAction = CreateServerAction(
-  true,
-  async (spaceId: string, currentUserId: string) => {
-    try {
-      const deleted = await dettachSpaceUser(spaceId, currentUserId)
-
-      return { success: true, data: deleted }
-    } catch (error: any) {
-      return { success: false, error: error.message || error }
-    }
-  }
-)
 
 export const DetachSpaceUserAction = CreateServerAction(
   true,
   async (spaceId: string, userId: string, roleId: number) => {
     try {
+     
+      const space = await GetSpaceById(spaceId, false)
+      
       const spaceUser = await dettachSpaceUser(spaceId, userId)
       const deleteRole = await deleteUserRole(userId, roleId)
+      
+      if (space?.space_slug) {
+        await deleteShortcutsByUrlAction(userId, "space", `${space.channel.channel_slug}/spaces/${space.space_slug}`)
+      }
       pusherServer.trigger(`user-${userId}`, "update-role", deleteRole)
       return { success: true }
     } catch (error) {

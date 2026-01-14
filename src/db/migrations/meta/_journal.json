@@ -211,6 +211,13 @@
       "when": 1766068069240,
       "tag": "0029_2025_12_18_222748__add_column_created_by_in_chats_table",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1768293096243,
+      "tag": "0030_2026_01_13_163135__add_column_in_the_short_cuts_table",
+      "breakpoints": true
     }
   ]
 }

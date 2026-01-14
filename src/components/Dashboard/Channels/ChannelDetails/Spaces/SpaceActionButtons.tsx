@@ -14,8 +14,7 @@ import { useAtomValue, useSetAtom } from "jotai"
 import {
   AttachSpaceUserAction,
   DeleteSpaceAction,
-  DetachSpaceUserAction,
-  LeaveSpaceAction
+  DetachSpaceUserAction
 } from "@/src/server-actions/Space/Space"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { SelectSpace } from "@/src/db/schema"
@@ -37,6 +36,7 @@ import { isEntityUser } from "@/src/utils/clientHelper"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 import clsx from "clsx"
 import { getRoleIdOnMatch } from "@/src/services/realtime/utils/helper"
+import useShortcut from "@/src/components/common/Shortcut/hooks/useShortcut"
 
 interface Props {
   space: SelectSpace
@@ -49,6 +49,7 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
   )
   const [leaveLoading, leaveResult, leaveError, leaveSpace] =
     useServerAction(DetachSpaceUserAction)
+  const {getShortcuts} = useShortcut()
 
   const authUser = useAtomValue(userStore.AuthUser)
   const currentUserId = authUser?.unique_id
@@ -101,6 +102,7 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
       const res = await leaveSpace(space.id, currentUserId, role_id)
       if (res?.success) {
         setIsSpaceMember(false)
+        await getShortcuts()
         toast({
           title: "Space Left",
           description: "You have successfully left the Space!",
@@ -239,7 +241,8 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
             type="space"
             entity={{
               slug: `${encodeChannelSlug}/spaces/${encodedSpaceSlug}`,
-              title: `${space?.channel?.channel_name} - ${space?.space_name}`
+              title: `${space?.space_name}`,
+              entity_id: space?.id
             }}
             ctaType="menuItem"
           />

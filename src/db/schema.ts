@@ -1379,6 +1379,7 @@ export const shortcutsTable = pgTable("shortcuts", {
   url: varchar().notNull(),
   type: varchar().notNull(),
   user_id: varchar().notNull(),
+  entity_id: varchar(),
   ...timestamps
 })
 

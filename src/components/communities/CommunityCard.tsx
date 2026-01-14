@@ -59,6 +59,7 @@ import {
 import { useState } from "react"
 import "../../app/(dashboard)/style.css"
 import Loader from "../common/Loader/Loader"
+import useShortcut from "../common/Shortcut/hooks/useShortcut"
 interface CommunityCardProps {
   community: SelectCommunity
   showStar?: boolean
@@ -87,6 +88,7 @@ export default function CommunityCard({
   const isCurrentUserMember = community?.communityMembers?.some(
     (member) => member.user_id === currentUserId
   )
+  const {getShortcuts} = useShortcut()
   const setRefreshCommunity = useSetAtom(
     communityStore.refreshCommunitiesTriggerAtom
   )
@@ -139,7 +141,7 @@ export default function CommunityCard({
 
       if (res?.success) {
         setRefreshCommunity((pre) => !pre)
-
+        await getShortcuts()
         toast({
           title: "Left community",
           description: "You have left the community, its channels, and spaces.",
@@ -207,7 +209,8 @@ export default function CommunityCard({
                         type="community"
                         entity={{
                           slug: community.slug ?? "",
-                          title: `${community.title}`
+                          title: `${community.title}`,
+                          entity_id: community.id ?? "",
                         }}
                         ctaType="menuItem"
                       />

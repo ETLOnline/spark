@@ -7,11 +7,13 @@ import {
   getUserShortcutsAction
 } from "@/src/server-actions/Shortcut/Shortcut"
 import { userStore } from "@/src/store/user/userStore"
-import { useAtom } from "jotai"
-import { useEffect } from "react"
+import { useAtom, useAtomValue } from "jotai"
+import { useEffect, useRef } from "react"
+import pusherClient from "@/src/services/realtime/PusherClient"
 
 const useShortcut = () => {
   const [shortcutList, setShortcutList] = useAtom(userStore.shortcuts)
+  const user = useAtomValue(userStore.AuthUser)
   const [loadingShortcuts, , , getUserShortcuts] = useServerAction(
     getUserShortcutsAction
   )
@@ -52,7 +54,7 @@ const useShortcut = () => {
       })
     } else {
       toast({
-        title: "Failed to fetch shortcuts",
+        title: "Failed to delete shortcuts",
         variant: "destructive",
         duration: 2000
       })
@@ -77,6 +79,23 @@ const useShortcut = () => {
       })
     }
   }
+
+  useEffect(() => {
+    if (!user?.unique_id) return
+    const channelName = `user-${user.unique_id}`
+    const channel = pusherClient.subscribe(channelName)
+
+    channel.bind(
+      "shortcut-deleted",
+      async(data: { type: string; urlPattern: string }) => {
+        await getShortcuts()
+      }
+    )
+
+    return () => {
+      pusherClient.unsubscribe(channelName)
+    }
+  }, [user?.unique_id, setShortcutList])
 
   useEffect(() => {
     if (shortcutList && shortcutList.length > 0) {

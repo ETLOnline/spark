@@ -16,8 +16,8 @@ import {
   detachCommunityUser,
   getCommunitiesByIds
 } from "@/src/db/data-access/communities/query"
-import { PaginationType } from "@/src/components/common/types/pagination.type"
-import { InsertCommunity, SelectCommunity } from "@/src/db/schema"
+import type { PaginationType } from "@/src/components/common/types/pagination.type"
+import type { InsertCommunity, SelectCommunity } from "@/src/db/schema"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import {
@@ -31,6 +31,7 @@ import {
 } from "@/src/services/storage/utils/fileUtils"
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
+import { deleteShortcutsByUrlAction, UpdateShortcutTitleAction } from "../Shortcut/Shortcut"
 
 export const CreateCommunityAction = CreateServerAction(
   true,
@@ -179,6 +180,7 @@ export const UpdateCommunityAction = CreateServerAction(
   async (communityID: string, updatedData: Partial<SelectCommunity>) => {
     try {
       const updatedCommunity = await UpdateCommunity(communityID, updatedData)
+      await UpdateShortcutTitleAction(communityID, "community",updatedCommunity.title)
       return { success: true, data: updatedCommunity }
     } catch (error: any) {
       console.error("Error in UpdateCommunityAction:", error)
@@ -301,8 +303,16 @@ export const DetachCommunityUserAction = CreateServerAction(
   true,
   async (communityId: string, userId: string, roleId: number) => {
     try {
+      const community = await GetCommunityByIdAction(communityId)
       const deleted = await detachCommunityUser(communityId, userId)
       const deleteRole = await deleteUserRole(userId, roleId)
+      if (community.data?.slug) {
+        await deleteShortcutsByUrlAction(
+          userId,
+          "community",
+          `${community.data.slug}`
+        )
+      }
       pusherServer.trigger(`user-${userId}`, "update-role", deleteRole)
       return { success: true, data: deleted }
     } catch (error: any) {
@@ -381,9 +391,33 @@ export const LeaveCommunityAction = CreateServerAction(
   true,
   async (communityId: string, currentUserId: string) => {
     try {
-      // const deleted = await leaveCommunity(communityId, currentUserId)
+      const authUser = await AuthUserAction()
+
+      const communityRole = authUser?.roles?.find(
+        (userRole) =>
+          userRole.role?.entity_type === "COMMUNITY" &&
+          userRole.role?.entity_id === communityId
+      )
+
+      const community = await GetCommunityByIdAction(communityId)
+
       const deleted = await detachCommunityUser(communityId, currentUserId)
 
+      if (communityRole?.role_id) {
+        const deleteRole = await deleteUserRole(
+          currentUserId,
+          communityRole.role_id
+        )
+        pusherServer.trigger(`user-${currentUserId}`, "update-role", deleteRole)
+      }
+
+      if (community.data?.slug) {
+        await deleteShortcutsByUrlAction(
+          currentUserId,
+          "community",
+          `${community.data.slug}`
+        )
+      }
       return { success: true, data: deleted }
     } catch (error: any) {
       return { success: false, error: error.message || error }
