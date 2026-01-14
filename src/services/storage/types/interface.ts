@@ -22,7 +22,18 @@ export interface DeleteFileParams {
   filePath: string
 }
 
+export interface DownloadFileParams {
+  filePath: string
+}
+
+export interface DownloadFileResult {
+  buffer: Buffer
+  contentType: string
+  fileName: string
+}
+
 export interface StorageAdapter {
   uploadFile(params: UploadFileParams): Promise<string>
   deleteFile(params: DeleteFileParams): Promise<void>
+  downloadFile(params: DownloadFileParams): Promise<DownloadFileResult>
 }
