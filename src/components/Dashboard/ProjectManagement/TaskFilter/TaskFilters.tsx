@@ -145,7 +145,7 @@ function TaskFilters({ projectId, onApplyFilters }: Props) {
             <div className="p-4 space-y-4">
               {/* Assignee Filter */}
               <div className="space-y-2">
-                <Label>Assigned To</Label>
+                <Label>Select Assigned To</Label>
                 <MultiSelect
                   options={AssigneeOptions}
                   selected={selectedAssignee}
