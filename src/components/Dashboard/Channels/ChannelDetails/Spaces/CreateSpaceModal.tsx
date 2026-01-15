@@ -297,7 +297,7 @@ function CreateSpaceModal({
                 : "You can create Spaces."}
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="h-[80vh] overflow-auto pr-3">
+          <ScrollArea className="max-h-[calc(100vh-8rem)] w-full pr-3">
             <form onSubmit={form.handleSubmit(submitData)}>
               <div className="grid gap-4 py-4">
                 {/* Space Name */}

@@ -360,7 +360,7 @@ function CreateChannels({
                 : "You can create Channels."}
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="h-[80vh] w-full pr-3">
+          <ScrollArea className="max-h-[calc(100vh-8rem)] w-full pr-3">
             <form onSubmit={form.handleSubmit(channelSubmit)}>
               <div className="grid gap-4 py-4">
                 {/* Channel Name */}
