@@ -79,6 +79,7 @@ import { FileUpload } from "../../ui/file-upload"
 import Image from "next/image"
 import { useOnlineStatus } from "../../providers/OnlineStatusProvider"
 import { GetSpaceUsersAction } from "@/src/server-actions/Space/Space"
+import ExpandableText from "../posts/ExpandableText"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -733,68 +734,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     return otherUser ? users.has(otherUser.user_id) : false
   })()
 
-  const MAX_MESSAGE_LENGTH = 300
-
-  const toggleMessage = (id: number) => {
-    setExpandedMessages((prev) => ({
-      ...prev,
-      [id]: !prev[id]
-    }))
-  }
-
-  const CollapsibleMessage = ({
-    messageId,
-    children
-  }: {
-    messageId: number
-    children: React.ReactNode
-  }) => {
-    const ref = useRef<HTMLDivElement>(null)
-    const isExpanded = expandedMessages[messageId]
-
-    useEffect(() => {
-      if (!ref.current) return
-
-      const isOverflowing = ref.current.scrollHeight > 120
-
-      setOverflowMessages((prev) => {
-        if (prev[messageId] === isOverflowing) return prev
-
-        return {
-          ...prev,
-          [messageId]: isOverflowing
-        }
-      })
-    }, [messageId])
-
-    return (
-      <div className="space-y-1">
-        <div
-          ref={ref}
-          className={`overflow-hidden transition-all duration-200 ${
-            isExpanded ? "max-h-none" : "max-h-[120px]"
-          }`}
-        >
-          {children}
-        </div>
-
-        {overflowMessages[messageId] && (
-          <button
-            onClick={() =>
-              setExpandedMessages((prev) => ({
-                ...prev,
-                [messageId]: !prev[messageId]
-              }))
-            }
-            className="text-xs text-blue-500 hover:underline"
-          >
-            {isExpanded ? "Show less" : "Show more"}
-          </button>
-        )}
-      </div>
-    )
-  }
-
   return (
     <>
       <div className="flex h-[calc(100vh-7rem)] gap-4">
@@ -1068,13 +1007,10 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                           })()}
 
                                         {message.type === "text" && (
-                                          <CollapsibleMessage
-                                            messageId={message.id}
-                                          >
-                                            <MessageContent
-                                              content={message.message}
-                                            />
-                                          </CollapsibleMessage>
+                                          <ExpandableText
+                                            content={message.message}
+                                            lines={5}
+                                          />
                                         )}
                                       </>
                                     )}
