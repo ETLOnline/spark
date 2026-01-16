@@ -164,12 +164,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const [, , , incrementUnreadCount] = useServerAction(
     incrementUnreadCountForChatAction
   )
-  const [expandedMessages, setExpandedMessages] = useState<
-    Record<number, boolean>
-  >({})
-  const [overflowMessages, setOverflowMessages] = useState<
-    Record<number, boolean>
-  >({})
 
   const canCreate = permissionChecker
     ? permissionChecker?.canAccess(permissionNamespaceCreate)
