@@ -107,11 +107,6 @@ export const AzureStorageAdapter: StorageAdapter = {
         fileName
       }
     } catch (error: any) {
-      console.error("Azure download error:", {
-        error: error.message,
-        stack: error.stack,
-        filePath
-      })
       throw new Error(error.message || "Failed to download file from storage")
     }
   }

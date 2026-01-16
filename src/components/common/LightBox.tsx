@@ -43,6 +43,7 @@ export default function ImageLightbox({
       const result = await downloadFile(activeSlide.src)
 
       if (!result?.success || !result.data) {
+        onClose()
         throw new Error("Failed to download file")
       }
       const { dataUrl, fileName } = result.data
@@ -60,6 +61,7 @@ export default function ImageLightbox({
       window.URL.revokeObjectURL(objectUrl)
       onClose()
     } catch (error) {
+      onClose()
       toast({
         title: "Download Failed",
         description: "There was an error downloading the image.",
