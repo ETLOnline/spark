@@ -59,11 +59,25 @@ export const AzureStorageAdapter: StorageAdapter = {
       // If it's a full URL, extract the blob name
       if (filePath.includes("blob.core.windows.net")) {
         const url = new URL(filePath)
-        const pathParts = url.pathname.split("/")
-        blobName = pathParts.slice(2).join("/") // Remove container name
+        const pathParts = url.pathname.split("/").filter(Boolean)
+
+        if (pathParts.length > 1) {
+          blobName = decodeURIComponent(pathParts.slice(1).join("/"))
+        } else {
+          throw new Error(
+            `Invalid blob URL: missing blob path. URL: ${filePath}`
+          )
+        }
       }
 
-      const blockBlobClient = azureClient().getBlockBlobClient(blobName)
+      const containerClient = azureClient()
+      const blockBlobClient = containerClient.getBlockBlobClient(blobName)
+
+      const exists = await blockBlobClient.exists()
+      if (!exists) {
+        throw new Error(`Blob does not exist: ${blobName}`)
+      }
+
       const downloadResponse = await blockBlobClient.download(0)
 
       if (!downloadResponse.readableStreamBody) {
@@ -84,16 +98,21 @@ export const AzureStorageAdapter: StorageAdapter = {
       const contentType =
         downloadResponse.contentType || "application/octet-stream"
 
-      // Extract filename from blob name
-      const fileName = blobName.split("/").pop() || "file"
+      // Extract filename from blob name (handle URL encoding)
+      const fileName = decodeURIComponent(blobName.split("/").pop() || "file")
 
       return {
         buffer,
         contentType,
         fileName
       }
-    } catch (error) {
-      throw new Error("Failed to download file from storage")
+    } catch (error: any) {
+      console.error("Azure download error:", {
+        error: error.message,
+        stack: error.stack,
+        filePath
+      })
+      throw new Error(error.message || "Failed to download file from storage")
     }
   }
 }

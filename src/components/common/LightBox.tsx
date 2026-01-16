@@ -58,6 +58,7 @@ export default function ImageLightbox({
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(objectUrl)
+      onClose()
     } catch (error) {
       toast({
         title: "Download Failed",
