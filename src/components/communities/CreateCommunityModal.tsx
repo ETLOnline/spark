@@ -425,10 +425,7 @@ export default function CreateCommunityModal({
   return (
     <>
       <Dialog open={communityFormModalVisibility} onOpenChange={handleClose}>
-        <DialogContent
-          className="max-w-[95vw] sm:max-w-[600px]"
-          onInteractOutside={(e) => e.preventDefault()}
-        >
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>
               {editMode === true ? "Edit Community" : "Create Community"}
