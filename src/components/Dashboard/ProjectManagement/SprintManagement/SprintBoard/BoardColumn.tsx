@@ -26,12 +26,19 @@ function BoardColumn({ sprint, status, tasks, onTaskClick, setTasks }: Props) {
       : true
   )
 
+  const taskCount = filteredTasks.length
+
   return (
     <div
       ref={setNodeRef}
       className="w-[33%] bg-muted/50 p-2 pb-4 rounded-xl flex-shrink-0 space-y-2"
     >
-      <div className="font-medium text-sm mb-4 text-center">{status?.name}</div>
+      <div className="flex flex-row justify-between mb-4">
+        <div className="font-medium text-sm text-center">{status?.name}</div>
+        <div className="text-xs text-center ">
+          {taskCount} {taskCount === 1 ? "task" : "tasks"}
+        </div>
+      </div>
       {filteredTasks.map((task) => (
         <BoardTaskCard
           task={task}
