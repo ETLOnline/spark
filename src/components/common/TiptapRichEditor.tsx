@@ -51,6 +51,7 @@ import MentionList, {
 } from "../Dashboard/Chat/components/MentionList"
 import { AddImageToStorageAction } from "@/src/server-actions/storage/storage"
 import HardBreak from "@tiptap/extension-hard-break"
+import Placeholder from "@tiptap/extension-placeholder"
 
 interface RichTextEditorProps {
   value?: string
@@ -68,6 +69,7 @@ interface RichTextEditorProps {
   showFooter?: boolean
   maxHeight?: string
   isScrollAble?: boolean
+  placeholder?: string
 }
 
 export default function RichTextEditor({
@@ -85,7 +87,8 @@ export default function RichTextEditor({
   showToolbar = true,
   onEnterPress,
   onMentionStateChange,
-  showFooter = true
+  showFooter = true,
+  placeholder
 }: RichTextEditorProps) {
   const [linkUrl, setLinkUrl] = useState("")
   const [showLinkInput, setShowLinkInput] = useState(false)
@@ -166,6 +169,11 @@ export default function RichTextEditor({
       StarterKit.configure({
         // Disable default hard break handling from StarterKit
         hardBreak: false
+      }),
+      Placeholder.configure({
+        placeholder: placeholder,
+        emptyEditorClass:
+          "is-editor-empty before:content-[attr(data-placeholder)] before:text-gray-400 before:float-left before:pointer-events-none before:h-0"
       }),
       Underline,
       Link.configure({ openOnClick: false }),

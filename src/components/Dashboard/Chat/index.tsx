@@ -1124,6 +1124,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                           onMentionStateChange={setIsMentionActive}
                           showFooter={false}
                           isScrollAble={true}
+                          placeholder="Write a message..."
                         />
                       )}
                     </div>
