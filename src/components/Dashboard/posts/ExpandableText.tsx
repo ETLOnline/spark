@@ -4,11 +4,17 @@ import { Button } from "../../ui/button"
 
 type Props = {
   content: string
-  lines: number
+  lines?: number
   className?: string
+  isHtml?: boolean
 }
 
-const ExpandableText: React.FC<Props> = ({ content, lines = 6, className }) => {
+const ExpandableText: React.FC<Props> = ({
+  content,
+  lines = 6,
+  className,
+  isHtml = false
+}) => {
   const { contentRef, expanded, showToggle, toggle } = useExpandableText(
     lines,
     content
@@ -25,17 +31,30 @@ const ExpandableText: React.FC<Props> = ({ content, lines = 6, className }) => {
 
   return (
     <>
-      <p
-        ref={contentRef}
-        style={clampStyle}
-        className={`${className ?? ""} text-justify whitespace-pre-wrap break-words`}
-      >
-        {content}
-      </p>
+      {isHtml ? (
+        <div
+          ref={contentRef}
+          style={clampStyle}
+          className={`${className ?? ""} whitespace-pre-wrap break-words`}
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
+      ) : (
+        <p
+          ref={contentRef}
+          style={clampStyle}
+          className={`${className ?? ""} whitespace-pre-wrap break-words`}
+        >
+          {content}
+        </p>
+      )}
 
       {showToggle && (
         <Button
-          onClick={toggle}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            toggle()
+          }}
           variant="ghost"
           size="sm"
           className="font-medium rounded-full flex items-center gap-1 mx-auto mt-1"

@@ -6,6 +6,8 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import { MarkNotificationAsReadAction } from "@/src/server-actions/Notification/Notification"
 import { notificationStore } from "@/src/store/notification/notificationStore"
 import moment from "moment-timezone"
+import { useEffect, useRef, useState } from "react"
+import ExpandableText from "../posts/ExpandableText"
 
 type NotificationItemProps = {
   activity: SelectNotification
@@ -68,10 +70,14 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
           </p>
           <p className="text-sm font-medium truncate">{activity.title}</p>
           {activity.body && (
-            <p
-              className="text-xs text-muted-foreground break-words"
-              dangerouslySetInnerHTML={{ __html: activity.body }}
-            />
+            <>
+              <ExpandableText
+                className="text-xs text-muted-foreground break-words"
+                content={activity.body}
+                lines={4}
+                isHtml={true}
+              />
+            </>
           )}
         </Link>
       </div>
