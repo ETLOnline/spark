@@ -41,12 +41,13 @@ export const DownloadImageFromStorageAction = CreateServerAction(
       // Convert buffer to base64 data URL
       const base64 = result.buffer.toString("base64")
       const dataUrl = `data:${result.contentType};base64,${base64}`
+      const name = result.fileName.split("-").pop()
 
       return {
         success: true,
         data: {
           dataUrl,
-          fileName: result.fileName,
+          fileName: name,
           contentType: result.contentType
         }
       }

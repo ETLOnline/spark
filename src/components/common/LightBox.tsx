@@ -13,13 +13,15 @@ interface ImageLightboxProps {
   images: string[]
   index: number
   onClose: () => void
+  showDownload?: boolean
 }
 
 export default function ImageLightbox({
   open,
   images,
   index,
-  onClose
+  onClose,
+  showDownload = false
 }: ImageLightboxProps) {
   const [, , , downloadFile] = useServerAction(DownloadImageFromStorageAction)
 
@@ -85,12 +87,16 @@ export default function ImageLightbox({
       }}
       toolbar={{
         buttons: [
-          "close",
-          <Download
-            key="download"
-            onClick={handleDownload}
-            className="mt-[6%] text-foreground/80 w-6 h-7 hover:text-white cursor-pointer"
-          />
+          ...(showDownload
+            ? [
+                <Download
+                  key="download"
+                  onClick={handleDownload}
+                  className="mt-[6%] text-foreground/80 w-6 h-7 hover:text-white cursor-pointer"
+                />
+              ]
+            : []),
+          "close"
         ]
       }}
     />

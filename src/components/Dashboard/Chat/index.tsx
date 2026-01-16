@@ -1262,6 +1262,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
         images={lightboxImages}
         index={lightboxIndex}
         onClose={() => setLightboxOpen(false)}
+        showDownload={true}
       />
     </>
   )
