@@ -17,6 +17,7 @@ import PostComments from "./post-comments"
 import PostCommentForm from "./post-comment-form"
 import PostCommentsSection from "./post-comments-section"
 import { usePostNavigation } from "@/src/hooks/usePostNavigation"
+import Image from "next/image"
 
 type Props = {
   post: SelectPollPost
@@ -69,7 +70,7 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
             p.id === post.id && "options" in p
               ? {
                   ...p,
-                  options: p.options.map((option) =>
+                  options: p.options?.map((option) =>
                     option.option_text === value
                       ? { ...option, vote_count: option.vote_count + 1 }
                       : option
@@ -90,14 +91,38 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
       })
     }
   }
-
+  const isSingle = post.files?.length === 1
   return (
     <>
       <CardContent
         className={spaceId !== "shared" ? "cursor-pointer" : ""}
         onClick={spaceId !== "shared" ? handleContentClick : undefined}
       >
-        <p className="font-semibold mb-2">{post.content}</p>
+        <p className="font-semibold mb-4">{post.content}</p>
+        {post.files && post.files.length > 0 && (
+          <div
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+            }}
+            className="mb-4 grid  gap-2 sm:grid-cols-3"
+          >
+            {post.files.map((file) => (
+              <div
+                key={file.id}
+                className="relative overflow-hidden rounded-lg"
+              >
+                <Image
+                  src={file.file_path}
+                  alt={file.file_name}
+                  width={isSingle ? 1200 : 600}
+                  height={isSingle ? 700 : 350}
+                  className="h-32 w-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        )}
         <RadioGroup
           onValueChange={handleVote}
           disabled={
@@ -147,7 +172,11 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
         />
         <Separator />
         <PostCommentsSection comments={post.postComments || []} />
-        <PostCommentForm postId={post.id} comments={post.comments} spaceId={spaceId} />
+        <PostCommentForm
+          postId={post.id}
+          comments={post.comments}
+          spaceId={spaceId}
+        />
       </CardFooter>
     </>
   )

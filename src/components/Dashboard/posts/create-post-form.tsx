@@ -40,7 +40,8 @@ import {
   CreatePollPostAction,
   CreatePostAction,
   CreateFilesPostAction,
-  LinkHashtagsToPostAction
+  LinkHashtagsToPostAction,
+  AttachImagesToPostAction
 } from "@/src/server-actions/Post/Post"
 import useHashtags from "../profile/hooks/useHashtags"
 import { spaceStore } from "@/src/store/space/spaceStore"
@@ -96,6 +97,12 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     linkHashtagsToPostError,
     linkHashtagsToPost
   ] = useServerAction(LinkHashtagsToPostAction)
+  const [
+    attachImagesToPostLoading,
+    attachedImages,
+    attachImagesToPostError,
+    attachImagesToPost
+  ] = useServerAction(AttachImagesToPostAction)
 
   const { permissionChecker } = usePermissionChecker(
     variant == "spaces" ? "scoped" : "global",
@@ -237,7 +244,9 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         }
       } else if (newPost.type === PostType.poll) {
         let linkedHashtags
-        const post =
+
+        // Create poll with options first
+        const pollPost =
           variant === "spaces"
             ? await createPollPost(
                 newPost.content as string,
@@ -253,10 +262,41 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 pollOptions
               )
         setPollOptions([])
-        if (post && post.data) {
+
+        if (pollPost && pollPost.data) {
+          const postId = pollPost.data.id
+          let pollWithImages: SelectPollPost = {
+            ...pollPost.data,
+            author: authUser as SelectUser
+          } as SelectPollPost
+
+          // If poll has images, attach them to the post
+          if (newPost.images && newPost.images.length > 0) {
+            const imageData = newPost.images.map((image) => ({
+              fileName: image.name,
+              fileSize: image.size,
+              fileType: image.type,
+              fileBase64: image.base64
+            }))
+
+            const imagesResult = await attachImagesToPost({
+              postId,
+              files: imageData,
+              folderPath: "posts"
+            })
+
+            if (imagesResult?.success && imagesResult.data) {
+              pollWithImages = {
+                ...pollPost.data,
+                author: authUser as SelectUser,
+                files: imagesResult.data
+              } as SelectPollPost
+            }
+          }
+
           if (hashtags.length) {
             linkedHashtags = await linkHashtagsToPost(
-              post.data.id,
+              postId,
               hashtags.length
                 ? hashtags
                     .filter((tag) => !tag.deleted)
@@ -277,15 +317,16 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
               })
             }
           }
+
           postData = {
-            ...post.data,
+            ...pollWithImages,
             author: authUser as SelectUser,
             hashtags: linkedHashtags?.data?.length
               ? [...linkedHashtags?.data]
               : [],
             postComments: []
-          }
-        } else if (post?.error) {
+          } as SelectPollPost
+        } else if (pollPost?.error) {
           toast({
             variant: "destructive",
             title: "Error",
@@ -605,14 +646,16 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 disabled={
                   createPostLoading ||
                   createFilesPostLoading ||
-                  createPollPostLoading
+                  createPollPostLoading ||
+                  attachImagesToPostLoading
                     ? true
                     : false
                 }
                 loading={
                   createPostLoading ||
                   createFilesPostLoading ||
-                  createPollPostLoading
+                  createPollPostLoading ||
+                  attachImagesToPostLoading
                     ? true
                     : false
                 }
