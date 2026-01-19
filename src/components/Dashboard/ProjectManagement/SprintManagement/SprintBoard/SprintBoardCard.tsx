@@ -178,15 +178,24 @@ function SprintBoardCard({
     })
 
     if (statusChanged) {
-      toast({
-        title: "Task status updated successfully",
-        duration: 2000
-      })
+      try {
+        const res = await UpdateTaskAction(taskId as string, {
+          status_id: overStatusId as string
+        })
 
-      // update on server
-      await UpdateTaskAction(taskId as string, {
-        status_id: overStatusId as string
-      })
+        if (res?.success) {
+          toast({
+            title: "Task status updated successfully",
+            duration: 2000
+          })
+        }
+      } catch (error) {
+        toast({
+          title: "Failed to update task status",
+          variant: "destructive",
+          duration: 2000
+        })
+      }
     }
 
     setActiveTask(null)

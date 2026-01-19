@@ -31,10 +31,10 @@ import { AttachProjectUserAction } from "@/src/server-actions/ProjectManagement/
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { useAuthUser } from "@/src/hooks/useAuthUser"
 import Tiptap from "@/src/components/common/TiptapRichEditor"
-import { ScrollArea } from "@radix-ui/react-scroll-area"
 import { projectSchema } from "./utils/projectSchema"
 import { useConfirmClose } from "@/src/hooks/useConfirmClose"
 import { UnsavedChangesDialog } from "../../common/unsavedChangesDialog"
+import { ScrollArea } from "../../ui/scroll-area"
 
 type ProjectFormData = z.infer<typeof projectSchema>
 
@@ -260,7 +260,7 @@ function ProjectFormModal({
           </DialogTrigger>
         )}
         <DialogContent
-          className="max-w-2xl"
+          className=""
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader className="p-2">
@@ -272,8 +272,8 @@ function ProjectFormModal({
               concise.
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className=" max-h-[80vh] overflow-auto">
-            <form onSubmit={form.handleSubmit(projectSubmit)} className="p-2">
+          <ScrollArea className="h-[78vh] w-full pr-3">
+            <form onSubmit={form.handleSubmit(projectSubmit)}>
               <div className="grid gap-4 ">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <div className="flex flex-col gap-2 w-full col-span-4">
@@ -401,7 +401,7 @@ function ProjectFormModal({
                   </div>
                 </div>
               </div>
-              <DialogFooter>
+              <DialogFooter className="pt-2">
                 <Button
                   type="submit"
                   loading={createProjectLoading || updateLoading}
