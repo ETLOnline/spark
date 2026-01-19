@@ -48,6 +48,16 @@ import { spaceStore } from "@/src/store/space/spaceStore"
 import { categories } from "@/src/utils/constants"
 import { Plus, X } from "lucide-react"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction
+} from "../../ui/alert-dialog"
 
 type Props = {
   variant?: "posts" | "spaces"
@@ -61,6 +71,9 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     hashtags: []
   })
   const [pollOptions, setPollOptions] = useState<string[]>([])
+  const [changeTabDialogOpen, setChangeTabDialogOpen] = useState<boolean>(false)
+  const [activeTab, setActiveTab] = useState<PostType>(PostType.text)
+  const [pendingTab, setPendingTab] = useState<PostType | null>(null)
 
   const setPosts = useSetAtom(postStore.posts)
   const authUser = useAtomValue(userStore.AuthUser)
@@ -116,6 +129,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     : false
 
   const resetForm = () => {
+    setActiveTab(PostType.text)
     setNewPost({
       content: "",
       type: PostType.text,
@@ -130,6 +144,15 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     setHashtags([])
   }
 
+  const hasUnsavedChanges = () =>
+    !!(
+      newPost.content?.trim() ||
+      newPost.images?.length ||
+      newPost.fileBase64 ||
+      pollOptions.length ||
+      hashtags.length
+    )
+
   const isSpaceVariant = variant === "spaces"
   const entityType = isSpaceVariant ? "space" : ""
   const entityId = isSpaceVariant ? (currentSpace?.id ?? "") : ""
@@ -137,11 +160,16 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   const postCategory = isSpaceVariant ? newPost.category : ""
 
   const handleTabChange = (value: string) => {
-    resetForm()
-    setNewPost((prev) => ({
-      ...prev,
-      type: value as PostType
-    }))
+    const nextTab = value as PostType
+
+    if (hasUnsavedChanges()) {
+      setPendingTab(nextTab)
+      setChangeTabDialogOpen(true)
+      return
+    }
+
+    setActiveTab(nextTab)
+    setNewPost((p) => ({ ...p, type: nextTab }))
   }
 
   const handleCloseModal = () => {
@@ -546,7 +574,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           <form onSubmit={handleCreatePost}>
             <CardContent>
               <Tabs
-                defaultValue="text"
+                value={activeTab}
                 className="w-full"
                 onValueChange={handleTabChange}
               >
@@ -648,16 +676,12 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                   createFilesPostLoading ||
                   createPollPostLoading ||
                   attachImagesToPostLoading
-                    ? true
-                    : false
                 }
                 loading={
                   createPostLoading ||
                   createFilesPostLoading ||
                   createPollPostLoading ||
                   attachImagesToPostLoading
-                    ? true
-                    : false
                 }
               >
                 Post
@@ -666,6 +690,45 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           </form>
         </Card>
       )}
+      <AlertDialog
+        open={changeTabDialogOpen}
+        onOpenChange={setChangeTabDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard Changes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved content. Switching post types will discard all
+              changes including selected files and images.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setPendingTab(null)
+                setChangeTabDialogOpen(false)
+                setActiveTab((t) => t)
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={() => {
+                if (!pendingTab) return
+
+                resetForm()
+                setActiveTab(pendingTab)
+                setNewPost((p) => ({ ...p, type: pendingTab }))
+                setPendingTab(null)
+                setChangeTabDialogOpen(false)
+              }}
+            >
+              Discard Changes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
