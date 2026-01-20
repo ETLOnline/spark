@@ -66,6 +66,7 @@ import {
 import { getChildTypes, getParentTypes } from "../utils/helper"
 import { GetLinkedTasksAction } from "@/src/server-actions/Tasks/Task"
 import Loader from "@/src/components/common/Loader/Loader"
+import { SearchableSingleSelect } from "@/src/components/ui/searchable-single-select"
 interface Props {
   onSubmit: (task: any) => void
   statuses?: InsertTaskStatus[]
@@ -431,18 +432,20 @@ export default function TaskForm({
     getSubTasks()
   }, [selectedTask])
 
-  const handleChangeInAssignTo = (newselected: MultiSelectOption[]) => {
-    if (newselected.length === 0) {
-      setSelectedAssignee([
-        {
-          label: "Unassigned",
-          value: ""
-        }
-      ])
-    } else {
-      const latestSelected = newselected?.[newselected.length - 1]
-      setSelectedAssignee(latestSelected ? [latestSelected] : [])
-    }
+  const handleAssigneeChange = (val: string, field: any) => {
+    field.onChange(val)
+
+    const user = usersList.find((u) => u?.unique_id === val)
+    setAssignee(user || null)
+
+    setActiveField(null)
+  }
+
+  const handleAssignorChange = (val: string, field: any) => {
+    field.onChange(val)
+    const user = usersList.find((u) => u?.unique_id === val)
+    setAssignor(user || null)
+    setActiveField(null)
   }
 
   const isEditable = isAllowedAction && !isSprintCompleted
@@ -696,13 +699,13 @@ export default function TaskForm({
                         control={form.control}
                         render={({ field }) =>
                           activeField === "assignTo" ? (
-                            <MultiSelect
+                            <SearchableSingleSelect
                               options={assigneeOptions}
-                              selected={selectedAssignee}
+                              value={field.value}
                               disabled={!isEditable}
-                              onChange={(newselected) => {
-                                handleChangeInAssignTo(newselected)
-                              }}
+                              onChange={(val) =>
+                                handleAssigneeChange(val, field)
+                              }
                               placeholder="Select Assignee"
                             />
                           ) : (
@@ -749,17 +752,15 @@ export default function TaskForm({
                         control={form.control}
                         render={({ field }) =>
                           activeField === "assignBy" ? (
-                            <MultiSelect
-                              options={assignorOptions}
-                              selected={selectedAssignor}
+                            <SearchableSingleSelect
+                              options={assignorOptions.filter(
+                                (opt) => opt.value !== ""
+                              )}
+                              value={field.value}
                               disabled={!isEditable}
-                              onChange={(newselected) => {
-                                const latestSelected =
-                                  newselected?.[newselected.length - 1]
-                                setSelectedAssignor(
-                                  latestSelected ? [latestSelected] : []
-                                )
-                              }}
+                              onChange={(val) =>
+                                handleAssignorChange(val, field)
+                              }
                               placeholder="Select Assignor"
                             />
                           ) : (
@@ -988,6 +989,7 @@ export default function TaskForm({
                       {selectedTask ? (
                         <Link
                           href={`/profile/${selectedTask?.creator?.unique_id}`}
+                          target="_blank"
                           className="flex flex-row gap-2 items-center  hover:cursor-pointer"
                         >
                           <Avatar className="h-8 w-8">
