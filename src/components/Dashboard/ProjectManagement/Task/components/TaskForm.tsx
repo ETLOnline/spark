@@ -690,7 +690,7 @@ export default function TaskForm({
 
                     {/* Assign To */}
                     <div className="space-y-2">
-                      <Label>Select Assigned To</Label>
+                      <Label>Select Assignee</Label>
                       <Controller
                         name="assign_to"
                         control={form.control}
@@ -703,7 +703,7 @@ export default function TaskForm({
                               onChange={(newselected) => {
                                 handleChangeInAssignTo(newselected)
                               }}
-                              placeholder="Select Assigned To"
+                              placeholder="Select Assignee"
                             />
                           ) : (
                             <div
