@@ -363,8 +363,11 @@ function UpdatePostModal({
                                   value={option.text}
                                   onChange={(e) => {
                                     const updated = [...options]
-                                    updated[index].text =
-                                      e.target.value.toUpperCase()
+                                    const inputValue = e.target.value
+                                    updated[index].text = inputValue
+                                      ? inputValue[0].toUpperCase() +
+                                        inputValue.substring(1).toLowerCase()
+                                      : inputValue
                                     field.onChange(updated)
                                   }}
                                 />
