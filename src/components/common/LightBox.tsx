@@ -95,7 +95,7 @@ export default function ImageLightbox({
                 <Download
                   key="download"
                   onClick={handleDownload}
-                  className="mt-[6%] text-foreground/80 w-6 h-7 hover:text-white cursor-pointer"
+                  className="mt-[6%] text-stone-300 w-6 h-7 hover:text-white cursor-pointer"
                 />
               ]
             : []),
