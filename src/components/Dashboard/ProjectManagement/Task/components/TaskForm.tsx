@@ -139,10 +139,6 @@ export default function TaskForm({
   const projectId = params?.id
 
   const assigneeOptions: MultiSelectOption[] = [
-    {
-      label: "Unassigned",
-      value: ""
-    },
     ...usersList.map((user) => ({
       label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
       value: user?.unique_id ?? ""
@@ -287,7 +283,7 @@ export default function TaskForm({
         setAssignee(null)
         setSelectedAssignee([
           {
-            label: "Unassigned",
+            label: "Select Assignee",
             value: ""
           }
         ])
@@ -700,6 +696,7 @@ export default function TaskForm({
                         render={({ field }) =>
                           activeField === "assignTo" ? (
                             <SearchableSingleSelect
+                              id="assign_to_input"
                               options={assigneeOptions}
                               value={field.value}
                               disabled={!isEditable}
@@ -736,7 +733,7 @@ export default function TaskForm({
                                   ? assignee.first_name +
                                     " " +
                                     assignee.last_name
-                                  : "Unassigned"}
+                                  : "Select Assignee"}
                               </span>
                             </div>
                           )
@@ -753,6 +750,7 @@ export default function TaskForm({
                         render={({ field }) =>
                           activeField === "assignBy" ? (
                             <SearchableSingleSelect
+                              id="assign_by_input"
                               options={assignorOptions.filter(
                                 (opt) => opt.value !== ""
                               )}
@@ -761,7 +759,7 @@ export default function TaskForm({
                               onChange={(val) =>
                                 handleAssignorChange(val, field)
                               }
-                              placeholder="Select Assignor"
+                              placeholder="Select Option"
                             />
                           ) : (
                             <div

@@ -20,25 +20,23 @@ import { ScrollArea } from "@/src/components/ui/scroll-area"
 
 export type SelectOption = { label: string; value: string }
 
-interface SearchableSelectProps {
+interface SearchableSingleSelectProps {
   options: SelectOption[]
   value?: string
   onChange: (value: string) => void
   placeholder?: string
   disabled?: boolean
   className?: string
+  id?: string
 }
 
-export const SearchableSingleSelect = React.forwardRef<HTMLButtonElement, SearchableSelectProps>(
-  ({ options, value, onChange, placeholder = "Select option...", disabled = false, className }, ref) => {
+export const SearchableSingleSelect = React.forwardRef<HTMLButtonElement, SearchableSingleSelectProps>(
+  ({ options, value, onChange, placeholder = "Select option...", disabled = false, className, id }, ref) => {
     const [open, setOpen] = React.useState(false)
+
     React.useEffect(() => {
       setOpen(true)
     }, [])
-
-    const filteredOptions = options.filter(
-      (opt) => opt.value !== "" && opt.label.toLowerCase() !== "unassigned"
-    )
 
     const selectedOption = options.find((option) => option.value === value)
 
@@ -46,6 +44,7 @@ export const SearchableSingleSelect = React.forwardRef<HTMLButtonElement, Search
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
+            id={id} 
             ref={ref}
             variant="outline"
             role="combobox"
@@ -59,13 +58,14 @@ export const SearchableSingleSelect = React.forwardRef<HTMLButtonElement, Search
             <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[250px] p-0" align="start">
+        {/* Use portal to ensure it renders outside the Sidebar scroll area */}
+        <PopoverContent className="w-[220px] p-0 z-[100]" align="start" side="bottom">
           <Command>
             <CommandInput placeholder="Search..." />
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
-              <ScrollArea className="max-h-[220px]">
-                {filteredOptions.map((option) => (
+              <ScrollArea className="max-h-[200px]">
+                {options.map((option) => (
                   <CommandItem
                     key={option.value}
                     value={option.label}
@@ -91,3 +91,5 @@ export const SearchableSingleSelect = React.forwardRef<HTMLButtonElement, Search
     )
   }
 )
+
+SearchableSingleSelect.displayName = "SearchableSingleSelect"
