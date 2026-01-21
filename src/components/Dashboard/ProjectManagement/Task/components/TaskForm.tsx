@@ -703,7 +703,7 @@ export default function TaskForm({
                               onChange={(val) =>
                                 handleAssigneeChange(val, field)
                               }
-                              placeholder="Select Assignee"
+                              placeholder="Select Option"
                             />
                           ) : (
                             <div
@@ -733,7 +733,7 @@ export default function TaskForm({
                                   ? assignee.first_name +
                                     " " +
                                     assignee.last_name
-                                  : "Select Assignee"}
+                                  : "Select Option"}
                               </span>
                             </div>
                           )
