@@ -945,7 +945,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                               </div>
                             ) : (
                               <div className="flex group gap-2">
-                                <div className="relative group flex flex-col max-w-xl">
+                                <div className="relative group flex flex-col">
                                   {/* MESSAGE BUBBLE */}
                                   <div
                                     className={`rounded-lg py-2 pl-2 rich-editor  flex gap-1 flex-col pr-6 ${
@@ -1111,7 +1111,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                 </div>
 
                                 {/* TIME */}
-                                <div className="text-xs text-right hidden group-hover:block">
+                                <div className="text-xs text-right hidden group-hover:block min-w-fit">
                                   <p>
                                     {moment
                                       .utc(message.created_at)
