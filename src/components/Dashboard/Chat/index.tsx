@@ -80,6 +80,7 @@ import Image from "next/image"
 import { useOnlineStatus } from "../../providers/OnlineStatusProvider"
 import { GetSpaceUsersAction } from "@/src/server-actions/Space/Space"
 import ImageLightbox from "../../common/LightBox"
+import ExpandableText from "../posts/ExpandableText"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -944,7 +945,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                               </div>
                             ) : (
                               <div className="flex group gap-2">
-                                <div className="relative group flex flex-col">
+                                <div className="relative group flex flex-col max-w-xl">
                                   {/* MESSAGE BUBBLE */}
                                   <div
                                     className={`rounded-lg py-2 pl-2 rich-editor  flex gap-1 flex-col pr-6 ${
@@ -1051,8 +1052,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                           })()}
 
                                         {message.type === "text" && (
-                                          <MessageContent
+                                          <ExpandableText
                                             content={message.message}
+                                            lines={5}
                                           />
                                         )}
                                       </>
