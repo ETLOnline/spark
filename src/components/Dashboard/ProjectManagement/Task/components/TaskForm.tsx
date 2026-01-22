@@ -789,7 +789,7 @@ export default function TaskForm({
                                   ? assignor.first_name +
                                     " " +
                                     assignor.last_name
-                                  : "Select Assignor"}
+                                  : "Select Option"}
                               </span>
                             </div>
                           )
