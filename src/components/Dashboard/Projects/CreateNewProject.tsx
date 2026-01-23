@@ -263,7 +263,7 @@ function ProjectFormModal({
           className=""
           onInteractOutside={(e) => e.preventDefault()}
         >
-          <DialogHeader className="p-2">
+          <DialogHeader>
             <DialogTitle>
               {isEditing ? "Update Project" : "Create a New Project"}
             </DialogTitle>

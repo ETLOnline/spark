@@ -80,6 +80,7 @@ import Image from "next/image"
 import { useOnlineStatus } from "../../providers/OnlineStatusProvider"
 import { GetSpaceUsersAction } from "@/src/server-actions/Space/Space"
 import ImageLightbox from "../../common/LightBox"
+import ExpandableText from "../posts/ExpandableText"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -1051,8 +1052,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                           })()}
 
                                         {message.type === "text" && (
-                                          <MessageContent
+                                          <ExpandableText
                                             content={message.message}
+                                            lines={5}
                                           />
                                         )}
                                       </>
@@ -1109,7 +1111,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                 </div>
 
                                 {/* TIME */}
-                                <div className="text-xs text-right hidden group-hover:block">
+                                <div className="text-xs text-right hidden group-hover:block min-w-fit">
                                   <p>
                                     {moment
                                       .utc(message.created_at)
@@ -1175,6 +1177,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                           onMentionStateChange={setIsMentionActive}
                           showFooter={false}
                           isScrollAble={true}
+                          placeholder="Type a message"
                         />
                       )}
                     </div>

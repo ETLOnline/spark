@@ -66,6 +66,7 @@ import {
 import { getChildTypes, getParentTypes } from "../utils/helper"
 import { GetLinkedTasksAction } from "@/src/server-actions/Tasks/Task"
 import Loader from "@/src/components/common/Loader/Loader"
+import { SearchableSingleSelect } from "@/src/components/ui/searchable-single-select"
 interface Props {
   onSubmit: (task: any) => void
   statuses?: InsertTaskStatus[]
@@ -138,14 +139,13 @@ export default function TaskForm({
   const projectId = params?.id
 
   const assigneeOptions: MultiSelectOption[] = [
-    {
-      label: "Unassigned",
-      value: ""
-    },
-    ...usersList.map((user) => ({
-      label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
-      value: user?.unique_id ?? ""
-    }))
+    { label: "Unassigned", value: "" },
+    ...usersList
+      .filter((user) => user !== null)
+      .map((user) => ({
+        label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
+        value: user?.unique_id ?? ""
+      }))
   ]
 
   const assignorOptions: MultiSelectOption[] = usersList.map((user) => ({
@@ -286,7 +286,7 @@ export default function TaskForm({
         setAssignee(null)
         setSelectedAssignee([
           {
-            label: "Unassigned",
+            label: "Select Assignee",
             value: ""
           }
         ])
@@ -431,18 +431,20 @@ export default function TaskForm({
     getSubTasks()
   }, [selectedTask])
 
-  const handleChangeInAssignTo = (newselected: MultiSelectOption[]) => {
-    if (newselected.length === 0) {
-      setSelectedAssignee([
-        {
-          label: "Unassigned",
-          value: ""
-        }
-      ])
-    } else {
-      const latestSelected = newselected?.[newselected.length - 1]
-      setSelectedAssignee(latestSelected ? [latestSelected] : [])
-    }
+  const handleAssigneeChange = (val: string, field: any) => {
+    field.onChange(val)
+
+    const user = usersList.find((u) => u?.unique_id === val)
+    setAssignee(user || null)
+
+    setActiveField(null)
+  }
+
+  const handleAssignorChange = (val: string, field: any) => {
+    field.onChange(val)
+    const user = usersList.find((u) => u?.unique_id === val)
+    setAssignor(user || null)
+    setActiveField(null)
   }
 
   const isEditable = isAllowedAction && !isSprintCompleted
@@ -690,20 +692,21 @@ export default function TaskForm({
 
                     {/* Assign To */}
                     <div className="space-y-2">
-                      <Label>Select Assigned To</Label>
+                      <Label>Select Assignee</Label>
                       <Controller
                         name="assign_to"
                         control={form.control}
                         render={({ field }) =>
                           activeField === "assignTo" ? (
-                            <MultiSelect
+                            <SearchableSingleSelect
+                              id="assign_to_input"
                               options={assigneeOptions}
-                              selected={selectedAssignee}
+                              value={field.value}
                               disabled={!isEditable}
-                              onChange={(newselected) => {
-                                handleChangeInAssignTo(newselected)
-                              }}
-                              placeholder="Select Assigned To"
+                              onChange={(val) =>
+                                handleAssigneeChange(val, field)
+                              }
+                              placeholder="Select Option"
                             />
                           ) : (
                             <div
@@ -723,16 +726,14 @@ export default function TaskForm({
                                   alt={assignee?.first_name}
                                 />
                                 <AvatarFallback className="text-xs">
-                                  {assignee?.first_name[0]}
-                                  {assignee?.last_name[0]}
+                                  {assignee?.first_name?.[0]}
+                                  {assignee?.last_name?.[0]}
                                 </AvatarFallback>
                               </Avatar>
 
-                              <span>
+                              <span className={!assignee ? "text-muted-foreground" : ""}>
                                 {assignee
-                                  ? assignee.first_name +
-                                    " " +
-                                    assignee.last_name
+                                  ? assignee.first_name + " " + assignee.last_name
                                   : "Unassigned"}
                               </span>
                             </div>
@@ -749,18 +750,17 @@ export default function TaskForm({
                         control={form.control}
                         render={({ field }) =>
                           activeField === "assignBy" ? (
-                            <MultiSelect
-                              options={assignorOptions}
-                              selected={selectedAssignor}
+                            <SearchableSingleSelect
+                              id="assign_by_input"
+                              options={assignorOptions.filter(
+                                (opt) => opt.value !== ""
+                              )}
+                              value={field.value}
                               disabled={!isEditable}
-                              onChange={(newselected) => {
-                                const latestSelected =
-                                  newselected?.[newselected.length - 1]
-                                setSelectedAssignor(
-                                  latestSelected ? [latestSelected] : []
-                                )
-                              }}
-                              placeholder="Select Assignor"
+                              onChange={(val) =>
+                                handleAssignorChange(val, field)
+                              }
+                              placeholder="Select Option"
                             />
                           ) : (
                             <div
@@ -788,9 +788,9 @@ export default function TaskForm({
                               <span>
                                 {assignor
                                   ? assignor.first_name +
-                                    " " +
-                                    assignor.last_name
-                                  : "Select Assignor"}
+                                  " " +
+                                  assignor.last_name
+                                  : "Select Option"}
                               </span>
                             </div>
                           )
@@ -879,8 +879,8 @@ export default function TaskForm({
                             : childTasks?.[0]?.task_type
                               ? getParentTypes(childTasks[0].task_type)
                               : projectTaskTypes.filter(
-                                  (t) => t.key !== TaskType.SUBTASK
-                                )
+                                (t) => t.key !== TaskType.SUBTASK
+                              )
 
                           return activeField === "issueType" ? (
                             <Select
@@ -988,6 +988,7 @@ export default function TaskForm({
                       {selectedTask ? (
                         <Link
                           href={`/profile/${selectedTask?.creator?.unique_id}`}
+                          target="_blank"
                           className="flex flex-row gap-2 items-center  hover:cursor-pointer"
                         >
                           <Avatar className="h-8 w-8">
