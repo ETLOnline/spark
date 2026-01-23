@@ -139,10 +139,13 @@ export default function TaskForm({
   const projectId = params?.id
 
   const assigneeOptions: MultiSelectOption[] = [
-    ...usersList.map((user) => ({
-      label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
-      value: user?.unique_id ?? ""
-    }))
+    { label: "Unassigned", value: "" },
+    ...usersList
+      .filter((user) => user !== null)
+      .map((user) => ({
+        label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
+        value: user?.unique_id ?? ""
+      }))
   ]
 
   const assignorOptions: MultiSelectOption[] = usersList.map((user) => ({
@@ -723,17 +726,15 @@ export default function TaskForm({
                                   alt={assignee?.first_name}
                                 />
                                 <AvatarFallback className="text-xs">
-                                  {assignee?.first_name[0]}
-                                  {assignee?.last_name[0]}
+                                  {assignee?.first_name?.[0]}
+                                  {assignee?.last_name?.[0]}
                                 </AvatarFallback>
                               </Avatar>
 
-                              <span>
+                              <span className={!assignee ? "text-muted-foreground" : ""}>
                                 {assignee
-                                  ? assignee.first_name +
-                                    " " +
-                                    assignee.last_name
-                                  : "Select Option"}
+                                  ? assignee.first_name + " " + assignee.last_name
+                                  : "Unassigned"}
                               </span>
                             </div>
                           )
@@ -787,8 +788,8 @@ export default function TaskForm({
                               <span>
                                 {assignor
                                   ? assignor.first_name +
-                                    " " +
-                                    assignor.last_name
+                                  " " +
+                                  assignor.last_name
                                   : "Select Option"}
                               </span>
                             </div>
@@ -878,8 +879,8 @@ export default function TaskForm({
                             : childTasks?.[0]?.task_type
                               ? getParentTypes(childTasks[0].task_type)
                               : projectTaskTypes.filter(
-                                  (t) => t.key !== TaskType.SUBTASK
-                                )
+                                (t) => t.key !== TaskType.SUBTASK
+                              )
 
                           return activeField === "issueType" ? (
                             <Select
