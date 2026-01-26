@@ -144,7 +144,6 @@ export const FileUpload: React.FC<{
       )
     }
   })
-
   return (
     <div className="w-full " {...getRootProps()}>
       <motion.div
@@ -182,7 +181,7 @@ export const FileUpload: React.FC<{
           <GridPattern />
         </div>
         <div className="flex flex-col items-center justify-center">
-          <p className="relative font-sans font-bold text-neutral-700 dark:text-neutral-300 text-base">
+          <p className="relative font-sans font-bold text-neutral-700 dark:text-neutral-300 text-base w-auto truncate max-w-xs">
             {files.length > 0 ? files[0].name : "Upload file"}
           </p>
           <p className="relative font-sans font-normal text-neutral-400 dark:text-neutral-400 text-base mt-2">
@@ -192,7 +191,7 @@ export const FileUpload: React.FC<{
           </p>
 
           <div
-            className="relative w-full  mt-10 max-w-xl mx-auto"
+            className="relative w-full  mt-10 max-w-sm mx-auto"
             onClick={(e) => {
               e.stopPropagation()
               // if no items, trigger file picker

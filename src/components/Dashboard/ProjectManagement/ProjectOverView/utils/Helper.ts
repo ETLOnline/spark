@@ -1,31 +1,36 @@
 import moment from "moment"
 
-export function generateBenchmarkData(totalValue: number, allDays: string[]) {
-  if (!totalValue || !allDays.length) return []
+export function generateBenchmarkData(
+  total: number,
+  days: string[]
+): { day: string; benchmark: number }[] {
+  if (!days.length || total === 0) return []
 
-  // Count how many working-day steps there are (including duplicates)
-  const workingDaySteps = allDays.filter((d) => {
-    const dow = moment(d).day()
-    return dow !== 0 && dow !== 6 // exclude Sat/Sun
-  }).length
+  // Count working days (Mon–Fri)
+  const workingDays = days.filter((day) => {
+    const d = moment(day, "YYYY-MM-DD")
+    const dow = d.day()
+    return dow !== 0 && dow !== 6
+  })
 
-  // Calculate how much to decrease per working-day step
-  const dailyDecrease = totalValue / Math.max(workingDaySteps - 1, 1)
-  let currentValue = totalValue
-  let lastWorkdayValue = totalValue
+  const burnPerDay =
+    workingDays.length > 1 ? total / (workingDays.length - 1) : total
 
-  return allDays.map((d) => {
-    const dow = moment(d).day()
+  let currentValue = total
 
-    if (dow === 6 || dow === 0) {
-      // 🟡 Weekend — keep last working day's value
-      return { day: d, benchmark: parseFloat(lastWorkdayValue.toFixed(2)) }
-    } else {
-      // 🟢 Working day (including duplicates)
-      const val = Math.max(currentValue, 0)
-      currentValue -= dailyDecrease
-      lastWorkdayValue = val
-      return { day: d, benchmark: parseFloat(val.toFixed(2)) }
+  return days.map((day, index) => {
+    const d = moment(day, "YYYY-MM-DD")
+    const dow = d.day()
+    const isWeekend = dow === 0 || dow === 6
+
+    // Decrease only on weekdays (except first day)
+    if (!isWeekend && index !== 0) {
+      currentValue = Math.max(currentValue - burnPerDay, 0)
+    }
+
+    return {
+      day,
+      benchmark: Number(currentValue.toFixed(2))
     }
   })
 }

@@ -79,6 +79,8 @@ import { FileUpload } from "../../ui/file-upload"
 import Image from "next/image"
 import { useOnlineStatus } from "../../providers/OnlineStatusProvider"
 import { GetSpaceUsersAction } from "@/src/server-actions/Space/Space"
+import ImageLightbox from "../../common/LightBox"
+import ExpandableText from "../posts/ExpandableText"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -204,6 +206,10 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const [chatContact, setChatContact] = useState<SelectUser | null>(null)
   const [availableUsers, setAvailableUsers] = useState<SelectUser[]>([])
   const [openAttachment, setOpenAttachment] = useState<boolean>(false)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxImages, setLightboxImages] = useState<string[]>([])
+  const [lightboxIndex, setLightboxIndex] = useState(0)
+
   type ChatRealtime = { chatId: number; unsubscribe: () => void }[]
 
   const [chatRealTime, setChatRealtime] = useState<ChatRealtime>([])
@@ -655,6 +661,30 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       })
     }
   }
+
+  const handleImageClick = (clickedImagePath: string, messageIndex: number) => {
+    if (!messages) return
+
+    // Extract all image URLs from messages, maintaining order
+    const allImages: string[] = []
+    messages.forEach((msg) => {
+      if (msg.type === "image") {
+        const parts = msg.message?.split(",") || []
+        if (parts.length >= 1) {
+          const imagePath = parts[0]
+          allImages.push(imagePath)
+        }
+      }
+    })
+
+    // Find the index of the clicked image in the all images array
+    const clickedIndex = allImages.findIndex((img) => img === clickedImagePath)
+
+    setLightboxImages(allImages)
+    setLightboxIndex(clickedIndex >= 0 ? clickedIndex : 0)
+    setLightboxOpen(true)
+  }
+
   const handleFileUpload = (files: File[]) => {
     if (!files || files.length === 0) {
       setRichMessageContent("")
@@ -949,14 +979,36 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
                                             const [file_path, file_name] = parts
                                             return (
-                                              <Image
-                                                src={file_path}
-                                                alt={file_name || "Image"}
-                                                className="rounded-lg max-h-96 w-full object-cover bg-gradient-to-r from-accent to-secondary"
-                                                width={1000}
-                                                height={1000}
-                                                style={{ objectFit: "contain" }}
-                                              />
+                                              <div
+                                                className="cursor-pointer hover:opacity-80 transition-opacity"
+                                                onClick={() =>
+                                                  handleImageClick(file_path, 0)
+                                                }
+                                                role="button"
+                                                tabIndex={0}
+                                                onKeyDown={(e) => {
+                                                  if (
+                                                    e.key === "Enter" ||
+                                                    e.key === " "
+                                                  ) {
+                                                    handleImageClick(
+                                                      file_path,
+                                                      0
+                                                    )
+                                                  }
+                                                }}
+                                              >
+                                                <Image
+                                                  src={file_path}
+                                                  alt={file_name || "Image"}
+                                                  className="rounded-lg max-h-96 w-full object-cover bg-gradient-to-r from-accent to-secondary"
+                                                  width={1000}
+                                                  height={1000}
+                                                  style={{
+                                                    objectFit: "contain"
+                                                  }}
+                                                />
+                                              </div>
                                             )
                                           })()}
 
@@ -1000,8 +1052,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                           })()}
 
                                         {message.type === "text" && (
-                                          <MessageContent
+                                          <ExpandableText
                                             content={message.message}
+                                            lines={5}
                                           />
                                         )}
                                       </>
@@ -1058,7 +1111,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                 </div>
 
                                 {/* TIME */}
-                                <div className="text-xs text-right hidden group-hover:block">
+                                <div className="text-xs text-right hidden group-hover:block min-w-fit">
                                   <p>
                                     {moment
                                       .utc(message.created_at)
@@ -1124,6 +1177,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                           onMentionStateChange={setIsMentionActive}
                           showFooter={false}
                           isScrollAble={true}
+                          placeholder="Type a message"
                         />
                       )}
                     </div>
@@ -1204,6 +1258,15 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           </Card>
         )}
       </div>
+
+      {/* Image Lightbox */}
+      <ImageLightbox
+        open={lightboxOpen}
+        images={lightboxImages}
+        index={lightboxIndex}
+        onClose={() => setLightboxOpen(false)}
+        showDownload={true}
+      />
     </>
   )
 }

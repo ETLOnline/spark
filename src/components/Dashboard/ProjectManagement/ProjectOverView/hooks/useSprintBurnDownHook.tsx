@@ -108,41 +108,101 @@ function useSprintBurnDownHook({ sprintId, sprintStart, sprintEnd }: Props) {
       const taskDAys = taskPoints.map((d) => d.day)
       const pointDAys = pointPoints.map((d) => d.day)
 
-      const taskBenchmark = generateBenchmarkData(totalTasks, taskDAys)
-      const pointBenchmark = generateBenchmarkData(totalPoints, pointDAys)
+      const taskBenchmark = generateBenchmarkData(totalTasks, allDays)
+      const pointBenchmark = generateBenchmarkData(totalPoints, allDays)
 
       // ✅ Merge into existing arrays
       const dayUsage: Record<string, number> = {}
 
-      const mergedTasks = taskPoints.map((d) => {
-        const day = d.day
-        const used = dayUsage[day] ?? 0
+      const taskBenchmarkMap = Object.fromEntries(
+        taskBenchmark.map((b) => [b.day, b.benchmark])
+      )
 
-        // Find all benchmarks for that day
-        const sameDayBenchmarks = taskBenchmark.filter((b) => b.day === day)
-
-        // Pick the correct one (by usage count)
-        const benchmark = sameDayBenchmarks[used]?.benchmark
-
-        // Increment counter for next duplicate
-        dayUsage[day] = used + 1
-
-        return { ...d, benchmark }
-      })
+      const mergedTasks = taskPoints.map((d) => ({
+        ...d,
+        benchmark: taskBenchmarkMap[d.day]
+      }))
 
       const pointDayUsage: Record<string, number> = {}
 
-      const mergedPoints = pointPoints.map((d) => {
-        const day = d.day
-        const used = pointDayUsage[day] ?? 0
-        const sameDayBenchmarks = pointBenchmark.filter((b) => b.day === day)
-        const benchmark = sameDayBenchmarks[used]?.benchmark
-        pointDayUsage[day] = used + 1
-        return { ...d, benchmark }
-      })
+      const pointBenchmarkMap = Object.fromEntries(
+        pointBenchmark.map((b) => [b.day, b.benchmark])
+      )
 
-      setTaskChartData(mergedTasks)
-      setPointChartData(mergedPoints)
+      const mergedPoints = pointPoints.map((d) => ({
+        ...d,
+        benchmark: pointBenchmarkMap[d.day]
+      }))
+
+      const forwardFillUntilToday = <
+        T extends { day: string; value: number | null }
+      >(
+        data: T[]
+      ): T[] => {
+        const todayKey = formatDate(new Date().toISOString())
+
+        let lastValue: number | null = null
+        let hasSeenFirstValue = false
+
+        return data.map((item) => {
+          if (item.value !== null && item.value !== undefined) {
+            lastValue = item.value
+            hasSeenFirstValue = true
+            return item
+          }
+
+          if (hasSeenFirstValue && lastValue !== null && item.day <= todayKey) {
+            return {
+              ...item,
+              value: lastValue
+            }
+          }
+
+          return item
+        })
+      }
+
+      const filledTasks = forwardFillUntilToday(mergedTasks)
+      const filledPoints = forwardFillUntilToday(mergedPoints)
+
+      const addFakePointIfSingleAtStart = <
+        T extends {
+          day: string
+          value: number | null
+          fullDate: string
+          benchmark?: number
+        }
+      >(
+        data: T[]
+      ): T[] => {
+        const realValues = data.filter(
+          (d) => d.value !== null && d.value !== undefined
+        )
+
+        if (realValues.length === 1) {
+          const onlyPoint = realValues[0]
+
+          const fakeFullDate = moment(onlyPoint.fullDate)
+            .add(1, "minute")
+            .format("YYYY-MM-DD HH:mm")
+
+          const fakePoint = {
+            ...onlyPoint,
+            fullDate: fakeFullDate
+          }
+
+          return [...data, fakePoint].sort(
+            (a, b) =>
+              moment(a.fullDate).valueOf() - moment(b.fullDate).valueOf()
+          )
+        }
+
+        // Otherwise return original array
+        return data
+      }
+
+      setTaskChartData(addFakePointIfSingleAtStart(filledTasks))
+      setPointChartData(addFakePointIfSingleAtStart(filledPoints))
       setAllTicks(allDays)
     })()
   }, [sprintId, sprintStart, sprintEnd])

@@ -4,7 +4,7 @@ import { DirItem } from "./types/spaces-types"
 import { useAtom, useAtomValue } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,9 +18,13 @@ import {
 } from "@/src/components/ui/alert-dialog"
 import { Button } from "@/src/components/ui/button"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { DeleteFileAction } from "@/src/server-actions/FileSharing/FileSharing"
+import {
+  DeleteFileAction,
+  GetDirectoryContentsAction
+} from "@/src/server-actions/FileSharing/FileSharing"
 import { useToast } from "@/src/hooks/use-toast"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { formatFileSize } from "@/src/utils/helpers"
 
 type DirViewProps = {
   navigateToFolder: (path: string) => Promise<void>
@@ -34,9 +38,11 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
   const { toast } = useToast()
 
   const [deleteFileLoading, , , deleteFile] = useServerAction(DeleteFileAction)
-
+  const [dirContentLoading, dirContent, dirContentError, getDirContent] =
+    useServerAction(GetDirectoryContentsAction)
   const currSpace = useAtomValue(spaceStore?.currentSpace)
   const authUser = useAtomValue(userStore.AuthUser)
+  const [folderSizes, setFolderSizes] = useState<Record<number, number>>({})
 
   const getItemsAtCurrPath = (): DirItem[] => {
     if (currentPath === "/") return dir
@@ -134,6 +140,52 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  const folderItems = useMemo(
+    () => filteredItems.filter((item) => item.type === "folder"),
+    [filteredItems]
+  )
+
+  useEffect(() => {
+    const foldersToFetch = folderItems.filter(
+      (folder) => folderSizes[folder.id] === undefined
+    )
+
+    if (foldersToFetch.length === 0) return
+
+    const fetchAllFolderContents = async () => {
+      try {
+        const results = await Promise.all(
+          foldersToFetch.map((folder) => getDirContent(folder.id))
+        )
+
+        const newSizes: Record<number, number> = {}
+
+        results.forEach((res, index) => {
+          const folderId = foldersToFetch[index].id
+
+          const totalSize = (res?.data || [])
+            .filter((item: any) => item.entity_type === "file")
+            .reduce(
+              (sum: number, item: any) => sum + (item.file?.file_size ?? 0),
+              0
+            )
+
+          newSizes[folderId] = totalSize
+        })
+
+        setFolderSizes((prev) => ({ ...prev, ...newSizes }))
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          description: "Failed to fetch folder sizes",
+          duration: 3000
+        })
+      }
+    }
+
+    fetchAllFolderContents()
+  }, [folderItems, folderSizes, getDirContent])
+
   return (
     <div className="p-4">
       <div
@@ -187,7 +239,15 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
                 )}
               </div>
               <div className="text-sm text-muted-foreground text-center w-20">
-                {item.size || "-"}
+                {item.type === "folder"
+                  ? folderSizes[item.id] !== undefined
+                    ? folderSizes[item.id] > 0
+                      ? formatFileSize(folderSizes[item.id])
+                      : "-" // empty folder
+                    : "-"
+                  : item.size
+                    ? item.size
+                    : "-"}
               </div>
               <div className="text-center w-24">
                 <span className="text-sm text-muted-foreground">

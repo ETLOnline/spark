@@ -290,12 +290,10 @@ function CreateSprintModal({
           </DialogHeader>
           <form onSubmit={form.handleSubmit(submitData)}>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="title" className="text-right">
-                  Name
-                </Label>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="title">Name</Label>
 
-                <div className="col-span-3">
+                <div>
                   <Controller
                     name="title"
                     defaultValue=""
@@ -318,12 +316,10 @@ function CreateSprintModal({
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="start_date" className="text-right">
-                  Start Date
-                </Label>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="start_date">Start Date</Label>
 
-                <div className="col-span-3">
+                <div>
                   <Controller
                     name="start_date"
                     defaultValue=""
@@ -353,12 +349,10 @@ function CreateSprintModal({
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="end_date" className="text-right">
-                  End Date
-                </Label>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="end_date">End Date</Label>
 
-                <div className="col-span-3">
+                <div>
                   <Controller
                     name="end_date"
                     defaultValue=""
