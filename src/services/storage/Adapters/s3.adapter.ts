@@ -4,7 +4,9 @@ import { randomUUID } from "crypto"
 import {
   StorageAdapter,
   UploadFileParams,
-  DeleteFileParams
+  DeleteFileParams,
+  DownloadFileParams,
+  DownloadFileResult
 } from "../types/interface"
 import { S3_ENDPOINT, S3_BUCKET_NAME, S3_REGION } from "../config"
 import { s3Client } from "../client/s3.client"
@@ -78,6 +80,58 @@ export const S3StorageAdapter: StorageAdapter = {
     } catch (error) {
       console.error("Error deleting file from S3:", error)
       throw new Error("Failed to delete file from storage")
+    }
+  },
+
+  async downloadFile({
+    filePath
+  }: DownloadFileParams): Promise<DownloadFileResult> {
+    if (!S3_ENDPOINT) {
+      throw new Error("S3_ENDPOINT not set")
+    }
+
+    const client = s3Client()
+    const bucket = S3_BUCKET_NAME
+
+    try {
+      // Extract the object key from the signed URL or direct path
+      let objectKey = filePath
+
+      // If it's a signed URL, extract the object key
+      if (filePath.includes(S3_ENDPOINT)) {
+        const url = new URL(filePath)
+        // remove the bucket name from the path
+        objectKey = decodeURIComponent(url.pathname.substring(1)).replace(
+          bucket,
+          ""
+        ) // Remove leading '/'
+      }
+
+      // Get object from S3
+      const dataStream = await client.getObject(bucket, objectKey)
+
+      // Convert stream to buffer
+      const chunks: Buffer[] = []
+      for await (const chunk of dataStream) {
+        chunks.push(Buffer.from(chunk))
+      }
+      const buffer = Buffer.concat(chunks)
+
+      // Get metadata to determine content type and filename
+      const stat = await client.statObject(bucket, objectKey)
+      const contentType =
+        stat.metaData?.["content-type"] ||
+        stat.metaData?.["Content-Type"] ||
+        "application/octet-stream"
+      const fileName = objectKey.split("/").pop() || "file"
+
+      return {
+        buffer,
+        contentType,
+        fileName
+      }
+    } catch (error) {
+      throw new Error("Failed to download file from storage")
     }
   }
 }
