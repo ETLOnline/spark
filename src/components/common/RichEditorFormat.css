@@ -123,10 +123,5 @@
 
 .rich-editor blockquote {
   border-left: 2px solid #666a72;
-  padding: 2px 5px;
-  margin: 1rem 0;
-}
-
-.rich-editor blockquote p {
-  margin: 0.5em 0;
+  padding: 4px 3px;
 }

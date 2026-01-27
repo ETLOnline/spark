@@ -87,7 +87,7 @@ const projectSchema = z.object({
     .max(150, "Title is too long")
     .refine(
       (value) => value.trim().length > 0,
-      "Title cannot be empty or whietespace"
+      "Title cannot be empty or whitespace"
     ),
   description: z.string().optional(),
   task_type: z.string().min(1, "Required"),
