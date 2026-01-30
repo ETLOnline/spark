@@ -73,10 +73,16 @@ export function useEntityHierarchy() {
 
   const fetchAndNormalizeHierarchy = async () => {
     const entity = getEntityFromPath(pathname)
-    if (!entity) return
+    if (!entity) {
+      setHierarchy(null)
+      return
+    }
 
     const res = await GetEntityHierarchyAction(entity.type, entity.id)
-    if (!res.success || !res.data) return
+    if (!res.success || !res.data) {
+      setHierarchy(null)
+      return
+    }
 
     const normalized = normalizeHierarchy(entity.type, res.data)
     setHierarchy(normalized)
