@@ -67,6 +67,7 @@ import Image from "next/image"
 import clsx from "clsx"
 import PrivatePage from "../common/Overlay/PrivatePage"
 import pusherClient from "@/src/services/realtime/PusherClient"
+import { EntityUpdateBroadCast } from "@/src/utils/constants"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -189,7 +190,7 @@ export default function CommunityDetailsClient({
 
   useEffect(() => {
     const pusherChannel = pusherClient.subscribe(
-      "broadcast-channels-spaces-update"
+      EntityUpdateBroadCast
     )
 
     pusherChannel.bind("channel-add", (newChannel: SelectChannel) => {
@@ -212,7 +213,7 @@ export default function CommunityDetailsClient({
 
     return () => {
       pusherChannel.unbind_all()
-      pusherClient.unsubscribe("broadcast-channels-spaces-update")
+      pusherClient.unsubscribe("broadcast-entity-update")
     }
   }, [community.id])
 
@@ -452,7 +453,8 @@ export default function CommunityDetailsClient({
                   type="community"
                   entity={{
                     slug: community?.slug ?? "",
-                    title: community?.title ?? ""
+                    title: community?.title ?? "",
+                    entity_id:community?.id ?? ""
                   }}
                 />
               </div>

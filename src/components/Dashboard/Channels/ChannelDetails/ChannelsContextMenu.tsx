@@ -255,7 +255,8 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
               type="channel"
               entity={{
                 slug: channel?.channel_slug ?? "",
-                title: `${channel?.community?.title} - ${channel?.channel_name}`
+                title: `${channel?.channel_name}`,
+                entity_id: channel?.id ?? "",
               }}
               ctaType="menuItem"
             />

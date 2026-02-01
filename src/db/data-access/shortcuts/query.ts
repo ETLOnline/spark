@@ -36,3 +36,19 @@ export const GetUserShortcuts = async (userId: string) => {
     })
   }
 }
+
+export const GetUserShortcutsByRelations = async (userId: string) => {
+  try {
+    return await db.query.shortcutsTable.findMany({
+      where: eq(shortcutsTable.user_id, userId),
+      with: {
+        community: { columns: { id:true,title: true , slug:true} },
+        channel: { columns: { id:true, channel_name: true , channel_slug:true} },
+        space: { columns: { id:true,space_name: true , space_slug:true} },
+        project: { columns: { id:true,project_name: true, project_slug:true } },
+      },
+    });
+  } catch (e: any) {
+    throw new Error("Failed to get shortcuts", { cause: e });
+  }
+};

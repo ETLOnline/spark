@@ -1379,8 +1379,32 @@ export const shortcutsTable = pgTable("shortcuts", {
   url: varchar().notNull(),
   type: varchar().notNull(),
   user_id: varchar().notNull(),
+  entity_id: varchar(),
   ...timestamps
 })
+
+export const shortcutsRelations = relations(shortcutsTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [shortcutsTable.user_id],
+    references: [usersTable.unique_id],
+  }),
+  community: one(communitiesTable, {
+    fields: [shortcutsTable.entity_id],
+    references: [communitiesTable.id],
+  }),
+  channel: one(channelsTable, {
+    fields: [shortcutsTable.entity_id],
+    references: [channelsTable.id],
+  }),
+  space: one(spacesTable, {
+    fields: [shortcutsTable.entity_id],
+    references: [spacesTable.id],
+  }),
+  project: one(projectTable, {
+    fields: [shortcutsTable.entity_id],
+    references: [projectTable.id],
+  }),
+}));
 
 export type SelectShortcut = typeof shortcutsTable.$inferSelect
 export type InsertShortcut = typeof shortcutsTable.$inferInsert

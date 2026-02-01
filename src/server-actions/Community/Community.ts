@@ -31,6 +31,7 @@ import {
 } from "@/src/services/storage/utils/fileUtils"
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
+import { EntityUpdateBroadCast } from "@/src/utils/constants"
 
 export const CreateCommunityAction = CreateServerAction(
   true,
@@ -179,6 +180,16 @@ export const UpdateCommunityAction = CreateServerAction(
   async (communityID: string, updatedData: Partial<SelectCommunity>) => {
     try {
       const updatedCommunity = await UpdateCommunity(communityID, updatedData)
+      await pusherServer.trigger(
+        "broadcast-entity-update",
+        "community-edit",
+        updatedCommunity
+      )
+      await pusherServer.trigger(
+        "broadcast-entity-update-sidebar",
+        "community-edit",
+        updatedCommunity
+      )
       return { success: true, data: updatedCommunity }
     } catch (error: any) {
       console.error("Error in UpdateCommunityAction:", error)
