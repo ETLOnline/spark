@@ -80,61 +80,46 @@ const useShortcut = () => {
       })
     }
   }
+
   useEffect(() => {
-    const channelName = "broadcast-entity-update-sidebar";
-    const channel = pusherClient.subscribe(channelName);
+    const updateChannel = pusherClient.subscribe("broadcast-entity-update-sidebar");
+    const deleteChannel = pusherClient.subscribe("broadcast-entity-delete-sidebar");
 
-    // 1. Define specific handlers
-    const handleCommunityEdit = (updatedCommunity: any) => {
-      setShortcutList((prev) =>
-        prev.map((s) =>
-          s.entity_id === updatedCommunity.id
-            ? { ...s, community: updatedCommunity }
-            : s
-        )
-      )
-    };
+    const handleCommunityEdit = (updated: any) => setShortcutList(prev => prev.map(s => s.entity_id === updated.id ? { ...s, community: updated } : s));
+    const handleChannelEdit = (updated: any) => setShortcutList(prev => prev.map(s => s.entity_id === updated.id ? { ...s, channel: updated } : s));
+    const handleSpaceEdit = (updated: any) => setShortcutList(prev => prev.map(s => s.entity_id === updated.id ? { ...s, space: updated } : s));
+    const handleProjectEdit = (updated: any) => setShortcutList(prev => prev.map(s => s.entity_id === updated.id ? { ...s, project: updated } : s));
 
-    const handleChannelEdit = (updatedChannel: any) => {
-      setShortcutList((prev) =>
-        prev.map((s) =>
-          s.entity_id === updatedChannel.id
-            ? { ...s, channel: updatedChannel }
-            : s
-        )
-      )
-    };
-    const handleSpaceEdit = (updatedSpace: any) => {
-      setShortcutList((prev) =>
-        prev.map((s) =>
-          s.entity_id === updatedSpace.id
-            ? { ...s, space: updatedSpace }
-            : s
-        )
-      )
-    };
-    const handleProjectEdit = (updatedProject: any) => {
-      setShortcutList((prev) =>
-        prev.map((s) =>
-          s.entity_id === updatedProject.id
-            ? { ...s, project: updatedProject }
-            : s
-        )
-      )
+    const handleCascadeDelete = (data: any) => {
+      const idsToRemove = [
+        ...(data.childIds || []),
+        data.communityId,
+        data.channelId,
+        data.spaceId,
+        data.projectId
+      ].filter(Boolean);
+  
+      setShortcutList(prev => prev.filter(s => !idsToRemove.includes(s.entity_id || "")));
     };
 
-    // 2. Bind specific events
-    channel.bind("community-edit", handleCommunityEdit);
-    channel.bind("channel-edit", handleChannelEdit);
-    channel.bind("space-edit", handleSpaceEdit);
-    channel.bind("project-edit", handleProjectEdit);
+    updateChannel.bind("community-edit", handleCommunityEdit);
+    updateChannel.bind("channel-edit", handleChannelEdit);
+    updateChannel.bind("space-edit", handleSpaceEdit);
+    updateChannel.bind("project-edit", handleProjectEdit);
+
+    deleteChannel.bind("community-delete", handleCascadeDelete);
+    deleteChannel.bind("channel-delete", handleCascadeDelete);
+    deleteChannel.bind("space-delete", handleCascadeDelete);
 
     return () => {
-      // 3. ONLY unbind these specific listeners
-      channel.unbind("community-edit", handleCommunityEdit);
-      channel.unbind("channel-edit", handleChannelEdit);
-      channel.unbind("space-edit", handleSpaceEdit);
-      channel.unbind("project-edit", handleProjectEdit);
+      updateChannel.unbind("community-edit", handleCommunityEdit);
+      updateChannel.unbind("channel-edit", handleChannelEdit);
+      updateChannel.unbind("space-edit", handleSpaceEdit);
+      updateChannel.unbind("project-edit", handleProjectEdit);
+
+      deleteChannel.unbind("community-delete", handleCascadeDelete);
+      deleteChannel.unbind("channel-delete", handleCascadeDelete);
+      deleteChannel.unbind("space-delete", handleCascadeDelete);
 
     };
   }, [setShortcutList]);
@@ -161,7 +146,7 @@ const useShortcut = () => {
     }
   }, [shortcutList])
 
-  const generateFullUrl = (list: any[]) => { 
+  const generateFullUrl = (list: any[]) => {
     const updatedShortcuts = list.map((s) => {
       const shortcut = { ...s }
 
@@ -175,7 +160,6 @@ const useShortcut = () => {
         shortcut.title = s.project.project_name
       }
 
-    
       let slugToUse = shortcut.url
 
       if (shortcut.type === "community" && s.community?.slug) {

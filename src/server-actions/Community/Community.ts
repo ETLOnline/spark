@@ -32,6 +32,7 @@ import {
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
 import { EntityUpdateBroadCast } from "@/src/utils/constants"
+import { DeleteShortcutsCascadeAction } from "../Shortcut/Shortcut"
 
 export const CreateCommunityAction = CreateServerAction(
   true,
@@ -208,6 +209,7 @@ export const DeleteCommunityAction = CreateServerAction(
       const communityIdToDelete = deletedCommunityData.id
       await DeleteCommunity(communityIdToDelete)
       await deleteRoleBasedOnEntityType("COMMUNITY", communityIdToDelete)
+      await DeleteShortcutsCascadeAction("community", communityIdToDelete)
 
       return { success: true, message: "Community deleted successfully." }
     } catch (error: any) {
