@@ -215,8 +215,8 @@
     {
       "idx": 30,
       "version": "7",
-      "when": 1769503837267,
-      "tag": "0030_2026_01_27_165036__add_entity_id_column_to_short_cut_table",
+      "when": 1770126558070,
+      "tag": "0031_2026_02_03_214857__create_casecade_community_channel_space_project_and_shortscuts",
       "breakpoints": true
     }
   ]

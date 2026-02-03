@@ -8,7 +8,6 @@ import {
 } from "@/src/server-actions/Shortcut/Shortcut"
 import pusherClient from "@/src/services/realtime/PusherClient"
 import { userStore } from "@/src/store/user/userStore"
-import { EntityUpdateBroadCast } from "@/src/utils/constants"
 import { useAtom } from "jotai"
 import { useEffect } from "react"
 
@@ -32,7 +31,7 @@ const useShortcut = () => {
 
   const getShortcuts = async () => {
     const res = await getUserShortcuts()
-    if (res?.success) {
+    if (res?.success && res.data) {
       setShortcutList(res.data || [])
       return res.data || []
     } else {
@@ -82,47 +81,46 @@ const useShortcut = () => {
   }
 
   useEffect(() => {
-    const updateChannel = pusherClient.subscribe("broadcast-entity-update-sidebar");
-    const deleteChannel = pusherClient.subscribe("broadcast-entity-delete-sidebar");
+    // ── EDIT channel (already working) ──────────────────────
+    const editChannel = pusherClient.subscribe("broadcast-entity-update-sidebar");
+    const deleteChannel = pusherClient.subscribe("broadcast-entity-update");
 
-    const handleCommunityEdit = (updated: any) => setShortcutList(prev => prev.map(s => s.entity_id === updated.id ? { ...s, community: updated } : s));
-    const handleChannelEdit = (updated: any) => setShortcutList(prev => prev.map(s => s.entity_id === updated.id ? { ...s, channel: updated } : s));
-    const handleSpaceEdit = (updated: any) => setShortcutList(prev => prev.map(s => s.entity_id === updated.id ? { ...s, space: updated } : s));
-    const handleProjectEdit = (updated: any) => setShortcutList(prev => prev.map(s => s.entity_id === updated.id ? { ...s, project: updated } : s));
+    const handleCommunityEdit = (updated: any) => setShortcutList(prev => prev.map(s => s.community_id === updated.id ? { ...s, community: updated } : s));
+    const handleChannelEdit  = (updated: any) => setShortcutList(prev => prev.map(s => s.channel_id  === updated.id ? { ...s, channel:   updated } : s));
+    const handleSpaceEdit    = (updated: any) => setShortcutList(prev => prev.map(s => s.space_id    === updated.id ? { ...s, space:     updated } : s));
+    const handleProjectEdit  = (updated: any) => setShortcutList(prev => prev.map(s => s.project_id  === updated.id ? { ...s, project:   updated } : s));
 
-    const handleCascadeDelete = (data: any) => {
-      const idsToRemove = [
-        ...(data.childIds || []),
-        data.communityId,
-        data.channelId,
-        data.spaceId,
-        data.projectId
-      ].filter(Boolean);
-  
-      setShortcutList(prev => prev.filter(s => !idsToRemove.includes(s.entity_id || "")));
+    editChannel.bind("community-edit", handleCommunityEdit);
+    editChannel.bind("channel-edit",   handleChannelEdit);
+    editChannel.bind("space-edit",     handleSpaceEdit);
+    editChannel.bind("project-edit",   handleProjectEdit);
+
+    const handleCascadeDelete = async () => {
+      const freshData = await getUserShortcuts();
+      if (freshData?.success && freshData.data) {
+        const updated = generateFullUrl(freshData.data)
+        setShortcutList(updated);
+      }
     };
 
-    updateChannel.bind("community-edit", handleCommunityEdit);
-    updateChannel.bind("channel-edit", handleChannelEdit);
-    updateChannel.bind("space-edit", handleSpaceEdit);
-    updateChannel.bind("project-edit", handleProjectEdit);
+    deleteChannel.bind("community-del", handleCascadeDelete);
+    deleteChannel.bind("channel-del",   handleCascadeDelete);
+    deleteChannel.bind("space-del",     handleCascadeDelete);
+    deleteChannel.bind("project-del",   handleCascadeDelete);
 
-    deleteChannel.bind("community-delete", handleCascadeDelete);
-    deleteChannel.bind("channel-delete", handleCascadeDelete);
-    deleteChannel.bind("space-delete", handleCascadeDelete);
-
+    // ── cleanup ─────────────────────────────────────────────
     return () => {
-      updateChannel.unbind("community-edit", handleCommunityEdit);
-      updateChannel.unbind("channel-edit", handleChannelEdit);
-      updateChannel.unbind("space-edit", handleSpaceEdit);
-      updateChannel.unbind("project-edit", handleProjectEdit);
+      editChannel.unbind("community-edit", handleCommunityEdit);
+      editChannel.unbind("channel-edit",   handleChannelEdit);
+      editChannel.unbind("space-edit",     handleSpaceEdit);
+      editChannel.unbind("project-edit",   handleProjectEdit);
 
-      deleteChannel.unbind("community-delete", handleCascadeDelete);
-      deleteChannel.unbind("channel-delete", handleCascadeDelete);
-      deleteChannel.unbind("space-delete", handleCascadeDelete);
-
+      deleteChannel.unbind("community-del", handleCascadeDelete);
+      deleteChannel.unbind("channel-del",   handleCascadeDelete);
+      deleteChannel.unbind("space-del",     handleCascadeDelete);
+      deleteChannel.unbind("project-del",   handleCascadeDelete);
     };
-  }, [setShortcutList]);
+  }, [setShortcutList, getUserShortcuts]);
 
   useEffect(() => {
     if (shortcutList && shortcutList.length > 0) {

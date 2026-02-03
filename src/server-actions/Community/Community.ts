@@ -205,8 +205,13 @@ export const DeleteCommunityAction = CreateServerAction(
   async (deletedCommunityData: SelectCommunity) => {
     try {
       const communityIdToDelete = deletedCommunityData.id
-      await DeleteCommunity(communityIdToDelete)
+      const deleted = await DeleteCommunity(communityIdToDelete)
       await deleteRoleBasedOnEntityType("COMMUNITY", communityIdToDelete)
+      await pusherServer.trigger(
+        "broadcast-entity-update",
+        "community-del",
+        deleted
+      )
 
       return { success: true, message: "Community deleted successfully." }
     } catch (error: any) {

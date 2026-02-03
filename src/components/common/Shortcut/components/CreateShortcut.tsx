@@ -37,7 +37,10 @@ const CreateShortcut = ({
       type,
       url: entity.slug,
       title: entity.title,
-      entity_id: entity.entity_id
+      community_id: type == "community" ? entity.entity_id : null,
+      channel_id: type == "channel" ? entity.entity_id : null,
+      space_id: type == "space" ? entity.entity_id : null,
+      project_id: type == "project" ? entity.entity_id : null
     }
 
     await createShortcut(newShortcut)

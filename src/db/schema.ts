@@ -779,7 +779,7 @@ export const channelsTable = pgTable("channels", {
   publish_channel: integer().notNull().default(0),
   ownerId: varchar(),
   community_id: varchar("community_id", { length: 36 }).references(
-    () => communitiesTable.id
+    () => communitiesTable.id, { onDelete: 'cascade' }
   ),
   ...timestamps
 })
@@ -812,7 +812,9 @@ export const spacesTable = pgTable("spaces", {
   space_slug: varchar().notNull(),
   space_name: varchar().notNull(),
   description: varchar(),
-  channel_id: varchar().notNull(),
+  channel_id: varchar("channel_id", { length: 36 }).references(
+    () => channelsTable.id, { onDelete: 'cascade' }
+  ).notNull(),
   created_by: varchar().notNull(),
   ownerId: varchar(),
   space_type: varchar(),
@@ -1007,7 +1009,9 @@ export const projectTable = pgTable("project", {
   project_startDate: varchar().notNull(),
   project_targetDate: varchar().notNull(),
   channel_id: varchar().notNull(),
-  space_id: varchar().notNull(),
+  space_id: varchar("space_id", { length: 36 }).references(
+    () => spacesTable.id, { onDelete: 'cascade' }
+  ),
   created_by: varchar().notNull(),
   project_type: varchar(),
   ...timestamps
@@ -1379,29 +1383,39 @@ export const shortcutsTable = pgTable("shortcuts", {
   url: varchar().notNull(),
   type: varchar().notNull(),
   user_id: varchar().notNull(),
-  entity_id: varchar(),
+  community_id: varchar("community_id", { length: 36 }).references(
+    () => communitiesTable.id, { onDelete: 'cascade' }
+  ),
+  channel_id: varchar("channelid", { length: 36 }).references(
+    () => channelsTable.id, { onDelete: 'cascade' }
+  ),
+  space_id: varchar("space_id", { length: 36 }).references(
+    () => spacesTable.id, { onDelete: 'cascade' }
+  ),
+  project_id: varchar("project_id", { length: 36 }).references(
+    () => projectTable.id, { onDelete: 'cascade' }
+  ),
   ...timestamps
 })
-
 export const shortcutsRelations = relations(shortcutsTable, ({ one }) => ({
   user: one(usersTable, {
     fields: [shortcutsTable.user_id],
     references: [usersTable.unique_id],
   }),
   community: one(communitiesTable, {
-    fields: [shortcutsTable.entity_id],
+    fields: [shortcutsTable.community_id], 
     references: [communitiesTable.id],
   }),
   channel: one(channelsTable, {
-    fields: [shortcutsTable.entity_id],
+    fields: [shortcutsTable.channel_id], 
     references: [channelsTable.id],
   }),
   space: one(spacesTable, {
-    fields: [shortcutsTable.entity_id],
+    fields: [shortcutsTable.space_id],
     references: [spacesTable.id],
   }),
   project: one(projectTable, {
-    fields: [shortcutsTable.entity_id],
+    fields: [shortcutsTable.project_id],
     references: [projectTable.id],
   }),
 }));

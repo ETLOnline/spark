@@ -1,6 +1,6 @@
 {
-  "id": "0cabf430-3921-409e-81f4-cf79f906aa4c",
-  "prevId": "812b53e6-b9ca-4f67-a622-a5d50cf658a6",
+  "id": "3d170692-cfee-4a29-b582-83e04c9b273c",
+  "prevId": "0cabf430-3921-409e-81f4-cf79f906aa4c",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -662,7 +662,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -2288,9 +2288,9 @@
         },
         "space_id": {
           "name": "space_id",
-          "type": "varchar",
+          "type": "varchar(36)",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "created_by": {
           "name": "created_by",
@@ -2325,7 +2325,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "project_space_id_spaces_id_fk": {
+          "name": "project_space_id_spaces_id_fk",
+          "tableFrom": "project",
+          "tableTo": "spaces",
+          "columnsFrom": [
+            "space_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -2591,9 +2605,27 @@
           "primaryKey": false,
           "notNull": true
         },
-        "entity_id": {
-          "name": "entity_id",
-          "type": "varchar",
+        "community_id": {
+          "name": "community_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "channelid": {
+          "name": "channelid",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "space_id": {
+          "name": "space_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "varchar(36)",
           "primaryKey": false,
           "notNull": false
         },
@@ -2618,7 +2650,60 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "shortcuts_community_id_communities_id_fk": {
+          "name": "shortcuts_community_id_communities_id_fk",
+          "tableFrom": "shortcuts",
+          "tableTo": "communities",
+          "columnsFrom": [
+            "community_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "shortcuts_channelid_channels_channel_id_fk": {
+          "name": "shortcuts_channelid_channels_channel_id_fk",
+          "tableFrom": "shortcuts",
+          "tableTo": "channels",
+          "columnsFrom": [
+            "channelid"
+          ],
+          "columnsTo": [
+            "channel_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "shortcuts_space_id_spaces_id_fk": {
+          "name": "shortcuts_space_id_spaces_id_fk",
+          "tableFrom": "shortcuts",
+          "tableTo": "spaces",
+          "columnsFrom": [
+            "space_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "shortcuts_project_id_project_id_fk": {
+          "name": "shortcuts_project_id_project_id_fk",
+          "tableFrom": "shortcuts",
+          "tableTo": "project",
+          "columnsFrom": [
+            "project_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -2880,7 +2965,7 @@
         },
         "channel_id": {
           "name": "channel_id",
-          "type": "varchar",
+          "type": "varchar(36)",
           "primaryKey": false,
           "notNull": true
         },
@@ -2936,7 +3021,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "spaces_channel_id_channels_channel_id_fk": {
+          "name": "spaces_channel_id_channels_channel_id_fk",
+          "tableFrom": "spaces",
+          "tableTo": "channels",
+          "columnsFrom": [
+            "channel_id"
+          ],
+          "columnsTo": [
+            "channel_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
