@@ -36,7 +36,6 @@ import pusherServer from "@/src/services/realtime/pusherServer"
 import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
 import { attachCommunityUser } from "@/src/db/data-access/communities/query"
 import { EntityUpdateBroadCast } from "@/src/utils/constants"
-import { DeleteShortcutsCascadeAction } from "../Shortcut/Shortcut"
 
 export const CreateChannelAction = CreateServerAction(
   true,
@@ -150,7 +149,6 @@ export const DeleteChannelAction = CreateServerAction(
   async (deletedChannelData: SelectChannel) => {
     try {
       await DeleteChannel(deletedChannelData)
-      await DeleteShortcutsCascadeAction("channel", deletedChannelData.id)
 
       await pusherServer.trigger(
         EntityUpdateBroadCast,

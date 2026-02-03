@@ -32,7 +32,6 @@ import {
   PaginationPrevious
 } from "@/src/components/ui/pagination"
 import pusherClient from "@/src/services/realtime/PusherClient"
-import { EntityUpdateBroadCast } from "@/src/utils/constants"
 
 export default function CommunitiesPage() {
   const [communitiesList, setCommunitiesList] =

@@ -48,7 +48,6 @@ import {
 } from "@/src/db/data-access/communities/query"
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { EntityUpdateBroadCast } from "@/src/utils/constants"
-import { DeleteShortcutsCascadeAction } from "../Shortcut/Shortcut"
 
 // Define the broadcast channel name constant for cleaner code
 const BROADCAST_CHANNEL = EntityUpdateBroadCast
@@ -206,7 +205,6 @@ export const DeleteSpaceAction = CreateServerAction(
   async (deletedSpaceData: SelectSpace) => {
     try {
       await DeleteSpace(deletedSpaceData)
-      await DeleteShortcutsCascadeAction("space", deletedSpaceData.id)
       
       await pusherServer.trigger(BROADCAST_CHANNEL, "space-del", deletedSpaceData);
 

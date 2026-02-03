@@ -3,16 +3,12 @@
 import {
   AddShortcut,
   DeleteShortcut,
-  DeleteShortcutsCascade,
-  getChildEntityIds,
   GetUserShortcuts,
   GetUserShortcutsByRelations,
-  ParentLevel
 } from "@/src/db/data-access/shortcuts/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import { InsertShortcut } from "@/src/db/schema"
-import pusherServer from "@/src/services/realtime/pusherServer"
 
 export const getUserShortcutsAction = CreateServerAction(true, async () => {
   try {
@@ -86,27 +82,3 @@ export const deleteShortcutAction = CreateServerAction(
   }
 )
 
-export const DeleteShortcutsCascadeAction = CreateServerAction(
-  true,
-  async ( parentLevel: ParentLevel,
-    parentId: string) => {
-    try {
-    const childIds = await getChildEntityIds(parentLevel, parentId)
-    
-    await DeleteShortcutsCascade(parentLevel, parentId)
-    
-    await pusherServer.trigger(
-      "broadcast-entity-delete-sidebar",
-      "community-delete",
-      { communityId: parentId, childIds }
-    )
-  
-      return { success: true }
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.message || "Failed to delete shortcut"
-      }
-    }
-  }
-)
