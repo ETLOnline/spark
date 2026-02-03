@@ -1,9 +1,9 @@
-ALTER TABLE "shortcuts" RENAME COLUMN "entity_id" TO "community_id";--> statement-breakpoint
 ALTER TABLE "channels" DROP CONSTRAINT "channels_community_id_communities_id_fk";
 --> statement-breakpoint
 ALTER TABLE "project" ALTER COLUMN "space_id" SET DATA TYPE varchar(36);--> statement-breakpoint
 ALTER TABLE "project" ALTER COLUMN "space_id" DROP NOT NULL;--> statement-breakpoint
 ALTER TABLE "spaces" ALTER COLUMN "channel_id" SET DATA TYPE varchar(36);--> statement-breakpoint
+ALTER TABLE "shortcuts" ADD COLUMN "community_id" varchar(36);--> statement-breakpoint
 ALTER TABLE "shortcuts" ADD COLUMN "channelid" varchar(36);--> statement-breakpoint
 ALTER TABLE "shortcuts" ADD COLUMN "space_id" varchar(36);--> statement-breakpoint
 ALTER TABLE "shortcuts" ADD COLUMN "project_id" varchar(36);--> statement-breakpoint

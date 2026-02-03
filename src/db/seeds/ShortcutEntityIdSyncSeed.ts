@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import { db } from ".."
 import { 
   shortcutsTable, 
@@ -8,134 +8,94 @@ import {
   projectTable 
 } from "../schema"
 
-/**
- * Seeder to populate entity_id in shortcuts table
- * Tries to match URL against all entity types
- */
 export const ShortcutEntityIdSyncSeed = async () => {
   return await db.transaction(async (tx) => {
     try {
-      // Fetch all shortcut records
       const shortcuts = await tx.select().from(shortcutsTable)
+      console.log(`📊 Processing ${shortcuts.length} shortcuts with STRICT isolation...`)
 
-      console.log(`📊 Found ${shortcuts.length} shortcuts to process`)
-
-      let updatedCount = 0
-      let skippedCount = 0
-      let errorCount = 0
-
-      // Process each shortcut
       for (const shortcut of shortcuts) {
-        try {
-          let entity_id: string | null = null
-          let matchedType: string | null = null
+        // Reset everything to null for this row to ensure no "bleeding" from other types
+        let updateData: any = {
+          community_id: null,
+          channel_id: null,
+          space_id: null,
+          project_id: null,
+        }
+        let matched = false
 
-          // Try to match as community
+        // 1. STRICT COMMUNITY: ONLY fill community_id
+        if (shortcut.type === "community") {
           const community = await tx
             .select({ id: communitiesTable.id })
             .from(communitiesTable)
             .where(eq(communitiesTable.slug, shortcut.url))
             .limit(1)
 
-          if (community[0]?.id) {
-            entity_id = community[0].id
-            matchedType = 'community'
+          if (community[0]) {
+            updateData.community_id = community[0].id
+            matched = true
           }
+        } 
+        
+        // 2. STRICT CHANNEL: ONLY fill channel_id
+        else if (shortcut.type === "channel") {
+          const channel = await tx
+            .select({ id: channelsTable.id })
+            .from(channelsTable)
+            .where(eq(channelsTable.channel_slug, shortcut.url))
+            .limit(1)
 
-          // If not found, try to match as channel
-          if (!entity_id) {
-            const channel = await tx
-              .select({ id: channelsTable.id })
-              .from(channelsTable)
-              .where(eq(channelsTable.channel_slug, shortcut.url))
-              .limit(1)
-
-            if (channel[0]?.id) {
-              entity_id = channel[0].id
-              matchedType = 'channel'
-            }
+          if (channel[0]) {
+            updateData.channel_id = channel[0].id
+            matched = true
           }
+        }
 
-          // If not found, try to match as space (URL format: "channel-slug/spaces/space-slug")
-          if (!entity_id && shortcut.url.includes('/spaces/')) {
-            const urlParts = shortcut.url.split("/").filter(Boolean)
-            const channel_slug = urlParts[0]
-            const space_slug = urlParts[2] // index 2 because format is: channel-slug/spaces/space-slug
+        // 3. STRICT SPACE: ONLY fill space_id
+        else if (shortcut.type === "space") {
+          const parts = shortcut.url.split("/").filter(Boolean)
+          const sSlug = parts[2] || shortcut.url // fallback if url is just the slug
 
-            if (channel_slug && space_slug) {
-              // First find the channel
-              const channel = await tx
-                .select({ id: channelsTable.id })
-                .from(channelsTable)
-                .where(eq(channelsTable.channel_slug, channel_slug))
-                .limit(1)
+          const space = await tx
+            .select({ id: spacesTable.id })
+            .from(spacesTable)
+            .where(eq(spacesTable.space_slug, sSlug))
+            .limit(1)
 
-              if (channel[0]?.id) {
-                // Then find the space
-                const space = await tx
-                  .select({ id: spacesTable.id })
-                  .from(spacesTable)
-                  .where(
-                    and(
-                      eq(spacesTable.space_slug, space_slug),
-                      eq(spacesTable.channel_id, channel[0].id)
-                    )
-                  )
-                  .limit(1)
-
-                if (space[0]?.id) {
-                  entity_id = space[0].id
-                  matchedType = 'space'
-                }
-              }
-            }
+          if (space[0]) {
+            updateData.space_id = space[0].id
+            matched = true
           }
+        }
 
-          // If not found, try to match as project (UUID format)
-          if (!entity_id) {
-            const project = await tx
-              .select({ id: projectTable.id })
-              .from(projectTable)
-              .where(eq(projectTable.id, shortcut.url))
-              .limit(1)
+        // 4. STRICT PROJECT: ONLY fill project_id
+        else if (shortcut.type === "project") {
+          const project = await tx
+            .select({ id: projectTable.id })
+            .from(projectTable)
+            .where(eq(projectTable.id, shortcut.url))
+            .limit(1)
 
-            if (project[0]?.id) {
-              entity_id = project[0].id
-              matchedType = 'project'
-            }
+          if (project[0]) {
+            updateData.project_id = project[0].id
+            matched = true
           }
+        }
 
-          // Update the shortcut with entity_id
-          if (entity_id) {
-            await tx
-              .update(shortcutsTable)
-              .set({ entity_id })
-              .where(eq(shortcutsTable.id, shortcut.id))
-
-            updatedCount++
-            console.log(`✓ Updated shortcut ${shortcut.id} [${matchedType}]: ${shortcut.url} → ${entity_id}`)
-          } else {
-            console.warn(`⚠️  No entity found for shortcut ID: ${shortcut.id}, url: ${shortcut.url}`)
-            skippedCount++
-          }
-        } catch (error) {
-          console.error(`❌ Error processing shortcut ${shortcut.id}:`, error)
-          errorCount++
+        if (matched) {
+          await tx
+            .update(shortcutsTable)
+            .set(updateData)
+            .where(eq(shortcutsTable.id, shortcut.id))
+          console.log(`✅ Fixed ${shortcut.type} (Isolated ID)`)
         }
       }
 
-      console.log("\n" + "=".repeat(50))
-      console.log("📈 Migration Summary:")
-      console.log(`   ✅ Updated: ${updatedCount}`)
-      console.log(`   ⚠️  Skipped: ${skippedCount}`)
-      console.log(`   ❌ Errors: ${errorCount}`)
-      console.log("=".repeat(50))
-      console.log("✅ Shortcut entity_id migration completed successfully")
+      console.log(`\n🚀 Migration Finished. Each type now has ONLY its own ID.`)
     } catch (e) {
-      console.error("❌ Fatal error during migration:", e)
+      console.error("❌ Seeder failed:", e)
       tx.rollback()
-      console.log("❌ Transaction rolled back")
-      process.exit(1)
     }
   })
 }
