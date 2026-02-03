@@ -16,7 +16,7 @@ export const ShortcutEntityIdSyncSeed = async () => {
 
       for (const shortcut of shortcuts) {
         // Reset everything to null for this row to ensure no "bleeding" from other types
-        let updateData: any = {
+        const updateData: any = {
           community_id: null,
           channel_id: null,
           space_id: null,
