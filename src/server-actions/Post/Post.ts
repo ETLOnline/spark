@@ -16,7 +16,9 @@ import {
   DeletePost,
   AddPostFileLink,
   UpdatePost,
-  RemoveHashtagFromPostLink
+  RemoveHashtagFromPostLink,
+  UpdatePollOption,
+  DeletePollOption
 } from "@/src/db/data-access/post/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
@@ -74,6 +76,90 @@ export const UpdatePostAction = CreateServerAction(
       return {
         success: false,
         error: error
+      }
+    }
+  }
+)
+
+export const UpdatePollOptionsAction = CreateServerAction(
+  true,
+  async (postId: string, options: Array<{ id?: number; text: string }>) => {
+    try {
+      const userId = (await AuthUserAction())?.unique_id
+      if (!userId) {
+        throw new Error("Unauthorized", { cause: 401 })
+      }
+
+      // Get current post to check if it's a poll and get existing options
+      const post = await GetPostById(postId)
+      if (!post || post.type !== "poll") {
+        throw new Error("Post is not a poll")
+      }
+
+      // Check if user is the post owner
+      if (post.user_id !== userId) {
+        throw new Error("Unauthorized: Only post owner can edit poll options")
+      }
+
+      // Check if there are any votes
+      const hasVotes =
+        post.options?.some(
+          (opt) => (opt.vote_count ?? opt.votes?.length ?? 0) > 0
+        ) ?? false
+
+      if (hasVotes) {
+        throw new Error("Cannot edit poll options after voting has started")
+      }
+
+      const existingOptions = post.options || []
+      const existingOptionIds = existingOptions.map((opt) => opt.id)
+
+      // Process options
+      const optionsToUpdate: Array<{ id: number; text: string }> = []
+      const optionsToCreate: Array<{ option_text: string; post_id: string }> =
+        []
+      const optionIdsToDelete: number[] = []
+
+      // Find options to update, create, or delete
+      for (const option of options) {
+        if (option.id && existingOptionIds.includes(option.id)) {
+          // Update existing option
+          optionsToUpdate.push({ id: option.id, text: option.text })
+        } else if (!option.id) {
+          // Create new option
+          optionsToCreate.push({
+            option_text: option.text,
+            post_id: postId
+          })
+        }
+      }
+
+      // Find options to delete (existing options not in the new list)
+      for (const existingOption of existingOptions) {
+        if (!options.some((opt) => opt.id === existingOption.id)) {
+          optionIdsToDelete.push(existingOption.id)
+        }
+      }
+
+      // Execute updates
+      const updatePromises = optionsToUpdate.map((opt) =>
+        UpdatePollOption(opt.id, opt.text)
+      )
+      const deletePromises = optionIdsToDelete.map((id) => DeletePollOption(id))
+
+      await Promise.all([...updatePromises, ...deletePromises])
+
+      if (optionsToCreate.length > 0) {
+        await AddPollOptions(optionsToCreate)
+      }
+
+      // Fetch updated post
+      const updatedPost = await GetPostById(postId)
+      return { success: true, data: updatedPost }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to update poll options"
       }
     }
   }
@@ -226,6 +312,52 @@ export const CreatePollPostAction = CreateServerAction(
         } else {
           throw new Error("Failed to create post")
         }
+      }
+    } catch (error: any) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const AttachImagesToPostAction = CreateServerAction(
+  true,
+  async (args: {
+    postId: string
+    files: Array<{
+      fileName: string
+      fileSize: number
+      fileType: string
+      fileBase64: string
+    }>
+    folderPath?: string
+  }) => {
+    const { postId, files, folderPath } = args
+    try {
+      const userId = (await AuthUserAction())?.unique_id
+      if (!userId) throw new Error("Unauthorized", { cause: 401 })
+
+      if (!files || files.length === 0) {
+        throw new Error("No files provided")
+      }
+
+      const fileRecords: any[] = []
+
+      for (const file of files) {
+        const fileBuffer = base64ToBuffer(file.fileBase64)
+        const { fileUrl, fileRecord } = await uploadFileAndSaveMetadata(
+          fileBuffer,
+          file.fileName,
+          file.fileType,
+          folderPath == "spaces" ? "spaces" : "posts"
+        )
+
+        await AddPostFileLink(postId, fileRecord.id)
+        fileRecords.push({ ...fileRecord, url: fileUrl })
+      }
+
+      return {
+        success: true,
+        data: fileRecords
       }
     } catch (error: any) {
       return { success: false, error }

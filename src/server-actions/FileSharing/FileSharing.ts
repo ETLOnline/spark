@@ -128,17 +128,20 @@ export const DeleteFileAction = CreateServerAction(
         }
       }
 
-      // Check if user owns the file
+      // Check if user owns the file or folder
       const fileEntry = await db.query.spaceFileDirectoryTable.findFirst({
         where: eq(spaceFileDirectoryTable.id, directoryId),
         with: {
           file: true
         }
       })
-      if (!fileEntry || fileEntry.entity_type !== "file") {
+      if (
+        !fileEntry ||
+        (fileEntry.entity_type !== "file" && fileEntry.entity_type !== "folder")
+      ) {
         return {
           success: false,
-          error: "File not found"
+          error: "File or folder not found"
         }
       }
       const isFileOwner = fileEntry.created_by === user.unique_id
@@ -146,7 +149,7 @@ export const DeleteFileAction = CreateServerAction(
       if (!isFileOwner && !canDeleteSpaceFile) {
         return {
           success: false,
-          error: "You can only delete files that you uploaded"
+          error: "You can only delete files and folders that you created"
         }
       }
 

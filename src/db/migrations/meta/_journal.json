@@ -215,6 +215,13 @@
     {
       "idx": 30,
       "version": "7",
+      "when": 1767955873678,
+      "tag": "0030_2026_01_09_155112__add_id_primary_key_to_poll_options",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
       "when": 1770136360565,
       "tag": "0031_2026_02_04_003240__cacade_in_community_channel_space_project_shortcuts",
       "breakpoints": true

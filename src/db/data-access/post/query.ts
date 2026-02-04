@@ -61,7 +61,7 @@ export const GetPostById = async (postId: string) => {
           orderBy: [desc(commentsTable.created_at)]
         },
         hashtags: { with: { hashtag: true } },
-        options: { with: { votes: true } },
+        options: { with: { votes: true }, orderBy: [pollOptionsTable.id] },
         files: { with: { postFile: true } },
         postLikes: true
       }
@@ -79,6 +79,24 @@ export const AddPostFileLink = async (postId: string, fileId: number) => {
 
 export const AddPollOptions = async (options: InsertPollOption[]) => {
   return await db.insert(pollOptionsTable).values(options).returning()
+}
+
+export const UpdatePollOption = async (
+  optionId: number,
+  optionText: string
+) => {
+  return await db
+    .update(pollOptionsTable)
+    .set({ option_text: optionText })
+    .where(eq(pollOptionsTable.id, optionId))
+    .returning()
+}
+
+export const DeletePollOption = async (optionId: number) => {
+  return await db
+    .delete(pollOptionsTable)
+    .where(eq(pollOptionsTable.id, optionId))
+    .returning()
 }
 
 export const LikePost = async (
@@ -228,7 +246,7 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
             orderBy: [desc(commentsTable.created_at)]
           },
           hashtags: { with: { hashtag: true } },
-          options: { with: { votes: true } },
+          options: { with: { votes: true }, orderBy: [pollOptionsTable.id] },
           files: { with: { postFile: true } },
           postLikes: true
         },
@@ -259,7 +277,7 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
             orderBy: [desc(commentsTable.created_at)]
           },
           hashtags: { with: { hashtag: true } },
-          options: { with: { votes: true } },
+          options: { with: { votes: true }, orderBy: [pollOptionsTable.id] },
           files: { with: { postFile: true } },
           postLikes: true
         },
