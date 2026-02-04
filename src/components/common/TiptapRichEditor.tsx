@@ -440,6 +440,40 @@ export default function RichTextEditor({
     }
   })
 
+  const updateLinkInputFromSelection = () => {
+    if (!editor) return
+
+    const attrs = editor.getAttributes("link")
+    if (attrs?.href) {
+      setLinkUrl(attrs.href)
+      setShowLinkInput(true)
+    }
+  }
+
+  useEffect(() => {
+    if (!editor) return
+
+    const onSelectionUpdate = () => {
+      const isLinkActive = editor.isActive("link")
+
+      if (isLinkActive) {
+        const attrs = editor.getAttributes("link")
+        setLinkUrl(attrs?.href ?? "")
+        setShowLinkInput(true)
+      } else {
+        // Cursor moved outside link → close input
+        setLinkUrl("")
+        setShowLinkInput(false)
+      }
+    }
+
+    editor.on("selectionUpdate", onSelectionUpdate)
+
+    return () => {
+      editor.off("selectionUpdate", onSelectionUpdate)
+    }
+  }, [editor])
+
   useEffect(() => {
     if (editor) {
       editorRef.current = editor
@@ -714,7 +748,16 @@ export default function RichTextEditor({
               type="button"
               variant={editor.isActive("link") ? "default" : "ghost"}
               size="sm"
-              onClick={() => setShowLinkInput(!showLinkInput)}
+              onClick={() => {
+                if (editor.isActive("link")) {
+                  const attrs = editor.getAttributes("link")
+                  setLinkUrl(attrs?.href ?? "")
+                  setShowLinkInput(true)
+                } else {
+                  setLinkUrl("")
+                  setShowLinkInput(true)
+                }
+              }}
             >
               <LinkIcon className="h-4 w-4" />
             </Button>
