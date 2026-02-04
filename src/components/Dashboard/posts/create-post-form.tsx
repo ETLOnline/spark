@@ -40,13 +40,24 @@ import {
   CreatePollPostAction,
   CreatePostAction,
   CreateFilesPostAction,
-  LinkHashtagsToPostAction
+  LinkHashtagsToPostAction,
+  AttachImagesToPostAction
 } from "@/src/server-actions/Post/Post"
 import useHashtags from "../profile/hooks/useHashtags"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { categories } from "@/src/utils/constants"
 import { Plus, X } from "lucide-react"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction
+} from "../../ui/alert-dialog"
 
 type Props = {
   variant?: "posts" | "spaces"
@@ -60,6 +71,9 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     hashtags: []
   })
   const [pollOptions, setPollOptions] = useState<string[]>([])
+  const [changeTabDialogOpen, setChangeTabDialogOpen] = useState<boolean>(false)
+  const [activeTab, setActiveTab] = useState<PostType>(PostType.text)
+  const [pendingTab, setPendingTab] = useState<PostType | null>(null)
 
   const setPosts = useSetAtom(postStore.posts)
   const authUser = useAtomValue(userStore.AuthUser)
@@ -96,6 +110,12 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     linkHashtagsToPostError,
     linkHashtagsToPost
   ] = useServerAction(LinkHashtagsToPostAction)
+  const [
+    attachImagesToPostLoading,
+    attachedImages,
+    attachImagesToPostError,
+    attachImagesToPost
+  ] = useServerAction(AttachImagesToPostAction)
 
   const { permissionChecker } = usePermissionChecker(
     variant == "spaces" ? "scoped" : "global",
@@ -109,6 +129,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     : false
 
   const resetForm = () => {
+    setActiveTab(PostType.text)
     setNewPost({
       content: "",
       type: PostType.text,
@@ -123,6 +144,15 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
     setHashtags([])
   }
 
+  const hasUnsavedChanges = () =>
+    !!(
+      newPost.content?.trim() ||
+      newPost.images?.length ||
+      newPost.fileBase64 ||
+      pollOptions.length ||
+      hashtags.length
+    )
+
   const isSpaceVariant = variant === "spaces"
   const entityType = isSpaceVariant ? "space" : ""
   const entityId = isSpaceVariant ? (currentSpace?.id ?? "") : ""
@@ -130,11 +160,16 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   const postCategory = isSpaceVariant ? newPost.category : ""
 
   const handleTabChange = (value: string) => {
-    resetForm()
-    setNewPost((prev) => ({
-      ...prev,
-      type: value as PostType
-    }))
+    const nextTab = value as PostType
+
+    if (hasUnsavedChanges()) {
+      setPendingTab(nextTab)
+      setChangeTabDialogOpen(true)
+      return
+    }
+
+    setActiveTab(nextTab)
+    setNewPost((p) => ({ ...p, type: nextTab }))
   }
 
   const handleCloseModal = () => {
@@ -237,7 +272,9 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         }
       } else if (newPost.type === PostType.poll) {
         let linkedHashtags
-        const post =
+
+        // Create poll with options first
+        const pollPost =
           variant === "spaces"
             ? await createPollPost(
                 newPost.content as string,
@@ -253,10 +290,41 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 pollOptions
               )
         setPollOptions([])
-        if (post && post.data) {
+
+        if (pollPost && pollPost.data) {
+          const postId = pollPost.data.id
+          let pollWithImages: SelectPollPost = {
+            ...pollPost.data,
+            author: authUser as SelectUser
+          } as SelectPollPost
+
+          // If poll has images, attach them to the post
+          if (newPost.images && newPost.images.length > 0) {
+            const imageData = newPost.images.map((image) => ({
+              fileName: image.name,
+              fileSize: image.size,
+              fileType: image.type,
+              fileBase64: image.base64
+            }))
+
+            const imagesResult = await attachImagesToPost({
+              postId,
+              files: imageData,
+              folderPath: "posts"
+            })
+
+            if (imagesResult?.success && imagesResult.data) {
+              pollWithImages = {
+                ...pollPost.data,
+                author: authUser as SelectUser,
+                files: imagesResult.data
+              } as SelectPollPost
+            }
+          }
+
           if (hashtags.length) {
             linkedHashtags = await linkHashtagsToPost(
-              post.data.id,
+              postId,
               hashtags.length
                 ? hashtags
                     .filter((tag) => !tag.deleted)
@@ -277,15 +345,16 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
               })
             }
           }
+
           postData = {
-            ...post.data,
+            ...pollWithImages,
             author: authUser as SelectUser,
             hashtags: linkedHashtags?.data?.length
               ? [...linkedHashtags?.data]
               : [],
             postComments: []
-          }
-        } else if (post?.error) {
+          } as SelectPollPost
+        } else if (pollPost?.error) {
           toast({
             variant: "destructive",
             title: "Error",
@@ -505,7 +574,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           <form onSubmit={handleCreatePost}>
             <CardContent>
               <Tabs
-                defaultValue="text"
+                value={activeTab}
                 className="w-full"
                 onValueChange={handleTabChange}
               >
@@ -605,16 +674,14 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 disabled={
                   createPostLoading ||
                   createFilesPostLoading ||
-                  createPollPostLoading
-                    ? true
-                    : false
+                  createPollPostLoading ||
+                  attachImagesToPostLoading
                 }
                 loading={
                   createPostLoading ||
                   createFilesPostLoading ||
-                  createPollPostLoading
-                    ? true
-                    : false
+                  createPollPostLoading ||
+                  attachImagesToPostLoading
                 }
               >
                 Post
@@ -623,6 +690,45 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           </form>
         </Card>
       )}
+      <AlertDialog
+        open={changeTabDialogOpen}
+        onOpenChange={setChangeTabDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard Changes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved content. Switching post types will discard all
+              changes including selected files and images.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setPendingTab(null)
+                setChangeTabDialogOpen(false)
+                setActiveTab((t) => t)
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={() => {
+                if (!pendingTab) return
+
+                resetForm()
+                setActiveTab(pendingTab)
+                setNewPost((p) => ({ ...p, type: pendingTab }))
+                setPendingTab(null)
+                setChangeTabDialogOpen(false)
+              }}
+            >
+              Discard Changes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

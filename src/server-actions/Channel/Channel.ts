@@ -35,6 +35,7 @@ import { ensureCommunityMembership } from "../Community/Community"
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
 import { attachCommunityUser } from "@/src/db/data-access/communities/query"
+import { EntityUpdateBroadCast } from "@/src/utils/constants"
 
 export const CreateChannelAction = CreateServerAction(
   true,
@@ -42,7 +43,7 @@ export const CreateChannelAction = CreateServerAction(
     try {
       const newChannel = await CreateChannel(channelData)
       await pusherServer.trigger(
-        "broadcast-channels-spaces-update",
+        EntityUpdateBroadCast,
         "channel-add",
         newChannel
       )
@@ -125,7 +126,13 @@ export const UpdateChannelAction = CreateServerAction(
     try {
       const updatedChannel = await UpdateChannel(channelID, updatedData)
       await pusherServer.trigger(
-        "broadcast-channels-spaces-update",
+        EntityUpdateBroadCast,
+        "channel-edit",
+        updatedChannel
+      )
+
+      await pusherServer.trigger(
+        "broadcast-entity-update-sidebar",
         "channel-edit",
         updatedChannel
       )
@@ -142,8 +149,9 @@ export const DeleteChannelAction = CreateServerAction(
   async (deletedChannelData: SelectChannel) => {
     try {
       await DeleteChannel(deletedChannelData)
+
       await pusherServer.trigger(
-        "broadcast-channels-spaces-update",
+        EntityUpdateBroadCast,
         "channel-del",
         deletedChannelData
       )

@@ -239,7 +239,8 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
             type="space"
             entity={{
               slug: `${encodeChannelSlug}/spaces/${encodedSpaceSlug}`,
-              title: `${space?.channel?.channel_name} - ${space?.space_name}`
+              title: `${space?.space_name}`,
+              entity_id: space?.id
             }}
             ctaType="menuItem"
           />

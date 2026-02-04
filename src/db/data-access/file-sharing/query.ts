@@ -86,17 +86,54 @@ export async function DeleteFile(fileId: number) {
     }
   })
 
-  if (!fileEntry || fileEntry.entity_type !== "file") {
-    throw new Error("File not found")
+  if (
+    !fileEntry ||
+    (fileEntry.entity_type !== "file" && fileEntry.entity_type !== "folder")
+  ) {
+    throw new Error("File or folder not found")
   }
 
-  // Delete from directory table
+  // If it's a folder, recursively delete all children
+  if (fileEntry.entity_type === "folder") {
+    const deleteFolder = async (folderId: number) => {
+      // Get all children
+      const children = await db.query.spaceFileDirectoryTable.findMany({
+        where: eq(spaceFileDirectoryTable.parent_id, folderId),
+        with: {
+          file: true
+        }
+      })
+
+      // Recursively delete each child
+      for (const child of children) {
+        if (child.entity_type === "folder") {
+          await deleteFolder(child.id)
+        } else if (child.entity_type === "file") {
+          // Delete file from files table
+          if (child.entity_id) {
+            await db
+              .delete(filesTable)
+              .where(eq(filesTable.id, child.entity_id))
+          }
+        }
+        // Delete the child directory entry
+        await db
+          .delete(spaceFileDirectoryTable)
+          .where(eq(spaceFileDirectoryTable.id, child.id))
+      }
+    }
+
+    // Delete all children first
+    await deleteFolder(fileId)
+  }
+
+  // Delete the file/folder entry from directory table
   await db
     .delete(spaceFileDirectoryTable)
     .where(eq(spaceFileDirectoryTable.id, fileId))
 
-  // Delete from files table if entity_id exists
-  if (fileEntry.entity_id) {
+  // Delete from files table if entity_id exists (for files)
+  if (fileEntry.entity_id && fileEntry.entity_type === "file") {
     await db.delete(filesTable).where(eq(filesTable.id, fileEntry.entity_id))
   }
 

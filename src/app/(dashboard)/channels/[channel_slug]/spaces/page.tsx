@@ -38,6 +38,7 @@ import {
   AlertDialogTitle
 } from "@/src/components/ui/alert-dialog"
 import pusherClient from "@/src/services/realtime/PusherClient"
+import { EntityUpdateBroadCast } from "@/src/utils/constants"
 
 export default function ChannelPage() {
   const router = useRouter()
@@ -70,7 +71,7 @@ export default function ChannelPage() {
     useServerAction(LeaveChannelAction)
 
   useEffect(() => {
-    const channel = pusherClient.subscribe("broadcast-channels-spaces-update")
+    const channel = pusherClient.subscribe(EntityUpdateBroadCast)
 
     channel.bind("space-add", (newSpace: SelectSpace) => {
       if (newSpace.channel_id === selectedChannel?.id) {
@@ -323,7 +324,8 @@ export default function ChannelPage() {
                   type="channel"
                   entity={{
                     slug: selectedChannel?.channel_slug ?? "",
-                    title: `${selectedChannel?.community?.title} - ${selectedChannel?.channel_name}`
+                    title: `${selectedChannel?.channel_name}`,
+                    entity_id :selectedChannel?.id ?? ""
                   }}
                 />
               </div>

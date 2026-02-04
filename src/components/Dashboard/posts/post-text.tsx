@@ -18,6 +18,11 @@ const TextPost: React.FC<Props> = ({ post, spaceId }) => {
   return (
     <>
       <CardContent>
+        {post.category && (
+          <Badge variant="outline" className="mb-2">
+            {post.category}
+          </Badge>
+        )}
         <ExpandableText content={content} lines={6} />
 
         <div className="mt-4 flex flex-wrap gap-2">

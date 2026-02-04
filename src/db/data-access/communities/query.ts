@@ -264,9 +264,6 @@ export async function DeleteCommunity(
     await db
       .delete(communityUsersTable)
       .where(eq(communityUsersTable.community_id, communityId))
-    await db
-      .delete(channelsTable)
-      .where(eq(channelsTable.community_id, communityId))
 
     const deletedCommunity = await db
       .delete(communitiesTable)
