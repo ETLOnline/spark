@@ -106,7 +106,8 @@ function SpaceOverview({
           type="space"
           entity={{
             slug: `${encodedChannelSlug}/spaces/${encodedSpaceSlug}`,
-            title: `${space?.channel?.channel_name} - ${space?.space_name}`
+            title: `${space?.space_name}`,
+            entity_id: space?.id
           }}
         />
       </div>
