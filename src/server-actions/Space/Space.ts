@@ -47,9 +47,10 @@ import {
   getCommunityUsers
 } from "@/src/db/data-access/communities/query"
 import pusherServer from "@/src/services/realtime/pusherServer"
+import { EntityUpdateBroadCast } from "@/src/utils/constants"
 
 // Define the broadcast channel name constant for cleaner code
-const BROADCAST_CHANNEL = "broadcast-channels-spaces-update";
+const BROADCAST_CHANNEL = EntityUpdateBroadCast
 
 export const CreateSpaceAction = CreateServerAction(
   true,
@@ -185,6 +186,12 @@ export const UpdateSpaceAction = CreateServerAction(
       const updatedSpace = await UpdateSpace(spaceID, updatedData)
       
       await pusherServer.trigger(BROADCAST_CHANNEL, "space-edit", updatedSpace);
+    
+      await pusherServer.trigger(
+        "broadcast-entity-update-sidebar",
+        "space-edit",
+        updatedSpace
+      )
 
       return { success: true, data: updatedSpace }
     } catch (error) {

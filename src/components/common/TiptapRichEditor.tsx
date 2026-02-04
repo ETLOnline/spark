@@ -52,6 +52,7 @@ import MentionList, {
 import { AddImageToStorageAction } from "@/src/server-actions/storage/storage"
 import HardBreak from "@tiptap/extension-hard-break"
 import Placeholder from "@tiptap/extension-placeholder"
+import ImageLightbox from "./LightBox"
 
 interface RichTextEditorProps {
   value?: string
@@ -92,6 +93,9 @@ export default function RichTextEditor({
 }: RichTextEditorProps) {
   const [linkUrl, setLinkUrl] = useState("")
   const [showLinkInput, setShowLinkInput] = useState(false)
+  const [lightboxOpen, setLightboxOpen] = useState<boolean>(false)
+  const [lightboxImages, setLightboxImages] = useState<string[]>([])
+  const [lightboxIndex, setLightboxIndex] = useState<number>(0)
   const [loading, setLoading] = useState(false)
   const editorRef = useRef<any>(null)
   const mentionActiveRef = useRef(false)
@@ -107,7 +111,7 @@ export default function RichTextEditor({
         // Create wrapper
         const dom = document.createElement("div")
         dom.className =
-          "tiptap-image-wrapper relative inline-block group max-w-full overflow-hidden align-middle max-w-xs"
+          "tiptap-image-wrapper relative inline-block hover:cursor-pointer group max-w-full overflow-hidden align-middle max-w-xs"
 
         // Create image
         const img = document.createElement("img")
@@ -119,6 +123,26 @@ export default function RichTextEditor({
         }
 
         dom.appendChild(img)
+        img.onclick = (e) => {
+          e.stopPropagation()
+
+          // Extract all images from the editor content
+          const allImages: string[] = []
+          let currentImageIndex = 0
+
+          editor.state.doc.descendants((node: any) => {
+            if (node.type.name === "image") {
+              if (node.attrs.src === img.src) {
+                currentImageIndex = allImages.length
+              }
+              allImages.push(node.attrs.src)
+            }
+          })
+
+          setLightboxImages(allImages)
+          setLightboxIndex(currentImageIndex)
+          setLightboxOpen(true)
+        }
 
         // Create delete button
         const deleteBtn = document.createElement("button")
@@ -416,6 +440,40 @@ export default function RichTextEditor({
     }
   })
 
+  const updateLinkInputFromSelection = () => {
+    if (!editor) return
+
+    const attrs = editor.getAttributes("link")
+    if (attrs?.href) {
+      setLinkUrl(attrs.href)
+      setShowLinkInput(true)
+    }
+  }
+
+  useEffect(() => {
+    if (!editor) return
+
+    const onSelectionUpdate = () => {
+      const isLinkActive = editor.isActive("link")
+
+      if (isLinkActive) {
+        const attrs = editor.getAttributes("link")
+        setLinkUrl(attrs?.href ?? "")
+        setShowLinkInput(true)
+      } else {
+        // Cursor moved outside link → close input
+        setLinkUrl("")
+        setShowLinkInput(false)
+      }
+    }
+
+    editor.on("selectionUpdate", onSelectionUpdate)
+
+    return () => {
+      editor.off("selectionUpdate", onSelectionUpdate)
+    }
+  }, [editor])
+
   useEffect(() => {
     if (editor) {
       editorRef.current = editor
@@ -690,7 +748,16 @@ export default function RichTextEditor({
               type="button"
               variant={editor.isActive("link") ? "default" : "ghost"}
               size="sm"
-              onClick={() => setShowLinkInput(!showLinkInput)}
+              onClick={() => {
+                if (editor.isActive("link")) {
+                  const attrs = editor.getAttributes("link")
+                  setLinkUrl(attrs?.href ?? "")
+                  setShowLinkInput(true)
+                } else {
+                  setLinkUrl("")
+                  setShowLinkInput(true)
+                }
+              }}
             >
               <LinkIcon className="h-4 w-4" />
             </Button>
@@ -808,6 +875,12 @@ export default function RichTextEditor({
           </span>
         </div>
       )}
+      <ImageLightbox
+        open={lightboxOpen}
+        images={lightboxImages}
+        index={lightboxIndex}
+        onClose={() => setLightboxOpen(false)}
+      />
     </div>
   )
 }

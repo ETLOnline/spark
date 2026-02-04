@@ -71,6 +71,12 @@ export const UpdateProjectAction = CreateServerAction(
         updatedProject
       )
 
+      await pusherServer.trigger(
+        "broadcast-entity-update-sidebar",
+        "project-edit",
+        updatedProject
+      )
+
       return { success: true, data: updatedProject }
     } catch (error) {
       return { error }

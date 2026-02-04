@@ -64,6 +64,12 @@ const TeamPage: React.FC = () => {
           setIsLoading(false)
           return
         }
+        if (!projectResult.data.space_id) {
+          setNotFound(true)
+          setIsLoading(false)
+          return
+        }
+      
         setCurrProject(projectResult.data)
 
         const spaceResult = await GetSpaceByIdAction(

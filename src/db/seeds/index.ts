@@ -13,6 +13,7 @@ import { siteSettingsSeed } from "./SiteSettingsSeed"
 import { UpdateRoleTable } from "./UpdateRolesTable"
 import { EmailTemplatesSeed } from "./EmailTemplatesSeed"
 import { ChatSlugCorrectionSyncSeed } from "./ChatSlugCorrectionSyncSeed"
+import { ShortcutEntityIdSyncSeed } from "./ShortcutEntityIdSyncSeed"
 
 const SEEDERS: Record<string, () => Promise<void>> = {
   FeatureSeed,
@@ -29,7 +30,8 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   SyncRolePermissionsSeeder,
   siteSettingsSeed,
   EmailTemplatesSeed,
-  ChatSlugCorrectionSyncSeed
+  ChatSlugCorrectionSyncSeed,
+  ShortcutEntityIdSyncSeed
 }
 
 async function runSeeders() {
@@ -44,7 +46,8 @@ async function runSeeders() {
       "SyncRolePermissionsSeeder",
       "EmailTemplatesSeed",
       "ChatSlugCorrectionSyncSeed",
-      "ChatSlugCorrectionSyncSeed"
+      "ChatSlugCorrectionSyncSeed",
+      "ShortcutEntityIdSyncSeed"
     ]
 
     const seederNames =
