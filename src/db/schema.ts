@@ -595,6 +595,7 @@ export type SelectPost = typeof postsTable.$inferSelect & {
   postComments?: SelectComment[]
   hashtags?: SelectTag[]
   postLikes?: SelectLike[]
+  options?: SelectPollOption[]
 }
 export type SelectFilePost = SelectPost & {
   file?: SelectFile
@@ -602,6 +603,7 @@ export type SelectFilePost = SelectPost & {
 }
 export type SelectPollPost = SelectPost & {
   options: SelectPollOption[]
+  files?: SelectFile[]
 }
 
 export const commentsTable = pgTable("comments", {
@@ -678,6 +680,7 @@ export type InsertLike = typeof likesTable.$inferInsert
 export type SelectLike = typeof likesTable.$inferSelect
 
 export const pollOptionsTable = pgTable("poll_options", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
   post_id: varchar().notNull(),
   option_text: varchar().notNull(),
   vote_count: integer().notNull().default(0)
