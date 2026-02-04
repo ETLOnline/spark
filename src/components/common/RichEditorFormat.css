@@ -1,18 +1,22 @@
 /* Headings */
 .rich-editor h1 {
-  font-size: 32px; /* 36px */
+  font-size: 32px;
+  /* 36px */
   font-weight: bold;
-  margin: 0.5em 0 0.5em 0; /* Top and bottom spacing */
+  margin: 0.5em 0 0.5em 0;
+  /* Top and bottom spacing */
 }
 
 .rich-editor h2 {
-  font-size: 24px; /* 30px */
+  font-size: 24px;
+  /* 30px */
   font-weight: bold;
   margin: 0.4em 0 0.5em 0;
 }
 
 .rich-editor h3 {
-  font-size: 20px; /* 24px */
+  font-size: 20px;
+  /* 24px */
   font-weight: bold;
   margin: 0.35em 0 0.5em 0;
 }
@@ -76,27 +80,48 @@
 .rich-editor img {
   display: inline-block;
   margin: 5px;
-  max-width: 100%;
+  max-width: auto;
   height: auto;
 }
 
 .tiptap-image-wrapper {
-  width: fit-content;
-  margin: 10px;
+  display: inline-block !important;
+  width: auto;
+  max-width: 250px;
+  margin: 5px;
+  vertical-align: top;
 }
 
 .tiptap-image-wrapper img {
-  width: auto;
-  height: 200px;
-  margin: 10px;
+  width: 100% !important;
+  height: 200px !important;
+  margin: 0px;
+  object-fit: cover;
+  border-radius: 8px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
+.rich-editor img:not(.tiptap-image-wrapper img) {
+  display: inline-block;
+  max-width: 250px;
+  height: 200px;
+  object-fit: cover;
+}
 .tiptap-image-wrapper img:hover {
   transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  z-index: 10;
 }
 
 .rich-editor {
-  white-space: pre-wrap; /* keeps spaces + line breaks */
+  white-space: pre-wrap;
+  /* keeps spaces + line breaks */
   word-break: break-word;
+}
+
+.rich-editor blockquote {
+  border-left: 2px solid #666a72;
+  padding: 4px 3px;
 }
