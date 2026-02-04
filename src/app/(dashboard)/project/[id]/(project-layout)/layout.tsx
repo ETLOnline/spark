@@ -22,25 +22,29 @@ async function layout({ children, params }: Props) {
 
   const currProject = await GetProjectByIdAction(projectId)
 
-  if (!currProject.success || !currProject.data) {
+  if (!currProject.success || !currProject.data || currProject.error) {
     return <NotFound />
   }
+
   const currentProject = currProject.data
 
-  const currSpace = await GetSpaceById(currentProject.space_id)
+  if (!currentProject.space_id) {
+    return <NotFound />
+  }
+
+  const currSpace = await GetSpaceByIdAction(currentProject.space_id)
+
 
   const projectStatusList = await GetTaskStatusAction(projectId)
-
-  const space = await GetSpaceByIdAction(currentProject.space_id)
 
   const projectUser = await getProjectUsers(projectId)
 
   const authUser = await AuthUserAction()
   const isAdmin = await isSuperAdmin(authUser)
 
-  const userRole = projectUser.find(
-    (user) => user.user_id === authUser.unique_id
-  )
+  const userRole = authUser.unique_id
+    ? projectUser.find((user) => user.user_id === authUser.unique_id)
+    : undefined
 
   return (
     <div className="grid grid-cols-12 w-full h-[calc(100vh-6rem)] overflow-hidden">
@@ -50,7 +54,7 @@ async function layout({ children, params }: Props) {
             <ProjectSidebar
               currProject={currentProject}
               statusList={projectStatusList.data ?? []}
-              currSpace={currSpace}
+              currSpace={currSpace.data}
             />
           </div>
 
@@ -61,7 +65,7 @@ async function layout({ children, params }: Props) {
       ) : (
         <PrivatePage
           page="project"
-          pageHref={`/channels/${space.data?.channel.channel_slug}/spaces/${space.data?.space_slug}?page-type=project-management`}
+          pageHref={`/channels/${currSpace.data?.channel.channel_slug}/spaces/${currSpace.data?.space_slug}?page-type=project-management`}
         />
       )}
     </div>
