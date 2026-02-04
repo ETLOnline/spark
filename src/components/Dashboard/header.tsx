@@ -15,6 +15,7 @@ import CommandCenter from "./CommandCenter/CommandCenter"
 import { SignedIn } from "@clerk/nextjs"
 import Notifications from "./Notifications/Notifications"
 import { useBreadcrumbs } from "@/src/hooks/useBreadcrumbs"
+import EntityHierarcy from "../common/EntitiyHierarcy/EntityHierarcy"
 
 const Header = () => {
   const breadcrumbs = useBreadcrumbs()
@@ -44,6 +45,7 @@ const Header = () => {
               ))}
             </BreadcrumbList>
           </Breadcrumb>
+          <EntityHierarcy />
         </div>
         <SignedIn>
           <CommandCenter />
