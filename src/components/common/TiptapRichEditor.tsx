@@ -53,6 +53,44 @@ import { AddImageToStorageAction } from "@/src/server-actions/storage/storage"
 import HardBreak from "@tiptap/extension-hard-break"
 import Placeholder from "@tiptap/extension-placeholder"
 import ImageLightbox from "./LightBox"
+import Blockquote from "@tiptap/extension-blockquote"
+
+const CustomBlockquote = Blockquote.extend({
+  addKeyboardShortcuts() {
+    return {
+      Enter: ({ editor }) => {
+        const { $from } = editor.state.selection
+
+        const isInBlockquote = $from.node(-1)?.type?.name === "blockquote"
+
+        const isEmpty = $from.parent.textContent.length === 0
+
+        // Exit blockquote on empty line
+        if (isInBlockquote && isEmpty) {
+          return editor.chain().focus().lift("blockquote").run()
+        }
+
+        return false
+      },
+
+      Backspace: ({ editor }) => {
+        const { $from } = editor.state.selection
+
+        const isInBlockquote = $from.node(-1)?.type?.name === "blockquote"
+
+        const isAtStart = $from.parentOffset === 0
+        const isEmpty = $from.parent.textContent.length === 0
+
+        // Exit blockquote cleanly instead of deleting it
+        if (isInBlockquote && isAtStart && isEmpty) {
+          return editor.chain().focus().lift("blockquote").run()
+        }
+
+        return false
+      }
+    }
+  }
+})
 
 interface RichTextEditorProps {
   value?: string
@@ -192,7 +230,9 @@ export default function RichTextEditor({
     const baseExtensions: any[] = [
       StarterKit.configure({
         // Disable default hard break handling from StarterKit
-        hardBreak: false
+        hardBreak: false,
+        // Disable the default blockquote so we can use a custom one
+        blockquote: false
       }),
       Placeholder.configure({
         placeholder: placeholder,
@@ -204,6 +244,11 @@ export default function RichTextEditor({
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Heading.configure({ levels: [1, 2, 3] }),
       CharacterCount.configure({ limit }),
+      CustomBlockquote.configure({
+        HTMLAttributes: {
+          class: "blockquote-block"
+        }
+      }),
       CustomImage.configure({
         inline: false,
         allowBase64: true,
@@ -211,26 +256,8 @@ export default function RichTextEditor({
           class: "CustomImage"
         }
       }),
-      // HardBreak for <br> insertion
-      HardBreak.extend({
-        addKeyboardShortcuts() {
-          return {
-            Enter: ({ editor }) => {
-              const { empty } = editor.state.selection
-              const node = editor.state.selection.$from.node()
-              const isNodeEmpty = node.textContent === ""
-
-              if (empty && isNodeEmpty) {
-                // If current line is empty, insert <br>
-                return editor.chain().insertContent("<br>").run()
-              }
-
-              // Otherwise, default behavior (new paragraph)
-              return editor.chain().splitBlock().run()
-            }
-          }
-        }
-      })
+      // Use default HardBreak handling to avoid interfering with blockquote behavior
+      HardBreak
     ]
 
     if (showMentions && mentionUsers.length > 0) {
