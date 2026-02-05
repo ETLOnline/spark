@@ -182,7 +182,7 @@ const useShortcut = () => {
           shortcut.url = `/communities/${encodedUrl}`
           break
         case "project":
-          shortcut.url = `/project/${encodedUrl}/board`
+          shortcut.url = `/project/${s.url}/board`
           break
         default:
           break
