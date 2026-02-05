@@ -61,7 +61,16 @@ export const GetUserShortcutsByRelations = async (userId: string) => {
             id: true, 
             space_name: true, 
             space_slug: true 
-          } 
+          } ,
+          with: {
+            channel: {
+              columns: {
+                id: true,
+                channel_name: true,
+                channel_slug: true
+              }
+            }
+          }
         },
         project: { 
           columns: { 
