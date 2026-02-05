@@ -33,6 +33,11 @@ const FilePost: React.FC<Props> = ({ post, spaceId }) => {
         className={spaceId !== "shared" ? "cursor-pointer" : ""}
         onClick={spaceId !== "shared" ? handleContentClick : undefined}
       >
+        {post.category && (
+          <Badge variant="outline" className="mb-2">
+            {post.category}
+          </Badge>
+        )}
         <p className="text-lg pb-5">{post.content}</p>
         {post?.file ? (
           <Link href={post?.file?.file_path} onClick={handleFileClick}>
@@ -64,7 +69,11 @@ const FilePost: React.FC<Props> = ({ post, spaceId }) => {
         />
         <Separator />
         <PostCommentsSection comments={post.postComments || []} />
-        <PostCommentForm postId={post.id} comments={post.comments} spaceId={spaceId}/>
+        <PostCommentForm
+          postId={post.id}
+          comments={post.comments}
+          spaceId={spaceId}
+        />
       </CardFooter>
     </>
   )
