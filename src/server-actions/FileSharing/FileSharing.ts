@@ -22,7 +22,19 @@ export const CreateNewFolderAction = CreateServerAction(
   true,
   async (id: string | number, folderName: string, folderSlug: string) => {
     try {
-      const result = await CreateFolder(id, folderName, folderSlug)
+      const user = await AuthUserAction()
+      if (!user) {
+        return {
+          success: false,
+          error: "Unauthorized"
+        }
+      }
+      const result = await CreateFolder(
+        id,
+        folderName,
+        folderSlug,
+        user.unique_id
+      )
       return { success: true, data: result[0] }
     } catch (error) {
       console.error("Error creating folder:", error)

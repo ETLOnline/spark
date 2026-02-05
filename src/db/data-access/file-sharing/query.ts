@@ -6,7 +6,8 @@ import { space } from "postcss/lib/list"
 export async function CreateFolder(
   id: string | number,
   folderName: string,
-  folderSlug: string
+  folderSlug: string,
+  createdBy?: string
 ) {
   return await db
     .insert(spaceFileDirectoryTable)
@@ -15,7 +16,8 @@ export async function CreateFolder(
       parent_id: typeof id === "number" ? id : undefined,
       entity_name: folderName,
       entity_type: "folder",
-      entity_slug: folderSlug
+      entity_slug: folderSlug,
+      created_by: createdBy
     })
     .returning()
 }
