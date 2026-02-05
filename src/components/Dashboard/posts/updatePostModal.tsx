@@ -281,9 +281,11 @@ function UpdatePostModal({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Post</DialogTitle>
-          <DialogDescription>
-            Here you can edit your post details.
-          </DialogDescription>
+          {isPoll && canEditPoll && (
+            <DialogDescription>
+              Here you can edit your post details.
+            </DialogDescription>
+          )}
         </DialogHeader>
         <form
           onSubmit={form.handleSubmit(handleUpdatePost)}
