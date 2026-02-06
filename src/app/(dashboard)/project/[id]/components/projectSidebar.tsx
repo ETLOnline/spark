@@ -135,7 +135,7 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
               entity={{
                 slug: currProject?.id ?? "",
                 title: `${currProject?.project_name}`,
-                entity_id: currProject?.id ?? "",
+                entity_id: currProject?.id ?? ""
               }}
             />
           </div>

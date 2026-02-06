@@ -69,7 +69,7 @@ const TeamPage: React.FC = () => {
           setIsLoading(false)
           return
         }
-      
+
         setCurrProject(projectResult.data)
 
         const spaceResult = await GetSpaceByIdAction(

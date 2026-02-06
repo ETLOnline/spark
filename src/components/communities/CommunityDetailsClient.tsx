@@ -191,9 +191,7 @@ export default function CommunityDetailsClient({
   ])
 
   useEffect(() => {
-    const pusherChannel = pusherClient.subscribe(
-      EntityUpdateBroadCast
-    )
+    const pusherChannel = pusherClient.subscribe(EntityUpdateBroadCast)
 
     pusherChannel.bind("channel-add", (newChannel: SelectChannel) => {
       if (newChannel.community_id === community.id) {
@@ -456,7 +454,7 @@ export default function CommunityDetailsClient({
                   entity={{
                     slug: community?.slug ?? "",
                     title: community?.title ?? "",
-                    entity_id:community?.id ?? ""
+                    entity_id: community?.id ?? ""
                   }}
                 />
               </div>

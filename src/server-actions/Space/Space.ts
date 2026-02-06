@@ -58,8 +58,8 @@ export const CreateSpaceAction = CreateServerAction(
     try {
       const overview = defaultSpaceOverviewTemplate(SpaceData.space_name)
       const newSpace = await CreateSpace({ ...SpaceData, overview: overview })
-      
-      await pusherServer.trigger(BROADCAST_CHANNEL, "space-add", newSpace);
+
+      await pusherServer.trigger(BROADCAST_CHANNEL, "space-add", newSpace)
 
       const result = await createScopedSpaceRolesAndAssignAdmin(
         newSpace.id,
@@ -184,9 +184,9 @@ export const UpdateSpaceAction = CreateServerAction(
   async (spaceID: string, updatedData: Partial<SelectSpace>) => {
     try {
       const updatedSpace = await UpdateSpace(spaceID, updatedData)
-      
-      await pusherServer.trigger(BROADCAST_CHANNEL, "space-edit", updatedSpace);
-    
+
+      await pusherServer.trigger(BROADCAST_CHANNEL, "space-edit", updatedSpace)
+
       await pusherServer.trigger(
         "broadcast-entity-update-sidebar",
         "space-edit",
@@ -205,8 +205,12 @@ export const DeleteSpaceAction = CreateServerAction(
   async (deletedSpaceData: SelectSpace) => {
     try {
       await DeleteSpace(deletedSpaceData)
-      
-      await pusherServer.trigger(BROADCAST_CHANNEL, "space-del", deletedSpaceData);
+
+      await pusherServer.trigger(
+        BROADCAST_CHANNEL,
+        "space-del",
+        deletedSpaceData
+      )
 
       await deleteRoleBasedOnEntityType("SPACE", deletedSpaceData.id)
       return { success: true }

@@ -34,8 +34,8 @@ import {
   TaskType
 } from "../../constants/projectManagment"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
-import "@/src/components/common/RichEditorFormat.css"
-import Tiptap from "@/src/components/common/TiptapRichEditor"
+import "@/src/components/common/Tiptap/RichEditorFormat.css"
+import Tiptap from "@/src/components/common/Tiptap/TiptapRichEditor"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import MultiSelect, {
   MultiSelectOption

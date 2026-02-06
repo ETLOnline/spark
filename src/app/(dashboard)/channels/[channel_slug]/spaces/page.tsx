@@ -325,7 +325,7 @@ export default function ChannelPage() {
                   entity={{
                     slug: selectedChannel?.channel_slug ?? "",
                     title: `${selectedChannel?.channel_name}`,
-                    entity_id :selectedChannel?.id ?? ""
+                    entity_id: selectedChannel?.id ?? ""
                   }}
                 />
               </div>

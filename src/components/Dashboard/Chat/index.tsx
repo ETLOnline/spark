@@ -58,7 +58,7 @@ import Avvvatars from "avvvatars-react"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import pusherClient from "@/src/services/realtime/PusherClient"
-import RichTextEditor from "@/src/components/common/TiptapRichEditor"
+import RichTextEditor from "@/src/components/common/Tiptap/TiptapRichEditor"
 import { MessageContent } from "./components/MessageContent"
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
 import {
@@ -67,7 +67,7 @@ import {
   EmojiPickerFooter,
   EmojiPickerSearch
 } from "../../ui/emoji-picker"
-import "@/src/components/common/RichEditorFormat.css"
+import "@/src/components/common/Tiptap/RichEditorFormat.css"
 import { toast } from "@/src/hooks/use-toast"
 import {
   DropdownMenu,
