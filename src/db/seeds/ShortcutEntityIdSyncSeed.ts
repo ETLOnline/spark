@@ -1,18 +1,20 @@
 import { eq } from "drizzle-orm"
 import { db } from ".."
-import { 
-  shortcutsTable, 
-  communitiesTable, 
-  channelsTable, 
-  spacesTable, 
-  projectTable 
+import {
+  shortcutsTable,
+  communitiesTable,
+  channelsTable,
+  spacesTable,
+  projectTable
 } from "../schema"
 
 export const ShortcutEntityIdSyncSeed = async () => {
   return await db.transaction(async (tx) => {
     try {
       const shortcuts = await tx.select().from(shortcutsTable)
-      console.log(`📊 Processing ${shortcuts.length} shortcuts with STRICT isolation...`)
+      console.log(
+        `📊 Processing ${shortcuts.length} shortcuts with STRICT isolation...`
+      )
 
       for (const shortcut of shortcuts) {
         // Reset everything to null for this row to ensure no "bleeding" from other types
@@ -20,7 +22,7 @@ export const ShortcutEntityIdSyncSeed = async () => {
           community_id: null,
           channel_id: null,
           space_id: null,
-          project_id: null,
+          project_id: null
         }
         let matched = false
 
@@ -36,8 +38,8 @@ export const ShortcutEntityIdSyncSeed = async () => {
             updateData.community_id = community[0].id
             matched = true
           }
-        } 
-        
+        }
+
         // 2. STRICT CHANNEL: ONLY fill channel_id
         else if (shortcut.type === "channel") {
           const channel = await tx

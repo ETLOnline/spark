@@ -19,7 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "@/src/hooks/use-toast"
 import { UpdateProjectAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import Tiptap from "@/src/components/common/TiptapRichEditor"
+import Tiptap from "@/src/components/common/Tiptap/TiptapRichEditor"
 import moment from "moment"
 
 type ProjectFormData = z.infer<typeof projectSchema>

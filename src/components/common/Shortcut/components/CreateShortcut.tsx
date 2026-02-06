@@ -10,7 +10,7 @@ interface CreateShortcutProps {
   entity: {
     slug: string
     title: string
-    entity_id:string
+    entity_id: string
   }
   ctaType?: "button" | "menuItem"
 }
