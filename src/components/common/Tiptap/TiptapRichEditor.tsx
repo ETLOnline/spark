@@ -45,6 +45,47 @@ import { AddImageToStorageAction } from "@/src/server-actions/storage/storage"
 import { createSchemaExtensions } from "./tiptapSchemaExtensions"
 import Loader from "../Loader/Loader"
 import { LoaderSizes } from "../types/loader-types"
+import HardBreak from "@tiptap/extension-hard-break"
+import Placeholder from "@tiptap/extension-placeholder"
+import Blockquote from "@tiptap/extension-blockquote"
+import ImageLightbox from "../LightBox"
+
+const CustomBlockquote = Blockquote.extend({
+  addKeyboardShortcuts() {
+    return {
+      Enter: ({ editor }) => {
+        const { $from } = editor.state.selection
+
+        const isInBlockquote = $from.node(-1)?.type?.name === "blockquote"
+
+        const isEmpty = $from.parent.textContent.length === 0
+
+        // Exit blockquote on empty line
+        if (isInBlockquote && isEmpty) {
+          return editor.chain().focus().lift("blockquote").run()
+        }
+
+        return false
+      },
+
+      Backspace: ({ editor }) => {
+        const { $from } = editor.state.selection
+
+        const isInBlockquote = $from.node(-1)?.type?.name === "blockquote"
+
+        const isAtStart = $from.parentOffset === 0
+        const isEmpty = $from.parent.textContent.length === 0
+
+        // Exit blockquote cleanly instead of deleting it
+        if (isInBlockquote && isAtStart && isEmpty) {
+          return editor.chain().focus().lift("blockquote").run()
+        }
+
+        return false
+      }
+    }
+  }
+})
 
 interface RichTextEditorProps {
   value?: string
@@ -86,6 +127,9 @@ export default function RichTextEditor({
   const [linkUrl, setLinkUrl] = useState("")
   const [isEditingLink, setIsEditingLink] = useState(false)
   const [showLinkInput, setShowLinkInput] = useState(false)
+  const [lightboxOpen, setLightboxOpen] = useState<boolean>(false)
+  const [lightboxImages, setLightboxImages] = useState<string[]>([])
+  const [lightboxIndex, setLightboxIndex] = useState<number>(0)
   const [loading, setLoading] = useState(false)
   const editorRef = useRef<any>(null)
   const mentionActiveRef = useRef(false)
@@ -101,7 +145,7 @@ export default function RichTextEditor({
         // Create wrapper
         const dom = document.createElement("div")
         dom.className =
-          "tiptap-image-wrapper relative inline-block group max-w-full overflow-hidden align-middle max-w-xs"
+          "tiptap-image-wrapper relative inline-block hover:cursor-pointer group max-w-full overflow-hidden align-middle max-w-xs"
 
         // Create image
         const img = document.createElement("img")
@@ -113,6 +157,26 @@ export default function RichTextEditor({
         }
 
         dom.appendChild(img)
+        img.onclick = (e) => {
+          e.stopPropagation()
+
+          // Extract all images from the editor content
+          const allImages: string[] = []
+          let currentImageIndex = 0
+
+          editor.state.doc.descendants((node: any) => {
+            if (node.type.name === "image") {
+              if (node.attrs.src === img.src) {
+                currentImageIndex = allImages.length
+              }
+              allImages.push(node.attrs.src)
+            }
+          })
+
+          setLightboxImages(allImages)
+          setLightboxIndex(currentImageIndex)
+          setLightboxOpen(true)
+        }
 
         // Create delete button
         const deleteBtn = document.createElement("button")
@@ -738,6 +802,12 @@ export default function RichTextEditor({
           </span>
         </div>
       )}
+      <ImageLightbox
+        open={lightboxOpen}
+        images={lightboxImages}
+        index={lightboxIndex}
+        onClose={() => setLightboxOpen(false)}
+      />
     </div>
   )
 }

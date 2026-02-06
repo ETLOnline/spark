@@ -81,7 +81,14 @@ interface Props {
 }
 
 const projectSchema = z.object({
-  task_title: z.string().min(1, "Required").max(150, "Title is too long"),
+  task_title: z
+    .string()
+    .min(1, "Required")
+    .max(150, "Title is too long")
+    .refine(
+      (value) => value.trim().length > 0,
+      "Title cannot be empty or whitespace"
+    ),
   description: z.string().optional(),
   task_type: z.string().min(1, "Required"),
   task_priority: z.string().min(1, "Required"),
@@ -619,7 +626,7 @@ export default function TaskForm({
                       <Button
                         loading={loading}
                         variant={"outline"}
-                        className="w-full"
+                        className="w-full bg-primary text-black"
                         disabled={loading}
                       >
                         {selectedTask ? "Update Task" : "Create Task"}

@@ -1,6 +1,7 @@
 import { RadioGroup } from "../../ui/radio-group"
 import { Label } from "../../ui/label"
 import { RadioGroupItem } from "../../ui/radio-group"
+import { Button } from "../../ui/button"
 import { SelectComment, SelectPollPost } from "@/src/db/schema"
 import { VotePollAction } from "@/src/server-actions/Post/Post"
 import { useEffect, useState } from "react"
@@ -17,6 +18,7 @@ import PostComments from "./post-comments"
 import PostCommentForm from "./post-comment-form"
 import PostCommentsSection from "./post-comments-section"
 import { usePostNavigation } from "@/src/hooks/usePostNavigation"
+import Image from "next/image"
 
 type Props = {
   post: SelectPollPost
@@ -25,6 +27,8 @@ type Props = {
 
 const PollPost: React.FC<Props> = ({ post, spaceId }) => {
   const [selectedOption, setSelectedOption] = useState<string>("")
+  const [tempSelectedOption, setTempSelectedOption] = useState<string>("")
+  const [hasVoted, setHasVoted] = useState<boolean>(false)
   const { navigateToPost } = usePostNavigation()
 
   const setPosts = useSetAtom(postStore.posts)
@@ -44,22 +48,42 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
       const userVote = post.options.find((option) =>
         option.votes?.some((vote) => vote.user_id === userId)
       )
-      setSelectedOption(userVote?.option_text || "")
+      if (userVote) {
+        setSelectedOption(userVote.option_text)
+        setTempSelectedOption(userVote.option_text)
+        setHasVoted(true)
+      }
     }
-  }, [userId])
+  }, [userId, post.options])
 
-  const handleVote = async (value: string) => {
-    if (value === selectedOption) {
+  const handleOptionChange = (value: string) => {
+    setTempSelectedOption(value)
+  }
+
+  const handleSubmitVote = async () => {
+    if (!tempSelectedOption) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please select an option"
+      })
       return
     }
+
     try {
       const option = post.options?.find(
-        (option) => option.option_text === value
+        (option) => option.option_text === tempSelectedOption
       )
       if (!option) return
-      setSelectedOption(value)
-      const result = await votePoll(post.id, value, option.vote_count)
+
+      const result = await votePoll(
+        post.id,
+        tempSelectedOption,
+        option.vote_count
+      )
       if (result?.success) {
+        setSelectedOption(tempSelectedOption)
+        setHasVoted(true)
         toast({
           title: "Success",
           description: "You have successfully voted"
@@ -69,10 +93,10 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
             p.id === post.id && "options" in p
               ? {
                   ...p,
-                  options: p.options.map((option) =>
-                    option.option_text === value
-                      ? { ...option, vote_count: option.vote_count + 1 }
-                      : option
+                  options: p.options?.map((opt) =>
+                    opt.option_text === tempSelectedOption
+                      ? { ...opt, vote_count: opt.vote_count + 1 }
+                      : opt
                   )
                 }
               : p
@@ -82,7 +106,6 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
         throw new Error(result?.error)
       }
     } catch (error) {
-      setSelectedOption("")
       toast({
         variant: "destructive",
         title: "Error",
@@ -90,44 +113,80 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
       })
     }
   }
-
+  const isSingle = post.files?.length === 1
   return (
     <>
       <CardContent
-        className={spaceId !== "shared" ? "cursor-pointer" : ""}
-        onClick={spaceId !== "shared" ? handleContentClick : undefined}
+        className={spaceId !== undefined ? "cursor-pointer" : ""}
+        onClick={spaceId !== undefined ? handleContentClick : undefined}
       >
-        <p className="font-semibold mb-2">{post.content}</p>
-        <RadioGroup
-          onValueChange={handleVote}
-          disabled={
-            votePollLoading ||
-            (votePollData?.data?.option.option_text.length as number) > 0 ||
-            selectedOption.length > 0
-          }
-          value={selectedOption}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {post.options?.map((option) => (
-            <div
-              key={option.option_text}
-              className="flex items-center space-x-2"
+        {post.category && (
+          <Badge variant="outline" className="mb-2">
+            {post.category}
+          </Badge>
+        )}
+        <p className="font-semibold mb-4">{post.content}</p>
+        {post.files && post.files.length > 0 && (
+          <div
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+            }}
+            className="mb-4 grid  gap-2 sm:grid-cols-3"
+          >
+            {post.files.map((file) => (
+              <div
+                key={file.id}
+                className="relative overflow-hidden rounded-lg"
+              >
+                <Image
+                  src={file.file_path}
+                  alt={file.file_name}
+                  width={isSingle ? 1200 : 600}
+                  height={isSingle ? 700 : 350}
+                  className="h-32 w-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        <div onClick={(e) => e.stopPropagation()}>
+          <RadioGroup
+            onValueChange={handleOptionChange}
+            disabled={votePollLoading || hasVoted}
+            value={tempSelectedOption}
+          >
+            {post.options?.map((option) => (
+              <div
+                key={option.option_text}
+                className="flex items-center space-x-2"
+              >
+                <RadioGroupItem
+                  value={option.option_text}
+                  id={option.option_text}
+                  disabled={votePollLoading || hasVoted}
+                />
+                <Label htmlFor={option.option_text}>
+                  {option.option_text}
+                  {option.vote_count > 0 && (
+                    <span className="ml-2 text-sm text-gray-500">
+                      ({option.vote_count} votes)
+                    </span>
+                  )}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+          {!hasVoted && tempSelectedOption && (
+            <Button
+              onClick={handleSubmitVote}
+              disabled={votePollLoading}
+              className="mt-4"
             >
-              <RadioGroupItem
-                value={option.option_text}
-                id={option.option_text}
-              />
-              <Label htmlFor={option.option_text}>
-                {option.option_text}
-                {option.vote_count > 0 && (
-                  <span className="ml-2 text-sm text-gray-500">
-                    ({option.vote_count} votes)
-                  </span>
-                )}
-              </Label>
-            </div>
-          ))}
-        </RadioGroup>
+              {votePollLoading ? "Voting..." : "Cast Vote"}
+            </Button>
+          )}
+        </div>
         <div className="mt-4 flex flex-wrap gap-2">
           {post.hashtags &&
             post.hashtags.map((tag) => (
@@ -147,7 +206,11 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
         />
         <Separator />
         <PostCommentsSection comments={post.postComments || []} />
-        <PostCommentForm postId={post.id} comments={post.comments} spaceId={spaceId} />
+        <PostCommentForm
+          postId={post.id}
+          comments={post.comments}
+          spaceId={spaceId}
+        />
       </CardFooter>
     </>
   )

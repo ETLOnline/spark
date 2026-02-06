@@ -104,7 +104,10 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
         setDir(removeFileFromPath(dir, selectedFileId))
 
         toast({
-          description: "File deleted successfully!",
+          description:
+            selectedItem && selectedItem.type === "folder"
+              ? "Folder deleted successfully!"
+              : "File deleted successfully!",
           duration: 3000
         })
       } else {
@@ -125,12 +128,15 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
     }
   }
 
-  const selectedFileName =
-    getItemsAtCurrPath().find((item) => item.id === selectedFileId)?.name || ""
+  const selectedItem = getItemsAtCurrPath().find(
+    (item) => item.id === selectedFileId
+  )
+  const selectedFileName = selectedItem?.name || ""
 
   // Check if any items have actions available
   const hasActions = getItemsAtCurrPath().some(
-    (item) => item.type === "file" && canDeleteFile(item)
+    (item) =>
+      (item.type === "file" || item.type === "folder") && canDeleteFile(item)
   )
   const gridCols = hasActions
     ? "grid-cols-[auto_1fr_auto_auto_auto]"
@@ -152,28 +158,28 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
 
     if (foldersToFetch.length === 0) return
 
-    const fetchAllFolderContents = async () => {
+    // Lazy load folder sizes in background without blocking
+    const timer = setTimeout(async () => {
       try {
-        const results = await Promise.all(
-          foldersToFetch.map((folder) => getDirContent(folder.id))
-        )
-
-        const newSizes: Record<number, number> = {}
-
-        results.forEach((res, index) => {
-          const folderId = foldersToFetch[index].id
-
-          const totalSize = (res?.data || [])
-            .filter((item: any) => item.entity_type === "file")
-            .reduce(
-              (sum: number, item: any) => sum + (item.file?.file_size ?? 0),
-              0
-            )
-
-          newSizes[folderId] = totalSize
-        })
-
-        setFolderSizes((prev) => ({ ...prev, ...newSizes }))
+        // Fetch sequentially to avoid overwhelming the server
+        for (const folder of foldersToFetch) {
+          try {
+            const res = await getDirContent(folder.id)
+            const totalSize = (res?.data || [])
+              .filter((item: any) => item.entity_type === "file")
+              .reduce(
+                (sum: number, item: any) => sum + (item.file?.file_size ?? 0),
+                0
+              )
+            setFolderSizes((prev) => ({ ...prev, [folder.id]: totalSize }))
+          } catch (error) {
+            toast({
+              variant: "destructive",
+              description: `Failed to fetch size for folder "${folder.name}"`,
+              duration: 3000
+            })
+          }
+        }
       } catch (error) {
         toast({
           variant: "destructive",
@@ -181,10 +187,10 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
           duration: 3000
         })
       }
-    }
+    }, 100)
 
-    fetchAllFolderContents()
-  }, [folderItems, folderSizes, getDirContent])
+    return () => clearTimeout(timer)
+  }, [folderItems, getDirContent, toast])
 
   return (
     <div className="p-4">
@@ -201,7 +207,9 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
       <div className="divide-y">
         {filteredItems.length === 0 ? (
           <div className="py-8 text-center text-muted-foreground">
-            No matching files or folders
+            {searchQuery
+              ? "No matching files or folders"
+              : "This folder is empty."}
           </div>
         ) : (
           filteredItems.map((item) => (
@@ -256,44 +264,52 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
               </div>
               {hasActions && (
                 <div className="flex items-center justify-center w-16">
-                  {item.type === "file" && canDeleteFile(item) && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          title="Delete"
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 px-2 text-destructive hover:text-destructive"
-                          onClick={() => setSelectedFileId(item.id)}
-                        >
-                          <Trash className="h-4 w-4 mr-1" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete File</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete "{selectedFileName}
-                            "? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel
-                            onClick={() => setSelectedFileId(null)}
+                  {(item.type === "file" ||
+                    item.type === "folder" ||
+                    authUser?.unique_id === item.created_by) &&
+                    canDeleteFile(item) && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            title="Delete"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-destructive hover:text-destructive"
+                            onClick={() => setSelectedFileId(item.id)}
                           >
-                            Cancel
-                          </AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={handleDeleteConfirm}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            disabled={deleteFileLoading}
-                          >
-                            {deleteFileLoading ? "Deleting..." : "Delete"}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
+                            <Trash className="h-4 w-4 mr-1" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              {selectedItem?.type === "folder"
+                                ? "Delete Folder"
+                                : "Delete File"}
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {selectedItem?.type === "folder"
+                                ? `Are you sure you want to delete "${selectedFileName}" and all its children? This action cannot be undone.`
+                                : `Are you sure you want to delete "${selectedFileName}"? This action cannot be undone.`}
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel
+                              onClick={() => setSelectedFileId(null)}
+                            >
+                              Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={handleDeleteConfirm}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              disabled={deleteFileLoading}
+                            >
+                              {deleteFileLoading ? "Deleting..." : "Delete"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                 </div>
               )}
             </div>

@@ -41,7 +41,7 @@ const CreatePostInput: React.FC<Props> = ({
       return
     }
 
-    if (type === PostType.image) {
+    if (type === PostType.image || type === PostType.poll) {
       // Reuse existing processed images when possible (for reorder/remove), otherwise read new ones
       const imagePromises = files
         .filter((file) => file.type.startsWith("image/"))
@@ -74,7 +74,7 @@ const CreatePostInput: React.FC<Props> = ({
       setSelectedImages(processedImages)
       setNewPost({
         ...newPost,
-        type: PostType.image,
+        type: type === PostType.poll ? PostType.poll : PostType.image,
         images: processedImages
       })
       return
@@ -147,7 +147,16 @@ const CreatePostInput: React.FC<Props> = ({
       />
     </div>
   ) : type === PostType.poll ? (
-    <div className="flex flex-col space-y-2">
+    <div className="flex flex-col space-y-4">
+      <div className="flex flex-col justify-center items-center pt-4">
+        <FileUpload
+          onChange={(files: File[]) => handleFiles(files)}
+          onRemove={handleRemoveFile}
+          accept="image/*"
+          multiple={true}
+          fileType="image"
+        />
+      </div>
       <Textarea
         placeholder="Enter your poll question"
         value={newPost.content as string}
@@ -164,7 +173,7 @@ const CreatePostInput: React.FC<Props> = ({
       <TagsInput
         tags={pollOptions as string[]}
         updateTags={setPollOptions as PollOptionsSetter}
-        placeholder="Type to add poll options..."
+        placeholder="Type an option and press Enter to add"
         type={type}
       />
     </div>

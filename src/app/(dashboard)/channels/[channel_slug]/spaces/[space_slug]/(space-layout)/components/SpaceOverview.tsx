@@ -20,6 +20,8 @@ import CreateShortcut from "@/src/components/common/Shortcut/components/CreateSh
 import StarterKit from "@tiptap/starter-kit"
 import { Editor } from "@tiptap/react"
 import { normalizeHTML } from "@/src/utils/helpers"
+import { useAtomValue } from "jotai"
+import { onlineUsersStore } from "@/src/store/onlineUsers/onlineUsersStore"
 
 interface SpaceOverviewProps {
   features?: SelectSpaceFeature[]
@@ -34,6 +36,7 @@ function SpaceOverview({
 }: SpaceOverviewProps) {
   const [isEditDetail, setIsEditDetail] = useState(false)
   const [content, setContent] = useState("")
+  const OnlineSpaceUsersCount = useAtomValue(onlineUsersStore.spaceOnlineUsers)
 
   const [overviewLoading, , , updatespaceDetails] =
     useServerAction(UpdateSpaceAction)
@@ -94,7 +97,8 @@ function SpaceOverview({
           type="space"
           entity={{
             slug: `${encodedChannelSlug}/spaces/${encodedSpaceSlug}`,
-            title: `${space?.channel?.channel_name} - ${space?.space_name}`
+            title: `${space?.space_name}`,
+            entity_id: space?.id
           }}
         />
       </div>
@@ -135,8 +139,12 @@ function SpaceOverview({
                   )}
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Clock className="w-4 h-4 text-blue-500 " />
-                    <span className="font-medium text-foreground">{0}</span>
-                    <span className="text-sm">active today</span>
+                    <span className="font-medium text-foreground">
+                      {OnlineSpaceUsersCount}
+                    </span>
+                    <span className="text-sm">
+                      active {OnlineSpaceUsersCount === 1 ? "user" : "users"}
+                    </span>
                   </div>
                 </div>
               </div>
