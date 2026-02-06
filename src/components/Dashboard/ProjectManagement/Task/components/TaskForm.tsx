@@ -34,8 +34,8 @@ import {
   TaskType
 } from "../../constants/projectManagment"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
-import "@/src/components/common/RichEditorFormat.css"
-import Tiptap from "@/src/components/common/TiptapRichEditor"
+import "@/src/components/common/Tiptap/RichEditorFormat.css"
+import Tiptap from "@/src/components/common/Tiptap/TiptapRichEditor"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import MultiSelect, {
   MultiSelectOption
@@ -731,9 +731,15 @@ export default function TaskForm({
                                 </AvatarFallback>
                               </Avatar>
 
-                              <span className={!assignee ? "text-muted-foreground" : ""}>
+                              <span
+                                className={
+                                  !assignee ? "text-muted-foreground" : ""
+                                }
+                              >
                                 {assignee
-                                  ? assignee.first_name + " " + assignee.last_name
+                                  ? assignee.first_name +
+                                    " " +
+                                    assignee.last_name
                                   : "Unassigned"}
                               </span>
                             </div>
@@ -788,8 +794,8 @@ export default function TaskForm({
                               <span>
                                 {assignor
                                   ? assignor.first_name +
-                                  " " +
-                                  assignor.last_name
+                                    " " +
+                                    assignor.last_name
                                   : "Select Option"}
                               </span>
                             </div>
@@ -879,8 +885,8 @@ export default function TaskForm({
                             : childTasks?.[0]?.task_type
                               ? getParentTypes(childTasks[0].task_type)
                               : projectTaskTypes.filter(
-                                (t) => t.key !== TaskType.SUBTASK
-                              )
+                                  (t) => t.key !== TaskType.SUBTASK
+                                )
 
                           return activeField === "issueType" ? (
                             <Select
