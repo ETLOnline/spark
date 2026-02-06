@@ -117,9 +117,14 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
   return (
     <>
       <CardContent
-        className={spaceId !== "shared" ? "cursor-pointer" : ""}
-        onClick={spaceId !== "shared" ? handleContentClick : undefined}
+        className={spaceId !== undefined ? "cursor-pointer" : ""}
+        onClick={spaceId !== undefined ? handleContentClick : undefined}
       >
+        {post.category && (
+          <Badge variant="outline" className="mb-2">
+            {post.category}
+          </Badge>
+        )}
         <p className="font-semibold mb-4">{post.content}</p>
         {post.files && post.files.length > 0 && (
           <div
