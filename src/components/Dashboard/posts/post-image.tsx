@@ -89,13 +89,13 @@ const ImagePost: React.FC<Props> = ({ post, spaceId }) => {
   return (
     <>
       <CardContent>
-        <p className="text-lg pb-5">{post.content}</p>
-
         {post.category && (
           <Badge variant="outline" className="mb-2">
             {post.category}
           </Badge>
         )}
+        <p className="text-lg pb-5">{post.content}</p>
+
         {/* Images */}
         {images.length > 0 && (
           <div
