@@ -301,9 +301,11 @@ function SpaceSidebar({ space }: Props) {
             ))
           ) : (
             <SidebarMenuItem className="p-2 text-sm text-gray-500">
-              {!isSpaceMember
-                ? "Join this Space to view Active Features."
-                : "No features available."}
+              {isSuperAdmin
+                ? "No features available."
+                : !isSpaceMember && !isLoading
+                  ? "Join this Space to view Active Features."
+                  : "No features available."}
             </SidebarMenuItem>
           )}
 
