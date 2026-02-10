@@ -41,69 +41,76 @@ export default function NavMain({
       <SidebarMenu>
         {items && items.length
           ? items.map((item) => {
-            const isActive = pathName.includes(item.url)
+              const isActive = pathName.includes(item.url)
 
-            return (
-              <Collapsible
-                key={item.url + item.title}
-                asChild
-                defaultOpen={item.isActive}
-              >
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    className={
-                      isActive
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : ""
-                    }
-                    asChild
-                    tooltip={item.title}
-                  >
-                    <Link href={item.url}>
-                      {item.icon ? <item.icon /> : null}
-                      <span>{item.title}</span>
-                      {item?.isPrivate ? (
-                        <Lock className="text-sm" height={10} />
-                      ) : null}
-                    </Link>
-                  </SidebarMenuButton>
-                  {item.items?.length ? (
-                    <>
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuAction className="data-[state=open]:rotate-90">
-                          <ChevronRight />
-                          <span className="sr-only">Toggle</span>
-                        </SidebarMenuAction>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
-                          {item.items?.map((subItem) => (
-                            <TooltipProvider key={subItem.title}>
-                              <Tooltip delayDuration={300}>
-                                <SidebarMenuSubItem>
-                                  <TooltipTrigger asChild>
-                                    <SidebarMenuSubButton asChild>
-                                      <Link href={subItem.url}>
-                                        {subItem.icon ? <subItem.icon /> : null}
-                                        <span className="truncate">{subItem.title}</span>
-                                      </Link>
-                                    </SidebarMenuSubButton>
-                                  </TooltipTrigger>
-                                </SidebarMenuSubItem>
-                                <TooltipContent side="right" className="bg-popover text-popover-foreground border">
-                                  {subItem.title}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          ))}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    </>
-                  ) : null}
-                </SidebarMenuItem>
-              </Collapsible>
-            )
-          })
+              return (
+                <Collapsible
+                  key={item.url + item.title}
+                  asChild
+                  defaultOpen={item.isActive}
+                >
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      className={
+                        isActive
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                          : ""
+                      }
+                      asChild
+                      tooltip={item.title}
+                    >
+                      <Link href={item.url}>
+                        {item.icon ? <item.icon /> : null}
+                        <span>{item.title}</span>
+                        {item?.isPrivate ? (
+                          <Lock className="text-sm" height={10} />
+                        ) : null}
+                      </Link>
+                    </SidebarMenuButton>
+                    {item.items?.length ? (
+                      <>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuAction className="data-[state=open]:rotate-90">
+                            <ChevronRight />
+                            <span className="sr-only">Toggle</span>
+                          </SidebarMenuAction>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {item.items?.map((subItem) => (
+                              <TooltipProvider key={subItem.title}>
+                                <Tooltip delayDuration={300}>
+                                  <SidebarMenuSubItem>
+                                    <TooltipTrigger asChild>
+                                      <SidebarMenuSubButton asChild>
+                                        <Link href={subItem.url}>
+                                          {subItem.icon ? (
+                                            <subItem.icon />
+                                          ) : null}
+                                          <span className="truncate">
+                                            {subItem.title}
+                                          </span>
+                                        </Link>
+                                      </SidebarMenuSubButton>
+                                    </TooltipTrigger>
+                                  </SidebarMenuSubItem>
+                                  <TooltipContent
+                                    side="right"
+                                    className="bg-popover text-popover-foreground border"
+                                  >
+                                    {subItem.title}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </>
+                    ) : null}
+                  </SidebarMenuItem>
+                </Collapsible>
+              )
+            })
           : null}
       </SidebarMenu>
     </SidebarGroup>

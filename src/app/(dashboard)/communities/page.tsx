@@ -214,11 +214,11 @@ export default function CommunitiesPage() {
   }, [])
 
   useEffect(() => {
-    const pusherChannel = pusherClient.subscribe("broadcast-entity-update");
-  
+    const pusherChannel = pusherClient.subscribe("broadcast-entity-update")
+
     const handleCommunityEdit = (updatedCommunity: SelectCommunity) => {
       setCommunitiesList((currentCommunities) => {
-        if (!currentCommunities) return null;
+        if (!currentCommunities) return null
         return {
           ...currentCommunities,
           communities: currentCommunities.communities.map((community) =>
@@ -232,17 +232,17 @@ export default function CommunitiesPage() {
                 ? { ...community, ...updatedCommunity }
                 : community
           )
-        };
-      });
-    };
-  
-    pusherChannel.bind("community-edit", handleCommunityEdit);
-  
+        }
+      })
+    }
+
+    pusherChannel.bind("community-edit", handleCommunityEdit)
+
     return () => {
-      pusherChannel.unbind("community-edit", handleCommunityEdit);
-      pusherClient.unsubscribe("broadcast-entity-update");
-    };
-  }, [setCommunitiesList]);
+      pusherChannel.unbind("community-edit", handleCommunityEdit)
+      pusherClient.unsubscribe("broadcast-entity-update")
+    }
+  }, [setCommunitiesList])
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value)

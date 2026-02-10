@@ -158,28 +158,28 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
 
     if (foldersToFetch.length === 0) return
 
-    const fetchAllFolderContents = async () => {
+    // Lazy load folder sizes in background without blocking
+    const timer = setTimeout(async () => {
       try {
-        const results = await Promise.all(
-          foldersToFetch.map((folder) => getDirContent(folder.id))
-        )
-
-        const newSizes: Record<number, number> = {}
-
-        results.forEach((res, index) => {
-          const folderId = foldersToFetch[index].id
-
-          const totalSize = (res?.data || [])
-            .filter((item: any) => item.entity_type === "file")
-            .reduce(
-              (sum: number, item: any) => sum + (item.file?.file_size ?? 0),
-              0
-            )
-
-          newSizes[folderId] = totalSize
-        })
-
-        setFolderSizes((prev) => ({ ...prev, ...newSizes }))
+        // Fetch sequentially to avoid overwhelming the server
+        for (const folder of foldersToFetch) {
+          try {
+            const res = await getDirContent(folder.id)
+            const totalSize = (res?.data || [])
+              .filter((item: any) => item.entity_type === "file")
+              .reduce(
+                (sum: number, item: any) => sum + (item.file?.file_size ?? 0),
+                0
+              )
+            setFolderSizes((prev) => ({ ...prev, [folder.id]: totalSize }))
+          } catch (error) {
+            toast({
+              variant: "destructive",
+              description: `Failed to fetch size for folder "${folder.name}"`,
+              duration: 3000
+            })
+          }
+        }
       } catch (error) {
         toast({
           variant: "destructive",
@@ -187,10 +187,10 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
           duration: 3000
         })
       }
-    }
+    }, 100)
 
-    fetchAllFolderContents()
-  }, [folderItems, folderSizes, getDirContent])
+    return () => clearTimeout(timer)
+  }, [folderItems, getDirContent, toast])
 
   return (
     <div className="p-4">
@@ -264,7 +264,9 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
               </div>
               {hasActions && (
                 <div className="flex items-center justify-center w-16">
-                  {(item.type === "file" || item.type === "folder") &&
+                  {(item.type === "file" ||
+                    item.type === "folder" ||
+                    authUser?.unique_id === item.created_by) &&
                     canDeleteFile(item) && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>

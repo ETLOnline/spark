@@ -34,7 +34,6 @@ async function layout({ children, params }: Props) {
 
   const currSpace = await GetSpaceByIdAction(currentProject.space_id)
 
-
   const projectStatusList = await GetTaskStatusAction(projectId)
 
   const projectUser = await getProjectUsers(projectId)

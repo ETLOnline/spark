@@ -218,9 +218,9 @@ export async function DeleteSpace(deletedSpaceData: SelectSpace) {
     const deletedSpace = await db
       .delete(spacesTable)
       .where(eq(spacesTable.id, deletedSpaceData.id))
-      await db
+    await db
       .delete(SpaceUsersTable)
-      .where(eq(SpaceUsersTable.space_id, deletedSpaceData.id));
+      .where(eq(SpaceUsersTable.space_id, deletedSpaceData.id))
     return deletedSpace
   } catch (e: any) {
     throw new Error(e.message)

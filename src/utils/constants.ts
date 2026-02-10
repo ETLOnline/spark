@@ -229,4 +229,4 @@ export enum Sendgrid {
   SENDGRID_TASK_UPDATE_TEMPLATE_ID = "d-d2538f8fe746453c9b264174ed580961"
 }
 
-export const EntityUpdateBroadCast = 'broadcast-entity-update'
+export const EntityUpdateBroadCast = "broadcast-entity-update"

@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect, Dispatch, SetStateAction, use } from "react"
 import { Button } from "@/src/components/ui/button"
-import Tiptap from "@/src/components/common/TiptapRichEditor"
+import Tiptap from "@/src/components/common/Tiptap/TiptapRichEditor"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"

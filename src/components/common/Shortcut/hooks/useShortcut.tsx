@@ -82,45 +82,67 @@ const useShortcut = () => {
 
   useEffect(() => {
     // ── EDIT channel (already working) ──────────────────────
-    const editChannel = pusherClient.subscribe("broadcast-entity-update-sidebar");
-    const deleteChannel = pusherClient.subscribe("broadcast-entity-update");
+    const editChannel = pusherClient.subscribe(
+      "broadcast-entity-update-sidebar"
+    )
+    const deleteChannel = pusherClient.subscribe("broadcast-entity-update")
 
-    const handleCommunityEdit = (updated: any) => setShortcutList(prev => prev.map(s => s.community_id === updated.id ? { ...s, community: updated } : s));
-    const handleChannelEdit  = (updated: any) => setShortcutList(prev => prev.map(s => s.channel_id  === updated.id ? { ...s, channel:   updated } : s));
-    const handleSpaceEdit    = (updated: any) => setShortcutList(prev => prev.map(s => s.space_id    === updated.id ? { ...s, space:     updated } : s));
-    const handleProjectEdit  = (updated: any) => setShortcutList(prev => prev.map(s => s.project_id  === updated.id ? { ...s, project:   updated } : s));
+    const handleCommunityEdit = (updated: any) =>
+      setShortcutList((prev) =>
+        prev.map((s) =>
+          s.community_id === updated.id ? { ...s, community: updated } : s
+        )
+      )
+    const handleChannelEdit = (updated: any) =>
+      setShortcutList((prev) =>
+        prev.map((s) =>
+          s.channel_id === updated.id ? { ...s, channel: updated } : s
+        )
+      )
+    const handleSpaceEdit = (updated: any) =>
+      setShortcutList((prev) =>
+        prev.map((s) =>
+          s.space_id === updated.id ? { ...s, space: updated } : s
+        )
+      )
+    const handleProjectEdit = (updated: any) =>
+      setShortcutList((prev) =>
+        prev.map((s) =>
+          s.project_id === updated.id ? { ...s, project: updated } : s
+        )
+      )
 
-    editChannel.bind("community-edit", handleCommunityEdit);
-    editChannel.bind("channel-edit",   handleChannelEdit);
-    editChannel.bind("space-edit",     handleSpaceEdit);
-    editChannel.bind("project-edit",   handleProjectEdit);
+    editChannel.bind("community-edit", handleCommunityEdit)
+    editChannel.bind("channel-edit", handleChannelEdit)
+    editChannel.bind("space-edit", handleSpaceEdit)
+    editChannel.bind("project-edit", handleProjectEdit)
 
     const handleCascadeDelete = async () => {
-      const freshData = await getUserShortcuts();
+      const freshData = await getUserShortcuts()
       if (freshData?.success && freshData.data) {
         const updated = generateFullUrl(freshData.data)
-        setShortcutList(updated);
+        setShortcutList(updated)
       }
-    };
+    }
 
-    deleteChannel.bind("community-del", handleCascadeDelete);
-    deleteChannel.bind("channel-del",   handleCascadeDelete);
-    deleteChannel.bind("space-del",     handleCascadeDelete);
-    deleteChannel.bind("project-del",   handleCascadeDelete);
+    deleteChannel.bind("community-del", handleCascadeDelete)
+    deleteChannel.bind("channel-del", handleCascadeDelete)
+    deleteChannel.bind("space-del", handleCascadeDelete)
+    deleteChannel.bind("project-del", handleCascadeDelete)
 
     // ── cleanup ─────────────────────────────────────────────
     return () => {
-      editChannel.unbind("community-edit", handleCommunityEdit);
-      editChannel.unbind("channel-edit",   handleChannelEdit);
-      editChannel.unbind("space-edit",     handleSpaceEdit);
-      editChannel.unbind("project-edit",   handleProjectEdit);
+      editChannel.unbind("community-edit", handleCommunityEdit)
+      editChannel.unbind("channel-edit", handleChannelEdit)
+      editChannel.unbind("space-edit", handleSpaceEdit)
+      editChannel.unbind("project-edit", handleProjectEdit)
 
-      deleteChannel.unbind("community-del", handleCascadeDelete);
-      deleteChannel.unbind("channel-del",   handleCascadeDelete);
-      deleteChannel.unbind("space-del",     handleCascadeDelete);
-      deleteChannel.unbind("project-del",   handleCascadeDelete);
-    };
-  }, [setShortcutList, getUserShortcuts]);
+      deleteChannel.unbind("community-del", handleCascadeDelete)
+      deleteChannel.unbind("channel-del", handleCascadeDelete)
+      deleteChannel.unbind("space-del", handleCascadeDelete)
+      deleteChannel.unbind("project-del", handleCascadeDelete)
+    }
+  }, [setShortcutList, getUserShortcuts])
 
   useEffect(() => {
     if (shortcutList && shortcutList.length > 0) {
@@ -165,9 +187,10 @@ const useShortcut = () => {
       } else if (shortcut.type === "channel" && s.channel?.channel_slug) {
         slugToUse = s.channel.channel_slug
       } else if (shortcut.type === "space" && s.space?.space_slug) {
-        slugToUse = s.space.space_slug
+        slugToUse = `${s.space.channel.channel_slug}/spaces/${s.space.space_slug}`
+        console.log(s.space, "slugToUse")
       } else if (shortcut.type === "project" && s.project?.project_slug) {
-        slugToUse = s.project.project_slug
+        slugToUse = s.project.id
       }
 
       const encodedUrl = encodeURIComponent(slugToUse)
@@ -182,7 +205,7 @@ const useShortcut = () => {
           shortcut.url = `/communities/${encodedUrl}`
           break
         case "project":
-          shortcut.url = `/project/${encodedUrl}/board`
+          shortcut.url = `/project/${slugToUse}/board`
           break
         default:
           break

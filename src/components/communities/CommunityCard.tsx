@@ -208,7 +208,7 @@ export default function CommunityCard({
                         entity={{
                           slug: community.slug ?? "",
                           title: `${community.title}`,
-                          entity_id: community.id ?? "",
+                          entity_id: community.id ?? ""
                         }}
                         ctaType="menuItem"
                       />
