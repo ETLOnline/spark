@@ -45,11 +45,28 @@ interface Props {
 }
 
 const userCertificateSchema = z.object({
-  title: z.string().min(1, "Required"),
-  institute: z.string().min(1, "Required"),
-  year: z.string().refine((val) => moment(val, "YYYY", true).isValid(), {
-    message: "Invalid year"
-  })
+  title: z
+    .string()
+    .min(1, "Certificate name is required")
+    .max(100, "Certificate name cannot exceed 100 characters"),
+
+  institute: z
+    .string()
+    .min(1, "Institute name is required")
+    .max(100, "Institute name cannot exceed 100 characters"),
+
+  year: z
+    .string()
+    .min(1, "Year is required")
+    .refine((val) => moment(val, "YYYY", true).isValid(), {
+      message: "Invalid year format"
+    })
+    .refine((val) => moment(val, "YYYY", true).year() >= 1990, {
+      message: "Year must be 1990 or later"
+    })
+    .refine((val) => moment(val, "YYYY", true).year() <= moment().year(), {
+      message: "Year cannot be in the future"
+    })
 })
 
 const CertificateModal = ({
@@ -197,6 +214,15 @@ const CertificateModal = ({
       isDirty: isChanged,
       onClose: () => setIsDialogOpen(false)
     })
+  const title = form.watch("title")
+  const institute = form.watch("institute")
+  const year = form.watch("year")
+
+  useEffect(() => {
+    if (title || institute || year) {
+      form.trigger(["title", "institute", "year"])
+    }
+  }, [title, institute, year, isDialogOpen])
 
   return (
     <>
