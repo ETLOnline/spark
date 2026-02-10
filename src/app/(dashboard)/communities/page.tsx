@@ -31,6 +31,7 @@ import {
   PaginationNext,
   PaginationPrevious
 } from "@/src/components/ui/pagination"
+import pusherClient from "@/src/services/realtime/PusherClient"
 
 export default function CommunitiesPage() {
   const [communitiesList, setCommunitiesList] =
@@ -211,6 +212,37 @@ export default function CommunitiesPage() {
 
     fetchCategories()
   }, [])
+
+  useEffect(() => {
+    const pusherChannel = pusherClient.subscribe("broadcast-entity-update")
+
+    const handleCommunityEdit = (updatedCommunity: SelectCommunity) => {
+      setCommunitiesList((currentCommunities) => {
+        if (!currentCommunities) return null
+        return {
+          ...currentCommunities,
+          communities: currentCommunities.communities.map((community) =>
+            community.id === updatedCommunity.id
+              ? { ...community, ...updatedCommunity }
+              : community
+          ),
+          joinedCommunities: currentCommunities.joinedCommunities.map(
+            (community) =>
+              community.id === updatedCommunity.id
+                ? { ...community, ...updatedCommunity }
+                : community
+          )
+        }
+      })
+    }
+
+    pusherChannel.bind("community-edit", handleCommunityEdit)
+
+    return () => {
+      pusherChannel.unbind("community-edit", handleCommunityEdit)
+      pusherClient.unsubscribe("broadcast-entity-update")
+    }
+  }, [setCommunitiesList])
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value)

@@ -67,6 +67,8 @@ import Image from "next/image"
 import clsx from "clsx"
 import PrivatePage from "../common/Overlay/PrivatePage"
 import pusherClient from "@/src/services/realtime/PusherClient"
+import { EntityUpdateBroadCast } from "@/src/utils/constants"
+import { onlineUsersStore } from "@/src/store/onlineUsers/onlineUsersStore"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -93,6 +95,7 @@ export default function CommunityDetailsClient({
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
+  const onlineUsers = useAtomValue(onlineUsersStore.communityOnlineUsers)
   const [joinLoading, joinResult, joinError, attachCommunityUser] =
     useServerAction(AttachCommunityUserAction)
   const [leaveLoading, leaveResult, leaveError, leaveCommunity] =
@@ -188,9 +191,7 @@ export default function CommunityDetailsClient({
   ])
 
   useEffect(() => {
-    const pusherChannel = pusherClient.subscribe(
-      "broadcast-channels-spaces-update"
-    )
+    const pusherChannel = pusherClient.subscribe(EntityUpdateBroadCast)
 
     pusherChannel.bind("channel-add", (newChannel: SelectChannel) => {
       if (newChannel.community_id === community.id) {
@@ -212,7 +213,7 @@ export default function CommunityDetailsClient({
 
     return () => {
       pusherChannel.unbind_all()
-      pusherClient.unsubscribe("broadcast-channels-spaces-update")
+      pusherClient.unsubscribe("broadcast-entity-update")
     }
   }, [community.id])
 
@@ -383,7 +384,7 @@ export default function CommunityDetailsClient({
                     </div>
                     <div className="flex items-center gap-1">
                       <span>•</span>
-                      <span>{community?.onlineNow ?? 0} online</span>
+                      <span>{onlineUsers} online</span>
                     </div>
                     <Badge
                       variant="outline"
@@ -452,7 +453,8 @@ export default function CommunityDetailsClient({
                   type="community"
                   entity={{
                     slug: community?.slug ?? "",
-                    title: community?.title ?? ""
+                    title: community?.title ?? "",
+                    entity_id: community?.id ?? ""
                   }}
                 />
               </div>
@@ -474,7 +476,7 @@ export default function CommunityDetailsClient({
               <span>members</span>
             </div>
             <span>•</span>
-            <span>{community?.onlineNow ?? 0} online</span>
+            <span>{onlineUsers} online</span>
           </div>
           <Badge variant="outline" className="text-xs">
             {community?.category}
@@ -576,18 +578,7 @@ export default function CommunityDetailsClient({
                         <span className="text-xs lg:text-sm">Online Now</span>
                       </div>
                       <span className="font-bold text-sm lg:text-base">
-                        {community.onlineNow}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <MessageCircle className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs lg:text-sm">
-                          Total Messages
-                        </span>
-                      </div>
-                      <span className="font-bold text-sm lg:text-base">
-                        {community.totalMessages?.toLocaleString?.() ?? 0}
+                        {onlineUsers}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -697,16 +688,7 @@ export default function CommunityDetailsClient({
                     <span className="text-xs lg:text-sm">Online Now</span>
                   </div>
                   <span className="font-bold text-sm lg:text-base">
-                    {community?.onlineNow ?? 0}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <MessageCircle className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-xs lg:text-sm">Total Messages</span>
-                  </div>
-                  <span className="font-bold text-sm lg:text-base">
-                    {community?.totalMessages?.toLocaleString?.() ?? 0}
+                    {onlineUsers}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">

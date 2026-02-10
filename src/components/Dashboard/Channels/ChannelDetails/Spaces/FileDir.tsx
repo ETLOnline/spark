@@ -29,8 +29,9 @@ import {
 import { useParams } from "next/navigation"
 import { DirItem } from "./types/spaces-types"
 import { formatFileSize, slugify } from "@/src/utils/helpers"
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
+import { userStore } from "@/src/store/user/userStore"
 import { SelectSpaceFileDirectory } from "@/src/db/schema"
 import { useToast } from "@/src/hooks/use-toast"
 import DirView from "./DirView"
@@ -62,6 +63,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
   const [dir, setDir] = useAtom(spaceStore.dir)
   const [currentPath, setCurrentPath] = useAtom(spaceStore.currDirPath)
   const [currSpace, setCurrSpace] = useAtom(spaceStore.selectedSpace)
+  const authUser = useAtomValue(userStore.AuthUser)
 
   const [fileData, setFileData] = useState<FileData | null>(null)
 
@@ -215,7 +217,8 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
           currentPath === "/"
             ? `/${newFolderName.current}`
             : `${currentPath}/${newFolderName.current}`,
-        children: []
+        children: [],
+        created_by: authUser?.unique_id
       }
 
       if (currentPath === "/") {
@@ -241,6 +244,9 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
 
   const navigateToFolder = async (path: string) => {
     const selectedFolder = findItemByPath(dir, path)
+
+    // Set path immediately for instant navigation
+    setCurrentPath(path)
 
     if (selectedFolder && selectedFolder.type === "folder") {
       try {
@@ -287,11 +293,13 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
           })
         }
       } catch (error) {
-        console.error("Error fetching folder contents:", error)
+        toast({
+          variant: "destructive",
+          description: "Failed to load folder contents",
+          duration: 3000
+        })
       }
     }
-
-    setCurrentPath(path)
   }
 
   const processFileForUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

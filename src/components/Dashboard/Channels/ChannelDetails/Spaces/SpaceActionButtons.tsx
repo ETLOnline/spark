@@ -47,8 +47,9 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
   const [joinLoading, joinResult, joinError, joinSpace] = useServerAction(
     AttachSpaceUserAction
   )
-  const [leaveLoading, leaveResult, leaveError, leaveSpace] =
-    useServerAction(DetachSpaceUserAction)
+  const [leaveLoading, leaveResult, leaveError, leaveSpace] = useServerAction(
+    DetachSpaceUserAction
+  )
 
   const authUser = useAtomValue(userStore.AuthUser)
   const currentUserId = authUser?.unique_id
@@ -88,13 +89,13 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
   }
 
   const handleLeaveSpace = async () => {
-    if(!authUser?.roles) {
+    if (!authUser?.roles) {
       toast({
         title: "Error",
         description: "Failed to leave Space",
         variant: "destructive"
       })
-      return;
+      return
     }
     const role_id = getRoleIdOnMatch(authUser?.roles, space.id)
     if (space.id && currentUserId && role_id) {
@@ -239,7 +240,8 @@ function SpacesActionButtons({ space, setIsChannelMember }: Props) {
             type="space"
             entity={{
               slug: `${encodeChannelSlug}/spaces/${encodedSpaceSlug}`,
-              title: `${space?.channel?.channel_name} - ${space?.space_name}`
+              title: `${space?.space_name}`,
+              entity_id: space?.id
             }}
             ctaType="menuItem"
           />

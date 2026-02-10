@@ -46,13 +46,13 @@ const DirNav: React.FC<DirNavProps> = ({ navigateToFolder }) => {
         )
       })
 
-  const navigateUp = () => {
+  const navigateUp = async () => {
     if (currentPath === "/") return
 
     const pathParts = currentPath.split("/")
     pathParts.pop()
     const parentPath = pathParts.join("/") || "/"
-    setCurrentPath(parentPath)
+    await navigateToFolder(parentPath)
   }
 
   return (

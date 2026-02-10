@@ -14,6 +14,11 @@ import { CommunityDetailData } from "../db/data-access/communities/query"
 import pusherClient from "../services/realtime/PusherClient"
 import { FindUserByUniqueIdAction } from "../server-actions/User/FindUserByUniqueIdAction"
 import { createAbsoluteUrl, getSiteLogoUrl } from "./clientHelper"
+import StarterKit from "@tiptap/starter-kit"
+import Link from "@tiptap/extension-link"
+import { Editor } from "@tiptap/react"
+import { createSchemaExtensions } from "../components/common/Tiptap/tiptapSchemaExtensions"
+
 export type RoleWithPermissions = {
   id: number
   name: string
@@ -394,4 +399,20 @@ export const formatContent = (content: string) => {
     .replace(/<\/p>/g, "\n")
     .replace(/<br\s*\/?>/g, "\n")
     .trim()
+}
+
+export const normalizeHTML = (html: string) => {
+  const editor = new Editor({
+    editable: false,
+    content: html,
+    extensions: createSchemaExtensions({
+      clickableLinks: true,
+      enableMentions: true
+    })
+  })
+
+  const normalized = editor.getHTML()
+  editor.destroy()
+
+  return normalized
 }

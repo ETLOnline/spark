@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronRight, GanttChart, Lock, type LucideIcon } from "lucide-react"
+import { ChevronRight, Lock, Type as type, type LucideIcon } from "lucide-react"
 import {
   Collapsible,
   CollapsibleContent,
@@ -17,6 +17,12 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem
 } from "@/src/components/ui/sidebar"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "../../ui/tooltip"
 import Link from "next/link"
 import { NavItem } from "./nav-types"
 import { usePathname } from "next/navigation"
@@ -72,14 +78,30 @@ export default function NavMain({
                         <CollapsibleContent>
                           <SidebarMenuSub>
                             {item.items?.map((subItem) => (
-                              <SidebarMenuSubItem key={subItem.title}>
-                                <SidebarMenuSubButton asChild>
-                                  <Link href={subItem.url}>
-                                    {subItem.icon ? <subItem.icon /> : null}
-                                    <span>{subItem.title}</span>
-                                  </Link>
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
+                              <TooltipProvider key={subItem.title}>
+                                <Tooltip delayDuration={300}>
+                                  <SidebarMenuSubItem>
+                                    <TooltipTrigger asChild>
+                                      <SidebarMenuSubButton asChild>
+                                        <Link href={subItem.url}>
+                                          {subItem.icon ? (
+                                            <subItem.icon />
+                                          ) : null}
+                                          <span className="truncate">
+                                            {subItem.title}
+                                          </span>
+                                        </Link>
+                                      </SidebarMenuSubButton>
+                                    </TooltipTrigger>
+                                  </SidebarMenuSubItem>
+                                  <TooltipContent
+                                    side="right"
+                                    className="bg-popover text-popover-foreground border"
+                                  >
+                                    {subItem.title}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             ))}
                           </SidebarMenuSub>
                         </CollapsibleContent>
