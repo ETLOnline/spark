@@ -298,10 +298,6 @@ export default function RichTextEditor({
                       mentionedUserIds.add(node.attrs.id)
                     }
                   })
-                  console.log(
-                    "Already mentioned user IDs:",
-                    Array.from(mentionedUserIds)
-                  )
                 }
               } catch (error) {
                 console.warn("Could not check for existing mentions:", error)
@@ -310,11 +306,6 @@ export default function RichTextEditor({
               const filtered = mentionUsers
                 .filter((user) => {
                   if (mentionedUserIds.has(user.unique_id)) {
-                    console.log(
-                      "Skipping already mentioned user:",
-                      user.first_name,
-                      user.last_name
-                    )
                     return false
                   }
                   const fullName =
