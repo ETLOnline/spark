@@ -160,6 +160,25 @@ export const CreateComment = async (
   })
 }
 
+export const UpdateComment = async (
+  commentId: number,
+  newContent: string
+) => {
+  return await db.transaction(async (tx) => {
+    // Update the comment content
+    const updatedComment = await tx
+      .update(commentsTable)
+      .set({ 
+        content: newContent,
+        updated_at: new Date().toISOString()
+      })
+      .where(eq(commentsTable.id, commentId))
+      .returning()
+
+    return { ...updatedComment[0] }
+  })
+}
+
 export const VotePoll = async (vote: InsertPollVote, voteCount: number) => {
   return await db.transaction(async (tx) => {
     // Insert vote record

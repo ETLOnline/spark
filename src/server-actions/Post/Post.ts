@@ -18,7 +18,8 @@ import {
   UpdatePost,
   RemoveHashtagFromPostLink,
   UpdatePollOption,
-  DeletePollOption
+  DeletePollOption,
+  UpdateComment
 } from "@/src/db/data-access/post/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
@@ -432,6 +433,29 @@ export const CreateCommentAction = CreateServerAction(
             space
           )
         }
+        return { success: true, data: { ...commentData, commentor: user } }
+      } else {
+        throw new Error("Unauthorized", { cause: 401 })
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error
+      }
+    }
+  }
+)
+export const UpdateCommentAction = CreateServerAction(
+  true,
+  async (
+    commentId: number,
+    newContent: string
+  ) => {
+    try {
+      const user = await AuthUserAction()
+      if (user?.unique_id) {
+        const commentData = await UpdateComment(  commentId, newContent)
+       
         return { success: true, data: { ...commentData, commentor: user } }
       } else {
         throw new Error("Unauthorized", { cause: 401 })

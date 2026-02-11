@@ -3,7 +3,7 @@ import { Label } from "../../ui/label"
 import { RadioGroupItem } from "../../ui/radio-group"
 import { Button } from "../../ui/button"
 import { SelectComment, SelectPollPost } from "@/src/db/schema"
-import { VotePollAction } from "@/src/server-actions/Post/Post"
+import { VotePollAction, UpdateCommentAction } from "@/src/server-actions/Post/Post"
 import { useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
@@ -29,6 +29,7 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
   const [selectedOption, setSelectedOption] = useState<string>("")
   const [tempSelectedOption, setTempSelectedOption] = useState<string>("")
   const [hasVoted, setHasVoted] = useState<boolean>(false)
+  const [editingComment, setEditingComment] = useState<SelectComment | null>(null)
   const { navigateToPost } = usePostNavigation()
 
   const setPosts = useSetAtom(postStore.posts)
@@ -36,6 +37,9 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
 
   const [votePollLoading, votePollData, votePollError, votePoll] =
     useServerAction(VotePollAction)
+
+  const [updateCommentLoading, updatedComment, updateCommentError, updateComment] =
+    useServerAction(UpdateCommentAction)
 
   const { toast } = useToast()
 
@@ -113,6 +117,52 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
       })
     }
   }
+
+  const handleEditComment = (comment: SelectComment) => {
+    setEditingComment(comment)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingComment(null)
+  }
+
+  const handleUpdateComment = async (commentId: number, newContent: string) => {
+    try {
+      const response = await updateComment(commentId, newContent)
+      if (response?.data) {
+        setPosts((posts) =>
+          posts.map((p) =>
+            p.id === post.id
+              ? {
+                  ...p,
+                  postComments: (p.postComments as SelectComment[]).map((c) =>
+                    c.id === commentId ? { ...c, content: newContent } : c
+                  )
+                }
+              : p
+          )
+        )
+        toast({
+          title: "Comment updated",
+          description: "Your comment has been updated successfully"
+        })
+        setEditingComment(null)
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Error updating comment please try again!"
+        })
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Error updating comment please try again!"
+      })
+    }
+  }
+
   const isSingle = post.files?.length === 1
   return (
     <>
@@ -205,11 +255,17 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
           spaceId={spaceId}
         />
         <Separator />
-        <PostCommentsSection comments={post.postComments || []} />
+        <PostCommentsSection
+          comments={post.postComments || []}
+          onEditComment={handleEditComment}
+        />
         <PostCommentForm
           postId={post.id}
           comments={post.comments}
           spaceId={spaceId}
+          editingComment={editingComment}
+          onCancelEdit={handleCancelEdit}
+          onUpdateComment={handleUpdateComment}
         />
       </CardFooter>
     </>
