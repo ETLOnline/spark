@@ -308,11 +308,11 @@ function SpaceSidebar({ space }: Props) {
                   <Loader size={LoaderSizes.sm} />
                 </div>
               ) : isSuperAdmin || spaceFeatures.length === 0 ? (
-                "No features available."
+                "No active feature."
               ) : !isSpaceMember ? (
                 "Join this Space to view Active Features."
               ) : (
-                "No features available."
+                "No active feature."
               )}
             </SidebarMenuItem>
           )}
