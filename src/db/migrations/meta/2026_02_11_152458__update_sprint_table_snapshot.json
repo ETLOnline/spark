@@ -1,6 +1,6 @@
 {
-  "id": "87cbfc62-1c1b-47b6-b841-263e849287af",
-  "prevId": "07f3a383-7928-4321-bb2a-0b5bfed22da2",
+  "id": "b39c30e3-5a83-4ee2-b080-8b5ba449c0e7",
+  "prevId": "97dbba6a-a299-4452-b58c-5c315ad2dc5f",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -288,6 +288,12 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
         },
         "start_date": {
           "name": "start_date",
@@ -1725,6 +1731,23 @@
       "name": "poll_options",
       "schema": "",
       "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "poll_options_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "post_id": {
           "name": "post_id",
           "type": "varchar",

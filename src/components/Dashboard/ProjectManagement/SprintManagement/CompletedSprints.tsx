@@ -8,7 +8,7 @@ import SprintCardPage from "./SprintCard"
 import NoDataCard from "../../Channels/ChannelDetails/NoDataCard"
 import { SelectTask } from "@/src/db/schema"
 import { ChartGantt } from "lucide-react"
-import { useParams, useSearchParams } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import PaginationComponent from "@/src/components/common/Pagination"
@@ -16,6 +16,7 @@ import { useAtom } from "jotai"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import { TaskModal } from "../Task/components/TaskModal"
 import { sprintStore } from "@/src/store/sprint/sprintsStore"
+import { Button } from "@/src/components/ui/button"
 
 function CompletedSprints() {
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
@@ -27,10 +28,13 @@ function CompletedSprints() {
   const [isTaskModalOpen, setIsTaskModalOpen] = useAtom(
     taskStore.isTaskModalOpen
   )
+  const [isNavigating, setIsNavigating] = useState(false)
 
   const projectId = useParams().id as string
 
   const searchParams = useSearchParams()
+
+  const router = useRouter()
 
   useEffect(() => {
     if (searchParams.get("page")) {
@@ -70,10 +74,22 @@ function CompletedSprints() {
     if (sprintList.length > 0) getSprintTasks()
   }, [sprintList])
 
+  const handleGoToCurrentSprints = () => {
+    setIsNavigating(true)
+    router.push(`/project/${projectId}/sprint`)
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-bold">Sprints History</h2>
+        <Button
+          loading={isNavigating}
+          variant="outline"
+          onClick={handleGoToCurrentSprints}
+        >
+          Go to Current Sprints
+        </Button>
       </div>
 
       <div className="space-y-4 print:space-y-3">
