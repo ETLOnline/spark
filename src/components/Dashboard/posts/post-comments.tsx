@@ -25,7 +25,7 @@ type Props = {
 const PostComments: React.FC<Props> = ({ comment, onEdit }) => {
   const name = `${comment.commentor.first_name} ${comment.commentor.last_name}`
   const user = useAtomValue(userStore.AuthUser)
-  const isOwnComment = true // user?.unique_id === comment.commentor.unique_id
+  const isOwnComment = user?.unique_id === comment.commentor.unique_id
 
   const initials = `${comment.commentor.first_name?.[0] ?? ""}${comment.commentor.last_name?.[0] ?? ""}`
 
