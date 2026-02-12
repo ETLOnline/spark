@@ -1,1 +1,0 @@
-ALTER TABLE "sprints" ADD COLUMN "slug" varchar;

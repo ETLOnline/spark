@@ -1156,7 +1156,6 @@ export const SprintTable = pgTable("sprints", {
     .primaryKey()
     .$defaultFn(() => randomUUID()),
   title: varchar().notNull(),
-  slug: varchar(),
   start_date: varchar().notNull(),
   end_date: varchar().notNull(),
   projectId: varchar().notNull(),
