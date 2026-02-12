@@ -18,6 +18,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateSprintAction,
   GetSprintCountAction,
+  IsSprintSlugAvailableAction,
   UpdateSprintAction
 } from "@/src/server-actions/Sprint/sprint"
 import { GetProjectByIdAction } from "@/src/server-actions/ProjectManagement/projectManagement"
@@ -30,6 +31,11 @@ import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { set, z } from "zod"
 import { SprintStatus } from "../constants/projectManagment"
+import { useDebouncedCallback } from "use-debounce"
+import { slugify } from "@/src/utils/helpers"
+import Loader from "@/src/components/common/Loader/Loader"
+import { CircleCheck, CircleXIcon } from "lucide-react"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
 
 interface Props {
   isCreateSprintOpen: boolean
@@ -44,6 +50,7 @@ const createSprintSchema = (projectDates?: {
   z
     .object({
       title: z.string().min(1, "Required").max(50, "Title is too long"),
+      slug: z.string().min(1, "Required").max(50, "Slug is too long"),
       start_date: z
         .string()
         .min(1, "Required")
@@ -121,6 +128,11 @@ function CreateSprintModal({
   const [updateSprintLoading, , , UpdateSprint] =
     useServerAction(UpdateSprintAction)
 
+  const [slugAvailableMessage, setslugAvailableMessage] = useState("")
+  const [isSlugAvailableLoading, , , isSlugAvailable] = useServerAction(
+    IsSprintSlugAvailableAction
+  )
+
   const projectId = useParams().id as string
 
   const [projectDates, setProjectDates] = useState<{
@@ -187,6 +199,53 @@ function CreateSprintModal({
       form.setValue("end_date", "")
     }
   }, [selectedSprint, isCreateSprintOpen])
+
+  const debouncedCheckSlugAvailability = useDebouncedCallback(
+    async (
+      slug: string,
+      onAvailable?: () => void,
+      onNotAvailable?: () => void
+    ) => {
+      try {
+        const result = await isSlugAvailable(slug, projectId)
+
+        if (result && result.data) {
+          if (onAvailable) onAvailable()
+        } else {
+          if (onNotAvailable) onNotAvailable()
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    },
+    1000 // Debounce delay in milliseconds
+  )
+
+  useEffect(() => {
+    const value = form.getValues("title")?.trim() || ""
+    const slug = value.replaceAll(" ", "-").toLowerCase()
+    const generatedSlug = slugify(slug)
+
+    if (value && selectedSprint?.slug !== generatedSlug) {
+      debouncedCheckSlugAvailability(
+        generatedSlug,
+        () => {
+          form.clearErrors("slug")
+          setslugAvailableMessage(`${generatedSlug} is available`)
+        },
+        () => {
+          form.setError("slug", {
+            type: "manual",
+            message: `${generatedSlug} is already taken`
+          })
+          setslugAvailableMessage("")
+        }
+      )
+    } else {
+      setslugAvailableMessage("")
+    }
+    form.setValue("slug", generatedSlug)
+  }, [form.watch("title")])
 
   function submitData(data: any) {
     data.title = data.title.trim()
@@ -290,6 +349,7 @@ function CreateSprintModal({
           </DialogHeader>
           <form onSubmit={form.handleSubmit(submitData)}>
             <div className="grid gap-4 py-4">
+              {/* Title */}
               <div className="flex flex-col gap-2">
                 <Label htmlFor="title">Name</Label>
 
@@ -316,6 +376,53 @@ function CreateSprintModal({
                   </div>
                 </div>
               </div>
+
+              {/* Slug */}
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="slug">Slug</Label>
+
+                <div>
+                  <Controller
+                    name="slug"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input
+                        id="slug"
+                        {...field}
+                        disabled
+                        className="col-span-3 "
+                      />
+                    )}
+                  />
+                  <div>
+                    {formError.slug && !isSlugAvailableLoading && (
+                      <div className="flex items-center text-red-500 gap-x-2 pt-1">
+                        <CircleXIcon className="h-4 w-4" />
+                        <span className="text-sm">
+                          {String(formError.slug.message)}
+                        </span>
+                      </div>
+                    )}
+                    {isSlugAvailableLoading && (
+                      <div className="flex items-center gap-x-2 pt-1">
+                        <Loader size={LoaderSizes.sm} />
+                        <span className="text-gray-500 text-sm">
+                          Checking slug availability
+                        </span>
+                      </div>
+                    )}
+                    {slugAvailableMessage && !isSlugAvailableLoading && (
+                      <div className="flex items-center gap-x-2 pt-1 text-green-500">
+                        <CircleCheck className="h-4 w-4" />
+                        <span className="text-sm">{slugAvailableMessage}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Start Date */}
               <div className="flex flex-col gap-2">
                 <Label htmlFor="start_date">Start Date</Label>
 
@@ -349,6 +456,8 @@ function CreateSprintModal({
                   </div>
                 </div>
               </div>
+
+              {/* End Date */}
               <div className="flex flex-col gap-2">
                 <Label htmlFor="end_date">End Date</Label>
 
@@ -386,7 +495,12 @@ function CreateSprintModal({
             </div>
 
             <DialogFooter>
-              <Button loading={createSprintLoading || updateSprintLoading}>
+              <Button
+                loading={createSprintLoading || updateSprintLoading}
+                disabled={
+                  isSlugAvailableLoading || formError.slug ? true : false
+                }
+              >
                 {selectedSprint ? "Save Changes" : "Create Sprint"}
               </Button>
             </DialogFooter>

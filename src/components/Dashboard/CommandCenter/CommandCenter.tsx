@@ -92,12 +92,13 @@ export default function CommandCenter() {
         />
 
         <CommandList>
-          {loading && (
+          {loading ? (
             <div className="w-full flex justify-center p-2">
               <Loader />
             </div>
+          ) : (
+            <CommandEmpty>No results found.</CommandEmpty>
           )}
-          <CommandEmpty>No results found.</CommandEmpty>
 
           <CommandGroup heading="Users">
             {peopleList.map((person) => (
