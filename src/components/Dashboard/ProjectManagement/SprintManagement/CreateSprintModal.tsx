@@ -497,7 +497,9 @@ function CreateSprintModal({
             <DialogFooter>
               <Button
                 loading={createSprintLoading || updateSprintLoading}
-                disabled={isSlugAvailableLoading}
+                disabled={
+                  isSlugAvailableLoading || formError.slug ? true : false
+                }
               >
                 {selectedSprint ? "Save Changes" : "Create Sprint"}
               </Button>

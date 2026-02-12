@@ -88,7 +88,7 @@ function CompletedSprints() {
           variant="outline"
           onClick={handleGoToCurrentSprints}
         >
-          Go to Current Sprints
+          Back to Active Sprints
         </Button>
       </div>
 
