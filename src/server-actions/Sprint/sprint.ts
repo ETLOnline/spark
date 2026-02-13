@@ -5,7 +5,6 @@ import {
   DeleteSprint,
   getSprintBurnDown,
   getSprints,
-  isSprintSlugAvailable,
   sprintCount,
   sprintQueryFilters,
   UpdateSprint
@@ -108,18 +107,6 @@ export const getSprintBurnDownAction = CreateServerAction(
     try {
       const sprint = await getSprintBurnDown(sprintId)
       return { success: true, data: sprint }
-    } catch (error) {
-      return { error: error }
-    }
-  }
-)
-
-export const IsSprintSlugAvailableAction = CreateServerAction(
-  true,
-  async (slug: string, projectId: string) => {
-    try {
-      const slugAvailable = await isSprintSlugAvailable(slug, projectId)
-      return { success: true, data: slugAvailable }
     } catch (error) {
       return { error: error }
     }

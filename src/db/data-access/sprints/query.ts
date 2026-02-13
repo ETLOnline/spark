@@ -180,20 +180,3 @@ export const getRecentlyUpdatedSprints = async () => {
     throw new Error(e.message)
   }
 }
-
-export const isSprintSlugAvailable = async (
-  slug: string,
-  projectId: string
-) => {
-  try {
-    const sprintWithSlug = await db
-      .select()
-      .from(SprintTable)
-      .where(
-        and(eq(SprintTable.slug, slug), eq(SprintTable.projectId, projectId))
-      )
-    return !sprintWithSlug.length
-  } catch (e: any) {
-    throw new Error(e.message)
-  }
-}
