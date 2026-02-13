@@ -8,24 +8,17 @@ import CharacterCount from "@tiptap/extension-character-count"
 import Image from "@tiptap/extension-image"
 import HardBreak from "@tiptap/extension-hard-break"
 import Placeholder from "@tiptap/extension-placeholder"
-import Mention from "@tiptap/extension-mention"
 
 export interface SchemaExtensionOptions {
   limit?: number
   placeholder?: string
-  enableMentions?: boolean
   clickableLinks?: boolean
 }
 
 export const createSchemaExtensions = (
   options: SchemaExtensionOptions = {}
 ) => {
-  const {
-    limit = 1000,
-    placeholder = "",
-    enableMentions = false,
-    clickableLinks = false
-  } = options
+  const { limit = 1000, placeholder = "", clickableLinks = false } = options
 
   const extensions: any[] = [
     StarterKit.configure({
@@ -61,16 +54,6 @@ export const createSchemaExtensions = (
 
     HardBreak
   ]
-
-  if (enableMentions) {
-    extensions.push(
-      Mention.configure({
-        HTMLAttributes: {
-          class: "mention"
-        }
-      })
-    )
-  }
 
   return extensions
 }

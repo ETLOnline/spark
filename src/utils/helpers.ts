@@ -406,8 +406,7 @@ export const normalizeHTML = (html: string) => {
     editable: false,
     content: html,
     extensions: createSchemaExtensions({
-      clickableLinks: true,
-      enableMentions: true
+      clickableLinks: true
     })
   })
 

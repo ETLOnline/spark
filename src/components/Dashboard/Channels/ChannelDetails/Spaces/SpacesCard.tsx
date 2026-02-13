@@ -46,7 +46,7 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
     : false
 
   return (
-    <Card key={space.id} className="overflow-hidden">
+    <Card key={space.id} className="overflow-hidden flex flex-col h-full ">
       {/* <div className="aspect-video w-full overflow-hidden">
         <img
           src={"/images/home/session-image2.jpg"}
@@ -62,7 +62,10 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Lock className="text-muted-foreground" height={14} />
+                    <Lock
+                      className="text-muted-foreground  self-start mt-2"
+                      height={14}
+                    />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-sm">Private</p>
@@ -76,7 +79,10 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Check className="text-muted-foreground" height={14} />
+                      <Check
+                        className="text-muted-foreground self-start mt-2"
+                        height={14}
+                      />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>Published</p>
@@ -88,7 +94,7 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <PencilRuler
-                        className="text-muted-foreground"
+                        className="text-muted-foreground self-start mt-2"
                         height={14}
                       />
                     </TooltipTrigger>
@@ -108,7 +114,7 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
         </div>
         <CardDescription>{space.description}</CardDescription>
       </CardHeader>
-      <CardFooter className="flex flex-col items-start gap-2">
+      <CardFooter className="flex flex-col items-start gap-2 mt-auto pt-3">
         {/* <Badge variant="secondary">
           {space.membersCount} {space.membersCount === 1 ? 'Member' : 'Members'}
           0 Members
