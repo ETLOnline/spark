@@ -38,6 +38,7 @@ export default function CommandCenter() {
   const router = useRouter()
   const [inputValue, setInputValue] = useState<string>("")
   const [peopleList, setPeopleList] = useState<SelectUser[]>([])
+  const [isTyping, setIsTyping] = useState(false)
   const [loading, state, error, FindUserWildCard] = useServerAction(
     FindUserWildCardAction
   )
@@ -62,9 +63,11 @@ export default function CommandCenter() {
   const handleInputValueChange = useDebouncedCallback(async (value: string) => {
     if (value.trim() === "") {
       setPeopleList([])
+      setIsTyping(false)
       return
     }
     await FindUserWildCard(value)
+    setIsTyping(false)
   }, 800)
 
   useEffect(() => {
@@ -86,13 +89,19 @@ export default function CommandCenter() {
         <CommandInput
           placeholder="Type a command or search..."
           onValueChange={(value) => {
+            if (value.trim() !== "") {
+              setIsTyping(true)
+            } else {
+              setIsTyping(false)
+              setPeopleList([])
+            }
             handleInputValueChange(value)
             setInputValue(value)
           }}
         />
 
         <CommandList>
-          {loading ? (
+          {loading || isTyping ? (
             <div className="w-full flex justify-center p-2">
               <Loader />
             </div>
