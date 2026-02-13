@@ -17,7 +17,6 @@ import {
   getProjectsBySpaceIds,
   addProjectRecentActivities,
   getProjectRecentActivities,
-  getProjectMembersCount,
   getProjectusersProfileUrl
 } from "@/src/db/data-access/project-management/query"
 import {
@@ -29,6 +28,7 @@ import pusherServer from "@/src/services/realtime/pusherServer"
 import { SendProjectNotifications } from "@/src/services/notifications/Project/utils"
 import { createProjectInviteNotification } from "@/src/services/notify/project/project"
 import { NotificationEvent } from "@/src/services/notify/types/events"
+import { getSpaceUsers } from "@/src/db/data-access/spaces/query"
 
 export const CreateProjectAction = CreateServerAction(
   true,
@@ -214,7 +214,17 @@ export const getProjectUserCountAndProfileUrlAction = CreateServerAction(
     usersProfileUrlIsRendom?: boolean
   ) => {
     try {
-      const totalMembersCount = await getProjectMembersCount(projectId)
+      const project = await getProjectById(projectId)
+      const spaceId = project?.space_id || ""
+
+      const spaceUsers = await getSpaceUsers(spaceId)
+      const projectUsers = await getProjectUsers(projectId)
+
+      // Count only those project users who are also part of the space and have a non-null user object
+      const totalMembersCount = projectUsers.filter((pu) =>
+        spaceUsers.some((su) => su.user_id === pu.user_id && pu.user !== null)
+      ).length
+
       const usersProfileUrl = await getProjectusersProfileUrl(
         projectId,
         usersProfileUrlLimit,
