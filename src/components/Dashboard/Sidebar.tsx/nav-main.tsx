@@ -1,6 +1,7 @@
 "use client"
 
 import { ChevronRight, Lock } from "lucide-react"
+import { useEffect, useState } from "react"
 import {
   Collapsible,
   CollapsibleContent,
@@ -38,6 +39,14 @@ export default function NavMain({
 }) {
   const pathName = usePathname()
   const sidebar = useSidebar()
+  const [openItems, setOpenItems] = useState<Set<string>>(new Set())
+
+  // Close all dropdowns when sidebar is collapsed
+  useEffect(() => {
+    if (sidebar?.state === "collapsed") {
+      setOpenItems(new Set())
+    }
+  }, [sidebar?.state])
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{label || ""}</SidebarGroupLabel>
@@ -45,12 +54,23 @@ export default function NavMain({
         {items && items.length
           ? items.map((item) => {
               const isActive = pathName.includes(item.url)
+              const itemKey = item.url + item.title
+              const isOpen = openItems.has(itemKey)
 
               return (
                 <Collapsible
-                  key={item.url + item.title}
+                  key={itemKey}
                   asChild
-                  defaultOpen={item.isActive}
+                  open={isOpen}
+                  onOpenChange={(open) => {
+                    const newOpenItems = new Set(openItems)
+                    if (open) {
+                      newOpenItems.add(itemKey)
+                    } else {
+                      newOpenItems.delete(itemKey)
+                    }
+                    setOpenItems(newOpenItems)
+                  }}
                 >
                   <SidebarMenuItem>
                     {item.items && item.items.length ? (
