@@ -32,11 +32,13 @@ const userQualificationSchema = z
   .object({
     degree: z
       .string()
-      .min(1, "Degree name required")
+      .trim()
+      .min(1, "Degree name cannot be empty")
       .max(100, "Maximum 100 characters"),
     institute: z
       .string()
-      .min(1, "Institute name required")
+      .trim()
+      .min(1, "Institute name cannot be empty")
       .max(100, "Maximum 100 characters"),
 
     duration_from: z

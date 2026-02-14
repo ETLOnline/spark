@@ -43,6 +43,7 @@ const editProfileSchema = z.object({
     .max(30, "Maximum 30 characters allowed"),
   bio: z
     .string()
+    .trim()
     .min(1, "Bio required")
     .max(2000, "Maximum 2000 characters allowed"),
   skill: z
