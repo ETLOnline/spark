@@ -138,7 +138,9 @@ export default function NavMain({
                         <CollapsibleContent>
                           <SidebarMenuSub>
                             {item.items.map((subItem) => (
-                              <TooltipProvider key={subItem.title}>
+                              <TooltipProvider
+                                key={subItem.url + subItem.title}
+                              >
                                 <Tooltip delayDuration={300}>
                                   <SidebarMenuSubItem>
                                     <TooltipTrigger asChild>
