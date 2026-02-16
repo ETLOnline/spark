@@ -948,7 +948,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                 <div className="relative group flex flex-col">
                                   {/* MESSAGE BUBBLE */}
                                   <div
-                                    className={`rounded-lg py-2 pl-2 rich-editor  flex gap-1 flex-col pr-6 ${
+                                    className={`rounded-lg py-2 px-2 group-hover:pr-6 rich-editor  flex gap-1 flex-col  ${
                                       message.sender_id === authUser?.unique_id
                                         ? "bg-primary text-primary-foreground"
                                         : "bg-muted"
@@ -1065,16 +1065,13 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                   {!message.is_deleted &&
                                     message.sender_id ===
                                       authUser?.unique_id && (
-                                      <div className="absolute self-end">
+                                      <div className="absolute top-2 right-2">
                                         <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                            <Button
-                                              variant="ghost"
-                                              size="icon"
-                                              className="opacity-0 group-hover:opacity-100 hover:bg-transparent transform -translate-y-2 group-hover:translate-y-0 transition-all duration-200"
-                                            >
-                                              <ChevronDown className="w-4 h-4 text-black" />
-                                            </Button>
+                                          <DropdownMenuTrigger
+                                            asChild
+                                            className="opacity-0 group-hover:opacity-100 hover:bg-transparent transform -translate-y-2 group-hover:translate-y-0 transition-all duration-200"
+                                          >
+                                            <ChevronDown className="w-4 h-4 text-black" />
                                           </DropdownMenuTrigger>
 
                                           <DropdownMenuContent
