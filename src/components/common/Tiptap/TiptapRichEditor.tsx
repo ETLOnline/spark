@@ -5,6 +5,7 @@ import StarterKit from "@tiptap/starter-kit"
 import Link from "@tiptap/extension-link"
 import Underline from "@tiptap/extension-underline"
 import TextAlign from "@tiptap/extension-text-align"
+import tippy from "tippy.js"
 import Mention from "@tiptap/extension-mention"
 import { Button } from "@/src/components/ui/button"
 import { Separator } from "@/src/components/ui/separator"
@@ -49,6 +50,9 @@ import HardBreak from "@tiptap/extension-hard-break"
 import Placeholder from "@tiptap/extension-placeholder"
 import Blockquote from "@tiptap/extension-blockquote"
 import ImageLightbox from "../LightBox"
+import MentionList, {
+  MentionListHandle
+} from "../../Dashboard/Chat/components/MentionList"
 
 const CustomBlockquote = Blockquote.extend({
   addKeyboardShortcuts() {
@@ -227,7 +231,6 @@ export default function RichTextEditor({
       createSchemaExtensions({
         limit,
         placeholder,
-        enableMentions: showMentions && mentionUsers.length > 0,
         clickableLinks: false
       }),
     [limit, placeholder, showMentions, mentionUsers.length]
@@ -275,8 +278,114 @@ export default function RichTextEditor({
     if (showMentions && mentionUsers.length > 0) {
       editorOnlyExtensions.push(
         Mention.configure({
+          HTMLAttributes: {
+            class:
+              "mention bg-primary/10 text-primary px-1 py-0.5 rounded font-medium"
+          },
           suggestion: {
-            /* your existing suggestion code */
+            items: ({ query, editor }: { query: string; editor: any }) => {
+              if (!mentionUsers || mentionUsers.length === 0) {
+                console.warn("No mention users available")
+                return []
+              }
+
+              const mentionedUserIds = new Set<string>()
+
+              try {
+                if (editor && editor.state && editor.state.doc) {
+                  editor.state.doc.descendants((node: any) => {
+                    if (node.type.name === "mention" && node.attrs.id) {
+                      mentionedUserIds.add(node.attrs.id)
+                    }
+                  })
+                }
+              } catch (error) {
+                console.warn("Could not check for existing mentions:", error)
+              }
+
+              const filtered = mentionUsers
+                .filter((user) => {
+                  if (mentionedUserIds.has(user.unique_id)) {
+                    return false
+                  }
+                  const fullName =
+                    `${user.first_name} ${user.last_name}`.toLowerCase()
+                  return (
+                    fullName.includes(query.toLowerCase()) ||
+                    user.email?.toLowerCase().includes(query.toLowerCase())
+                  )
+                })
+                .slice(0, 5)
+
+              return filtered
+            },
+            render: () => {
+              let component: ReactRenderer
+              let popup: any
+
+              return {
+                onStart: (props: any) => {
+                  mentionActiveRef.current = true
+                  onMentionStateChange?.(true)
+
+                  component = new ReactRenderer(MentionList, {
+                    props,
+                    editor: props.editor
+                  })
+
+                  if (!props.clientRect) {
+                    return
+                  }
+
+                  popup = tippy("body", {
+                    getReferenceClientRect: props.clientRect,
+                    appendTo: () => document.body,
+                    content: component.element,
+                    showOnCreate: true,
+                    interactive: true,
+                    trigger: "manual",
+                    placement: "top-start"
+                  })
+
+                  applyPopupStyles(popup)
+                },
+
+                onUpdate(props: any) {
+                  component.updateProps(props)
+
+                  if (!props.clientRect) {
+                    return
+                  }
+
+                  popup[0].setProps({
+                    getReferenceClientRect: props.clientRect
+                  })
+                  applyPopupStyles(popup)
+                },
+
+                onKeyDown(props: any) {
+                  if (props.event.key === "Escape") {
+                    popup[0].hide()
+                    mentionActiveRef.current = false
+                    onMentionStateChange?.(false)
+                    return true
+                  }
+
+                  return (
+                    (component.ref as MentionListHandle | null)?.onKeyDown?.(
+                      props
+                    ) || false
+                  )
+                },
+
+                onExit() {
+                  mentionActiveRef.current = false
+                  onMentionStateChange?.(false)
+                  popup[0].destroy()
+                  component.destroy()
+                }
+              }
+            }
           }
         })
       )
