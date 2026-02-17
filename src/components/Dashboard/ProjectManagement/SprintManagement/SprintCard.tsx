@@ -185,7 +185,7 @@ export default function SprintCardPage({
               <div className="col-span-3">Title</div>
               <div className="col-span-1 text-center">Parent</div>
               <div className="col-span-2 text-center">Status</div>
-              <div className="col-span-1 text-center">priority</div>
+              <div className="col-span-1 text-center">Priority</div>
               <div className="col-span-1 text-center">Points</div>
               <div className="col-span-1 text-center">Assignee</div>
               <div className="col-span-1 text-center">Actions</div>

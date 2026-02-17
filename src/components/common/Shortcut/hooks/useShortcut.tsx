@@ -186,7 +186,11 @@ const useShortcut = () => {
         slugToUse = s.community.slug
       } else if (shortcut.type === "channel" && s.channel?.channel_slug) {
         slugToUse = s.channel.channel_slug
-      } else if (shortcut.type === "space" && s.space?.space_slug) {
+      } else if (
+        shortcut.type === "space" &&
+        s.space?.space_slug &&
+        s.space.channel?.channel_slug
+      ) {
         slugToUse = `${s.space.channel.channel_slug}/spaces/${s.space.space_slug}`
         console.log(s.space, "slugToUse")
       } else if (shortcut.type === "project" && s.project?.project_slug) {

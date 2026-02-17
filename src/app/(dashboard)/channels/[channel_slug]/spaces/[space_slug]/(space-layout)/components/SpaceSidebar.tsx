@@ -30,6 +30,8 @@ import { useToast } from "@/src/hooks/use-toast"
 import "./../../../../../../style.css"
 import { getRoleIdOnMatch } from "@/src/services/realtime/utils/helper"
 import { useAuthUser } from "@/src/hooks/useAuthUser"
+import Loader from "@/src/components/common/Loader/Loader"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
 
 interface Props {
   space: SelectSpace
@@ -301,9 +303,17 @@ function SpaceSidebar({ space }: Props) {
             ))
           ) : (
             <SidebarMenuItem className="p-2 text-sm text-gray-500">
-              {!isSpaceMember
-                ? "Join this Space to view Active Features."
-                : "No features available."}
+              {isLoading ? (
+                <div className="flex justify-center">
+                  <Loader size={LoaderSizes.sm} />
+                </div>
+              ) : isSuperAdmin || spaceFeatures.length === 0 ? (
+                "No active feature."
+              ) : !isSpaceMember ? (
+                "Join this Space to view Active Features."
+              ) : (
+                "No active feature."
+              )}
             </SidebarMenuItem>
           )}
 
