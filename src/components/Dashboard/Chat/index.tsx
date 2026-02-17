@@ -668,7 +668,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     // Extract all image URLs from messages, maintaining order
     const allImages: string[] = []
     messages.forEach((msg) => {
-      if (msg.type === "image") {
+      if (msg.type === "image" && msg.is_deleted !== 1) {
         const parts = msg.message?.split(",") || []
         if (parts.length >= 1) {
           const imagePath = parts[0]
