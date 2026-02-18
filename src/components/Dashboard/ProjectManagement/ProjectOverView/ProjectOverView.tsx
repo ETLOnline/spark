@@ -59,7 +59,6 @@ function ProjectOverView() {
     []
   )
   const [sprintList, setSprintList] = useState<SelectSprint[]>([])
-  const [activeDropdown, setActiveDropdown] = useState(false)
   const [currentSprint, setCurrentSprint] = useState<SelectSprint | null>(null)
   const [percentage, setPercentage] = useState(0)
 
@@ -175,20 +174,12 @@ function ProjectOverView() {
             <div className="flex flex-col justify-between h-full">
               {getSprintLoading ? (
                 <Loader />
-              ) : activeDropdown ? (
+              ) : (
                 <SelectCurrentSprint
                   sprints={sprintList}
                   currentSprint={currentSprint}
                   setCurrentSprint={setCurrentSprint}
-                  setActiveDropdown={setActiveDropdown}
                 />
-              ) : (
-                <div
-                  onClick={() => setActiveDropdown(true)}
-                  className="text-2xl font-bold w-full hover:bg-gray-500 hover:cursor-pointer  flex items-center justify-between px-2 py-1 rounded-md"
-                >
-                  {currentSprint ? currentSprint.title : "Select Sprint"}
-                </div>
               )}
               <div className="mt-2">
                 <div className="flex justify-between mb-1 text-xs">

@@ -14,14 +14,12 @@ interface SelectCurrentSprintProps {
   sprints: SelectSprint[]
   currentSprint: SelectSprint | null
   setCurrentSprint: (sprint: SelectSprint) => void
-  setActiveDropdown: (active: boolean) => void
 }
 
 export function SelectCurrentSprint({
   sprints,
   currentSprint,
-  setCurrentSprint,
-  setActiveDropdown
+  setCurrentSprint
 }: SelectCurrentSprintProps) {
   return (
     <Select
@@ -30,7 +28,6 @@ export function SelectCurrentSprint({
         const sprint = sprints.find((s) => s.id.toString() === val)
         if (sprint) {
           setCurrentSprint(sprint)
-          setActiveDropdown(false)
         }
       }}
     >
@@ -47,12 +44,7 @@ export function SelectCurrentSprint({
             </SelectGroup>
           ))
         ) : (
-          <SelectItem
-            value="no-sprint"
-            onClick={() => setActiveDropdown(false)}
-          >
-            No Sprint Found
-          </SelectItem>
+          <SelectItem value="no-sprint">No Sprint Found</SelectItem>
         )}
       </SelectContent>
     </Select>
