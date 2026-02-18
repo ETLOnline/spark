@@ -56,10 +56,18 @@ export default function TaskMoveDialog({
   const [updateTaskloading, , , UpdateTask] = useServerAction(
     UpdateTasksSprintAction
   )
+  const [getTaskByIdsLoading, , , GetTaskById] =
+    useServerAction(GetTaskByIdsAction)
   const [updateSprintLoading, , , UpdateSprint] =
     useServerAction(UpdateSprintAction)
   const [deleteSprintLoading, , , DeleteSprint] =
     useServerAction(DeleteSprintAction)
+
+  const isLoading =
+    getTaskByIdsLoading ||
+    updateTaskloading ||
+    updateSprintLoading ||
+    deleteSprintLoading
 
   const setShouldRefetchTasks = useSetAtom(taskStore.shouldRefetchTasks)
 
@@ -81,7 +89,9 @@ export default function TaskMoveDialog({
   }, [projectId])
 
   const handleMoveTask = async () => {
-    const res = await GetTaskByIdsAction(tasks.map((task) => task.id))
+    if (isLoading) return
+
+    const res = await GetTaskById(tasks.map((task) => task.id))
     if (!res?.success || !res.data) return
 
     const task_ids = res.data.flatMap((task) => [
@@ -115,6 +125,7 @@ export default function TaskMoveDialog({
   }
 
   const handleEndSprint = async () => {
+    if (isLoading) return
     if (!selectedSprint || !currSprintId) return
 
     const task_ids = tasks.flatMap((task) => [
@@ -147,6 +158,7 @@ export default function TaskMoveDialog({
   }
 
   const handleDeleteSprint = async () => {
+    if (isLoading) return
     if (!selectedSprint || !currSprintId) return
 
     const task_ids = tasks.flatMap((task) => [
@@ -182,7 +194,10 @@ export default function TaskMoveDialog({
   return (
     <Dialog
       open={isTaskMoveDialogOpen}
-      onOpenChange={(open) => setIsTaskMoveDialogOpen(open)}
+      onOpenChange={(open) => {
+        if (isLoading) return
+        setIsTaskMoveDialogOpen(open)
+      }}
     >
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
@@ -248,14 +263,15 @@ export default function TaskMoveDialog({
           <Button
             variant="outline"
             onClick={() => setIsTaskMoveDialogOpen(false)}
+            disabled={isLoading}
           >
             Cancel
           </Button>
 
           <Button
             onClick={handleMoveTask}
-            loading={updateTaskloading}
-            disabled={!selectedSprint}
+            loading={isLoading}
+            disabled={!selectedSprint || isLoading}
           >
             {dialogAction === "moveTask" ? "Move Task" : "Move Only"}
           </Button>
@@ -267,8 +283,8 @@ export default function TaskMoveDialog({
                   ? handleEndSprint
                   : handleDeleteSprint
               }
-              loading={updateSprintLoading || deleteSprintLoading}
-              disabled={!selectedSprint}
+              loading={isLoading}
+              disabled={!selectedSprint || isLoading}
             >
               Move Task &{" "}
               {dialogAction === "endSprint" ? "End Sprint" : "Delete Sprint"}
