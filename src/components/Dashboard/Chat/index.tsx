@@ -1005,15 +1005,13 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                                     }
                                                   }}
                                                 >
-                                                  <div className="overflow- ">
-                                                    <Image
-                                                      src={file_path}
-                                                      alt={file_name || "Image"}
-                                                      className="max-h-96 w-auto object-cover rounded-lg"
-                                                      width={1000}
-                                                      height={1000}
-                                                    />
-                                                  </div>
+                                                  <Image
+                                                    src={file_path}
+                                                    alt={file_name || "Image"}
+                                                    className="max-h-96 w-auto object-cover rounded-lg"
+                                                    width={1000}
+                                                    height={1000}
+                                                  />
                                                 </div>
                                               )
                                             })()}
@@ -1075,7 +1073,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                         authUser?.unique_id && (
                                         <DropdownMenu>
                                           <DropdownMenuTrigger asChild>
-                                            <ChevronDown className="h-4 w-4 absolute top-2 right-1 cursor-pointer  rounded opacity-0 translate-y-[-4px] group-hover:opacity-100 group-hover:translate-y-0  transition-all duration-200 " />
+                                            <ChevronDown className="h-4 w-4 absolute top-2 right-1 cursor-pointer rounded opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 " />
                                           </DropdownMenuTrigger>
 
                                           <DropdownMenuContent
