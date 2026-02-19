@@ -945,133 +945,137 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                               </div>
                             ) : (
                               <div className="flex group gap-2">
-                                <div className="relative group flex flex-col">
+                                <div className=" group flex flex-col">
                                   {/* MESSAGE BUBBLE */}
                                   <div
-                                    className={`rounded-lg py-2 px-2 group-hover:pr-6 rich-editor  flex gap-1 flex-col  ${
+                                    className={`relative rounded-lg py-2 pl-2 pr-2 group-hover:pr-4 flex flex-row rich-editor ${
                                       message.sender_id === authUser?.unique_id
                                         ? "bg-primary text-primary-foreground"
                                         : "bg-muted"
                                     }`}
                                   >
-                                    {message.sender_id !==
-                                      authUser?.unique_id &&
-                                    currentChat.is_group ? (
-                                      <p className="text-sm font-semibold mb-1 text-muted-foreground">
-                                        ~ {message.sender?.first_name}
-                                      </p>
-                                    ) : null}
+                                    <div className="flex flex-col gap-2">
+                                      {message.sender_id !==
+                                        authUser?.unique_id &&
+                                      currentChat.is_group ? (
+                                        <p className="text-sm font-semibold mb-1 text-muted-foreground">
+                                          ~ {message.sender?.first_name}
+                                        </p>
+                                      ) : null}
 
-                                    {message.is_deleted ? (
-                                      <span className="italic text-sm">
-                                        {message.sender_id ===
-                                        authUser?.unique_id
-                                          ? "You deleted this message"
-                                          : "This message was deleted"}
-                                      </span>
-                                    ) : (
-                                      <>
-                                        {message.type === "image" &&
-                                          (() => {
-                                            const parts =
-                                              message.message?.split(",") || []
-                                            if (parts.length !== 4) return null
+                                      {message.is_deleted ? (
+                                        <span className="italic text-sm">
+                                          {message.sender_id ===
+                                          authUser?.unique_id
+                                            ? "You deleted this message"
+                                            : "This message was deleted"}
+                                        </span>
+                                      ) : (
+                                        <>
+                                          {message.type === "image" &&
+                                            (() => {
+                                              const parts =
+                                                message.message?.split(",") ||
+                                                []
+                                              if (parts.length !== 4)
+                                                return null
 
-                                            const [file_path, file_name] = parts
-                                            return (
-                                              <div
-                                                className="cursor-pointer hover:opacity-80 transition-opacity"
-                                                onClick={() =>
-                                                  handleImageClick(file_path, 0)
-                                                }
-                                                role="button"
-                                                tabIndex={0}
-                                                onKeyDown={(e) => {
-                                                  if (
-                                                    e.key === "Enter" ||
-                                                    e.key === " "
-                                                  ) {
+                                              const [file_path, file_name] =
+                                                parts
+                                              return (
+                                                <div
+                                                  className="cursor-pointer hover:opacity-80 transition-opacity"
+                                                  onClick={() =>
                                                     handleImageClick(
                                                       file_path,
                                                       0
                                                     )
                                                   }
-                                                }}
-                                              >
-                                                <Image
-                                                  src={file_path}
-                                                  alt={file_name || "Image"}
-                                                  className="rounded-lg max-h-96 w-full object-cover bg-gradient-to-r from-accent to-secondary"
-                                                  width={1000}
-                                                  height={1000}
-                                                  style={{
-                                                    objectFit: "contain"
+                                                  role="button"
+                                                  tabIndex={0}
+                                                  onKeyDown={(e) => {
+                                                    if (
+                                                      e.key === "Enter" ||
+                                                      e.key === " "
+                                                    ) {
+                                                      handleImageClick(
+                                                        file_path,
+                                                        0
+                                                      )
+                                                    }
                                                   }}
-                                                />
-                                              </div>
-                                            )
-                                          })()}
-
-                                        {message.type === "file" &&
-                                          (() => {
-                                            const parts =
-                                              message.message?.split(",") || []
-                                            if (parts.length !== 4) return null
-
-                                            const [
-                                              fileUrl,
-                                              fileName,
-                                              fileSize
-                                            ] = parts
-
-                                            return (
-                                              <Link
-                                                href={fileUrl}
-                                                target="_blank"
-                                              >
-                                                <div
-                                                  className={`flex items-center ${
-                                                    message.sender_id ===
-                                                    authUser?.unique_id
-                                                      ? "bg-primary text-primary-foreground"
-                                                      : "bg-muted text-white"
-                                                  } space-x-2 p-2 rounded-lg`}
                                                 >
-                                                  <FileIcon className="h-8 w-8" />
-                                                  <span className="font-medium">
-                                                    {fileName}
-                                                  </span>
-                                                  <span className="text-xs">
-                                                    {formatFileSize(
-                                                      Number(fileSize)
-                                                    )}
-                                                  </span>
+                                                  <div className="overflow- ">
+                                                    <Image
+                                                      src={file_path}
+                                                      alt={file_name || "Image"}
+                                                      className="max-h-96 w-auto object-cover rounded-lg"
+                                                      width={1000}
+                                                      height={1000}
+                                                    />
+                                                  </div>
                                                 </div>
-                                              </Link>
-                                            )
-                                          })()}
+                                              )
+                                            })()}
 
-                                        {message.type === "text" && (
-                                          <ExpandableText
-                                            content={message.message}
-                                            lines={5}
-                                          />
-                                        )}
-                                      </>
-                                    )}
-                                  </div>
+                                          {message.type === "file" &&
+                                            (() => {
+                                              const parts =
+                                                message.message?.split(",") ||
+                                                []
+                                              if (parts.length !== 4)
+                                                return null
 
-                                  {/* DROPDOWN TOP RIGHT */}
-                                  {!message.is_deleted &&
-                                    message.sender_id ===
-                                      authUser?.unique_id && (
-                                      <div className="absolute top-2 right-2">
+                                              const [
+                                                fileUrl,
+                                                fileName,
+                                                fileSize
+                                              ] = parts
+
+                                              return (
+                                                <Link
+                                                  href={fileUrl}
+                                                  target="_blank"
+                                                >
+                                                  <div
+                                                    className={`flex items-center ${
+                                                      message.sender_id ===
+                                                      authUser?.unique_id
+                                                        ? "bg-primary text-primary-foreground"
+                                                        : "bg-muted text-white"
+                                                    } space-x-2 p-2 rounded-lg`}
+                                                  >
+                                                    <FileIcon className="h-8 w-8" />
+                                                    <span className="font-medium">
+                                                      {fileName}
+                                                    </span>
+                                                    <span className="text-xs">
+                                                      {formatFileSize(
+                                                        Number(fileSize)
+                                                      )}
+                                                    </span>
+                                                  </div>
+                                                </Link>
+                                              )
+                                            })()}
+
+                                          {message.type === "text" && (
+                                            <ExpandableText
+                                              content={message.message}
+                                              lines={5}
+                                            />
+                                          )}
+                                        </>
+                                      )}
+                                    </div>
+
+                                    {/* DROPDOWN TOP RIGHT */}
+                                    {!message.is_deleted &&
+                                      message.sender_id ===
+                                        authUser?.unique_id && (
                                         <DropdownMenu>
-                                          <DropdownMenuTrigger
-                                            asChild
-                                            className="opacity-0 group-hover:opacity-100 hover:bg-transparent transform -translate-y-2 group-hover:translate-y-0 transition-all duration-200"
-                                          >
-                                            <ChevronDown className="w-4 h-4 text-black" />
+                                          <DropdownMenuTrigger asChild>
+                                            <ChevronDown className="h-4 w-4 absolute top-2 right-1 cursor-pointer  rounded opacity-0 translate-y-[-4px] group-hover:opacity-100 group-hover:translate-y-0  transition-all duration-200 " />
                                           </DropdownMenuTrigger>
 
                                           <DropdownMenuContent
@@ -1103,8 +1107,8 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                             </DropdownMenuItem>
                                           </DropdownMenuContent>
                                         </DropdownMenu>
-                                      </div>
-                                    )}
+                                      )}
+                                  </div>
                                 </div>
 
                                 {/* TIME */}
