@@ -4,28 +4,33 @@ export function generateBenchmarkData(
   total: number,
   days: string[]
 ): { day: string; benchmark: number }[] {
-  if (!days.length || total === 0) return []
+  if (!days.length || total <= 0) return []
 
   // Count working days (Mon–Fri)
   const workingDays = days.filter((day) => {
-    const d = moment(day, "YYYY-MM-DD")
-    const dow = d.day()
+    const dow = moment(day, "YYYY-MM-DD").day()
     return dow !== 0 && dow !== 6
   })
 
+  // Burn so last working day becomes 0
   const burnPerDay =
     workingDays.length > 1 ? total / (workingDays.length - 1) : total
 
   let currentValue = total
+  let firstWorkingDayPassed = false
 
-  return days.map((day, index) => {
+  return days.map((day) => {
     const d = moment(day, "YYYY-MM-DD")
     const dow = d.day()
     const isWeekend = dow === 0 || dow === 6
 
-    // Decrease only on weekdays (except first day)
-    if (!isWeekend && index !== 0) {
-      currentValue = Math.max(currentValue - burnPerDay, 0)
+    if (!isWeekend) {
+      // Skip burn on first working day
+      if (firstWorkingDayPassed) {
+        currentValue = Math.max(currentValue - burnPerDay, 0)
+      } else {
+        firstWorkingDayPassed = true
+      }
     }
 
     return {
