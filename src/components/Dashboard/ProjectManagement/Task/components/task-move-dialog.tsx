@@ -281,7 +281,11 @@ export default function TaskMoveDialog({
           <Button
             onClick={handleMoveTask}
             loading={executingAction === "moveTask"}
-            disabled={!selectedSprint || executingAction === "moveTask"}
+            disabled={
+              !selectedSprint ||
+              executingAction === "moveTask" ||
+              executingAction === "endSprint"
+            }
           >
             {dialogAction === "moveTask" ? "Move Task" : "Move Only"}
           </Button>
@@ -300,7 +304,8 @@ export default function TaskMoveDialog({
               disabled={
                 !selectedSprint ||
                 executingAction === "endSprint" ||
-                executingAction === "deleteSprint"
+                executingAction === "deleteSprint" ||
+                executingAction === "moveTask"
               }
             >
               Move Task &{" "}
