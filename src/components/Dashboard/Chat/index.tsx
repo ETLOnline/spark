@@ -948,9 +948,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                 <div className=" group flex flex-col">
                                   {/* MESSAGE BUBBLE */}
                                   <div
-                                    className={`relative rounded-lg py-2 pl-2 pr-2 group-hover:pr-4 flex flex-row rich-editor ${
+                                    className={`relative rounded-lg py-2 pl-2 pr-2  flex flex-row rich-editor ${
                                       message.sender_id === authUser?.unique_id
-                                        ? "bg-primary text-primary-foreground"
+                                        ? "bg-primary text-primary-foreground group-hover:pr-4"
                                         : "bg-muted"
                                     }`}
                                   >
