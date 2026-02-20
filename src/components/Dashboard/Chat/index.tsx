@@ -948,9 +948,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                 <div className=" group flex flex-col">
                                   {/* MESSAGE BUBBLE */}
                                   <div
-                                    className={`relative rounded-lg py-2 pl-2 pr-2  flex flex-row rich-editor ${
+                                    className={`relative rounded-lg py-2 pl-2 pr-2  flex flex-row gap-2  rich-editor ${
                                       message.sender_id === authUser?.unique_id
-                                        ? "bg-primary text-primary-foreground group-hover:pr-4"
+                                        ? "bg-primary text-primary-foreground group-hover:pr-6"
                                         : "bg-muted"
                                     }`}
                                   >
@@ -1061,6 +1061,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                             <ExpandableText
                                               content={message.message}
                                               lines={5}
+                                              className="mr-1"
                                             />
                                           )}
                                         </>
@@ -1073,7 +1074,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                         authUser?.unique_id && (
                                         <DropdownMenu>
                                           <DropdownMenuTrigger asChild>
-                                            <ChevronDown className="h-4 w-4 absolute top-2 right-1 cursor-pointer rounded opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 " />
+                                            <ChevronDown className="h-4 w-4 absolute top-2 right-2 cursor-pointer rounded opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200  " />
                                           </DropdownMenuTrigger>
 
                                           <DropdownMenuContent
