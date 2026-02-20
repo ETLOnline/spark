@@ -83,6 +83,10 @@ export default function TaskMoveDialog({
     fetchSprints()
   }, [projectId])
 
+  useEffect(() => {
+    if (isTaskMoveDialogOpen) setSelectedSprint("")
+  }, [isTaskMoveDialogOpen])
+
   const handleMoveTask = async () => {
     if (executingAction) return
     setExecutingAction("moveTask")
@@ -284,7 +288,8 @@ export default function TaskMoveDialog({
             disabled={
               !selectedSprint ||
               executingAction === "moveTask" ||
-              executingAction === "endSprint"
+              executingAction === "endSprint" ||
+              executingAction === "deleteSprint"
             }
           >
             {dialogAction === "moveTask" ? "Move Task" : "Move Only"}
