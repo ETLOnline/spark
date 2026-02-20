@@ -9,6 +9,7 @@ import {
   isNull,
   like,
   not,
+  notInArray,
   or,
   sql,
   SQLWrapper
@@ -309,7 +310,7 @@ export async function GetSprintTaskCount(filters?: SprintTaskCountFilters) {
     const inprogressStatusId = statuses.find(
       (s) => s.status_slug === "in-progress"
     )?.id
-    const todoStatusId = statuses.find((s) => s.status_slug === "todo")?.id
+    const todoStatusId = statuses.find((s) => s.status_slug === "to-do")?.id
 
     const whereClauses: (SQLWrapper | undefined)[] = []
 
@@ -335,10 +336,14 @@ export async function GetSprintTaskCount(filters?: SprintTaskCountFilters) {
       )
     }
 
-    if (inprogress && inprogressStatusId) {
+    if (inprogress && (todoStatusId || doneStatusId)) {
+      const excludeStatusIds = [todoStatusId, doneStatusId].filter(
+        (id): id is string => !!id
+      )
+
       results.InprogressTasksCount = await db.$count(
         taskTable,
-        and(...whereClauses, eq(taskTable.status_id, inprogressStatusId))
+        and(...whereClauses, notInArray(taskTable.status_id, excludeStatusIds))
       )
     }
 
