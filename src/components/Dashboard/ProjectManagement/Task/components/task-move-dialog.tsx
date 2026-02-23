@@ -51,6 +51,7 @@ export default function TaskMoveDialog({
   dialogAction
 }: Props) {
   const [selectedSprint, setSelectedSprint] = useState("")
+  const [executingAction, setExecutingAction] = useState<string | null>(null)
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
   const [updateTaskloading, , , UpdateTask] = useServerAction(
@@ -62,12 +63,6 @@ export default function TaskMoveDialog({
     useServerAction(UpdateSprintAction)
   const [deleteSprintLoading, , , DeleteSprint] =
     useServerAction(DeleteSprintAction)
-
-  const isLoading =
-    getTaskByIdsLoading ||
-    updateTaskloading ||
-    updateSprintLoading ||
-    deleteSprintLoading
 
   const setShouldRefetchTasks = useSetAtom(taskStore.shouldRefetchTasks)
 
@@ -88,106 +83,125 @@ export default function TaskMoveDialog({
     fetchSprints()
   }, [projectId])
 
+  useEffect(() => {
+    if (isTaskMoveDialogOpen) setSelectedSprint("")
+  }, [isTaskMoveDialogOpen])
+
   const handleMoveTask = async () => {
-    if (isLoading) return
+    if (executingAction) return
+    setExecutingAction("moveTask")
 
-    const res = await GetTaskById(tasks.map((task) => task.id))
-    if (!res?.success || !res.data) return
+    try {
+      const res = await GetTaskById(tasks.map((task) => task.id))
+      if (!res?.success || !res.data) return
 
-    const task_ids = res.data.flatMap((task) => [
-      task.id,
-      ...(task.subTasks?.map((sub) => sub.id) || [])
-    ])
+      const task_ids = res.data.flatMap((task) => [
+        task.id,
+        ...(task.subTasks?.map((sub) => sub.id) || [])
+      ])
 
-    if (selectedSprint) {
-      const updatedTask = await UpdateTask(
-        task_ids,
-        selectedSprint,
-        currSprintId
-      )
-      if (updatedTask?.success && updatedTask.data) {
-        if (setTasks) {
-          setTasks((prevTasks) =>
-            prevTasks.map((t) => {
-              const updated = updatedTask.data.find((ut) => ut?.id === t.id)
-              return updated ? updated : t
-            })
-          )
+      if (selectedSprint) {
+        const updatedTask = await UpdateTask(
+          task_ids,
+          selectedSprint,
+          currSprintId
+        )
+        if (updatedTask?.success && updatedTask.data) {
+          if (setTasks) {
+            setTasks((prevTasks) =>
+              prevTasks.map((t) => {
+                const updated = updatedTask.data.find((ut) => ut?.id === t.id)
+                return updated ? updated : t
+              })
+            )
+          }
+          setIsTaskMoveDialogOpen(false)
+          setShouldRefetchTasks(true)
+          toast({
+            title: `Task successfully moved to ${sprintList.find((s) => s.id === selectedSprint)?.title}`,
+            duration: 2000
+          })
         }
-        setIsTaskMoveDialogOpen(false)
-        setShouldRefetchTasks(true)
-        toast({
-          title: `Task successfully moved to ${sprintList.find((s) => s.id === selectedSprint)?.title}`,
-          duration: 2000
-        })
       }
+    } finally {
+      setExecutingAction(null)
     }
   }
 
   const handleEndSprint = async () => {
-    if (isLoading) return
+    if (executingAction) return
     if (!selectedSprint || !currSprintId) return
+    setExecutingAction("endSprint")
 
-    const task_ids = tasks.flatMap((task) => [
-      task.id,
-      ...(task.subTasks?.map((sub) => sub.id) || [])
-    ])
+    try {
+      const task_ids = tasks.flatMap((task) => [
+        task.id,
+        ...(task.subTasks?.map((sub) => sub.id) || [])
+      ])
 
-    const updatedTask = await UpdateTask(task_ids, selectedSprint)
-    if (!updatedTask?.success || !updatedTask.data) return
+      const updatedTask = await UpdateTask(task_ids, selectedSprint)
+      if (!updatedTask?.success || !updatedTask.data) return
 
-    if (setTasks) {
-      setTasks((prevTasks) =>
-        prevTasks.map((t) => {
-          const updated = updatedTask.data.find((ut) => ut?.id === t.id)
-          return updated ? updated : t
-        })
-      )
-    }
+      if (setTasks) {
+        setTasks((prevTasks) =>
+          prevTasks.map((t) => {
+            const updated = updatedTask.data.find((ut) => ut?.id === t.id)
+            return updated ? updated : t
+          })
+        )
+      }
 
-    toast({
-      title: `Tasks successfully moved to ${sprintList.find((s) => s.id === selectedSprint)?.title}`,
-      duration: 2000
-    })
+      toast({
+        title: `Tasks successfully moved to ${sprintList.find((s) => s.id === selectedSprint)?.title}`,
+        duration: 2000
+      })
 
-    const res = await UpdateSprint(currSprintId, { sprint_status: "closed" })
-    if (res?.success && res.data) {
-      setSprintList((prev) => prev.filter((s) => s.id !== res.data.id))
-      setIsTaskMoveDialogOpen(false)
+      const res = await UpdateSprint(currSprintId, { sprint_status: "closed" })
+      if (res?.success && res.data) {
+        setSprintList((prev) => prev.filter((s) => s.id !== res.data.id))
+        setIsTaskMoveDialogOpen(false)
+      }
+    } finally {
+      setExecutingAction(null)
     }
   }
 
   const handleDeleteSprint = async () => {
-    if (isLoading) return
+    if (executingAction) return
     if (!selectedSprint || !currSprintId) return
+    setExecutingAction("deleteSprint")
 
-    const task_ids = tasks.flatMap((task) => [
-      task.id,
-      ...(task.subTasks?.map((sub) => sub.id) || [])
-    ])
+    try {
+      const task_ids = tasks.flatMap((task) => [
+        task.id,
+        ...(task.subTasks?.map((sub) => sub.id) || [])
+      ])
 
-    const updatedTask = await UpdateTask(task_ids, selectedSprint)
-    if (!updatedTask?.success || !updatedTask.data) return
+      const updatedTask = await UpdateTask(task_ids, selectedSprint)
+      if (!updatedTask?.success || !updatedTask.data) return
 
-    if (setTasks) {
-      setTasks((prevTasks) =>
-        prevTasks.map((t) => {
-          const updated = updatedTask.data.find((ut) => ut?.id === t.id)
-          return updated ? updated : t
-        })
-      )
-    }
+      if (setTasks) {
+        setTasks((prevTasks) =>
+          prevTasks.map((t) => {
+            const updated = updatedTask.data.find((ut) => ut?.id === t.id)
+            return updated ? updated : t
+          })
+        )
+      }
 
-    toast({
-      title: `Tasks successfully moved to ${sprintList.find((s) => s.id === selectedSprint)?.title}`,
-      duration: 2000
-    })
+      toast({
+        title: `Tasks successfully moved to ${sprintList.find((s) => s.id === selectedSprint)?.title}`,
+        duration: 2000
+      })
 
-    const deletedSprint = await DeleteSprint(currSprintId)
+      const deletedSprint = await DeleteSprint(currSprintId)
 
-    if (deletedSprint?.success) {
-      setSprintList((prev) => prev.filter((s) => s.id !== currSprintId))
-      setIsTaskMoveDialogOpen(false)
+      if (deletedSprint?.success) {
+        setSprintList((prev) => prev.filter((s) => s.id !== currSprintId))
+        setIsTaskMoveDialogOpen(false)
+      }
+    } finally {
+      setExecutingAction(null)
     }
   }
 
@@ -195,7 +209,7 @@ export default function TaskMoveDialog({
     <Dialog
       open={isTaskMoveDialogOpen}
       onOpenChange={(open) => {
-        if (isLoading) return
+        if (executingAction) return
         setIsTaskMoveDialogOpen(open)
       }}
     >
@@ -263,15 +277,20 @@ export default function TaskMoveDialog({
           <Button
             variant="outline"
             onClick={() => setIsTaskMoveDialogOpen(false)}
-            disabled={isLoading}
+            disabled={!!executingAction}
           >
             Cancel
           </Button>
 
           <Button
             onClick={handleMoveTask}
-            loading={isLoading}
-            disabled={!selectedSprint || isLoading}
+            loading={executingAction === "moveTask"}
+            disabled={
+              !selectedSprint ||
+              executingAction === "moveTask" ||
+              executingAction === "endSprint" ||
+              executingAction === "deleteSprint"
+            }
           >
             {dialogAction === "moveTask" ? "Move Task" : "Move Only"}
           </Button>
@@ -283,8 +302,16 @@ export default function TaskMoveDialog({
                   ? handleEndSprint
                   : handleDeleteSprint
               }
-              loading={isLoading}
-              disabled={!selectedSprint || isLoading}
+              loading={
+                executingAction === "endSprint" ||
+                executingAction === "deleteSprint"
+              }
+              disabled={
+                !selectedSprint ||
+                executingAction === "endSprint" ||
+                executingAction === "deleteSprint" ||
+                executingAction === "moveTask"
+              }
             >
               Move Task &{" "}
               {dialogAction === "endSprint" ? "End Sprint" : "Delete Sprint"}
