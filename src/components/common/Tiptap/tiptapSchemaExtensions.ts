@@ -19,7 +19,6 @@ export const createSchemaExtensions = (
   options: SchemaExtensionOptions = {}
 ) => {
   const { limit = 1000, placeholder = "", clickableLinks = false } = options
-  console.log("Creating schema extensions with options:", options)
 
   const extensions: any[] = [
     StarterKit.configure({
@@ -28,7 +27,6 @@ export const createSchemaExtensions = (
 
     Placeholder.configure({
       placeholder: placeholder || "Write something...",
-      // emptyEditorClass: "is-editor-empty",
       showOnlyWhenEditable: true,
       showOnlyCurrent: false
     }),
