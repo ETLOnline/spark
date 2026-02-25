@@ -225,7 +225,6 @@ export default function RichTextEditor({
       popup[0].popper.style.pointerEvents = "auto"
     }
   }
-
   const schemaExtensions = useMemo(
     () =>
       createSchemaExtensions({
@@ -240,39 +239,7 @@ export default function RichTextEditor({
     const editorOnlyExtensions: any[] = []
 
     // Custom Image NodeView (UI only)
-    editorOnlyExtensions.push(
-      Image.extend({
-        addNodeView() {
-          return ({ node, getPos, editor }) => {
-            const dom = document.createElement("div")
-            dom.className = "tiptap-image-wrapper relative inline-block"
-
-            const img = document.createElement("img")
-            img.src = node.attrs.src
-            img.className = "rounded-md max-w-full h-auto"
-
-            dom.appendChild(img)
-
-            const deleteBtn = document.createElement("button")
-            deleteBtn.textContent = "✕"
-            deleteBtn.onclick = (e) => {
-              e.stopPropagation()
-              editor
-                .chain()
-                .focus()
-                .deleteRange({
-                  from: getPos(),
-                  to: getPos() + node.nodeSize
-                })
-                .run()
-            }
-
-            dom.appendChild(deleteBtn)
-            return { dom }
-          }
-        }
-      })
-    )
+    editorOnlyExtensions.push(CustomImage)
 
     // Mention UI logic
     if (showMentions && mentionUsers.length > 0) {
@@ -396,7 +363,7 @@ export default function RichTextEditor({
 
   const editor = useEditor({
     extensions,
-    content: value,
+    content: value || "",
     editable,
     editorProps: {
       attributes: {

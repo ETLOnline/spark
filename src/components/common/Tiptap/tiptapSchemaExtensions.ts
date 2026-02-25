@@ -26,7 +26,9 @@ export const createSchemaExtensions = (
     }),
 
     Placeholder.configure({
-      placeholder
+      placeholder: placeholder || "Write something...",
+      showOnlyWhenEditable: true,
+      showOnlyCurrent: false
     }),
 
     Underline,
