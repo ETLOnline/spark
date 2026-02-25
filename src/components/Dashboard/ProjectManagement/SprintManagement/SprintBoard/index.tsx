@@ -177,17 +177,21 @@ function SprintBoard() {
           icon={<Kanban />}
         />
       ) : (
-        sprintList.map((sprint) => (
-          <SprintBoardCard
-            sprint={sprint}
-            key={sprint.id}
-            tasks={tasks}
-            isTaskModalOpen={isTaskModalOpen}
-            setIsTaskModalOpen={setIsTaskModalOpen}
-            selectedTask={selectedTask}
-            setSelectedTask={setSelectedTask}
-          />
-        ))
+        sprintList.map((sprint) => {
+          const SptintTasks = tasks.filter((t) => t?.sprint_id === sprint.id)
+          return (
+            <SprintBoardCard
+              sprint={sprint}
+              key={sprint.id}
+              tasks={SptintTasks}
+              isTaskModalOpen={isTaskModalOpen}
+              setIsTaskModalOpen={setIsTaskModalOpen}
+              selectedTask={selectedTask}
+              setSelectedTask={setSelectedTask}
+              setTasks={setTasks}
+            />
+          )
+        })
       )}
 
       <TaskModal
