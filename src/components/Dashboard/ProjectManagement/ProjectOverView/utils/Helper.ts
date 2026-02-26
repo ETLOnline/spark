@@ -6,30 +6,30 @@ export function generateBenchmarkData(
 ): { day: string; benchmark: number }[] {
   if (!days.length || total <= 0) return []
 
-  // Count working days (Mon–Fri)
-  const workingDays = days.filter((day) => {
-    const dow = moment(day, "YYYY-MM-DD").day()
-    return dow !== 0 && dow !== 6
-  })
+  const getDateOnly = (d: string) => moment(d).format("YYYY-MM-DD")
 
-  // Burn so last working day becomes 0
-  const burnPerDay =
-    workingDays.length > 1 ? total / (workingDays.length - 1) : total
+  // Count ALL working-day entries (including repeats)
+  const workingEntries = days.filter((d) => {
+    const dow = moment(getDateOnly(d), "YYYY-MM-DD").day()
+    return dow !== 0 && dow !== 6
+  }).length
+
+  // Burn so last working entry reaches 0
+  const burnPerEntry = workingEntries > 1 ? total / (workingEntries - 1) : total
 
   let currentValue = total
-  let firstWorkingDayPassed = false
+  let firstWorkingEntry = true
 
   return days.map((day) => {
-    const d = moment(day, "YYYY-MM-DD")
-    const dow = d.day()
+    const dateOnly = getDateOnly(day)
+    const dow = moment(dateOnly, "YYYY-MM-DD").day()
     const isWeekend = dow === 0 || dow === 6
 
     if (!isWeekend) {
-      // Skip burn on first working day
-      if (firstWorkingDayPassed) {
-        currentValue = Math.max(currentValue - burnPerDay, 0)
+      if (firstWorkingEntry) {
+        firstWorkingEntry = false
       } else {
-        firstWorkingDayPassed = true
+        currentValue = Math.max(currentValue - burnPerEntry, 0)
       }
     }
 
@@ -48,10 +48,10 @@ export const calculateChartTicks = (allTicks: string[]) => {
   const totalDays = end.diff(start, "days")
 
   // 5 ticks → 4 intervals
-  const intervalDays = totalDays / 4
+  const intervalDays = totalDays / 7
   const ticks = []
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 7; i++) {
     const tickDate = moment(start)
       .add(intervalDays * i, "days")
       .format("YYYY-MM-DD")
@@ -61,6 +61,7 @@ export const calculateChartTicks = (allTicks: string[]) => {
         ? a
         : b
     )
+    console.log("Closest actual tick:", closest)
     ticks.push(closest)
   }
 

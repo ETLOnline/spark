@@ -105,11 +105,11 @@ function useSprintBurnDownHook({ sprintId, sprintStart, sprintEnd }: Props) {
       const totalTasks = events[0]?.total_tasks ?? 0
       const totalPoints = events[0]?.total_story_points ?? 0
 
-      const taskDAys = taskPoints.map((d) => d.day)
-      const pointDAys = pointPoints.map((d) => d.day)
+      const taskDAys = taskPoints.map((d) => d.fullDate)
+      const pointDAys = pointPoints.map((d) => d.fullDate)
 
-      const taskBenchmark = generateBenchmarkData(totalTasks, allDays)
-      const pointBenchmark = generateBenchmarkData(totalPoints, allDays)
+      const taskBenchmark = generateBenchmarkData(totalTasks, taskDAys)
+      const pointBenchmark = generateBenchmarkData(totalPoints, pointDAys)
 
       // ✅ Merge into existing arrays
       const dayUsage: Record<string, number> = {}
@@ -120,7 +120,7 @@ function useSprintBurnDownHook({ sprintId, sprintStart, sprintEnd }: Props) {
 
       const mergedTasks = taskPoints.map((d) => ({
         ...d,
-        benchmark: taskBenchmarkMap[d.day]
+        benchmark: taskBenchmarkMap[d.fullDate]
       }))
 
       const pointDayUsage: Record<string, number> = {}
@@ -131,7 +131,7 @@ function useSprintBurnDownHook({ sprintId, sprintStart, sprintEnd }: Props) {
 
       const mergedPoints = pointPoints.map((d) => ({
         ...d,
-        benchmark: pointBenchmarkMap[d.day]
+        benchmark: pointBenchmarkMap[d.fullDate]
       }))
 
       const forwardFillUntilToday = <
