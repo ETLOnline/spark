@@ -53,6 +53,7 @@ function useSprintBurnDownHook({ sprintId, sprintStart, sprintEnd }: Props) {
         start: startDate.toDate(),
         end: endDate.toDate()
       }).map((d) => formatDate(String(d)))
+      console.log("All days:", allDays)
 
       const dayMap: Record<
         string,
