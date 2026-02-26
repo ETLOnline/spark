@@ -6,28 +6,42 @@ export function generateBenchmarkData(
 ): { day: string; benchmark: number }[] {
   if (!days.length || total <= 0) return []
 
-  // Count working days (Mon–Fri)
-  const workingDays = days.filter((day) => {
+  // Normalize to YYYY-MM-DD (ignore time)
+  const getDateOnly = (d: string) => moment(d).format("YYYY-MM-DD")
+
+  // Count occurrences per calendar day
+  const dayCounts: Record<string, number> = {}
+  days.forEach((d) => {
+    const key = getDateOnly(d)
+    dayCounts[key] = (dayCounts[key] || 0) + 1
+  })
+
+  // Unique working days (Mon–Fri)
+  const uniqueWorkingDays = Object.keys(dayCounts).filter((day) => {
     const dow = moment(day, "YYYY-MM-DD").day()
     return dow !== 0 && dow !== 6
   })
 
   // Burn so last working day becomes 0
   const burnPerDay =
-    workingDays.length > 1 ? total / (workingDays.length - 1) : total
+    uniqueWorkingDays.length > 1
+      ? total / (uniqueWorkingDays.length - 1)
+      : total
 
   let currentValue = total
   let firstWorkingDayPassed = false
 
   return days.map((day) => {
-    const d = moment(day, "YYYY-MM-DD")
+    const dateOnly = getDateOnly(day)
+    const d = moment(dateOnly, "YYYY-MM-DD")
     const dow = d.day()
     const isWeekend = dow === 0 || dow === 6
 
     if (!isWeekend) {
-      // Skip burn on first working day
       if (firstWorkingDayPassed) {
-        currentValue = Math.max(currentValue - burnPerDay, 0)
+        // Divide burn across repeats of this day
+        const perEntryBurn = burnPerDay / dayCounts[dateOnly]
+        currentValue = Math.max(currentValue - perEntryBurn)
       } else {
         firstWorkingDayPassed = true
       }
