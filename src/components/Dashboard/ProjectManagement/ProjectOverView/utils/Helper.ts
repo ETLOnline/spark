@@ -48,10 +48,10 @@ export const calculateChartTicks = (allTicks: string[]) => {
   const totalDays = end.diff(start, "days")
 
   // 5 ticks → 4 intervals
-  const intervalDays = totalDays / 7
+  const intervalDays = totalDays / 5
   const ticks = []
 
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 6; i++) {
     const tickDate = moment(start)
       .add(intervalDays * i, "days")
       .format("YYYY-MM-DD")
@@ -61,7 +61,6 @@ export const calculateChartTicks = (allTicks: string[]) => {
         ? a
         : b
     )
-    console.log("Closest actual tick:", closest)
     ticks.push(closest)
   }
 

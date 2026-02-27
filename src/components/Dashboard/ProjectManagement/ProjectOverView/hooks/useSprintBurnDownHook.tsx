@@ -53,7 +53,6 @@ function useSprintBurnDownHook({ sprintId, sprintStart, sprintEnd }: Props) {
         start: startDate.toDate(),
         end: endDate.toDate()
       }).map((d) => formatDate(String(d)))
-      console.log("All days:", allDays)
 
       const dayMap: Record<
         string,
@@ -103,8 +102,18 @@ function useSprintBurnDownHook({ sprintId, sprintStart, sprintEnd }: Props) {
         }
       }
 
-      const totalTasks = events[0]?.total_tasks ?? 0
-      const totalPoints = events[0]?.total_story_points ?? 0
+      const totalTasks = Math.max(
+        0,
+        ...taskPoints
+          .map((d) => d.value)
+          .filter((v): v is number => v !== null && v !== undefined)
+      )
+      const totalPoints = Math.max(
+        0,
+        ...pointPoints
+          .map((d) => d.value)
+          .filter((v): v is number => v !== null && v !== undefined)
+      )
 
       const taskDAys = taskPoints.map((d) => d.fullDate)
       const pointDAys = pointPoints.map((d) => d.fullDate)
