@@ -140,7 +140,7 @@ function ProjectOverView() {
       })
       if (tasks?.success && tasks.data) {
         setSprintDoneTasksCount(tasks.data.DoneTasksCount)
-        setSprintInprogressTasksCount(tasks.data.InprogressTasksCount)
+        setSprintInprogressTasksCount(tasks.data.InProgressTasksCount)
         setTotalSprintTasksCount(tasks.data.totalTasksCount)
       }
     }
