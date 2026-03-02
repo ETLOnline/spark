@@ -148,20 +148,6 @@ export async function getProjectUsers(projectId: string) {
   }
 }
 
-export async function getProjectMembersCount(projectId: string) {
-  try {
-    const totalMembers = await db.$count(
-      ProjectUsersTable,
-      eq(ProjectUsersTable.project_id, projectId)
-    )
-
-    return totalMembers
-  } catch (error: any) {
-    console.error("Error fetching project users:", error)
-    throw new Error(error.message)
-  }
-}
-
 export async function getProjectusersProfileUrl(
   projectId: string,
   limit?: number,

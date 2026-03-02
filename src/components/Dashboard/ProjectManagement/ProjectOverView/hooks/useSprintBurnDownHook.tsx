@@ -76,7 +76,7 @@ function useSprintBurnDownHook({ sprintId, sprintStart, sprintEnd }: Props) {
         value: number | null
         fullDate: string
       }[] = []
-      const pointPoints: {
+      const estimationPoints: {
         day: string
         value: number | null
         fullDate: string
@@ -89,30 +89,39 @@ function useSprintBurnDownHook({ sprintId, sprintStart, sprintEnd }: Props) {
       for (const day of allDays) {
         if (day < firstEventDay) {
           taskPoints.push({ day, value: 0, fullDate: day })
-          pointPoints.push({ day, value: 0, fullDate: day })
+          estimationPoints.push({ day, value: 0, fullDate: day })
         } else if (dayMap[day]) {
           for (const ev of dayMap[day]) {
             const fullDate = ev.fullDate
             taskPoints.push({ day, value: ev.remainingTasks, fullDate })
-            pointPoints.push({ day, value: ev.storyPoints, fullDate })
+            estimationPoints.push({ day, value: ev.storyPoints, fullDate })
           }
         } else if (day > lastEventDay) {
           taskPoints.push({ day, value: null, fullDate: day })
-          pointPoints.push({ day, value: null, fullDate: day })
+          estimationPoints.push({ day, value: null, fullDate: day })
         }
       }
 
-      const totalTasks = events[0]?.total_tasks ?? 0
-      const totalPoints = events[0]?.total_story_points ?? 0
+      const maxTaskCountPerSprint = Math.max(
+        0,
+        ...events.map((e) => e.total_tasks).filter(Boolean)
+      )
+      const maxPointsPerSprint = Math.max(
+        0,
+        ...events.map((e) => e.total_story_points).filter(Boolean)
+      )
 
-      const taskDAys = taskPoints.map((d) => d.day)
-      const pointDAys = pointPoints.map((d) => d.day)
+      const taskDAys = taskPoints.map((d) => d.fullDate)
+      const pointDAys = estimationPoints.map((d) => d.fullDate)
 
-      const taskBenchmark = generateBenchmarkData(totalTasks, allDays)
-      const pointBenchmark = generateBenchmarkData(totalPoints, allDays)
-
-      // ✅ Merge into existing arrays
-      const dayUsage: Record<string, number> = {}
+      const taskBenchmark = generateBenchmarkData(
+        maxTaskCountPerSprint,
+        taskDAys
+      )
+      const pointBenchmark = generateBenchmarkData(
+        maxPointsPerSprint,
+        pointDAys
+      )
 
       const taskBenchmarkMap = Object.fromEntries(
         taskBenchmark.map((b) => [b.day, b.benchmark])
@@ -120,18 +129,16 @@ function useSprintBurnDownHook({ sprintId, sprintStart, sprintEnd }: Props) {
 
       const mergedTasks = taskPoints.map((d) => ({
         ...d,
-        benchmark: taskBenchmarkMap[d.day]
+        benchmark: taskBenchmarkMap[d.fullDate]
       }))
-
-      const pointDayUsage: Record<string, number> = {}
 
       const pointBenchmarkMap = Object.fromEntries(
         pointBenchmark.map((b) => [b.day, b.benchmark])
       )
 
-      const mergedPoints = pointPoints.map((d) => ({
+      const mergedPoints = estimationPoints.map((d) => ({
         ...d,
-        benchmark: pointBenchmarkMap[d.day]
+        benchmark: pointBenchmarkMap[d.fullDate]
       }))
 
       const forwardFillUntilToday = <

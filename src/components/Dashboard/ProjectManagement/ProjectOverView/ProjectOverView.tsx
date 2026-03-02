@@ -59,7 +59,6 @@ function ProjectOverView() {
     []
   )
   const [sprintList, setSprintList] = useState<SelectSprint[]>([])
-  const [activeDropdown, setActiveDropdown] = useState(false)
   const [currentSprint, setCurrentSprint] = useState<SelectSprint | null>(null)
   const [percentage, setPercentage] = useState(0)
 
@@ -137,11 +136,11 @@ function ProjectOverView() {
         project_id: params.id as string,
         sprint_id: currentSprint.id,
         done: true,
-        inprogress: true
+        inProgress: true
       })
       if (tasks?.success && tasks.data) {
         setSprintDoneTasksCount(tasks.data.DoneTasksCount)
-        setSprintInprogressTasksCount(tasks.data.InprogressTasksCount)
+        setSprintInprogressTasksCount(tasks.data.InProgressTasksCount)
         setTotalSprintTasksCount(tasks.data.totalTasksCount)
       }
     }
@@ -165,7 +164,11 @@ function ProjectOverView() {
     }
   }, [projectStatusList])
 
-  return projectStatusList.length > 0 ? (
+  if (projectStatusList.length === 0) {
+    return <StatusRequiredDialog openDialog={openDialog} />
+  }
+
+  return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <ProjectStatCards
@@ -175,20 +178,12 @@ function ProjectOverView() {
             <div className="flex flex-col justify-between h-full">
               {getSprintLoading ? (
                 <Loader />
-              ) : activeDropdown ? (
+              ) : (
                 <SelectCurrentSprint
                   sprints={sprintList}
                   currentSprint={currentSprint}
                   setCurrentSprint={setCurrentSprint}
-                  setActiveDropdown={setActiveDropdown}
                 />
-              ) : (
-                <div
-                  onClick={() => setActiveDropdown(true)}
-                  className="text-2xl font-bold w-full hover:bg-gray-500 hover:cursor-pointer  flex items-center justify-between px-2 py-1 rounded-md"
-                >
-                  {currentSprint ? currentSprint.title : "Select Sprint"}
-                </div>
               )}
               <div className="mt-2">
                 <div className="flex justify-between mb-1 text-xs">
@@ -296,8 +291,6 @@ function ProjectOverView() {
         </div>
       </div>
     </div>
-  ) : (
-    <StatusRequiredDialog openDialog={openDialog} />
   )
 }
 

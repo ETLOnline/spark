@@ -1,3 +1,4 @@
+import { ProjectStatus } from "@/src/components/Dashboard/ProjectManagement/types/projectStatus.type"
 import { db } from "@/src/db"
 import {
   addSprintBurnDown,
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
       const totalTasks = sprintTasks.length
 
       const completedTasks = sprintTasks.filter(
-        (t) => t.status?.status_slug === "done"
+        (t) => t.status?.status_slug === ProjectStatus.Done
       ).length
 
       const totalStoryPoints = sprintTasks.reduce(
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
       )
 
       const completedStoryPoints = sprintTasks
-        .filter((t) => t.status?.status_slug === "done")
+        .filter((t) => t.status?.status_slug === ProjectStatus.Done)
         .reduce((sum, t) => sum + Number(t.story_points || 0), 0)
 
       const remainingStoryPoints = totalStoryPoints - completedStoryPoints

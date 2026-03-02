@@ -30,7 +30,6 @@ import {
   useSensors,
   DragOverlay
 } from "@dnd-kit/core"
-import BoardTaskCard from "./BoardTaskCard"
 import { createPortal } from "react-dom"
 import { toast } from "@/src/hooks/use-toast"
 import { Skeleton } from "@/src/components/ui/skeleton"
@@ -43,6 +42,7 @@ interface Props {
   setIsTaskModalOpen: Dispatch<SetStateAction<boolean>>
   selectedTask: SelectTask | null
   setSelectedTask: Dispatch<SetStateAction<SelectTask | null>>
+  setTasks: Dispatch<SetStateAction<SelectTask[]>>
 }
 
 function SprintBoardCard({
@@ -51,10 +51,10 @@ function SprintBoardCard({
   isTaskModalOpen,
   setIsTaskModalOpen,
   selectedTask,
-  setSelectedTask
+  setSelectedTask,
+  setTasks
 }: Props) {
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
-  const [filteredTasks, setFilteredTasks] = useState<SelectTask[]>([])
   const [filters, setFilters] = useState<TaskFiltersType | null>(null)
   const [activeTask, setActiveTask] = useState<SelectTask | null>(null)
 
@@ -62,30 +62,25 @@ function SprintBoardCard({
     useServerAction(GetSprintTasksAction)
 
   useEffect(() => {
-    if (!sprint.id) return
+    if (!sprint.id || !filters) return
 
-    if (filters && tasks?.length > 0) {
-      const filtered = tasks.filter((t) => {
-        return (
-          t?.sprint_id === sprint.id &&
-          (!filters.priority?.length ||
-            filters.priority.includes(t.task_priority)) &&
-          (!filters.type?.length || filters.type.includes(t.task_type)) &&
-          (!filters.status?.length ||
-            filters.status.includes(t.status_id || "")) &&
-          (!filters.assignee?.length ||
-            filters.assignee.includes(t.assign_to || "")) &&
-          (!filters.creator?.length ||
-            filters.creator.includes(t.created_by || ""))
-        )
-      })
+    const filtered = tasks.filter((t) => {
+      return (
+        t.sprint_id === sprint.id &&
+        (!filters.priority?.length ||
+          filters.priority.includes(t.task_priority)) &&
+        (!filters.type?.length || filters.type.includes(t.task_type)) &&
+        (!filters.status?.length ||
+          filters.status.includes(t.status_id || "")) &&
+        (!filters.assignee?.length ||
+          filters.assignee.includes(t.assign_to || "")) &&
+        (!filters.creator?.length ||
+          filters.creator.includes(t.created_by || ""))
+      )
+    })
 
-      setFilteredTasks(filtered)
-    } else if (tasks?.length > 0) {
-      setFilteredTasks(tasks.filter((t) => t?.sprint_id === sprint.id))
-    }
+    setTasks(filtered)
   }, [tasks, sprint.id, filters])
-
   useEffect(() => {
     const getTask = async () => {
       if (sprint) {
@@ -100,7 +95,7 @@ function SprintBoardCard({
           excludedTypes: [TaskType.EPIC]
         })
         if (tasks?.success && tasks.data) {
-          setFilteredTasks(tasks.data.tasks)
+          setTasks(tasks.data.tasks)
         }
       }
     }
@@ -136,7 +131,7 @@ function SprintBoardCard({
 
   function handleDragStart(event: any) {
     const taskId = event.active.id
-    const task = filteredTasks.find((t) => t.id === taskId)
+    const task = tasks.find((t) => t.id === taskId)
     setActiveTask(task || null)
   }
 
@@ -152,11 +147,13 @@ function SprintBoardCard({
 
     let statusChanged = false
     let movedParent: any = null
+    let prevStatusId: string | null = null
 
-    setFilteredTasks((prev) => {
+    setTasks((prev) => {
       return prev.map((task) => {
         // update the dragged task’s status
         if (task.id === taskId && task.status_id !== overStatusId) {
+          prevStatusId = task.status_id
           statusChanged = true
           movedParent = { ...task, status_id: overStatusId }
           return movedParent
@@ -183,15 +180,25 @@ function SprintBoardCard({
           status_id: overStatusId as string
         })
 
-        if (res?.success) {
+        if (res?.success && res.data) {
           toast({
-            title: "Task status updated successfully",
+            title: `Task #${res.data.task_num} status updated successfully`,
             duration: 2000
           })
         }
       } catch (error) {
+        setTasks((prev) => {
+          return prev.map((task) => {
+            if (task.id === taskId && prevStatusId) {
+              return { ...task, status_id: prevStatusId }
+            }
+
+            return task
+          })
+        })
+
         toast({
-          title: "Failed to update task status",
+          title: "Failed to update task  status",
           variant: "destructive",
           duration: 2000
         })
@@ -223,10 +230,7 @@ function SprintBoardCard({
             </div>
           </div>
 
-          <SprintProgressBar
-            tasks={filteredTasks}
-            statuses={projectStatusList}
-          />
+          <SprintProgressBar tasks={tasks} statuses={projectStatusList} />
         </CardHeader>
         <CardContent>
           <DndContext
@@ -242,9 +246,9 @@ function SprintBoardCard({
                     key={status.id}
                     sprint={sprint}
                     status={status}
-                    tasks={filteredTasks}
+                    tasks={tasks}
                     onTaskClick={handleOnTaskClick}
-                    setTasks={setFilteredTasks}
+                    setTasks={setTasks}
                   />
                 ))}
               </div>
@@ -253,7 +257,7 @@ function SprintBoardCard({
             {createPortal(
               <DragOverlay>
                 {activeTask ? (
-                  <Skeleton className="h-[200px] w-full rounded-lg" />
+                  <Skeleton className="h-[100px] w-full rounded-lg" />
                 ) : null}
               </DragOverlay>,
               document.body
