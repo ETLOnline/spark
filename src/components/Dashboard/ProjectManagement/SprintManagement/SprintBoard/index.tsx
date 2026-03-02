@@ -160,7 +160,11 @@ function SprintBoard() {
     getTasks()
   }, [projectId, sprintList])
 
-  return projectStatusList.length > 0 ? (
+  if (projectStatusList.length === 0) {
+    return <StatusRequiredDialog openDialog={openDialog} />
+  }
+
+  return (
     <div
       ref={scrollRef}
       className="space-y-4 print:space-y-3 overflow-y-auto"
@@ -176,14 +180,17 @@ function SprintBoard() {
           description="There are no active sprints for this project. Create and active a new sprint to get started."
           icon={<Kanban />}
         />
-      ) : (
+      ) : null}
+
+      {!getSprintLoading &&
+        sprintList.length > 0 &&
         sprintList.map((sprint) => {
-          const SptintTasks = tasks.filter((t) => t?.sprint_id === sprint.id)
+          const SprintTasks = tasks.filter((t) => t?.sprint_id === sprint.id)
           return (
             <SprintBoardCard
               sprint={sprint}
               key={sprint.id}
-              tasks={SptintTasks}
+              tasks={SprintTasks}
               isTaskModalOpen={isTaskModalOpen}
               setIsTaskModalOpen={setIsTaskModalOpen}
               selectedTask={selectedTask}
@@ -191,8 +198,7 @@ function SprintBoard() {
               setTasks={setTasks}
             />
           )
-        })
-      )}
+        })}
 
       <TaskModal
         isReady={isInitailDataLoad}
@@ -206,8 +212,6 @@ function SprintBoard() {
         onSubTaskCreate={(task: SelectTask) => getTasks()}
       />
     </div>
-  ) : (
-    <StatusRequiredDialog openDialog={openDialog} />
   )
 }
 

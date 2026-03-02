@@ -36,6 +36,7 @@ import ProjectTeamList, {
   ProjectUser
 } from "@/src/components/Dashboard/ProjectManagement/ProjectTeamList/ProjectTeamList"
 import { GetProjectUsersAction } from "@/src/server-actions/ProjectManagement/projectManagement"
+import StatusRequiredDialog from "./StatusRequiredDialog"
 
 interface Props {
   currProject: SelectProject
@@ -110,7 +111,11 @@ export function ProjectDashboard({
     fetchProjectUsers()
   }, [currProject.id, spaceUsers])
 
-  return projectStatusList.length > 0 ? (
+  if (projectStatusList.length === 0) {
+    return <StatusRequiredDialog openDialog={openDialog} />
+  }
+
+  return (
     <Tabs
       defaultValue="overview"
       value={activeTab}
@@ -160,29 +165,5 @@ export function ProjectDashboard({
         />
       </TabsContent>
     </Tabs>
-  ) : (
-    <Dialog open={openDialog}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-amber-500" />
-            Status Required
-          </DialogTitle>
-          <DialogDescription>
-            You need to add a statuses to access this project. Please go to the
-            project settings page to set up project statuses.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button
-            className="gap-2"
-            onClick={() => router.push(`./settings?tab=taskStatus`)}
-          >
-            <Settings className="h-4 w-4" />
-            Go to Project Settings
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   )
 }

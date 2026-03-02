@@ -9,13 +9,16 @@ export function generateBenchmarkData(
   const getDateOnly = (d: string) => moment(d).format("YYYY-MM-DD")
 
   // Count ALL working-day entries (including repeats)
-  const workingEntries = days.filter((d) => {
+  const workingDaysTillSprintEnd = days.filter((d) => {
     const dow = moment(getDateOnly(d), "YYYY-MM-DD").day()
     return dow !== 0 && dow !== 6
   }).length
 
   // Burn so last working entry reaches 0
-  const burnPerEntry = workingEntries > 1 ? total / (workingEntries - 1) : total
+  const burnPerEntry =
+    workingDaysTillSprintEnd > 1
+      ? total / (workingDaysTillSprintEnd - 1)
+      : total
 
   let currentValue = total
   let firstWorkingEntry = true

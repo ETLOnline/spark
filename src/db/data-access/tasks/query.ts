@@ -25,6 +25,7 @@ import {
   TaskStatusTable,
   taskTable
 } from "../../schema"
+import { ProjectStatus } from "@/src/components/Dashboard/ProjectManagement/types/projectStatus.type"
 
 export type taskQueryFilters = {
   page?: number
@@ -48,7 +49,7 @@ export type SprintTaskCountFilters = {
   sprint_id?: string
   total?: boolean
   done?: boolean
-  inprogress?: boolean
+  inProgress?: boolean
   todo?: boolean
 }
 
@@ -286,14 +287,14 @@ export async function GetSprintTaskCount(filters?: SprintTaskCountFilters) {
     const project_id = filters?.project_id
     const sprint_id = filters?.sprint_id
     const done = filters?.done
-    const inprogress = filters?.inprogress
+    const inProgress = filters?.inProgress
     const todo = filters?.todo
 
     if (!project_id) {
       throw new Error("Project ID is required")
     }
 
-    const needStatus = done || inprogress || todo
+    const needStatus = done || inProgress || todo
 
     let statuses: { id: string; status_slug: string | null }[] = []
     if (needStatus) {
@@ -306,11 +307,12 @@ export async function GetSprintTaskCount(filters?: SprintTaskCountFilters) {
       })
     }
 
-    const doneStatusId = statuses.find((s) => s.status_slug === "done")?.id
-    const inprogressStatusId = statuses.find(
-      (s) => s.status_slug === "in-progress"
+    const doneStatusId = statuses.find(
+      (s) => s.status_slug === ProjectStatus.Done
     )?.id
-    const todoStatusId = statuses.find((s) => s.status_slug === "to-do")?.id
+    const todoStatusId = statuses.find(
+      (s) => s.status_slug === ProjectStatus.ToDo
+    )?.id
 
     const whereClauses: (SQLWrapper | undefined)[] = []
 
@@ -336,12 +338,12 @@ export async function GetSprintTaskCount(filters?: SprintTaskCountFilters) {
       )
     }
 
-    if (inprogress && (todoStatusId || doneStatusId)) {
+    if (inProgress && (todoStatusId || doneStatusId)) {
       const excludeStatusIds = [todoStatusId, doneStatusId].filter(
         (id): id is string => !!id
       )
 
-      results.InprogressTasksCount = await db.$count(
+      results.InProgressTasksCount = await db.$count(
         taskTable,
         and(...whereClauses, notInArray(taskTable.status_id, excludeStatusIds))
       )

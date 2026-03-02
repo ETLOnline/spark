@@ -136,7 +136,7 @@ function ProjectOverView() {
         project_id: params.id as string,
         sprint_id: currentSprint.id,
         done: true,
-        inprogress: true
+        inProgress: true
       })
       if (tasks?.success && tasks.data) {
         setSprintDoneTasksCount(tasks.data.DoneTasksCount)
@@ -164,7 +164,11 @@ function ProjectOverView() {
     }
   }, [projectStatusList])
 
-  return projectStatusList.length > 0 ? (
+  if (projectStatusList.length === 0) {
+    return <StatusRequiredDialog openDialog={openDialog} />
+  }
+
+  return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <ProjectStatCards
@@ -287,8 +291,6 @@ function ProjectOverView() {
         </div>
       </div>
     </div>
-  ) : (
-    <StatusRequiredDialog openDialog={openDialog} />
   )
 }
 
