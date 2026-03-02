@@ -226,7 +226,11 @@ export function FileSharing() {
         file.uploadedBy.name.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
-  return projectStatusList.length > 0 ? (
+  if (projectStatusList.length === 0) {
+    return <StatusRequiredDialog openDialog={openDialog} />
+  }
+
+  return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-bold">Files & Documents</h2>
@@ -569,7 +573,5 @@ export function FileSharing() {
         </DialogContent>
       </Dialog>
     </div>
-  ) : (
-    <StatusRequiredDialog openDialog={openDialog} />
   )
 }

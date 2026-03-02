@@ -83,6 +83,18 @@ export default function ImageLightbox({
       styles={{
         container: { zIndex: 9999, pointerEvents: "auto" }
       }}
+      carousel={{
+        finite: slides.length <= 1
+      }}
+      controller={{
+        disableSwipeNavigation: slides.length > 1
+      }}
+      zoom={{
+        maxZoomPixelRatio: 3,
+        zoomInMultiplier: 2,
+        doubleTapDelay: 300,
+        doubleClickDelay: 300
+      }}
       on={{
         view: ({ index }) => {
           currentIndexRef.current = index

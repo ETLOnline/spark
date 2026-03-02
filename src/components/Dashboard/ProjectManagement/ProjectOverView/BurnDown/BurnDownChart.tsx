@@ -43,7 +43,7 @@ function BurnDownChart({ chartData, allTicks, CustomTooltip }: Props) {
         />
 
         <YAxis
-          domain={[0, (dataMax: number) => Math.ceil(dataMax + 2)]}
+          domain={[0, "dataMax"]}
           ticks={calculateYAxisTicks(chartData, 2)}
         />
 

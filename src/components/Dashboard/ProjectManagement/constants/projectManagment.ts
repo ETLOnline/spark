@@ -1,4 +1,5 @@
 import { InsertTaskStatus, SelectTask } from "@/src/db/schema"
+import { ProjectStatus } from "../types/projectStatus.type"
 
 export enum TaskType {
   STORY = "story",
@@ -133,19 +134,19 @@ interface InsertTaskStatusEx extends InsertTaskStatus {
 export const projectDefaultStatuses: Partial<InsertTaskStatusEx>[] = [
   {
     name: "To Do",
-    status_slug: "to-do",
+    status_slug: ProjectStatus.ToDo,
     position: 1,
     iconColor: "#3b82f6"
   },
   {
     name: "In Progress",
-    status_slug: "in-progress",
+    status_slug: ProjectStatus.InProgress,
     position: 2,
     iconColor: "#eab308"
   },
   {
     name: "Done",
-    status_slug: "done",
+    status_slug: ProjectStatus.Done,
     position: 3,
     iconColor: "#22c55e"
   }

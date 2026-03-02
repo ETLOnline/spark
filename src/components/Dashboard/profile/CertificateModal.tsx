@@ -47,12 +47,14 @@ interface Props {
 const userCertificateSchema = z.object({
   title: z
     .string()
-    .min(1, "Certificate name is required")
+    .trim()
+    .min(1, "Certificate name cannot be empty")
     .max(100, "Certificate name cannot exceed 100 characters"),
 
   institute: z
     .string()
-    .min(1, "Institute name is required")
+    .trim()
+    .min(1, "Institute name cannot be empty")
     .max(100, "Institute name cannot exceed 100 characters"),
 
   year: z
