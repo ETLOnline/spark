@@ -4,28 +4,36 @@ export function generateBenchmarkData(
   total: number,
   days: string[]
 ): { day: string; benchmark: number }[] {
-  if (!days.length || total === 0) return []
+  if (!days.length || total <= 0) return []
 
-  // Count working days (Mon–Fri)
-  const workingDays = days.filter((day) => {
-    const d = moment(day, "YYYY-MM-DD")
-    const dow = d.day()
+  const getDateOnly = (d: string) => moment(d).format("YYYY-MM-DD")
+
+  // Count ALL working-day entries (including repeats)
+  const workingDaysTillSprintEnd = days.filter((d) => {
+    const dow = moment(getDateOnly(d), "YYYY-MM-DD").day()
     return dow !== 0 && dow !== 6
-  })
+  }).length
 
-  const burnPerDay =
-    workingDays.length > 1 ? total / (workingDays.length - 1) : total
+  // Burn so last working entry reaches 0
+  const burnPerEntry =
+    workingDaysTillSprintEnd > 1
+      ? total / (workingDaysTillSprintEnd - 1)
+      : total
 
   let currentValue = total
+  let firstWorkingEntry = true
 
-  return days.map((day, index) => {
-    const d = moment(day, "YYYY-MM-DD")
-    const dow = d.day()
+  return days.map((day) => {
+    const dateOnly = getDateOnly(day)
+    const dow = moment(dateOnly, "YYYY-MM-DD").day()
     const isWeekend = dow === 0 || dow === 6
 
-    // Decrease only on weekdays (except first day)
-    if (!isWeekend && index !== 0) {
-      currentValue = Math.max(currentValue - burnPerDay, 0)
+    if (!isWeekend) {
+      if (firstWorkingEntry) {
+        firstWorkingEntry = false
+      } else {
+        currentValue = Math.max(currentValue - burnPerEntry, 0)
+      }
     }
 
     return {
@@ -43,10 +51,10 @@ export const calculateChartTicks = (allTicks: string[]) => {
   const totalDays = end.diff(start, "days")
 
   // 5 ticks → 4 intervals
-  const intervalDays = totalDays / 4
+  const intervalDays = totalDays / 5
   const ticks = []
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 6; i++) {
     const tickDate = moment(start)
       .add(intervalDays * i, "days")
       .format("YYYY-MM-DD")

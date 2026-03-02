@@ -134,7 +134,11 @@ const TeamPage: React.FC = () => {
 
   if (!currProject || !currSpace) return <NotFound />
 
-  return projectStatusList.length > 0 ? (
+  if (projectStatusList.length === 0) {
+    return <StatusRequiredDialog openDialog={openDialog} />
+  }
+
+  return (
     <ScrollArea className="min-h-full px-4">
       <div className="p-6">
         <ProjectTeamList
@@ -145,8 +149,6 @@ const TeamPage: React.FC = () => {
         />
       </div>
     </ScrollArea>
-  ) : (
-    <StatusRequiredDialog openDialog={openDialog} />
   )
 }
 

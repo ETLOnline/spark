@@ -109,7 +109,11 @@ export function BacklogManagement() {
     return null
   }
 
-  return projectStatusList.length > 0 ? (
+  if (projectStatusList.length === 0) {
+    return <StatusRequiredDialog openDialog={openDialog} />
+  }
+
+  return (
     <>
       <TaskModal
         isReady={isInitailDataLoad}
@@ -211,7 +215,5 @@ export function BacklogManagement() {
         />
       </div>
     </>
-  ) : (
-    <StatusRequiredDialog openDialog={openDialog} />
   )
 }
