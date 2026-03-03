@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { useAtom, useSetAtom } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   DeleteCommunityAction,
@@ -32,6 +32,11 @@ import {
   PaginationPrevious
 } from "@/src/components/ui/pagination"
 import pusherClient from "@/src/services/realtime/PusherClient"
+import { Button } from "@/src/components/ui/button"
+import Image from "next/image"
+import CommunityRequestBanner from "@/src/components/communities/CommunityRequestBanner"
+import { isSuperAdmin } from "@/src/utils/helpers"
+import { userStore } from "@/src/store/user/userStore"
 
 export default function CommunitiesPage() {
   const [communitiesList, setCommunitiesList] =
@@ -350,6 +355,8 @@ export default function CommunitiesPage() {
     return pages
   }
 
+  const isSuperAdmin = Boolean(useAtomValue(userStore.SuperAdmin))
+
   return (
     <div className="flex-1 space-y-6 p-6">
       {/* Communities Header: Includes the "Create Community" button */}
@@ -365,6 +372,9 @@ export default function CommunitiesPage() {
         onSortByChange={handleSortByChange}
         availableCategories={communityCategories}
       />
+
+      {/* Community Request Banner */}
+      {!isSuperAdmin ? <CommunityRequestBanner /> : null}
 
       {/* Community List Tabs: ALWAYS RENDER THIS COMPONENT */}
       <CommunityListTabs

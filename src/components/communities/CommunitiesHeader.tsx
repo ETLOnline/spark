@@ -23,11 +23,13 @@ export default function CommunitiesHeader({
         </p>
       </div>
       {/* Attach the onCreateCommunityClick prop to the Button's onClick event */}
-      {canCreateCommunity && (
+      {canCreateCommunity ? (
         <Button onClick={onCreateCommunityClick}>
           <CirclePlus className="h-4 w-4 mr-2" />
           Create Community
         </Button>
+      ) : (
+        <Button>Request to Create Community</Button>
       )}
     </div>
   )
