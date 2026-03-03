@@ -1,6 +1,6 @@
 {
-  "id": "48ec2eec-6af3-48ce-8747-70929e32c7a6",
-  "prevId": "31aa703f-8d14-4706-b07d-e541fba92b8c",
+  "id": "42172398-6df4-46cd-8358-30313e02bcbe",
+  "prevId": "ce23b1e4-f0a0-4fe1-bddd-dbd2fca22ab7",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -986,8 +986,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "official_university_name": {
-          "name": "official_university_name",
+        "official_university_email": {
+          "name": "official_university_email",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true

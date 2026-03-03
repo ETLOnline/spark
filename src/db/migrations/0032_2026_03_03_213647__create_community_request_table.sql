@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS "community_requests" (
 	"id" varchar(36) PRIMARY KEY NOT NULL,
 	"university_name" varchar NOT NULL,
-	"official_university_name" varchar NOT NULL,
+	"official_university_email" varchar NOT NULL,
 	"contact_person_id" varchar NOT NULL,
 	"contact_person_name" varchar NOT NULL,
 	"contact_number" varchar NOT NULL,
