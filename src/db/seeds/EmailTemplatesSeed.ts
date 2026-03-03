@@ -39,6 +39,11 @@ const templatesToSeed: NewEmailTemplate[] = [
     name: NotificationEvent.CHAT_INVITE,
     subject: "You've got a new chat",
     body: loadTemplate("chat_invite.html")
+  },
+  {
+    name: "community_request",
+    subject: "Your Community Request Has Been Submitted",
+    body: loadTemplate("submit_community_request.html")
   }
 ]
 
