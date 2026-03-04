@@ -32,10 +32,7 @@ import {
   PaginationPrevious
 } from "@/src/components/ui/pagination"
 import pusherClient from "@/src/services/realtime/PusherClient"
-import { Button } from "@/src/components/ui/button"
-import Image from "next/image"
 import CommunityRequestBanner from "@/src/components/communities/CommunityRequestBanner"
-import { isSuperAdmin } from "@/src/utils/helpers"
 import { userStore } from "@/src/store/user/userStore"
 
 export default function CommunitiesPage() {
