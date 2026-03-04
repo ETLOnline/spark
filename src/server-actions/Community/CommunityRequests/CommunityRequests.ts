@@ -5,7 +5,10 @@ import {
 } from "@/src/db/data-access/communities/communityRequest/query"
 import { InsertCommunityRequest } from "@/src/db/schema"
 import { CreateServerAction } from "../.."
-import { createCommunityRequestNotification } from "@/src/services/notify/community/community"
+import {
+  createCommunityRequestNotification,
+  notifyAdminNewCommunityRequest
+} from "@/src/services/notify/community/community"
 import { NotificationEvent } from "@/src/services/notify/types/events"
 
 export const CreateCommunityRequestAction = CreateServerAction(
@@ -17,6 +20,10 @@ export const CreateCommunityRequestAction = CreateServerAction(
       if (res) {
         await createCommunityRequestNotification(
           NotificationEvent.COMMUNITY_REQUEST
+        )
+
+        await notifyAdminNewCommunityRequest(
+          NotificationEvent.ADMIN_NEW_COMMUNITY_REQUEST
         )
       }
 

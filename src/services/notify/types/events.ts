@@ -9,5 +9,6 @@ export enum NotificationEvent {
   POST_LIKE = "post_like",
   POST_COMMENT = "post_comment",
   MENTION_IN_COMMENT = "mention_in_comment",
-  COMMUNITY_REQUEST = "community_request"
+  COMMUNITY_REQUEST = "community_request",
+  ADMIN_NEW_COMMUNITY_REQUEST = "admin_new_community_request"
 }
