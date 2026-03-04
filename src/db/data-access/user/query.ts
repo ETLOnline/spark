@@ -329,3 +329,26 @@ export async function getBulkUsers(unique_ids: string[]) {
     where: inArray(usersTable.unique_id, unique_ids)
   })
 }
+
+export async function getSuperAdmins() {
+  try {
+    const superAdminRole = await db.query.rolesTable.findFirst({
+      where: eq(rolesTable.name, "Super_Admin")
+    })
+
+    if (!superAdminRole) {
+      throw new Error("Super Admin role not found")
+    }
+    const superAdmins = await db.query.userRolesTable.findMany({
+      where: eq(userRolesTable.role_id, superAdminRole.id),
+      with: {
+        user: true
+      }
+    })
+
+    return superAdmins.map((sa) => sa.user) || []
+  } catch (error: any) {
+    console.error("Error fetching super admins:", error)
+    throw new Error("Failed to fetch super admins")
+  }
+}

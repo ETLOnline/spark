@@ -1380,6 +1380,27 @@ export type SelectCommunityCategory =
     communities?: SelectCommunity[]
   }
 
+export const communityRequestsTable = pgTable("community_requests", {
+  Id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  university_name: varchar().notNull(),
+  official_university_email: varchar().notNull(),
+  contact_person_id: varchar().notNull(),
+  contact_person_name: varchar().notNull(),
+  contact_number: varchar().notNull(),
+  designation: varchar().notNull(),
+  university_website: varchar(),
+  city: varchar().notNull(),
+  description: varchar(),
+  estimates_number_of_students: integer(),
+  intended_usage: varchar(),
+  ...timestamps
+})
+
+export type InsertCommunityRequest = typeof communityRequestsTable.$inferInsert
+export type SelectCommunityRequest = typeof communityRequestsTable.$inferSelect
+
 export const shortcutsTable = pgTable("shortcuts", {
   id: varchar("id", { length: 36 })
     .primaryKey()

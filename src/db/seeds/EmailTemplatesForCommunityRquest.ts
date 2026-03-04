@@ -16,31 +16,6 @@ const loadTemplate = (filename: string) => {
 
 const templatesToSeed: NewEmailTemplate[] = [
   {
-    name: "update_task",
-    subject: "Task has been updated",
-    body: loadTemplate("update_task.html")
-  },
-  {
-    name: NotificationEvent.NEW_CONNECTION,
-    subject: "New Connection",
-    body: loadTemplate("new_connection.html")
-  },
-  {
-    name: NotificationEvent.CONNECTION_ACCEPTED,
-    subject: "New Connection",
-    body: loadTemplate("accept_connection.html")
-  },
-  {
-    name: "project_invite",
-    subject: `You've Been Added to a Project - {{projectName}}`,
-    body: loadTemplate("project_invite.html")
-  },
-  {
-    name: NotificationEvent.CHAT_INVITE,
-    subject: "You've got a new chat",
-    body: loadTemplate("chat_invite.html")
-  },
-  {
     name: NotificationEvent.COMMUNITY_REQUEST,
     subject: "Your Community Request Has Been Submitted",
     body: loadTemplate("submit_community_request.html")
@@ -52,19 +27,26 @@ const templatesToSeed: NewEmailTemplate[] = [
   }
 ]
 
-export const EmailTemplatesSeed = async () => {
+export const EmailTemplatesForCommunityRequestSeed = async () => {
   return await db.transaction(async (tx) => {
     try {
       console.log("🌱 Seeding email templates...")
-      await tx.execute(sql`Truncate email_templates CASCADE ;`)
-      // Use the transaction's `insert` method
-      await tx.insert(emailTemplatesTable).values(templatesToSeed)
+
+      await tx
+        .insert(emailTemplatesTable)
+        .values(templatesToSeed)
+        .onConflictDoUpdate({
+          target: emailTemplatesTable.name, // must be unique in schema
+          set: {
+            subject: templatesToSeed[0].subject,
+            body: templatesToSeed[0].body
+          }
+        })
 
       console.log("✅ Email template seeding complete.")
     } catch (error) {
       console.error("❌ Error seeding email templates:", error)
-      tx.rollback() // Roll back the transaction on failure
-      process.exit(1)
+      throw error // Let transaction auto-rollback
     }
   })
 }
