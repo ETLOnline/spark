@@ -38,6 +38,9 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/src/components/ui/select"
+import { permissions } from "@/src/utils/constants"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { PermissionChecker } from "@/src/lib/PermissionCheker"
 
 // Sample data for platform users
 const platformUsers: SelectUser[] = []
@@ -75,6 +78,20 @@ export function InviteUserDialog({
   const [copied, setCopied] = useState(false)
   const [selectedType, setSelectedType] = useState(type[0])
   const [inviteLink, setInviteLink] = useState("")
+  const typeForMapping = entityType.toUpperCase() as "SPACE" | "CHANNEL" | "COMMUNITY";
+
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    typeForMapping,
+    entity.id
+  )
+  const canEmailInviteUser = PermissionChecker
+    ? permissionChecker?.canAccess(permissions.community.userEmailInvite)
+    : false
+
+  const allowedTypes = canEmailInviteUser
+    ? type
+    : type.filter(t => t === "link");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -454,7 +471,7 @@ export function InviteUserDialog({
             </Button>
             <Button
               onClick={sendInvitations}
-              loading={isSending} 
+              loading={isSending}
               disabled={isSending || emailList.length === 0}
             >
               {isSending ? "Sending..." : "Send Invitations"}

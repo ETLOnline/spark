@@ -29,6 +29,7 @@ const permissionSeedList = [
   { namespace: "community", action: permissions.community.delete },
   { namespace: "community", action: permissions.community.allowAction },
   { namespace: "community", action: permissions.community.userInvite },
+  { namespace: "community", action: permissions.community.userEmailInvite },
   { namespace: "community", action: permissions.community.userUpdate },
   { namespace: "community", action: permissions.community.userRemove },
   { namespace: "community", action: permissions.community.userView },
