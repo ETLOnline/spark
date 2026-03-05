@@ -44,6 +44,11 @@ const templatesToSeed: NewEmailTemplate[] = [
     name: "community_request",
     subject: "Your Community Request Has Been Submitted",
     body: loadTemplate("submit_community_request.html")
+  },
+  {
+    name: NotificationEvent.JOIN_INVITE_EMAIL,
+    subject: `You've Been Invited to join spark {{entityType}}!`,
+    body: loadTemplate("join_invite_email.html")
   }
 ]
 

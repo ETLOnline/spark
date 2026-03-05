@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Check, Copy, Mail, Search, User } from "lucide-react"
-
+import { useToast } from "@/src/hooks/use-toast"
 import { Button } from "@/src/components/ui/button"
 import {
   Dialog,
@@ -29,6 +29,15 @@ import { entityKind } from "drizzle-orm"
 import { hostname } from "os"
 import { isEntityChannel, isEntityCommunity } from "@/src/utils/helpers"
 import { CommunityDetailData } from "@/src/db/data-access/communities/query"
+import { SendInvitationsAction } from "@/src/server-actions/Invite/Invite"
+import { getRoleByEntityTypeAndIdAction } from "@/src/server-actions/UserRoles/UserRole"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/src/components/ui/select"
 
 // Sample data for platform users
 const platformUsers: SelectUser[] = []
@@ -51,10 +60,15 @@ export function InviteUserDialog({
   entityType,
   entity
 }: InviteUserDialogProps) {
+  const { toast } = useToast()
   const [searchQuery, setSearchQuery] = useState("")
+  const [roles, setRoles] = useState<{ id: number; name: string }[]>([])
+  const [selectedRole, setSelectedRole] = useState<string>("member")
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [emailInput, setEmailInput] = useState("")
   const [emailList, setEmailList] = useState<string[]>([])
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [isSending, setIsSending] = useState(false);
   const [inviteMessage, setInviteMessage] = useState(
     `Join our ${entityType} on our platform!`
   )
@@ -94,10 +108,24 @@ export function InviteUserDialog({
 
   // Add email to list
   const addEmail = () => {
-    if (emailInput && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) {
-      setEmailList((prev) => [...prev, emailInput])
-      setEmailInput("")
+    setEmailError(null)
+
+    if (!emailInput) return
+
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)
+
+    if (!isValidEmail) {
+      setEmailError("Please enter a valid email address.")
+      return
     }
+
+    if (emailList.includes(emailInput)) {
+      setEmailError("This email has already been added.")
+      return
+    }
+
+    setEmailList((prev) => [...prev, emailInput])
+    setEmailInput("")
   }
 
   // Remove email from list
@@ -111,22 +139,89 @@ export function InviteUserDialog({
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+  useEffect(() => {
+    const fetchRoles = async () => {
+      if (!open) return
 
-  // Send invitations
-  const sendInvitations = () => {
-    // Here you would implement the actual invitation logic
-    console.log("Selected platform users:", selectedUsers)
-    console.log("Email invitations:", emailList)
-    console.log("Invite message:", inviteMessage)
+      const typeMapping: Record<string, "CHANNEL" | "SPACE" | "PROJECT" | "COMMUNITY"> = {
+        community: "COMMUNITY",
+        space: "SPACE",
+        channel: "CHANNEL"
+      }
 
-    // Close the dialog
-    onOpenChange(false)
+      const response = await getRoleByEntityTypeAndIdAction(typeMapping[entityType], entity.id)
 
-    // Reset state
-    setSelectedUsers([])
-    setEmailList([])
-    setSearchQuery("")
-    setEmailInput("")
+      if (response.success && response.data) {
+        setRoles(response.data)
+        if (response.data.length > 0) {
+          setSelectedRole(response.data[0].name)
+        }
+      }
+    }
+
+    fetchRoles()
+  }, [open, entity.id, entityType])
+
+
+  const sendInvitations = async () => {
+    if (emailList.length === 0) {
+      toast({
+        title: "No recipients",
+        description: "Please add at least one email address.",
+        variant: "destructive",
+        duration: 3000
+      })
+      return
+    }
+    // Find the full role object to get the ID
+    const roleObject = roles.find(r => r.name === selectedRole)
+
+    if (!roleObject) {
+      toast({
+        title: "Invalid Role",
+        description: "Please select a valid role.",
+        variant: "destructive"
+      })
+      return
+    }
+    setIsSending(true);
+
+    try {
+      const response = await SendInvitationsAction({
+        emails: emailList,
+        role_offer_id: roleObject.id,
+        roleName: roleObject.name,
+        entityType: entityType,
+        entityId: entity.id,
+      })
+
+      if (response.success) {
+        toast({
+          title: "Invitations sent successfully",
+          description: `${emailList.length} people have been invited to the ${entityType}.`,
+          duration: 3000
+        })
+
+        setEmailList([])
+        onOpenChange(false)
+      } else {
+        toast({
+          title: "Error sending invitations",
+          description: response.error || "Something went wrong.",
+          variant: "destructive",
+          duration: 3000
+        })
+      }
+    } catch (error: any) {
+      toast({
+        title: "System Error",
+        description: "An unexpected error occurred while processing invitations.",
+        variant: "destructive",
+        duration: 3000
+      })
+    } finally {
+      setIsSending(false);
+    }
   }
 
   return (
@@ -239,7 +334,10 @@ export function InviteUserDialog({
                   placeholder="Enter email address..."
                   className="pl-8"
                   value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
+                  onChange={(e) => {
+                    setEmailInput(e.target.value)
+                    if (emailError) setEmailError(null)
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault()
@@ -252,7 +350,9 @@ export function InviteUserDialog({
                 Add
               </Button>
             </div>
-
+            {emailError && (
+              <p className="text-xs font-medium text-destructive">{emailError}</p>
+            )}
             {emailList.length > 0 && (
               <div className="space-y-2 max-h-[200px] overflow-y-auto">
                 {emailList.map((email) => (
@@ -289,15 +389,23 @@ export function InviteUserDialog({
               </div>
             )}
 
-            <div className="pt-2">
-              <Label htmlFor="email-invite-message">Invitation Message</Label>
-              <Textarea
-                id="email-invite-message"
-                value={inviteMessage}
-                onChange={(e) => setInviteMessage(e.target.value)}
-                className="mt-1"
-                placeholder="Add a personal message to your invitation"
-              />
+            <div className="space-y-2">
+              <Label htmlFor="role-select">Assign Role</Label>
+              <Select value={selectedRole} onValueChange={setSelectedRole}>
+                <SelectTrigger id="role-select" className="w-full">
+                  <SelectValue placeholder="Select a role to offer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((role) => (
+                    <SelectItem key={role.id} value={role.name}>
+                      {role.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                The invited users will be assigned this role upon joining.
+              </p>
             </div>
           </TabsContent>
 
@@ -344,7 +452,13 @@ export function InviteUserDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={sendInvitations}>Send Invitations</Button>
+            <Button
+              onClick={sendInvitations}
+              loading={isSending} 
+              disabled={isSending || emailList.length === 0}
+            >
+              {isSending ? "Sending..." : "Send Invitations"}
+            </Button>
           </DialogFooter>
         ) : null}
       </DialogContent>
