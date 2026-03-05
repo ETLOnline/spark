@@ -3,8 +3,11 @@ import React from "react"
 import { Button } from "../ui/button"
 import Image from "next/image"
 import "./CommunityRequestBannerStyle.css"
+import { useRouter } from "next/navigation"
 
 function CommunityRequestBanner() {
+  const router = useRouter()
+
   return (
     <div className="community-request-Banner">
       <div className="banner-content">
@@ -14,7 +17,9 @@ function CommunityRequestBanner() {
           Manage your own community and connect with peers in a focused
           environment. Take control and bring your ideas to life!
         </p>
-        <Button>Request to Create Community</Button>
+        <Button onClick={() => router.push("/communities/request")}>
+          Request to Create Community
+        </Button>
       </div>
       <Image
         src="images/community_request_banner.svg"

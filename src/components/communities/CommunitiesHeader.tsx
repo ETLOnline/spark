@@ -1,6 +1,7 @@
 import { Button } from "@/src/components/ui/button"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { CirclePlus } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 type CommunitiesHeaderProps = {
   onCreateCommunityClick: () => void
@@ -14,6 +15,8 @@ export default function CommunitiesHeader({
     ? permissionChecker?.canAccess("community.create")
     : false
 
+  const route = useRouter()
+
   return (
     <div className="flex items-center justify-between">
       <div>
@@ -23,13 +26,15 @@ export default function CommunitiesHeader({
         </p>
       </div>
       {/* Attach the onCreateCommunityClick prop to the Button's onClick event */}
-      {canCreateCommunity ? (
+      {!permissionChecker ? null : canCreateCommunity ? (
         <Button onClick={onCreateCommunityClick}>
           <CirclePlus className="h-4 w-4 mr-2" />
           Create Community
         </Button>
       ) : (
-        <Button>Request to Create Community</Button>
+        <Button onClick={() => route.push("/communities/request")}>
+          Request to Create Community
+        </Button>
       )}
     </div>
   )

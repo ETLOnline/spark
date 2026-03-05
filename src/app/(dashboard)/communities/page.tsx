@@ -353,6 +353,7 @@ export default function CommunitiesPage() {
   }
 
   const isSuperAdmin = Boolean(useAtomValue(userStore.SuperAdmin))
+  const isUserLoading = Boolean(useAtomValue(userStore.LoadingUser))
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -371,7 +372,9 @@ export default function CommunitiesPage() {
       />
 
       {/* Community Request Banner */}
-      {!isSuperAdmin ? <CommunityRequestBanner /> : null}
+      {!isUserLoading && isSuperAdmin === false ? (
+        <CommunityRequestBanner />
+      ) : null}
 
       {/* Community List Tabs: ALWAYS RENDER THIS COMPONENT */}
       <CommunityListTabs
