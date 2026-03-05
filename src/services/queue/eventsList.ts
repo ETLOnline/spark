@@ -1,7 +1,9 @@
 import { processChatNotification } from "./processors/chat"
 import {
   processAdminNewCommunityRequestNotification,
-  processSubmitCommunityRequestNotification
+  processSubmitCommunityRequestNotification,
+  processUserCommunityRequestAcceptedNotification,
+  processUserCommunityRequestRejectedNotification
 } from "./processors/community"
 import { processContactNotification } from "./processors/contact"
 import { processProjectInviteNotification } from "./processors/project"
@@ -22,5 +24,7 @@ export const eventsList: Record<string, EventProcessor> = {
   project_invite: processProjectInviteNotification,
   chat_invite: processChatNotification,
   community_request: processSubmitCommunityRequestNotification,
-  admin_new_community_request: processAdminNewCommunityRequestNotification
+  admin_new_community_request: processAdminNewCommunityRequestNotification,
+  community_request_accepted: processUserCommunityRequestAcceptedNotification,
+  community_request_rejected: processUserCommunityRequestRejectedNotification
 }
