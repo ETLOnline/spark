@@ -26,7 +26,7 @@ export const SendInvitationsAction = CreateServerAction(
 
       const inviteKey = randomBytes(16).toString("hex")
 
-      let invitation = await createInvitation({
+      const invitation = await createInvitation({
         invite_key: inviteKey,
         entity_id: data.entityId,
         entity_type: data.entityType,
