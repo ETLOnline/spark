@@ -111,7 +111,7 @@ const InviteScreen = ({ entityType, entity, inviteKey }: Props) => {
         })
         const path = getEntityRedirectPath(entity)
         router.replace(path)
-        
+
       } else {
         setHasCheckedMembership(true)
       }
@@ -131,11 +131,11 @@ const InviteScreen = ({ entityType, entity, inviteKey }: Props) => {
         setIsVerifying(false);
         return;
       }
-  
+
       if (!authUser?.email) return;
-  
+
       const result = await VerifyInviteAction({ key: inviteKey });
-  
+
       if (result.success) {
         setInvitationData(result.data);
         setVerificationFailed(false);
@@ -150,7 +150,7 @@ const InviteScreen = ({ entityType, entity, inviteKey }: Props) => {
         });
       }
     };
-  
+
     verify();
   }, [inviteKey, authUser]);
 
@@ -158,7 +158,7 @@ const InviteScreen = ({ entityType, entity, inviteKey }: Props) => {
     if (isLoading) return
     setIsLoading(true)
     const roleSlug = inviteKey ? invitationData.role.slug : ""
-    
+
     if (authUser?.unique_id && entity.id) {
       try {
         if (isEntityCommunity(entity)) {
@@ -213,6 +213,7 @@ const InviteScreen = ({ entityType, entity, inviteKey }: Props) => {
           </div>
           <CardTitle className="text-xl">{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
+          <CardDescription className="text-center p-4 text-destructive font-bold">Invalid invitation, you were not invited with this email</CardDescription>
         </CardHeader>
 
         <CardContent>
@@ -241,18 +242,19 @@ const InviteScreen = ({ entityType, entity, inviteKey }: Props) => {
             </div>
           </div>
         </CardContent>
-
-        <CardFooter className="flex flex-col sm:flex-row gap-3">
-          <Button
-            loading={isLoading}
-            disabled={isLoading || isVerifying || verificationFailed}
-            className="w-full sm:w-auto"
-            onClick={handleJoin}
-          >
-            {isLoading ? "Joining..." : "Continue to Join"}
-            {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
-          </Button>
-        </CardFooter>
+        {isVerifying &&
+          <CardFooter className="flex flex-col sm:flex-row gap-3">
+            <Button
+              loading={isLoading}
+              disabled={isLoading || isVerifying || verificationFailed}
+              className="w-full sm:w-auto"
+              onClick={handleJoin}
+            >
+              {isLoading ? "Joining..." : "Continue to Join"}
+              {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
+            </Button>
+          </CardFooter>
+        }
       </Card>
     </div>
   )

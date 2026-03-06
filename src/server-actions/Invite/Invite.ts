@@ -64,7 +64,7 @@ export const VerifyInviteAction = CreateServerAction(
       if (!invitation) {
         return {
           success: false,
-          error: "Invalid invitation key or you were not invited with this email."
+          error: "Invalid invitation, you were not invited with this email."
         };
       }
 
