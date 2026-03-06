@@ -26,7 +26,7 @@ export const SendInvitationsAction = CreateServerAction(
 
       const inviteKey = randomBytes(16).toString("hex")
 
-      const invitation = await createInvitation({
+      let invitation = await createInvitation({
         invite_key: inviteKey,
         entity_id: data.entityId,
         entity_type: data.entityType,
@@ -34,10 +34,12 @@ export const SendInvitationsAction = CreateServerAction(
         invite_email: data.emails,
         invited_by: authUser.unique_id,
       })
-
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+      const inviteUrl = `${baseUrl}/invite/${invitation.entity_id}?type=${invitation.entity_type}&key=${invitation.invite_key}`;
+       const finalInvitationPayLoad = {...invitation,role_offer,inviteUrl}
       // Logic to send actual emails would go here
-      await createInviteEmailNotification(NotificationEvent.JOIN_INVITE_EMAIL, {...invitation,role_offer})
-      return { success: true, data: invitation }
+      await createInviteEmailNotification(NotificationEvent.JOIN_INVITE_EMAIL, finalInvitationPayLoad)
+      return { success: true, data: finalInvitationPayLoad }
     } catch (error: any) {
       console.error("Error in SendInvitationsAction:", error)
       return {

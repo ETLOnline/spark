@@ -72,6 +72,7 @@ export function InviteUserDialog({
   const [emailList, setEmailList] = useState<string[]>([])
   const [emailError, setEmailError] = useState<string | null>(null)
   const [isSending, setIsSending] = useState(false);
+  const [sentInviteLink, setSentInviteLink] = useState<string | null>(null);
   const [inviteMessage, setInviteMessage] = useState(
     `Join our ${entityType} on our platform!`
   )
@@ -122,6 +123,12 @@ export function InviteUserDialog({
         : [...prev, userId]
     )
   }
+
+  useEffect(() => {
+    if (!open) {
+      setSentInviteLink(null);
+    }
+  }, [open]);
 
   // Add email to list
   const addEmail = () => {
@@ -220,7 +227,9 @@ export function InviteUserDialog({
         })
 
         setEmailList([])
-        onOpenChange(false)
+        if (response.data?.inviteUrl) {
+          setSentInviteLink(response.data.inviteUrl);
+        }
       } else {
         toast({
           title: "Error sending invitations",
@@ -343,87 +352,111 @@ export function InviteUserDialog({
           </TabsContent>
 
           <TabsContent value="email" className="space-y-4 py-4">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Mail className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="email"
-                  placeholder="Enter email address..."
-                  className="pl-8"
-                  value={emailInput}
-                  onChange={(e) => {
-                    setEmailInput(e.target.value)
-                    if (emailError) setEmailError(null)
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault()
-                      addEmail()
-                    }
-                  }}
-                />
-              </div>
-              <Button type="button" onClick={addEmail}>
-                Add
-              </Button>
-            </div>
-            {emailError && (
-              <p className="text-xs font-medium text-destructive">{emailError}</p>
-            )}
-            {emailList.length > 0 && (
-              <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                {emailList.map((email) => (
-                  <div
-                    key={email}
-                    className="flex items-center justify-between bg-muted p-2 rounded-md"
-                  >
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span>{email}</span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeEmail(email)}
-                    >
-                      <span className="sr-only">Remove</span>
-                      <svg
-                        width="15"
-                        height="15"
-                        viewBox="0 0 15 15"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                      >
-                        <path
-                          d="M11.7816 4.03157C12.0062 3.80702 12.0062 3.44295 11.7816 3.2184C11.5571 2.99385 11.193 2.99385 10.9685 3.2184L7.50005 6.68682L4.03164 3.2184C3.80708 2.99385 3.44301 2.99385 3.21846 3.2184C2.99391 3.44295 2.99391 3.80702 3.21846 4.03157L6.68688 7.49999L3.21846 10.9684C2.99391 11.193 2.99391 11.557 3.21846 11.7816C3.44301 12.0061 3.80708 12.0061 4.03164 11.7816L7.50005 8.31316L10.9685 11.7816C11.193 12.0061 11.5571 12.0061 11.7816 11.7816C12.0062 11.557 12.0062 11.193 11.7816 10.9684L8.31322 7.49999L11.7816 4.03157Z"
-                          fill="currentColor"
-                        />
-                      </svg>
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="role-select">Assign Role</Label>
-              <Select value={selectedRole} onValueChange={setSelectedRole}>
-                <SelectTrigger id="role-select" className="w-full">
-                  <SelectValue placeholder="Select a role to offer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {roles.map((role) => (
-                    <SelectItem key={role.id} value={role.name}>
-                      {role.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                The invited users will be assigned this role upon joining.
-              </p>
-            </div>
+            {sentInviteLink ?
+              <>
+                <div className="text-center space-y-4">
+                  <h3 className="text-lg font-medium">Invitations sent! You can also share this direct link</h3>
+                </div>
+
+                <div className="flex gap-2">
+                  <Input readOnly value={sentInviteLink} className="flex-1" />
+                  <Button variant="outline" onClick={copyInviteLink}>
+                    {copied ? (
+                      <Check className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Copy className="h-4 w-4 mr-2" />
+                    )}
+                    {copied ? "Copied" : "Copy"}
+                  </Button>
+                </div>
+              </>
+              :
+              <>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Mail className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="email"
+                      placeholder="Enter email address..."
+                      className="pl-8"
+                      value={emailInput}
+                      onChange={(e) => {
+                        setEmailInput(e.target.value)
+                        if (emailError) setEmailError(null)
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          addEmail()
+                        }
+                      }}
+                    />
+                  </div>
+                  <Button type="button" onClick={addEmail}>
+                    Add
+                  </Button>
+                </div>
+                {emailError && (
+                  <p className="text-xs font-medium text-destructive">{emailError}</p>
+                )}
+                {emailList.length > 0 && (
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                    {emailList.map((email) => (
+                      <div
+                        key={email}
+                        className="flex items-center justify-between bg-muted p-2 rounded-md"
+                      >
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span>{email}</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeEmail(email)}
+                        >
+                          <span className="sr-only">Remove</span>
+                          <svg
+                            width="15"
+                            height="15"
+                            viewBox="0 0 15 15"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                          >
+                            <path
+                              d="M11.7816 4.03157C12.0062 3.80702 12.0062 3.44295 11.7816 3.2184C11.5571 2.99385 11.193 2.99385 10.9685 3.2184L7.50005 6.68682L4.03164 3.2184C3.80708 2.99385 3.44301 2.99385 3.21846 3.2184C2.99391 3.44295 2.99391 3.80702 3.21846 4.03157L6.68688 7.49999L3.21846 10.9684C2.99391 11.193 2.99391 11.557 3.21846 11.7816C3.44301 12.0061 3.80708 12.0061 4.03164 11.7816L7.50005 8.31316L10.9685 11.7816C11.193 12.0061 11.5571 12.0061 11.7816 11.7816C12.0062 11.557 12.0062 11.193 11.7816 10.9684L8.31322 7.49999L11.7816 4.03157Z"
+                              fill="currentColor"
+                            />
+                          </svg>
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="role-select">Assign Role</Label>
+                  <Select value={selectedRole} onValueChange={setSelectedRole}>
+                    <SelectTrigger id="role-select" className="w-full">
+                      <SelectValue placeholder="Select a role to offer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles.map((role) => (
+                        <SelectItem key={role.id} value={role.name}>
+                          {role.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    The invited users will be assigned this role upon joining.
+                  </p>
+                </div>
+              </>
+            }
+
           </TabsContent>
 
           <TabsContent value="link" className="space-y-4 py-4">
@@ -464,7 +497,7 @@ export function InviteUserDialog({
           </TabsContent>
         </Tabs>
 
-        {selectedType !== "link" ? (
+        {selectedType == "email" ? (
           <DialogFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
