@@ -163,9 +163,9 @@ const InviteScreen = ({ entityType, entity, inviteKey }: Props) => {
       try {
         if (isEntityCommunity(entity)) {
           await attachCommunityUser(entity.id, authUser.unique_id, roleSlug)
-        }else if (isEntityChannel(entity)) {
+        } else if (isEntityChannel(entity)) {
           await attachChannelUser(entity.id, authUser.unique_id)
-        }else if (isEntitySpace(entity)) {
+        } else if (isEntitySpace(entity)) {
           await attachSpaceUser(entity.id, authUser.unique_id)
         }
 
@@ -213,7 +213,8 @@ const InviteScreen = ({ entityType, entity, inviteKey }: Props) => {
           </div>
           <CardTitle className="text-xl">{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
-          <CardDescription className="text-center p-4 text-destructive font-bold">Invalid invitation, you were not invited with this email</CardDescription>
+          {(isVerifying || verificationFailed) &&
+            <CardDescription className="text-center p-4 text-destructive font-bold">Invalid invitation, you were not invited with this email</CardDescription>}
         </CardHeader>
 
         <CardContent>
@@ -242,7 +243,7 @@ const InviteScreen = ({ entityType, entity, inviteKey }: Props) => {
             </div>
           </div>
         </CardContent>
-        {isVerifying &&
+        {(isVerifying || !verificationFailed) &&
           <CardFooter className="flex flex-col sm:flex-row gap-3">
             <Button
               loading={isLoading}
