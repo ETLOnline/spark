@@ -1381,7 +1381,7 @@ export type SelectCommunityCategory =
   }
 
 export const communityRequestsTable = pgTable("community_requests", {
-  Id: varchar("id", { length: 36 })
+  id: varchar("id", { length: 36 })
     .primaryKey()
     .$defaultFn(() => randomUUID()),
   university_name: varchar().notNull(),
@@ -1393,8 +1393,11 @@ export const communityRequestsTable = pgTable("community_requests", {
   university_website: varchar(),
   city: varchar().notNull(),
   description: varchar(),
-  estimates_number_of_students: integer(),
+  estimated_number_of_students: varchar(),
   intended_usage: varchar(),
+  status: varchar().notNull().default("pending"),
+  invite_link: varchar(),
+  reason: varchar(),
   ...timestamps
 })
 

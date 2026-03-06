@@ -232,6 +232,20 @@
       "when": 1772555809978,
       "tag": "0032_2026_03_03_213647__create_community_request_table",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1772728846435,
+      "tag": "0033_2026_03_05_214032__update_community_request_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1772811965589,
+      "tag": "0034_2026_03_06_234604__add_inviation_table",
+      "breakpoints": true
     }
   ]
 }

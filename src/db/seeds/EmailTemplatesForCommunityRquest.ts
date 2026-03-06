@@ -16,9 +16,24 @@ const loadTemplate = (filename: string) => {
 
 const templatesToSeed: NewEmailTemplate[] = [
   {
-    name: "community_request",
+    name: NotificationEvent.COMMUNITY_REQUEST,
     subject: "Your Community Request Has Been Submitted",
     body: loadTemplate("submit_community_request.html")
+  },
+  {
+    name: NotificationEvent.ADMIN_NEW_COMMUNITY_REQUEST,
+    subject: "New Community Request Submitted",
+    body: loadTemplate("admin-community-request-notification.html")
+  },
+  {
+    name: NotificationEvent.COMMUNITY_REQUEST_ACCEPTED,
+    subject: "Community Creation Request Approved",
+    body: loadTemplate("community_creation_request_approved.html")
+  },
+  {
+    name: NotificationEvent.COMMUNITY_REQUEST_REJECTED,
+    subject: "Community Creation Request Declined",
+    body: loadTemplate("community_creation_request_decline.html")
   }
 ]
 
