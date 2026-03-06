@@ -59,9 +59,6 @@ function CommunityRequestList({ status }: CommunityRequestListProps) {
     router.replace(`?${params.toString()}`, { scroll: false })
   }, [status])
 
-  console.log(communityRequests)
-  console.log(pagination)
-
   const hanldeClick = (request: SelectCommunityRequest) => {
     setSelectedRequest(request)
     setOpenDetailModal(true)

@@ -145,15 +145,7 @@ function CommunityRequestDetailModal({
                     {request?.designation || "N/A"}
                   </p>
                 </div>
-                {/* Contact Email */}
-                {/* <div>
-                  <Label className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                    Email
-                  </Label>
-                  <p className="text-foreground mt-1">
-                    {request?.official_university_email || 'N/A'}
-                  </p>
-                </div> */}
+
                 {/* Contact Number */}
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
