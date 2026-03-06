@@ -39,6 +39,32 @@ const templatesToSeed: NewEmailTemplate[] = [
     name: NotificationEvent.CHAT_INVITE,
     subject: "You've got a new chat",
     body: loadTemplate("chat_invite.html")
+  },
+  {
+    name: NotificationEvent.COMMUNITY_REQUEST,
+    subject: "Your Community Request Has Been Submitted",
+    body: loadTemplate("submit_community_request.html")
+  },
+  {
+   
+    name: NotificationEvent.ADMIN_NEW_COMMUNITY_REQUEST,
+    subject: "New Community Request Submitted",
+    body: loadTemplate("admin-community-request-notification.html")
+  },
+  {
+    name: NotificationEvent.COMMUNITY_REQUEST_ACCEPTED,
+    subject: "Community Creation Request Approved",
+    body: loadTemplate("community_creation_request_approved.html")
+  },
+  {
+    name: NotificationEvent.COMMUNITY_REQUEST_REJECTED,
+    subject: "Community Creation Request Declined",
+    body: loadTemplate("community_creation_request_decline.html")
+  },
+  {
+    name: NotificationEvent.JOIN_INVITE_EMAIL,
+    subject: `You've Been Invited to join spark {{entityType}}!`,
+    body: loadTemplate("join_invite_email.html")
   }
 ]
 

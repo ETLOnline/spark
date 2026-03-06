@@ -1,6 +1,6 @@
 import { SiteRoutes } from "@/src/components/Dashboard/Sidebar.tsx/nav-types"
 
-import { Settings2, Shield } from "lucide-react"
+import { Settings2, Shield, ShieldCheck } from "lucide-react"
 
 export const adminSiteRoutes: SiteRoutes = {
   navMain: [
@@ -19,6 +19,11 @@ export const adminSiteRoutes: SiteRoutes = {
           url: "/admin/site-settings/home-page"
         }
       ]
+    },
+    {
+      title: "Community Requests",
+      url: "/admin/community-requests",
+      icon: ShieldCheck
     }
   ]
 }

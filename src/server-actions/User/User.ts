@@ -9,7 +9,8 @@ import {
   GetFeaturedUsers,
   UpdateUserName,
   UpdateUserProfilePicture,
-  UpdateCoverImage
+  UpdateCoverImage,
+  getSuperAdmins
 } from "@/src/db/data-access/user/query"
 import { CreateServerAction } from ".."
 import { AddUserTag } from "@/src/db/data-access/tag/query"
@@ -268,3 +269,19 @@ export const RemoveCoverImageAction = CreateServerAction(
     }
   }
 )
+
+export const GetSuperAdminsAction = CreateServerAction(true, async () => {
+  try {
+    const res = await getSuperAdmins()
+
+    return {
+      success: true,
+      data: res
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error
+    }
+  }
+})
