@@ -547,11 +547,7 @@ export async function createScopedProjectRolesAndAssignAdmin(
  * @returns The viewer role or null if not found.
  */
 async function fetchViewerRole(
-  roleSlug:
-    | "channel_viewer"
-    | "space_viewer"
-    | "project_viewer"
-    | "community_viewer",
+  roleSlug: EntityType,
   entityId: string
 ) {
   try {
@@ -597,13 +593,16 @@ async function fetchViewerRole(
  * @param entityId The ID of the specific channel or space.
  * @returns A success status and a list of assigned role IDs.
  */
+
+export type EntityType = "channel_viewer"
+  | "space_viewer"
+  | "project_viewer"
+  | "community_viewer"
+  | "community_admin"
+  | "community_editor"
 export async function getAndAssignViewerRoles(
   userId: string,
-  roleSlug:
-    | "channel_viewer"
-    | "space_viewer"
-    | "project_viewer"
-    | "community_viewer",
+  roleSlug: EntityType,
   entityId: string
 ) {
   return await db.transaction(async (trx) => {

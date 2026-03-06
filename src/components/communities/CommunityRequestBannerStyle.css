@@ -1,0 +1,19 @@
+.community-request-Banner {
+  @apply w-full  bg-card border rounded-md p-6 relative overflow-hidden;
+}
+
+.banner-content {
+  @apply w-3/4 flex flex-col items-start gap-4;
+}
+
+.banner-title {
+  @apply text-lg font-semibold  text-muted-foreground;
+}
+
+.banner-description {
+  @apply text-sm text-muted-foreground;
+}
+
+.banner-image {
+  @apply absolute right-0 -bottom-3 w-1/4 h-auto opacity-80 stroke-white;
+}

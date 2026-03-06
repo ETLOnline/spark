@@ -679,7 +679,7 @@ export default function ChannelUserList({
         open={isInviteDialogOpen}
         onOpenChange={setIsInviteDialogOpen}
         spaceName="Platform"
-        type={["link"]}
+        type={["link","email"]}
         entityType={entityType}
         entity={entity}
       />
