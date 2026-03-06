@@ -157,7 +157,7 @@ const InviteScreen = ({ entityType, entity, inviteKey }: Props) => {
   const handleJoin = async () => {
     if (isLoading) return
     setIsLoading(true)
-    const roleSlug = invitationData.role.slug
+    const roleSlug = inviteKey ? invitationData.role.slug : ""
     
     if (authUser?.unique_id && entity.id) {
       try {

@@ -163,6 +163,12 @@ export function InviteUserDialog({
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+  const copyEmailInviteLink = () => {
+    if (!sentInviteLink) return;
+    navigator.clipboard.writeText(sentInviteLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
   useEffect(() => {
     const fetchRoles = async () => {
       if (!open) return
@@ -361,7 +367,7 @@ export function InviteUserDialog({
 
                 <div className="flex gap-2">
                   <Input readOnly value={sentInviteLink} className="flex-1" />
-                  <Button variant="outline" onClick={copyInviteLink}>
+                  <Button variant="outline" onClick={copyEmailInviteLink}>
                     {copied ? (
                       <Check className="h-4 w-4 mr-2" />
                     ) : (
