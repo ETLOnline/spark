@@ -147,6 +147,7 @@ export const permissions = {
     delete: "delete",
     allowAction: "allow.action",
     userInvite: "user.invite",
+    userEmailInvite: "user.email.invite",
     userUpdate: "user.update",
     userRemove: "user.remove",
     userView: "user.view",

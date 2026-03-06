@@ -1589,3 +1589,37 @@ export type InsertProjectRecentActivity =
   typeof projectRecentActivityTable.$inferInsert
 export type SelectProjectRecentActivity =
   typeof projectRecentActivityTable.$inferSelect
+
+
+  export const invitationsTable = pgTable("invitations", {
+    id: varchar("id", { length: 36 })
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    invite_key: varchar("key").notNull().unique(),
+    invite_email: jsonb("invite_email").default([]).notNull(),
+    joined_email: jsonb("joined_email").default([]).notNull(),
+    invited_by: varchar("invited_by", { length: 36 })
+      .notNull()
+      .references(() => usersTable.unique_id),
+    entity_id: varchar("entity_id").notNull(),
+    entity_type: varchar("entity_type").notNull(),
+    role_offer_id: integer("role_offer_id")
+    .notNull()
+    .references(() => rolesTable.id),
+    ...timestamps
+  })
+  
+  export const invitationsRelations = relations(invitationsTable, ({ one }) => ({
+    inviter: one(usersTable, {
+      fields: [invitationsTable.invited_by],
+      references: [usersTable.unique_id],
+      relationName: "userToInvitations"
+    }),
+    role: one(rolesTable, {
+      fields: [invitationsTable.role_offer_id],
+      references: [rolesTable.id],
+    })
+  }))
+  
+  export type InsertInvitation = typeof invitationsTable.$inferInsert
+  export type SelectInvitation = typeof invitationsTable.$inferSelect

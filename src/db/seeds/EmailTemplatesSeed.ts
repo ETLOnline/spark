@@ -46,6 +46,7 @@ const templatesToSeed: NewEmailTemplate[] = [
     body: loadTemplate("submit_community_request.html")
   },
   {
+   
     name: NotificationEvent.ADMIN_NEW_COMMUNITY_REQUEST,
     subject: "New Community Request Submitted",
     body: loadTemplate("admin-community-request-notification.html")
@@ -59,6 +60,11 @@ const templatesToSeed: NewEmailTemplate[] = [
     name: NotificationEvent.COMMUNITY_REQUEST_REJECTED,
     subject: "Community Creation Request Declined",
     body: loadTemplate("community_creation_request_decline.html")
+  },
+  {
+    name: NotificationEvent.JOIN_INVITE_EMAIL,
+    subject: `You've Been Invited to join spark {{entityType}}!`,
+    body: loadTemplate("join_invite_email.html")
   }
 ]
 
