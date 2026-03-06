@@ -67,7 +67,7 @@ import Image from "next/image"
 import clsx from "clsx"
 import PrivatePage from "../common/Overlay/PrivatePage"
 import pusherClient from "@/src/services/realtime/PusherClient"
-import { EntityUpdateBroadCast, permissions } from "@/src/utils/constants"
+import { EntityUpdateBroadCast } from "@/src/utils/constants"
 import { onlineUsersStore } from "@/src/store/onlineUsers/onlineUsersStore"
 
 interface CommunityDetailsClientProps {
