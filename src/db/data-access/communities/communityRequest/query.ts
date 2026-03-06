@@ -77,12 +77,14 @@ export async function getCommunityRequestByUserId(id: string) {
 
 export async function UpdateCommunityRequest(
   CommunityRequestId: string,
-  status: string
+  status: string,
+  inviteLink?: string,
+  reason?: string
 ) {
   try {
     const response = await db
       .update(communityRequestsTable)
-      .set({ status: status })
+      .set({ status: status, invite_link: inviteLink, reason: reason })
       .where(eq(communityRequestsTable.id, CommunityRequestId))
       .returning()
 

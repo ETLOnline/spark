@@ -62,7 +62,8 @@ function CommunityRequestActionModal({
 
       const res = await UpdateRequest(
         selectedRequest?.id,
-        RequestStatus.ACCEPTED
+        RequestStatus.ACCEPTED,
+        { inviteLink: inviteLink.trim() }
       )
 
       if (res?.success) {
@@ -75,7 +76,6 @@ function CommunityRequestActionModal({
         onOpenChange(false)
         setInviteLink("")
         setIsAcceptRequest(false)
-        onOpenChange(false)
         setIsDetailModalOpen(false)
       }
     } catch (err) {
@@ -107,7 +107,8 @@ function CommunityRequestActionModal({
 
       const res = await UpdateRequest(
         selectedRequest?.id,
-        RequestStatus.REJECTED
+        RequestStatus.REJECTED,
+        { reason: Reason.trim() }
       )
 
       if (res?.success) {
@@ -120,7 +121,6 @@ function CommunityRequestActionModal({
         onOpenChange(false)
         setReason("")
         setIsRejectRequest(false)
-        onOpenChange(false)
         setIsDetailModalOpen(false)
       }
     } catch (err) {

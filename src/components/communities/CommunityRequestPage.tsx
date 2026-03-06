@@ -3,7 +3,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle
 } from "@/src/components/ui/card"
@@ -23,10 +22,11 @@ import { useToast } from "@/src/hooks/use-toast"
 import { useRouter } from "next/navigation"
 
 const communityRequestFormSchema = z.object({
-  university_name: z.string().min(1, "University name is required"),
+  university_name: z.string().trim().min(1, "University name is required"),
   official_university_email: z
     .string()
     .email("Invalid email address")
+    .trim()
     .min(1, "Official university email is required"),
   contact_person_name: z.string().optional(),
   designation: z.string().optional(),

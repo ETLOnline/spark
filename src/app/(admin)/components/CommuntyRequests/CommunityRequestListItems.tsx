@@ -2,14 +2,7 @@ import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
 import { SelectCommunityRequest } from "@/src/db/schema"
 import { RequestStatus } from "@/src/types/CommunityCreationRequest/CommunityCreationRequest"
-import {
-  ArrowRight,
-  Check,
-  CheckCircle2,
-  Clock,
-  X,
-  XCircle
-} from "lucide-react"
+import { ArrowRight, CheckCircle2, Clock, XCircle } from "lucide-react"
 import React from "react"
 
 interface CommunityRequestListItemsProps {

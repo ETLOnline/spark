@@ -68,9 +68,18 @@ export const GetCommunityRequestByUserIdAction = CreateServerAction(
 
 export const UpdateCommunityRequestAction = CreateServerAction(
   true,
-  async (CommunityRequestId: string, status: string) => {
+  async (
+    CommunityRequestId: string,
+    status: string,
+    { inviteLink, reason }: { inviteLink?: string; reason?: string }
+  ) => {
     try {
-      const res = await UpdateCommunityRequest(CommunityRequestId, status)
+      const res = await UpdateCommunityRequest(
+        CommunityRequestId,
+        status,
+        inviteLink,
+        reason
+      )
 
       if (res.status === RequestStatus.ACCEPTED) {
         await notifyUserCommunityRequestAccepted(

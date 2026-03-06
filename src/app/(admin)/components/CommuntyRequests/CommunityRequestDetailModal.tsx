@@ -51,7 +51,9 @@ function CommunityRequestDetailModal({
                 variant={
                   request?.status === RequestStatus.PENDING
                     ? "outline"
-                    : "destructive"
+                    : request?.status === RequestStatus.ACCEPTED
+                      ? "default"
+                      : "destructive"
                 }
               >
                 {request?.status}
@@ -189,6 +191,18 @@ function CommunityRequestDetailModal({
                     {request?.intended_usage || "N/A"}
                   </p>
                 </div>
+
+                {/* Reason of Rejection */}
+                {request?.status === RequestStatus.REJECTED ? (
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                      Reason of Rejection
+                    </Label>
+                    <p className="text-foreground mt-1">
+                      {request?.reason || "N/A"}
+                    </p>
+                  </div>
+                ) : null}
               </div>
             </section>
           </div>
