@@ -16,53 +16,6 @@ import { useAtom } from "jotai"
 import { communityRequestsStore } from "@/src/store/community/commmunityRequest/communityRequestStore"
 
 function CommunityRequests() {
-  const [getCommunityRequestsLoading, , , getCommunityRequests] =
-    useServerAction(getCommunityRequestsAction)
-  const [communityRequests, setCommunityRequests] = useAtom(
-    communityRequestsStore.CommunityRequests
-  )
-  const [pendingRequests, setPendingRequests] = useState<
-    SelectCommunityRequest[]
-  >([])
-  const [approvedRequests, setApprovedRequests] = useState<
-    SelectCommunityRequest[]
-  >([])
-  const [rejectedRequests, setRejectedRequests] = useState<
-    SelectCommunityRequest[]
-  >([])
-
-  const fetchData = async () => {
-    const res = await getCommunityRequests()
-
-    if (res?.success && res?.data) {
-      setCommunityRequests(res.data.communityRequests)
-    }
-  }
-
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  useEffect(() => {
-    if (communityRequests) {
-      setPendingRequests(
-        communityRequests.filter(
-          (request) => request.status === RequestStatus.PENDING
-        )
-      )
-      setApprovedRequests(
-        communityRequests.filter(
-          (request) => request.status === RequestStatus.ACCEPTED
-        )
-      )
-      setRejectedRequests(
-        communityRequests.filter(
-          (request) => request.status === RequestStatus.REJECTED
-        )
-      )
-    }
-  }, [communityRequests])
-
   return (
     <>
       <div>
@@ -80,20 +33,16 @@ function CommunityRequests() {
         <TabsList>
           <TabsTrigger value="pending-requests">Pending Requests</TabsTrigger>
           <TabsTrigger value="rejected-requests">Rejected Requests</TabsTrigger>
+          <TabsTrigger value="approved-requests">Approved Requests</TabsTrigger>
         </TabsList>
         <TabsContent value="pending-requests">
-          <CommunityRequestList
-            communityRequests={pendingRequests}
-            getCommunityRequestsLoading={getCommunityRequestsLoading}
-            FetchRequests={fetchData}
-          />
+          <CommunityRequestList status={RequestStatus.PENDING} />
         </TabsContent>
         <TabsContent value="rejected-requests">
-          <CommunityRequestList
-            communityRequests={rejectedRequests}
-            getCommunityRequestsLoading={getCommunityRequestsLoading}
-            FetchRequests={fetchData}
-          />
+          <CommunityRequestList status={RequestStatus.REJECTED} />
+        </TabsContent>
+        <TabsContent value="approved-requests">
+          <CommunityRequestList status={RequestStatus.ACCEPTED} />
         </TabsContent>
       </Tabs>
     </>

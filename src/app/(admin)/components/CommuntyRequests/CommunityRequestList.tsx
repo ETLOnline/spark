@@ -1,29 +1,66 @@
 import Loader from "@/src/components/common/Loader/Loader"
 import { SelectCommunityRequest } from "@/src/db/schema"
 import { Gavel, ListCheck, MapPin, University, User } from "lucide-react"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import CommunityRequestListItems from "./CommunityRequestListItems"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import CommunityRequestDetailModal from "./CommunityRequestDetailModal"
 import CommunityRequestActionModal from "./CommunityRequestActionModal"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { getCommunityRequestsAction } from "@/src/server-actions/Community/CommunityRequests/CommunityRequests"
+import { useRouter, useSearchParams } from "next/navigation"
+import { PaginationType } from "@/src/components/common/types/pagination.type"
+import PaginationComponent from "@/src/components/common/Pagination"
 
 interface CommunityRequestListProps {
-  communityRequests: SelectCommunityRequest[]
-  getCommunityRequestsLoading: boolean
-  FetchRequests: () => void
+  status: string
 }
 
-function CommunityRequestList({
-  communityRequests,
-  getCommunityRequestsLoading,
-  FetchRequests
-}: CommunityRequestListProps) {
+function CommunityRequestList({ status }: CommunityRequestListProps) {
   const [selectedRequest, setSelectedRequest] =
     useState<SelectCommunityRequest | null>(null)
   const [openDetailModal, setOpenDetailModal] = useState(false)
   const [openActionModal, setOpenActionModal] = useState(false)
   const [isAcceptRequest, setIsAcceptRequest] = useState(false)
   const [isRejectRequest, setIsRejectRequest] = useState(false)
+  const [communityRequests, setCommunityRequests] = useState<
+    SelectCommunityRequest[]
+  >([])
+  const [pagination, setPagination] = useState<PaginationType>()
+
+  const [getCommunityRequestsLoading, , , getCommunityRequests] =
+    useServerAction(getCommunityRequestsAction)
+
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const page = parseInt(searchParams.get("page") || "1", 10)
+
+  const fetchData = async () => {
+    const res = await getCommunityRequests({
+      page: page,
+      limit: 10,
+      status: status
+    })
+
+    if (res?.success && res?.data) {
+      setCommunityRequests(res.data.communityRequests)
+      setPagination(res.data.pagination)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [searchParams.get("page"), status])
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("page", "1")
+
+    router.replace(`?${params.toString()}`, { scroll: false })
+  }, [status])
+
+  console.log(communityRequests)
+  console.log(pagination)
 
   const hanldeClick = (request: SelectCommunityRequest) => {
     setSelectedRequest(request)
@@ -81,13 +118,21 @@ function CommunityRequestList({
             <Loader size={LoaderSizes.lg} />
           </div>
         ) : communityRequests.length > 0 ? (
-          communityRequests.map((communityRequest) => (
-            <CommunityRequestListItems
-              key={communityRequest.id}
-              communityRequest={communityRequest}
-              hanldeClick={hanldeClick}
-            />
-          ))
+          <>
+            {communityRequests.map((communityRequest) => (
+              <CommunityRequestListItems
+                key={communityRequest.id}
+                communityRequest={communityRequest}
+                hanldeClick={hanldeClick}
+              />
+            ))}
+
+            {pagination && (
+              <div className="flex justify-center my-4">
+                <PaginationComponent pagination={pagination} />
+              </div>
+            )}
+          </>
         ) : (
           <div className="flex justify-center h-full w-full my-4">
             <span className="text-muted-foreground">No requests found.</span>
@@ -109,7 +154,7 @@ function CommunityRequestList({
           isAcceptRequest={isAcceptRequest}
           setIsAcceptRequest={setIsAcceptRequest}
           setIsRejectRequest={setIsRejectRequest}
-          fetchRequests={FetchRequests}
+          fetchRequests={fetchData}
           setIsDetailModalOpen={setOpenDetailModal}
         />
       </div>

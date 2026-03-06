@@ -24,9 +24,9 @@ export async function createCommunityRequest(data: InsertCommunityRequest) {
 
 export async function getCommunityRequests(filters?: CommunityRequestFilters) {
   try {
-    const page = filters?.page ?? 1
-    const limit = filters?.limit ?? 10
-    const offset = (page - 1) * limit
+    const page = filters?.page
+    const limit = filters?.limit
+    const offset = page && limit ? (page - 1) * limit : 0
 
     const whereClauses: (SQLWrapper | undefined)[] = []
 
@@ -34,22 +34,25 @@ export async function getCommunityRequests(filters?: CommunityRequestFilters) {
       whereClauses.push(eq(communityRequestsTable.status, filters.status))
     }
 
-    const response = await db
-      .select()
-      .from(communityRequestsTable)
-      .where(whereClauses.length ? and(...whereClauses) : undefined)
-      .limit(limit)
-      .offset(offset)
+    const response = await db.query.communityRequestsTable.findMany({
+      limit: limit,
+      offset: offset,
+      where: whereClauses.length ? and(...whereClauses) : undefined
+    })
 
-    const totalCount = await db.$count(communityRequestsTable)
+    const totalCount = await db.$count(
+      communityRequestsTable,
+      whereClauses.length ? and(...whereClauses) : undefined
+    )
 
     return {
       communityRequests: response,
       pagination: {
         total: Number(totalCount),
-        page,
-        limit,
-        totalPages: limit ? Math.ceil(Number(totalCount) / limit) : 1
+        page: page || 1,
+        limit: limit || 0,
+        totalPages:
+          limit && limit !== 0 ? Math.ceil(Number(totalCount) / limit) : 1
       }
     }
   } catch (error) {

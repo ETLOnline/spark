@@ -1,6 +1,7 @@
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
 import { SelectCommunityRequest } from "@/src/db/schema"
+import { RequestStatus } from "@/src/types/CommunityCreationRequest/CommunityCreationRequest"
 import {
   ArrowRight,
   Check,
@@ -42,7 +43,7 @@ function CommunityRequestListItems({
 
       <div className="col-span-2 text-center">
         <div className="flex items-center justify-center gap-2">
-          {communityRequest.status === "approved" && (
+          {communityRequest.status === RequestStatus.ACCEPTED && (
             <>
               <Badge
                 variant={"outline"}
@@ -53,7 +54,7 @@ function CommunityRequestListItems({
               </Badge>
             </>
           )}
-          {communityRequest.status === "rejected" && (
+          {communityRequest.status === RequestStatus.REJECTED && (
             <>
               <Badge
                 variant={"outline"}
@@ -64,7 +65,7 @@ function CommunityRequestListItems({
               </Badge>
             </>
           )}
-          {communityRequest.status === "pending" && (
+          {communityRequest.status === RequestStatus.PENDING && (
             <>
               <Badge
                 variant={"outline"}

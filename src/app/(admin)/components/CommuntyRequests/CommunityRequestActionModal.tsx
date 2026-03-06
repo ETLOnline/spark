@@ -15,6 +15,7 @@ import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { useToast } from "@/src/hooks/use-toast"
 import { RequestStatus } from "@/src/types/CommunityCreationRequest/CommunityCreationRequest"
 import { Textarea } from "@/src/components/ui/textarea"
+import { getCharacterCount, isValidInviteLink } from "@/src/utils/helpers"
 
 interface CommunityRequestActionModalProps {
   selectedRequest: SelectCommunityRequest | null
@@ -46,7 +47,18 @@ function CommunityRequestActionModal({
 
   const HandleAcceptRequest = async () => {
     try {
-      if (!inviteLink || !selectedRequest) return
+      if (!inviteLink.trim() || !selectedRequest) return
+
+      const link = isValidInviteLink(inviteLink)
+      if (!link) {
+        toast({
+          title: "Error",
+          description:
+            "Invalid invite link. Please provide a valid invite link.",
+          variant: "destructive"
+        })
+        return
+      }
 
       const res = await UpdateRequest(
         selectedRequest?.id,
@@ -79,7 +91,19 @@ function CommunityRequestActionModal({
 
   const HandleRejectRequest = async () => {
     try {
-      if (!Reason || !selectedRequest) return
+      if (!Reason.trim() || !selectedRequest) return
+
+      const characterCount = getCharacterCount(Reason)
+      console.log(characterCount)
+      if (characterCount < 100) {
+        toast({
+          title: "Error",
+          description:
+            "Reason must be at least 100 characters long. Please try again.",
+          variant: "destructive"
+        })
+        return
+      }
 
       const res = await UpdateRequest(
         selectedRequest?.id,
@@ -142,17 +166,22 @@ function CommunityRequestActionModal({
             </label>
             {isAcceptRequest ? (
               <Input
-                value={inviteLink}
-                onChange={(e) => setInviteLink(e.target.value)}
+                value={inviteLink.trim()}
+                onChange={(e) => setInviteLink(e.target.value.trim())}
                 placeholder={"https://community.example.com/invite/..."}
                 className="h-10"
               />
             ) : (
-              <Textarea
-                value={Reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder={"Reason for rejection"}
-              />
+              <>
+                <Textarea
+                  value={Reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder={"Reason for rejection"}
+                />
+                <p className="text-right text-xs text-muted-foreground">
+                  {getCharacterCount(Reason)} characters
+                </p>
+              </>
             )}
           </div>
         </div>
@@ -179,7 +208,7 @@ function CommunityRequestActionModal({
           ) : (
             <Button
               onClick={HandleRejectRequest}
-              disabled={!Reason || updateRequestLoading}
+              disabled={!Reason.trim() || updateRequestLoading}
               loading={updateRequestLoading}
               variant="destructive"
               className="flex-1"
