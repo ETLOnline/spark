@@ -62,6 +62,7 @@ import { getInitials } from "@/src/utils/helpers"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
+import CommunityRequestBanner from "@/src/components/communities/CommunityRequestBanner"
 
 const fadeInUp = {
   initial: { opacity: 0, y: 60 },
@@ -568,7 +569,7 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.6 }}
           >
             <LinkAsButton
-              href="/profile"
+              href="/communities"
               size="lg"
               className="bg-gradient-to-r from-primary to-accent hover:from-primary-hover hover:to-accent-hover text-primary-foreground text-xl px-12 py-6 shadow-2xl transform hover:scale-105 transition-all duration-300"
             >
@@ -769,7 +770,10 @@ export default function HomePage() {
               </>
             )}
           </motion.div>
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center justify-center gap-6">
+            <div>
+              <CommunityRequestBanner />
+            </div>
             <Card className="h-full w-full md:w-96 lg:w-45 hover:shadow-2xl transition-all duration-500 shadow-xl group bg-transparent p-4">
               <CardTitle className="h-0 absolute" />
               <CardContent className="h-full">

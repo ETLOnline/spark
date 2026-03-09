@@ -88,6 +88,7 @@ const userRolePermissions = [
           permissions.community.delete,
           permissions.community.update,
           permissions.community.userInvite,
+          permissions.community.userEmailInvite,
           permissions.community.userRemove,
           permissions.community.userUpdate,
           permissions.community.userView,

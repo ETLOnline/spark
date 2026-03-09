@@ -23,6 +23,7 @@ import { AuthUserAction } from "../User/AuthUserAction"
 import {
   createScopedCommunityRolesAndAssignAdmin,
   deleteUserRole,
+  EntityType,
   getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
 import {
@@ -292,11 +293,12 @@ export const GetCommunityByIdAction = CreateServerAction(
 
 export const AttachCommunityUserAction = CreateServerAction(
   true,
-  async (communityId: string, userId: string) => {
+  async (communityId: string, userId: string, roleName?: EntityType,) => {
     try {
+      const roleAssigned = roleName ? roleName : "community_viewer"
       const attachUserRole = await getAndAssignViewerRoles(
         userId,
-        "community_viewer",
+        roleAssigned,
         communityId
       )
       const channelUser = await attachCommunityUser(
