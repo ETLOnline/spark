@@ -32,10 +32,12 @@ import { AttachCommunityUserAction } from "@/src/server-actions/Community/Commun
 import { isEntityUser } from "@/src/utils/clientHelper"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import { AcceptInvitationAction, VerifyInviteAction } from "@/src/server-actions/Invite/Invite"
 
 interface Props {
   entityType: "channel" | "space" | "community"
   entity: SelectChannel | SelectSpace | SelectCommunity
+  inviteKey?: string;
 }
 
 const getEntityRedirectPath = (
@@ -53,7 +55,7 @@ const getEntityRedirectPath = (
   return "/"
 }
 
-const InviteScreen = ({ entityType, entity }: Props) => {
+const InviteScreen = ({ entityType, entity, inviteKey }: Props) => {
   const { refreshAuthUser } = useAuthUser()
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [navigate, setNavigate] = useState(false)
@@ -62,6 +64,9 @@ const InviteScreen = ({ entityType, entity }: Props) => {
   const router = useRouter()
   const authUser = useAtomValue(userStore.AuthUser)
   const { toast } = useToast()
+  const [isVerifying, setIsVerifying] = useState(!!inviteKey);
+  const [verificationFailed, setVerificationFailed] = useState(false); // New state
+  const [invitationData, setInvitationData] = useState<any>(null);
 
   const isUserMember = isEntityUser(entity, authUser?.unique_id ?? "")
 
@@ -106,7 +111,7 @@ const InviteScreen = ({ entityType, entity }: Props) => {
         })
         const path = getEntityRedirectPath(entity)
         router.replace(path)
-        
+
       } else {
         setHasCheckedMembership(true)
       }
@@ -120,21 +125,52 @@ const InviteScreen = ({ entityType, entity }: Props) => {
     }
   }, [navigate, router, entity])
 
+  useEffect(() => {
+    const verify = async () => {
+      if (!inviteKey) {
+        setIsVerifying(false);
+        return;
+      }
+
+      if (!authUser?.email) return;
+
+      const result = await VerifyInviteAction({ key: inviteKey });
+
+      if (result.success) {
+        setInvitationData(result.data);
+        setVerificationFailed(false);
+        setIsVerifying(false);
+      } else {
+        setVerificationFailed(true);
+        setIsVerifying(false);
+        toast({
+          title: "Invalid Invitation",
+          description: result.error,
+          variant: "destructive",
+        });
+      }
+    };
+
+    verify();
+  }, [inviteKey, authUser]);
+
   const handleJoin = async () => {
     if (isLoading) return
     setIsLoading(true)
+    const roleSlug = inviteKey ? invitationData.role.slug : ""
+
     if (authUser?.unique_id && entity.id) {
       try {
         if (isEntityCommunity(entity)) {
-          await attachCommunityUser(entity.id, authUser.unique_id)
-        }
-
-        if (isEntityChannel(entity)) {
+          await attachCommunityUser(entity.id, authUser.unique_id, roleSlug)
+        } else if (isEntityChannel(entity)) {
           await attachChannelUser(entity.id, authUser.unique_id)
+        } else if (isEntitySpace(entity)) {
+          await attachSpaceUser(entity.id, authUser.unique_id)
         }
 
-        if (isEntitySpace(entity)) {
-          await attachSpaceUser(entity.id, authUser.unique_id)
+        if (inviteKey) {
+          await AcceptInvitationAction(inviteKey)
         }
         await refreshAuthUser()
 
@@ -177,6 +213,8 @@ const InviteScreen = ({ entityType, entity }: Props) => {
           </div>
           <CardTitle className="text-xl">{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
+          {(isVerifying || verificationFailed) &&
+            <CardDescription className="text-center p-4 text-destructive font-bold">Invalid invitation, you were not invited with this email</CardDescription>}
         </CardHeader>
 
         <CardContent>
@@ -205,18 +243,19 @@ const InviteScreen = ({ entityType, entity }: Props) => {
             </div>
           </div>
         </CardContent>
-
-        <CardFooter className="flex flex-col sm:flex-row gap-3">
-          <Button
-            loading={isLoading}
-            disabled={isLoading}
-            className="w-full sm:w-auto"
-            onClick={handleJoin}
-          >
-            {isLoading ? "Joining..." : "Continue to Join"}
-            {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
-          </Button>
-        </CardFooter>
+        {(isVerifying || !verificationFailed) &&
+          <CardFooter className="flex flex-col sm:flex-row gap-3">
+            <Button
+              loading={isLoading}
+              disabled={isLoading || isVerifying || verificationFailed}
+              className="w-full sm:w-auto"
+              onClick={handleJoin}
+            >
+              {isLoading ? "Joining..." : "Continue to Join"}
+              {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
+            </Button>
+          </CardFooter>
+        }
       </Card>
     </div>
   )

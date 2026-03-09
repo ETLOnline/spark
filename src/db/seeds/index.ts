@@ -14,6 +14,8 @@ import { UpdateRoleTable } from "./UpdateRolesTable"
 import { EmailTemplatesSeed } from "./EmailTemplatesSeed"
 import { ChatSlugCorrectionSyncSeed } from "./ChatSlugCorrectionSyncSeed"
 import { ShortcutEntityIdSyncSeed } from "./ShortcutEntityIdSyncSeed"
+import { EmailTemplatesForCommunityRequestSeed } from "./EmailTemplatesForCommunityRquest"
+import { JoinInviteEmailSeed } from "./JoinInviteEmail"
 
 const SEEDERS: Record<string, () => Promise<void>> = {
   FeatureSeed,
@@ -31,7 +33,9 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   siteSettingsSeed,
   EmailTemplatesSeed,
   ChatSlugCorrectionSyncSeed,
-  ShortcutEntityIdSyncSeed
+  ShortcutEntityIdSyncSeed,
+  EmailTemplatesForCommunityRequestSeed,
+  JoinInviteEmailSeed
 }
 
 async function runSeeders() {
@@ -47,7 +51,9 @@ async function runSeeders() {
       "EmailTemplatesSeed",
       "ChatSlugCorrectionSyncSeed",
       "ChatSlugCorrectionSyncSeed",
-      "ShortcutEntityIdSyncSeed"
+      "ShortcutEntityIdSyncSeed",
+      "EmailTemplatesForCommunityRequestSeed",
+      "JoinInviteEmailSeed"
     ]
 
     const seederNames =

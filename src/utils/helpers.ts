@@ -415,3 +415,20 @@ export const normalizeHTML = (html: string) => {
 
   return normalized
 }
+
+export const getCharacterCount = (text: string) => {
+  return text.replace(/\s+/g, " ").trim().length
+}
+
+export const isValidInviteLink = (link: string) => {
+  try {
+    const url = new URL(link)
+
+    const hasInvitePath = url.pathname.includes("/invite/")
+    const typeParam = url.searchParams.get("type")
+
+    return hasInvitePath && typeParam === "community"
+  } catch {
+    return false
+  }
+}

@@ -30,12 +30,13 @@ interface Props {
   }>
   searchParams: Promise<{
     type: string
+    key?: string
   }>
 }
 
 export default async function InvitePage({ params, searchParams }: Props) {
   const { id } = await params
-  const { type } = await searchParams
+  const { type, key } = await searchParams
 
   let entity: SelectChannel | SelectSpace | SelectCommunity | null = null
 
@@ -69,6 +70,7 @@ export default async function InvitePage({ params, searchParams }: Props) {
       <InviteScreen
         entityType={type as "channel" | "space" | "community"}
         entity={entity}
+        inviteKey={key}
       />
     </Suspense>
   )

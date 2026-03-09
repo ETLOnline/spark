@@ -747,7 +747,7 @@ export default function CommunityDetailsClient({
         open={isInviteDialogOpen}
         onOpenChange={setIsInviteDialogOpen}
         spaceName="Platform"
-        type={["link"]}
+        type={["link","email"]}
         entityType="community"
         entity={community}
       />
