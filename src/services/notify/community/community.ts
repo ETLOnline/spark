@@ -32,19 +32,19 @@ export const notifyAdminNewCommunityRequest = async (event: string) => {
   const authUser = await AuthUserAction()
   if (!authUser) throw new Error("Unauthorized")
 
-  const SuperAmins = await GetSuperAdminsAction()
+  const SuperAdmins = await GetSuperAdminsAction()
 
-  if (SuperAmins.data?.length === 0) return
+  if (SuperAdmins.data?.length === 0) return
 
-  const SuperAdminsEmails = SuperAmins.data?.map((admin) => admin.email)
+  const SuperAdminsEmails = SuperAdmins.data?.map((admin) => admin.email)
 
   const siteLogo = getSiteLogoUrl()
-  const linkUrl = createAbsoluteUrl(`/admin`)
+  const linkUrl = createAbsoluteUrl(`/admin/community-requests`)
   const payload = {
     logoUrl: siteLogo,
     subject: "New Community Creation Request Submitted",
     userName: `${authUser.first_name} ${authUser.last_name}`,
-    dashboardLink: linkUrl
+    adminPanelLink: linkUrl
   }
 
   await AddToQueue({
