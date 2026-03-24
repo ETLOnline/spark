@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Check, Copy, Mail, Search, User } from "lucide-react"
-
+import { useToast } from "@/src/hooks/use-toast"
 import { Button } from "@/src/components/ui/button"
 import {
   Dialog,
@@ -29,6 +29,18 @@ import { entityKind } from "drizzle-orm"
 import { hostname } from "os"
 import { isEntityChannel, isEntityCommunity } from "@/src/utils/helpers"
 import { CommunityDetailData } from "@/src/db/data-access/communities/query"
+import { SendInvitationsAction } from "@/src/server-actions/Invite/Invite"
+import { getRoleByEntityTypeAndIdAction } from "@/src/server-actions/UserRoles/UserRole"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/src/components/ui/select"
+import { permissions } from "@/src/utils/constants"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { PermissionChecker } from "@/src/lib/PermissionCheker"
 
 // Sample data for platform users
 const platformUsers: SelectUser[] = []
@@ -51,16 +63,36 @@ export function InviteUserDialog({
   entityType,
   entity
 }: InviteUserDialogProps) {
+  const { toast } = useToast()
   const [searchQuery, setSearchQuery] = useState("")
+  const [roles, setRoles] = useState<{ id: number; name: string }[]>([])
+  const [selectedRole, setSelectedRole] = useState<string>("member")
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [emailInput, setEmailInput] = useState("")
   const [emailList, setEmailList] = useState<string[]>([])
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [isSending, setIsSending] = useState(false);
+  const [sentInviteLink, setSentInviteLink] = useState<string | null>(null);
   const [inviteMessage, setInviteMessage] = useState(
     `Join our ${entityType} on our platform!`
   )
   const [copied, setCopied] = useState(false)
   const [selectedType, setSelectedType] = useState(type[0])
   const [inviteLink, setInviteLink] = useState("")
+  const typeForMapping = entityType.toUpperCase() as "SPACE" | "CHANNEL" | "COMMUNITY";
+
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    typeForMapping,
+    entity.id
+  )
+  const canEmailInviteUser = PermissionChecker
+    ? permissionChecker?.canAccess(permissions.community.userEmailInvite)
+    : false
+
+  const allowedTypes = canEmailInviteUser
+    ? type
+    : type.filter(t => t === "link");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -92,12 +124,32 @@ export function InviteUserDialog({
     )
   }
 
+  useEffect(() => {
+    if (!open) {
+      setSentInviteLink(null);
+    }
+  }, [open]);
+
   // Add email to list
   const addEmail = () => {
-    if (emailInput && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) {
-      setEmailList((prev) => [...prev, emailInput])
-      setEmailInput("")
+    setEmailError(null)
+
+    if (!emailInput) return
+
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)
+
+    if (!isValidEmail) {
+      setEmailError("Please enter a valid email address.")
+      return
     }
+
+    if (emailList.includes(emailInput)) {
+      setEmailError("This email has already been added.")
+      return
+    }
+
+    setEmailList((prev) => [...prev, emailInput])
+    setEmailInput("")
   }
 
   // Remove email from list
@@ -111,27 +163,105 @@ export function InviteUserDialog({
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+  const copyEmailInviteLink = () => {
+    if (!sentInviteLink) return;
+    navigator.clipboard.writeText(sentInviteLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+  useEffect(() => {
+    const fetchRoles = async () => {
+      if (!open) return
 
-  // Send invitations
-  const sendInvitations = () => {
-    // Here you would implement the actual invitation logic
-    console.log("Selected platform users:", selectedUsers)
-    console.log("Email invitations:", emailList)
-    console.log("Invite message:", inviteMessage)
+      const typeMapping: Record<string, "CHANNEL" | "SPACE" | "PROJECT" | "COMMUNITY"> = {
+        community: "COMMUNITY",
+        space: "SPACE",
+        channel: "CHANNEL"
+      }
 
-    // Close the dialog
-    onOpenChange(false)
+      const response = await getRoleByEntityTypeAndIdAction(typeMapping[entityType], entity.id)
 
-    // Reset state
-    setSelectedUsers([])
-    setEmailList([])
-    setSearchQuery("")
-    setEmailInput("")
+      if (response.success && response.data) {
+        setRoles(response.data)
+        if (response.data.length > 0) {
+          setSelectedRole(response.data[0].name)
+        }
+      }
+    }
+
+    fetchRoles()
+  }, [open, entity.id, entityType])
+
+
+  const sendInvitations = async () => {
+    if (emailList.length === 0) {
+      toast({
+        title: "No recipients",
+        description: "Please add at least one email address.",
+        variant: "destructive",
+        duration: 3000
+      })
+      return
+    }
+    // Find the full role object to get the ID
+    const roleObject = roles.find(r => r.name === selectedRole)
+
+    if (!roleObject) {
+      toast({
+        title: "Invalid Role",
+        description: "Please select a valid role.",
+        variant: "destructive"
+      })
+      return
+    }
+    setIsSending(true);
+
+    try {
+      const response = await SendInvitationsAction({
+        emails: emailList,
+        role_offer_id: roleObject.id,
+        roleName: roleObject.name,
+        entityType: entityType,
+        entityId: entity.id,
+      })
+
+      if (response.success) {
+        toast({
+          title: "Invitations sent successfully",
+          description: `${emailList.length} people have been invited to the ${entityType}.`,
+          duration: 3000
+        })
+
+        setEmailList([])
+        if (response.data?.inviteUrl) {
+          setSentInviteLink(response.data.inviteUrl);
+        }
+      } else {
+        toast({
+          title: "Error sending invitations",
+          description: response.error || "Something went wrong.",
+          variant: "destructive",
+          duration: 3000
+        })
+      }
+    } catch (error: any) {
+      toast({
+        title: "System Error",
+        description: "An unexpected error occurred while processing invitations.",
+        variant: "destructive",
+        duration: 3000
+      })
+    } finally {
+      setIsSending(false);
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent
+        className="sm:max-w-[600px]"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Invite Users to {entityType}</DialogTitle>
           {/* <DialogDescription>Invite users to join your space either from the platform or via email.</DialogDescription> */}
@@ -228,74 +358,111 @@ export function InviteUserDialog({
           </TabsContent>
 
           <TabsContent value="email" className="space-y-4 py-4">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Mail className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="email"
-                  placeholder="Enter email address..."
-                  className="pl-8"
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault()
-                      addEmail()
-                    }
-                  }}
-                />
-              </div>
-              <Button type="button" onClick={addEmail}>
-                Add
-              </Button>
-            </div>
 
-            {emailList.length > 0 && (
-              <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                {emailList.map((email) => (
-                  <div
-                    key={email}
-                    className="flex items-center justify-between bg-muted p-2 rounded-md"
-                  >
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span>{email}</span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeEmail(email)}
-                    >
-                      <span className="sr-only">Remove</span>
-                      <svg
-                        width="15"
-                        height="15"
-                        viewBox="0 0 15 15"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                      >
-                        <path
-                          d="M11.7816 4.03157C12.0062 3.80702 12.0062 3.44295 11.7816 3.2184C11.5571 2.99385 11.193 2.99385 10.9685 3.2184L7.50005 6.68682L4.03164 3.2184C3.80708 2.99385 3.44301 2.99385 3.21846 3.2184C2.99391 3.44295 2.99391 3.80702 3.21846 4.03157L6.68688 7.49999L3.21846 10.9684C2.99391 11.193 2.99391 11.557 3.21846 11.7816C3.44301 12.0061 3.80708 12.0061 4.03164 11.7816L7.50005 8.31316L10.9685 11.7816C11.193 12.0061 11.5571 12.0061 11.7816 11.7816C12.0062 11.557 12.0062 11.193 11.7816 10.9684L8.31322 7.49999L11.7816 4.03157Z"
-                          fill="currentColor"
-                        />
-                      </svg>
-                    </Button>
+            {sentInviteLink ?
+              <>
+                <div className="text-center space-y-4">
+                  <h3 className="text-lg font-medium">Invitations sent! You can also share this direct link</h3>
+                </div>
+
+                <div className="flex gap-2">
+                  <Input readOnly value={sentInviteLink} className="flex-1" />
+                  <Button variant="outline" onClick={copyEmailInviteLink}>
+                    {copied ? (
+                      <Check className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Copy className="h-4 w-4 mr-2" />
+                    )}
+                    {copied ? "Copied" : "Copy"}
+                  </Button>
+                </div>
+              </>
+              :
+              <>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Mail className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="email"
+                      placeholder="Enter email address..."
+                      className="pl-8"
+                      value={emailInput}
+                      onChange={(e) => {
+                        setEmailInput(e.target.value)
+                        if (emailError) setEmailError(null)
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          addEmail()
+                        }
+                      }}
+                    />
                   </div>
-                ))}
-              </div>
-            )}
+                  <Button type="button" onClick={addEmail}>
+                    Add
+                  </Button>
+                </div>
+                {emailError && (
+                  <p className="text-xs font-medium text-destructive">{emailError}</p>
+                )}
+                {emailList.length > 0 && (
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                    {emailList.map((email) => (
+                      <div
+                        key={email}
+                        className="flex items-center justify-between bg-muted p-2 rounded-md"
+                      >
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span>{email}</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeEmail(email)}
+                        >
+                          <span className="sr-only">Remove</span>
+                          <svg
+                            width="15"
+                            height="15"
+                            viewBox="0 0 15 15"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                          >
+                            <path
+                              d="M11.7816 4.03157C12.0062 3.80702 12.0062 3.44295 11.7816 3.2184C11.5571 2.99385 11.193 2.99385 10.9685 3.2184L7.50005 6.68682L4.03164 3.2184C3.80708 2.99385 3.44301 2.99385 3.21846 3.2184C2.99391 3.44295 2.99391 3.80702 3.21846 4.03157L6.68688 7.49999L3.21846 10.9684C2.99391 11.193 2.99391 11.557 3.21846 11.7816C3.44301 12.0061 3.80708 12.0061 4.03164 11.7816L7.50005 8.31316L10.9685 11.7816C11.193 12.0061 11.5571 12.0061 11.7816 11.7816C12.0062 11.557 12.0062 11.193 11.7816 10.9684L8.31322 7.49999L11.7816 4.03157Z"
+                              fill="currentColor"
+                            />
+                          </svg>
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-            <div className="pt-2">
-              <Label htmlFor="email-invite-message">Invitation Message</Label>
-              <Textarea
-                id="email-invite-message"
-                value={inviteMessage}
-                onChange={(e) => setInviteMessage(e.target.value)}
-                className="mt-1"
-                placeholder="Add a personal message to your invitation"
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="role-select">Assign Role</Label>
+                  <Select value={selectedRole} onValueChange={setSelectedRole}>
+                    <SelectTrigger id="role-select" className="w-full">
+                      <SelectValue placeholder="Select a role to offer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles.map((role) => (
+                        <SelectItem key={role.id} value={role.name}>
+                          {role.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    The invited users will be assigned this role upon joining.
+                  </p>
+                </div>
+              </>
+            }
+
           </TabsContent>
 
           <TabsContent value="link" className="space-y-4 py-4">
@@ -336,12 +503,18 @@ export function InviteUserDialog({
           </TabsContent>
         </Tabs>
 
-        {selectedType !== "link" ? (
+        {selectedType == "email" ? (
           <DialogFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={sendInvitations}>Send Invitations</Button>
+            <Button
+              onClick={sendInvitations}
+              loading={isSending}
+              disabled={isSending || emailList.length === 0}
+            >
+              {isSending ? "Sending..." : "Send Invitations"}
+            </Button>
           </DialogFooter>
         ) : null}
       </DialogContent>

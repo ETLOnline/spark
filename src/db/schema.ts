@@ -5,7 +5,10 @@ import {
   pgTable,
   primaryKey,
   varchar,
-  json
+  json,
+  boolean,
+  text,
+  jsonb
 } from "drizzle-orm/pg-core"
 // import { integer, primaryKey, pgTable, varchar } from "drizzle-orm/sqlite-core"
 
@@ -24,6 +27,7 @@ export const usersTable = pgTable("users", {
   email: varchar().notNull().unique(),
   external_auth_id: varchar().notNull().unique(),
   profile_url: varchar(),
+  cover_image: varchar(),
   meta: varchar(),
   role: varchar().notNull().default("user"),
   meta_profile: json("meta_profile").default({
@@ -90,11 +94,23 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   tasksAssignedTo: many(taskTable, {
     relationName: "taskAssignee"
   }),
-  tasksCreatedBy: many(taskTable, {
+  tasksAssignor: many(taskTable, {
     relationName: "taskAssignor"
   }),
   certificates: many(certificatesTable, {
     relationName: "userToCertificate"
+  }),
+  taskComments: many(taskCommentsTable, {
+    relationName: "taskCommentToUser"
+  }),
+  hostedEvents: many(eventsTable, {
+    relationName: "userToHostedEvents" // User can host many events
+  }),
+  TaskCreator: many(taskTable, {
+    relationName: "taskCreator"
+  }),
+  createdChats: many(chatsTable, {
+    relationName: "chatToCreator"
   })
 }))
 
@@ -118,6 +134,7 @@ export type SelectUser = Omit<typeof usersTable.$inferSelect, "meta"> & {
   profile?: SelectProfile | null
   joinedCommunities?: SelectCommunityUser[]
   certificates?: SelectCertificate[]
+  taskComments?: SelectTaskComment[]
 }
 
 export const profileTable = pgTable("profile", {
@@ -187,21 +204,27 @@ export const chatsTable = pgTable("chats", {
   chat_slug: varchar()
     .notNull()
     .$defaultFn(() => randomUUID()),
+  name_index: varchar(),
   name: varchar(),
   type: varchar(),
   avatar: varchar(),
   last_message: varchar(),
-  unread_count: integer().notNull().default(0),
   is_group: integer().notNull().default(0),
+  created_by: varchar(),
   ...timestamps
 })
 
-export const chatsRelations = relations(chatsTable, ({ many }) => ({
+export const chatsRelations = relations(chatsTable, ({ many, one }) => ({
   messages: many(messagesTable, {
     relationName: "messageToChat"
   }),
   users: many(userChatsTable, {
     relationName: "ChatUsers"
+  }),
+  creator: one(usersTable, {
+    fields: [chatsTable.created_by],
+    references: [usersTable.unique_id],
+    relationName: "chatToCreator"
   })
 }))
 
@@ -209,6 +232,7 @@ export type InsertChat = typeof chatsTable.$inferInsert
 export type SelectChat = InferSelectModel<typeof chatsTable> & {
   messages?: SelectMessage[]
   users?: SelectUserChat[]
+  creator?: SelectUser
 }
 export type SelectChatWithRelation = typeof chatsRelations
 
@@ -218,6 +242,9 @@ export const messagesTable = pgTable("messages", {
   type: varchar().notNull(),
   sender_id: varchar().notNull(),
   message: varchar().notNull(),
+  mentions: varchar("mentions").array(),
+  is_deleted: integer().notNull().default(0),
+
   ...timestamps
 })
 
@@ -234,15 +261,19 @@ export const messagesRelations = relations(messagesTable, ({ one }) => ({
   })
 }))
 
-export type InsertMessage = typeof messagesTable.$inferInsert
+export type InsertMessage = typeof messagesTable.$inferInsert & {
+  mentions?: string[] // 👈 Allow mentions when inserting
+}
 export type SelectMessage = typeof messagesTable.$inferSelect & {
   chat?: SelectChat
   sender?: SelectUser
+  mentions?: string[] | null
 }
 
 export const userChatsTable = pgTable("user_chats", {
   user_id: varchar().notNull(),
-  chat_id: integer().notNull()
+  chat_id: integer().notNull(),
+  unread_count: integer().notNull().default(0)
 })
 
 export const userChatsRelations = relations(userChatsTable, ({ one }) => ({
@@ -344,7 +375,10 @@ export const userTagsRelations = relations(userTagsTable, ({ one }) => ({
 }))
 
 export type InsertUserTag = typeof userTagsTable.$inferInsert
-export type SelectUserTag = typeof userTagsTable.$inferSelect
+export type SelectUserTag = typeof userTagsTable.$inferSelect & {
+  tag?: SelectTag
+  user?: SelectUser
+}
 
 export const rewardsTable = pgTable("rewards", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -463,12 +497,11 @@ export const notificationsTable = pgTable("notifications", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   created_by: varchar().notNull(),
   received_by: varchar().notNull(),
-  type: varchar().notNull(),
-  link: varchar(),
+  title: varchar().notNull(),
+  body: varchar().notNull(),
+  deep_link: varchar().notNull(),
+  icon: varchar(),
   is_read: integer().notNull().default(0),
-  counter: integer().notNull().default(0),
-  entity_id: varchar(),
-  entity_type: varchar().notNull(),
   ...timestamps
 })
 
@@ -492,14 +525,24 @@ export const eventsTable = pgTable("events", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   title: varchar().notNull(),
   description: varchar(),
+  coverImage: varchar(),
   start_date_time: varchar(),
   end_date_time: varchar(),
   type: varchar(),
   metadata: varchar(),
-  host_id: varchar().notNull(),
+  tags: varchar("tags").array(),
+  host_id: varchar()
+    .notNull()
+    .references(() => usersTable.unique_id),
   ...timestamps
 })
-
+export const eventsRelations = relations(eventsTable, ({ one }) => ({
+  host: one(usersTable, {
+    fields: [eventsTable.host_id],
+    references: [usersTable.unique_id],
+    relationName: "userToHostedEvents"
+  })
+}))
 export type InsertEvent = typeof eventsTable.$inferInsert
 export type SelectEvent = typeof eventsTable.$inferSelect
 
@@ -536,10 +579,8 @@ export const postsRelations = relations(postsTable, ({ one, many }) => ({
   options: many(pollOptionsTable, {
     relationName: "pollToPost"
   }),
-  file: one(postFilesTable, {
-    fields: [postsTable.id],
-    references: [postFilesTable.post_id],
-    relationName: "postToFile"
+  files: many(postFilesTable, {
+    relationName: "postToFiles"
   }),
   space: one(spacesTable, {
     fields: [postsTable.entity_id],
@@ -554,12 +595,15 @@ export type SelectPost = typeof postsTable.$inferSelect & {
   postComments?: SelectComment[]
   hashtags?: SelectTag[]
   postLikes?: SelectLike[]
+  options?: SelectPollOption[]
 }
 export type SelectFilePost = SelectPost & {
-  file: SelectFile
+  file?: SelectFile
+  files?: SelectFile[]
 }
 export type SelectPollPost = SelectPost & {
   options: SelectPollOption[]
+  files?: SelectFile[]
 }
 
 export const commentsTable = pgTable("comments", {
@@ -636,6 +680,7 @@ export type InsertLike = typeof likesTable.$inferInsert
 export type SelectLike = typeof likesTable.$inferSelect
 
 export const pollOptionsTable = pgTable("poll_options", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
   post_id: varchar().notNull(),
   option_text: varchar().notNull(),
   vote_count: integer().notNull().default(0)
@@ -713,7 +758,7 @@ export const postFilesRelations = relations(postFilesTable, ({ one }) => ({
   post: one(postsTable, {
     fields: [postFilesTable.post_id],
     references: [postsTable.id],
-    relationName: "postToFile"
+    relationName: "postToFiles"
   }),
   postFile: one(filesTable, {
     fields: [postFilesTable.file_id],
@@ -737,7 +782,8 @@ export const channelsTable = pgTable("channels", {
   publish_channel: integer().notNull().default(0),
   ownerId: varchar(),
   community_id: varchar("community_id", { length: 36 }).references(
-    () => communitiesTable.id
+    () => communitiesTable.id,
+    { onDelete: "cascade" }
   ),
   ...timestamps
 })
@@ -770,7 +816,9 @@ export const spacesTable = pgTable("spaces", {
   space_slug: varchar().notNull(),
   space_name: varchar().notNull(),
   description: varchar(),
-  channel_id: varchar().notNull(),
+  channel_id: varchar("channel_id", { length: 36 })
+    .references(() => channelsTable.id, { onDelete: "cascade" })
+    .notNull(),
   created_by: varchar().notNull(),
   ownerId: varchar(),
   space_type: varchar(),
@@ -867,6 +915,7 @@ export const spaceFileDirectoryTable = pgTable("space_file_directory", {
   space_id: varchar(),
   entity_name: varchar().notNull(),
   entity_type: varchar().notNull(),
+  entity_slug: varchar(),
   entity_id: integer(),
   entity_size: integer(),
   parent_id: integer(),
@@ -896,6 +945,9 @@ export const SpaceUsersTable = pgTable("space_users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   space_id: varchar().notNull(),
   user_id: varchar().notNull(),
+  channel_user_id: integer().references(() => ChannelUsersTable.id, {
+    onDelete: "cascade"
+  }),
   role: varchar().default("member"),
   status: varchar().default("active")
 })
@@ -923,6 +975,9 @@ export const ChannelUsersTable = pgTable("channel_users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   channel_id: varchar().notNull(),
   user_id: varchar().notNull(),
+  community_user_id: varchar().references(() => communityUsersTable.id, {
+    onDelete: "cascade"
+  }),
   role: varchar().default("member"),
   status: varchar().default("active")
 })
@@ -958,7 +1013,10 @@ export const projectTable = pgTable("project", {
   project_startDate: varchar().notNull(),
   project_targetDate: varchar().notNull(),
   channel_id: varchar().notNull(),
-  space_id: varchar().notNull(),
+  space_id: varchar("space_id", { length: 36 }).references(
+    () => spacesTable.id,
+    { onDelete: "cascade" }
+  ),
   created_by: varchar().notNull(),
   project_type: varchar(),
   ...timestamps
@@ -999,6 +1057,7 @@ export const taskTable = pgTable("task", {
   sprint_id: varchar(),
   assign_to: varchar(),
   assign_by: varchar(),
+  parent_task_id: varchar(),
   ...timestamps
 })
 
@@ -1006,9 +1065,13 @@ export type InsertTask = typeof taskTable.$inferInsert
 export type SelectTask = typeof taskTable.$inferSelect & {
   assignee?: SelectUser | null
   assignor?: SelectUser | null
+  status?: InferSelectModel<typeof TaskStatusTable> | null
+  parentTask?: SelectTask | null
+  subTasks?: SelectTask[]
+  creator?: SelectUser | null
 }
 
-export const taskRelations = relations(taskTable, ({ one }) => ({
+export const taskRelations = relations(taskTable, ({ one, many }) => ({
   assignee: one(usersTable, {
     fields: [taskTable.assign_to],
     references: [usersTable.unique_id],
@@ -1018,6 +1081,27 @@ export const taskRelations = relations(taskTable, ({ one }) => ({
     fields: [taskTable.assign_by],
     references: [usersTable.unique_id],
     relationName: "taskAssignor"
+  }),
+  status: one(TaskStatusTable, {
+    fields: [taskTable.status_id],
+    references: [TaskStatusTable.id],
+    relationName: "taskStatus"
+  }),
+  burnDowns: many(sprintBurnDownTable, {
+    relationName: "taskToBurnDown"
+  }),
+  parentTask: one(taskTable, {
+    fields: [taskTable.parent_task_id],
+    references: [taskTable.id],
+    relationName: "taskParent"
+  }),
+  subTasks: many(taskTable, {
+    relationName: "taskParent"
+  }),
+  creator: one(usersTable, {
+    fields: [taskTable.created_by],
+    references: [usersTable.unique_id],
+    relationName: "taskCreator"
   })
 }))
 
@@ -1058,6 +1142,12 @@ export const TaskStatusTable = pgTable("tasks_status", {
   ...timestamps
 })
 
+export const TaskStatusRelations = relations(TaskStatusTable, ({ many }) => ({
+  tasks: many(taskTable, {
+    relationName: "taskStatus"
+  })
+}))
+
 export type InsertTaskStatus = typeof TaskStatusTable.$inferInsert
 export type SelectTaskStatus = typeof TaskStatusTable.$inferSelect
 
@@ -1072,6 +1162,12 @@ export const SprintTable = pgTable("sprints", {
   sprint_status: varchar(),
   ...timestamps
 })
+
+export const SprintRelations = relations(SprintTable, ({ many }) => ({
+  burnDowns: many(sprintBurnDownTable, {
+    relationName: "sprintToBurnDown"
+  })
+}))
 
 export type InsertSprint = typeof SprintTable.$inferInsert
 export type SelectSprint = typeof SprintTable.$inferSelect
@@ -1200,6 +1296,7 @@ export const communitiesTable = pgTable("communities", {
   slug: varchar().notNull().unique(),
   type: varchar().notNull().default("public"),
   created_by: varchar().notNull(),
+  cover_image: varchar(),
   ...timestamps
 })
 
@@ -1283,6 +1380,30 @@ export type SelectCommunityCategory =
     communities?: SelectCommunity[]
   }
 
+export const communityRequestsTable = pgTable("community_requests", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  university_name: varchar().notNull(),
+  official_university_email: varchar().notNull(),
+  contact_person_id: varchar().notNull(),
+  contact_person_name: varchar().notNull(),
+  contact_number: varchar().notNull(),
+  designation: varchar().notNull(),
+  university_website: varchar(),
+  city: varchar().notNull(),
+  description: varchar(),
+  estimated_number_of_students: varchar(),
+  intended_usage: varchar(),
+  status: varchar().notNull().default("pending"),
+  invite_link: varchar(),
+  reason: varchar(),
+  ...timestamps
+})
+
+export type InsertCommunityRequest = typeof communityRequestsTable.$inferInsert
+export type SelectCommunityRequest = typeof communityRequestsTable.$inferSelect
+
 export const shortcutsTable = pgTable("shortcuts", {
   id: varchar("id", { length: 36 })
     .primaryKey()
@@ -1291,8 +1412,214 @@ export const shortcutsTable = pgTable("shortcuts", {
   url: varchar().notNull(),
   type: varchar().notNull(),
   user_id: varchar().notNull(),
+  community_id: varchar("community_id", { length: 36 }).references(
+    () => communitiesTable.id,
+    { onDelete: "cascade" }
+  ),
+  channel_id: varchar("channelid", { length: 36 }).references(
+    () => channelsTable.id,
+    { onDelete: "cascade" }
+  ),
+  space_id: varchar("space_id", { length: 36 }).references(
+    () => spacesTable.id,
+    { onDelete: "cascade" }
+  ),
+  project_id: varchar("project_id", { length: 36 }).references(
+    () => projectTable.id,
+    { onDelete: "cascade" }
+  ),
   ...timestamps
 })
+export const shortcutsRelations = relations(shortcutsTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [shortcutsTable.user_id],
+    references: [usersTable.unique_id]
+  }),
+  community: one(communitiesTable, {
+    fields: [shortcutsTable.community_id],
+    references: [communitiesTable.id]
+  }),
+  channel: one(channelsTable, {
+    fields: [shortcutsTable.channel_id],
+    references: [channelsTable.id]
+  }),
+  space: one(spacesTable, {
+    fields: [shortcutsTable.space_id],
+    references: [spacesTable.id]
+  }),
+  project: one(projectTable, {
+    fields: [shortcutsTable.project_id],
+    references: [projectTable.id]
+  })
+}))
 
 export type SelectShortcut = typeof shortcutsTable.$inferSelect
 export type InsertShortcut = typeof shortcutsTable.$inferInsert
+
+export const taskCommentsTable = pgTable("task_comments", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  content: varchar().notNull(),
+  user_id: varchar().notNull(),
+  task_id: varchar().notNull(),
+  task_history: jsonb(),
+  type: varchar(),
+  mentions: varchar("mentions").array(),
+  ...timestamps
+})
+
+export const taskCommentsRelations = relations(
+  taskCommentsTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [taskCommentsTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "taskCommentToUser"
+    })
+  })
+)
+
+export type SelectTaskComment = InferSelectModel<typeof taskCommentsTable> & {
+  user?: SelectUser
+}
+export type InsertTaskComment = typeof taskCommentsTable.$inferInsert
+
+export const siteSettingsTable = pgTable("site_settings", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  key: varchar().notNull(),
+  value: json().notNull(),
+  page: varchar().notNull(),
+  ...timestamps
+})
+
+export type SelectSiteSetting = typeof siteSettingsTable.$inferSelect
+export type InsertSiteSetting = typeof siteSettingsTable.$inferInsert
+
+export const eventRegistrationsTable = pgTable("event_users", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  event_id: integer("event_id")
+    .notNull()
+    .references(() => eventsTable.id, { onDelete: "cascade" }),
+  user_id: varchar("user_id", { length: 36 })
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  ...timestamps
+})
+
+export const eventRegistrationsRelations = relations(
+  eventRegistrationsTable,
+  ({ one }) => ({
+    event: one(eventsTable, {
+      fields: [eventRegistrationsTable.event_id],
+      references: [eventsTable.id],
+      relationName: "eventToRegistration"
+    }),
+    user: one(usersTable, {
+      fields: [eventRegistrationsTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "userToEventRegistration"
+    })
+  })
+)
+
+export type InsertEventRegistration =
+  typeof eventRegistrationsTable.$inferInsert
+
+export type SelectEventRegistration =
+  typeof eventRegistrationsTable.$inferSelect & {
+    event?: SelectEvent
+    user?: SelectUser
+  }
+
+export const emailTemplatesTable = pgTable("email_templates", {
+  unique_id: varchar("unique_id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+
+  subject: varchar("subject", { length: 255 }).notNull(),
+  body: text("body").notNull(),
+  isActive: boolean("is_active").default(true),
+  ...timestamps
+})
+
+export const sprintBurnDownTable = pgTable("sprint_burndown", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  sprint_id: varchar().notNull(),
+  task_id: varchar(),
+  total_tasks: integer().notNull().default(0),
+  completed_tasks: integer().notNull().default(0),
+  total_story_points: integer().notNull().default(0),
+  ...timestamps
+})
+
+export const sprintBurnDownRelations = relations(
+  sprintBurnDownTable,
+  ({ one }) => ({
+    sprint: one(SprintTable, {
+      fields: [sprintBurnDownTable.sprint_id],
+      references: [SprintTable.id],
+      relationName: "sprintToBurnDown"
+    }),
+    task: one(taskTable, {
+      fields: [sprintBurnDownTable.task_id],
+      references: [taskTable.id],
+      relationName: "taskToBurnDown"
+    })
+  })
+)
+export type InsertSprintBurnDown = typeof sprintBurnDownTable.$inferInsert
+export type SelectSprintBurnDown = typeof sprintBurnDownTable.$inferSelect & {
+  sprint?: SelectSprint
+  task?: SelectTask
+  user?: SelectUser
+}
+
+export const projectRecentActivityTable = pgTable("project_recent_activity", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  project_id: varchar().notNull(),
+  icon: varchar().notNull(),
+  activity: varchar().notNull(),
+  deep_link: varchar().notNull(),
+  ...timestamps
+})
+
+export type InsertProjectRecentActivity =
+  typeof projectRecentActivityTable.$inferInsert
+export type SelectProjectRecentActivity =
+  typeof projectRecentActivityTable.$inferSelect
+
+
+  export const invitationsTable = pgTable("invitations", {
+    id: varchar("id", { length: 36 })
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    invite_key: varchar("key").notNull().unique(),
+    invite_email: jsonb("invite_email").default([]).notNull(),
+    joined_email: jsonb("joined_email").default([]).notNull(),
+    invited_by: varchar("invited_by", { length: 36 })
+      .notNull()
+      .references(() => usersTable.unique_id),
+    entity_id: varchar("entity_id").notNull(),
+    entity_type: varchar("entity_type").notNull(),
+    role_offer_id: integer("role_offer_id")
+    .notNull()
+    .references(() => rolesTable.id),
+    ...timestamps
+  })
+  
+  export const invitationsRelations = relations(invitationsTable, ({ one }) => ({
+    inviter: one(usersTable, {
+      fields: [invitationsTable.invited_by],
+      references: [usersTable.unique_id],
+      relationName: "userToInvitations"
+    }),
+    role: one(rolesTable, {
+      fields: [invitationsTable.role_offer_id],
+      references: [rolesTable.id],
+    })
+  }))
+  
+  export type InsertInvitation = typeof invitationsTable.$inferInsert
+  export type SelectInvitation = typeof invitationsTable.$inferSelect

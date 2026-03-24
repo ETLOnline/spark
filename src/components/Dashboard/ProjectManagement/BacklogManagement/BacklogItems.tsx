@@ -10,7 +10,7 @@ import {
 } from "@/src/components/ui/alert-dialog"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
-import { Checkbox } from "@/src/components/ui/checkbox"
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,19 +21,21 @@ import {
 import { SelectTask, SelectUser } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { DeleteTaskAction } from "@/src/server-actions/Tasks/Task"
+import {
+  checkIfTaskIsParentAction,
+  DeleteTaskAction
+} from "@/src/server-actions/Tasks/Task"
 import { projectStore } from "@/src/store/project/projectStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import { useAtom, useSetAtom } from "jotai"
-import { CircleHelp, MoreHorizontal } from "lucide-react"
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
+import { AlertCircle, CircleHelp, Flag, MoreHorizontal } from "lucide-react"
+import React, { useState } from "react"
 import {
   projectTaskPriority,
   projectTaskTypes
 } from "../constants/projectManagment"
 import { useParams } from "next/navigation"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import TaskMoveDialog from "../Task/components/task-move-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   Tooltip,
@@ -41,45 +43,45 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
-import { getInitials } from "@/src/utils/helpers"
+import { getInitials, ToUpperCase } from "@/src/utils/helpers"
+import Link from "next/link"
+import { DynamicIcon, IconName } from "lucide-react/dynamic"
 
 interface Props {
-  selectedItems: string[]
-  setSelectedItems: Dispatch<SetStateAction<string[]>>
   task: SelectTask
 }
 
-function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
+function BacklogItems({ task }: Props) {
   const params = useParams()
   const projectId = params.id as string
   const [isDropdownOpen, setIsDropDownOpen] = useState(false)
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
-  const SetTasks = useSetAtom(taskStore.BackLogTasks)
+  const setTasks = useSetAtom(taskStore.BackLogTasks)
   const [status, setStatus] = useAtom(projectStore.projectStatusList)
-  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useState(false)
+  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useAtom(
+    taskStore.isTaskMoveDialogOpen
+  )
+  const setIsConfirmationAlertOpen = useSetAtom(
+    taskStore.isConfirmationAlertOpen
+  )
+  const setIsTaskModalOpen = useSetAtom(taskStore.isTaskModalOpen)
+  const setTaskMoveDialogAction = useSetAtom(taskStore.taskMoveDialogAction)
 
   const [deleteTaskLoading, deleteTaskData, deleteTaskError, DeleteTask] =
     useServerAction(DeleteTaskAction)
 
-  const handleSelectItem = (id: string) => {
-    setSelectedItems(
-      selectedItems.includes(id)
-        ? selectedItems.filter((itemId) => itemId !== id)
-        : [...selectedItems, id]
-    )
-  }
-
   function EditTask(task: SelectTask) {
     setSelectedTask(task)
     setIsDropDownOpen(false)
+    setIsTaskModalOpen(true)
   }
 
   async function handleDeleteTask(selectedTask: SelectTask) {
     try {
       const deletedTask = await DeleteTask(selectedTask)
       if (deletedTask?.success) {
-        SetTasks((prev) => prev.filter((t) => t.id !== selectedTask.id))
+        setTasks((prev) => prev.filter((t) => t.id !== selectedTask.id))
         toast({
           title: "Task Deleted successfully"
         })
@@ -92,40 +94,16 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
     }
   }
 
-  const getTypeLabel = (type: string) => {
-    const matchedType = projectTaskTypes.find((t) => t.key === type)
-    return matchedType ? (
-      <Badge
-        variant={
-          matchedType?.badgeVariant as
-            | "default"
-            | "destructive"
-            | "secondary"
-            | "outline"
-        }
-      >
-        {matchedType.title}
-      </Badge>
-    ) : (
-      <Badge variant={"outline"} />
-    )
-  }
-
-  const getPriorityLabel = (priority: string) => {
-    const priorityMap = projectTaskPriority.find((p) => p.key === priority)
-    return priorityMap ? (
-      <Badge
-        variant={"outline"}
-        style={{
-          color: priorityMap.badgeTextColor,
-          borderColor: priorityMap.badgeBorderColor
-        }}
-      >
-        {priorityMap?.title}
-      </Badge>
-    ) : (
-      <Badge variant="outline">Unknown</Badge>
-    )
+  const HandleMoveTask = async (task: SelectTask) => {
+    const isTaskParent = await checkIfTaskIsParentAction(task.id)
+    if (isTaskParent.data) {
+      setIsConfirmationAlertOpen(true)
+    } else {
+      setIsTaskMoveDialogOpen(true)
+    }
+    setSelectedTask(task)
+    setIsDropDownOpen(false)
+    setTaskMoveDialogAction("moveTask")
   }
 
   // PERMISSIONS INITATE
@@ -140,59 +118,129 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
   const canDelete = permissionChecker
     ? permissionChecker?.canAccess("project.backlog.task.delete")
     : false
-  const onTaskCreated = (task: SelectTask) => {
-    SetTasks((prev) => [...prev, task])
-    setSelectedTask(task)
-  }
 
-  const onTaskUpdated = (task: SelectTask) => {
-    SetTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, ...task } : t))
+  function IssueTypeIcon({ type }: { type: string }) {
+    const typeMap = projectTaskTypes.find((t) => t.key === type)
+    return typeMap ? (
+      <DynamicIcon
+        name={typeMap.icon as IconName}
+        className="h-5 w-5"
+        style={{ color: typeMap.iconColor }}
+      />
+    ) : (
+      <AlertCircle className="h-5 w-5" />
     )
-    setSelectedTask(task)
   }
 
+  function PriorityIcon({ priority }: { priority: string }) {
+    const priorityMap = projectTaskPriority.find((p) => p.key === priority)
+    return priorityMap ? (
+      <DynamicIcon
+        name={priorityMap.icon as IconName}
+        className="h-5 w-5"
+        style={{ color: priorityMap.iconColor }}
+      />
+    ) : (
+      <Flag className="h-5 w-5" />
+    )
+  }
+
+  const isParentAvailable = task.parentTask
   return (
     <>
       <div
         key={task.id}
-        className="grid grid-cols-12 gap-2 p-4 border-t items-center hover:bg-muted/50  transition delay-150 duration-300"
+        className="grid grid-cols-12 gap-3 p-4 border-t items-center hover:bg-muted/50  transition delay-150 duration-300"
       >
-        <div className="col-span-1">
-          <Checkbox
-            checked={
-              task.task_num ? selectedItems.includes(task.task_num) : false
-            }
-            onCheckedChange={() =>
-              task.task_num && handleSelectItem(task.task_num)
-            }
-          />
+        <div className={`col-span-1`}>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <IssueTypeIcon type={task.task_type} />
+              </TooltipTrigger>
+              <TooltipContent>{task.task_type}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
+
         <div
-          className={`col-span-1 text-sm font-medium ${canUpdate ? "cursor-pointer" : "cursor-default"}`}
-          onClick={() => canUpdate && EditTask(task)}
+          className={`col-span-1 text-sm font-medium cursor-pointer text-left`}
+          onClick={() => EditTask(task)}
         >
           {task.task_num}
         </div>
-        <div className="col-span-3">
+        <div className={"col-span-3"}>
           <div
-            className={`font-medium break-words whitespace-normal line-clamp-2 ${canUpdate ? "cursor-pointer" : "cursor-default"}`}
-            onClick={() => canUpdate && EditTask(task)}
+            className={`font-medium break-words whitespace-normal line-clamp-2 cursor-pointer text-left`}
+            onClick={() => EditTask(task)}
           >
             {task.task_title}
           </div>
         </div>
-        <div className="col-span-1">{getTypeLabel(task.task_type)}</div>
-        <div className="col-span-3 flex justify-around items-center">
+
+        <div className="col-span-1 text-center">
+          {task.parentTask ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Badge variant={"outline"}>
+                    <Link
+                      href={`/project/${projectId}/task/${task.parentTask?.id}`}
+                      className="flex flex-row items-center gap-2"
+                    >
+                      <IssueTypeIcon type={task.parentTask.task_type} />
+                      {task.parentTask?.task_num}
+                    </Link>
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>{task.parentTask?.task_title}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : null}
+        </div>
+
+        <div className="col-span-2 text-center">
           <Badge variant={"outline"}>
             {status.find((s) => s.id === task.status_id)?.name}
           </Badge>
-          <div>{getPriorityLabel(task.task_priority)}</div>
         </div>
-        <div className="col-span-1">{task.story_points}</div>
-        <div className="col-span-1">
+
+        <div className="col-span-1 text-center">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <PriorityIcon priority={task.task_priority} />
+              </TooltipTrigger>
+              <TooltipContent>{ToUpperCase(task.task_priority)}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        <div className="col-span-1 text-center">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <div className="truncate max-w-[50px] mx-auto">
+                  {task.story_points && task.story_points !== "0"
+                    ? task.story_points
+                    : "-"}
+                </div>
+              </TooltipTrigger>
+
+              <TooltipContent>
+                <span>
+                  {task.story_points && task.story_points !== "0"
+                    ? task.story_points
+                    : "-"}
+                </span>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        <div className="col-span-1 text-center">
           {task.assign_to ? (
-            <div>
+            <div className="flex justify-center items-center">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -219,10 +267,12 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
               </TooltipProvider>
             </div>
           ) : (
-            <CircleHelp />
+            <div className="flex justify-center items-center">
+              <CircleHelp />
+            </div>
           )}
         </div>
-        <div className="col-span-1 text-right">
+        <div className="col-span-1 text-center">
           {(canUpdate || canDelete) && (
             <DropdownMenu
               open={isDropdownOpen}
@@ -241,8 +291,7 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
-                        setIsTaskMoveDialogOpen(true)
-                        setIsDropDownOpen(false)
+                        HandleMoveTask(task)
                       }}
                     >
                       Add to Sprint
@@ -287,12 +336,6 @@ function BacklogItems({ task, selectedItems, setSelectedItems }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <TaskMoveDialog
-        isTaskMoveDialogOpen={isTaskMoveDialogOpen}
-        setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
-        task_id={task.id}
-      />
     </>
   )
 }

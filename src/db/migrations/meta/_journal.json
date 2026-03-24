@@ -92,6 +92,160 @@
       "when": 1752926482581,
       "tag": "0012_2025_07_19_170119__update_recommendation_and_profile_table_and_create_certificates_table",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1753192713722,
+      "tag": "0013_2025_07_22_185827__add_table_for_comments_task",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1753885886387,
+      "tag": "0014_2025_07_30_193123__create_site_settings_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1755591102610,
+      "tag": "0015_2025_08_19_131140__update_users_and_communities_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1755865421734,
+      "tag": "0016_2025_08_22_172329__events_table_update_and_create_event_users_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1756289562425,
+      "tag": "0017_2025_08_27_151240__add_email_temapltes_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1757694148533,
+      "tag": "0018_2025_09_12_212225__update_space_file_directory",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1758041330249,
+      "tag": "0019_2025_09_16_214843__update_notifcation_table_column",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1759317885751,
+      "tag": "0020_2025_10_01_162442__update_channel_and_space_user_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1760023196481,
+      "tag": "0021_2025_10_09_201952__create_sprint_burn_down_and_project_recent_activity_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1760697682721,
+      "tag": "0022_2025_10_17_154118__update_tasktable",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1763052780533,
+      "tag": "0023_2025_11_14_005259__add_column_name_index_in_chat_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1763452596357,
+      "tag": "0024_2025_11_18_155635__add_unread_colmun_in_user_chats_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1763736274339,
+      "tag": "0025_2025_11_21_194429__update_task_comment_table_for_task_history",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1763781924573,
+      "tag": "0026_2025_11_22_112523__add_mention_column_in_the_chats_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1764606527543,
+      "tag": "0027_2025_12_01_212844__add_mention_column_in_task_comments",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1764849048637,
+      "tag": "0028_2025_12_04_165046__add_is_deleted_column_in_message_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1766068069240,
+      "tag": "0029_2025_12_18_222748__add_column_created_by_in_chats_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1767955873678,
+      "tag": "0030_2026_01_09_155112__add_id_primary_key_to_poll_options",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1770136360565,
+      "tag": "0031_2026_02_04_003240__cacade_in_community_channel_space_project_shortcuts",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1772555809978,
+      "tag": "0032_2026_03_03_213647__create_community_request_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1772728846435,
+      "tag": "0033_2026_03_05_214032__update_community_request_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1772811965589,
+      "tag": "0034_2026_03_06_234604__add_inviation_table",
+      "breakpoints": true
     }
   ]
 }

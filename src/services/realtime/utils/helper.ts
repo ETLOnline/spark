@@ -1,0 +1,79 @@
+import { MentionChatRegex } from "@/src/components/Dashboard/Chat/constants"
+import { RealtimeChannelPrefix } from "../types/prefix"
+
+export interface MentionToken {
+  type: "text" | "mention"
+  value: string
+  userId?: string
+}
+
+export function getRealtimeSystemNotificationChannel(userId: string) {
+  return `${RealtimeChannelPrefix.SystemNotification}${userId}`
+}
+
+/**
+ * Extracts mentioned user IDs from message content
+ * Supports formats like: @[John Doe](user_id_123)
+ * @param message - The message content
+ * @returns Array of unique user IDs that were mentioned
+ */
+export const extractMentionsFromMessage = (message: string): string[] => {
+  const mentionRegex = MentionChatRegex
+  const mentions: string[] = []
+
+  let match
+  while ((match = mentionRegex.exec(message)) !== null) {
+    const userId = match[2]
+    if (userId && !mentions.includes(userId)) {
+      mentions.push(userId)
+    }
+  }
+
+  return mentions
+}
+
+export const parseMentions = (text: string): MentionToken[] => {
+  const tokens: MentionToken[] = []
+  const regex = new RegExp(MentionChatRegex.source, "g")
+  let lastIndex = 0
+  let match
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      tokens.push({
+        type: "text",
+        value: text.substring(lastIndex, match.index)
+      })
+    }
+
+    tokens.push({
+      type: "mention",
+      value: match[1], // displayName
+      userId: match[2] // user_id
+    })
+
+    lastIndex = match.index + match[0].length
+  }
+
+  if (lastIndex < text.length) {
+    tokens.push({
+      type: "text",
+      value: text.substring(lastIndex)
+    })
+  }
+
+  return tokens
+}
+
+
+export const getRoleIdOnMatch = (rolesArray: any[], targetEntityId: string) => {
+  let matchedId: number | null = null
+  rolesArray.forEach((data) => {
+    if (matchedId === null) {
+      if (data?.role?.entity_id === targetEntityId) {
+        matchedId = data?.role?.id
+      }
+    }
+  })
+  return matchedId
+}

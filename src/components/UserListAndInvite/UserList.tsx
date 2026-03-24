@@ -34,15 +34,13 @@ import {
   SelectCommunityUser,
   SelectRole,
   SelectSpace,
-  SelectSpaceUser
+  SelectSpaceUser,
+  SelectUser
 } from "@/src/db/schema"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import {
-  DettachChannelUserAction,
-  UpdateChannelUserAction
-} from "@/src/server-actions/Channel/Channel"
+import { DettachChannelUserAction } from "@/src/server-actions/Channel/Channel"
 import {
   DetachSpaceUserAction,
   UpdateSpaceUserAction
@@ -73,13 +71,13 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger
+  AlertDialogTitle
 } from "../ui/alert-dialog"
 import { SpaceUserRole } from "../common/types/spaceuser.role"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { updateUserRoleForEntityAction } from "@/src/server-actions/UserRoles/UserRole"
 import { CommunityDetailData } from "@/src/db/data-access/communities/query"
+import { DetachCommunityUserAction } from "@/src/server-actions/Community/Community"
 
 interface Props {
   entityType: "channel" | "space" | "community"
@@ -110,6 +108,8 @@ export default function ChannelUserList({
   >(null)
   const [selectedRoleName, setSelectedRoleName] = useState("")
   const authUser = useAtomValue(userStore.AuthUser)
+  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
+
   const [
     dettachChannelUserLoading,
     dettachChannelUserData,
@@ -122,6 +122,12 @@ export default function ChannelUserList({
     errorDettachSpaceUser,
     DettachSpaceUser
   ] = useServerAction(DetachSpaceUserAction)
+  const [
+    detachCommunityUserLoading,
+    detachCommunityUserData,
+    errorDetachCommunityUser,
+    DetachCommunityUser
+  ] = useServerAction(DetachCommunityUserAction)
   const [
     updateEntityUserRoleLoading,
     updateEntityUserRoleData,
@@ -318,8 +324,10 @@ export default function ChannelUserList({
       let delUser
       if (entityType === "channel") {
         delUser = await DettachChannelUser(entityId, userId, roleToRemove.id)
-      } else {
+      } else if (entityType === "space") {
         delUser = await DettachSpaceUser(entityId, userId, roleToRemove.id)
+      } else if (entityType === "community") {
+        delUser = await DetachCommunityUser(entityId, userId, roleToRemove.id)
       }
       if (delUser?.success) {
         setUsersList((prevUsersList) => {
@@ -358,15 +366,69 @@ export default function ChannelUserList({
     }
   }
 
+  const getEntityCreatorId = () => {
+    if (entityType === "channel") {
+      return (entity as SelectChannel).created_by
+    }
+    if (entityType === "space") {
+      return (entity as SelectSpace).created_by
+    }
+    if (entityType === "community") {
+      return (entity as CommunityDetailData).owner.id
+    }
+    return null
+  }
+
+  const entityCreatorId = getEntityCreatorId()
+
+  const isEntityOwner = entityCreatorId === authUser?.unique_id
+
+  const isScopedAdminFn = (user?: SelectUser) => {
+    if (user?.roles) {
+      return user.roles.some(
+        (role) =>
+          role.role?.slug?.includes("admin") &&
+          role.role.entity_id === entity.id
+      )
+    }
+    return false
+  }
+
+  const canChangeUserRole = (targetUser: SelectUser | undefined) => {
+    if (!targetUser) return false
+
+    if (targetUser.unique_id === authUser?.unique_id) return false
+
+    if (isSuperAdmin) return true
+
+    if (targetUser.unique_id === entityCreatorId) return false
+
+    if (authUser?.unique_id === entityCreatorId) return true
+
+    if (isScopedAdminFn(authUser || undefined)) {
+      if (
+        targetUser.unique_id === entityCreatorId ||
+        isScopedAdminFn(targetUser)
+      ) {
+        return false
+      }
+      return true
+    }
+
+    return false
+  }
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-2">
           <Link
             href={
-              entityType === "channel"
-                ? `/channels/${(entity as SelectChannel).channel_slug}/spaces`
-                : `/channels/${(entity as SelectSpace).channel?.channel_slug}/spaces/${(entity as SelectSpace).space_slug}`
+              entityType === "community"
+                ? `/communities/${(entity as CommunityDetailData).slug}`
+                : entityType === "channel"
+                  ? `/channels/${(entity as SelectChannel).channel_slug}/spaces`
+                  : `/channels/${(entity as SelectSpace).channel?.channel_slug}/spaces/${(entity as SelectSpace).space_slug}`
             }
           >
             <h1 className="text-2xl font-bold">{entityName}</h1>
@@ -398,19 +460,29 @@ export default function ChannelUserList({
             </div>
           </div>
           <CardDescription>
-            Manage all users across your{" "}
-            {entityType === "channel" ? "channel" : "space"}. {usersList.length}{" "}
-            users total.
+            Manage all users across your {entityType}. {usersList.length} users
+            total.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
-            <div className="grid grid-cols-12 p-4 bg-muted font-medium">
-              <div className="col-span-4">User</div>
-              <div className="col-span-4">Email</div>
-              <div className="col-span-3">Role</div>
-              <div className="col-span-1">Actions</div>
+            <div className="grid grid-cols-12 px-2 py-4 bg-muted font-medium">
+              <div className="col-span-4 lg:col-span-3">User</div>
+              <div className="col-span-4 lg:col-span-4">Email</div>
+              <div
+                className={
+                  isScopedAdminFn(authUser || undefined) || isSuperAdmin
+                    ? "col-span-3 lg:col-span-4"
+                    : "col-span-4 lg:col-span-5 text-center"
+                }
+              >
+                Role
+              </div>
+              {isScopedAdminFn(authUser || undefined) || isSuperAdmin ? (
+                <div className="col-span-1">Actions</div>
+              ) : null}
             </div>
+
             <div className="divide-y">
               {filteredUsers.map((cu) => {
                 const user = cu.user
@@ -418,9 +490,9 @@ export default function ChannelUserList({
                 return (
                   <div
                     key={user.unique_id}
-                    className="grid grid-cols-12 p-4 items-center"
+                    className="grid grid-cols-12 px-2  py-4 items-center"
                   >
-                    <div className="col-span-4 flex items-center gap-3">
+                    <div className="col-span-3  lg:col-span-3 flex items-center gap-2">
                       <Avatar>
                         <AvatarImage
                           src={user.profile_url || undefined}
@@ -431,62 +503,90 @@ export default function ChannelUserList({
                           {user.first_name.split(" ")[1]?.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="font-medium">{user.first_name}</div>
+                      <div className="font-medium text-sm lg:text-base">
+                        {user.first_name}
+                      </div>
                     </div>
-                    <div className="col-span-4 text-sm text-muted-foreground">
+                    <div className="col-span-3 lg:col-span-4 text-xs lg:text-sm text-muted-foreground">
                       {user.email}
                     </div>
-                    <div className="col-span-3 flex items-center gap-1">
-                      <Badge
-                        className="capitalize"
-                        variant={
-                          cu.role === SpaceUserRole.Admin
-                            ? "default"
-                            : "outline"
-                        }
-                      >
-                        {cu.role}
-                      </Badge>
+
+                    <div
+                      className={
+                        isScopedAdminFn(authUser || undefined) || isSuperAdmin
+                          ? "col-span-3 lg:col-span-4 flex gap-1"
+                          : "col-span-4 lg:col-span-5"
+                      }
+                    >
+                      <div className="flex flex-col items-center ga">
+                        <Badge
+                          className="capitalize"
+                          variant={
+                            cu.role === SpaceUserRole.Admin
+                              ? "default"
+                              : "outline"
+                          }
+                        >
+                          {cu.role && cu.role.length > 25
+                            ? cu.role.slice(0, 25) + "..."
+                            : cu.role}
+                        </Badge>
+                        {entityCreatorId === user.unique_id && (
+                          <Badge variant="outline">{"(Creator)"}</Badge>
+                        )}
+                      </div>
                     </div>
-                    <div className="col-span-1 text-center">
-                      {(canUpdateUser || canDeleteUser) && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">More options</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            {canUpdateUser && (
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedUser(cu)
-                                  setSelectedRoleName(cu.role || "")
-                                  setChangeRoleModelVisibility(true)
-                                }}
+
+                    {/* Actions */}
+                    {isScopedAdminFn(authUser || undefined) || isSuperAdmin ? (
+                      <div className="col-span-1 flex justify-center">
+                        {canChangeUserRole(user) ? (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
                               >
-                                Change Role
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuSeparator />
-                            {canDeleteUser && (
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() => {
-                                  setSelectedUser(cu)
-                                  setIsAlertOpen(true)
-                                }}
-                              >
-                                Remove User
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </div>
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">More options</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              {canUpdateUser && (
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedUser(cu)
+                                    setSelectedRoleName(cu.role || "")
+                                    setChangeRoleModelVisibility(true)
+                                  }}
+                                >
+                                  Change Role
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
+                              {canDeleteUser && (
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={() => {
+                                    setSelectedUser(cu)
+                                    setIsAlertOpen(true)
+                                  }}
+                                >
+                                  Remove User
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">
+                            -
+                          </span>
+                        )}
+                      </div>
+                    ) : null}
                   </div>
                 )
               })}
@@ -505,7 +605,7 @@ export default function ChannelUserList({
         open={changeRoleModelVisibility}
         onOpenChange={setChangeRoleModelVisibility}
       >
-        <DialogContent>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Change User Role</DialogTitle>
           </DialogHeader>
@@ -579,7 +679,7 @@ export default function ChannelUserList({
         open={isInviteDialogOpen}
         onOpenChange={setIsInviteDialogOpen}
         spaceName="Platform"
-        type={["link"]}
+        type={["link","email"]}
         entityType={entityType}
         entity={entity}
       />

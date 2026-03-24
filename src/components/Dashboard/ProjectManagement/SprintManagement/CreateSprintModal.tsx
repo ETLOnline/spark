@@ -1,3 +1,4 @@
+import { UnsavedChangesDialog } from "@/src/components/common/unsavedChangesDialog"
 import { Button } from "@/src/components/ui/button"
 import {
   Dialog,
@@ -12,11 +13,14 @@ import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import { SelectSprint } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
+import { useConfirmClose } from "@/src/hooks/useConfirmClose"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateSprintAction,
+  GetSprintCountAction,
   UpdateSprintAction
 } from "@/src/server-actions/Sprint/sprint"
+import { GetProjectByIdAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { sprintStore } from "@/src/store/sprint/sprintsStore"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAtom } from "jotai"
@@ -24,7 +28,8 @@ import moment from "moment"
 import { useParams } from "next/navigation"
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
-import { z } from "zod"
+import { set, z } from "zod"
+import { SprintStatus } from "../constants/projectManagment"
 
 interface Props {
   isCreateSprintOpen: boolean
@@ -32,43 +37,76 @@ interface Props {
   selectedSprint?: SelectSprint | null
 }
 
-const projectSchema = z
-  .object({
-    title: z.string().min(1, "Required").max(50, "Title is too long"),
-    start_date: z.string().refine(
-      (value) => {
-        const inputValue = moment(value)
-        const today = moment().startOf("day")
-        return inputValue.isSameOrAfter(today)
+const createSprintSchema = (projectDates?: {
+  project_startDate?: string
+  project_targetDate?: string
+}) =>
+  z
+    .object({
+      title: z.string().min(1, "Required").max(50, "Title is too long"),
+      start_date: z
+        .string()
+        .min(1, "Required")
+        .refine(
+          (value) => {
+            if (!value) return true
+            const formats = ["YYYY-MM-DD", "DD-MM-YYYY"]
+            const projectStart = projectDates?.project_startDate
+              ? moment(projectDates.project_startDate, formats, true).startOf(
+                  "day"
+                )
+              : null
+            const minStart = projectStart ?? moment().startOf("day")
+            return moment(value, "YYYY-MM-DD").isSameOrAfter(minStart)
+          },
+          { message: "Start date must be on or after project start date " }
+        ),
+      end_date: z.string().min(1, "Required")
+    })
+    .refine(
+      (data) => {
+        if (!data.start_date || !data.end_date) return true
+        return moment(data.end_date, "YYYY-MM-DD").isSameOrAfter(
+          moment(data.start_date, "YYYY-MM-DD")
+        )
       },
       {
-        message: "Date must not be in the past"
-      }
-    ),
-    end_date: z.string().refine(
-      (value) => {
-        const inputValue = moment(value)
-        const today = moment().startOf("day")
-        return inputValue.isSameOrAfter(today)
-      },
-      {
-        message: "End date must not be in the past"
+        message: "End date must be after start date",
+        path: ["end_date"]
       }
     )
-  })
-  .refine(
-    (data) => {
-      const start = moment(data.start_date)
-
-      const end = moment(data.end_date)
-
-      return end.isSameOrAfter(start)
-    },
-    {
-      message: "End date must be after start date",
-      path: ["end_date"]
-    }
-  )
+    .superRefine((data, ctx) => {
+      if (!projectDates?.project_startDate || !projectDates?.project_targetDate)
+        return
+      const formats = ["YYYY-MM-DD", "DD-MM-YYYY"]
+      const projectStart = moment(
+        projectDates.project_startDate,
+        formats,
+        true
+      ).startOf("day")
+      const projectEnd = moment(
+        projectDates.project_targetDate,
+        formats,
+        true
+      ).endOf("day")
+      const start = moment(data.start_date, "YYYY-MM-DD")
+      const end = moment(data.end_date, "YYYY-MM-DD")
+      if (!start.isValid() || !end.isValid()) return
+      if (start.isBefore(projectStart)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["start_date"],
+          message: `Start date must be on or after project start date`
+        })
+      }
+      if (end.isAfter(projectEnd)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["end_date"],
+          message: `End date must be on or before project end date `
+        })
+      }
+    })
 
 function CreateSprintModal({
   isCreateSprintOpen,
@@ -76,6 +114,7 @@ function CreateSprintModal({
   selectedSprint
 }: Props) {
   const [sprints, setSprints] = useAtom(sprintStore.sprints)
+  const [sprintsCount, setSprintsCount] = useState(0)
 
   const [createSprintLoading, , , CreateSprint] =
     useServerAction(CreateSprintAction)
@@ -84,23 +123,81 @@ function CreateSprintModal({
 
   const projectId = useParams().id as string
 
+  const [projectDates, setProjectDates] = useState<{
+    project_startDate?: string
+    project_targetDate?: string
+  } | null>(null)
+
+  useEffect(() => {
+    if (!projectId || !isCreateSprintOpen) return
+    const fetchProjectDates = async () => {
+      try {
+        const res = await GetProjectByIdAction(projectId)
+        if (res?.success && res.data) {
+          setProjectDates({
+            project_startDate: res.data.project_startDate,
+            project_targetDate: res.data.project_targetDate
+          })
+        }
+      } catch (err) {
+        toast({
+          title: "Unable to fetch project details",
+          duration: 3000,
+          variant: "destructive"
+        })
+      }
+    }
+    fetchProjectDates()
+  }, [projectId, isCreateSprintOpen])
+
+  const sprintSchema = React.useMemo(
+    () => createSprintSchema(projectDates ?? undefined),
+    [projectDates]
+  )
+
   const form = useForm({
-    resolver: zodResolver(projectSchema)
+    resolver: zodResolver(sprintSchema)
   })
 
   const formError = form.formState.errors
+  const isChanged = form.formState.isDirty
+
+  const GetSprintCount = async (projectId: string) => {
+    const sprintsCount = await GetSprintCountAction(projectId)
+    if (sprintsCount.data && sprintsCount.success) {
+      setSprintsCount(sprintsCount.data)
+    }
+  }
+
+  useEffect(() => {
+    if (!projectId) return
+    if (!selectedSprint) {
+      GetSprintCount(projectId)
+    }
+  }, [projectId, isCreateSprintOpen])
 
   useEffect(() => {
     if (selectedSprint) {
       form.setValue("title", selectedSprint.title)
       form.setValue("start_date", selectedSprint.start_date)
       form.setValue("end_date", selectedSprint.end_date)
-    } else {
-      form.reset()
+    } else if (isCreateSprintOpen && sprintsCount) {
+      form.setValue("title", `Sprint ${sprintsCount + 1}`)
+      form.setValue("start_date", "")
+      form.setValue("end_date", "")
     }
   }, [selectedSprint, isCreateSprintOpen])
 
   function submitData(data: any) {
+    data.title = data.title.trim()
+    if (!data.title) {
+      form.setError("title", {
+        type: "manual",
+        message: "Sprint name required"
+      })
+      return
+    }
+
     if (selectedSprint) {
       handleUpdateSprint(data)
     } else {
@@ -113,11 +210,15 @@ function CreateSprintModal({
       const payload = {
         ...data,
         projectId: projectId,
-        sprint_status: "upcoming"
+        sprint_status: SprintStatus.UPCOMING
       }
       const sprint = await CreateSprint(payload)
       if (sprint?.success && sprint.data) {
-        setSprints([...sprints, sprint.data])
+        setSprints((prev) => {
+          const sprinExists = prev.some((s) => s.id === sprint.data.id)
+
+          return sprinExists ? prev : [...prev, sprint.data]
+        })
 
         toast({
           title: "sprint successfully created"
@@ -161,119 +262,144 @@ function CreateSprintModal({
     }
   }
 
+  const { showConfirmation, setShowConfirmation, handleClose } =
+    useConfirmClose({
+      isDirty: isChanged,
+      onClose: () => setIsCreateSprintOpen(false)
+    })
+
+  useEffect(() => {
+    if (!isCreateSprintOpen) {
+      form.reset()
+    }
+  }, [isCreateSprintOpen])
+
   return (
-    <Dialog
-      open={isCreateSprintOpen}
-      onOpenChange={(open) => setIsCreateSprintOpen(open)}
-    >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {selectedSprint ? "Edit Sprint" : "Create New Sprint"}
-          </DialogTitle>
-          <DialogDescription>
-            {selectedSprint
-              ? "Edit the details of the sprint."
-              : "Plan a new sprint for your project."}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={form.handleSubmit(submitData)}>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="title" className="text-right">
-                Name
-              </Label>
+    <>
+      <Dialog open={isCreateSprintOpen} onOpenChange={handleClose}>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>
+              {selectedSprint ? "Edit Sprint" : "Create New Sprint"}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedSprint
+                ? "Edit the details of the sprint."
+                : "Plan a new sprint for your project."}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={form.handleSubmit(submitData)}>
+            <div className="grid gap-4 py-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="title">Name</Label>
 
-              <div className="col-span-3">
-                <Controller
-                  name="title"
-                  defaultValue=""
-                  control={form.control}
-                  render={({ field }) => (
-                    <Input
-                      id="title"
-                      {...field}
-                      type="text"
-                      className="col-span-3 "
-                    />
-                  )}
-                />
                 <div>
-                  {formError.title && (
-                    <p className="text-sm text-red-500">
-                      {formError.title.message}
-                    </p>
-                  )}
+                  <Controller
+                    name="title"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input
+                        id="title"
+                        {...field}
+                        type="text"
+                        className="col-span-3 "
+                      />
+                    )}
+                  />
+                  <div>
+                    {formError.title && (
+                      <p className="text-sm text-red-500">
+                        {formError.title.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="start_date">Start Date</Label>
+
+                <div>
+                  <Controller
+                    name="start_date"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input
+                        id="start_date"
+                        {...field}
+                        className="col-span-3"
+                        type="date"
+                      />
+                    )}
+                  />
+                  <div>
+                    {formError.start_date ? (
+                      <p className="text-sm text-red-500">
+                        {formError.start_date.message}
+                      </p>
+                    ) : (
+                      projectDates && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          Project timeline: {projectDates.project_startDate} —{" "}
+                          {projectDates.project_targetDate}
+                        </p>
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="end_date">End Date</Label>
+
+                <div>
+                  <Controller
+                    name="end_date"
+                    defaultValue=""
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input
+                        id="end_date"
+                        {...field}
+                        className="col-span-3"
+                        type="date"
+                      />
+                    )}
+                  />
+
+                  <div>
+                    {formError.end_date ? (
+                      <p className="text-sm text-red-500">
+                        {formError.end_date.message}
+                      </p>
+                    ) : (
+                      projectDates && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          Project timeline: {projectDates.project_startDate} —{" "}
+                          {projectDates.project_targetDate}
+                        </p>
+                      )
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="start_date" className="text-right">
-                Start Date
-              </Label>
 
-              <div className="col-span-3">
-                <Controller
-                  name="start_date"
-                  defaultValue=""
-                  control={form.control}
-                  render={({ field }) => (
-                    <Input
-                      id="start_date"
-                      {...field}
-                      className="col-span-3"
-                      type="date"
-                    />
-                  )}
-                />
-                <div>
-                  {formError.start_date && (
-                    <p className="text-sm text-red-500">
-                      {formError.start_date.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="end_date" className="text-right">
-                End Date
-              </Label>
+            <DialogFooter>
+              <Button loading={createSprintLoading || updateSprintLoading}>
+                {selectedSprint ? "Save Changes" : "Create Sprint"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-              <div className="col-span-3">
-                <Controller
-                  name="end_date"
-                  defaultValue=""
-                  control={form.control}
-                  render={({ field }) => (
-                    <Input
-                      id="end_date"
-                      {...field}
-                      className="col-span-3"
-                      type="date"
-                    />
-                  )}
-                />
-
-                <div>
-                  {formError.end_date && (
-                    <p className="text-sm text-red-500">
-                      {formError.end_date.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button loading={createSprintLoading || updateSprintLoading}>
-              {selectedSprint ? "Save Changes" : "Create Sprint"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <UnsavedChangesDialog
+        setShowConfirmation={setShowConfirmation}
+        showConfirmation={showConfirmation}
+        setIsActualDialogOpen={setIsCreateSprintOpen}
+      />
+    </>
   )
 }
 

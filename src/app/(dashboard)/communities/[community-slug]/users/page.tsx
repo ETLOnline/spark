@@ -21,7 +21,9 @@ const CommunityUsersPage = async ({ params }: Props) => {
   const communitySlug = await params
   const communitySlugValue = communitySlug["community-slug"]
 
-  const currentCommunity = await GetCommunityDetailsAction(communitySlugValue)
+  const DecodedCommunitySlug = decodeURIComponent(communitySlugValue)
+
+  const currentCommunity = await GetCommunityDetailsAction(DecodedCommunitySlug)
 
   if (!currentCommunity) {
     return <NotFound />

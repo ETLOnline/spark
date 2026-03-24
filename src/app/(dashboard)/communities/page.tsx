@@ -1,13 +1,14 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { useAtom, useSetAtom } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   DeleteCommunityAction,
   GetCommunitiesAction,
   GetCommunitiesActionResponse,
-  GetCommunityCategoriesAction
+  GetCommunityCategoriesAction,
+  GetJoinedCommunitiesAction
 } from "@/src/server-actions/Community/Community"
 import {
   CommunityCategory,
@@ -30,13 +31,9 @@ import {
   PaginationNext,
   PaginationPrevious
 } from "@/src/components/ui/pagination"
-
-interface EnhancedCommunityQueryFilters extends CommunityQueryFilters {
-  refreshTriggerValue?: boolean
-  page?: number
-  limit?: number
-  activeTab?: "all" | "my"
-}
+import pusherClient from "@/src/services/realtime/PusherClient"
+import CommunityRequestBanner from "@/src/components/communities/CommunityRequestBanner"
+import { userStore } from "@/src/store/user/userStore"
 
 export default function CommunitiesPage() {
   const [communitiesList, setCommunitiesList] =
@@ -54,17 +51,34 @@ export default function CommunitiesPage() {
   const [searchTerm, setSearchTerm] = useState<string>("")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [sortBy, setSortBy] = useState<SortByOptions>("newest")
-
-  const [currentPage, setCurrentPage] = useState(1)
+  const [currentPageAll, setCurrentPageAll] = useState(1)
+  const [currentPageJoined, setCurrentPageJoined] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(6)
-  const [activeTab, setActiveTab] = useState<"all" | "my">("all")
+  const [activeTab, setActiveTab] = useState<"all" | "joined">("all")
+  const [isPaginating, setIsPaginating] = useState(false)
+
   const [loading, communitiesResult, error, fetchCommunities] =
     useServerAction(GetCommunitiesAction)
+
+  const [
+    loadingJoined,
+    joinedCommunitiesResult,
+    errorJoined,
+    fetchJoinedCommunities
+  ] = useServerAction(GetJoinedCommunitiesAction)
+
   const [deleteLoading, , deleteError, deleteCommunity] = useServerAction(
     DeleteCommunityAction
   )
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const previousFiltersRef = useRef<EnhancedCommunityQueryFilters | null>(null)
+  const previousFiltersRef = useRef<{
+    filters: CommunityQueryFilters
+    pageAll: number
+    pageJoined: number
+    limit: number
+    refreshTriggerValue: boolean
+  } | null>(null)
+
   const [communityCategories, setCommunityCategories] = useState<
     CommunityCategory[]
   >([])
@@ -72,32 +86,53 @@ export default function CommunitiesPage() {
   const loadCommunities = useCallback(
     async (
       filters: CommunityQueryFilters,
-      page: number,
-      limit: number,
-      currentActiveTab: "all" | "my"
+      pageAll: number,
+      pageJoined: number,
+      limit: number
     ) => {
-      const currentEnhancedFilters: EnhancedCommunityQueryFilters = {
-        ...filters,
-        refreshTriggerValue: refreshTrigger,
-        page,
+      const currentCombinedFilters = {
+        filters,
+        pageAll,
+        pageJoined,
         limit,
-        activeTab: currentActiveTab
+        refreshTriggerValue: refreshTrigger
       }
+
       if (
         !initialLoadRef.current &&
-        JSON.stringify(currentEnhancedFilters) ===
+        JSON.stringify(currentCombinedFilters) ===
           JSON.stringify(previousFiltersRef.current)
       ) {
         return
       }
-      const res = await fetchCommunities(filters, page, limit, currentActiveTab)
+      setIsPaginating(true)
 
-      if (res?.success && res.data) {
-        setCommunitiesList(res.data)
-        previousFiltersRef.current = currentEnhancedFilters
+      const [allRes, myRes] = await Promise.all([
+        fetchCommunities({ ...filters, type: "all" }, pageAll, limit),
+        fetchJoinedCommunities(
+          { ...filters, type: "joined" },
+          pageJoined,
+          limit
+        )
+      ])
+      if (allRes?.success && myRes?.success) {
+        setCommunitiesList({
+          communities: allRes.data.communities,
+          allCommunitiesPagination: allRes.data.allCommunitiesPagination,
+          joinedCommunities: myRes.data.joinedCommunities,
+          joinedCommunitiesPagination: myRes.data.joinedCommunitiesPagination,
+          joinedCount: myRes.data.joinedCount
+        })
+        previousFiltersRef.current = currentCombinedFilters
       }
+      setIsPaginating(false)
     },
-    [fetchCommunities, setCommunitiesList, refreshTrigger]
+    [
+      fetchCommunities,
+      fetchJoinedCommunities,
+      setCommunitiesList,
+      refreshTrigger
+    ]
   )
 
   useEffect(() => {
@@ -116,12 +151,38 @@ export default function CommunitiesPage() {
 
     if (initialLoadRef.current) {
       initialLoadRef.current = false
-      loadCommunities(currentFilters, currentPage, itemsPerPage, activeTab)
+      loadCommunities(
+        currentFilters,
+        currentPageAll,
+        currentPageJoined,
+        itemsPerPage
+      )
+      return
+    }
+
+    const currentRelevantPage =
+      activeTab === "all" ? currentPageAll : currentPageJoined
+    const previousRelevantPage =
+      previousFiltersRef.current?.filters && activeTab === "all"
+        ? previousFiltersRef.current.pageAll
+        : previousFiltersRef.current?.pageJoined
+
+    if (
+      JSON.stringify(currentFilters) ===
+        JSON.stringify(previousFiltersRef.current?.filters) &&
+      refreshTrigger === previousFiltersRef.current?.refreshTriggerValue &&
+      currentRelevantPage === previousRelevantPage
+    ) {
       return
     }
 
     debounceTimeoutRef.current = setTimeout(() => {
-      loadCommunities(currentFilters, currentPage, itemsPerPage, activeTab)
+      loadCommunities(
+        currentFilters,
+        currentPageAll,
+        currentPageJoined,
+        itemsPerPage
+      )
     }, 300)
 
     return () => {
@@ -133,9 +194,11 @@ export default function CommunitiesPage() {
     searchTerm,
     selectedCategory,
     sortBy,
-    currentPage,
+    currentPageAll,
+    currentPageJoined,
     itemsPerPage,
     loadCommunities,
+    refreshTrigger,
     activeTab
   ])
 
@@ -152,26 +215,59 @@ export default function CommunitiesPage() {
     fetchCategories()
   }, [])
 
+  useEffect(() => {
+    const pusherChannel = pusherClient.subscribe("broadcast-entity-update")
+
+    const handleCommunityEdit = (updatedCommunity: SelectCommunity) => {
+      setCommunitiesList((currentCommunities) => {
+        if (!currentCommunities) return null
+        return {
+          ...currentCommunities,
+          communities: currentCommunities.communities.map((community) =>
+            community.id === updatedCommunity.id
+              ? { ...community, ...updatedCommunity }
+              : community
+          ),
+          joinedCommunities: currentCommunities.joinedCommunities.map(
+            (community) =>
+              community.id === updatedCommunity.id
+                ? { ...community, ...updatedCommunity }
+                : community
+          )
+        }
+      })
+    }
+
+    pusherChannel.bind("community-edit", handleCommunityEdit)
+
+    return () => {
+      pusherChannel.unbind("community-edit", handleCommunityEdit)
+      pusherClient.unsubscribe("broadcast-entity-update")
+    }
+  }, [setCommunitiesList])
+
   const handleSearchChange = (value: string) => {
     setSearchTerm(value)
-    setCurrentPage(1)
+    setCurrentPageAll(1)
+    setCurrentPageJoined(1)
   }
   const handleCategoryChange = (value: string) => {
     setSelectedCategory(value)
-    setCurrentPage(1)
+    setCurrentPageAll(1)
+    setCurrentPageJoined(1)
   }
   const handleSortByChange = (value: SortByOptions) => {
     setSortBy(value)
-    setCurrentPage(1)
+    setCurrentPageAll(1)
+    setCurrentPageJoined(1)
   }
 
   const handleTabChange = (tabValue: string) => {
-    if (tabValue === "all" || tabValue === "my") {
+    if (tabValue === "all" || tabValue === "joined") {
       setActiveTab(tabValue)
     } else {
       console.warn("Unexpected tab value received:", tabValue)
     }
-    setCurrentPage(1)
   }
 
   const handleCreateCommunityClick = () => {
@@ -186,7 +282,8 @@ export default function CommunitiesPage() {
 
   const handleJoinCommunity = () => {
     setRefreshTrigger((prev) => !prev)
-    setCurrentPage(1)
+    setCurrentPageAll(1)
+    setCurrentPageJoined(1)
   }
 
   const handleDeleteCommunity = async (communityToDelete: SelectCommunity) => {
@@ -200,7 +297,8 @@ export default function CommunitiesPage() {
           duration: 3000
         })
         setRefreshTrigger((prev) => !prev)
-        setCurrentPage(1)
+        setCurrentPageAll(1)
+        setCurrentPageJoined(1)
       } else {
         toast({
           title: "Deletion Failed",
@@ -221,7 +319,11 @@ export default function CommunitiesPage() {
   }
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
+    if (activeTab === "all") {
+      setCurrentPageAll(page)
+    } else {
+      setCurrentPageJoined(page)
+    }
   }
 
   const paginationData =
@@ -250,6 +352,9 @@ export default function CommunitiesPage() {
     return pages
   }
 
+  const isSuperAdmin = Boolean(useAtomValue(userStore.SuperAdmin))
+  const isUserLoading = Boolean(useAtomValue(userStore.LoadingUser))
+
   return (
     <div className="flex-1 space-y-6 p-6">
       {/* Communities Header: Includes the "Create Community" button */}
@@ -266,9 +371,14 @@ export default function CommunitiesPage() {
         availableCategories={communityCategories}
       />
 
+      {/* Community Request Banner */}
+      {!isUserLoading && isSuperAdmin === false ? (
+        <CommunityRequestBanner />
+      ) : null}
+
       {/* Community List Tabs: ALWAYS RENDER THIS COMPONENT */}
       <CommunityListTabs
-        loading={loading}
+        loading={isPaginating || loading}
         error={error}
         communitiesList={communitiesList}
         onEditCommunity={handleEditCommunity}

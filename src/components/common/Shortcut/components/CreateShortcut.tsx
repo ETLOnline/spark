@@ -3,12 +3,14 @@ import { InsertShortcut, SelectShortcut } from "@/src/db/schema"
 import { Layers2 } from "lucide-react"
 import useShortcut from "../hooks/useShortcut"
 import { useEffect, useState } from "react"
+import { DropdownMenuItem } from "@/src/components/ui/dropdown-menu"
 
 interface CreateShortcutProps {
   type: "space" | "channel" | "community" | "project"
   entity: {
     slug: string
     title: string
+    entity_id: string
   }
   ctaType?: "button" | "menuItem"
 }
@@ -34,7 +36,11 @@ const CreateShortcut = ({
     const newShortcut: Partial<InsertShortcut> = {
       type,
       url: entity.slug,
-      title: entity.title
+      title: entity.title,
+      community_id: type == "community" ? entity.entity_id : null,
+      channel_id: type == "channel" ? entity.entity_id : null,
+      space_id: type == "space" ? entity.entity_id : null,
+      project_id: type == "project" ? entity.entity_id : null
     }
 
     await createShortcut(newShortcut)
@@ -67,17 +73,32 @@ const CreateShortcut = ({
               {" "}
               <Layers2 /> Create Shortcut
             </Button>
-          ) : null}
+          ) : (
+            <DropdownMenuItem onClick={handleCreateShortcut}>
+              <Layers2 className="mr-2 h-4 w-4" /> Create Shortcut
+            </DropdownMenuItem>
+          )}
         </>
       ) : (
-        <Button
-          variant={"outline"}
-          loading={loadingShortcuts}
-          onClick={handleDeleteShortcut}
-        >
-          {" "}
-          <Layers2 /> Delete Shortcut
-        </Button>
+        <>
+          {ctaType === "button" ? (
+            <Button
+              variant={"outline"}
+              loading={loadingShortcuts}
+              onClick={handleDeleteShortcut}
+            >
+              {" "}
+              <Layers2 /> Delete Shortcut
+            </Button>
+          ) : (
+            <DropdownMenuItem
+              onClick={handleDeleteShortcut}
+              className="text-red-600 focus:text-red-600"
+            >
+              <Layers2 className="mr-2 h-4 w-4" /> Delete Shortcut
+            </DropdownMenuItem>
+          )}
+        </>
       )}
     </>
   )

@@ -19,7 +19,10 @@ import {
   UserPlus,
   Lock,
   Globe,
-  PlusCircle
+  PlusCircle,
+  PencilRuler,
+  Check,
+  LogOut
 } from "lucide-react"
 import { CommunityDetailData } from "@/src/db/data-access/communities/query"
 import CreateChannels from "@/src/components/Dashboard/Channels/CreateChannels"
@@ -31,20 +34,41 @@ import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import PaginationComponent from "../common/Pagination"
 import { PaginationType } from "../common/types/pagination.type"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import ChannelsContextMenu from "@/src/components/Dashboard/Channels/ChannelDetails/ChannelsContextMenu"
 import Link from "next/link"
 import { userStore } from "@/src/store/user/userStore"
-import Overlay from "../common/Overlay/OverLay"
 import { communityStore } from "@/src/store/community/communityStore"
 import { useSetAtom } from "jotai"
 import { InviteUserDialog } from "../UserListAndInvite/UserInviteDialog"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import { AttachCommunityUserAction } from "@/src/server-actions/Community/Community"
+import {
+  AttachCommunityUserAction,
+  LeaveCommunityAction
+} from "@/src/server-actions/Community/Community"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
 import { isEntityUser } from "@/src/utils/clientHelper"
+import { getInitials } from "@/src/utils/helpers"
 import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "../ui/alert-dialog"
+
+import ChannelCardItem from "../Dashboard/Channels/ChannelCardItem"
+import Image from "next/image"
+import clsx from "clsx"
+import PrivatePage from "../common/Overlay/PrivatePage"
+import pusherClient from "@/src/services/realtime/PusherClient"
+import { EntityUpdateBroadCast } from "@/src/utils/constants"
+import { onlineUsersStore } from "@/src/store/onlineUsers/onlineUsersStore"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -65,9 +89,31 @@ const demoRules = [
 export default function CommunityDetailsClient({
   community
 }: CommunityDetailsClientProps) {
+  const router = useRouter()
   const { toast } = useToast()
   const setCurrentCommunity = useSetAtom(communityStore.selectedCommunity)
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
+  const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
+  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
+  const onlineUsers = useAtomValue(onlineUsersStore.communityOnlineUsers)
+  const [joinLoading, joinResult, joinError, attachCommunityUser] =
+    useServerAction(AttachCommunityUserAction)
+  const [leaveLoading, leaveResult, leaveError, leaveCommunity] =
+    useServerAction(LeaveCommunityAction)
+  const [loadingChannels, setLoadingChannels] = useState(true)
+  const [channels, setChannels] = useAtom(channelStore.channels)
+  const [pagination, setPagination] = useState<PaginationType | null>(null)
+  const searchParams = useSearchParams()
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState<boolean>(false)
+  const page = Number(searchParams.get("page")) || 1
+  const [isCommunityMember, setIsCommunityMember] = useState<boolean | null>(
+    null
+  )
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "COMMUNITY",
+    community?.id
+  )
 
   useEffect(() => {
     if (community) {
@@ -77,6 +123,7 @@ export default function CommunityDetailsClient({
         description: community.description,
         slug: community.slug,
         type: community.type,
+        cover_image: community.cover_image,
 
         category_id: community.category,
         created_by: "unknown",
@@ -90,28 +137,16 @@ export default function CommunityDetailsClient({
     }
   }, [community])
 
-  const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
-  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
-  const communityInitial = community?.title
-    ? community.title.charAt(0).toUpperCase()
-    : "C"
-  const [joinLoading, joinResult, joinError, attachCommunityUser] =
-    useServerAction(AttachCommunityUserAction)
+  useEffect(() => {
+    if (currentUserId) {
+      const isMember = isEntityUser(community, currentUserId)
+      setIsCommunityMember(isMember)
+    }
+  }, [community, currentUserId])
 
-  const [loadingChannels, setLoadingChannels] = useState(true)
-
-  const [channels, setChannels] = useAtom(channelStore.channels)
-  const [pagination, setPagination] = useState<PaginationType | null>(null)
-
-  const searchParams = useSearchParams()
-  const page = Number(searchParams.get("page")) || 1
-
-  const isUserMember =
-    community.type === "private"
-      ? isEntityUser(community, currentUserId as string)
-      : true
   const showAccessDeniedOverlay =
-    community.type === "private" && !isUserMember && !isSuperAdmin
+    community.type === "private" && isCommunityMember === false && !isSuperAdmin
+
   useEffect(() => {
     const fetchCommunityChannels = async () => {
       // If access is denied, don't fetch channels
@@ -144,15 +179,68 @@ export default function CommunityDetailsClient({
       }
     }
 
-    fetchCommunityChannels()
-  }, [community?.id, page, setChannels, showAccessDeniedOverlay])
+    if (isCommunityMember !== null) {
+      fetchCommunityChannels()
+    }
+  }, [
+    community?.id,
+    page,
+    setChannels,
+    showAccessDeniedOverlay,
+    isCommunityMember
+  ])
+
+  useEffect(() => {
+    const pusherChannel = pusherClient.subscribe(EntityUpdateBroadCast)
+
+    pusherChannel.bind("channel-add", (newChannel: SelectChannel) => {
+      if (newChannel.community_id === community.id) {
+        onActionComplete("create", newChannel)
+      }
+    })
+
+    pusherChannel.bind("channel-edit", (updatedChannel: SelectChannel) => {
+      if (updatedChannel.community_id === community.id) {
+        onActionComplete("updated", updatedChannel)
+      }
+    })
+
+    pusherChannel.bind("channel-del", (deletedChannel: SelectChannel) => {
+      if (deletedChannel.community_id === community.id) {
+        onActionComplete("deleted", deletedChannel)
+      }
+    })
+
+    return () => {
+      pusherChannel.unbind_all()
+      pusherClient.unsubscribe("broadcast-entity-update")
+    }
+  }, [community.id])
+
+  if (
+    isCommunityMember === null &&
+    community.type === "private" &&
+    !isSuperAdmin
+  ) {
+    return (
+      <div className="flex justify-center h-full w-full">
+        <Loader size={LoaderSizes.xl} />
+      </div>
+    )
+  }
+
+  const communityInitial = community?.title ? getInitials(community.title) : "C"
 
   const onActionComplete = (
     actionType: "create" | "updated" | "deleted",
     channel: SelectChannel
   ) => {
     if (actionType === "create") {
-      setChannels((prevChannels) => [channel, ...prevChannels])
+      setChannels((prevChannels) => {
+        const exists = prevChannels.some((c) => c.id === channel.id)
+        if (exists) return prevChannels
+        return [channel, ...prevChannels]
+      })
       if (pagination) {
         setPagination((prev) => ({
           ...prev!,
@@ -161,7 +249,6 @@ export default function CommunityDetailsClient({
         }))
       }
     } else if (actionType === "updated") {
-      console.log("Channel updated:", channel)
       setChannels((prevChannels) =>
         prevChannels.map((c) => (c.id === channel.id ? channel : c))
       )
@@ -182,30 +269,15 @@ export default function CommunityDetailsClient({
   const currentChannels = channels || []
   const channelsCount = currentChannels.length
 
-  const { permissionChecker } = usePermissionChecker(
-    "scoped",
-    "COMMUNITY",
-    community?.id
-  )
-
   const canInviteUser = permissionChecker
     ? permissionChecker?.canAccess("community.user.invite")
     : false
-
-  const [isCommunityMember, setIsCommunityMember] = useState<boolean>(false)
-
-  useEffect(() => {
-    const isMember = isEntityUser(community, currentUserId as string)
-
-    if (isMember) setIsCommunityMember(true)
-    else {
-      setIsCommunityMember(false)
-    }
-  }, [community, currentUserId])
-
   const handleJoinCommunity = async () => {
-    if (community.id && currentUserId) {
+    if (!community.id || !currentUserId) return
+
+    try {
       const res = await attachCommunityUser(community.id, currentUserId)
+
       if (res?.success) {
         setIsCommunityMember(true)
         toast({
@@ -213,22 +285,60 @@ export default function CommunityDetailsClient({
           description: "You have successfully joined the community!",
           duration: 3000
         })
-      } else {
-        console.error("Failed to join community:", res?.error)
       }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong while joining the community.",
+        variant: "destructive"
+      })
     }
   }
 
+  const handleLeaveCommunity = async () => {
+    if (!community.id || !currentUserId) return
+
+    try {
+      const res = await leaveCommunity(community.id, currentUserId)
+
+      if (res?.success) {
+        toast({
+          title: "Left community",
+          description: "You have left the community, its channels, and spaces.",
+          duration: 3000
+        })
+        router.push("/communities")
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong while leaving the community.",
+        variant: "destructive"
+      })
+    }
+  }
+  const encodedCommunitySlug = encodeURIComponent(community.slug)
+  if (showAccessDeniedOverlay) {
+    return <PrivatePage page="Community" pageHref="/communities" />
+  }
   return (
     <div className="min-h-screen bg-background relative">
       {/* Added relative for the overlay positioning */}
-      {showAccessDeniedOverlay && (
-        <Overlay page="Community" pageHref="/communities" />
-      )}
       <div className="flex flex-col min-h-screen">
         {/* Community Header Banner */}
-        <div className="relative sm:h-44 h-36 shadow-sm shadow-secondary rounded-lg overflow-hidden">
-          <div className="absolute inset-0 w-full h-full object-cover cover-pattern" />
+        <div className="relative sm:h-44 h-36 shadow-sm rounded-lg overflow-hidden">
+          {community.cover_image ? (
+            <Image
+              src={community.cover_image}
+              alt={community.title}
+              width={1000}
+              height={1000}
+              objectFit="cover"
+              className="w-full h-36 sm:h-44 rounded-lg"
+            />
+          ) : (
+            <div className="absolute inset-0 w-full h-full object-cover cover-pattern" />
+          )}
           <div className="absolute inset-0 bg-black/50"></div>
           <div className="absolute inset-0 px-4 py-4 sm:py-6 sm:px-6 flex flex-col gap-4 justify-center h-full">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 h-full">
@@ -274,7 +384,7 @@ export default function CommunityDetailsClient({
                     </div>
                     <div className="flex items-center gap-1">
                       <span>•</span>
-                      <span>{community?.onlineNow ?? 0} online</span>
+                      <span>{onlineUsers} online</span>
                     </div>
                     <Badge
                       variant="outline"
@@ -300,29 +410,51 @@ export default function CommunityDetailsClient({
                   </Button>
                 )}
                 {!isSuperAdmin && (
-                  <Button
-                    variant="outline"
-                    onClick={handleJoinCommunity}
-                    disabled={isCommunityMember || joinLoading}
-                    className={
-                      isCommunityMember
-                        ? "text-gray-500 cursor-not-allowed"
-                        : ""
-                    }
-                  >
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    {joinLoading
-                      ? "Joining..."
-                      : isCommunityMember
-                        ? "Joined"
-                        : "Join"}
-                  </Button>
+                  <>
+                    {isCommunityMember === null ? (
+                      <Button
+                        variant="outline"
+                        disabled
+                        className="border-none px-1"
+                      >
+                        <Loader size={LoaderSizes.sm} />
+                        <span className="ml-2">Loading...</span>
+                      </Button>
+                    ) : !isCommunityMember ? (
+                      <Button
+                        variant="outline"
+                        onClick={handleJoinCommunity}
+                        disabled={joinLoading}
+                        loading={joinLoading}
+                        className="border-none px-1"
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        {joinLoading ? "Joining..." : "Join Community"}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        onClick={() => setLeaveDialogOpen(true)}
+                        disabled={leaveLoading}
+                        loading={leaveLoading}
+                        className={clsx(
+                          "text-red-500",
+                          "hover:bg-red-500 hover:text-white border-none",
+                          "dark:hover:bg-muted dark:hover:text-red-500"
+                        )}
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        {leaveLoading ? "Leaving..." : "Leave Community"}
+                      </Button>
+                    )}
+                  </>
                 )}
                 <CreateShortcut
                   type="community"
                   entity={{
                     slug: community?.slug ?? "",
-                    title: community?.title ?? ""
+                    title: community?.title ?? "",
+                    entity_id: community?.id ?? ""
                   }}
                 />
               </div>
@@ -344,7 +476,7 @@ export default function CommunityDetailsClient({
               <span>members</span>
             </div>
             <span>•</span>
-            <span>{community?.onlineNow ?? 0} online</span>
+            <span>{onlineUsers} online</span>
           </div>
           <Badge variant="outline" className="text-xs">
             {community?.category}
@@ -393,63 +525,20 @@ export default function CommunityDetailsClient({
                     </p>
                     <div className="space-y-2">
                       {currentChannels.length > 0 ? (
-                        currentChannels.map((channel) => (
-                          <div
-                            key={channel.id}
-                            className="flex items-center justify-between p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
-                          >
-                            {/* Main Content Area */}
-                            <Link
-                              className="flex items-center gap-3 flex-grow min-w-0"
-                              href={`/channels/${channel.channel_slug}/spaces`}
-                            >
-                              <div className="flex items-center gap-3 flex-grow min-w-0">
-                                <Hash className="h-5 w-5 text-muted-foreground shrink-0" />
-                                <div className="flex flex-col min-w-0 flex-grow">
-                                  <span className="flex items-center gap-2 font-medium min-w-0">
-                                    <span className="truncate">
-                                      {channel.channel_name}
-                                    </span>
-                                    {channel.channel_type === "public" ? (
-                                      <Globe className="h-4 w-4 text-green-500 shrink-0" />
-                                    ) : channel.channel_type === "private" ? (
-                                      <Lock className="h-4 w-4 text-yellow-500 shrink-0" />
-                                    ) : null}
-                                  </span>
-                                  <span className="text-xs text-muted-foreground mt-0.5">
-                                    {channel.description ||
-                                      "No description available"}
-                                  </span>
-                                </div>
-                                {/* Channel Stats (still part of the content, but aligned to the right within this section) */}
-                                <div className="flex flex-col items-end whitespace-nowrap text-right text-sm text-muted-foreground ml-4">
-                                  <div className="text-xs">
-                                    {channel.created_at
-                                      ? new Date(
-                                          channel.created_at
-                                        ).toLocaleString("default", {
-                                          month: "long",
-                                          day: "numeric",
-                                          year: "numeric"
-                                        })
-                                      : "N/A"}
-                                  </div>
-                                  <div className="text-xs mt-0.5">
-                                    {(channel.users as Array<any>)?.length ?? 0}{" "}
-                                    members
-                                  </div>
-                                </div>
-                              </div>
-                            </Link>
-                            {/* Action Menu Area */}
-                            <div className="flex items-center ml-4">
-                              <ChannelsContextMenu
+                        currentChannels.map((channel) => {
+                          const encodedChannelSlug = encodeURIComponent(
+                            channel.channel_slug
+                          )
+                          return (
+                            <div key={channel.id}>
+                              <ChannelCardItem
                                 channel={channel}
                                 onActionComplete={onActionComplete}
+                                setIsCommunityMember={setIsCommunityMember}
                               />
                             </div>
-                          </div>
-                        ))
+                          )
+                        })
                       ) : (
                         <p className="text-center text-muted-foreground py-4">
                           No channels found in this community.
@@ -489,18 +578,7 @@ export default function CommunityDetailsClient({
                         <span className="text-xs lg:text-sm">Online Now</span>
                       </div>
                       <span className="font-bold text-sm lg:text-base">
-                        {community.onlineNow}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <MessageCircle className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs lg:text-sm">
-                          Total Messages
-                        </span>
-                      </div>
-                      <span className="font-bold text-sm lg:text-base">
-                        {community.totalMessages?.toLocaleString?.() ?? 0}
+                        {onlineUsers}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -593,7 +671,12 @@ export default function CommunityDetailsClient({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-xs lg:text-sm">Total Members</span>
+                    <Link
+                      href={`/communities/${encodedCommunitySlug}/users`}
+                      className="text-xs lg:text-sm hover:underline hover:decoration-white"
+                    >
+                      Members
+                    </Link>
                   </div>
                   <span className="font-bold text-sm lg:text-base">
                     {community?.totalMembers?.toLocaleString() ?? 0}
@@ -605,16 +688,7 @@ export default function CommunityDetailsClient({
                     <span className="text-xs lg:text-sm">Online Now</span>
                   </div>
                   <span className="font-bold text-sm lg:text-base">
-                    {community?.onlineNow ?? 0}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <MessageCircle className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-xs lg:text-sm">Total Messages</span>
-                  </div>
-                  <span className="font-bold text-sm lg:text-base">
-                    {community?.totalMessages?.toLocaleString?.() ?? 0}
+                    {onlineUsers}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -673,10 +747,33 @@ export default function CommunityDetailsClient({
         open={isInviteDialogOpen}
         onOpenChange={setIsInviteDialogOpen}
         spaceName="Platform"
-        type={["link"]}
+        type={["link","email"]}
         entityType="community"
         entity={community}
       />
+      <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave Community?</AlertDialogTitle>
+            <AlertDialogDescription>
+              By leaving this, you will also be removed from related channels
+              and spaces.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              loading={leaveLoading}
+              onClick={async () => {
+                await handleLeaveCommunity()
+                setLeaveDialogOpen(false)
+              }}
+            >
+              Leave Community
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

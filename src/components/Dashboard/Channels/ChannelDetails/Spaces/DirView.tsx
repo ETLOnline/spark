@@ -4,7 +4,7 @@ import { DirItem } from "./types/spaces-types"
 import { useAtom, useAtomValue } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { userStore } from "@/src/store/user/userStore"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,55 +18,62 @@ import {
 } from "@/src/components/ui/alert-dialog"
 import { Button } from "@/src/components/ui/button"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { DeleteFileAction } from "@/src/server-actions/FileSharing/FileSharing"
+import {
+  DeleteFileAction,
+  GetDirectoryContentsAction
+} from "@/src/server-actions/FileSharing/FileSharing"
 import { useToast } from "@/src/hooks/use-toast"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import { formatFileSize } from "@/src/utils/helpers"
 
 type DirViewProps = {
   navigateToFolder: (path: string) => Promise<void>
+  searchQuery: string
 }
 
-const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
+const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
   const [dir, setDir] = useAtom(spaceStore.dir)
   const currentPath = useAtomValue(spaceStore.currDirPath)
   const [selectedFileId, setSelectedFileId] = useState<number | null>(null)
   const { toast } = useToast()
 
   const [deleteFileLoading, , , deleteFile] = useServerAction(DeleteFileAction)
-
-  // Safe atom access with fallbacks
+  const [dirContentLoading, dirContent, dirContentError, getDirContent] =
+    useServerAction(GetDirectoryContentsAction)
   const currSpace = useAtomValue(spaceStore?.currentSpace)
   const authUser = useAtomValue(userStore.AuthUser)
+  const [folderSizes, setFolderSizes] = useState<Record<number, number>>({})
 
   const getItemsAtCurrPath = (): DirItem[] => {
-    if (currentPath === "/") {
-      return dir
-    }
-
+    if (currentPath === "/") return dir
     return findItemsByPath(dir, currentPath)
   }
 
   const findItemsByPath = (items: DirItem[], path: string): DirItem[] => {
     for (const item of items) {
       if (item.type === "folder") {
-        if (item.path === path) {
-          return item.children || []
-        }
+        if (item.path === path) return item.children || []
 
         if (item.children) {
           const found = findItemsByPath(item.children, path)
-
-          if (found.length > 0) {
-            return found
-          }
+          if (found.length > 0) return found
         }
       }
     }
-
     return []
   }
+  const { permissionChecker } = usePermissionChecker(
+    "scoped",
+    "SPACE",
+    currSpace?.id
+  )
+  const canDeleteSpaceFile = permissionChecker
+    ? permissionChecker?.canAccess("space.file_sharing.delete")
+    : false
 
   const canDeleteFile = (item: DirItem): boolean => {
     if (!authUser || !currSpace) return false
+    if (canDeleteSpaceFile) return true
     return item.created_by === authUser.unique_id
   }
 
@@ -74,15 +81,18 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
     if (!selectedFileId || !currSpace || !authUser) return
 
     try {
-      const result = await deleteFile(selectedFileId, currSpace.id)
+      const result = await deleteFile(
+        selectedFileId,
+        currSpace.id,
+        canDeleteSpaceFile
+      )
 
       if (result?.success) {
-        // Remove the file from the local state
         const removeFileFromPath = (
           items: DirItem[],
           targetId: number
-        ): DirItem[] => {
-          return items
+        ): DirItem[] =>
+          items
             .filter((item) => item.id !== targetId)
             .map((item) => ({
               ...item,
@@ -90,12 +100,14 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
                 ? removeFileFromPath(item.children, targetId)
                 : undefined
             }))
-        }
 
         setDir(removeFileFromPath(dir, selectedFileId))
 
         toast({
-          description: "File deleted successfully!",
+          description:
+            selectedItem && selectedItem.type === "folder"
+              ? "Folder deleted successfully!"
+              : "File deleted successfully!",
           duration: 3000
         })
       } else {
@@ -116,16 +128,70 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
     }
   }
 
-  const selectedFileName =
-    getItemsAtCurrPath().find((item) => item.id === selectedFileId)?.name || ""
+  const selectedItem = getItemsAtCurrPath().find(
+    (item) => item.id === selectedFileId
+  )
+  const selectedFileName = selectedItem?.name || ""
 
   // Check if any items have actions available
   const hasActions = getItemsAtCurrPath().some(
-    (item) => item.type === "file" && canDeleteFile(item)
+    (item) =>
+      (item.type === "file" || item.type === "folder") && canDeleteFile(item)
   )
   const gridCols = hasActions
     ? "grid-cols-[auto_1fr_auto_auto_auto]"
     : "grid-cols-[auto_1fr_auto_auto]"
+
+  const filteredItems = getItemsAtCurrPath().filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const folderItems = useMemo(
+    () => filteredItems.filter((item) => item.type === "folder"),
+    [filteredItems]
+  )
+
+  useEffect(() => {
+    const foldersToFetch = folderItems.filter(
+      (folder) => folderSizes[folder.id] === undefined
+    )
+
+    if (foldersToFetch.length === 0) return
+
+    // Lazy load folder sizes in background without blocking
+    const timer = setTimeout(async () => {
+      try {
+        // Fetch sequentially to avoid overwhelming the server
+        for (const folder of foldersToFetch) {
+          try {
+            const res = await getDirContent(folder.id)
+            const totalSize = (res?.data || [])
+              .filter((item: any) => item.entity_type === "file")
+              .reduce(
+                (sum: number, item: any) => sum + (item.file?.file_size ?? 0),
+                0
+              )
+            setFolderSizes((prev) => ({ ...prev, [folder.id]: totalSize }))
+          } catch (error) {
+            toast({
+              variant: "destructive",
+              description: `Failed to fetch size for folder "${folder.name}"`,
+              duration: 3000
+            })
+          }
+        }
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          description: "Failed to fetch folder sizes",
+          duration: 3000
+        })
+      }
+    }, 100)
+
+    return () => clearTimeout(timer)
+  }, [folderItems, getDirContent, toast])
+
   return (
     <div className="p-4">
       <div
@@ -133,17 +199,20 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
       >
         <div>Type</div>
         <div>Name</div>
-        <div>Size</div>
-        <div>Updated</div>
-        {hasActions && <div>Actions</div>}
+        <div className="text-center w-20">Size</div>
+        <div className="text-center w-24">Last Updated</div>
+        {hasActions && <div className="text-center w-16">Actions</div>}
       </div>
+
       <div className="divide-y">
-        {getItemsAtCurrPath().length === 0 ? (
+        {filteredItems.length === 0 ? (
           <div className="py-8 text-center text-muted-foreground">
-            This folder is empty
+            {searchQuery
+              ? "No matching files or folders"
+              : "This folder is empty."}
           </div>
         ) : (
-          getItemsAtCurrPath().map((item) => (
+          filteredItems.map((item) => (
             <div
               key={item.id}
               className={`grid ${gridCols} gap-4 items-center py-3 px-2 hover:bg-muted/50 rounded-md`}
@@ -156,7 +225,7 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
                 )}
               </div>
               <div
-                className={`font-medium ${
+                className={`font-medium truncate ${
                   item.type === "folder"
                     ? "cursor-pointer hover:text-primary"
                     : ""
@@ -177,54 +246,70 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder }) => {
                   item.name
                 )}
               </div>
-              <div className="text-sm text-muted-foreground">
-                {item.size || "-"}
+              <div className="text-sm text-muted-foreground text-center w-20">
+                {item.type === "folder"
+                  ? folderSizes[item.id] !== undefined
+                    ? folderSizes[item.id] > 0
+                      ? formatFileSize(folderSizes[item.id])
+                      : "-" // empty folder
+                    : "-"
+                  : item.size
+                    ? item.size
+                    : "-"}
               </div>
-              <div>
+              <div className="text-center w-24">
                 <span className="text-sm text-muted-foreground">
                   {item.updatedAt}
                 </span>
               </div>
               {hasActions && (
-                <div className="flex items-center justify-end">
-                  {item.type === "file" && canDeleteFile(item) && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          title="Delete"
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 px-2 text-destructive hover:text-destructive"
-                          onClick={() => setSelectedFileId(item.id)}
-                        >
-                          <Trash className="h-4 w-4 mr-1" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete File</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete "{selectedFileName}
-                            "? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel
-                            onClick={() => setSelectedFileId(null)}
+                <div className="flex items-center justify-center w-16">
+                  {(item.type === "file" ||
+                    item.type === "folder" ||
+                    authUser?.unique_id === item.created_by) &&
+                    canDeleteFile(item) && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            title="Delete"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-destructive hover:text-destructive"
+                            onClick={() => setSelectedFileId(item.id)}
                           >
-                            Cancel
-                          </AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={handleDeleteConfirm}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            disabled={deleteFileLoading}
-                          >
-                            {deleteFileLoading ? "Deleting..." : "Delete"}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
+                            <Trash className="h-4 w-4 mr-1" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              {selectedItem?.type === "folder"
+                                ? "Delete Folder"
+                                : "Delete File"}
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {selectedItem?.type === "folder"
+                                ? `Are you sure you want to delete "${selectedFileName}" and all its children? This action cannot be undone.`
+                                : `Are you sure you want to delete "${selectedFileName}"? This action cannot be undone.`}
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel
+                              onClick={() => setSelectedFileId(null)}
+                            >
+                              Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={handleDeleteConfirm}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              disabled={deleteFileLoading}
+                            >
+                              {deleteFileLoading ? "Deleting..." : "Delete"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                 </div>
               )}
             </div>

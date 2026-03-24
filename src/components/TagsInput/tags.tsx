@@ -7,9 +7,7 @@ import {
   GetAllTAgsAction,
   SearchTagsForSuggestionsAction
 } from "@/src/server-actions/Tag/Tag"
-import { string } from "zod"
 import { useDebouncedCallback } from "use-debounce"
-import { Controller } from "react-hook-form"
 
 interface Props {
   type: string
@@ -60,8 +58,6 @@ function TagSelect({ type, control, selected, setSelected }: Props) {
     }
   }, 1000)
 
-  useEffect(() => {}, [options])
-
   return (
     <div>
       <MultiSelect
@@ -69,6 +65,7 @@ function TagSelect({ type, control, selected, setSelected }: Props) {
         selected={selected}
         onChange={setSelected}
         onQueryChange={handleQuerySearch}
+        shouldFilter={false}
       />
     </div>
   )

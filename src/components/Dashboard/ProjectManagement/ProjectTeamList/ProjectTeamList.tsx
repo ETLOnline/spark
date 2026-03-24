@@ -10,8 +10,7 @@ import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   AttachProjectUserAction,
-  RemoveProjectUserAction,
-  UpdateProjectUserRoleAction
+  RemoveProjectUserAction
 } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { GetSpaceUsersAction } from "@/src/server-actions/Space/Space"
 import {
@@ -38,10 +37,8 @@ import {
 } from "@/src/components/ui/dialog"
 import { MoreHorizontal, PlusCircle } from "lucide-react"
 import { Badge } from "@/src/components/ui/badge"
-import { ProjectUserRole } from "@/src/components/common/types/projectuser.role"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
-import { projectStore } from "@/src/store/project/projectStore"
 import { Label } from "@/src/components/ui/label"
 import {
   Select,
@@ -77,6 +74,7 @@ export default function ProjectTeamList({
   const [spaceUsers, setSpaceUsers] = useState<SelectUser[]>([])
   const [selectedUsers, setSelectedUsers] = useState<MultiSelectOption[]>([])
   const [usersList, setUsersList] = useState<ProjectUser[]>(projectUsers)
+  const isSuperAdmin = useAtomValue(userStore.SuperAdmin)
 
   const [attachUserLoading, , , AttachUser] = useServerAction(
     AttachProjectUserAction
@@ -94,6 +92,41 @@ export default function ProjectTeamList({
       fetchSpaceRoles("PROJECT", projectId)
     }
   }, [projectId])
+
+  const isScopedAdminFn = (user?: SelectUser) => {
+    if (user?.roles) {
+      return user.roles.some(
+        (role) =>
+          role.role?.slug?.includes("admin") &&
+          role.role.entity_id === projectId
+      )
+    }
+    return false
+  }
+
+  const canChangeUserRole = (targetUser: SelectUser | undefined) => {
+    if (!targetUser) return false
+
+    if (targetUser.unique_id === authUser?.unique_id) return false
+
+    if (isSuperAdmin) return true
+
+    if (targetUser.unique_id === projectCreatorId) return false
+
+    if (authUser?.unique_id === projectCreatorId) return true
+
+    if (isScopedAdminFn(authUser || undefined)) {
+      if (
+        targetUser.unique_id === projectCreatorId ||
+        isScopedAdminFn(targetUser)
+      ) {
+        return false
+      }
+      return true
+    }
+
+    return false
+  }
 
   const [roleDialogOpen, setRoleDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<ProjectUser | null>(null)
@@ -163,7 +196,7 @@ export default function ProjectTeamList({
             duration: 3000
           })
         } else {
-          toast({ title: "All selected users added to project successfully!" })
+          toast({ title: "User(s) added successfully!" })
         }
       } else {
         console.error(
@@ -188,9 +221,9 @@ export default function ProjectTeamList({
     }
   }
 
-  const handleRemoveUser = async (userId: string) => {
+  const handleRemoveUser = async (userId: string, roleName: string) => {
     try {
-      if (!selectedUser) {
+      if (!roleName) {
         toast({
           title: "Error",
           description: "No user selected for removal.",
@@ -201,7 +234,7 @@ export default function ProjectTeamList({
 
       // Find the role object based on the selected user's current role name
       const roleToRemove = spaceRolesData?.data?.find(
-        (role) => role.name === selectedUser.role
+        (role) => role.name === roleName
       )
 
       if (!roleToRemove) {
@@ -286,7 +319,13 @@ export default function ProjectTeamList({
     }
   }
 
-  const options: MultiSelectOption[] = spaceUsers.map((u) => ({
+  const projectUserIds = new Set(usersList.map((u) => u.user_id))
+
+  const availableSpaceUsers = spaceUsers.filter(
+    (spaceUser) => !projectUserIds.has(spaceUser.unique_id)
+  )
+
+  const options: MultiSelectOption[] = availableSpaceUsers.map((u) => ({
     label: `${u.first_name} ${u.last_name}`,
     value: u.unique_id
   }))
@@ -330,8 +369,18 @@ export default function ProjectTeamList({
             <div className="grid grid-cols-12 p-4 bg-muted font-medium">
               <div className="col-span-4">User</div>
               <div className="col-span-4">Email</div>
-              <div className="col-span-3">Role</div>
-              <div className="col-span-1 text-center">Actions</div>
+              <div
+                className={
+                  isScopedAdminFn(authUser || undefined) || isSuperAdmin
+                    ? "col-span-3"
+                    : "col-span-4 text-center"
+                }
+              >
+                Role
+              </div>
+              {isScopedAdminFn(authUser || undefined) || isSuperAdmin ? (
+                <div className="col-span-1 text-center">Actions</div>
+              ) : null}
             </div>
             <div className="divide-y">
               {usersList.length === 0 ? (
@@ -364,57 +413,76 @@ export default function ProjectTeamList({
                       <div className="col-span-4 text-sm text-muted-foreground">
                         {user.email}
                       </div>
-                      <div className="col-span-3 flex items-center gap-1">
-                        <Badge
-                          className="capitalize"
-                          variant={cu.role === "admin" ? "default" : "outline"}
-                        >
-                          {cu.role}
-                        </Badge>
+                      <div
+                        className={
+                          isScopedAdminFn(authUser || undefined) || isSuperAdmin
+                            ? "col-span-3 flex gap-1"
+                            : "col-span-4  gap-1"
+                        }
+                      >
+                        <div className="flex flex-col items-center">
+                          <Badge
+                            className="capitalize"
+                            variant={
+                              cu.role === "admin" ? "default" : "outline"
+                            }
+                          >
+                            {cu.role}
+                          </Badge>
+                          {user.unique_id === projectCreatorId ? (
+                            <Badge variant="outline">{"(Creator)"}</Badge>
+                          ) : null}
+                        </div>
                       </div>
-                      <div className="col-span-1 text-center">
-                        {isProjectCreator || canUpdate || canDelete ? (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">More options</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              {canUpdate && (
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setSelectedUser(cu)
-                                    setNewRoleName(cu.role ?? "member")
-                                    setRoleDialogOpen(true)
-                                  }}
-                                >
-                                  Change Role
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuSeparator />
-                              {canDelete && (
-                                <DropdownMenuItem
-                                  className="text-destructive"
-                                  onClick={() => {
-                                    setSelectedUser(cu)
-                                    handleRemoveUser(cu.user_id)
-                                  }}
-                                >
-                                  Remove User
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        ) : (
-                          <span className="text-muted-foreground text-xs">
-                            -
-                          </span>
-                        )}
-                      </div>
+                      {isScopedAdminFn(authUser || undefined) ||
+                      isSuperAdmin ? (
+                        <div className="col-span-1 text-center">
+                          {canChangeUserRole(user) ? (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                  <span className="sr-only">More options</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                {canUpdate && (
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedUser(cu)
+                                      setNewRoleName(cu.role ?? "member")
+                                      setRoleDialogOpen(true)
+                                    }}
+                                  >
+                                    Change Role
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuSeparator />
+                                {canDelete && (
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={() => {
+                                      setSelectedUser(cu)
+                                      handleRemoveUser(
+                                        cu.user_id,
+                                        cu.role ?? ""
+                                      )
+                                    }}
+                                  >
+                                    Remove User
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">
+                              -
+                            </span>
+                          )}
+                        </div>
+                      ) : null}
                     </div>
                   )
                 })
@@ -426,7 +494,7 @@ export default function ProjectTeamList({
 
       {/* Add Users Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Add Users to Project</DialogTitle>
           </DialogHeader>
@@ -446,10 +514,9 @@ export default function ProjectTeamList({
           </Button>
         </DialogContent>
       </Dialog>
-
       {/* Change Role Dialog */}
       <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
-        <DialogContent>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Change User Role</DialogTitle>
           </DialogHeader>

@@ -1,4 +1,4 @@
-import { and, eq, SQLWrapper } from "drizzle-orm"
+import { and, eq, inArray, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
 import {
   channelsTable,
@@ -218,6 +218,9 @@ export async function DeleteSpace(deletedSpaceData: SelectSpace) {
     const deletedSpace = await db
       .delete(spacesTable)
       .where(eq(spacesTable.id, deletedSpaceData.id))
+    await db
+      .delete(SpaceUsersTable)
+      .where(eq(SpaceUsersTable.space_id, deletedSpaceData.id))
     return deletedSpace
   } catch (e: any) {
     throw new Error(e.message)
@@ -253,6 +256,7 @@ export async function attachSpaceFeatures(
 export async function attachSpaceUser(
   spaceId: string,
   userId: string,
+  channel_user_id: number,
   spaceRole?: string
 ) {
   try {
@@ -261,6 +265,7 @@ export async function attachSpaceUser(
       .values({
         space_id: spaceId,
         user_id: userId,
+        channel_user_id: channel_user_id,
         role: spaceRole
       })
       .returning()
@@ -313,10 +318,29 @@ export async function getSpaceUsers(spaceId: string) {
     const spaceUsers = await db.query.SpaceUsersTable.findMany({
       where: eq(SpaceUsersTable.space_id, spaceId),
       with: {
-        user: true
+        user: {
+          with: {
+            roles: {
+              with: {
+                role: true
+              }
+            }
+          }
+        }
       }
     })
     return spaceUsers
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function getSpaceByChannelId(channelIds: string[]) {
+  try {
+    const spaces = await db.query.spacesTable.findMany({
+      where: inArray(spacesTable.channel_id, channelIds)
+    })
+    return spaces
   } catch (e: any) {
     throw new Error(e.message)
   }

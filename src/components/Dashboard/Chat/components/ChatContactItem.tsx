@@ -1,25 +1,66 @@
 "use client"
+
+import { useOnlineStatus } from "@/src/components/providers/OnlineStatusProvider"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Badge } from "@/src/components/ui/badge"
 import { SelectChat } from "@/src/db/schema"
+import { parseMentions } from "@/src/services/realtime/utils/helper"
 import { chatStore } from "@/src/store/chat/chatStore"
 import { userStore } from "@/src/store/user/userStore"
+import {
+  computeTypingLabel,
+  parseLastMessageType
+} from "@/src/utils/clientHelper"
 import Avvvatars from "avvvatars-react"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
+import { AtSign } from "lucide-react"
+import { useMemo } from "react"
 
-const ChatContactItem = ({ chat }: { chat: SelectChat }) => {
+interface ChatContactItemProps {
+  chat: SelectChat
+  typingUsers?: Record<number, Set<string>>
+}
+
+const ChatContactItem = ({ chat, typingUsers }: ChatContactItemProps) => {
   const authUser = useAtomValue(userStore.AuthUser)
+  const authUserId = authUser?.unique_id
   const [currentChat, setCurrentChat] = useAtom(chatStore.currentChat)
   const setSwtichedChat = useSetAtom(chatStore.switchedChat)
   const setIsMobileMenuOpen = useSetAtom(chatStore.isMobileMenuOpen)
+  const { getOnlineUsers } = useOnlineStatus()
+
+  const users = getOnlineUsers()
 
   const filteredContact = chat?.users?.find(
-    (user) => user.user_id !== authUser?.unique_id
+    (user) => user?.user_id !== authUser?.unique_id
   )
-  if (!filteredContact) return null
-  const chatContact = filteredContact?.user || null
-  if (!chatContact) return null
+  const lastMessageInfo = useMemo(() => {
+    if (!chat?.messages?.length) return null
 
+    const lastMsg = chat.messages[chat.messages.length - 1]
+
+    if (lastMsg.is_deleted === 1) {
+      return parseLastMessageType("This message was deleted")
+    }
+
+    return parseLastMessageType(lastMsg.message)
+  }, [chat?.messages])
+
+  const isCurrentUserMentioned = useMemo(() => {
+    if (!authUserId || !chat.last_message) return false
+    const mentionRegex = new RegExp(`@\\[[^\\]]+\\]\\(${authUserId}\\)`, "g")
+    return mentionRegex.test(chat.last_message)
+  }, [chat.last_message, authUserId])
+
+  const currentUserChatRecord = chat?.users?.find(
+    (user) => user.user_id === authUser?.unique_id
+  )
+  const unreadCount = currentUserChatRecord?.unread_count || 0
+  const typingLabel = computeTypingLabel({ chat, typingUsers, authUserId })
+  const isContactOnline =
+    filteredContact?.user?.unique_id !== undefined
+      ? users.has(filteredContact.user.unique_id)
+      : false
   return (
     <div
       key={chat.id}
@@ -34,37 +75,76 @@ const ChatContactItem = ({ chat }: { chat: SelectChat }) => {
       {chat?.is_group ? (
         <Avvvatars value={chat.name || ""} style="shape" />
       ) : (
-        <Avatar className="h-10 w-10 relative bg-white">
-          {!chat?.is_group && chatContact ? (
-            <>
-              {chatContact?.profile_url ? (
-                <AvatarImage src={chatContact.profile_url} />
-              ) : null}
+        <div className="relative h-10 w-10">
+          <Avatar className="h-10 w-10 bg-white">
+            {filteredContact?.user?.profile_url ? (
+              <AvatarImage src={filteredContact?.user?.profile_url} />
+            ) : (
               <AvatarFallback>
-                {chatContact.first_name.charAt(0)}
+                {filteredContact?.user?.first_name.charAt(0)}
               </AvatarFallback>
-            </>
-          ) : null}
-          {/* {chat.online && (
-              <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></span>
-            )} */}
-        </Avatar>
+            )}
+          </Avatar>
+
+          {isContactOnline && (
+            <span
+              className="absolute bottom-0 right-0 z-50 
+                     h-3 w-3 rounded-full bg-green-500 
+                     border-2 border-white"
+            ></span>
+          )}
+        </div>
       )}
-      <div className="flex-1 max-w-[80%]">
-        <p className="font-medium">
+      <div className="flex-1 max-w-[60%]">
+        <p className="font-medium truncate">
           {chat.is_group
             ? chat.name
-            : `${chatContact?.first_name} ${chatContact?.last_name}`}
+            : `${filteredContact?.user?.first_name} ${filteredContact?.user?.last_name}`}
         </p>
-        <p className="text-sm text-muted-foreground truncate">
-          {chat?.last_message}
-        </p>
+        {typingLabel ? (
+          <p className="text-sm text-foreground truncate animate-pulse">
+            {typingLabel}
+          </p>
+        ) : (
+          <>
+            {lastMessageInfo?.type === "text" ? (
+              <p
+                className="text-sm text-muted-foreground truncate"
+                dangerouslySetInnerHTML={{
+                  __html: lastMessageInfo?.content ?? ""
+                }}
+              />
+            ) : (
+              (lastMessageInfo?.type === "image" ||
+                lastMessageInfo?.type === "file") && (
+                <p className="text-sm text-muted-foreground truncate">
+                  Shared a file
+                </p>
+              )
+            )}
+          </>
+        )}
       </div>
-      {(chat?.unread_count || 0) > 0 && (
-        <Badge variant="secondary" className="rounded-full px-2 py-1">
-          {chat?.unread_count}
-        </Badge>
-      )}
+
+      {/* NEW: Show badges container */}
+      <div className="flex items-center gap-1 ml-auto">
+        {/* NEW: Show @ badge if user is mentioned */}
+        {isCurrentUserMentioned && unreadCount > 0 && (
+          <Badge
+            variant="secondary"
+            className="rounded-full px-2 py-1 bg-primary/10 text-primary"
+          >
+            <AtSign className="h-3 w-3" />
+          </Badge>
+        )}
+
+        {/* Show unread count */}
+        {unreadCount > 0 && (
+          <Badge variant="secondary" className="rounded-full px-2 py-1">
+            {unreadCount}
+          </Badge>
+        )}
+      </div>
     </div>
   )
 }

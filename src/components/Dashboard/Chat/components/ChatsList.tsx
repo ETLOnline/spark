@@ -1,26 +1,96 @@
 import { ScrollArea } from "@radix-ui/react-scroll-area"
-import React, { useEffect, useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar"
-import { Badge } from "../../../ui/badge"
-import { useAtom, useAtomValue, useSetAtom } from "jotai"
+import React, { useMemo, useState, useEffect, useRef } from "react"
+import { useAtom, useAtomValue } from "jotai"
 import { chatStore } from "@/src/store/chat/chatStore"
 import { userStore } from "@/src/store/user/userStore"
-import { SelectChat, SelectUser } from "@/src/db/schema"
 import Loader from "../../../common/Loader/Loader"
 import ChatContactItem from "./ChatContactItem"
+import moment from "moment"
 
-const ChatsList = () => {
+export const ChatsList = ({
+  searchQuery = "",
+  typingUsers
+}: {
+  searchQuery: string
+  typingUsers?: Record<number, Set<string>>
+}) => {
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
   const authUser = useAtomValue(userStore.AuthUser)
+  const [isLoadingChats, setIsLoadingChats] = useState(true)
+  const isInitialMount = useRef(true)
+
+  useEffect(() => {
+    if (isInitialMount.current) {
+      if (myChats !== null && myChats !== undefined) {
+        const timer = setTimeout(() => {
+          setIsLoadingChats(false)
+          isInitialMount.current = false
+        }, 300)
+        return () => clearTimeout(timer)
+      }
+    } else {
+      setIsLoadingChats(false)
+    }
+  }, [myChats])
+
+  const filteredChats = useMemo(() => {
+    if (!myChats) return []
+    const chats = myChats.filter((chat) => {
+      if (!searchQuery.trim()) return true
+      const query = searchQuery.toLowerCase().replace(/\s+/g, "")
+      if (
+        chat.is_group &&
+        chat.name?.toLowerCase().replace(/\s+/g, "").includes(query)
+      )
+        return true
+      
+      if (!chat.is_group && chat.users) {
+        const contact = chat.users.find(
+          (u) => u.user?.unique_id !== authUser?.unique_id
+        )?.user
+        if (contact) {
+          const fullName = `${contact.first_name} ${contact.last_name}`
+            .toLowerCase()
+            .replace(/\s+/g, "")
+          const email = contact.email?.toLowerCase() || ""
+          if (
+            fullName.includes(query) ||
+            email.replace(/\s+/g, "").includes(query)
+          ) {
+            return true
+          }
+        }
+      }
+      return false
+    })
+    
+    return chats.sort(
+      (a, b) => moment(b.updated_at).valueOf() - moment(a.updated_at).valueOf()
+    )
+  }, [myChats, searchQuery, authUser])
 
   return (
-    <ScrollArea className="h-[calc(100vh-20rem)] px-2">
+    <ScrollArea className="h-[calc(100vh-15rem)] px-2 pb-5">
       {authUser ? (
-        <>
-          {myChats.map((chat) => (
-            <ChatContactItem key={chat.id} chat={chat} />
-          ))}
-        </>
+        <div className="overflow-y-auto h-full space-y-1">
+          {isLoadingChats ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader />
+            </div>
+          ) : filteredChats.length > 0 ? (
+            filteredChats.map((chat) => (
+              <ChatContactItem
+                key={chat.id}
+                typingUsers={typingUsers}
+                chat={chat}
+              />
+            ))
+          ) : (
+            <div className="text-center text-muted-foreground py-8">
+              No chats found.
+            </div>
+          )}
+        </div>
       ) : (
         <div className="flex items-center justify-center">
           <Loader />

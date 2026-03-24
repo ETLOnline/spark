@@ -9,10 +9,12 @@ import { ChevronDown, ChevronUp } from "lucide-react"
 
 interface PostCommentsSectionProps {
   comments: SelectComment[]
+  onEditComment?: (comment: SelectComment) => void
 }
 
 const PostCommentsSection: React.FC<PostCommentsSectionProps> = ({
-  comments
+  comments,
+  onEditComment
 }) => {
   const [showAll, setShowAll] = useState(false)
   const displayedComments = showAll ? comments : comments.slice(0, 3)
@@ -25,17 +27,25 @@ const PostCommentsSection: React.FC<PostCommentsSectionProps> = ({
   return (
     <div className="w-full">
       {showAll ? (
-        <ScrollArea className="h-[400px] w-full">
+        <ScrollArea className="h-[400px] w-full pr-3">
           <div className="space-y-4">
             {displayedComments.map((comment) => (
-              <PostComments key={comment.id} comment={comment} />
+              <PostComments
+                key={comment.id}
+                comment={comment}
+                onEdit={onEditComment}
+              />
             ))}
           </div>
         </ScrollArea>
       ) : (
         <div className="space-y-4">
           {displayedComments.map((comment) => (
-            <PostComments key={comment.id} comment={comment} />
+            <PostComments
+              key={comment.id}
+              comment={comment}
+              onEdit={onEditComment}
+            />
           ))}
         </div>
       )}

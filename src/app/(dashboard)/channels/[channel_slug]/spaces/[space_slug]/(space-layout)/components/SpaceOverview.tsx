@@ -10,25 +10,41 @@ import {
   Users
 } from "lucide-react"
 import React, { useEffect, useState } from "react"
-import Tiptap from "@/src/components/common/TiptapRichEditor"
-import "@/src/components/common/RichEditorFormat.css"
+import Tiptap from "@/src/components/common/Tiptap/TiptapRichEditor"
+import "@/src/components/common/Tiptap/RichEditorFormat.css"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { UpdateSpaceAction } from "@/src/server-actions/Space/Space"
 import { toast } from "@/src/hooks/use-toast"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
+import StarterKit from "@tiptap/starter-kit"
+import { Editor } from "@tiptap/react"
+import { normalizeHTML } from "@/src/utils/helpers"
+import { useAtomValue } from "jotai"
+import { onlineUsersStore } from "@/src/store/onlineUsers/onlineUsersStore"
 
 interface SpaceOverviewProps {
   features?: SelectSpaceFeature[]
+  hasAnyFeatureAccess: boolean
   space: SelectSpace
 }
 
-function SpaceOverview({ features, space }: SpaceOverviewProps) {
+function SpaceOverview({
+  features,
+  hasAnyFeatureAccess,
+  space
+}: SpaceOverviewProps) {
   const [isEditDetail, setIsEditDetail] = useState(false)
   const [content, setContent] = useState("")
+  const OnlineSpaceUsersCount = useAtomValue(onlineUsersStore.spaceOnlineUsers)
 
   const [overviewLoading, , , updatespaceDetails] =
     useServerAction(UpdateSpaceAction)
+
+  const encodedChannelSlug = encodeURIComponent(
+    space.channel?.channel_slug ?? ""
+  )
+  const encodedSpaceSlug = encodeURIComponent(space.space_slug)
 
   useEffect(() => {
     if (space.overview) {
@@ -80,8 +96,9 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
         <CreateShortcut
           type="space"
           entity={{
-            slug: `${space.channel?.channel_slug}/spaces/${space?.space_slug}`,
-            title: `${space?.channel?.channel_name} - ${space?.space_name}`
+            slug: `${encodedChannelSlug}/spaces/${encodedSpaceSlug}`,
+            title: `${space?.space_name}`,
+            entity_id: space?.id
           }}
         />
       </div>
@@ -111,17 +128,23 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
                     </span>
                     <span className="text-sm">members</span>
                   </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <CircleCheckBig className="h-4 w-4 text-green-500" />
-                    <span className="font-medium text-foreground">
-                      {features?.length || 0}
-                    </span>
-                    <span className="text-sm">active features</span>
-                  </div>
+                  {hasAnyFeatureAccess && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <CircleCheckBig className="h-4 w-4 text-green-500" />
+                      <span className="font-medium text-foreground">
+                        {features?.length || 0}
+                      </span>
+                      <span className="text-sm">active features</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Clock className="w-4 h-4 text-blue-500 " />
-                    <span className="font-medium text-foreground">{0}</span>
-                    <span className="text-sm">active today</span>
+                    <span className="font-medium text-foreground">
+                      {OnlineSpaceUsersCount}
+                    </span>
+                    <span className="text-sm">
+                      active {OnlineSpaceUsersCount === 1 ? "user" : "users"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -148,17 +171,21 @@ function SpaceOverview({ features, space }: SpaceOverviewProps) {
                 <Card
                   className="p-4 cursor-pointer"
                   onClick={() => setIsEditDetail(true)}
-                  dangerouslySetInnerHTML={{
-                    __html: content ?? ""
-                  }}
-                />
+                >
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: normalizeHTML(content) ?? ""
+                    }}
+                  />
+                </Card>
               ) : (
-                <Card
-                  className="p-4"
-                  dangerouslySetInnerHTML={{
-                    __html: content ?? ""
-                  }}
-                />
+                <Card className="p-4">
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: normalizeHTML(content) ?? ""
+                    }}
+                  />
+                </Card>
               )}
             </div>
           </div>

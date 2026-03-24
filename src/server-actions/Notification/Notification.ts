@@ -7,8 +7,8 @@ import {
   MarkNotificationAsRead
 } from "../../db/data-access/notification/query"
 import { CreateServerAction } from ".."
-import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 import { AuthUserAction } from "../User/AuthUserAction"
+import pusherServer from "@/src/services/realtime/pusherServer"
 
 export const AddNotificationAction = CreateServerAction(
   true,
@@ -16,8 +16,16 @@ export const AddNotificationAction = CreateServerAction(
     try {
       const data = await AddNotification(payload)
       const user = await AuthUserAction()
-      const realTimeChannel = AblyClientRest.channels.get(payload.received_by)
-      await realTimeChannel.publish("notification", { ...data, creator: user })
+
+      await pusherServer.trigger(
+        payload.received_by, 
+        "notification", 
+        { 
+          ...data, 
+          creator: user 
+        }
+      );
+
       return { success: true, data }
     } catch (error: any) {
       return { error: error, success: false }
@@ -36,7 +44,7 @@ export const GetNotificationsAction = CreateServerAction(true, async () => {
 
 export const MarkNotificationAsReadAction = CreateServerAction(
   true,
-  async (id: number) => {
+  async (id: number | number[]) => {
     try {
       const data = await MarkNotificationAsRead(id)
       return { success: true, data }
@@ -50,7 +58,7 @@ export const DeleteNotificationAction = CreateServerAction(
   true,
   async (id: number) => {
     try {
-      const data = await MarkNotificationAsRead(id)
+      const data = await MarkNotificationAsRead(id) 
       return { success: true, data }
     } catch (error: any) {
       return { error: error, success: false }

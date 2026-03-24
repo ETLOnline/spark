@@ -5,6 +5,7 @@ import Header from "@/src/components/Dashboard/header"
 import { SidebarInset, SidebarProvider } from "@/src/components/ui/sidebar"
 import { checkUserPersonaCompletion, isSuperAdmin } from "@/src/utils/helpers"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
+import { OnlineStatusProvider } from "@/src/components/providers/OnlineStatusProvider"
 
 export default async function DashboardLayout({
   children
@@ -21,18 +22,25 @@ export default async function DashboardLayout({
   if (!superAdmin) {
     if (!hasPersona) {
       redirect("/personas")
+    } else if (
+      !authUser.profile ||
+      !authUser.profile.bio ||
+      !authUser.profile.degree
+    ) {
+      redirect("/profile-complition")
     }
   }
-
   return (
-    <SidebarProvider>
-      <AppSidebar collapsible="icon" />
-      <SidebarInset>
-        <Header />
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0 !w-full h-full">
-          {children}
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+    <OnlineStatusProvider>
+      <SidebarProvider>
+        <AppSidebar collapsible="icon" />
+        <SidebarInset>
+          <Header />
+          <div className="flex flex-1 flex-col gap-4 px-4  !w-full h-full">
+            {children}
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
+    </OnlineStatusProvider>
   )
 }

@@ -6,8 +6,7 @@ import {
 import NotFound from "@/src/components/Dashboard/NotFound/NotFound"
 import ChannelUserList from "@/src/components/UserListAndInvite/UserList"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import { getSpaceRole } from "@/src/utils/spaceRoleHelper"
-import { isSuperAdmin, isUserAdmin } from "@/src/utils/helpers"
+import { isSuperAdmin } from "@/src/utils/helpers"
 import UnauthorizedAccessScreen from "@/src/components/common/UnauthorizedAccessScreen"
 import { getRoleByEntityTypeAndIdAction } from "@/src/server-actions/UserRoles/UserRole"
 
@@ -21,7 +20,13 @@ interface Props {
 async function SpaceUsersPage({ params }: Props) {
   const { space_slug, channel_slug } = await params
 
-  const currentSpace = await GetSpaceBySlugAction(space_slug, channel_slug)
+  const decodedChannelSlug = decodeURIComponent(channel_slug)
+  const decodedSpaceSlug = decodeURIComponent(space_slug)
+
+  const currentSpace = await GetSpaceBySlugAction(
+    decodedSpaceSlug,
+    decodedChannelSlug
+  )
   if (!currentSpace.success || !currentSpace.data) {
     return <NotFound />
   }
@@ -32,11 +37,14 @@ async function SpaceUsersPage({ params }: Props) {
     await getRoleByEntityTypeAndIdAction("SPACE", currentSpace.data.id)
   ).data
 
+  const userSpaceRoles = authUser.roles.filter(
+    (ur) =>
+      ur?.role?.entity_type === "SPACE" &&
+      ur?.role?.entity_id === currentSpace?.data?.id
+  )
+
   if (authUser) {
-    const channelRole = getSpaceRole(currentSpace.data.id, authUser)
-    const hasRole = scopedRoles
-      ? scopedRoles.some((role) => role.name === channelRole)
-      : false
+    const hasRole = userSpaceRoles && userSpaceRoles.length > 0 ? true : false
     const superAdmin = isSuperAdmin(authUser)
     if (!hasRole && !superAdmin) {
       return <UnauthorizedAccessScreen />

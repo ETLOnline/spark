@@ -31,6 +31,8 @@ import { desc } from "drizzle-orm"
 import { set, z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import moment from "moment"
+import { UnsavedChangesDialog } from "../../common/unsavedChangesDialog"
+import { useConfirmClose } from "@/src/hooks/useConfirmClose"
 
 interface Props {
   UserId: string
@@ -43,11 +45,30 @@ interface Props {
 }
 
 const userCertificateSchema = z.object({
-  title: z.string().min(1, "Required"),
-  institute: z.string().min(1, "Required"),
-  year: z.string().refine((val) => moment(val, "YYYY", true).isValid(), {
-    message: "Invalid year"
-  })
+  title: z
+    .string()
+    .trim()
+    .min(1, "Certificate name cannot be empty")
+    .max(100, "Certificate name cannot exceed 100 characters"),
+
+  institute: z
+    .string()
+    .trim()
+    .min(1, "Institute name cannot be empty")
+    .max(100, "Institute name cannot exceed 100 characters"),
+
+  year: z
+    .string()
+    .min(1, "Year is required")
+    .refine((val) => moment(val, "YYYY", true).isValid(), {
+      message: "Invalid year format"
+    })
+    .refine((val) => moment(val, "YYYY", true).year() >= 1990, {
+      message: "Year must be 1990 or later"
+    })
+    .refine((val) => moment(val, "YYYY", true).year() <= moment().year(), {
+      message: "Year cannot be in the future"
+    })
 })
 
 const CertificateModal = ({
@@ -74,6 +95,7 @@ const CertificateModal = ({
   })
 
   const error = form.formState.errors
+  const isChanged = form.formState.isDirty
 
   useEffect(() => {
     if (!isDialogOpen) {
@@ -189,104 +211,130 @@ const CertificateModal = ({
     }
   }
 
+  const { showConfirmation, setShowConfirmation, handleClose } =
+    useConfirmClose({
+      isDirty: isChanged,
+      onClose: () => setIsDialogOpen(false)
+    })
+  const title = form.watch("title")
+  const institute = form.watch("institute")
+  const year = form.watch("year")
+
+  useEffect(() => {
+    if (title || institute || year) {
+      form.trigger(["title", "institute", "year"])
+    }
+  }, [title, institute, year, isDialogOpen])
+
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>
-            {selectedCertificate
-              ? "Update Certificate and Qualification"
-              : "Add Qualification & Certificate"}
-          </DialogTitle>
-          <DialogDescription>
-            {selectedCertificate
-              ? "Update your Certificate and Qualification to your profile."
-              : "Add your Qualification and Certificate to your profile."}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={form.handleSubmit(submitData)}>
-          <div className="grid gap-4 py-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor={`degree`} className="font-semibold">
-                Certificate
-              </Label>
-              <Controller
-                name="title"
-                defaultValue=""
-                control={form.control}
-                render={({ field }) => (
-                  <Input
-                    id="title"
-                    placeholder="e.g. Meta Full Stack Developer Certificate"
-                    {...field}
-                  />
+    <>
+      <Dialog open={isDialogOpen} onOpenChange={handleClose}>
+        <DialogContent
+          className="sm:max-w-[425px]"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle>
+              {selectedCertificate
+                ? "Update Certificate and Qualification"
+                : "Add Qualification & Certificate"}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedCertificate
+                ? "Update your Certificate and Qualification to your profile."
+                : "Add your Qualification and Certificate to your profile."}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={form.handleSubmit(submitData)}>
+            <div className="grid gap-4 py-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor={`degree`} className="font-semibold">
+                  Certificate
+                </Label>
+                <Controller
+                  name="title"
+                  defaultValue=""
+                  control={form.control}
+                  render={({ field }) => (
+                    <Input
+                      id="title"
+                      placeholder="e.g. Meta Full Stack Developer Certificate"
+                      {...field}
+                    />
+                  )}
+                />
+                {error.title && (
+                  <span className="text-red-500 text-sm">
+                    {String(error.title.message)}
+                  </span>
                 )}
-              />
-              {error.title && (
-                <span className="text-red-500 text-sm">
-                  {String(error.title.message)}
-                </span>
-              )}
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor={`institute`} className="font-semibold">
-                Institution
-              </Label>
-              <Controller
-                name="institute"
-                defaultValue=""
-                control={form.control}
-                render={({ field }) => (
-                  <Input id="institute" placeholder="e.g. Meta" {...field} />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor={`institute`} className="font-semibold">
+                  Institution
+                </Label>
+                <Controller
+                  name="institute"
+                  defaultValue=""
+                  control={form.control}
+                  render={({ field }) => (
+                    <Input id="institute" placeholder="e.g. Meta" {...field} />
+                  )}
+                />
+                {error.institute && (
+                  <span className="text-red-500 text-sm">
+                    {String(error.institute.message)}
+                  </span>
                 )}
-              />
-              {error.institute && (
-                <span className="text-red-500 text-sm">
-                  {String(error.institute.message)}
-                </span>
-              )}
-            </div>
+              </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="duration_from" className="font-semibold">
-                Year
-              </Label>
-              <Controller
-                name="year"
-                defaultValue=""
-                control={form.control}
-                render={({ field }) => (
-                  <Input id="year" placeholder="2024" {...field} />
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="duration_from" className="font-semibold">
+                  Year
+                </Label>
+                <Controller
+                  name="year"
+                  defaultValue=""
+                  control={form.control}
+                  render={({ field }) => (
+                    <Input id="year" placeholder="e.g. 2024" {...field} />
+                  )}
+                />
+                {error.year && (
+                  <span className="text-red-500 text-sm">
+                    {String(error.year.message)}
+                  </span>
                 )}
-              />
-              {error.year && (
-                <span className="text-red-500 text-sm">
-                  {String(error.year.message)}
-                </span>
-              )}
+              </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              loading={DeleteCertificateLoading}
-              onClick={() =>
-                handleDeleteCertificate(selectedCertificate?.id || 0)
-              }
-              type="button"
-            >
-              Delete
-            </Button>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                loading={DeleteCertificateLoading}
+                onClick={() =>
+                  handleDeleteCertificate(selectedCertificate?.id || 0)
+                }
+                type="button"
+              >
+                Delete
+              </Button>
 
-            <Button
-              loading={createCertificateLoading || updateCertificateLoading}
-            >
-              {selectedCertificate ? "Update" : "Add"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+              <Button
+                loading={createCertificateLoading || updateCertificateLoading}
+              >
+                {selectedCertificate ? "Update" : "Add"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <UnsavedChangesDialog
+        showConfirmation={showConfirmation}
+        setShowConfirmation={setShowConfirmation}
+        setIsActualDialogOpen={setIsDialogOpen}
+      />
+    </>
   )
 }
 

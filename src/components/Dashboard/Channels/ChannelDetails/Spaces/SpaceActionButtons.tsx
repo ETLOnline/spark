@@ -2,6 +2,7 @@ import { Button } from "@/src/components/ui/button"
 import {
   Edit,
   ExternalLink,
+  LogOut,
   MoreHorizontal,
   PlusCircle,
   Settings,
@@ -12,7 +13,9 @@ import { spaceStore } from "@/src/store/space/spaceStore"
 import { useAtomValue, useSetAtom } from "jotai"
 import {
   AttachSpaceUserAction,
-  DeleteSpaceAction
+  DeleteSpaceAction,
+  DetachSpaceUserAction,
+  LeaveSpaceAction
 } from "@/src/server-actions/Space/Space"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { SelectSpace } from "@/src/db/schema"
@@ -31,19 +34,27 @@ import { PermissionChecker } from "@/src/lib/PermissionCheker"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { userStore } from "@/src/store/user/userStore"
 import { isEntityUser } from "@/src/utils/clientHelper"
+import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
+import clsx from "clsx"
+import { getRoleIdOnMatch } from "@/src/services/realtime/utils/helper"
 
 interface Props {
   space: SelectSpace
+  setIsChannelMember?: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-function SpacesActionButtons({ space }: Props) {
+function SpacesActionButtons({ space, setIsChannelMember }: Props) {
   const [joinLoading, joinResult, joinError, joinSpace] = useServerAction(
     AttachSpaceUserAction
   )
-  const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
+  const [leaveLoading, leaveResult, leaveError, leaveSpace] = useServerAction(
+    DetachSpaceUserAction
+  )
+
+  const authUser = useAtomValue(userStore.AuthUser)
+  const currentUserId = authUser?.unique_id
   const superAdmin = useAtomValue(userStore.SuperAdmin)
   const [isSpaceMember, setIsSpaceMember] = useState<boolean>(false)
-
   useEffect(() => {
     const isMember = isEntityUser(space, currentUserId as string)
 
@@ -53,22 +64,63 @@ function SpacesActionButtons({ space }: Props) {
     }
   }, [space, currentUserId])
 
-  const handleJoinChannel = async () => {
-    if (space.id && currentUserId) {
+  const handleJoinSpace = async () => {
+    if (!space.id || !currentUserId) return
+
+    try {
       const res = await joinSpace(space.id, currentUserId)
+
       if (res?.success) {
         setIsSpaceMember(true)
+        setIsChannelMember?.(true)
         toast({
           title: "Space Joined",
           description: "You have successfully joined the Space!",
           duration: 3000
         })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong while joining the Space",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleLeaveSpace = async () => {
+    if (!authUser?.roles) {
+      toast({
+        title: "Error",
+        description: "Failed to leave Space",
+        variant: "destructive"
+      })
+      return
+    }
+    const role_id = getRoleIdOnMatch(authUser?.roles, space.id)
+    if (space.id && currentUserId && role_id) {
+      const res = await leaveSpace(space.id, currentUserId, role_id)
+      if (res?.success) {
+        setIsSpaceMember(false)
+        toast({
+          title: "Space Left",
+          description: "You have successfully left the Space!",
+          duration: 3000
+        })
       } else {
-        console.error("Failed to join Channel:", res?.error)
+        toast({
+          title: "Error",
+          description: "Failed to leave Space",
+          variant: "destructive"
+        })
       }
     }
   }
 
+  const encodedSpaceSlug = encodeURIComponent(space.space_slug)
+  const encodeChannelSlug = encodeURIComponent(
+    space.channel?.channel_slug ?? ""
+  )
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "SPACE",
@@ -133,7 +185,7 @@ function SpacesActionButtons({ space }: Props) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem
-            onClick={() => router.push(`./spaces/${space.space_slug}`)}
+            onClick={() => router.push(`./spaces/${encodedSpaceSlug}`)}
           >
             <ExternalLink className="mr-2 h-4 w-4" />
             Open Space
@@ -144,21 +196,30 @@ function SpacesActionButtons({ space }: Props) {
               Edit
             </DropdownMenuItem>
           )}
-          {!superAdmin && (
-            <DropdownMenuItem
-              onClick={handleJoinChannel}
-              disabled={isSpaceMember || joinLoading}
-              className={
-                isSpaceMember ? "text-gray-500 cursor-not-allowed" : ""
-              }
-            >
+          {!superAdmin && !isSpaceMember && (
+            <DropdownMenuItem onClick={handleJoinSpace} disabled={joinLoading}>
               <PlusCircle className="mr-2 h-4 w-4" />
-              {joinLoading ? "Joining..." : isSpaceMember ? "Joined" : "Join"}
+              {joinLoading ? "Joining..." : "Join Space"}
+            </DropdownMenuItem>
+          )}
+
+          {!superAdmin && isSpaceMember && (
+            <DropdownMenuItem
+              onClick={handleLeaveSpace}
+              disabled={leaveLoading}
+              className={clsx(
+                "text-red-500",
+                "focus:bg-red-500 focus:text-white",
+                "dark:focus:bg-muted dark:focus:text-red-500"
+              )}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              {leaveLoading ? "Leaving..." : "Leave Space"}
             </DropdownMenuItem>
           )}
           {canViewSpaceUsers && (
             <DropdownMenuItem
-              onClick={() => router.push(`./spaces/${space.space_slug}/users`)}
+              onClick={() => router.push(`./spaces/${encodedSpaceSlug}/users`)}
             >
               <User className="mr-2 h-4 w-4" />
               Users
@@ -167,7 +228,7 @@ function SpacesActionButtons({ space }: Props) {
           {canSetSpaceSetting && (
             <DropdownMenuItem
               onClick={() =>
-                router.push(`./spaces/${space.space_slug}/settings`)
+                router.push(`./spaces/${encodedSpaceSlug}/settings`)
               }
             >
               <Settings className="mr-2 h-4 w-4" />
@@ -175,6 +236,15 @@ function SpacesActionButtons({ space }: Props) {
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
+          <CreateShortcut
+            type="space"
+            entity={{
+              slug: `${encodeChannelSlug}/spaces/${encodedSpaceSlug}`,
+              title: `${space?.space_name}`,
+              entity_id: space?.id
+            }}
+            ctaType="menuItem"
+          />
           {canDeleteSpace && (
             <DropdownMenuItem
               className="text-destructive focus:text-destructive"

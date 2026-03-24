@@ -13,7 +13,19 @@ import {
 import { Input } from "@/src/components/ui/input"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger } from "@/src/components/ui/sheet"
-import { Menu, PlusCircle, Search, Send, SmileIcon } from "lucide-react"
+import {
+  Menu,
+  Send,
+  Search,
+  SmileIcon,
+  PencilLine,
+  ChevronDown,
+  Edit,
+  FileIcon,
+  Paperclip,
+  Trash2,
+  X
+} from "lucide-react"
 import { useAtom, useAtomValue } from "jotai"
 import { chatStore } from "@/src/store/chat/chatStore"
 import {
@@ -24,98 +36,117 @@ import {
   SelectUserChat
 } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
-import { AblyClient } from "@/src/services/realtime/AblyClient"
-import ChatsList from "./components/ChatsList"
+import { ChatsList } from "./components/ChatsList"
 import {
   AddMessageToChatAction,
-  GetChatWithMessagesAction
+  DeleteMessageFromChatAction,
+  EditChaMessagetAction,
+  GetChatWithMessagesAction,
+  incrementUnreadCountForChatAction,
+  MarkChatAsReadAction,
+  sendFilesAndImagesInChatAction,
+  SendTypingIndicatorAction,
+  AddUserToGroupChatAction
 } from "@/src/server-actions/Chat/Chat"
 import moment from "moment-timezone"
 import Link from "next/link"
 import Loader from "../../common/Loader/Loader"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
-import { isOnlyEmoji } from "@/src/utils/helpers"
+import { formatFileSize, getUserRole, isOnlyEmoji } from "@/src/utils/helpers"
 import CreateNewChat from "./components/CreateNewChat"
 import Avvvatars from "avvvatars-react"
+import { spaceStore } from "@/src/store/space/spaceStore"
+import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import pusherClient from "@/src/services/realtime/PusherClient"
+import RichTextEditor from "@/src/components/common/Tiptap/TiptapRichEditor"
+import { MessageContent } from "./components/MessageContent"
+import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
 import {
   EmojiPicker,
   EmojiPickerContent,
   EmojiPickerFooter,
   EmojiPickerSearch
 } from "../../ui/emoji-picker"
-import { spaceStore } from "@/src/store/space/spaceStore"
-import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
+import "@/src/components/common/Tiptap/RichEditorFormat.css"
+import { toast } from "@/src/hooks/use-toast"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "../../ui/dropdown-menu"
+import { FileUpload } from "../../ui/file-upload"
+import Image from "next/image"
+import { useOnlineStatus } from "../../providers/OnlineStatusProvider"
+import { GetSpaceUsersAction } from "@/src/server-actions/Space/Space"
+import ImageLightbox from "../../common/LightBox"
+import ExpandableText from "../posts/ExpandableText"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
   allChatsSSR: SelectChat[]
 }
 
-// Function to join a channel (for group or one-to-one chat)
+type ChatUpdatePayload = {
+  chatId: number
+  lastMessage: string
+  wasMentioned?: boolean
+  sender_id: string
+}
+
 /**
- * Joins a specified channel and sets up message subscription and sending functionality.
+ * Joins a specified channel for a chat.
  *
- * @param {string} channelName - The name of the channel to join.
+ * @param {number} chatId - The ID of the chat to join.
  * @param {(message: SelectMessage) => void} onMessageReceived - Callback function to handle received messages.
- * @returns {{ sendMessage: (content: any) => void }} An object containing a function to send messages to the channel.
+ * @returns {{ unsubscribe: () => void }} An object containing a function to unsubscribe.
  */
 function joinChannel(
-  channelName: string,
-  onMessageReceived: (message: SelectMessage) => void
+  chatId: number,
+  onMessageReceived: (message: SelectMessage) => void,
+  onMessageDeleted?: (msgId: number) => void,
+  onMessageEdited?: (msgId: number, newContent: string) => void,
+  onTyping?: (userId: string, isTyping: boolean, chatId: number) => void,
+  onMemberAdded?: (newUserChat: any) => void,
+  onMemberRemoved?: (userId: string) => void
 ) {
-  const channel = AblyClient.channels.get(channelName)
+  const channelName = `private-chat-${chatId}`
+  const channel = pusherClient.subscribe(channelName)
 
-  // Subscribe to messages
-  channel.subscribe((message) => {
-    onMessageReceived(message.data)
+  channel.bind("new-message", (data: { message: SelectMessage }) => {
+    onMessageReceived(data.message)
   })
 
-  // Send a message
-  function sendMessage(content: any) {
-    channel.publish("message", content)
-  }
+  channel.bind("message-deleted", (data: { id: number }) => {
+    onMessageDeleted?.(data.id)
+  })
+  channel.bind(
+    "message-edited",
+    (data: { id: number; new_content: string }) => {
+      onMessageEdited?.(data.id, data.new_content)
+    }
+  )
+  channel.bind("typing", (data: { userId: string; isTyping: boolean }) => {
+    onTyping?.(data.userId, data.isTyping, chatId)
+  })
 
+  channel.bind("member-added", (data: { newUserChat: any }) => {
+    onMemberAdded?.(data.newUserChat)
+  })
+
+  channel.bind("member-removed", (data: { userId: string }) => {
+    onMemberRemoved?.(data.userId)
+  })
   function unsubscribe() {
-    channel.unsubscribe()
-    channel.detach()
+    channel.unbind_all()
+    pusherClient.unsubscribe(channelName)
   }
 
-  return { sendMessage, unsubscribe }
+  return { unsubscribe }
 }
 
 /**
  * ChatScreen component renders the chat interface including the list of chats and the main chat area.
- * It handles the display of messages, sending new messages, and switching between different chats.
- *
- * @param {ChatScreenProps} props - The properties for the ChatScreen component.
- * @param {Chat} props.currentChatSSR - The current chat data fetched from the server-side rendering.
- * @param {Chat[]} props.allChatsSSR - The list of all chats fetched from the server-side rendering.
- *
- * @returns {JSX.Element} The rendered ChatScreen component.
- *
- * @component
- *
- * @example
- * // Example usage of ChatScreen component
- * <ChatScreen currentChatSSR={currentChatData} allChatsSSR={allChatsData} />
- *
- * @remarks
- * This component uses several hooks and atoms for state management and side effects:
- * - `useState` for managing local state such as messages, newMessage, isMobileMenuOpen, chat, and chatContact.
- * - `useRef` for referencing the end of the messages list to scroll into view.
- * - `useAtom` and `useAtomValue` from Jotai for managing global state related to the current chat, switched chat, and authenticated user.
- * - `useEffect` for handling side effects such as setting initial state, joining chat channels, and handling chat switches.
- * - `useCallback` for memoizing the scrollToBottom function.
- *
- * The component also includes several nested components and elements for rendering the chat interface:
- * - `Card`, `CardHeader`, `CardContent`, `CardFooter` for structuring the chat interface.
- * - `Sheet`, `SheetTrigger`, `SheetContent` for handling the mobile menu.
- * - `Link` for navigating to the chat contact's profile.
- * - `Avatar`, `AvatarImage`, `AvatarFallback` for displaying the chat contact's avatar.
- * - `ScrollArea` for displaying the list of messages with a scrollable area.
- * - `Loader` for displaying a loading indicator while fetching chat messages.
- * - `Input` and `Button` for handling the input and sending of new messages.
  */
 export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
   const currentSpace = useAtomValue(spaceStore.currentSpace)
@@ -124,25 +155,66 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     "SPACE",
     currentSpace?.id
   )
+  const permissionNamespaceCreate = currentSpace
+    ? "space.chat.create"
+    : "chat.create"
+  const permissionNamespaceView = currentSpace ? "space.chat.view" : "chat.view"
+  const permissionDelete = currentSpace ? "space.user.remove" : "chat.delete"
+
+  const [, , , markAsRead] = useServerAction(MarkChatAsReadAction)
+  const [, , , incrementUnreadCount] = useServerAction(
+    incrementUnreadCountForChatAction
+  )
+
   const canCreate = permissionChecker
-    ? permissionChecker?.canAccess("chat.create")
+    ? permissionChecker?.canAccess(permissionNamespaceCreate)
     : false
   const canView = permissionChecker
-    ? permissionChecker?.canAccess("chat.view")
+    ? permissionChecker?.canAccess(permissionNamespaceView)
+    : false
+  const canDelete = permissionChecker
+    ? permissionChecker?.canAccess(permissionDelete)
     : false
 
   const [messages, setMessages] = useState<SelectMessage[]>([])
-  const [newMessage, setNewMessage] = useState("")
+  const [richMessageContent, setRichMessageContent] = useState("")
+  const [showRichEditorToolbar, setShowRichEditorToolbar] = useState(false)
+  const [isMentionActive, setIsMentionActive] = useState(false)
+  const [spaceUsers, setSpaceUsers] = useState<SelectUser[]>([])
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useAtom(
     chatStore.isMobileMenuOpen
   )
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const initialChatLoadRef = useRef<boolean>(true)
   const [currentChat, setCurrentChat] = useAtom(chatStore.currentChat)
   const [switchedChat, setSwitchedChat] = useAtom(chatStore.switchedChat)
   const [myChats, setMyChats] = useAtom(chatStore.myChats)
+  const [editingMessage, setEditingMessage] = useState<SelectMessage | null>(
+    null
+  )
+  const [typingUsers, setTypingUsers] = useState<Record<number, Set<string>>>(
+    {}
+  )
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [fileString, setFileString] = useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const authUser = useAtomValue(userStore.AuthUser)
-  const [chatRealTime, setChatRealtime] = useState<any>(null)
+  const [searchQuery, setSearchQuery] = useState<string>("")
   const [chatContact, setChatContact] = useState<SelectUser | null>(null)
+  const [availableUsers, setAvailableUsers] = useState<SelectUser[]>([])
+  const [openAttachment, setOpenAttachment] = useState<boolean>(false)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxImages, setLightboxImages] = useState<string[]>([])
+  const [lightboxIndex, setLightboxIndex] = useState(0)
+
+  type ChatRealtime = { chatId: number; unsubscribe: () => void }[]
+
+  const [chatRealTime, setChatRealtime] = useState<ChatRealtime>([])
+  const { getOnlineUsers } = useOnlineStatus()
+
   const [
     fetchingChatMessages,
     switchedChatState,
@@ -155,11 +227,28 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     newMessageError,
     addMessageToChat
   ] = useServerAction(AddMessageToChatAction)
+  const [
+    deletedMessageLoading,
+    deletedMessageState,
+    deletedMessageError,
+    deleteMessageFromChat
+  ] = useServerAction(DeleteMessageFromChatAction)
+
+  const [, , , updateChatMsg] = useServerAction(EditChaMessagetAction)
+  const [, , , sendTypingIndicator] = useServerAction(SendTypingIndicatorAction)
+  const [uploadLoding, , , uploadAttachment] = useServerAction(
+    sendFilesAndImagesInChatAction
+  )
+  const [, , , addUserToGroup] = useServerAction(AddUserToGroupChatAction)
+  const [, , , getSpaceUsers] = useServerAction(GetSpaceUsersAction)
 
   useEffect(() => {
     setCurrentChat(currentChatSSR || null)
     setMyChats(allChatsSSR || [])
-    setMessages(currentChatSSR?.messages || [])
+    initialChatLoadRef.current = true
+    const initialMessages = currentChatSSR?.messages || []
+
+    setMessages(initialMessages)
     scrollToBottom()
     return () => {
       setCurrentChat(null)
@@ -167,311 +256,1017 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
       setMessages([])
     }
   }, [])
-
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+    const behavior: ScrollBehavior = initialChatLoadRef.current
+      ? "auto"
+      : "smooth"
+    messagesEndRef.current?.scrollIntoView({ behavior })
+    initialChatLoadRef.current = false
+  }, [])
 
   useEffect(() => {
-    if (!currentChat || !authUser) return
-
-    const { sendMessage, unsubscribe } = joinChannel(
-      currentChat.channel_id,
-      (message) => {
-        setMessages((prev) => [...prev, message])
-      }
-    )
-
-    setChatRealtime({ sendMessage, unsubscribe })
-
-    if (!currentChat.is_group) {
-      const chatContact = currentChat.users?.find(
-        (user) => user.user_id !== authUser?.unique_id
-      )?.user
-      setChatContact(chatContact || null)
+    if (!currentChat) {
+      setAvailableUsers([])
+      return
     }
-  }, [currentChat?.channel_id, authUser])
+    if (currentChat.is_group === 1) {
+      const chatUsers = currentChat.users
+        ?.map((u) => u.user)
+        .filter((user): user is SelectUser => Boolean(user))
+        .filter(
+          (user) => user.unique_id !== authUser?.unique_id
+        ) as SelectUser[]
+      if (chatUsers && chatUsers.length > 0) {
+        setAvailableUsers(chatUsers)
+      } else {
+        setAvailableUsers([])
+      }
+    } else {
+      setAvailableUsers([])
+    }
+  }, [currentChat])
+
+  useEffect(() => {
+    if (!authUser || !myChats.length) return
+
+    // Unsubscribe old channels
+    chatRealTime?.forEach((c) => c.unsubscribe())
+
+    const subscriptions = myChats.map((chat) => {
+      const { unsubscribe } = joinChannel(
+        chat.id,
+
+        // NEW MESSAGE
+        (message) => {
+          setMessages((prev) => [...prev, message])
+
+          setMyChats((prevChats) =>
+            prevChats.map((c) =>
+              c.id === message.chat_id
+                ? {
+                    ...c,
+                    messages: [...(c.messages || []), message],
+                    last_message: message.message,
+                    last_message_at: message.created_at
+                  }
+                : c
+            )
+          )
+        },
+
+        // DELETE
+        (msgId) => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === msgId
+                ? { ...m, is_deleted: 1, message: "This message was deleted" }
+                : m
+            )
+          )
+
+          setMyChats((prevChats) =>
+            prevChats.map((chat) => {
+              if (!chat.messages) return chat
+
+              const updatedMessages = chat.messages.map((m) =>
+                m.id === msgId
+                  ? { ...m, is_deleted: 1, message: "This message was deleted" }
+                  : m
+              )
+
+              return {
+                ...chat,
+                messages: updatedMessages,
+                last_message:
+                  updatedMessages[updatedMessages.length - 1]?.message ?? ""
+              }
+            })
+          )
+        },
+        // EDIT
+        (msgId, newContent) => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === msgId ? { ...m, message: newContent } : m
+            )
+          )
+        },
+
+        // TYPING
+        (userId, isTyping, chatId) => {
+          setTypingUsers((prev) => {
+            const updated = { ...prev }
+            if (!updated[chatId]) updated[chatId] = new Set()
+            if (isTyping) updated[chatId].add(userId)
+            else updated[chatId].delete(userId)
+            return updated
+          })
+        },
+        // NEW: Member Added Handler
+        (newUserChat) => {
+          setMyChats((prev) =>
+            prev.map((c) =>
+              c.id === chat.id
+                ? { ...c, users: [...(c.users || []), newUserChat] }
+                : c
+            )
+          )
+
+          setCurrentChat((prev) => {
+            if (prev?.id === chat.id) {
+              return { ...prev, users: [...(prev.users || []), newUserChat] }
+            }
+            return prev
+          })
+        },
+
+        // NEW: Member Removed Handler
+        (userId) => {
+          setMyChats((prev) =>
+            prev.map((c) =>
+              c.id === chat.id
+                ? { ...c, users: c.users?.filter((u) => u.user_id !== userId) }
+                : c
+            )
+          )
+
+          setCurrentChat((prev) => {
+            if (prev?.id === chat.id) {
+              return {
+                ...prev,
+                users: prev.users?.filter((u) => u.user_id !== userId)
+              }
+            }
+            return prev
+          })
+        }
+      )
+
+      return { chatId: chat.id, unsubscribe }
+    })
+
+    setChatRealtime(subscriptions)
+
+    return () => subscriptions.forEach((s) => s.unsubscribe())
+  }, [myChats, authUser])
 
   useEffect(() => {
     if (!switchedChat) return
-    chatRealTime?.unsubscribe()
-    setChatRealtime(null)
     handleChatSwitch(switchedChat.id)
     setSwitchedChat(null)
   }, [switchedChat])
 
-  /**
-   * Handles switching to a different chat by fetching the chat data and its messages.
-   *
-   * @param {number} chatId - The ID of the chat to switch to.
-   * @returns {Promise<void>} A promise that resolves when the chat has been switched.
-   */
   const handleChatSwitch = async (chatId: number) => {
+    initialChatLoadRef.current = true
+
+    setAvailableUsers([])
+    setRichMessageContent("")
+    setShowRichEditorToolbar(false)
+    setFileString("")
+    setSelectedFile(null)
+    setOpenAttachment(false)
+
     const newSwitchedChat = await fetchChatWithMessages(chatId)
     if (newSwitchedChat && newSwitchedChat.data) {
-      setCurrentChat(newSwitchedChat.data)
-      setMessages(newSwitchedChat.data.messages)
+      const transformedMessages = (newSwitchedChat.data.messages?.map(
+        (msg) => ({
+          ...msg,
+          mentions: msg.mentions ?? undefined
+        })
+      ) || []) as SelectMessage[]
+      const transformedChat = {
+        ...newSwitchedChat.data,
+        messages: transformedMessages
+      } as SelectChat
+      setCurrentChat(transformedChat)
+      setMessages(transformedMessages)
     }
+
+    await markAsRead(chatId)
+
+    setMyChats((prevChats) =>
+      prevChats.map((chat) => {
+        if (chat.id === chatId) {
+          const updatedUsers = chat.users?.map((uc) => {
+            if (uc.user_id === authUser?.unique_id) {
+              return { ...uc, unread_count: 0 } as SelectUserChat
+            }
+            return uc
+          })
+          return { ...chat, users: updatedUsers }
+        }
+        return chat
+      })
+    )
   }
 
   useEffect(() => {
     scrollToBottom()
   }, [messages, authUser])
 
-  /**
-   * Handles the sending of a new message in the chat.
-   *
-   * This function checks if the new message is not empty, creates a new message object,
-   * clears the input field, and then calls the action to add the message to the chat.
-   *
-   * @async
-   * @function handleSendMessage
-   * @returns {Promise<void>} A promise that resolves when the message has been added to the chat.
-   */
-  const handleSendMessage = async () => {
-    if (newMessage.trim() === "") return
-    const newMsg: InsertMessage = {
-      sender_id: authUser?.unique_id || "",
-      chat_id: currentChat?.id || 0,
-      message: newMessage,
-      type: "text"
+  useEffect(() => {
+    if (!authUser) return
+
+    const userChannelName = `private-user-${authUser.unique_id}`
+    const userChannel = pusherClient.subscribe(userChannelName)
+
+    userChannel.bind("chat-update", (data: { update: ChatUpdatePayload }) => {
+      const update = data.update
+
+      setMyChats((prevChats) => {
+        const updatedChat = prevChats.find((chat) => chat.id === update.chatId)
+
+        if (updatedChat && update.lastMessage) {
+          const newChats = prevChats.map((chat) => {
+            if (chat.id === update.chatId) {
+              const isActiveChat = currentChat?.id === update.chatId
+              const updatedUsers = chat.users?.map((uc) => {
+                if (uc.user_id === authUser.unique_id) {
+                  if (
+                    !isActiveChat &&
+                    authUser.unique_id !== update.sender_id
+                  ) {
+                    incrementUnreadCount(update.chatId, uc.user_id)
+                  }
+                  return {
+                    ...uc,
+                    unread_count: isActiveChat
+                      ? uc.unread_count || 0
+                      : (uc.unread_count || 0) + 1
+                  } as SelectUserChat
+                }
+                return uc
+              })
+              return {
+                ...chat,
+                last_message: update.lastMessage,
+                updated_at: new Date().toISOString(),
+                users: updatedUsers
+              }
+            }
+            return chat
+          })
+          return newChats
+        }
+        return prevChats
+      })
+    })
+
+    userChannel.bind(
+      "chat-created",
+      (data: {
+        newChat?: SelectChat
+        chatId?: number
+        initiatorId: string
+        spaceId?: string
+        shouldFetch?: boolean
+      }) => {
+        const { newChat, chatId, initiatorId, spaceId, shouldFetch } = data
+
+        if (initiatorId === authUser?.unique_id) {
+          return
+        }
+        const currentSpaceId = currentSpace?.id
+
+        if (spaceId && currentSpaceId !== spaceId) {
+          return
+        }
+        if (shouldFetch && chatId) {
+          fetchChatWithMessages(chatId).then((result) => {
+            if (result?.success && result.data) {
+              const fetchedChat = result.data as SelectChat
+              setMyChats((prevChats) => {
+                const exists = prevChats.some((c) => c.id === chatId)
+                if (exists) {
+                  return prevChats.map((c) =>
+                    c.id === chatId ? fetchedChat : c
+                  )
+                } else {
+                  return [fetchedChat, ...prevChats]
+                }
+              })
+              setSwitchedChat(fetchedChat)
+            }
+          })
+        } else if (newChat) {
+          setMyChats((prevChats) => [newChat, ...prevChats])
+          setSwitchedChat(newChat)
+        }
+      }
+    )
+
+    userChannel.bind(
+      "chat-removed",
+      (data: { chatId: number; removedBy: string }) => {
+        const { chatId, removedBy } = data
+        setMyChats((prevChats) =>
+          prevChats.filter((chat) => chat.id !== chatId)
+        )
+        if (currentChat?.id === chatId) {
+          setCurrentChat(null)
+          setMessages([])
+        }
+
+        toast({
+          title: "Removed from group",
+          description: "You have been removed from the group chat",
+          duration: 3000
+        })
+      }
+    )
+
+    return () => {
+      userChannel.unbind_all()
+      pusherClient.unsubscribe(userChannelName)
     }
-    setNewMessage("")
-    await addMessageToChat(newMsg)
+  }, [authUser, setMyChats, currentChat, currentSpace])
+
+  const handleSendMessage = async () => {
+    try {
+      if (!currentChat || !authUser || newMessageLoading) return
+
+      let type: "text" | "image" | "file" = "text"
+      let messageToSend = ""
+
+      if (fileString) {
+        const [file_path, file_name, file_size, file_type] =
+          fileString.split(",")
+
+        if (file_type.startsWith("image/")) type = "image"
+        else type = "file"
+
+        messageToSend = fileString
+      } else {
+        const contentToSend = richMessageContent
+          .replace(
+            /<span[^>]*data-type="mention"[^>]*data-id="([^"]*)"[^>]*data-label="([^"]*)"[^>]*>@[^<]*<\/span>/g,
+            "@[ $2 ]($1)"
+          )
+          .replace(/<p[^>]*>/g, "")
+          .replace(/<\/p>/g, "\n")
+          .replace(/<br\s*\/?>/g, "\n")
+          .trim()
+
+        if (contentToSend === "") return
+
+        messageToSend = contentToSend
+      }
+
+      if (editingMessage) {
+        await updateChatMsg(editingMessage.id, currentChat.id, messageToSend)
+
+        setEditingMessage(null)
+      } else {
+        const newMsg: InsertMessage = {
+          sender_id: authUser.unique_id,
+          chat_id: currentChat.id,
+          message: messageToSend,
+          type
+        }
+
+        await addMessageToChat(newMsg, currentSpace?.id)
+      }
+
+      setRichMessageContent("")
+      setFileString("")
+      setOpenAttachment(false)
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to send message",
+        duration: 3000
+      })
+    }
   }
 
+  const currentMessageContent = richMessageContent
+
+  const handleEmojiSelect = (emoji: string) => {
+    setRichMessageContent((prev) => `${prev}${emoji}`)
+  }
+  const handleDelteMsg = async (msg: SelectMessage) => {
+    try {
+      if (
+        authUser?.unique_id === msg.sender_id &&
+        currentChat?.id === msg.chat_id
+      ) {
+        await deleteMessageFromChat(msg.id, currentChat.id)
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete message.",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleImageClick = (clickedImagePath: string, messageIndex: number) => {
+    if (!messages) return
+
+    // Extract all image URLs from messages, maintaining order
+    const allImages: string[] = []
+    messages.forEach((msg) => {
+      if (msg.type === "image" && msg.is_deleted !== 1) {
+        const parts = msg.message?.split(",") || []
+        if (parts.length >= 1) {
+          const imagePath = parts[0]
+          allImages.push(imagePath)
+        }
+      }
+    })
+
+    // Find the index of the clicked image in the all images array
+    const clickedIndex = allImages.findIndex((img) => img === clickedImagePath)
+
+    setLightboxImages(allImages)
+    setLightboxIndex(clickedIndex >= 0 ? clickedIndex : 0)
+    setLightboxOpen(true)
+  }
+
+  const handleFileUpload = (files: File[]) => {
+    if (!files || files.length === 0) {
+      setRichMessageContent("")
+      setFileString("")
+      return
+    }
+    const file = files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onloadend = async () => {
+      const base64 = reader.result as string
+      try {
+        const res = await uploadAttachment(file.name, base64, file.type)
+        if (res?.success && res.data) {
+          const { fileRecord } = res.data
+          setRichMessageContent(fileRecord.file_name)
+          const fileString = `${fileRecord.file_path},${fileRecord.file_name},${fileRecord.file_size},${fileRecord.file_type}`
+          setFileString(fileString)
+        }
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Something went wrong",
+          duration: 3000
+        })
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleTyping = () => {
+    if (!currentChat || !authUser) return
+
+    if (!typingTimeoutRef.current) {
+      sendTypingIndicator(currentChat.id, true)
+    }
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+
+    typingTimeoutRef.current = setTimeout(() => {
+      sendTypingIndicator(currentChat.id, false)
+      typingTimeoutRef.current = null
+    }, 700)
+  }
+
+  const handleCloseAttachment = () => {
+    setOpenAttachment(false)
+    setRichMessageContent("")
+    setFileString("")
+  }
+  const handleRichEditor = () => {
+    setShowRichEditorToolbar((prev) => !prev)
+    setOpenAttachment(false)
+    setFileString("")
+    setRichMessageContent("")
+  }
+
+  const users = getOnlineUsers()
+
+  const isContactOnline = (() => {
+    const chat = myChats.find((c) => c.id === currentChat?.id)
+    if (!chat) return false
+
+    const otherUser = chat.users?.find(
+      (user) => user.user_id !== authUser?.unique_id
+    )
+
+    return otherUser ? users.has(otherUser.user_id) : false
+  })()
+
   return (
-    <div className={`flex h-full gap-4`}>
-      {/* Contacts list - visible on desktop, hidden on mobile */}
-      <Card className="w-80 flex-shrink-0 border-r hidden md:flex md:flex-col">
-        <CardHeader className="px-3">
-          <CardTitle className="flex items-center justify-between">
-            Chats
-            {canCreate && <CreateNewChat />}
-          </CardTitle>
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search chats..." className="pl-8" />
-          </div>
-        </CardHeader>
-        <CardContent className="flex-1 overflow-hidden p-0">
-          {canView && <ChatsList />}
-        </CardContent>
-      </Card>
-
-      {/* Main chat area */}
-      {canView && (
-        <Card className="flex-1 flex flex-col">
-          <CardHeader className="flex flex-row items-center justify-between py-4">
-            <div className="flex items-center">
-              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                <SheetTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="md:hidden mr-2"
-                  >
-                    <Menu />
-                    <span className="sr-only">Toggle contacts</span>
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-[80%] sm:w-[385px] p-0">
-                  <CardHeader>
-                    <CardTitle>
-                      Chats <CreateNewChat />
-                    </CardTitle>
-                    <div className="relative">
-                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="Search chats..." className="pl-8" />
-                    </div>
-                  </CardHeader>
-                  <ChatsList />
-                </SheetContent>
-              </Sheet>
-              {currentChat ? (
-                <Link
-                  href={
-                    currentChat.is_group
-                      ? "#"
-                      : `/profile/${chatContact?.unique_id}`
-                  }
-                >
-                  <div className="flex ">
-                    {currentChat.is_group ? (
-                      <Avvvatars value={currentChat.name || ""} style="shape" />
-                    ) : (
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage
-                          src={
-                            currentChat && !currentChat.is_group
-                              ? chatContact?.profile_url || undefined
-                              : undefined
-                          }
-                          alt={currentChat.name || ""}
-                        />
-                        <AvatarFallback>
-                          {currentChat && !currentChat.is_group
-                            ? chatContact?.first_name[0]
-                            : currentChat.name}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                    <div className="ml-4 space-y-1">
-                      {!currentChat?.is_group && chatContact ? (
-                        <>
-                          <p className="text-sm font-medium leading-none">{`${chatContact?.first_name} ${chatContact?.last_name}`}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {chatContact?.email}
-                          </p>
-                        </>
-                      ) : null}
-
-                      {currentChat?.is_group ? (
-                        <>
-                          <p className="text-sm font-medium leading-none">
-                            {currentChat.name}
-                          </p>
-                          <p className="text-sm text-muted-foreground truncate">
-                            Group Chat (
-                            {currentChat.users
-                              ?.map(
-                                (user) =>
-                                  `${user.user?.first_name} ${user.user?.last_name}`
-                              )
-                              .join(", ")}
-                            )
-                          </p>
-                        </>
-                      ) : null}
-                    </div>
-                  </div>
-                </Link>
-              ) : null}
+    <>
+      <div className="flex h-[calc(100vh-7rem)] gap-4">
+        {/* Contacts list - visible on desktop, hidden on mobile */}
+        <Card className="w-80 flex-shrink-0 border-r hidden md:flex md:flex-col h-full">
+          <CardHeader className="px-3">
+            <CardTitle className="flex items-center justify-between">
+              Chats
+              {canCreate && <CreateNewChat />}
+            </CardTitle>
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search chats..."
+                className="pl-8"
+              />
             </div>
-
-            {/* calling options for future */}
-
-            {/* <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="icon">
-                <Phone className="h-4 w-4" />
-                <span className="sr-only">Start voice call</span>
-              </Button>
-              <Button variant="ghost" size="icon">
-                <Video className="h-4 w-4" />
-                <span className="sr-only">Start video call</span>
-              </Button>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-4 w-4" />
-                <span className="sr-only">More options</span>
-              </Button>
-            </div> */}
           </CardHeader>
-          {currentChat ? (
-            <>
-              <CardContent className="flex-1 overflow-hidden p-4">
-                {authUser && currentChat && !fetchingChatMessages ? (
-                  <ScrollArea className="h-[calc(100svh-17rem)] pr-4">
-                    {messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={` group mb-4 flex items-center ${
-                          message.sender_id === authUser?.unique_id
-                            ? "justify-end"
-                            : "justify-start"
-                        }
-                            `}
-                      >
-                        {isOnlyEmoji(message.message) ? (
-                          <div className="">
-                            {message.sender_id !== authUser?.unique_id &&
-                            currentChat.is_group ? (
-                              <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">
-                                ~ {message.sender?.first_name}
-                              </p>
-                            ) : null}
-                            <p className="text-4xl">{message.message}</p>
-                          </div>
-                        ) : (
+          <CardContent className="flex-1 overflow-hidden p-0">
+            {canView && (
+              <ChatsList typingUsers={typingUsers} searchQuery={searchQuery} />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Main chat area */}
+        {canView && (
+          <Card className="flex-1 flex flex-col h-full">
+            <CardHeader className="flex flex-row items-center justify-between py-4">
+              <div className="flex items-center flex-1">
+                <Sheet
+                  open={isMobileMenuOpen}
+                  onOpenChange={setIsMobileMenuOpen}
+                >
+                  <SheetTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="md:hidden mr-2"
+                    >
+                      <Menu />
+                      <span className="sr-only">Toggle contacts</span>
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent
+                    side="left"
+                    className="w-[80%] sm:w-[385px] p-0"
+                  >
+                    <CardHeader>
+                      <CardTitle>
+                        Chats <CreateNewChat />
+                      </CardTitle>
+                      <div className="relative">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="Search chats..." className="pl-8" />
+                      </div>
+                    </CardHeader>
+                    <ChatsList
+                      typingUsers={typingUsers}
+                      searchQuery={searchQuery}
+                    />
+                  </SheetContent>
+                </Sheet>
+                {currentChat
+                  ? (() => {
+                      const otherUser = !currentChat.is_group
+                        ? currentChat.users?.find(
+                            (u) => u.user?.unique_id !== authUser?.unique_id
+                          )?.user
+                        : null
+
+                      return (
+                        <div className="flex items-center justify-between w-full">
+                          <Link
+                            href={
+                              currentChat.is_group
+                                ? "#"
+                                : `/profile/${otherUser?.unique_id}`
+                            }
+                          >
+                            <div className="flex">
+                              {/* AVATAR */}
+                              {currentChat.is_group ? (
+                                <Avvvatars
+                                  value={currentChat.name || "Group"}
+                                  style="shape"
+                                />
+                              ) : (
+                                <div className="relative h-9 w-9">
+                                  <Avatar className="h-9 w-9">
+                                    <AvatarImage
+                                      src={otherUser?.profile_url || undefined}
+                                    />
+                                    <AvatarFallback>
+                                      {otherUser?.first_name?.[0]}
+                                    </AvatarFallback>
+                                  </Avatar>
+
+                                  {isContactOnline && (
+                                    <span className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-white rounded-full"></span>
+                                  )}
+                                </div>
+                              )}
+
+                              <div className="ml-4 space-y-1">
+                                {/* PRIVATE CHAT */}
+                                {!currentChat.is_group && otherUser ? (
+                                  <>
+                                    <p className="text-sm font-medium leading-none">
+                                      {otherUser.first_name}{" "}
+                                      {otherUser.last_name}
+                                    </p>
+
+                                    {(() => {
+                                      const role = getUserRole(
+                                        otherUser,
+                                        currentSpace?.id
+                                      )
+
+                                      return role ? (
+                                        <p className="text-sm text-muted-foreground truncate">
+                                          {role}
+                                        </p>
+                                      ) : null
+                                    })()}
+                                  </>
+                                ) : (
+                                  <>
+                                    <p className="text-sm font-medium leading-none">
+                                      {currentChat.name}
+                                    </p>
+
+                                    <p className="text-sm text-muted-foreground truncate">
+                                      {currentChat.users?.length || 0} members
+                                    </p>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </Link>
+
+                          {/* Group Members Button */}
+                          {currentChat.is_group ? (
+                            <CreateNewChat
+                              mode="manage"
+                              currentChat={currentChat}
+                              onSuccess={() => handleChatSwitch(currentChat.id)}
+                              canDelete={canDelete}
+                            />
+                          ) : (
+                            ""
+                          )}
+                        </div>
+                      )
+                    })()
+                  : null}
+              </div>
+            </CardHeader>
+            {currentChat ? (
+              <>
+                <CardContent className="flex-1 min-h-0 p-4 flex flex-col">
+                  {authUser && currentChat && !fetchingChatMessages ? (
+                    <ScrollArea className="flex-1 pr-4 mt-2">
+                      {messages
+                        .filter((msg) => msg.chat_id === currentChat?.id)
+                        .map((message) => (
                           <div
-                            className={`rounded-lg p-3 max-w-[70%] ${
+                            key={message.id}
+                            className={`mb-4 flex items-start ${
                               message.sender_id === authUser?.unique_id
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted"
+                                ? "justify-end"
+                                : "justify-start"
                             }`}
                           >
-                            {message.sender_id !== authUser?.unique_id &&
-                            currentChat.is_group ? (
-                              <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">
-                                ~ {message.sender?.first_name}
-                              </p>
-                            ) : null}
-                            <p className="text-sm">{message.message}</p>
+                            {isOnlyEmoji(message.message) ? (
+                              <div className="">
+                                {message.sender_id !== authUser?.unique_id &&
+                                currentChat.is_group ? (
+                                  <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">
+                                    ~ {message.sender?.first_name}
+                                  </p>
+                                ) : null}
+                                <p className="text-4xl">{message.message}</p>
+                              </div>
+                            ) : (
+                              <div className="flex group gap-2">
+                                <div className=" group flex flex-col">
+                                  {/* MESSAGE BUBBLE */}
+                                  <div
+                                    className={`relative rounded-lg py-2 pl-2 pr-2  flex flex-row gap-2  rich-editor ${
+                                      message.sender_id === authUser?.unique_id
+                                        ? "bg-primary text-primary-foreground group-hover:pr-6"
+                                        : "bg-muted"
+                                    }`}
+                                  >
+                                    <div className="flex flex-col gap-2">
+                                      {message.sender_id !==
+                                        authUser?.unique_id &&
+                                      currentChat.is_group ? (
+                                        <p className="text-sm font-semibold mb-1 text-muted-foreground">
+                                          ~ {message.sender?.first_name}
+                                        </p>
+                                      ) : null}
+
+                                      {message.is_deleted ? (
+                                        <span className="italic text-sm">
+                                          {message.sender_id ===
+                                          authUser?.unique_id
+                                            ? "You deleted this message"
+                                            : "This message was deleted"}
+                                        </span>
+                                      ) : (
+                                        <>
+                                          {message.type === "image" &&
+                                            (() => {
+                                              const parts =
+                                                message.message?.split(",") ||
+                                                []
+                                              if (parts.length !== 4)
+                                                return null
+
+                                              const [file_path, file_name] =
+                                                parts
+                                              return (
+                                                <div
+                                                  className="cursor-pointer hover:opacity-80 transition-opacity"
+                                                  onClick={() =>
+                                                    handleImageClick(
+                                                      file_path,
+                                                      0
+                                                    )
+                                                  }
+                                                  role="button"
+                                                  tabIndex={0}
+                                                  onKeyDown={(e) => {
+                                                    if (
+                                                      e.key === "Enter" ||
+                                                      e.key === " "
+                                                    ) {
+                                                      handleImageClick(
+                                                        file_path,
+                                                        0
+                                                      )
+                                                    }
+                                                  }}
+                                                >
+                                                  <Image
+                                                    src={file_path}
+                                                    alt={file_name || "Image"}
+                                                    className="max-h-96 w-auto object-cover rounded-lg"
+                                                    width={1000}
+                                                    height={1000}
+                                                  />
+                                                </div>
+                                              )
+                                            })()}
+
+                                          {message.type === "file" &&
+                                            (() => {
+                                              const parts =
+                                                message.message?.split(",") ||
+                                                []
+                                              if (parts.length !== 4)
+                                                return null
+
+                                              const [
+                                                fileUrl,
+                                                fileName,
+                                                fileSize
+                                              ] = parts
+
+                                              return (
+                                                <Link
+                                                  href={fileUrl}
+                                                  target="_blank"
+                                                >
+                                                  <div
+                                                    className={`flex items-center ${
+                                                      message.sender_id ===
+                                                      authUser?.unique_id
+                                                        ? "bg-primary text-primary-foreground"
+                                                        : "bg-muted text-white"
+                                                    } space-x-2 p-2 rounded-lg`}
+                                                  >
+                                                    <FileIcon className="h-8 w-8" />
+                                                    <span className="font-medium">
+                                                      {fileName}
+                                                    </span>
+                                                    <span className="text-xs">
+                                                      {formatFileSize(
+                                                        Number(fileSize)
+                                                      )}
+                                                    </span>
+                                                  </div>
+                                                </Link>
+                                              )
+                                            })()}
+
+                                          {message.type === "text" && (
+                                            <ExpandableText
+                                              content={message.message}
+                                              lines={5}
+                                              className="mr-1"
+                                            />
+                                          )}
+                                        </>
+                                      )}
+                                    </div>
+
+                                    {/* DROPDOWN TOP RIGHT */}
+                                    {!message.is_deleted &&
+                                      message.sender_id ===
+                                        authUser?.unique_id && (
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <ChevronDown className="h-4 w-4 absolute top-2 right-2 cursor-pointer rounded opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200  " />
+                                          </DropdownMenuTrigger>
+
+                                          <DropdownMenuContent
+                                            align="end"
+                                            className="w-40"
+                                          >
+                                            {message.type === "text" && (
+                                              <DropdownMenuItem
+                                                onClick={() => {
+                                                  setEditingMessage(message)
+                                                  setRichMessageContent(
+                                                    message.message
+                                                  )
+                                                }}
+                                              >
+                                                <Edit className="mr-2 h-4 w-4" />{" "}
+                                                Edit
+                                              </DropdownMenuItem>
+                                            )}
+
+                                            <DropdownMenuItem
+                                              onClick={() =>
+                                                handleDelteMsg(message)
+                                              }
+                                              className="text-red-600"
+                                            >
+                                              <Trash2 className="mr-2 h-4 w-4" />{" "}
+                                              Delete
+                                            </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      )}
+                                  </div>
+                                </div>
+
+                                {/* TIME */}
+                                <div className="text-xs text-right hidden group-hover:block min-w-fit">
+                                  <p>
+                                    {moment
+                                      .utc(message.created_at)
+                                      .local()
+                                      .format("hh:mm A")}
+                                  </p>
+                                  <p>
+                                    {moment
+                                      .utc(message.created_at)
+                                      .local()
+                                      .fromNow()}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        )}
-                        <p className="text-xs ml-2 text-right hidden group-hover:block">
-                          {moment
-                            .utc(message.created_at)
-                            .local()
-                            .format("hh:mm A")}
-                        </p>
-                      </div>
-                    ))}
-                    <div ref={messagesEndRef} />
-                  </ScrollArea>
-                ) : (
-                  <div className="flex h-full items-center justify-center">
-                    <Loader />
-                  </div>
-                )}
-              </CardContent>
-              <CardFooter className="p-4">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    handleSendMessage()
-                  }}
-                  onChange={(e) => {
-                    e.preventDefault()
-                  }}
-                  className="flex w-full space-x-2"
-                >
-                  <Input
-                    placeholder="Type a message..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    className="flex-1"
-                    // type="text"
-                  />
-                  <Popover>
-                    <PopoverTrigger>
-                      <SmileIcon />
-                    </PopoverTrigger>
-                    <PopoverContent side="top" align="end" className="p-0">
-                      <EmojiPicker
-                        className="h-[342px]"
-                        onEmojiSelect={({ emoji }: any) =>
-                          setNewMessage(`${newMessage}${emoji}`)
-                        }
-                      >
-                        <EmojiPickerSearch />
-                        <EmojiPickerContent />
-                        <EmojiPickerFooter />
-                      </EmojiPicker>
-                    </PopoverContent>
-                  </Popover>
-                  <Button type="submit" size="icon">
-                    {newMessageLoading ? (
+                        ))}
+                      <div ref={messagesEndRef} />
+                    </ScrollArea>
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
                       <Loader />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
-                </form>
-              </CardFooter>
-            </>
-          ) : null}
-        </Card>
-      )}
-    </div>
+                    </div>
+                  )}
+                </CardContent>
+                <CardFooter className="p-4 relative">
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      handleSendMessage()
+                    }}
+                    className="flex w-full space-x-2 items-end"
+                  >
+                    <div className="flex-1" key={currentChat?.id || "no-chat"}>
+                      {openAttachment ? (
+                        <div className=" flex flex-col">
+                          <FileUpload
+                            accept="image/*,application/*"
+                            onChange={handleFileUpload}
+                            showClose={true}
+                            onClose={handleCloseAttachment}
+                          />
+                        </div>
+                      ) : (
+                        <RichTextEditor
+                          value={richMessageContent}
+                          onChange={(val) => {
+                            setRichMessageContent(val)
+                            handleTyping()
+                          }}
+                          image_uploading={true}
+                          entity="chats"
+                          showMentions={
+                            currentChat?.is_group === 1 &&
+                            availableUsers.length > 0
+                          }
+                          mentionUsers={availableUsers}
+                          showToolbar={showRichEditorToolbar}
+                          minHeight={`${showRichEditorToolbar ? "100px" : "30px"}`}
+                          limit={5000}
+                          editable={!newMessageLoading}
+                          onEnterPress={handleSendMessage}
+                          onMentionStateChange={setIsMentionActive}
+                          showFooter={false}
+                          isScrollAble={true}
+                          placeholder="Type a message"
+                        />
+                      )}
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      title={
+                        showRichEditorToolbar
+                          ? "Hide Formatting Menu (Enter sends)"
+                          : "Show Formatting Menu (Enter adds line)"
+                      }
+                      onClick={handleRichEditor}
+                      className={`p-1 ${
+                        showRichEditorToolbar
+                          ? "bg-secondary"
+                          : "hover:bg-secondary/50"
+                      }`}
+                    >
+                      <PencilLine className="h-5 w-5" />
+                      <span className="sr-only">Toggle Formatting Menu</span>
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      disabled={openAttachment}
+                      onClick={() => setOpenAttachment(true)}
+                      title="Attach file"
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          title="Insert Emoji"
+                          className="p-1"
+                        >
+                          <SmileIcon className="h-5 w-5" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent side="top" align="end" className="p-0">
+                        <EmojiPicker
+                          className="h-[342px]"
+                          onEmojiSelect={({ emoji }: any) =>
+                            handleEmojiSelect(emoji)
+                          }
+                        >
+                          <EmojiPickerSearch />
+                          <EmojiPickerContent />
+                          <EmojiPickerFooter />
+                        </EmojiPicker>
+                      </PopoverContent>
+                    </Popover>
+
+                    <Button
+                      type="submit"
+                      size="icon"
+                      disabled={
+                        newMessageLoading || currentMessageContent.trim() === ""
+                      }
+                    >
+                      {newMessageLoading ? (
+                        <Loader />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </form>
+                </CardFooter>
+              </>
+            ) : null}
+          </Card>
+        )}
+      </div>
+
+      {/* Image Lightbox */}
+      <ImageLightbox
+        open={lightboxOpen}
+        images={lightboxImages}
+        index={lightboxIndex}
+        onClose={() => setLightboxOpen(false)}
+        showDownload={true}
+      />
+    </>
   )
 }

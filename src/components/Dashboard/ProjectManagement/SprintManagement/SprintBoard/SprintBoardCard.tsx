@@ -13,77 +13,203 @@ import BoardColumn from "./BoardColumn"
 import { SelectSprint, SelectTask } from "@/src/db/schema"
 import { useAtomValue } from "jotai"
 import { projectStore } from "@/src/store/project/projectStore"
-import { useEffect, useState } from "react"
+import { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
-import { TaskModal } from "../../Task/components/TaskModal"
-import TaskFilters from "../../BacklogManagement/TaskFilters"
+import {
+  GetSprintTasksAction,
+  UpdateTaskAction
+} from "@/src/server-actions/Tasks/Task"
+import { TaskFiltersType } from "../../types/taskFilters.type"
+import TaskFilters from "../../TaskFilter/TaskFilters"
+import {
+  DndContext,
+  closestCenter,
+  DragEndEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay
+} from "@dnd-kit/core"
+import { createPortal } from "react-dom"
+import { toast } from "@/src/hooks/use-toast"
+import { Skeleton } from "@/src/components/ui/skeleton"
+import { TaskType } from "../../constants/projectManagment"
 
 interface Props {
   sprint: SelectSprint
+  tasks: SelectTask[]
+  isTaskModalOpen: boolean
+  setIsTaskModalOpen: Dispatch<SetStateAction<boolean>>
+  selectedTask: SelectTask | null
+  setSelectedTask: Dispatch<SetStateAction<SelectTask | null>>
+  setTasks: Dispatch<SetStateAction<SelectTask[]>>
 }
 
-function SprintBoardCard({ sprint }: Props) {
+function SprintBoardCard({
+  sprint,
+  tasks,
+  isTaskModalOpen,
+  setIsTaskModalOpen,
+  selectedTask,
+  setSelectedTask,
+  setTasks
+}: Props) {
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
-  const [tasks, setTasks] = useState<SelectTask[]>([])
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
-  const [selectedTask, setSelectedTask] = useState<SelectTask | null>()
-  const [filters, setFilters] = useState<{
-    assignee?: string | null
-    priority?: string
-    type?: string
-    status?: string
-  }>({})
+  const [filters, setFilters] = useState<TaskFiltersType | null>(null)
+  const [activeTask, setActiveTask] = useState<SelectTask | null>(null)
 
   const [getTaskLoading, , , GetSPrintTask] =
     useServerAction(GetSprintTasksAction)
 
+  useEffect(() => {
+    if (!sprint.id || !filters) return
+
+    const filtered = tasks.filter((t) => {
+      return (
+        t.sprint_id === sprint.id &&
+        (!filters.priority?.length ||
+          filters.priority.includes(t.task_priority)) &&
+        (!filters.type?.length || filters.type.includes(t.task_type)) &&
+        (!filters.status?.length ||
+          filters.status.includes(t.status_id || "")) &&
+        (!filters.assignee?.length ||
+          filters.assignee.includes(t.assign_to || "")) &&
+        (!filters.creator?.length ||
+          filters.creator.includes(t.created_by || ""))
+      )
+    })
+
+    setTasks(filtered)
+  }, [tasks, sprint.id, filters])
   useEffect(() => {
     const getTask = async () => {
       if (sprint) {
         const tasks = await GetSPrintTask({
           project_id: sprint.projectId,
           sprint_id: sprint.id,
-          priority: filters.priority,
-          type: filters.type,
-          status: filters.status,
-          assignee: filters.assignee
+          priority: filters?.priority,
+          type: filters?.type,
+          status: filters?.status,
+          assignee: filters?.assignee,
+          creator: filters?.creator,
+          excludedTypes: [TaskType.EPIC]
         })
         if (tasks?.success && tasks.data) {
           setTasks(tasks.data.tasks)
         }
       }
     }
-    getTask()
-  }, [sprint, filters.assignee, filters.priority, filters.type, filters.status])
+
+    if (filters) {
+      getTask()
+    }
+  }, [
+    sprint,
+    filters?.assignee,
+    filters?.priority,
+    filters?.type,
+    filters?.status,
+    filters?.creator
+  ])
 
   function handleOnTaskClick(task: SelectTask) {
     setSelectedTask(task)
+    setIsTaskModalOpen(true)
   }
 
-  useEffect(() => {
-    if (!isTaskModalOpen) {
-      setSelectedTask(null)
-    }
-  }, [isTaskModalOpen])
-
-  useEffect(() => {
-    if (selectedTask) {
-      setIsTaskModalOpen(true)
-    }
-  }, [selectedTask])
-
-  function HandleTaskFilters(filters: {
-    assignee?: string | null
-    priority?: string
-    type?: string
-    status?: string
-  }) {
+  function HandleTaskFilters(filters: TaskFiltersType) {
     setFilters(filters)
   }
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 15
+      }
+    })
+  )
+
+  function handleDragStart(event: any) {
+    const taskId = event.active.id
+    const task = tasks.find((t) => t.id === taskId)
+    setActiveTask(task || null)
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over) {
+      setActiveTask(null)
+      return
+    }
+
+    const taskId = active.id
+    const overStatusId = over.data?.current?.statusId
+
+    let statusChanged = false
+    let movedParent: any = null
+    let prevStatusId: string | null = null
+
+    setTasks((prev) => {
+      return prev.map((task) => {
+        // update the dragged task’s status
+        if (task.id === taskId && task.status_id !== overStatusId) {
+          prevStatusId = task.status_id
+          statusChanged = true
+          movedParent = { ...task, status_id: overStatusId }
+          return movedParent
+        }
+
+        // if this task is a child of the moved parent → update its embedded parentTask reference
+        if (task.parent_task_id === taskId && task.parentTask) {
+          return {
+            ...task,
+            parentTask: {
+              ...task.parentTask,
+              status_id: overStatusId
+            }
+          }
+        }
+
+        return task
+      })
+    })
+
+    if (statusChanged) {
+      try {
+        const res = await UpdateTaskAction(taskId as string, {
+          status_id: overStatusId as string
+        })
+
+        if (res?.success && res.data) {
+          toast({
+            title: `Task #${res.data.task_num} status updated successfully`,
+            duration: 2000
+          })
+        }
+      } catch (error) {
+        setTasks((prev) => {
+          return prev.map((task) => {
+            if (task.id === taskId && prevStatusId) {
+              return { ...task, status_id: prevStatusId }
+            }
+
+            return task
+          })
+        })
+
+        toast({
+          title: "Failed to update task  status",
+          variant: "destructive",
+          duration: 2000
+        })
+      }
+    }
+
+    setActiveTask(null)
+  }
+
   return (
-    <>
+    <div className="px-6">
       <Card key={sprint.id} className="mb-6 ">
         <CardHeader className="pb-2">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
@@ -107,36 +233,42 @@ function SprintBoardCard({ sprint }: Props) {
           <SprintProgressBar tasks={tasks} statuses={projectStatusList} />
         </CardHeader>
         <CardContent>
-          <div className="flex overflow-x-auto  ">
-            <div className="flex justify-between gap-2 w-full">
-              {projectStatusList.map((status) => (
-                <BoardColumn
-                  key={status.id}
-                  sprint={sprint}
-                  status={status}
-                  tasks={tasks}
-                  onTaskClick={handleOnTaskClick}
-                  setTasks={setTasks}
-                />
-              ))}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="flex overflow-x-auto  ">
+              <div className="flex justify-between gap-2 w-full">
+                {projectStatusList.map((status) => (
+                  <BoardColumn
+                    key={status.id}
+                    sprint={sprint}
+                    status={status}
+                    tasks={tasks}
+                    onTaskClick={handleOnTaskClick}
+                    setTasks={setTasks}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+
+            {createPortal(
+              <DragOverlay>
+                {activeTask ? (
+                  <Skeleton className="h-[100px] w-full rounded-lg" />
+                ) : null}
+              </DragOverlay>,
+              document.body
+            )}
+          </DndContext>
         </CardContent>
         <CardFooter>
           <SprintStatus />
         </CardFooter>
       </Card>
-
-      <TaskModal
-        isTaskModelOpen={isTaskModalOpen}
-        setIsTaskModelOpen={setIsTaskModalOpen}
-        selectedTask={selectedTask || undefined}
-        onUpdateComplete={(task: SelectTask) => {
-          setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
-          setSelectedTask(task)
-        }}
-      />
-    </>
+    </div>
   )
 }
 

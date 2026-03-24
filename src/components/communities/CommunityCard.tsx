@@ -21,7 +21,8 @@ import {
   Globe,
   User,
   PlusCircle,
-  ArrowRight
+  ArrowRight,
+  LogOut
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -34,12 +35,30 @@ import { SelectCommunity } from "@/src/db/schema"
 import Link from "next/link"
 import { getInitials } from "@/src/utils/helpers"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import { useAtomValue } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
-import { AttachCommunityUserAction } from "@/src/server-actions/Community/Community"
+import {
+  AttachCommunityUserAction,
+  LeaveCommunityAction
+} from "@/src/server-actions/Community/Community"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
-
+import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
+import clsx from "clsx"
+import { communityStore } from "@/src/store/community/communityStore"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "../ui/alert-dialog"
+import { useState } from "react"
+import "../../app/(dashboard)/style.css"
+import Loader from "../common/Loader/Loader"
 interface CommunityCardProps {
   community: SelectCommunity
   showStar?: boolean
@@ -60,14 +79,21 @@ export default function CommunityCard({
     "COMMUNITY",
     community.id
   )
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState<boolean>(false)
+  const encodedCommunitySlug = encodeURIComponent(community.slug)
   const { toast } = useToast()
   const currentUserId = useAtomValue(userStore.AuthUser)?.unique_id
   const superAdmin = useAtomValue(userStore.SuperAdmin)
   const isCurrentUserMember = community?.communityMembers?.some(
     (member) => member.user_id === currentUserId
   )
+  const setRefreshCommunity = useSetAtom(
+    communityStore.refreshCommunitiesTriggerAtom
+  )
   const [joinLoading, joinResult, joinError, attachCommunityUser] =
     useServerAction(AttachCommunityUserAction)
+  const [leaveLoading, leaveResult, leaveError, leaveCommunity] =
+    useServerAction(LeaveCommunityAction)
 
   const allowAction = permissionChecker
     ? permissionChecker?.canAccess("community.allow.action")
@@ -83,23 +109,54 @@ export default function CommunityCard({
     : false
 
   const handleJoinCommunity = async () => {
-    if (community.id && currentUserId) {
+    if (!community.id || !currentUserId) return
+
+    try {
       const res = await attachCommunityUser(community.id, currentUserId)
+
       if (res?.success) {
-        onJoin()
+        setRefreshCommunity((pre) => !pre)
         toast({
           title: "Community Joined",
           description: "You have successfully joined the community!",
           duration: 3000
         })
-      } else {
-        console.error("Failed to join community:", res?.error)
       }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong while joining the community.",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleLeaveCommunity = async () => {
+    if (!community.id || !currentUserId) return
+
+    try {
+      const res = await leaveCommunity(community.id, currentUserId)
+
+      if (res?.success) {
+        setRefreshCommunity((pre) => !pre)
+
+        toast({
+          title: "Left community",
+          description: "You have left the community, its channels, and spaces.",
+          duration: 3000
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong while leaving the community.",
+        variant: "destructive"
+      })
     }
   }
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="flex flex-col justify-between hover:shadow-md transition-shadow overflow-hidden">
       <CardHeader className="pb-3">
         <div className="flex items-start gap-4">
           <Avatar className="h-16 w-16 flex-shrink-0 border-2 border-gray-200 dark:border-gray-700">
@@ -108,23 +165,18 @@ export default function CommunityCard({
               {getInitials(community.title)}
             </AvatarFallback>
           </Avatar>
-          <div className="flex-1 space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              {" "}
-              {/* Added justify-between for spacing */}
-              <CardTitle className="text-xl font-bold">
+          <div className="flex-1 space-y-3 min-w-0 max-w-full overflow-hidden">
+            <div className="flex items-center justify-between gap-2 min-w-0">
+              <CardTitle className="text-xl font-bold truncate max-w-[calc(100%-40px)]">
                 {community.title}
               </CardTitle>
-              {/* Right-aligned content in the header */}
+
               {(allowAction || community.type === "public") && (
-                <div className="flex items-center gap-2">
-                  {/* Only show if canManage is true AND relevant callbacks are provided */}
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      {/* Use shadcn/ui Button as trigger for consistent styling and accessibility */}
                       <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreVertical className="h-4 w-4" />{" "}
-                        {/* Changed from MoreHorizontal to MoreVertical */}
+                        <MoreVertical className="h-4 w-4" />
                         <span className="sr-only">Community actions</span>
                       </Button>
                     </DropdownMenuTrigger>
@@ -136,19 +188,30 @@ export default function CommunityCard({
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuItem asChild>
-                        <Link href={`/communities/${community.slug}/users`}>
+                        <Link
+                          href={`/communities/${encodedCommunitySlug}/users`}
+                        >
                           <User className="mr-2 h-4 w-4" />
-                          User
+                          Users
                         </Link>
                       </DropdownMenuItem>
                       {canView && (
                         <DropdownMenuItem asChild>
-                          <Link href={`/communities/${community.slug}`}>
+                          <Link href={`/communities/${encodedCommunitySlug}`}>
                             <Eye className="mr-2 h-4 w-4" />
                             Detail
                           </Link>
                         </DropdownMenuItem>
                       )}
+                      <CreateShortcut
+                        type="community"
+                        entity={{
+                          slug: community.slug ?? "",
+                          title: `${community.title}`,
+                          entity_id: community.id ?? ""
+                        }}
+                        ctaType="menuItem"
+                      />
                       {canDelete && (
                         <DropdownMenuItem
                           onClick={() => onDelete(community)}
@@ -162,7 +225,7 @@ export default function CommunityCard({
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
               <Badge variant="outline">{community?.category?.name}</Badge>
               {community.type === "public" ? (
                 <Globe className="h-4 w-4 text-green-500" />
@@ -177,41 +240,84 @@ export default function CommunityCard({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <CardDescription className="text-sm leading-relaxed">
-          {community.description}
-        </CardDescription>
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
+
+      <CardContent className="flex flex-col justify-between flex-grow space-y-4">
+        {/* Upper: Description + Channels */}
+        <div>
+          <CardDescription className="text-sm leading-relaxed line-clamp-3">
+            {community.description}
+          </CardDescription>
+          <div className="flex items-center gap-1 mt-3 text-muted-foreground text-sm">
             <Hash className="h-4 w-4" />
-            <span>{community.channels?.length || 0} channels</span>
-          </div>
-          <div className="flex items-center gap-1">
-            {!superAdmin && (
-              <Button
-                variant="outline"
-                onClick={handleJoinCommunity}
-                disabled={isCurrentUserMember || joinLoading}
-                className={
-                  isCurrentUserMember ? "text-gray-500 cursor-not-allowed" : ""
-                }
-              >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                {joinLoading
-                  ? "Joining..."
-                  : isCurrentUserMember
-                    ? "Joined"
-                    : "Join"}
-              </Button>
-            )}
-            <Link href={`/communities/${community.slug}`}>
-              <Button variant="outline">
-                View <ArrowRight />
-              </Button>
-            </Link>
+            <span>
+              {`${community.channels?.length || 0} ${(community.channels?.length || 0) === 1 ? "channel" : "channels"}`}
+            </span>
           </div>
         </div>
+        {/* Bottom: Buttons */}
+        <div className="flex justify-end flex-wrap items-center gap-2 mt-auto">
+          {((!superAdmin && community.type === "public") ||
+            (!superAdmin && isCurrentUserMember)) && (
+            <>
+              {!currentUserId ? (
+                <Button variant="outline" disabled>
+                  <Loader />
+                </Button>
+              ) : !isCurrentUserMember ? (
+                <Button
+                  variant="outline"
+                  onClick={handleJoinCommunity}
+                  disabled={joinLoading}
+                  loading={joinLoading}
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  {joinLoading ? "Joining..." : "Join"}
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() => setLeaveDialogOpen(true)}
+                  disabled={leaveLoading}
+                  loading={leaveLoading}
+                  className={`leave-btn${leaveLoading ? " disabled" : ""}  `}
+                >
+                  <LogOut className=" h-4 w-4" />
+                  {leaveLoading ? "Leaving..." : "Leave"}
+                </Button>
+              )}
+            </>
+          )}
+          <Link href={`/communities/${encodedCommunitySlug}`}>
+            <Button variant="outline">
+              View <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
       </CardContent>
+
+      <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave Community?</AlertDialogTitle>
+            <AlertDialogDescription>
+              By leaving this, you will also be removed from related channels
+              and spaces.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              loading={leaveLoading}
+              onClick={async () => {
+                await handleLeaveCommunity()
+                setLeaveDialogOpen(false)
+              }}
+            >
+              Leave Community
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   )
 }

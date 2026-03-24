@@ -7,8 +7,9 @@ import { ScrollArea } from "@/src/components/ui/scroll-area"
 import { GetSpaceById } from "@/src/db/data-access/spaces/query"
 import { getProjectUsers } from "@/src/db/data-access/project-management/query"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import Overlay from "@/src/components/common/Overlay/OverLay"
 import { GetSpaceByIdAction } from "@/src/server-actions/Space/Space"
+import { isSuperAdmin } from "@/src/utils/helpers"
+import PrivatePage from "@/src/components/common/Overlay/PrivatePage"
 
 interface Props {
   children: ReactNode
@@ -21,47 +22,49 @@ async function layout({ children, params }: Props) {
 
   const currProject = await GetProjectByIdAction(projectId)
 
-  if (!currProject.success || !currProject.data) {
+  if (!currProject.success || !currProject.data || currProject.error) {
     return <NotFound />
   }
+
   const currentProject = currProject.data
 
-  const currSpace = await GetSpaceById(currentProject.space_id)
+  if (!currentProject.space_id) {
+    return <NotFound />
+  }
+
+  const currSpace = await GetSpaceByIdAction(currentProject.space_id)
 
   const projectStatusList = await GetTaskStatusAction(projectId)
 
-  const space = await GetSpaceByIdAction(currentProject.space_id)
-
   const projectUser = await getProjectUsers(projectId)
 
-  const currUser = await AuthUserAction()
+  const authUser = await AuthUserAction()
+  const isAdmin = await isSuperAdmin(authUser)
 
-  const userRole = projectUser.find(
-    (user) => user.user_id === currUser.unique_id
-  )
+  const userRole = authUser.unique_id
+    ? projectUser.find((user) => user.user_id === authUser.unique_id)
+    : undefined
 
   return (
-    <div className="grid grid-cols-12 w-full h-[80vh] overflow-hidden">
-      {userRole ? (
+    <div className="grid grid-cols-12 w-full h-[calc(100vh-6rem)] overflow-hidden">
+      {userRole || isAdmin ? (
         <>
           <div className="col-span-2 border-r p-2 pl-0 overflow-y-auto">
             <ProjectSidebar
               currProject={currentProject}
               statusList={projectStatusList.data ?? []}
-              currSpace={currSpace}
+              currSpace={currSpace.data}
             />
           </div>
 
           <div className="col-span-10 overflow-hidden">
-            <div className="grid grid-cols-1 h-full">
-              <ScrollArea className="min-h-[80vh] p-4">{children}</ScrollArea>
-            </div>
+            <div className="grid grid-cols-1 h-full">{children}</div>
           </div>
         </>
       ) : (
-        <Overlay
+        <PrivatePage
           page="project"
-          pageHref={`/channels/${space.data?.channel.channel_slug}/spaces/${space.data?.space_slug}?page-type=project-management`}
+          pageHref={`/channels/${currSpace.data?.channel.channel_slug}/spaces/${currSpace.data?.space_slug}?page-type=project-management`}
         />
       )}
     </div>

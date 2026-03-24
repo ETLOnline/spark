@@ -1,0 +1,136 @@
+/* Headings */
+.rich-editor h1 {
+  font-size: 32px;
+  /* 36px */
+  font-weight: bold;
+  margin: 0.5em 0 0.5em 0;
+  /* Top and bottom spacing */
+}
+
+.rich-editor h2 {
+  font-size: 24px;
+  /* 30px */
+  font-weight: bold;
+  margin: 0.4em 0 0.5em 0;
+}
+
+.rich-editor h3 {
+  font-size: 20px;
+  /* 24px */
+  font-weight: bold;
+  margin: 0.35em 0 0.5em 0;
+}
+
+.rich-editor p {
+  font-size: 16px;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.rich-editor ul {
+  list-style-type: disc;
+  padding-left: 40px;
+  margin: 1em 0;
+}
+
+.rich-editor ul li {
+  margin: 0.5em 0;
+}
+
+.rich-editor ol {
+  list-style-type: decimal;
+  padding-left: 40px;
+  margin: 1em 0;
+}
+
+.rich-editor ol li {
+  margin: 0.5em 0;
+}
+
+.rich-editor ul ul {
+  list-style-type: circle;
+}
+
+.rich-editor ol ol {
+  list-style-type: lower-alpha;
+}
+
+.rich-editor li {
+  line-height: 1.6;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.rich-editor a {
+  color: #2563eb;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    text-decoration 0.2s ease;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.rich-editor a:hover {
+  color: #7c3aed;
+  text-decoration: underline;
+}
+
+.rich-editor img {
+  display: inline-block;
+  margin: 5px;
+  max-width: auto;
+  height: auto;
+}
+
+.tiptap-image-wrapper {
+  display: inline-block !important;
+  width: auto;
+  max-width: 250px;
+  margin: 5px;
+  vertical-align: top;
+}
+
+.tiptap-image-wrapper img {
+  width: 100% !important;
+  height: 200px !important;
+  margin: 0px;
+  object-fit: cover;
+  border-radius: 8px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.rich-editor img:not(.tiptap-image-wrapper img) {
+  display: inline-block;
+  max-width: 250px;
+  height: 200px;
+  object-fit: cover;
+}
+.tiptap-image-wrapper img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.rich-editor {
+  white-space: pre-wrap;
+  /* keeps spaces + line breaks */
+  word-break: break-word;
+}
+
+.rich-editor blockquote {
+  border-left: 2px solid #666a72;
+  padding: 4px 3px;
+}
+
+/* TipTap Placeholder */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  pointer-events: none;
+  float: left;
+  height: 0;
+}

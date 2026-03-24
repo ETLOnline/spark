@@ -3,6 +3,12 @@ import { ChevronLeft } from "lucide-react"
 import { useAtom } from "jotai"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import React from "react"
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider
+} from "@/src/components/ui/tooltip"
 
 type DirNavProps = {
   navigateToFolder: (path: string) => Promise<void>
@@ -21,25 +27,32 @@ const DirNav: React.FC<DirNavProps> = ({ navigateToFolder }) => {
         return (
           <div key={segmentPath} className="flex items-center">
             <span className="mx-1 text-muted-foreground">/</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="px-1 h-7"
-              onClick={() => navigateToFolder(segmentPath)}
-            >
-              {segment}
-            </Button>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  // limit width and apply ellipsis
+                  className="px-1 h-7 max-w-[200px] truncate text-left"
+                  onClick={() => navigateToFolder(segmentPath)}
+                >
+                  <span className="truncate block">{segment}</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">{segment}</TooltipContent>
+            </Tooltip>
           </div>
         )
       })
 
-  const navigateUp = () => {
+  const navigateUp = async () => {
     if (currentPath === "/") return
 
     const pathParts = currentPath.split("/")
     pathParts.pop()
     const parentPath = pathParts.join("/") || "/"
-    setCurrentPath(parentPath)
+    await navigateToFolder(parentPath)
   }
 
   return (
@@ -56,7 +69,7 @@ const DirNav: React.FC<DirNavProps> = ({ navigateToFolder }) => {
             <ChevronLeft className="h-4 w-4" />
           </Button>
         )}
-        <div className="flex items-center text-sm">
+        <div className="flex items-center text-sm overflow-hidden whitespace-nowrap">
           <Button
             variant="ghost"
             size="sm"

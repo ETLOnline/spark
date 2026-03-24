@@ -6,7 +6,7 @@ import { Label } from "@/src/components/ui/label"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Dispatch, SetStateAction, useEffect } from "react"
+import { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { SelectProfile, SelectUser } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
@@ -22,23 +22,45 @@ interface StepTwoProps {
 
 const userQualificationSchema = z
   .object({
-    degree: z.string().min(1, "Required"),
-    institute: z.string().min(1, "Required"),
+    degree: z
+      .string()
+      .min(1, "Degree name required")
+      .max(100, "Maximum 100 characters"),
+    institute: z
+      .string()
+      .min(1, "Institute name required")
+      .max(100, "Maximum 100 characters"),
+
     duration_from: z
       .string()
+      .min(4, "Start year required")
       .refine((val) => moment(val, "YYYY", true).isValid(), {
         message: "Invalid start year"
+      })
+      .refine((val) => moment(val, "YYYY", true).year() >= 1990, {
+        message: "Start year must be 1990 or later"
+      })
+      .refine((val) => moment(val, "YYYY", true).year() <= moment().year(), {
+        message: "Start Year cannot be in the future"
       }),
+
     duration_to: z
       .string()
+      .min(4, "End year required")
       .refine((val) => moment(val, "YYYY", true).isValid(), {
         message: "Invalid end year"
       })
   })
   .refine(
     (data) => {
-      const start = moment(data.duration_from)
-      const end = moment(data.duration_to)
+      if (
+        !data.duration_to ||
+        data.duration_to.trim() === "" ||
+        !moment(data.duration_to, "YYYY", true).isValid()
+      )
+        return true
+      const start = moment(data.duration_from, "YYYY", true)
+      const end = moment(data.duration_to, "YYYY", true)
       return start.isBefore(end)
     },
     {
@@ -46,11 +68,24 @@ const userQualificationSchema = z
       path: ["duration_from"]
     }
   )
+  .refine(
+    (data) => {
+      const start = moment(data.duration_from)
+      const end = moment(data.duration_to)
+      const diff = end.diff(start, "years")
+      return diff >= 1 && diff <= 10
+    },
+    {
+      message: "Degree duration must be between 1 and 10 years",
+      path: ["duration_to"]
+    }
+  )
 
 export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
   const [submitDataLoading, , , submitUserProfileData] = useServerAction(
     updateUserProfileAction
   )
+  const [isTransitioning, setIsTransitioning] = useState(false)
 
   const form = useForm({
     resolver: zodResolver(userQualificationSchema)
@@ -77,6 +112,8 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
 
   async function handleSubmit(data: any) {
     try {
+      setIsTransitioning(true)
+
       if (user) {
         const payload = {
           ...data,
@@ -96,6 +133,8 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
             setStep((prev) => prev + 1)
             window.scrollTo(0, 0)
           }
+        } else {
+          setIsTransitioning(false)
         }
       }
     } catch {
@@ -104,13 +143,25 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
         variant: "destructive",
         duration: 2000
       })
+      setIsTransitioning(false)
     }
   }
+
+  const startYear = form.watch("duration_from")
+  const endYear = form.watch("duration_to")
+  const degree = form.watch("degree")
+  const institute = form.watch("institute")
+
+  useEffect(() => {
+    if (degree || institute || startYear || endYear) {
+      form.trigger(["degree", "institute", "duration_from", "duration_to"])
+    }
+  }, [startYear, endYear, form, degree, institute])
 
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold">Education & Qualifications</h3>
+        <h3 className="text-lg font-semibold">Education</h3>
         <p className="text-sm text-muted-foreground">
           Add your educational background
         </p>
@@ -121,7 +172,7 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
           <div className="grid gap-4">
             <div className="space-y-2">
               <Label htmlFor={`degree`} className="font-semibold">
-                Degree/Qualification
+                Degree
               </Label>
               <Controller
                 name="degree"
@@ -211,7 +262,11 @@ export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
               >
                 Previous
               </Button>
-              <Button type="submit" loading={submitDataLoading}>
+              <Button
+                type="submit"
+                loading={submitDataLoading}
+                disabled={isTransitioning}
+              >
                 Next
               </Button>
             </div>

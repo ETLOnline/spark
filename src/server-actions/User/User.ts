@@ -1,9 +1,16 @@
 "use server"
 
 import {
+  GetMentors,
+  GetRandomUsers,
   getUserContacts,
+  GetUserFilters,
   GetUserProfileData,
-  UpdateUserProfilePicture
+  GetFeaturedUsers,
+  UpdateUserName,
+  UpdateUserProfilePicture,
+  UpdateCoverImage,
+  getSuperAdmins
 } from "@/src/db/data-access/user/query"
 import { CreateServerAction } from ".."
 import { AddUserTag } from "@/src/db/data-access/tag/query"
@@ -25,7 +32,23 @@ export const SaveUserProfileAction = CreateServerAction(
   true,
   async (profileData: ProfileData) => {
     try {
+      const clerk = await clerkClient()
+      const { unique_id, external_auth_id } = await AuthUserAction()
+
       const userProfile = await SearchUserProfile(profileData.userId)
+
+      if (profileData.first_name && profileData.last_name) {
+        const UpdateUserData = await UpdateUserName(
+          profileData.userId,
+          profileData.first_name,
+          profileData.last_name
+        )
+
+        await clerk.users.updateUser(external_auth_id, {
+          firstName: profileData.first_name,
+          lastName: profileData.last_name
+        })
+      }
 
       // Check if user profile already exist the update it otherwise create new profile
       if (userProfile) {
@@ -115,7 +138,9 @@ export const UpdateUserProfilePictureAction = CreateServerAction(
       const clerkUserId = external_auth_id
       const dbUserId = unique_id
 
-      const fileBlob = new Blob([fileBuffer], { type: fileType })
+      const fileBlob = new Blob([Uint8Array.from(fileBuffer)], {
+        type: fileType
+      })
       const clerk = await clerkClient()
       await clerk.users.updateUserProfileImage(clerkUserId, {
         file: fileBlob
@@ -136,3 +161,127 @@ export const UpdateUserProfilePictureAction = CreateServerAction(
     }
   }
 )
+
+export const GetRandomUsersAction = CreateServerAction(true, async () => {
+  try {
+    const users = await GetRandomUsers()
+
+    return {
+      success: true,
+      data: users
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error
+    }
+  }
+})
+
+export const GetMentorsAction = CreateServerAction(true, async () => {
+  try {
+    const mentors = await GetMentors()
+
+    return {
+      success: true,
+      data: mentors
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error
+    }
+  }
+})
+
+export const GetFeaturedUsersAction = CreateServerAction(
+  false,
+  async (filters: GetUserFilters) => {
+    try {
+      const users = await GetFeaturedUsers(filters)
+
+      return {
+        success: true,
+        data: users
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error
+      }
+    }
+  }
+)
+
+export const UpdateCoverImageAction = CreateServerAction(
+  true,
+  async (
+    userID: string,
+    fileName: string,
+    fileB64string: string,
+    fileType: string
+  ) => {
+    try {
+      const fileBuffer = base64ToBuffer(fileB64string)
+
+      const { fileUrl } = await uploadFileAndSaveMetadata(
+        fileBuffer,
+        fileName,
+        fileType,
+        "profiles"
+      )
+
+      if (!fileUrl) {
+        throw new Error("Upload failed: missing fileUrl or file metadata.")
+      }
+
+      const userCoverImage = await UpdateCoverImage(userID, fileUrl)
+
+      return {
+        success: true,
+        data: userCoverImage
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error
+      }
+    }
+  }
+)
+
+export const RemoveCoverImageAction = CreateServerAction(
+  true,
+  async (userID: string) => {
+    try {
+      const removeUserCoverImage = await UpdateCoverImage(userID, null)
+
+      return {
+        success: true,
+        data: removeUserCoverImage
+      }
+    } catch (error) {
+      console.error("Error removing cover image:", error)
+      return {
+        success: false,
+        error: error
+      }
+    }
+  }
+)
+
+export const GetSuperAdminsAction = CreateServerAction(true, async () => {
+  try {
+    const res = await getSuperAdmins()
+
+    return {
+      success: true,
+      data: res
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error
+    }
+  }
+})

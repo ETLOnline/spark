@@ -5,8 +5,17 @@ import { PermissionsSeed } from "./PermissionsSeed"
 import { RolePermissionsSeed } from "./RolePermissionsSeed"
 import { TagSeed } from "./TagsSeeder"
 import { CommunityCategorySeed } from "./CommunityCategories"
-import { NewRolePermissions } from "./NewRolePermissions"
 import { CommunityUserListRolePermission } from "./CommunityUserListRolePermission"
+import { NewTagsSeed } from "./NewTagsSeeder"
+import { CheckRolePermissionMismatch } from "./CheckRolePermissionMismatch"
+import { SyncRolePermissionsSeeder } from "./SyncScopedPermissions"
+import { siteSettingsSeed } from "./SiteSettingsSeed"
+import { UpdateRoleTable } from "./UpdateRolesTable"
+import { EmailTemplatesSeed } from "./EmailTemplatesSeed"
+import { ChatSlugCorrectionSyncSeed } from "./ChatSlugCorrectionSyncSeed"
+import { ShortcutEntityIdSyncSeed } from "./ShortcutEntityIdSyncSeed"
+import { EmailTemplatesForCommunityRequestSeed } from "./EmailTemplatesForCommunityRquest"
+import { JoinInviteEmailSeed } from "./JoinInviteEmail"
 
 const SEEDERS: Record<string, () => Promise<void>> = {
   FeatureSeed,
@@ -16,8 +25,17 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   RolePermissionsSeed,
   UserSeed,
   CommunityCategorySeed,
-  NewRolePermissions,
-  CommunityUserListRolePermission
+  UpdateRoleTable,
+  CommunityUserListRolePermission,
+  NewTagsSeed,
+  CheckRolePermissionMismatch,
+  SyncRolePermissionsSeeder,
+  siteSettingsSeed,
+  EmailTemplatesSeed,
+  ChatSlugCorrectionSyncSeed,
+  ShortcutEntityIdSyncSeed,
+  EmailTemplatesForCommunityRequestSeed,
+  JoinInviteEmailSeed
 }
 
 async function runSeeders() {
@@ -25,8 +43,17 @@ async function runSeeders() {
     const args = process.argv.slice(2)
     const excludedSeeders = [
       "UserSeed",
-      "NewRolePermissions",
-      "CommunityUserListRolePermission"
+      "UpdateRoleTable",
+      "CommunityUserListRolePermission",
+      "NewTagsSeed",
+      "CheckRolePermissionMismatch",
+      "SyncRolePermissionsSeeder",
+      "EmailTemplatesSeed",
+      "ChatSlugCorrectionSyncSeed",
+      "ChatSlugCorrectionSyncSeed",
+      "ShortcutEntityIdSyncSeed",
+      "EmailTemplatesForCommunityRequestSeed",
+      "JoinInviteEmailSeed"
     ]
 
     const seederNames =

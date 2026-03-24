@@ -31,12 +31,14 @@ import { Avatar, AvatarImage } from "../../ui/avatar"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import Loader from "../../common/Loader/Loader"
 import { useEffect, useState } from "react"
+import { getUserRole } from "@/src/utils/helpers"
 
 export default function CommandCenter() {
   const [open, setOpen] = useState(false)
   const router = useRouter()
   const [inputValue, setInputValue] = useState<string>("")
   const [peopleList, setPeopleList] = useState<SelectUser[]>([])
+  const [isTyping, setIsTyping] = useState(false)
   const [loading, state, error, FindUserWildCard] = useServerAction(
     FindUserWildCardAction
   )
@@ -61,9 +63,11 @@ export default function CommandCenter() {
   const handleInputValueChange = useDebouncedCallback(async (value: string) => {
     if (value.trim() === "") {
       setPeopleList([])
+      setIsTyping(false)
       return
     }
     await FindUserWildCard(value)
+    setIsTyping(false)
   }, 800)
 
   useEffect(() => {
@@ -85,18 +89,25 @@ export default function CommandCenter() {
         <CommandInput
           placeholder="Type a command or search..."
           onValueChange={(value) => {
+            if (value.trim() !== "") {
+              setIsTyping(true)
+            } else {
+              setIsTyping(false)
+              setPeopleList([])
+            }
             handleInputValueChange(value)
             setInputValue(value)
           }}
         />
 
         <CommandList>
-          {loading && (
+          {loading || isTyping ? (
             <div className="w-full flex justify-center p-2">
               <Loader />
             </div>
+          ) : (
+            <CommandEmpty>No results found.</CommandEmpty>
           )}
-          <CommandEmpty>No results found.</CommandEmpty>
 
           <CommandGroup heading="Users">
             {peopleList.map((person) => (
@@ -104,6 +115,7 @@ export default function CommandCenter() {
                 value={`${person.first_name} ${person.last_name}`}
                 key={person.unique_id}
                 onSelect={() => handleItemPress(`/profile/${person.unique_id}`)}
+                className="group"
               >
                 <Avatar>
                   <AvatarImage
@@ -111,9 +123,18 @@ export default function CommandCenter() {
                     alt={person.first_name}
                   />
                 </Avatar>
-                <span>
-                  {person.first_name} {person.last_name}
-                </span>
+                <div className="flex flex-col">
+                  <h2>
+                    {person.first_name} {person.last_name}
+                  </h2>
+                  <p
+                    className="text-sm text-muted-foreground
+                   
+                   group-data-[selected=true]:text-muted"
+                  >
+                    {getUserRole(person)}
+                  </p>
+                </div>
               </CommandItem>
             ))}
           </CommandGroup>
@@ -127,10 +148,6 @@ export default function CommandCenter() {
             <CommandItem onSelect={() => handleItemPress("/chat")}>
               <MessageSquare />
               <span>Chat</span>
-            </CommandItem>
-            <CommandItem>
-              <Settings />
-              <span>Settings</span>
             </CommandItem>
           </CommandGroup>
         </CommandList>

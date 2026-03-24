@@ -1,13 +1,6 @@
 "use client"
 
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-  Sparkles
-} from "lucide-react"
+import { BadgeCheck, ChevronsUpDown, LogOut } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
@@ -27,16 +20,22 @@ import {
 } from "@/src/components/ui/sidebar"
 import { useRouter } from "next/navigation"
 import { SignOutButton, UserProfile, useUser } from "@clerk/nextjs"
+import { useOnLogout } from "@/src/hooks/useSignOut"
+import { useEffect, useState } from "react"
 
 export default function NavUser() {
   const { isMobile } = useSidebar()
   const router = useRouter()
   const { user } = useUser()
 
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  const { manualLogout } = useOnLogout()
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
+        <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
@@ -87,14 +86,6 @@ export default function NavUser() {
                 </div>
               </div>
             </DropdownMenuLabel>
-            {/* <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Sparkles />
-                Upgrade to Pro
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator /> */}
             <DropdownMenuGroup>
               <DropdownMenuItem
                 onClick={() => {
@@ -104,19 +95,15 @@ export default function NavUser() {
                 <BadgeCheck />
                 Account
               </DropdownMenuItem>
-              {/* <DropdownMenuItem>
-                <CreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
-              </DropdownMenuItem> */}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => {}}>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onSelect={(e) => e.preventDefault()}
+              onClick={() => manualLogout()}
+            >
               <LogOut />
-              <SignOutButton />
+              Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

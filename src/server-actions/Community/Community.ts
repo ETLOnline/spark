@@ -5,7 +5,6 @@ import {
   GetCommunities,
   IsCommunitySlugAvailable,
   CommunityQueryFilters,
-  GetJoinedCommunities,
   UpdateCommunity,
   DeleteCommunity,
   CommunityDetailData,
@@ -13,7 +12,9 @@ import {
   getCategories,
   getCommunityUsers,
   attachCommunityUser,
-  GetCommunityById
+  GetCommunityById,
+  detachCommunityUser,
+  getCommunitiesByIds
 } from "@/src/db/data-access/communities/query"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import { InsertCommunity, SelectCommunity } from "@/src/db/schema"
@@ -21,8 +22,16 @@ import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import {
   createScopedCommunityRolesAndAssignAdmin,
+  deleteUserRole,
+  EntityType,
   getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
+import {
+  base64ToBuffer,
+  uploadFileAndSaveMetadata
+} from "@/src/services/storage/utils/fileUtils"
+import pusherServer from "@/src/services/realtime/pusherServer"
+import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
 
 export const CreateCommunityAction = CreateServerAction(
   true,
@@ -39,7 +48,6 @@ export const CreateCommunityAction = CreateServerAction(
         newCommunity.created_by,
         result.adminRole?.name
       )
-
       return { success: true, data: newCommunity }
     } catch (error: any) {
       console.error("Error in CreateCommunityAction:", error)
@@ -55,6 +63,7 @@ export interface GetCommunitiesActionResponse {
   allCommunitiesPagination: PaginationType
   joinedCommunities: SelectCommunity[]
   joinedCommunitiesPagination: PaginationType
+  joinedCount: number
 }
 
 export interface GetCommunitiesResponseType {
@@ -67,8 +76,7 @@ export const GetCommunitiesAction = CreateServerAction(
   async (
     filters?: CommunityQueryFilters,
     page: number = 1,
-    limit: number = 6,
-    activeTab: "all" | "my" = "all"
+    limit: number = 6
   ): Promise<
     | { success: true; data: GetCommunitiesActionResponse }
     | { success: false; error: any }
@@ -80,16 +88,17 @@ export const GetCommunitiesAction = CreateServerAction(
         throw new Error("Authentication required to fetch communities.")
       }
       const allCommunitiesResult = await GetCommunities(
+        authUser,
         { ...filters },
         page,
         limit
       )
 
-      const joinedCommunitiesResult = await GetJoinedCommunities(
-        authUser.unique_id,
-        { ...filters },
-        page,
-        limit
+      const joinedCommunitiesResult = allCommunitiesResult.communities.filter(
+        (community) =>
+          community.communityMembers?.some(
+            (member) => member.user_id === authUser.unique_id
+          )
       )
 
       return {
@@ -97,8 +106,58 @@ export const GetCommunitiesAction = CreateServerAction(
         data: {
           communities: allCommunitiesResult.communities,
           allCommunitiesPagination: allCommunitiesResult.pagination,
-          joinedCommunities: joinedCommunitiesResult.communities,
-          joinedCommunitiesPagination: joinedCommunitiesResult.pagination
+          joinedCommunities: joinedCommunitiesResult,
+          joinedCommunitiesPagination: allCommunitiesResult.pagination,
+          joinedCount: allCommunitiesResult.joinedCount
+        }
+      }
+    } catch (error: any) {
+      console.error("Error in GetCommunitiesAction:", error)
+      return {
+        success: false,
+        error: error.message || "Failed to retrieve communities."
+      }
+    }
+  }
+)
+export const GetJoinedCommunitiesAction = CreateServerAction(
+  true,
+  async (
+    filters?: CommunityQueryFilters,
+    page: number = 1,
+    limit: number = 6
+  ): Promise<
+    | { success: true; data: GetCommunitiesActionResponse }
+    | { success: false; error: any }
+  > => {
+    try {
+      const authUser = await AuthUserAction()
+
+      if (!authUser?.unique_id) {
+        throw new Error("Authentication required to fetch communities.")
+      }
+      const allCommunitiesResult = await GetCommunities(
+        authUser,
+        { ...filters },
+        page,
+        limit
+      )
+
+      const joinedCommunitiesResult = allCommunitiesResult.communities.filter(
+        (community) =>
+          community.communityMembers?.some(
+            (member) => member.user_id === authUser.unique_id
+          )
+      )
+
+      return {
+        success: true,
+        data: {
+          communities: allCommunitiesResult.communities,
+          allCommunitiesPagination: allCommunitiesResult.pagination,
+          joinedCommunities: joinedCommunitiesResult,
+          joinedCommunitiesPagination: allCommunitiesResult.pagination,
+          joinedCount: allCommunitiesResult.joinedCount
         }
       }
     } catch (error: any) {
@@ -116,50 +175,21 @@ export interface GetJoinedCommunitiesResponseType {
   pagination: PaginationType
 }
 
-export const GetJoinedCommunitiesAction = CreateServerAction(
-  true,
-
-  async (
-    filters?: Omit<CommunityQueryFilters, "createdByUserId">,
-    page: number = 1,
-    limit: number = 10
-  ): Promise<
-    | { success: true; data: GetJoinedCommunitiesResponseType }
-    | { success: false; error: any }
-  > => {
-    try {
-      const authUser = await AuthUserAction()
-
-      if (!authUser?.unique_id) {
-        throw new Error("User not authenticated.")
-      }
-
-      const combinedFilters = {
-        ...filters,
-        page,
-        limit
-      }
-
-      const result = await GetJoinedCommunities(
-        authUser.unique_id,
-        combinedFilters
-      )
-      return { success: true, data: result }
-    } catch (error: any) {
-      console.error("Error in GetJoinedCommunitiesAction:", error)
-      return {
-        success: false,
-        error: error.message || "Failed to retrieve joined communities."
-      }
-    }
-  }
-)
-
 export const UpdateCommunityAction = CreateServerAction(
   true,
   async (communityID: string, updatedData: Partial<SelectCommunity>) => {
     try {
       const updatedCommunity = await UpdateCommunity(communityID, updatedData)
+      await pusherServer.trigger(
+        "broadcast-entity-update",
+        "community-edit",
+        updatedCommunity
+      )
+      await pusherServer.trigger(
+        "broadcast-entity-update-sidebar",
+        "community-edit",
+        updatedCommunity
+      )
       return { success: true, data: updatedCommunity }
     } catch (error: any) {
       console.error("Error in UpdateCommunityAction:", error)
@@ -176,7 +206,13 @@ export const DeleteCommunityAction = CreateServerAction(
   async (deletedCommunityData: SelectCommunity) => {
     try {
       const communityIdToDelete = deletedCommunityData.id
-      await DeleteCommunity(communityIdToDelete)
+      const deleted = await DeleteCommunity(communityIdToDelete)
+      await deleteRoleBasedOnEntityType("COMMUNITY", communityIdToDelete)
+      await pusherServer.trigger(
+        "broadcast-entity-update",
+        "community-del",
+        deleted
+      )
 
       return { success: true, message: "Community deleted successfully." }
     } catch (error: any) {
@@ -245,9 +281,9 @@ export const GetCommunityUsersAction = CreateServerAction(
 
 export const GetCommunityByIdAction = CreateServerAction(
   true,
-  async (spaceId: string, withSpaceUsers?: boolean) => {
+  async (communityId: string, withCommunityUsers?: boolean) => {
     try {
-      const space = await GetCommunityById(spaceId, withSpaceUsers)
+      const space = await GetCommunityById(communityId, withCommunityUsers)
       return { success: true, data: space }
     } catch (error) {
       return { error: error }
@@ -257,11 +293,12 @@ export const GetCommunityByIdAction = CreateServerAction(
 
 export const AttachCommunityUserAction = CreateServerAction(
   true,
-  async (communityId: string, userId: string) => {
+  async (communityId: string, userId: string, roleName?: EntityType,) => {
     try {
+      const roleAssigned = roleName ? roleName : "community_viewer"
       const attachUserRole = await getAndAssignViewerRoles(
         userId,
-        "community_viewer",
+        roleAssigned,
         communityId
       )
       const channelUser = await attachCommunityUser(
@@ -269,9 +306,104 @@ export const AttachCommunityUserAction = CreateServerAction(
         userId,
         attachUserRole?.viewerRole?.name
       )
+      pusherServer.trigger(`user-${userId}`, "update-role", attachUserRole)
       return { success: true, data: channelUser }
     } catch (error) {
       return { error: error }
+    }
+  }
+)
+
+export const DetachCommunityUserAction = CreateServerAction(
+  true,
+  async (communityId: string, userId: string, roleId: number) => {
+    try {
+      const deleted = await detachCommunityUser(communityId, userId)
+      const deleteRole = await deleteUserRole(userId, roleId)
+      pusherServer.trigger(`user-${userId}`, "update-role", deleteRole)
+      return { success: true, data: deleted }
+    } catch (error: any) {
+      return { success: false, error: error.message }
+    }
+  }
+)
+
+export const GetFeaturedCommunitiesAction = CreateServerAction(
+  false,
+  async (communityIds: string[]) => {
+    try {
+      const communities = await getCommunitiesByIds(communityIds)
+      return { success: true, data: communities }
+    } catch (error) {
+      return { success: false, error: error }
+    }
+  }
+)
+
+// this function will check if the user is a member of the community
+export const ensureCommunityMembership = async (
+  communityId: string,
+  userId: string
+): Promise<void> => {
+  const communityMembers = await getCommunityUsers(communityId)
+  const communityUserIds = communityMembers.map((cu) => cu.user_id)
+
+  const isMember = communityUserIds.includes(userId)
+
+  if (!isMember) {
+    const attachCommunityUserRole = await getAndAssignViewerRoles(
+      userId,
+      "community_viewer",
+      communityId
+    )
+
+    await attachCommunityUser(
+      communityId,
+      userId,
+      attachCommunityUserRole?.viewerRole?.name
+    )
+  }
+}
+
+export const communityCoverImageAction = CreateServerAction(
+  true,
+  async (fileName: string, fileB64string: string, fileType: string) => {
+    try {
+      const fileBuffer = base64ToBuffer(fileB64string)
+
+      const { fileUrl } = await uploadFileAndSaveMetadata(
+        fileBuffer,
+        fileName,
+        fileType,
+        "communities"
+      )
+
+      if (!fileUrl) {
+        throw new Error("Upload failed: missing fileUrl or file metadata.")
+      }
+
+      return {
+        success: true,
+        data: fileUrl
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error
+      }
+    }
+  }
+)
+export const LeaveCommunityAction = CreateServerAction(
+  true,
+  async (communityId: string, currentUserId: string) => {
+    try {
+      // const deleted = await leaveCommunity(communityId, currentUserId)
+      const deleted = await detachCommunityUser(communityId, currentUserId)
+
+      return { success: true, data: deleted }
+    } catch (error: any) {
+      return { success: false, error: error.message || error }
     }
   }
 )

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
 import {
@@ -20,7 +20,11 @@ import { taskStore } from "@/src/store/tasks/taskStore"
 import StatusRequiredDialog from "../StatusRequiredDialog"
 import { TaskModal } from "../Task/components/TaskModal"
 import { SelectTask } from "@/src/db/schema"
-import TaskFilters from "./TaskFilters"
+import { TaskFiltersType } from "../types/taskFilters.type"
+import TaskFilters from "../TaskFilter/TaskFilters"
+import TaskMoveDialog from "../Task/components/task-move-dialog"
+import ConfirmationDialog from "../Task/components/ConfirmationDialog"
+import { TaskType } from "../constants/projectManagment"
 
 export function BacklogManagement() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -29,30 +33,35 @@ export function BacklogManagement() {
   const [limit, setLimit] = useState(10)
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
   const [openDialog, setOpenDialog] = useState(false)
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
+  const [isTaskModalOpen, setIsTaskModalOpen] = useAtom(
+    taskStore.isTaskModalOpen
+  )
   const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
   const [tasks, setTasks] = useAtom(taskStore.BackLogTasks)
-  const [appliedFilters, setAppliedFilters] = useState<{
-    assignee?: string | null
-    priority?: string
-    type?: string
-    status?: string
-  }>({})
+  const [appliedFilters, setAppliedFilters] = useState<TaskFiltersType | null>(
+    null
+  )
+  const [isTaskMoveDialogOpen, setIsTaskMoveDialogOpen] = useAtom(
+    taskStore.isTaskMoveDialogOpen
+  )
+  const [isConfirmationAlertOpen, setIsConfirmationAlertOpen] = useAtom(
+    taskStore.isConfirmationAlertOpen
+  )
+  const taskMoveDialogAction = useAtomValue(taskStore.taskMoveDialogAction)
+  const [isInitailDataLoad, setIsInitailDataLoad] = useState(false)
+  const isInitialRender = useRef(true)
 
   const params = useParams()
-  const projectId = params.id as string
 
   function handleSearch() {
-    if (searchQuery) {
-      setSearchedItem(searchQuery)
-    }
+    setSearchedItem(searchQuery)
   }
 
   // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "PROJECT",
-    projectId
+    params.id as string
   )
   const canCreateTask = permissionChecker
     ? permissionChecker?.canAccess("project.backlog.task.create")
@@ -65,29 +74,49 @@ export function BacklogManagement() {
   }, [projectStatusList])
 
   useEffect(() => {
-    if (!isTaskModalOpen) {
+    if (!isTaskMoveDialogOpen) {
       setSelectedTask(null)
     }
-  }, [isTaskModalOpen])
+  }, [isTaskMoveDialogOpen])
 
   useEffect(() => {
-    if (selectedTask) {
-      setIsTaskModalOpen(true)
+    if (tasks.length > 0) {
+      setIsInitailDataLoad(true)
     }
-  }, [selectedTask])
+  }, [tasks])
 
-  function handleFilters(filters: {
-    assignee: string | null | undefined
-    priority: string | undefined
-    type: string | undefined
-    status: string | undefined
-  }) {
+  function handleFilters(filters: TaskFiltersType) {
     setAppliedFilters(filters)
+    setSearchedItem(searchQuery)
+  }
+  const handleKeyDown = (e: any) => {
+    if (e.key === "Enter") {
+      handleSearch()
+    }
+  }
+  useEffect(() => {
+    if (isInitialRender.current) {
+      isInitialRender.current = false
+      return
+    }
+
+    if (searchQuery === "") {
+      handleSearch()
+    }
+  }, [searchQuery])
+
+  if (!params.id) {
+    return null
   }
 
-  return projectStatusList.length > 0 ? (
+  if (projectStatusList.length === 0) {
+    return <StatusRequiredDialog openDialog={openDialog} />
+  }
+
+  return (
     <>
       <TaskModal
+        isReady={isInitailDataLoad}
         isTaskModelOpen={isTaskModalOpen}
         setIsTaskModelOpen={setIsTaskModalOpen}
         selectedTask={selectedTask || undefined}
@@ -99,6 +128,23 @@ export function BacklogManagement() {
           setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
           setSelectedTask(task)
         }}
+        onSubTaskCreate={(task: SelectTask) => {
+          if (task.task_type === TaskType.SUBTASK) return
+          setTasks((prev) => [...prev, task])
+        }}
+      />
+
+      <TaskMoveDialog
+        isTaskMoveDialogOpen={isTaskMoveDialogOpen}
+        setIsTaskMoveDialogOpen={setIsTaskMoveDialogOpen}
+        tasks={selectedTask ? [selectedTask] : []}
+        setTasks={setTasks}
+        dialogAction={taskMoveDialogAction}
+      />
+
+      <ConfirmationDialog
+        isAlertOpen={isConfirmationAlertOpen}
+        setIsAlertDialogOpen={setIsConfirmationAlertOpen}
       />
 
       <div className="space-y-6">
@@ -116,9 +162,10 @@ export function BacklogManagement() {
           <div className="relative w-full sm:w-64 flex">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search backlog..."
+              placeholder="Search by title or ticket ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="pl-8 rounded-r-none"
             />
             <Button
@@ -130,7 +177,10 @@ export function BacklogManagement() {
             </Button>
           </div>
           <div className="flex items-center space-x-2">
-            <TaskFilters projectId={projectId} onApplyFilters={handleFilters} />
+            <TaskFilters
+              projectId={params.id as string}
+              onApplyFilters={handleFilters}
+            />
 
             <Button
               variant="outline"
@@ -165,7 +215,5 @@ export function BacklogManagement() {
         />
       </div>
     </>
-  ) : (
-    <StatusRequiredDialog openDialog={openDialog} />
   )
 }

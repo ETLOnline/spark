@@ -36,6 +36,20 @@ export const CreatePost = async (post: InsertPost) => {
   return await db.insert(postsTable).values(post).returning()
 }
 
+export const UpdatePost = async (postId: string, content: string) => {
+  try {
+    const updatedPost = await db
+      .update(postsTable)
+      .set({ content })
+      .where(eq(postsTable.id, postId))
+      .returning()
+
+    return updatedPost[0]
+  } catch (error: any) {
+    throw new Error(error)
+  }
+}
+
 export const GetPostById = async (postId: string) => {
   try {
     return await db.query.postsTable.findFirst({
@@ -47,8 +61,8 @@ export const GetPostById = async (postId: string) => {
           orderBy: [desc(commentsTable.created_at)]
         },
         hashtags: { with: { hashtag: true } },
-        options: { with: { votes: true } },
-        file: { with: { postFile: true } },
+        options: { with: { votes: true }, orderBy: [pollOptionsTable.id] },
+        files: { with: { postFile: true } },
         postLikes: true
       }
     })
@@ -65,6 +79,24 @@ export const AddPostFileLink = async (postId: string, fileId: number) => {
 
 export const AddPollOptions = async (options: InsertPollOption[]) => {
   return await db.insert(pollOptionsTable).values(options).returning()
+}
+
+export const UpdatePollOption = async (
+  optionId: number,
+  optionText: string
+) => {
+  return await db
+    .update(pollOptionsTable)
+    .set({ option_text: optionText })
+    .where(eq(pollOptionsTable.id, optionId))
+    .returning()
+}
+
+export const DeletePollOption = async (optionId: number) => {
+  return await db
+    .delete(pollOptionsTable)
+    .where(eq(pollOptionsTable.id, optionId))
+    .returning()
 }
 
 export const LikePost = async (
@@ -128,6 +160,25 @@ export const CreateComment = async (
   })
 }
 
+export const UpdateComment = async (
+  commentId: number,
+  newContent: string
+) => {
+  return await db.transaction(async (tx) => {
+    // Update the comment content
+    const updatedComment = await tx
+      .update(commentsTable)
+      .set({ 
+        content: newContent,
+        updated_at: new Date().toISOString()
+      })
+      .where(eq(commentsTable.id, commentId))
+      .returning()
+
+    return { ...updatedComment[0] }
+  })
+}
+
 export const VotePoll = async (vote: InsertPollVote, voteCount: number) => {
   return await db.transaction(async (tx) => {
     // Insert vote record
@@ -168,7 +219,12 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
     ]
 
     if (globalPostsOnly) {
-      whereClauses.push(isNull(postsTable.entity_id))
+      whereClauses.push(
+        or(
+          isNull(postsTable.entity_id),
+          eq(postsTable.entity_id, "")
+        ) as SQL<unknown>
+      )
     } else if (entityId) {
       whereClauses.push(eq(postsTable.entity_id, entityId))
     } else {
@@ -195,14 +251,22 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
         offset,
         where: whereClauses.length ? and(...whereClauses) : undefined,
         with: {
-          author: true,
+          author: {
+            with: {
+              roles: {
+                with: {
+                  role: true
+                }
+              }
+            }
+          },
           postComments: {
             with: { commentor: true },
             orderBy: [desc(commentsTable.created_at)]
           },
           hashtags: { with: { hashtag: true } },
-          options: { with: { votes: true } },
-          file: { with: { postFile: true } },
+          options: { with: { votes: true }, orderBy: [pollOptionsTable.id] },
+          files: { with: { postFile: true } },
           postLikes: true
         },
         orderBy:
@@ -217,15 +281,23 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
         offset,
         where: whereClauses.length ? and(...whereClauses) : undefined,
         with: {
-          author: true,
+          author: {
+            with: {
+              roles: {
+                with: {
+                  role: true
+                }
+              }
+            }
+          },
           postComments: {
             with: { commentor: true },
             limit: 3,
             orderBy: [desc(commentsTable.created_at)]
           },
           hashtags: { with: { hashtag: true } },
-          options: { with: { votes: true } },
-          file: { with: { postFile: true } },
+          options: { with: { votes: true }, orderBy: [pollOptionsTable.id] },
+          files: { with: { postFile: true } },
           postLikes: true
         },
         orderBy:
@@ -289,6 +361,24 @@ export const AddHashtagToPostLink = async (
       return { post_id: postId, hashtag_id: tag.id }
     })
   )
+}
+
+export const RemoveHashtagFromPostLink = async (
+  postId: string,
+  hashtagId: number[]
+) => {
+  try {
+    const removedHashtags = await db
+      .delete(postHashtagsTable)
+      .where(
+        and(
+          eq(postHashtagsTable.post_id, postId),
+          inArray(postHashtagsTable.hashtag_id, hashtagId)
+        )
+      )
+  } catch (error: any) {
+    throw new Error(error)
+  }
 }
 
 export const SearchHashtags = async (searchTerm: string) => {

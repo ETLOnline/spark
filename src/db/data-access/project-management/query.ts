@@ -1,8 +1,10 @@
-import { and, eq, inArray } from "drizzle-orm"
+import { and, desc, eq, inArray, sql } from "drizzle-orm"
 import { db } from "../.."
 import {
   channelsTable,
   InsertProject,
+  InsertProjectRecentActivity,
+  projectRecentActivityTable,
   projectTable,
   ProjectUsersTable,
   SelectProject,
@@ -146,6 +148,31 @@ export async function getProjectUsers(projectId: string) {
   }
 }
 
+export async function getProjectusersProfileUrl(
+  projectId: string,
+  limit?: number,
+  isRendom?: boolean
+) {
+  try {
+    const usersProfileUrls = await db.query.ProjectUsersTable.findMany({
+      with: {
+        user: {
+          columns: {
+            profile_url: true
+          }
+        }
+      },
+      where: eq(ProjectUsersTable.project_id, projectId),
+      limit: limit,
+      orderBy: isRendom ? sql`random()` : undefined
+    })
+
+    return usersProfileUrls.map((user) => user.user.profile_url)
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
+
 export async function removeProjectUser(projectId: string, userId: string) {
   try {
     const result = await db
@@ -211,5 +238,60 @@ export async function countProjectMembers(projectId: string) {
     return count
   } catch (error: any) {
     throw new Error(error.message)
+  }
+}
+
+export async function getProjectsBySpaceIds(spaceIds: string[]) {
+  try {
+    if (spaceIds.length === 0) {
+      console.warn("No space IDs provided to retrieve projects.")
+      return []
+    }
+
+    const projects = await db
+      .select()
+      .from(projectTable)
+      .where(inArray(projectTable.space_id, spaceIds))
+
+    return projects
+  } catch (error: any) {
+    throw new Error(
+      `Failed to retrieve projects by space IDs: ${error.message}`
+    )
+  }
+}
+
+export const addProjectRecentActivities = async (
+  payLoad: InsertProjectRecentActivity
+) => {
+  try {
+    const result = await db
+      .insert(projectRecentActivityTable)
+      .values({
+        project_id: payLoad.project_id,
+        icon: payLoad.icon,
+        activity: payLoad.activity,
+        deep_link: payLoad.deep_link
+      })
+      .returning()
+
+    return result[0]
+  } catch (error: any) {
+    throw new Error(`Failed to add recent activity: ${error.message}`)
+  }
+}
+
+export const getProjectRecentActivities = async (projectId: string) => {
+  try {
+    const activities = await db
+      .select()
+      .from(projectRecentActivityTable)
+      .where(eq(projectRecentActivityTable.project_id, projectId))
+      .orderBy(desc(projectRecentActivityTable.created_at))
+      .limit(10)
+
+    return activities
+  } catch (error: any) {
+    throw new Error(`Failed to retrieve recent activities: ${error.message}`)
   }
 }

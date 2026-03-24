@@ -12,6 +12,7 @@ interface Props {
 
 function TaskScreenPage({ statuses, task }: Props) {
   const [selectedTask, setSelectedTask] = useState<SelectTask | null>(null)
+  const [refetchComments, setRefetchComments] = useState(false)
 
   const onCreateComplete = (task: SelectTask) => {
     setSelectedTask(task)
@@ -19,6 +20,7 @@ function TaskScreenPage({ statuses, task }: Props) {
 
   const onUpdateComplete = (task: SelectTask) => {
     setSelectedTask(task)
+    setRefetchComments(true)
   }
 
   const { handleSubmit, createTaskLoading, updateTaskLoading } = useTaskHook({
@@ -35,15 +37,17 @@ function TaskScreenPage({ statuses, task }: Props) {
   }, [task])
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
       <TaskFormHeader selectedTask={selectedTask ?? undefined} />
       <TaskForm
         loading={createTaskLoading || updateTaskLoading}
         onSubmit={handleSubmit}
         selectedTask={selectedTask ?? undefined}
         statuses={statuses}
+        refetchComments={refetchComments}
+        setRefetchComments={setRefetchComments}
       />
-    </>
+    </div>
   )
 }
 

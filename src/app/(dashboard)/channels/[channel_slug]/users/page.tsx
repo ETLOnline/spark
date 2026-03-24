@@ -5,7 +5,6 @@ import {
 } from "@/src/server-actions/Channel/Channel"
 import React, { Suspense } from "react"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import { getChannelRole } from "@/src/utils/channelRoleHelper"
 import UnauthorizedAccessScreen from "@/src/components/common/UnauthorizedAccessScreen"
 import { isSuperAdmin } from "@/src/utils/helpers"
 import ChannelUserList from "@/src/components/UserListAndInvite/UserList"
@@ -20,8 +19,9 @@ interface Props {
 
 const ChannelUsersPage = async ({ params }: Props) => {
   const { channel_slug } = await params
+  const decodedChannelSlug = decodeURIComponent(channel_slug)
 
-  const currentChannel = await GetChannelBySlugAction(channel_slug)
+  const currentChannel = await GetChannelBySlugAction(decodedChannelSlug)
 
   if (!currentChannel.success || !currentChannel.data) {
     return <NotFound />
@@ -32,11 +32,14 @@ const ChannelUsersPage = async ({ params }: Props) => {
     await getRoleByEntityTypeAndIdAction("CHANNEL", currentChannel.data.id)
   ).data
 
+  const userChannelRole = authUser.roles.filter(
+    (ur) =>
+      ur.role.entity_type === "CHANNEL" &&
+      ur.role.entity_id === currentChannel?.data?.id
+  )
+
   if (authUser) {
-    const channelRole = getChannelRole(currentChannel.data.id, authUser)
-    const hasRole = scopedRoles
-      ? scopedRoles.some((role) => role.name === channelRole)
-      : false
+    const hasRole = userChannelRole && userChannelRole.length > 0 ? true : false
     const superAdmin = await isSuperAdmin(authUser)
 
     if (!hasRole && !superAdmin) {

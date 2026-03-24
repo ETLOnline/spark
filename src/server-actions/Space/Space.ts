@@ -5,6 +5,7 @@ import {
   CreateSpace,
   DeleteSpace,
   dettachSpaceUser,
+  getSpaceByChannelId,
   GetSpaceById,
   GetSpaceBySlug,
   GetSpaces,
@@ -14,7 +15,6 @@ import {
   UpdateSpace,
   updateSpaceUser
 } from "@/src/db/data-access/spaces/query"
-import { AblyClientRest } from "@/src/services/realtime/AblyClient"
 import { CreateServerAction } from ".."
 import {
   InsertSpace,
@@ -24,7 +24,7 @@ import {
 } from "@/src/db/schema"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import { AuthUserAction } from "../User/AuthUserAction"
-import { isUserAdmin } from "@/src/utils/helpers"
+import { isSuperAdmin } from "@/src/utils/helpers"
 import {
   attachChannelUser,
   GetChannelById,
@@ -38,6 +38,19 @@ import {
   getAndAssignViewerRoles
 } from "@/src/db/data-access/roles/query"
 import { defaultSpaceOverviewTemplate } from "@/src/app/(dashboard)/channels/[channel_slug]/spaces/[space_slug]/(space-layout)/components/constants"
+import { PermissionChecker } from "@/src/lib/PermissionCheker"
+import { GetUserPermissionsParsedAction } from "../UserRoles/UserRole"
+import { ensureCommunityMembership } from "../Community/Community"
+import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
+import {
+  attachCommunityUser,
+  getCommunityUsers
+} from "@/src/db/data-access/communities/query"
+import pusherServer from "@/src/services/realtime/pusherServer"
+import { EntityUpdateBroadCast } from "@/src/utils/constants"
+
+// Define the broadcast channel name constant for cleaner code
+const BROADCAST_CHANNEL = EntityUpdateBroadCast
 
 export const CreateSpaceAction = CreateServerAction(
   true,
@@ -45,18 +58,24 @@ export const CreateSpaceAction = CreateServerAction(
     try {
       const overview = defaultSpaceOverviewTemplate(SpaceData.space_name)
       const newSpace = await CreateSpace({ ...SpaceData, overview: overview })
-      const channel = AblyClientRest.channels.get(
-        "broadcast-channels-spaces-update"
-      )
-      await channel.publish("space-add", newSpace)
+
+      await pusherServer.trigger(BROADCAST_CHANNEL, "space-add", newSpace)
+
       const result = await createScopedSpaceRolesAndAssignAdmin(
         newSpace.id,
         newSpace.space_name,
         newSpace.created_by
       )
+
+      const channelUsersAfter = await getChannelUsers(SpaceData?.channel_id)
+
+      const channel_user_id = channelUsersAfter.find(
+        (cu) => cu.user_id === newSpace.created_by
+      )?.id
       await attachSpaceUser(
         newSpace.id,
         newSpace.created_by,
+        channel_user_id as number,
         result.adminRole?.name
       )
       return { success: true, data: newSpace }
@@ -82,6 +101,15 @@ export const GetSpacesAction = CreateServerAction(
 
       const authUser = await AuthUserAction()
       const authUserId = authUser?.unique_id
+
+      const isAdmin = await isSuperAdmin(authUser)
+
+      const response = await GetUserPermissionsParsedAction(authUserId)
+
+      if (!response.success) {
+        return { error: response.error }
+      }
+
       if (filters?.channel_slug) {
         channel = await GetChannelBySlug(filters?.channel_slug || "")
       } else if (filters?.channel_id) {
@@ -95,7 +123,15 @@ export const GetSpacesAction = CreateServerAction(
         }
       }
 
-      if (isUserAdmin(authUser)) {
+      const permissionChecker = new PermissionChecker(
+        "scoped",
+        response.data,
+        isAdmin,
+        "CHANNEL",
+        channel?.id
+      )
+
+      if (isAdmin || permissionChecker.canAccess("channel.space.create")) {
         spaces = await GetSpaces({ ...filters })
       } else {
         const spacesResponse = await GetSpaces({
@@ -148,10 +184,15 @@ export const UpdateSpaceAction = CreateServerAction(
   async (spaceID: string, updatedData: Partial<SelectSpace>) => {
     try {
       const updatedSpace = await UpdateSpace(spaceID, updatedData)
-      const channel = AblyClientRest.channels.get(
-        "broadcast-channels-spaces-update"
+
+      await pusherServer.trigger(BROADCAST_CHANNEL, "space-edit", updatedSpace)
+
+      await pusherServer.trigger(
+        "broadcast-entity-update-sidebar",
+        "space-edit",
+        updatedSpace
       )
-      await channel.publish("space-edit", updatedSpace)
+
       return { success: true, data: updatedSpace }
     } catch (error) {
       return { error: error }
@@ -164,10 +205,14 @@ export const DeleteSpaceAction = CreateServerAction(
   async (deletedSpaceData: SelectSpace) => {
     try {
       await DeleteSpace(deletedSpaceData)
-      const channel = AblyClientRest.channels.get(
-        "broadcast-channels-spaces-update"
+
+      await pusherServer.trigger(
+        BROADCAST_CHANNEL,
+        "space-del",
+        deletedSpaceData
       )
-      await channel.publish("space-del", deletedSpaceData)
+
+      await deleteRoleBasedOnEntityType("SPACE", deletedSpaceData.id)
       return { success: true }
     } catch (error) {
       return { error: error }
@@ -204,46 +249,116 @@ export const AttachSpaceUserAction = CreateServerAction(
   async (spaceId: string, userId: string) => {
     try {
       const space = await GetSpaceById(spaceId, true)
-      const spaceUserIds = space?.users.map((su) => su.user_id) || []
+      if (!space) return { success: false, error: "Space not found" }
 
-      const isUserSpaceMember = spaceUserIds.includes(userId)
-
-      if (isUserSpaceMember) {
-        return { success: true, data: null }
+      const existingSpaceUserIds = space.users.map((su) => su.user_id)
+      if (existingSpaceUserIds.includes(userId)) {
+        return { success: true, data: null } // already a member
       }
 
-      if (space?.channel_id) {
-        const channelUsers = await getChannelUsers(space?.channel_id)
-        const channelUserIds = channelUsers.map((cu) => cu.user_id)
+      if (!space.channel_id)
+        return { success: false, error: "Space has no associated channel" }
 
-        const isUserChannelMember = channelUserIds.includes(userId)
+      const channel = await GetChannelById(space.channel_id)
+      if (!channel) return { success: false, error: "Channel not found" }
 
-        if (!isUserChannelMember) {
-          const attachChannelUserRole = await getAndAssignViewerRoles(
-            userId,
-            "channel_viewer",
-            space.channel_id
-          )
-          await attachChannelUser(
-            space.channel_id,
-            userId,
-            attachChannelUserRole?.viewerRole?.name
-          )
+      const { community_id: communityId } = channel
+      const [channelUsers, communityUsers] = await Promise.all([
+        getChannelUsers(space.channel_id),
+        getCommunityUsers(communityId ?? "")
+      ])
+
+      const channelUserIds = channelUsers.map((cu) => cu.user_id)
+      const communityUserIds = communityUsers.map((cu) => cu.user_id)
+
+      // this will be used as a reference when we insert in the channel_user table
+      let communityUserID = communityUsers.find(
+        (cu) => cu.user_id === userId
+      )?.id
+
+      if (!communityUserIds.includes(userId)) {
+        const communityViewerRole = await getAndAssignViewerRoles(
+          userId,
+          "community_viewer",
+          communityId as string
+        )
+
+        const newCommunityUser = await attachCommunityUser(
+          communityId as string,
+          userId,
+          communityViewerRole?.viewerRole?.name
+        )
+
+        communityUserID = newCommunityUser?.id
+      }
+      if (!communityUserID) {
+        return {
+          success: false,
+          error: "Could not find community_user for space"
         }
       }
-      const attachSpaceUserRole = await getAndAssignViewerRoles(
+      if (!channelUserIds.includes(userId)) {
+        const channelViewerRole = await getAndAssignViewerRoles(
+          userId,
+          "channel_viewer",
+          space.channel_id
+        )
+
+        await attachChannelUser(
+          space.channel_id,
+          userId,
+          communityUserID,
+          channelViewerRole?.viewerRole?.name
+        )
+      }
+
+      const spaceViewerRole = await getAndAssignViewerRoles(
         userId,
         "space_viewer",
         spaceId
       )
-      const spaceUser = await attachSpaceUser(
+
+      const updatedChannelUsers = await getChannelUsers(space.channel_id)
+      const channelUserId = updatedChannelUsers.find(
+        (cu) => cu.user_id === userId
+      )?.id
+
+      if (!channelUserId)
+        return {
+          success: false,
+          error: "Could not find channel_user for space"
+        }
+
+      const newSpaceUser = await attachSpaceUser(
         spaceId,
         userId,
-        attachSpaceUserRole?.viewerRole?.name
+        channelUserId,
+        spaceViewerRole?.viewerRole?.name
       )
-      return { success: true, data: spaceUser }
+
+      await pusherServer.trigger(
+        `user-${userId}`,
+        "update-role",
+        spaceViewerRole
+      )
+
+      return { success: true, data: newSpaceUser }
     } catch (error) {
-      return { error: error }
+      console.error("AttachSpaceUserAction failed:", error)
+      return { success: false, error: "Internal server error" }
+    }
+  }
+)
+
+export const LeaveSpaceAction = CreateServerAction(
+  true,
+  async (spaceId: string, currentUserId: string) => {
+    try {
+      const deleted = await dettachSpaceUser(spaceId, currentUserId)
+
+      return { success: true, data: deleted }
+    } catch (error: any) {
+      return { success: false, error: error.message || error }
     }
   }
 )
@@ -254,7 +369,7 @@ export const DetachSpaceUserAction = CreateServerAction(
     try {
       const spaceUser = await dettachSpaceUser(spaceId, userId)
       const deleteRole = await deleteUserRole(userId, roleId)
-
+      pusherServer.trigger(`user-${userId}`, "update-role", deleteRole)
       return { success: true }
     } catch (error) {
       return { error: error }
@@ -284,6 +399,18 @@ export const GetSpaceUsersAction = CreateServerAction(
     try {
       const spaceUsers = await getSpaceUsers(spaceId)
       return { success: true, data: spaceUsers }
+    } catch (error) {
+      return { error: error }
+    }
+  }
+)
+
+export const GetSpaceByChannelIdsAction = CreateServerAction(
+  true,
+  async (channelIds: string[]) => {
+    try {
+      const spaces = await getSpaceByChannelId(channelIds)
+      return { success: true, data: spaces }
     } catch (error) {
       return { error: error }
     }

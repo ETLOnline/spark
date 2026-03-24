@@ -4,9 +4,12 @@ import {
   count,
   desc,
   eq,
+  ilike,
   inArray,
   like,
+  ne,
   or,
+  sql,
   SQLWrapper
 } from "drizzle-orm"
 import { db } from "../.."
@@ -16,9 +19,13 @@ import {
   spacesTable,
   userChatsTable,
   userContactsTable,
-  usersTable
+  usersTable,
+  SpaceUsersTable
 } from "../../schema"
 import { randomUUID } from "crypto"
+import { slugify } from "@/src/utils/helpers"
+import { MentionChatRegex } from "@/src/components/Dashboard/Chat/constants"
+import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 
 export const CreatePrivateChat = async (
   user_id: string,
@@ -31,7 +38,8 @@ export const CreatePrivateChat = async (
       .values({
         type: space_id ? "space" : "open",
         name: "",
-        channel_id: `${user_id}:${contact_id}`
+        channel_id: `${user_id}:${contact_id}`,
+        created_by: user_id
       })
       .returning()
 
@@ -74,6 +82,8 @@ export const CreateGroupChat = async (
   space_id?: string
 ) => {
   try {
+    const user = await AuthUserAction()
+    const creatorID =  user.unique_id
     const realtimeChannelId = randomUUID()
 
     const chat = await db
@@ -82,7 +92,9 @@ export const CreateGroupChat = async (
         type: space_id ? "space" : "open",
         name: chatName,
         channel_id: realtimeChannelId,
-        is_group: 1
+        name_index: slugify(chatName),
+        is_group: 1,
+        created_by: creatorID
       })
       .returning()
 
@@ -130,7 +142,11 @@ export const CreateGroupChat = async (
 //     }
 // }
 
-export const GetChats = async (user_id: string, space_id?: string) => {
+export const GetChats = async (
+  user_id: string,
+  space_id?: string,
+  is_group?: boolean
+) => {
   try {
     let chatIds: number[] = []
 
@@ -155,15 +171,27 @@ export const GetChats = async (user_id: string, space_id?: string) => {
       where: (chatsTable) =>
         and(
           inArray(chatsTable.id, chatIds),
-          eq(chatsTable.type, space_id ? "space" : "open")
+          eq(chatsTable.type, space_id ? "space" : "open"),
+          is_group !== undefined && is_group === false
+            ? eq(chatsTable.is_group, 0)
+            : undefined
         ),
-      orderBy: (chatsTable) => desc(chatsTable.created_at),
+      orderBy: (chatsTable) => desc(chatsTable.updated_at),
       with: {
         users: {
           with: {
-            user: true
+            user: {
+              with: {
+                roles: {
+                  with: {
+                    role: true
+                  }
+                }
+              }
+            }
           }
-        }
+        },
+        messages: true
       }
     })
     return chats
@@ -190,7 +218,11 @@ export const GetMutualChatb = async (user_id: string, contact_id: string) => {
   }
 }
 
-export const GetMutualChat = async (user_id: string, contact_id: string) => {
+export const GetMutualChat = async (
+  user_id: string,
+  contact_id: string,
+  type?: "open" | "space"
+) => {
   try {
     const chatId = await db
       .select({ chat_id: userChatsTable.chat_id })
@@ -205,17 +237,24 @@ export const GetMutualChat = async (user_id: string, contact_id: string) => {
       .having(eq(count(userChatsTable.chat_id), 2))
     if (chatId.length === 0) return null
     return await db.query.chatsTable.findFirst({
-      where: eq(chatsTable.id, chatId[0].chat_id)
+      where: and(
+        eq(chatsTable.id, chatId[0].chat_id),
+        type ? eq(chatsTable.type, type) : undefined,
+        type ? eq(chatsTable.is_group, 0) : undefined
+      )
     })
   } catch (error: any) {
     throw new Error(error.message)
   }
 }
 
-export const GetChatById = async (chat_id: number) => {
+export const GetChatById = async (chat_id: number, withUsers: boolean = false) => {
   try {
     const chat = await db.query.chatsTable.findFirst({
-      where: eq(chatsTable.id, chat_id)
+      where: eq(chatsTable.id, chat_id),
+      with: {
+        users: withUsers ? true : undefined,
+      },
     })
     return chat
   } catch (error: any) {
@@ -237,7 +276,15 @@ export const GetChatByIdWithMessages = async (chat_id: number) => {
         },
         users: {
           with: {
-            user: true
+            user: {
+              with: {
+                roles: {
+                  with: {
+                    role: true
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -261,11 +308,22 @@ export const GetChatBySlugWithMessages = async (slug: string) => {
       with: {
         messages: {
           limit: 50,
-          orderBy: (messagesTable) => desc(messagesTable.id)
+          orderBy: (messagesTable) => desc(messagesTable.id),
+          with: {
+            sender: true
+          }
         },
         users: {
           with: {
-            user: true
+            user: {
+              with: {
+                roles: {
+                  with: {
+                    role: true
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -287,15 +345,33 @@ export const updateLastChatMessage = async (
   message: string
 ) => {
   try {
-    const updatedChat = await db
+    const [updatedChatResult] = await db
       .update(chatsTable)
       .set({
-        last_message: message
+        last_message: message,
+        updated_at: new Date().toISOString()
       })
       .where(eq(chatsTable.id, chatId))
-      .returning()
-    return updatedChat[0]
+      .returning({ id: chatsTable.id })
+
+    if (!updatedChatResult) {
+      return null
+    }
+
+    const fullChatWithUsers = await db.query.chatsTable.findFirst({
+      where: eq(chatsTable.id, chatId),
+      with: {
+        users: {
+          with: {
+            user: true
+          }
+        }
+      }
+    })
+
+    return fullChatWithUsers
   } catch (error: any) {
+    console.error("Failed to update chat and fetch users:", error)
     throw new Error(error.message)
   }
 }
@@ -368,6 +444,7 @@ export const getChatContacts = async ({
         email: true,
         external_auth_id: true,
         profile_url: true,
+        cover_image: true,
         unique_id: true,
         role: true,
         meta_profile: true
@@ -378,7 +455,11 @@ export const getChatContacts = async ({
             ? or(
                 like(usersTable.first_name, `%${query}%`),
                 like(usersTable.last_name, `%${query}%`),
-                like(usersTable.email, `%${query}%`)
+                like(usersTable.email, `%${query}%`),
+                ilike(
+                  sql`${usersTable.first_name} || ' ' || ${usersTable.last_name}`,
+                  `%${query}%`
+                )
               )
             : undefined,
           ...whereClause
@@ -387,6 +468,252 @@ export const getChatContacts = async ({
 
     return users
   } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
+
+export const getExistingSingleChat = async (
+  user_id: string,
+  contact_id: string,
+  type?: "open" | "space",
+  space_id?: string
+) => {
+  try {
+    // Find all chat IDs where both users are participants
+    const chatId = await db
+      .select({ chat_id: userChatsTable.chat_id })
+      .from(userChatsTable)
+      .where(
+        or(
+          eq(userChatsTable.user_id, user_id),
+          eq(userChatsTable.user_id, contact_id)
+        )
+      )
+      .groupBy(userChatsTable.chat_id)
+      .having(eq(count(userChatsTable.chat_id), 2))
+
+    if (chatId.length === 0) return null
+
+    let chatIds = chatId.map((c) => c.chat_id)
+
+    // If space_id is provided, filter chats that belong to that space
+    if (space_id) {
+      const spaceChats = await db
+        .select({ chat_id: SpaceChatsTable.chat_id })
+        .from(SpaceChatsTable)
+        .where(
+          and(
+            inArray(SpaceChatsTable.chat_id, chatIds),
+            eq(SpaceChatsTable.space_id, space_id)
+          )
+        )
+
+      if (spaceChats.length === 0) return null
+      chatIds = spaceChats.map((c) => c.chat_id)
+    }
+
+    // Find the chat from the filtered chat IDs
+    return await db.query.chatsTable.findFirst({
+      where: and(
+        inArray(chatsTable.id, chatIds),
+        type ? eq(chatsTable.type, type) : undefined,
+        eq(chatsTable.is_group, 0)
+      )
+    })
+  } catch (error: any) {
+    console.log(error.message, "error")
+    throw new Error(error.message)
+  }
+}
+
+export const incrementUnreadCountForChat = async (
+  chatId: number,
+  user_id: string
+) => {
+  try {
+    // 1. Increment the unread_count for all users who are NOT the sender
+    const result = await db
+      .update(userChatsTable)
+      .set({
+        unread_count: sql`${userChatsTable.unread_count} + 1`
+      })
+      .where(
+        and(
+          eq(userChatsTable.chat_id, chatId),
+          eq(userChatsTable.user_id, user_id)
+        )
+      )
+
+    return result
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
+
+export const markChatAsReadForUser = async (chatId: number, userId: string) => {
+  try {
+    const [result] = await db
+      .update(userChatsTable)
+      .set({ unread_count: 0 })
+      .where(
+        and(
+          eq(userChatsTable.chat_id, chatId),
+          eq(userChatsTable.user_id, userId)
+        )
+      )
+      .returning({
+        userId: userChatsTable.user_id,
+        chatId: userChatsTable.chat_id
+      })
+
+    return result
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
+export const getExistingGroupName = async (
+  chatName: string,
+  space_id?: string
+) => {
+  try {
+    if (!space_id) {
+      return undefined
+    }
+    const chatNameSlugfy = slugify(chatName)
+    const existingChat = await db.query.chatsTable.findFirst({
+      where: and(
+        eq(chatsTable.is_group, 1),
+        eq(chatsTable.name_index, chatNameSlugfy),
+
+        inArray(
+          chatsTable.id,
+          sql`${db
+            .select({ chat_id: SpaceChatsTable.chat_id })
+            .from(SpaceChatsTable)
+            .where(eq(SpaceChatsTable.space_id, space_id))}`
+        )
+      ),
+      with: {
+        users: {
+          with: {
+            user: true
+          }
+        }
+      }
+    })
+
+    return existingChat
+  } catch (error: any) {
+    console.error("Error during group name check:", error.message)
+    throw new Error(error.message)
+  }
+}
+
+/**
+ * Add a user to a group chat
+ */
+export const addUserToGroupChat = async (chatId: number, userId: string) => {
+  try {
+    const chat = await db.query.chatsTable.findFirst({
+      where: eq(chatsTable.id, chatId),
+      with: {
+        users: true
+      }
+    })
+
+    if (!chat) {
+      throw new Error("Chat not found")
+    }
+
+    if (!chat.is_group) {
+      throw new Error("This is not a group chat")
+    }
+
+    const existingUserChat = await db.query.userChatsTable.findFirst({
+      where: and(
+        eq(userChatsTable.chat_id, chatId),
+        eq(userChatsTable.user_id, userId)
+      )
+    })
+
+    if (existingUserChat) {
+      throw new Error("User is already in this chat")
+    }
+
+    const [newUserChat] = await db
+      .insert(userChatsTable)
+      .values({
+        user_id: userId,
+        chat_id: chatId,
+        unread_count: 0
+      })
+      .returning()
+
+    await db
+      .update(chatsTable)
+      .set({
+        updated_at: new Date().toISOString()
+      })
+      .where(eq(chatsTable.id, chatId))
+
+    return newUserChat
+  } catch (error: any) {
+    console.error("Error adding user to group chat:", error)
+    throw new Error(error.message)
+  }
+}
+
+/**
+ * Remove a user from a group chat
+ */
+export const removeUserFromGroupChat = async (
+  chatId: number,
+  userId: string
+) => {
+  try {
+    const chat = await db.query.chatsTable.findFirst({
+      where: eq(chatsTable.id, chatId),
+      with: {
+        users: true
+      }
+    })
+
+    if (!chat) {
+      throw new Error("Chat not found")
+    }
+
+    if (!chat.is_group) {
+      throw new Error("This is not a group chat")
+    }
+
+    if (chat.users && chat.users.length === 1) {
+      throw new Error("Cannot remove the last member from the group")
+    }
+
+    const deleted = await db
+      .delete(userChatsTable)
+      .where(
+        and(
+          eq(userChatsTable.chat_id, chatId),
+          eq(userChatsTable.user_id, userId)
+        )
+      )
+      .returning()
+
+    if (!deleted.length) {
+      throw new Error("User not found in this chat")
+    }
+
+    await db
+      .update(chatsTable)
+      .set({
+        updated_at: new Date().toISOString()
+      })
+      .where(eq(chatsTable.id, chatId))
+
+    return deleted[0]
+  } catch (error: any) {
+    console.error("Error removing user from group chat:", error)
     throw new Error(error.message)
   }
 }

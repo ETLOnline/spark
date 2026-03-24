@@ -3,7 +3,7 @@
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import { Card, CardContent } from "@/src/components/ui/card"
-import { Dispatch, SetStateAction } from "react"
+import { Dispatch, SetStateAction, useState } from "react"
 import { Button } from "../ui/button"
 import { SelectUser } from "@/src/db/schema"
 import { Controller, useForm } from "react-hook-form"
@@ -12,6 +12,7 @@ import { toast } from "@/src/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { updateUserProfileAction } from "@/src/server-actions/profile/profile"
 import { socialPlatforms } from "./constants"
+import { set } from "zod"
 
 interface StepThreeProps {
   step: number
@@ -24,6 +25,7 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
   const [submitDataLoading, , , submitUserProfileData] = useServerAction(
     updateUserProfileAction
   )
+  const [isTransitioning, setIsTransitioning] = useState(false)
 
   const form = useForm({})
   const router = useRouter()
@@ -34,13 +36,26 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
   }
 
   async function submitData(data: any) {
+    setIsTransitioning(true)
     try {
       const socialPlatforms = {
         linkedin_url: data.linkedin,
         github_url: data.github,
         instagram_url: data.instagram,
         twitter_url: data.twitter,
-        personal_website_url: data.personal_website
+        personal_website_url: data.website
+      }
+      const hasAnyLink = Object.values(socialPlatforms).some(
+        (val) => val && val.trim() !== ""
+      )
+
+      if (!hasAnyLink) {
+        toast({
+          title: "Profile data saved successfully",
+          duration: 2000
+        })
+        router.push(`/profile`)
+        return
       }
 
       const res = await submitUserProfileData(user.unique_id, socialPlatforms)
@@ -54,6 +69,8 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
         if (!submitDataLoading) {
           router.push(`/profile`)
         }
+      } else {
+        setIsTransitioning(false)
       }
     } catch {
       toast({
@@ -61,6 +78,7 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
         variant: "destructive",
         duration: 2000
       })
+      setIsTransitioning(false)
     }
   }
 
@@ -116,7 +134,9 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
               >
                 Previous
               </Button>
-              <Button loading={submitDataLoading}>Continue</Button>
+              <Button loading={submitDataLoading} disabled={isTransitioning}>
+                Continue
+              </Button>
             </div>
           )}
         </form>

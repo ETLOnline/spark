@@ -1,31 +1,30 @@
 import {
   Dialog,
-  DialogClose,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle
 } from "@/src/components/ui/dialog"
 import { projectStore } from "@/src/store/project/projectStore"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useAtom, useAtomValue } from "jotai"
-import { useParams } from "next/navigation"
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
+import { useAtom, useSetAtom } from "jotai"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
+import React, {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useState
+} from "react"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
-import { taskStore } from "@/src/store/tasks/taskStore"
 import TaskFormHeader from "./TaskFormHeader"
 import TaskForm from "./TaskForm"
-import { InsertTask, SelectTask } from "@/src/db/schema"
-import { userStore } from "@/src/store/user/userStore"
+import { SelectTask } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import {
-  CreateTaskAction,
-  UpdateTaskAction
-} from "@/src/server-actions/Tasks/Task"
+import { GetTaskByIdAction } from "@/src/server-actions/Tasks/Task"
 import { toast } from "@/src/hooks/use-toast"
 import useTaskHook from "../hooks/useTaskHook"
+import { taskStore } from "@/src/store/tasks/taskStore"
+import { useConfirmClose } from "@/src/hooks/useConfirmClose"
+import { UnsavedChangesDialog } from "@/src/components/common/unsavedChangesDialog"
 
 interface TaskModalProps {
   isTaskModelOpen: boolean
@@ -34,19 +33,10 @@ interface TaskModalProps {
   sprintId?: string
   onCreateComplete?: (task: SelectTask) => void
   onUpdateComplete?: (task: SelectTask) => void
+  isReady?: boolean
+  onSubTaskCreate?: (task: SelectTask) => void
+  isSprintCompleted?: boolean
 }
-
-const taskSchema = z.object({
-  task_title: z.string().min(1, "Title required").max(50, "Title is too long"),
-  description: z
-    .string()
-    .min(1, "Title required")
-    .max(100, "Title is too long"),
-  task_type: z.string().min(1, "Title required"),
-  task_priority: z.string().min(1, "Title required"),
-  story_points: z.string().optional(),
-  status_id: z.string().optional()
-})
 
 export const TaskModal = ({
   isTaskModelOpen,
@@ -54,32 +44,146 @@ export const TaskModal = ({
   selectedTask,
   onCreateComplete,
   onUpdateComplete,
-  sprintId
+  sprintId,
+  isReady,
+  onSubTaskCreate,
+  isSprintCompleted = false
 }: TaskModalProps) => {
-  const [statuses, setStatuses] = useAtom(projectStore.projectStatusList)
+  const setSelectedTask = useSetAtom(taskStore.selectedTask)
+  const [taskIdFromUrl, setTaskIdFromUrl] = useState<string | null>(null)
+  const [statuses] = useAtom(projectStore.projectStatusList)
+  const [refetchComments, setRefetchComments] = useState(false)
   const { createTaskLoading, updateTaskLoading, handleSubmit } = useTaskHook({
     selectedTask,
     sprintId,
-    onCreateComplete,
-    onUpdateComplete
+    onCreateComplete: (task) => {
+      onCreateComplete?.(task)
+      setIsChanged(false)
+    },
+    onUpdateComplete: (task) => {
+      onUpdateComplete?.(task)
+      setIsChanged(false)
+      setRefetchComments(true)
+    },
+    setIsTaskModelOpen,
+    setSelectedTask
   })
 
+  const [isChanged, setIsChanged] = useState(false)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathName = usePathname()
+
+  const [internalTask, setInternalTask] = useState<SelectTask | undefined>(
+    selectedTask
+  )
+
+  const [loading, taskData, error, fetchTaskById] =
+    useServerAction(GetTaskByIdAction)
+
+  useEffect(() => {
+    if (searchParams.get("task_id")) {
+      setTaskIdFromUrl(searchParams.get("task_id"))
+    }
+  }, [searchParams])
+
+  const fetchTask = async (taskId: string) => {
+    try {
+      const res = await fetchTaskById(taskId)
+      if (res?.data) {
+        setInternalTask(res.data)
+        setSelectedTask(res.data)
+        setIsTaskModelOpen(true)
+      } else {
+        toast({ title: "Task not found" })
+        router.replace(pathName)
+      }
+    } catch (err) {
+      console.error("Error fetching task:", err)
+      toast({ title: "Failed to fetch task" })
+      router.replace(pathName)
+    }
+  }
+
+  useEffect(() => {
+    if (!isReady) return
+
+    if (!taskIdFromUrl || internalTask?.id === taskIdFromUrl) return
+
+    fetchTask(taskIdFromUrl)
+  }, [taskIdFromUrl, isReady])
+
+  useEffect(() => {
+    if (selectedTask) {
+      setInternalTask(selectedTask)
+    }
+  }, [selectedTask])
+
+  useEffect(() => {
+    if (isTaskModelOpen && internalTask?.id) {
+      const newSearchParams = new URLSearchParams(searchParams.toString())
+      newSearchParams.set("task_id", internalTask?.id)
+
+      router.push(`${pathName}?${newSearchParams.toString()}`)
+    }
+  }, [isTaskModelOpen, internalTask?.id])
+
+  const { showConfirmation, setShowConfirmation, handleClose } =
+    useConfirmClose({
+      isDirty: isChanged,
+      onClose: () => {
+        setIsTaskModelOpen(false)
+        setInternalTask(undefined)
+        setSelectedTask(null)
+        setIsChanged(false)
+
+        const newSearchParams = new URLSearchParams(searchParams.toString())
+        newSearchParams.delete("task_id")
+
+        setTimeout(() => {
+          router.push(`${pathName}?${newSearchParams.toString()}`)
+        }, 0)
+      }
+    })
+
+  const isLoading = createTaskLoading || updateTaskLoading || loading
+
   return (
-    <Dialog open={isTaskModelOpen} onOpenChange={setIsTaskModelOpen}>
-      <DialogContent className="sm:max-w-5xl [&>button]:w-6 [&>button]:h-6 [&>button>svg]:w-6 [&>button>svg]:h-6">
-        <DialogHeader>
-          <TaskFormHeader selectedTask={selectedTask} />
-          <DialogTitle className="h-0 absolute"></DialogTitle>
-        </DialogHeader>
-        <ScrollArea className=" max-h-[80vh] ">
+    <>
+      <Dialog open={isTaskModelOpen} onOpenChange={handleClose}>
+        <DialogContent
+          className="sm:max-w-5xl [&>button]:w-6 [&>button]:h-6 [&>button>svg]:w-6 [&>button>svg]:h-6"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <TaskFormHeader selectedTask={internalTask} />
+            <DialogTitle className="sr-only">
+              {internalTask
+                ? `Edit Task: ${internalTask.task_title}`
+                : "Create New Task"}
+            </DialogTitle>
+          </DialogHeader>
+
           <TaskForm
             statuses={statuses}
             onSubmit={handleSubmit}
-            selectedTask={selectedTask}
-            loading={createTaskLoading || updateTaskLoading}
+            selectedTask={internalTask}
+            loading={isLoading}
+            isTaskModelOpen={isTaskModelOpen}
+            setIsChanged={setIsChanged}
+            onSubTaskCreate={onSubTaskCreate}
+            isSprintCompleted={isSprintCompleted}
+            refetchComments={refetchComments}
+            setRefetchComments={setRefetchComments}
           />
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <UnsavedChangesDialog
+        showConfirmation={showConfirmation}
+        setShowConfirmation={setShowConfirmation}
+        setIsActualDialogOpen={setIsTaskModelOpen}
+      />
+    </>
   )
 }

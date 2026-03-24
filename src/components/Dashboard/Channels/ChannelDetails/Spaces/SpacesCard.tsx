@@ -13,7 +13,6 @@ import { useAtomValue } from "jotai"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
 import { ArrowRight, Check, Lock, PencilRuler } from "lucide-react"
-import { canControlSpace } from "@/src/utils/spaceRoleHelper"
 import {
   Tooltip,
   TooltipContent,
@@ -25,17 +24,12 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 
 interface Props {
   space: SelectSpace
+  setIsChannelMember?: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-function SpacesCard({ space }: Props) {
-  const [spaceControl, setSpaceControl] = useState(false)
+function SpacesCard({ space, setIsChannelMember }: Props) {
   const user = useAtomValue(userStore.AuthUser)
-
-  useEffect(() => {
-    if (user && canControlSpace(space.channel_id, space.id, user)) {
-      setSpaceControl(true)
-    }
-  }, [user, space])
+  const encodedSpaceSlug = encodeURIComponent(space.space_slug)
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "SPACE",
@@ -47,9 +41,12 @@ function SpacesCard({ space }: Props) {
   const canViewSpace = permissionChecker
     ? permissionChecker?.canAccess("space.view")
     : false
+  const canUpdateSpace = permissionChecker
+    ? permissionChecker?.canAccess("space.update")
+    : false
 
   return (
-    <Card key={space.id} className="overflow-hidden">
+    <Card key={space.id} className="overflow-hidden flex flex-col h-full ">
       {/* <div className="aspect-video w-full overflow-hidden">
         <img
           src={"/images/home/session-image2.jpg"}
@@ -62,49 +59,67 @@ function SpacesCard({ space }: Props) {
           <CardTitle className="text-xl flex items-center gap-1">
             {space.space_name}
             {space.space_type === "private" && (
-              <Lock className="text-muted-foreground" height={14} />
-            )}
-            {space.publish_space ? (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Check className="text-muted-foreground" height={14} />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Published</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <PencilRuler
-                      className="text-muted-foreground"
+                    <Lock
+                      className="text-muted-foreground  self-start mt-2"
                       height={14}
                     />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Darft</p>
+                    <p className="text-sm">Private</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             )}
+
+            {canUpdateSpace &&
+              (space.publish_space ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Check
+                        className="text-muted-foreground self-start mt-2"
+                        height={14}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Published</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <PencilRuler
+                        className="text-muted-foreground self-start mt-2"
+                        height={14}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Draft</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ))}
           </CardTitle>
-          {spaceControl ||
-          canSpaceAllowAction ||
-          space.space_type === "public" ? (
-            <SpacesActionButtons space={space} />
+          {canSpaceAllowAction || space.space_type === "public" ? (
+            <SpacesActionButtons
+              space={space}
+              setIsChannelMember={setIsChannelMember}
+            />
           ) : null}
         </div>
         <CardDescription>{space.description}</CardDescription>
       </CardHeader>
-      <CardFooter className="flex flex-col items-start gap-2">
-        <Badge variant="secondary">
-          {/* {space.membersCount} {space.membersCount === 1 ? 'Member' : 'Members'} */}
+      <CardFooter className="flex flex-col items-start gap-2 mt-auto pt-3">
+        {/* <Badge variant="secondary">
+          {space.membersCount} {space.membersCount === 1 ? 'Member' : 'Members'}
           0 Members
-        </Badge>
-        <Link href={`./spaces/${space.space_slug}`}>
+        </Badge> */}
+        <Link href={`./spaces/${encodedSpaceSlug}`}>
           <Button>
             Launch Space <ArrowRight />
           </Button>

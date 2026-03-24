@@ -171,8 +171,15 @@ export async function createScopedRole(params: {
   roleSlug?: string | null
   entityType?: string | null
   entityId?: string | null
+  roleType?: string | null
 }) {
-  const { name, roleSlug = null, entityType = null, entityId = null } = params
+  const {
+    name,
+    roleSlug = null,
+    entityType = null,
+    entityId = null,
+    roleType = null
+  } = params
   try {
     const result = await db.transaction(async (trx) => {
       // Internal transaction
@@ -180,7 +187,7 @@ export async function createScopedRole(params: {
         .insert(rolesTable)
         .values({
           name,
-          role_type: "SCOPED",
+          role_type: roleType ? roleType : "SCOPED",
           slug: roleSlug,
           entity_type: entityType,
           entity_id: entityId
@@ -296,9 +303,8 @@ export async function createScopedChannelRolesAndAssignAdmin(
         slug: string | null
       }[] = []
       for (const getDefaultRole of defaultRoles) {
-        const createRoleName = `${channelName} ${getDefaultRole.name}`
         const newScopedRole = await createScopedRole({
-          name: createRoleName,
+          name: getDefaultRole.name,
           roleSlug: getDefaultRole.slug,
           entityType: "CHANNEL",
           entityId: channelId
@@ -382,10 +388,9 @@ export async function createScopedSpaceRolesAndAssignAdmin(
 
       for (const getDefaultRole of defaultRoles) {
         const roleName = getDefaultRole.name || "Default Space Role"
-        const createRoleName = `${spaceName} ${roleName}` // Naming convention for space roles
 
         const newScopedRole = await createScopedRole({
-          name: createRoleName,
+          name: roleName,
           roleSlug: getDefaultRole.slug,
           entityType: "SPACE",
           entityId: spaceId
@@ -446,23 +451,13 @@ export async function createScopedSpaceRolesAndAssignAdmin(
 }
 
 /**
- * Creates a new role for a specific project by copying a default role's permissions,
- * and then assigns this new role to the project creator.
- * @param defaultRoleId The ID of the default role to copy (e.g., 'Project Role').
- * @param projectId The ID of the newly created project.
- * @param userId The ID of the user creating the project.
- * @param newRoleName The name for the new project-specific role (e.g., "Project Admin - [Project Name]").
- * @param roleSlug The slug of the default role. // Added roleSlug parameter
- * @returns The newly created role and the user role assignment.
- */
-/**
  * Creates all default project-scoped roles (Admin, Editor, Viewer) for a new project
  * and assigns the 'Project Admin' role to the project creator.
  * @param projectId The ID of the newly created project.
  * @param projectName The name of the newly created project (for role naming).
  * @param creatorUserId The ID of the user who created the project.
  */
-export async function createScopedProjectRolesAndAssignAdmin( // Renamed and refactored
+export async function createScopedProjectRolesAndAssignAdmin(
   projectId: string,
   projectName: string,
   creatorUserId: string
@@ -483,10 +478,9 @@ export async function createScopedProjectRolesAndAssignAdmin( // Renamed and ref
 
       for (const getDefaultRole of defaultRoles) {
         const roleName = getDefaultRole.name || "Default Project Role"
-        const createRoleName = `${projectName} ${roleName}`
 
         const newScopedRole = await createScopedRole({
-          name: createRoleName,
+          name: roleName,
           roleSlug: getDefaultRole.slug,
           entityType: "PROJECT",
           entityId: projectId
@@ -553,11 +547,7 @@ export async function createScopedProjectRolesAndAssignAdmin( // Renamed and ref
  * @returns The viewer role or null if not found.
  */
 async function fetchViewerRole(
-  roleSlug:
-    | "channel_viewer"
-    | "space_viewer"
-    | "project_viewer"
-    | "community_viewer",
+  roleSlug: EntityType,
   entityId: string
 ) {
   try {
@@ -603,13 +593,16 @@ async function fetchViewerRole(
  * @param entityId The ID of the specific channel or space.
  * @returns A success status and a list of assigned role IDs.
  */
+
+export type EntityType = "channel_viewer"
+  | "space_viewer"
+  | "project_viewer"
+  | "community_viewer"
+  | "community_admin"
+  | "community_editor"
 export async function getAndAssignViewerRoles(
   userId: string,
-  roleSlug:
-    | "channel_viewer"
-    | "space_viewer"
-    | "project_viewer"
-    | "community_viewer",
+  roleSlug: EntityType,
   entityId: string
 ) {
   return await db.transaction(async (trx) => {
@@ -800,9 +793,8 @@ export async function createScopedCommunityRolesAndAssignAdmin(
 
       for (const getDefaultRole of defaultRoles) {
         const roleName = getDefaultRole.name || "Default Community Role"
-        const createRoleName = `${communityName} ${roleName}` // Naming convention for community roles
         const newScopedRole = await createScopedRole({
-          name: createRoleName,
+          name: roleName,
           roleSlug: getDefaultRole.slug,
           entityType: "COMMUNITY",
           entityId: communityId
@@ -870,5 +862,44 @@ export const getAllRoles = async () => {
     return roles
   } catch (error: any) {
     throw new Error(error.message)
+  }
+}
+
+export async function deleteRolesAndAssociatedData(entityIds: string[]) {
+  try {
+    await db.transaction(async (tx) => {
+      const rolesToDelete = await tx
+        .select({ id: rolesTable.id })
+        .from(rolesTable)
+        .where(inArray(rolesTable.entity_id, entityIds))
+
+      const roleIdsToDelete = rolesToDelete.map((role) => role.id)
+
+      if (roleIdsToDelete.length > 0) {
+        await tx
+          .delete(userRolesTable)
+          .where(inArray(userRolesTable.role_id, roleIdsToDelete))
+
+        await tx
+          .delete(rolePermissionsTable)
+          .where(inArray(rolePermissionsTable.role_id, roleIdsToDelete))
+
+        await tx
+          .delete(rolesTable)
+          .where(inArray(rolesTable.id, roleIdsToDelete))
+      }
+
+      console.log(
+        `Successfully deleted roles and associated data for entity IDs: ${entityIds.join(", ")}`
+      )
+    })
+  } catch (error) {
+    console.error(
+      `Failed to delete roles and associated data for entity IDs: ${entityIds.join(", ")}`
+    )
+    console.error(error)
+    throw new Error(
+      "Database error: Unable to delete roles and associated data."
+    )
   }
 }

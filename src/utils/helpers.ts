@@ -9,9 +9,16 @@ import {
   SelectUser,
   SelectUserRole
 } from "../db/schema"
-import { AblyClient } from "../services/realtime/AblyClient"
 import moment from "moment-timezone"
 import { CommunityDetailData } from "../db/data-access/communities/query"
+import pusherClient from "../services/realtime/PusherClient"
+import { FindUserByUniqueIdAction } from "../server-actions/User/FindUserByUniqueIdAction"
+import { createAbsoluteUrl, getSiteLogoUrl } from "./clientHelper"
+import StarterKit from "@tiptap/starter-kit"
+import Link from "@tiptap/extension-link"
+import { Editor } from "@tiptap/react"
+import { createSchemaExtensions } from "../components/common/Tiptap/tiptapSchemaExtensions"
+
 export type RoleWithPermissions = {
   id: number
   name: string
@@ -25,15 +32,18 @@ export const joinRequestChannel = (
   onRequestReceived: (request: ProfileActivity, activity: string) => void,
   channelEvents: string[]
 ) => {
-  const channel = AblyClient.channels.get(channelId)
-  // Subscribe to incoming requests
-  channel.subscribe(channelEvents, (message) => {
-    onRequestReceived(message.data, message.name as string)
+  const channel = pusherClient.subscribe(channelId)
+
+  channelEvents.forEach((eventName) => {
+    channel.bind(eventName, (data: ProfileActivity) => {
+      onRequestReceived(data, eventName)
+    })
   })
-  // Return functions to send messages and cleanup
+
   return {
     unsubscribe: () => {
-      channel.unsubscribe(channelEvents)
+      channelEvents.forEach((eventName) => channel.unbind(eventName))
+      pusherClient.unsubscribe(channelId)
     }
   }
 }
@@ -62,20 +72,23 @@ export const killConnection = (
 export const joinNotificationChannel = (
   channelId: string,
   onRequestReceived: (
-    notifcation: InsertNotification,
+    notification: InsertNotification,
     activity: string
   ) => void,
   channelEvents: string[]
 ) => {
-  const channel = AblyClient.channels.get(channelId)
-  // Subscribe to incoming notifications
-  channel.subscribe(channelEvents, (message) => {
-    onRequestReceived(message.data, message.name as string)
+  const channel = pusherClient.subscribe(channelId)
+
+  channelEvents.forEach((eventName) => {
+    channel.bind(eventName, (data: InsertNotification) => {
+      onRequestReceived(data, eventName)
+    })
   })
-  // Return functions to send messages and cleanup
+
   return {
     unsubscribe: () => {
-      channel.unsubscribe()
+      channelEvents.forEach((eventName) => channel.unbind(eventName))
+      pusherClient.unsubscribe(channelId)
     }
   }
 }
@@ -88,40 +101,27 @@ export const joinChannelsAndSpacesChannel = (
   ) => void | Promise<void>,
   channelEvents: string[]
 ) => {
-  const channel = AblyClient.channels.get(channelId)
-  // Subscribe to incoming channel/space updates
-  channel.subscribe(channelEvents, (message) => {
-    onUpdate(message.data, message.name as string)
+  const channel = pusherClient.subscribe(channelId)
+
+  channelEvents.forEach((eventName) => {
+    channel.bind(eventName, (data: SelectChannel | SelectSpace) => {
+      onUpdate(data, eventName)
+    })
   })
-  // Return functions to send messages and cleanup
+
   return {
     unsubscribe: () => {
-      channel.unsubscribe(channelEvents)
+      channelEvents.forEach((eventName) => channel.unbind(eventName))
+      pusherClient.unsubscribe(channelId)
     }
   }
-}
-
-export const getUserRoles = (user: SelectUser): string[] => {
-  const roles = (user?.role || "").split(",")
-  return roles || []
-}
-
-export const isUserAdmin = (user: SelectUser): boolean => {
-  return getUserRoles(user).includes("admin")
-}
-
-export const canUserIntract = (
-  user: SelectUser,
-  ownerId?: string | null
-): boolean => {
-  return isUserAdmin(user) || user.unique_id === ownerId ? true : false
 }
 
 export const generateUrl = (path: string) => {
   if (typeof window !== "undefined") {
     return `${window.location.origin}${path}`
   }
-  return path // Return just the path on server-side
+  return path
 }
 
 export const getPagePath = (page: string) => {
@@ -180,7 +180,7 @@ export function ToUpperCase(string: string) {
 }
 
 export const checkUserPersonaCompletion = async (user: SelectUser) => {
-  if (isUserAdmin(user)) {
+  if (await isSuperAdmin(user)) {
     return true
   }
   if (!user.roles || user.roles.length === 0) {
@@ -327,4 +327,108 @@ export const formatRelativeTime = (
     .utc(dateString || "")
     .local()
     .fromNow()
+}
+
+export const getUserRole = (user: SelectUser, entity_id?: string) => {
+  if (user.roles && user.roles.length > 0) {
+    if (entity_id) {
+      return user.roles.flatMap((ur) =>
+        ur.role &&
+        ur.role.entity_id === entity_id &&
+        ur.role.role_type === "SCOPED"
+          ? ur.role.name
+          : ""
+      )
+    } else {
+      return user.roles.flatMap((ur) =>
+        ur.role &&
+        (ur.role.role_type === "GLOBAL" || ur.role.role_type === "SYSTEM")
+          ? ur.role.name
+          : ""
+      )
+    }
+  }
+}
+
+export function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gi, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-+/g, "-")
+}
+
+export function joinPresenceChannel(chatId: number) {
+  const channel = pusherClient.subscribe(`presence-chat-${chatId}`)
+
+  return channel
+}
+export async function prepareContactData(
+  user: SelectUser,
+  contact_id: string,
+  event: string
+): Promise<{ payload: any; sendingTo: string[] } | undefined> {
+  const receivedByUser = await FindUserByUniqueIdAction(contact_id)
+
+  if (!receivedByUser.data) {
+    return
+  }
+  const ctaLinkProcess =
+    event == "new_connection" ? `/connections` : `/profile/${contact_id}`
+  const linkUrl = createAbsoluteUrl(ctaLinkProcess)
+  const logoUrl = getSiteLogoUrl()
+  const payload = {
+    logoUrl: logoUrl,
+    userName:
+      `${receivedByUser.data.first_name ?? ""} ${receivedByUser.data.last_name ?? ""}`.trim(),
+    requesterName: `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim(),
+    ctaLink: linkUrl
+  }
+  const sendingTo = Array.from(new Set([receivedByUser.data.email]))
+
+  return { payload, sendingTo }
+}
+
+export const formatContent = (content: string) => {
+  return content
+    .replace(
+      /<span[^>]*data-type="mention"[^>]*data-id="([^"]*)"[^>]*data-label="([^"]*)"[^>]*>@[^<]*<\/span>/g,
+      "@[ $2 ]($1)"
+    )
+    .replace(/<p[^>]*>/g, "")
+    .replace(/<\/p>/g, "\n")
+    .replace(/<br\s*\/?>/g, "\n")
+    .trim()
+}
+
+export const normalizeHTML = (html: string) => {
+  const editor = new Editor({
+    editable: false,
+    content: html,
+    extensions: createSchemaExtensions({
+      clickableLinks: true
+    })
+  })
+
+  const normalized = editor.getHTML()
+  editor.destroy()
+
+  return normalized
+}
+
+export const getCharacterCount = (text: string) => {
+  return text.replace(/\s+/g, " ").trim().length
+}
+
+export const isValidInviteLink = (link: string) => {
+  try {
+    const url = new URL(link)
+
+    const hasInvitePath = url.pathname.includes("/invite/")
+    const typeParam = url.searchParams.get("type")
+
+    return hasInvitePath && typeParam === "community"
+  } catch {
+    return false
+  }
 }

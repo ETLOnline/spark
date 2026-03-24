@@ -3,7 +3,8 @@ import {
   CreateFile,
   CreateFolder,
   GetDirectoryContents,
-  DeleteFile
+  DeleteFile,
+  searchFoldersBySlug
 } from "@/src/db/data-access/file-sharing/query"
 import {
   base64ToBuffer,
@@ -15,18 +16,47 @@ import { getStorageClient } from "@/src/services/storage/client/storage.client"
 import { db } from "@/src/db"
 import { spaceFileDirectoryTable } from "@/src/db/schema"
 import { eq } from "drizzle-orm"
+import { getSpaceUsers } from "@/src/db/data-access/spaces/query"
 
 export const CreateNewFolderAction = CreateServerAction(
   true,
-  async (id: string | number, folderName: string) => {
+  async (id: string | number, folderName: string, folderSlug: string) => {
     try {
-      const result = await CreateFolder(id, folderName)
+      const user = await AuthUserAction()
+      if (!user) {
+        return {
+          success: false,
+          error: "Unauthorized"
+        }
+      }
+      const result = await CreateFolder(
+        id,
+        folderName,
+        folderSlug,
+        user.unique_id
+      )
       return { success: true, data: result[0] }
     } catch (error) {
       console.error("Error creating folder:", error)
       return {
         success: false,
         error: "Failed to create folder"
+      }
+    }
+  }
+)
+
+export const SearchFolderBySlugAction = CreateServerAction(
+  true,
+  async (id: string | number, slug: string, isRoot: boolean) => {
+    try {
+      const result = await searchFoldersBySlug(id, slug, isRoot)
+      return { success: true, data: result }
+    } catch (error) {
+      console.error("Error searching folder:", error)
+      return {
+        success: false,
+        error: "Failed to search folder"
       }
     }
   }
@@ -100,7 +130,7 @@ export const GetDirectoryContentsAction = CreateServerAction(
 
 export const DeleteFileAction = CreateServerAction(
   true,
-  async (directoryId: number, spaceId: string) => {
+  async (directoryId: number, spaceId: string, canDeleteSpaceFile: boolean) => {
     try {
       const user = await AuthUserAction()
       if (!user) {
@@ -110,23 +140,28 @@ export const DeleteFileAction = CreateServerAction(
         }
       }
 
-      // Check if user owns the file
+      // Check if user owns the file or folder
       const fileEntry = await db.query.spaceFileDirectoryTable.findFirst({
         where: eq(spaceFileDirectoryTable.id, directoryId),
         with: {
           file: true
         }
       })
-      if (!fileEntry || fileEntry.entity_type !== "file") {
+      if (
+        !fileEntry ||
+        (fileEntry.entity_type !== "file" && fileEntry.entity_type !== "folder")
+      ) {
         return {
           success: false,
-          error: "File not found"
+          error: "File or folder not found"
         }
       }
-      if (fileEntry.created_by !== user.unique_id) {
+      const isFileOwner = fileEntry.created_by === user.unique_id
+
+      if (!isFileOwner && !canDeleteSpaceFile) {
         return {
           success: false,
-          error: "You can only delete files that you uploaded"
+          error: "You can only delete files and folders that you created"
         }
       }
 

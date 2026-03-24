@@ -27,6 +27,7 @@ import { updateChannelUser } from "@/src/db/data-access/channels/query"
 import { updateSpaceUser } from "@/src/db/data-access/spaces/query"
 import { updateProjectUserRole } from "@/src/db/data-access/project-management/query"
 import { updateCommunityUser } from "@/src/db/data-access/communities/query"
+import pusherServer from "@/src/services/realtime/pusherServer"
 
 export const getPersonasAction = CreateServerAction(true, async () => {
   const globalRoles = await getAllGlobalRoles()
@@ -39,6 +40,23 @@ export const getUserPermissionRowsAction = CreateServerAction(
     try {
       const permissionRows = await getUserPermissionRows(userId)
       return { success: true, data: permissionRows }
+    } catch (error) {
+      console.error("Error :", error)
+      return { success: false, error: "Failed to get permissions" }
+    }
+  }
+)
+
+export const GetUserPermissionsParsedAction = CreateServerAction(
+  true,
+  async (userId: string) => {
+    try {
+      const permissionRows = await getUserPermissionRows(userId)
+      let permissions = null
+      if (permissionRows.length > 0) {
+        permissions = buildUserPerms(permissionRows)
+      }
+      return { success: true, data: permissions }
     } catch (error) {
       console.error("Error :", error)
       return { success: false, error: "Failed to get permissions" }
@@ -115,7 +133,7 @@ export const SaveRoleWithPermissionsAction = CreateServerAction(
 
 export const CreateRoleAction = CreateServerAction(
   true,
-  async (formData: { name: string }) => {
+  async (formData: { name: string; roleType?: string }) => {
     try {
       const newRole = await createScopedRole(formData)
       return { success: true, data: newRole }
@@ -197,6 +215,7 @@ export const updateUserRoleForEntityAction = CreateServerAction(
       } else {
         await updateProjectUserRole(entityId, userId, newRoleName)
       }
+      pusherServer.trigger(`user-${userId}`, "update-role", result)
       return { success: true, data: result }
     } catch (error: any) {
       console.error("Error updating user role for entity:", error)

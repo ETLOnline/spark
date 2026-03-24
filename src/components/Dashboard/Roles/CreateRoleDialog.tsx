@@ -36,12 +36,16 @@ export function CreateRoleDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const result = await runCreateRole(formData)
+    const dataWithRoleType = {
+      ...formData,
+      roleType: "GLOBAL"
+    }
+    const result = await runCreateRole(dataWithRoleType)
 
     if (result?.success) {
       onOpenChange(false)
       setFormData({ name: "" })
-      router.push(`/roles/${result.data.id}/edit`)
+      router.push(`/admin/roles/${result.data.id}/edit`)
     } else {
       // handle error (show toast, etc.)
       console.error("Failed to create role:", result?.error)
