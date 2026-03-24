@@ -74,10 +74,11 @@ import { NextResponse } from "next/server";
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const data = await req.json();
-    const result = await UpdateCertificateAction(Number(params.id), data);
+    const resolvedParams = await params;
+    const result = await UpdateCertificateAction(Number(resolvedParams.id), data);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(
@@ -94,9 +95,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const result = await DeleteCertificateAction(Number(params.id));
+    const resolvedParams = await params;
+    const result = await DeleteCertificateAction(Number(resolvedParams.id));
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(

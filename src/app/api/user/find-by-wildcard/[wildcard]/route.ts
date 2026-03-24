@@ -2,12 +2,10 @@
 import { FindUserWildCardAction } from "@/src/server-actions/User/FindUserWildCardAction";
 import { NextResponse } from "next/server";
 
-export async function GET(
-  req: Request,
-  { params }: { params: { wildcard: string } }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ wildcard: string }> }) {
+  const resolvedParams = await params;
   try {
-    const user = await FindUserWildCardAction(params.wildcard);
+    const user = await FindUserWildCardAction(resolvedParams.wildcard);
     return NextResponse.json(user);
   } catch (error: any) {
     return new NextResponse(

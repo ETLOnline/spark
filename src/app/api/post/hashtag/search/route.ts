@@ -1,6 +1,6 @@
 
 import { SearchHashtagsAction } from "@/src/server-actions/Post/Post";
-import { NextResponse } => "next/server";
+import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
   try {

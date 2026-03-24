@@ -2,13 +2,11 @@
 import { UpdateTaskStatusAction, DeleteTaskStatusAction } from "@/src/server-actions/Tasks/Task";
 import { NextResponse } from "next/server";
 
-export async function PUT(
-  req: Request,
-  { params }: { params: { statusId: string } }
-) {
+export async function PUT(req: Request, { params }: { params: Promise<{ statusId: string }> }) {
+  const resolvedParams = await params;
   try {
     const data = await req.json();
-    const result = await UpdateTaskStatusAction(params.statusId, data);
+    const result = await UpdateTaskStatusAction(resolvedParams.statusId, data);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(
@@ -25,12 +23,10 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { statusId: string } }
-) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ statusId: string }> }) {
+  const resolvedParams = await params;
   try {
-    const result = await DeleteTaskStatusAction(params.statusId);
+    const result = await DeleteTaskStatusAction(resolvedParams.statusId);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(

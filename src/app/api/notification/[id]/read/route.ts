@@ -38,9 +38,10 @@ import { NextResponse } from "next/server";
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
   try {
-    const result = await MarkNotificationAsReadAction(Number(params.id));
+    const result = await MarkNotificationAsReadAction(Number(resolvedParams.id));
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(

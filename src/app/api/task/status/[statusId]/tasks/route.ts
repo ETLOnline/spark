@@ -2,12 +2,10 @@
 import { GetTasksByStatusIdAction } from "@/src/server-actions/Tasks/Task";
 import { NextResponse } from "next/server";
 
-export async function GET(
-  req: Request,
-  { params }: { params: { statusId: string } }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ statusId: string }> }) {
+  const resolvedParams = await params;
   try {
-    const result = await GetTasksByStatusIdAction(params.statusId);
+    const result = await GetTasksByStatusIdAction(resolvedParams.statusId);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(

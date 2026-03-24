@@ -2,12 +2,10 @@
 import { getUsersByRoleIDAction } from "@/src/server-actions/UserRoles/UserRole";
 import { NextResponse } from "next/server";
 
-export async function GET(
-  req: Request,
-  { params }: { params: { roleId: string } }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ roleId: string }> }) {
+  const resolvedParams = await params;
   try {
-    const result = await getUsersByRoleIDAction(Number(params.roleId));
+    const result = await getUsersByRoleIDAction(Number(resolvedParams.roleId));
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(

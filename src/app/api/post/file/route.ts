@@ -1,5 +1,5 @@
 
-import { CreateFilePostAction } from "@/src/server-actions/Post/Post";
+import { CreateFilesPostAction } from "@/src/server-actions/Post/Post";
 import { NextResponse } from "next/server";
 
 /**
@@ -40,7 +40,7 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   try {
     const data = await req.json();
-    const result = await CreateFilePostAction(data);
+    const result = await CreateFilesPostAction(data);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(

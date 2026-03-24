@@ -79,10 +79,11 @@ import { NextResponse } from "next/server";
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
   try {
     const data = await req.json();
-    const result = await UpdateEventsAction(Number(params.id), data);
+    const result = await UpdateEventsAction(Number(resolvedParams.id), data);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(
@@ -99,7 +100,8 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
   try {
     const data = await req.json();
     const result = await DeleteEventAction(data);

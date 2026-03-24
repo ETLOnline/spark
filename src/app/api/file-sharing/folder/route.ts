@@ -50,8 +50,8 @@ import { NextResponse } from "next/server";
  */
 export async function POST(req: Request) {
   try {
-    const { id, folderName } = await req.json();
-    const result = await CreateNewFolderAction(id, folderName);
+    const { id, folderName, folderSlug } = await req.json();
+    const result = await CreateNewFolderAction(id, folderName, folderSlug);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(

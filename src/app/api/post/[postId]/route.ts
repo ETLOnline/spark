@@ -2,12 +2,10 @@
 import { GetPostByIdAction, DeletePostAction } from "@/src/server-actions/Post/Post";
 import { NextResponse } from "next/server";
 
-export async function GET(
-  req: Request,
-  { params }: { params: { postId: string } }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ postId: string }> }) {
+  const resolvedParams = await params;
   try {
-    const result = await GetPostByIdAction(params.postId);
+    const result = await GetPostByIdAction(resolvedParams.postId);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(
@@ -24,12 +22,10 @@ export async function GET(
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { postId: string } }
-) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ postId: string }> }) {
+  const resolvedParams = await params;
   try {
-    const result = await DeletePostAction(params.postId);
+    const result = await DeletePostAction(resolvedParams.postId);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(

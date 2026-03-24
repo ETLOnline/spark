@@ -2,12 +2,10 @@
 import { deleteRoleAction } from "@/src/server-actions/UserRoles/UserRole";
 import { NextResponse } from "next/server";
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { roleId: string } }
-) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ roleId: string }> }) {
+  const resolvedParams = await params;
   try {
-    const result = await deleteRoleAction(Number(params.roleId));
+    const result = await deleteRoleAction(Number(resolvedParams.roleId));
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(

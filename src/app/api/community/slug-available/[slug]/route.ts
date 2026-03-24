@@ -46,14 +46,12 @@ import { NextResponse } from "next/server";
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function GET(
-  req: Request,
-  { params }: { params: { slug: string } }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const resolvedParams = await params;
   try {
     const { searchParams } = new URL(req.url);
     const communityId = searchParams.get("communityId") || undefined;
-    const result = await IsCommunitySlugAvailableAction(params.slug, communityId);
+    const result = await IsCommunitySlugAvailableAction(resolvedParams.slug, communityId);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(

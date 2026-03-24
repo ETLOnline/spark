@@ -134,7 +134,7 @@ export async function GET(req: Request) {
     const page = Number(searchParams.get("page")) || 1;
     const limit = Number(searchParams.get("limit")) || 6;
     const activeTab = (searchParams.get("activeTab") as any) || "all";
-    const result = await GetCommunitiesAction(filters, page, limit, activeTab);
+    const result = await GetCommunitiesAction(filters, page, limit);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(

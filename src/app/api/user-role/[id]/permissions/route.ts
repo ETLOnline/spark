@@ -2,12 +2,10 @@
 import { GetRoleWithPermissionsAction, SaveRoleWithPermissionsAction } from "@/src/server-actions/UserRoles/UserRole";
 import { NextResponse } from "next/server";
 
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
   try {
-    const result = await GetRoleWithPermissionsAction(Number(params.id));
+    const result = await GetRoleWithPermissionsAction(Number(resolvedParams.id));
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(
@@ -24,13 +22,11 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
   try {
     const { name, permissionIds } = await req.json();
-    const result = await SaveRoleWithPermissionsAction(Number(params.id), name, permissionIds);
+    const result = await SaveRoleWithPermissionsAction(Number(resolvedParams.id), name, permissionIds);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(

@@ -2,12 +2,10 @@
 import { GetTaskByIdAction, UpdateTaskAction, DeleteTaskAction } from "@/src/server-actions/Tasks/Task";
 import { NextResponse } from "next/server";
 
-export async function GET(
-  req: Request,
-  { params }: { params: { taskId: string } }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ taskId: string }> }) {
+  const resolvedParams = await params;
   try {
-    const result = await GetTaskByIdAction(params.taskId);
+    const result = await GetTaskByIdAction(resolvedParams.taskId);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(
@@ -24,13 +22,11 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  req: Request,
-  { params }: { params: { taskId: string } }
-) {
+export async function PUT(req: Request, { params }: { params: Promise<{ taskId: string }> }) {
+  const resolvedParams = await params;
   try {
     const data = await req.json();
-    const result = await UpdateTaskAction(params.taskId, data);
+    const result = await UpdateTaskAction(resolvedParams.taskId, data);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(
@@ -47,10 +43,8 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { taskId: string } }
-) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ taskId: string }> }) {
+  const resolvedParams = await params;
   try {
     const data = await req.json();
     const result = await DeleteTaskAction(data);

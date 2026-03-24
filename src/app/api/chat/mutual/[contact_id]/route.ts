@@ -38,12 +38,10 @@ import { NextResponse } from "next/server";
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function GET(
-  req: Request,
-  { params }: { params: { contact_id: string } }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ contact_id: string }> }) {
+  const resolvedParams = await params;
   try {
-    const result = await GetMutualChatAction(params.contact_id);
+    const result = await GetMutualChatAction(resolvedParams.contact_id);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(

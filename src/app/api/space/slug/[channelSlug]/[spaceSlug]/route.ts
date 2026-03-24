@@ -2,14 +2,12 @@
 import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space";
 import { NextResponse } from "next/server";
 
-export async function GET(
-  req: Request,
-  { params }: { params: { channelSlug: string; spaceSlug: string } }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ channelSlug: string; spaceSlug: string }> }) {
+  const resolvedParams = await params;
   try {
     const { searchParams } = new URL(req.url);
     const withSpaceUsers = searchParams.get("withSpaceUsers") === "true";
-    const result = await GetSpaceBySlugAction(params.spaceSlug, params.channelSlug, withSpaceUsers);
+    const result = await GetSpaceBySlugAction(resolvedParams.spaceSlug, resolvedParams.channelSlug, withSpaceUsers);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(

@@ -1,5 +1,5 @@
 
-import { createUserProfileAction } from "@/src/server-actions/profile/profile";
+import { createUserProfileAction, updateUserProfileAction } from "@/src/server-actions/profile/profile";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {

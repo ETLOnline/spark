@@ -2,16 +2,14 @@
 import { GetSpacePostsAction } from "@/src/server-actions/Post/Post";
 import { NextResponse } from "next/server";
 
-export async function GET(
-  req: Request,
-  { params }: { params: { spaceId: string } }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ spaceId: string }> }) {
+  const resolvedParams = await params;
   try {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category") || "";
     const offset = searchParams.get("offset") ? Number(searchParams.get("offset")) : undefined;
     const limit = searchParams.get("limit") ? Number(searchParams.get("limit")) : undefined;
-    const result = await GetSpacePostsAction(params.spaceId, category, offset, limit);
+    const result = await GetSpacePostsAction(resolvedParams.spaceId, category, offset, limit);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(

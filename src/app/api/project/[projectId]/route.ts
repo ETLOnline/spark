@@ -2,14 +2,12 @@
 import { GetProjectByIdAction } from "@/src/server-actions/ProjectManagement/projectManagement";
 import { NextResponse } from "next/server";
 
-export async function GET(
-  req: Request,
-  { params }: { params: { projectId: string } }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ projectId: string }> }) {
+  const resolvedParams = await params;
   try {
     const { searchParams } = new URL(req.url);
     const WithChannelAndSpace = searchParams.get("WithChannelAndSpace") === "true";
-    const result = await GetProjectByIdAction(params.projectId, WithChannelAndSpace);
+    const result = await GetProjectByIdAction(resolvedParams.projectId, WithChannelAndSpace);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(

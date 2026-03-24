@@ -51,10 +51,11 @@ import { NextResponse } from "next/server";
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
   try {
     const { spaceId } = await req.json();
-    const result = await DeleteFileAction(Number(params.id), spaceId);
+    const result = await DeleteFileAction(Number(resolvedParams.id), spaceId, false);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(

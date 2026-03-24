@@ -112,14 +112,12 @@ import { NextResponse } from "next/server";
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
   try {
     const { searchParams } = new URL(req.url);
     const withSpaceUsers = searchParams.get("withSpaceUsers") === "true";
-    const result = await GetCommunityByIdAction(params.id, withSpaceUsers);
+    const result = await GetCommunityByIdAction(resolvedParams.id, withSpaceUsers);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(
@@ -136,10 +134,11 @@ export async function GET(
   }
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
   try {
     const data = await req.json();
-    const result = await UpdateCommunityAction(params.id, data);
+    const result = await UpdateCommunityAction(resolvedParams.id, data);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(
@@ -156,7 +155,8 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
   try {
     const data = await req.json();
     const result = await DeleteCommunityAction(data);

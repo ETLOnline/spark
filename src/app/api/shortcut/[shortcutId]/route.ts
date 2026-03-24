@@ -2,12 +2,10 @@
 import { deleteShortcutAction } from "@/src/server-actions/Shortcut/Shortcut";
 import { NextResponse } from "next/server";
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { shortcutId: string } }
-) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ shortcutId: string }> }) {
+  const resolvedParams = await params;
   try {
-    const result = await deleteShortcutAction(params.shortcutId);
+    const result = await deleteShortcutAction(resolvedParams.shortcutId);
     return NextResponse.json(result);
   } catch (error: any) {
     return new NextResponse(
