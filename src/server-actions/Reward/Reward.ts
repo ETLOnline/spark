@@ -1,10 +1,12 @@
 import {
   AddLedgerEntry,
   AddVerificationEntry,
-  GetActivityRule
+  GetActivityRule,
+  UpsertUserRewardBalance
 } from "@/src/db/data-access/reward/query"
 import { CreateServerAction } from ".."
 import { InsertPointLedger, InsertTrustVerification } from "@/src/db/schema"
+import { AuthUserAction } from "../User/AuthUserAction"
 
 export const AddRewardAction = CreateServerAction(
   true,
@@ -21,10 +23,18 @@ export const AddRewardAction = CreateServerAction(
         reward_id: activityRule.reward_id,
         rule_id: activityRule.rule_id,
         amount: activityRule.base_points,
-        source_system: "internal_app"
+        source_system: "internal_app",
+        external_ref_id: "",
+        metadata: {}
       }
 
       const ledgerEntry = await AddLedgerEntry(ledgerData as InsertPointLedger)
+
+      await UpsertUserRewardBalance(
+        user_id,
+        activityRule.reward_id,
+        activityRule.base_points
+      )
 
       if (activityRule.required_verification) {
         const verificationData = {
