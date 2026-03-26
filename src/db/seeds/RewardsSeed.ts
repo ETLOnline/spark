@@ -45,7 +45,8 @@ const activityRules: InsertActivityRules[] = [
     category_group: "engagement",
     required_verification: false,
     is_active: true,
-    description: "SC per verified hour attending a public webinar (monthly cap applies)"
+    description:
+      "SC per verified hour attending a public webinar (monthly cap applies)"
   },
   {
     rule_id: 3,
@@ -55,7 +56,8 @@ const activityRules: InsertActivityRules[] = [
     category_group: "attendance",
     required_verification: false,
     is_active: true,
-    description: "SC per verified hour attending a community voice/video session"
+    description:
+      "SC per verified hour attending a community voice/video session"
   },
   {
     rule_id: 4,
@@ -65,7 +67,8 @@ const activityRules: InsertActivityRules[] = [
     category_group: "community_service",
     required_verification: true,
     is_active: true,
-    description: "SC for admin-approved community service (moderation or event organising)"
+    description:
+      "SC for admin-approved community service (moderation or event organising)"
   },
   {
     rule_id: 5,
@@ -114,10 +117,11 @@ const activityRules: InsertActivityRules[] = [
     action_type: "milestone_deployment",
     reward_id: 1,
     base_points: 40,
-    category_group: "technical",
+    category_group: "milestone",
     required_verification: true,
     is_active: true,
-    description: "RP for a successful FYP milestone deployment after advisor approval"
+    description:
+      "RP for a successful FYP milestone deployment after advisor approval"
   },
   {
     rule_id: 10,
@@ -127,17 +131,19 @@ const activityRules: InsertActivityRules[] = [
     category_group: "peer_review",
     required_verification: true,
     is_active: true,
-    description: "RP for a peer review marked helpful by recipient (anti-collusion enforced)"
+    description:
+      "RP for a peer review marked helpful by recipient (anti-collusion enforced)"
   },
   {
     rule_id: 11,
-    action_type: "milestone_approved",
+    action_type: "milestone_approval",
     reward_id: 1,
     base_points: 40,
     category_group: "milestone",
-    required_verification: true,
+    required_verification: false,
     is_active: true,
-    description: "RP awarded to student when their milestone is approved by an advisor"
+    description:
+      "RP awarded to student when their milestone is approved by an advisor"
   },
   {
     rule_id: 12,
@@ -147,19 +153,21 @@ const activityRules: InsertActivityRules[] = [
     category_group: "mentorship",
     required_verification: true,
     is_active: true,
-    description: "RP for student after a verified mentorship session with feedback"
+    description:
+      "RP for student after a verified mentorship session with feedback"
   },
 
   // ── Reputation Points – Advisor (reward_id: 1) ────────────────────────────
   {
     rule_id: 13,
-    action_type: "advisor_milestone_verified",
+    action_type: "milestone_verified",
     reward_id: 1,
     base_points: 5,
-    category_group: "verification",
-    required_verification: true,
+    category_group: "milestone",
+    required_verification: false,
     is_active: true,
-    description: "RP for advisor after verifying and approving a student milestone"
+    description:
+      "RP for advisor after verifying and approving a student milestone"
   },
   {
     rule_id: 14,
@@ -179,7 +187,28 @@ const activityRules: InsertActivityRules[] = [
     category_group: "mentorship",
     required_verification: true,
     is_active: true,
-    description: "RP for advisor after a verified mentorship session with feedback"
+    description:
+      "RP for advisor after a verified mentorship session with feedback"
+  },
+  {
+    rule_id: 16,
+    action_type: "task_inprogress",
+    reward_id: 2,
+    base_points: 10,
+    category_group: "engagement",
+    required_verification: false,
+    is_active: true,
+    description: "SC awarded when a task is moved to in-progress status"
+  },
+  {
+    rule_id: 17,
+    action_type: "task_completion",
+    reward_id: 1,
+    base_points: 20,
+    category_group: "technical",
+    required_verification: true,
+    is_active: true,
+    description: "RP awarded upon successful completion of an assigned task"
   }
 ]
 

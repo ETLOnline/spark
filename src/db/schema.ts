@@ -1704,6 +1704,7 @@ export const pointLedgerTable = pgTable("point_ledger", {
   source_system: varchar().notNull(),
   external_ref_id: varchar().notNull(),
   metadata: jsonb().notNull(),
+  trust_verification_id: integer(),
   ...timestamps
 })
 
@@ -1722,6 +1723,11 @@ export const pointLedgerRelations = relations(pointLedgerTable, ({ one }) => ({
     fields: [pointLedgerTable.rule_id],
     references: [activityRulesTable.rule_id],
     relationName: "pointLedgerToRule"
+  }),
+  trustVerification: one(trustVerificationTable, {
+    fields: [pointLedgerTable.trust_verification_id],
+    references: [trustVerificationTable.verification_id],
+    relationName: "pointLedgerToTrustVerification"
   })
 }))
 
@@ -1732,19 +1738,18 @@ export const trustVerificationTable = pgTable("trust_verification", {
   verification_id: integer().primaryKey().generatedAlwaysAsIdentity(),
   user_id: varchar().notNull(),
   rule_id: integer().notNull(),
-  advisor_id: varchar().notNull(),
+  approved_by: varchar(),
   status: varchar().notNull(),
   proof_url: varchar().notNull(),
-  points_awarded: integer().notNull(),
-  verified_at: varchar()
-    .default(sql`now()`)
-    .notNull(),
+  points: integer().notNull(),
+  feedback: varchar(),
+  verified_at: varchar(),
   ...timestamps
 })
 
 export const trustVerificationRelations = relations(
   trustVerificationTable,
-  ({ one }) => ({
+  ({ one, many }) => ({
     user: one(usersTable, {
       fields: [trustVerificationTable.user_id],
       references: [usersTable.unique_id],
@@ -1756,9 +1761,12 @@ export const trustVerificationRelations = relations(
       relationName: "trustVerificationToRule"
     }),
     advisor: one(usersTable, {
-      fields: [trustVerificationTable.advisor_id],
+      fields: [trustVerificationTable.approved_by],
       references: [usersTable.unique_id],
       relationName: "trustVerificationToAdvisor"
+    }),
+    ledger: many(pointLedgerTable, {
+      relationName: "pointLedgerToTrustVerification"
     })
   })
 )

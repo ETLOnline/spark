@@ -2,17 +2,32 @@ import {
   AddLedgerEntry,
   AddVerificationEntry,
   GetActivityRule,
+  updateTrustVerification,
   UpsertUserRewardBalance
 } from "@/src/db/data-access/reward/query"
 import { CreateServerAction } from ".."
-import { InsertPointLedger, InsertTrustVerification } from "@/src/db/schema"
+import {
+  InsertPointLedger,
+  InsertTrustVerification,
+  SelectTrustVerification
+} from "@/src/db/schema"
 import { AuthUserAction } from "../User/AuthUserAction"
+import {
+  ActivityTypes,
+  TrustVerificationStatus
+} from "@/src/types/Rewards/rewards"
 
 export const AddRewardAction = CreateServerAction(
   true,
-  async (action_type: string, user_id: string) => {
+  async (
+    action_type: string,
+    user_id: string,
+    proof_url: string,
+    metadata?: any,
+    verification_id?: number
+  ) => {
     try {
-      const activityRule = await GetActivityRule(action_type)
+      const activityRule = await GetActivityRule({ action_type })
 
       if (!activityRule) {
         return { success: false, error: "Activity rule not found" }
@@ -25,7 +40,13 @@ export const AddRewardAction = CreateServerAction(
         amount: activityRule.base_points,
         source_system: "internal_app",
         external_ref_id: "",
-        metadata: {}
+        trust_verification_id: verification_id || null,
+        metadata: {
+          milestone_id: null,
+          milestone_type: null,
+          milestone_url: null,
+          ...metadata
+        }
       }
 
       const ledgerEntry = await AddLedgerEntry(ledgerData as InsertPointLedger)
@@ -37,11 +58,16 @@ export const AddRewardAction = CreateServerAction(
       )
 
       if (activityRule.required_verification) {
+        const activity = await GetActivityRule({
+          action_type: ActivityTypes.MilestoneApproval
+        })
+
         const verificationData = {
           user_id: user_id,
           rule_id: activityRule.rule_id,
-          status: "pending",
-          points_awarded: activityRule.base_points
+          status: TrustVerificationStatus.Pending,
+          points: activity?.base_points,
+          proof_url: proof_url
         }
 
         const verificationEntry = await AddVerificationEntry(
@@ -52,6 +78,54 @@ export const AddRewardAction = CreateServerAction(
       return { success: true, data: ledgerEntry }
     } catch (error) {
       return { success: false, error: error }
+    }
+  }
+)
+
+export const UpdateTrustVerificationAction = CreateServerAction(
+  true,
+  async (verification_id: number, status: string, feedback: string) => {
+    try {
+      const user = await AuthUserAction()
+      if (!user) {
+        throw new Error("Unauthorized", { cause: 401 })
+      }
+
+      const data = {
+        status,
+        feedback,
+        approved_by: user.unique_id,
+        verified_at: new Date().toISOString()
+      }
+
+      const res = await updateTrustVerification(verification_id, data)
+
+      const isApproved = res?.status === TrustVerificationStatus.Approved
+      const isRejected = res?.status === TrustVerificationStatus.Rejected
+
+      if (isApproved) {
+        await AddRewardAction(
+          ActivityTypes.MilestoneApproval,
+          res.user_id,
+          res.proof_url,
+          {},
+          verification_id
+        )
+      }
+
+      if (isApproved || isRejected) {
+        await AddRewardAction(
+          ActivityTypes.MilestoneVerified,
+          res.approved_by || "",
+          res.proof_url,
+          {},
+          verification_id
+        )
+      }
+
+      return { success: true, data: res }
+    } catch (error) {
+      return { success: false, error }
     }
   }
 )

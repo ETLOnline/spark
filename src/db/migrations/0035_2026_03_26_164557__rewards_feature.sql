@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS "point_ledger" (
 	"source_system" varchar NOT NULL,
 	"external_ref_id" varchar NOT NULL,
 	"metadata" jsonb NOT NULL,
+	"trust_verification_id" integer,
 	"updated_at" varchar,
 	"created_at" varchar DEFAULT CURRENT_TIMESTAMP,
 	"deleted_at" varchar
@@ -42,11 +43,12 @@ CREATE TABLE IF NOT EXISTS "trust_verification" (
 	"verification_id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "trust_verification_verification_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"user_id" varchar NOT NULL,
 	"rule_id" integer NOT NULL,
-	"advisor_id" varchar NOT NULL,
+	"approved_by" varchar,
 	"status" varchar NOT NULL,
 	"proof_url" varchar NOT NULL,
-	"points_awarded" integer NOT NULL,
-	"verified_at" varchar DEFAULT now() NOT NULL,
+	"points" integer NOT NULL,
+	"feedback" varchar,
+	"verified_at" varchar,
 	"updated_at" varchar,
 	"created_at" varchar DEFAULT CURRENT_TIMESTAMP,
 	"deleted_at" varchar
