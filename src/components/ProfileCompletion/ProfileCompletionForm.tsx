@@ -11,6 +11,7 @@ import { Progress } from "@/src/components/ui/progress"
 import { StepOne } from "./StepOne"
 import { StepTwo } from "./StepTwo"
 import { StepThree } from "./StepThree"
+import { OnboardingCompletion } from "../TrustEngine/OnboardingCompletion"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import { SelectUser } from "@/src/db/schema"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
@@ -42,9 +43,13 @@ export default function ProfileCompletionForm() {
     {
       title: "Social Links",
       icon: "link-2"
+    },
+    {
+      title: "Complete",
+      icon: "check-circle"
     }
   ]
-  const progress = ((step - 1) / 2) * 100
+  const progress = ((step - 1) / 3) * 100
 
   return (
     <Card className="w-full">
@@ -102,6 +107,12 @@ export default function ProfileCompletionForm() {
             setStep={setStep}
             user={user}
             setUser={setUser}
+          />
+        )}
+        {step === 4 && (
+          <OnboardingCompletion
+            redirectTo="/profile"
+            buttonLabel="Go to Profile"
           />
         )}
       </CardContent>
