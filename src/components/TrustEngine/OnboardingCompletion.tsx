@@ -41,9 +41,7 @@ export function OnboardingCompletion({
           <h3 className="text-2xl font-semibold text-foreground mb-2">
             You're All Set!
           </h3>
-          <p className="text-muted-foreground">
-            Start building your reputation today
-          </p>
+          <p>Start building your reputation today</p>
         </div>
 
         <div className="mb-8">
@@ -67,12 +65,12 @@ export function OnboardingCompletion({
                 <h4 className="text-2xl font-bold text-foreground mb-2">
                   Welcome to SPARK, Champion!
                 </h4>
-                <p className="text-muted-foreground mb-4">
+                <p className="mb-4 text-gray-500 dark:text-white/70">
                   You've unlocked your Spark Starter badge and earned 50 initial
                   RP. Your journey begins now!
                 </p>
                 <div className="space-y-2">
-                  <div className="p-3 bg-white/50 rounded-lg border border-primary/20">
+                  <div className="p-3 rounded-lg border border-primary/50 dark:border-primary/30">
                     <p className="text-sm font-semibold text-primary">
                       Initial Balance
                     </p>

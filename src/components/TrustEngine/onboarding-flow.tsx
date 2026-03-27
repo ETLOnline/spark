@@ -26,27 +26,27 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
       description: "Your reputation and achievements matter",
       content: (
         <div className="space-y-4">
-          <p className="text-muted-foreground">
+          <p>
             Every action you take contributes to your reputation in the
             community. We track two key metrics to measure your growth:
           </p>
           <div className="space-y-3">
-            <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
-              <h4 className="font-semibold text-primary flex items-center gap-2 mb-2">
+            <div className="p-4  border  rounded-lg">
+              <h4 className="font-semibold  flex items-center gap-2 mb-2">
                 <Zap className="w-5 h-5" />
                 Reputation Points (RP)
               </h4>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm">
                 Earned through learning, contribution, and community engagement.
                 Unlocks advanced opportunities.
               </p>
             </div>
-            <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-              <h4 className="font-semibold text-purple-700 flex items-center gap-2 mb-2">
+            <div className="p-4  border  rounded-lg">
+              <h4 className="font-semibold  flex items-center gap-2 mb-2">
                 <Zap className="w-5 h-5" />
                 Spark Credits (SC)
               </h4>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm">
                 Earned through milestones and achievements. Spend them on
                 premium courses and mentorship.
               </p>
@@ -61,9 +61,7 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
       description: "Every action counts toward your progression",
       content: (
         <div className="space-y-4">
-          <p className="text-muted-foreground">
-            Get rewarded for meaningful contributions:
-          </p>
+          <p>Get rewarded for meaningful contributions:</p>
           <div className="space-y-2">
             {[
               {
@@ -94,14 +92,10 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
             ].map((item, i) => (
               <div
                 key={i}
-                className={`p-3 ${item.color} rounded-lg flex items-center justify-between`}
+                className={`p-3 border rounded-lg flex items-center justify-between`}
               >
-                <span className="text-sm font-medium text-slate-900">
-                  {item.action}
-                </span>
-                <span className="text-sm font-semibold text-primary">
-                  {item.reward}
-                </span>
+                <span className="text-sm font-medium">{item.action}</span>
+                <span className="text-sm  ">{item.reward}</span>
               </div>
             ))}
           </div>
@@ -114,7 +108,7 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
       description: "Unlock new opportunities as you grow",
       content: (
         <div className="space-y-4">
-          <p className="text-muted-foreground">
+          <p>
             As you accumulate reputation, you'll progress through distinct
             levels, each unlocking new opportunities:
           </p>
@@ -149,11 +143,9 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
               <div key={i} className="p-3 border rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
                   <Badge className="bg-primary text-white">{item.level}</Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {item.rp} RP
-                  </span>
+                  <span className="text-xs ">{item.rp} RP</span>
                 </div>
-                <p className="text-sm text-muted-foreground">{item.features}</p>
+                <p className="text-sm ">{item.features}</p>
               </div>
             ))}
           </div>
@@ -167,22 +159,22 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
       content: (
         <div className="space-y-4 text-center">
           <div className="space-y-4">
-            <div className="p-8 bg-primary/10 rounded-lg">
+            <div className="p-8 border rounded-lg">
               <div className="inline-block p-4 bg-primary text-white rounded-full mb-4">
                 <CheckCircle className="w-8 h-8" />
               </div>
               <h4 className="text-xl font-semibold text-foreground mb-2">
                 Ready to Start
               </h4>
-              <p className="text-muted-foreground">
+              <p>
                 Complete your profile to earn your first 50 reputation points!
               </p>
             </div>
-            <div className="p-4 bg-muted/50 rounded-lg">
+            <div className="p-4 border rounded-lg">
               <p className="text-sm font-medium text-foreground mb-3">
                 Quick Start Actions:
               </p>
-              <ul className="text-sm text-muted-foreground space-y-2">
+              <ul className="text-sm  space-y-2">
                 <li className="flex items-center gap-2">
                   <span className="w-2 h-2 bg-primary rounded-full" />
                   Complete your profile
@@ -240,7 +232,7 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
           <h3 className="text-2xl font-semibold text-foreground mb-2">
             {currentStepData.title}
           </h3>
-          <p className="text-muted-foreground">{currentStepData.description}</p>
+          <p>{currentStepData.description}</p>
         </div>
 
         <div className="mb-8">{currentStepData.content}</div>

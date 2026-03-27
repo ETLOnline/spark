@@ -63,7 +63,7 @@ export default function ProfileCompletionForm() {
                 className={`
                   flex flex-col items-center align-middle 
                   ${
-                    step > index + 1
+                    step >= index + 1
                       ? "text-primary border-primary"
                       : step === index + 1
                         ? "text-foreground border-foreground"
