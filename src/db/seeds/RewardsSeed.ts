@@ -1,3 +1,4 @@
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
 import { db } from ".."
 import {
   activityRulesTable,
@@ -29,7 +30,7 @@ const activityRules: InsertActivityRules[] = [
   // ── Spark Credits (reward_id: 2) ──────────────────────────────────────────
   {
     rule_id: 1,
-    action_type: "profile_complete",
+    action_type: ActivityTypes.ProfileComplete,
     reward_id: 2,
     base_points: 50,
     category_group: "onboarding",
@@ -39,7 +40,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 2,
-    action_type: "attend_public_webinar",
+    action_type: ActivityTypes.AttendPublicWebinar,
     reward_id: 2,
     base_points: 10,
     category_group: "engagement",
@@ -50,7 +51,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 3,
-    action_type: "attend_community_session",
+    action_type: ActivityTypes.AttendCommunitySession,
     reward_id: 2,
     base_points: 10,
     category_group: "attendance",
@@ -61,7 +62,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 4,
-    action_type: "community_service",
+    action_type: ActivityTypes.CommunityService,
     reward_id: 2,
     base_points: 30,
     category_group: "community_service",
@@ -72,7 +73,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 5,
-    action_type: "social_sharing",
+    action_type: ActivityTypes.SocialSharing,
     reward_id: 2,
     base_points: 5,
     category_group: "social",
@@ -82,7 +83,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 6,
-    action_type: "successful_referral",
+    action_type: ActivityTypes.SuccessfulReferral,
     reward_id: 2,
     base_points: 25,
     category_group: "referral",
@@ -94,7 +95,7 @@ const activityRules: InsertActivityRules[] = [
   // ── Reputation Points – Student (reward_id: 1) ────────────────────────────
   {
     rule_id: 7,
-    action_type: "merged_pull_request",
+    action_type: ActivityTypes.MergedPullRequest,
     reward_id: 1,
     base_points: 30,
     category_group: "technical",
@@ -104,7 +105,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 8,
-    action_type: "issue_resolution",
+    action_type: ActivityTypes.IssueResolution,
     reward_id: 1,
     base_points: 20,
     category_group: "technical",
@@ -114,7 +115,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 9,
-    action_type: "milestone_deployment",
+    action_type: ActivityTypes.MilestoneDeployment,
     reward_id: 1,
     base_points: 40,
     category_group: "milestone",
@@ -125,7 +126,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 10,
-    action_type: "peer_review",
+    action_type: ActivityTypes.PeerReview,
     reward_id: 1,
     base_points: 10,
     category_group: "peer_review",
@@ -136,7 +137,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 11,
-    action_type: "milestone_approval",
+    action_type: ActivityTypes.MilestoneApproval,
     reward_id: 1,
     base_points: 40,
     category_group: "milestone",
@@ -147,7 +148,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 12,
-    action_type: "mentorship_session_student",
+    action_type: ActivityTypes.MentorshipSessionStudent,
     reward_id: 1,
     base_points: 5,
     category_group: "mentorship",
@@ -160,7 +161,7 @@ const activityRules: InsertActivityRules[] = [
   // ── Reputation Points – Advisor (reward_id: 1) ────────────────────────────
   {
     rule_id: 13,
-    action_type: "milestone_verified",
+    action_type: ActivityTypes.MilestoneVerified,
     reward_id: 1,
     base_points: 5,
     category_group: "milestone",
@@ -171,7 +172,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 14,
-    action_type: "advisor_student_rated",
+    action_type: ActivityTypes.AdvisorStudentRated,
     reward_id: 1,
     base_points: 15,
     category_group: "teaching",
@@ -181,7 +182,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 15,
-    action_type: "advisor_mentorship_session",
+    action_type: ActivityTypes.AdvisorMentorshipSession,
     reward_id: 1,
     base_points: 20,
     category_group: "mentorship",
@@ -192,7 +193,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 16,
-    action_type: "task_inprogress",
+    action_type: ActivityTypes.TaskInprogress,
     reward_id: 2,
     base_points: 10,
     category_group: "engagement",
@@ -202,7 +203,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 17,
-    action_type: "task_completion",
+    action_type: ActivityTypes.TaskCompletion,
     reward_id: 1,
     base_points: 20,
     category_group: "technical",
