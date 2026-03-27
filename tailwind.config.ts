@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss"
+import type { PluginAPI } from "tailwindcss/types/config"
 
 const config: Config = {
   darkMode: ["class"],
@@ -105,6 +106,20 @@ const config: Config = {
       }
     }
   },
-  plugins: [require("tailwindcss-animate")]
+  plugins: [
+    require("tailwindcss-animate"),
+    function ({ addUtilities }: PluginAPI) {
+      addUtilities({
+        ".spark-gradient-panel": {
+          "@apply p-8 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-lg border-2 border-primary/30":
+            {}
+        },
+        ".spark-gradient-icon": {
+          "@apply inline-block p-4 bg-gradient-to-r from-primary to-purple-500 text-white rounded-full mb-4":
+            {}
+        }
+      })
+    }
+  ]
 }
 export default config
