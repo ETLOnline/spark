@@ -5,14 +5,24 @@ import {
   InsertPointLedger,
   InsertTrustVerification,
   pointLedgerTable,
+  SelectTrustVerification,
   trustVerificationTable,
   userRewardBalanceTable
 } from "../../schema"
 
-export async function  GetActivityRule(action_key: string) {
+export type GetActivityRuleFilters = {
+  action_type: string
+}
+
+export async function GetActivityRule(
+  GetactivityRuleFilters: GetActivityRuleFilters
+) {
   try {
     const res = await db.query.activityRulesTable.findFirst({
-      where: eq(activityRulesTable.action_type, action_key)
+      where: eq(
+        activityRulesTable.action_type,
+        GetactivityRuleFilters.action_type
+      )
     })
     return res
   } catch (e: any) {
@@ -28,7 +38,6 @@ export async function AddLedgerEntry(data: InsertPointLedger) {
     throw new Error(e.message)
   }
 }
-
 
 export async function GetLedgerEntryByUserAndRule(
   user_id: string,
@@ -95,6 +104,23 @@ export async function UpsertUserRewardBalance(
         .returning()
       return res
     }
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function updateTrustVerification(
+  verification_id: number,
+  data: Partial<SelectTrustVerification>
+) {
+  try {
+    const res = await db
+      .update(trustVerificationTable)
+      .set(data)
+      .where(eq(trustVerificationTable.verification_id, verification_id))
+      .returning()
+
+    return res[0]
   } catch (e: any) {
     throw new Error(e.message)
   }
