@@ -1,5 +1,5 @@
 {
-  "id": "b74394cb-f763-4f6c-b559-9eb33638e787",
+  "id": "15360ea5-3f12-4f76-95e6-280dc41ffa4b",
   "prevId": "e5975d52-e35d-43a3-8bbb-8b19af2f6474",
   "version": "7",
   "dialect": "postgresql",
@@ -2096,6 +2096,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "trust_verification_id": {
+          "name": "trust_verification_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "varchar",
@@ -3846,11 +3852,11 @@
           "primaryKey": false,
           "notNull": true
         },
-        "advisor_id": {
-          "name": "advisor_id",
+        "approved_by": {
+          "name": "approved_by",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "status": {
           "name": "status",
@@ -3864,18 +3870,23 @@
           "primaryKey": false,
           "notNull": true
         },
-        "points_awarded": {
-          "name": "points_awarded",
+        "points": {
+          "name": "points",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "feedback": {
+          "name": "feedback",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
         },
         "verified_at": {
           "name": "verified_at",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
+          "notNull": false
         },
         "updated_at": {
           "name": "updated_at",
