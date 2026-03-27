@@ -58,8 +58,8 @@ export function OnboardingCompletion({
                   </div>
                 ))}
               </div>
-              <div className="spark-gradient-panel">
-                <div className="spark-gradient-icon">
+              <div className="p-8 spark-gradient-panel-bg rounded-lg border-2 border-primary/30">
+                <div className="inline-block p-4 spark-gradient-icon-bg text-white rounded-full mb-4">
                   <Trophy className="w-8 h-8" />
                 </div>
                 <h4 className="text-2xl font-bold text-foreground mb-2">

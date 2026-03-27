@@ -67,18 +67,6 @@ export default function SparkTrustEngine() {
             learning, collaboration, and growth. Track your journey from Spark
             Starter to Spark Champion.
           </p>
-          {/* <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/spark/onboarding">
-              <Button className="bg-primary text-white hover:bg-primary/90 px-8 py-6 text-lg">
-                Get Started
-              </Button>
-            </Link>
-            <Link href="/spark/dashboard">
-              <Button variant="outline" className="px-8 py-6 text-lg">
-                View Dashboard
-              </Button>
-            </Link>
-          </div> */}
         </div>
 
         {/* Features Grid */}
