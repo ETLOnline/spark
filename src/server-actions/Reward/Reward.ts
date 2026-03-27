@@ -16,6 +16,7 @@ import {
   ActivityTypes,
   TrustVerificationStatus
 } from "@/src/types/Rewards/rewards"
+import { triggerPusherEvent } from "@/src/services/trigger"
 
 export const AddRewardAction = CreateServerAction(
   true,
@@ -74,6 +75,8 @@ export const AddRewardAction = CreateServerAction(
           verificationData as InsertTrustVerification
         )
       }
+      // add pusher for send real time 
+      await triggerPusherEvent(user_id, "reward_added",{})
 
       return { success: true, data: ledgerEntry }
     } catch (error) {
