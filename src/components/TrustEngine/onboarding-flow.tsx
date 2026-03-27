@@ -6,6 +6,10 @@ import { Badge } from "../ui/badge"
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
 import {
+  onboardingRewardData,
+  onboardingLevelData
+} from "@/src/utils/constants"
+import {
   CheckCircle,
   Target,
   Award,
@@ -63,39 +67,13 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
         <div className="space-y-4">
           <p>Get rewarded for meaningful contributions:</p>
           <div className="space-y-2">
-            {[
-              {
-                action: "Complete Your Profile",
-                reward: "+50 RP",
-                color: "bg-blue-50"
-              },
-              {
-                action: "Share Your First Post",
-                reward: "+30 RP",
-                color: "bg-green-50"
-              },
-              {
-                action: "Help Another Member",
-                reward: "+20 RP",
-                color: "bg-purple-50"
-              },
-              {
-                action: "Complete a Milestone",
-                reward: "+150 RP + 50 SC",
-                color: "bg-yellow-50"
-              },
-              {
-                action: "Get Skill Verified",
-                reward: "+75 RP",
-                color: "bg-pink-50"
-              }
-            ].map((item, i) => (
+            {onboardingRewardData.map((item, i) => (
               <div
                 key={i}
                 className={`p-3 border rounded-lg flex items-center justify-between`}
               >
                 <span className="text-sm font-medium">{item.action}</span>
-                <span className="text-sm  ">{item.reward}</span>
+                <span className="text-sm">{item.reward}</span>
               </div>
             ))}
           </div>
@@ -113,39 +91,13 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
             levels, each unlocking new opportunities:
           </p>
           <div className="space-y-3">
-            {[
-              {
-                level: "Spark Starter",
-                rp: "0 - 500",
-                features: "Basic access, join communities"
-              },
-              {
-                level: "Spark Contributor",
-                rp: "500 - 1500",
-                features: "Post & comment, find mentors"
-              },
-              {
-                level: "Spark Collaborator",
-                rp: "1500 - 3000",
-                features: "Lead discussions, advanced projects"
-              },
-              {
-                level: "Spark Leader",
-                rp: "3000 - 5000",
-                features: "Mentor others, host workshops"
-              },
-              {
-                level: "Spark Champion",
-                rp: "5000+",
-                features: "Platform leadership, exclusive perks"
-              }
-            ].map((item, i) => (
+            {onboardingLevelData.map((item, i) => (
               <div key={i} className="p-3 border rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
                   <Badge className="bg-primary text-white">{item.level}</Badge>
-                  <span className="text-xs ">{item.rp} RP</span>
+                  <span className="text-xs">{item.rp} RP</span>
                 </div>
-                <p className="text-sm ">{item.features}</p>
+                <p className="text-sm">{item.features}</p>
               </div>
             ))}
           </div>

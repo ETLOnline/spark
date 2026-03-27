@@ -5,51 +5,17 @@ import { Zap, Users, BarChart3, Award, TrendingUp, Target } from "lucide-react"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
 import { Card } from "@/src/components/ui/card"
+import { trustEngineFeatures } from "@/src/utils/constants"
 
 export default function SparkTrustEngine() {
-  const features = [
-    {
-      icon: Zap,
-      title: "Dual-Currency System",
-      description:
-        "Earn Reputation Points for learning and Spark Credits for achievements",
-      href: "/spark/onboarding"
-    },
-    {
-      icon: Award,
-      title: "Level Progression",
-      description:
-        "Unlock opportunities as you advance through 5 distinct trust levels",
-      href: "/spark/dashboard"
-    },
-    {
-      icon: Users,
-      title: "Community Ranking",
-      description:
-        "Compete fairly on community leaderboards and track your growth",
-      href: "/spark/dashboard?tab=ranking"
-    },
-    {
-      icon: BarChart3,
-      title: "Transaction Ledger",
-      description:
-        "See exactly how you earned or spent your reputation and credits",
-      href: "/spark/dashboard?tab=transactions"
-    },
-    {
-      icon: Target,
-      title: "Opportunity Gating",
-      description: "Discover what new opportunities unlock at each level",
-      href: "/spark/dashboard?tab=opportunities"
-    },
-    {
-      icon: TrendingUp,
-      title: "Advisor Tools",
-      description:
-        "Mentors can track student progress and award meaningful achievements",
-      href: "/spark/advisor"
-    }
-  ]
+  const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+    Zap,
+    Award,
+    Users,
+    BarChart3,
+    Target,
+    TrendingUp
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br  pt-10 from-background to-primary/5">
@@ -71,8 +37,8 @@ export default function SparkTrustEngine() {
 
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
-          {features.map((feature, index) => {
-            const Icon = feature.icon
+          {trustEngineFeatures.map((feature, index) => {
+            const Icon = iconMap[feature.icon]
             return (
               <div key={index}>
                 <Card className="p-6 h-full hover:shadow-lg hover:border-primary/50 transition-all cursor-pointer group">

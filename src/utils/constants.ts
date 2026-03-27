@@ -230,4 +230,104 @@ export enum Sendgrid {
   SENDGRID_TASK_UPDATE_TEMPLATE_ID = "d-d2538f8fe746453c9b264174ed580961"
 }
 
+export const onboardingRewardData = [
+  {
+    action: "Complete Your Profile",
+    reward: "+50 RP",
+    color: "bg-blue-50"
+  },
+  {
+    action: "Share Your First Post",
+    reward: "+30 RP",
+    color: "bg-green-50"
+  },
+  {
+    action: "Help Another Member",
+    reward: "+20 RP",
+    color: "bg-purple-50"
+  },
+  {
+    action: "Complete a Milestone",
+    reward: "+150 RP + 50 SC",
+    color: "bg-yellow-50"
+  },
+  {
+    action: "Get Skill Verified",
+    reward: "+75 RP",
+    color: "bg-pink-50"
+  }
+]
+
+export const onboardingLevelData = [
+  {
+    level: "Spark Starter",
+    rp: "0 - 500",
+    features: "Basic access, join communities"
+  },
+  {
+    level: "Spark Contributor",
+    rp: "500 - 1500",
+    features: "Post & comment, find mentors"
+  },
+  {
+    level: "Spark Collaborator",
+    rp: "1500 - 3000",
+    features: "Lead discussions, advanced projects"
+  },
+  {
+    level: "Spark Leader",
+    rp: "3000 - 5000",
+    features: "Mentor others, host workshops"
+  },
+  {
+    level: "Spark Champion",
+    rp: "5000+",
+    features: "Platform leadership, exclusive perks"
+  }
+]
+
+export const trustEngineFeatures = [
+  {
+    icon: "Zap",
+    title: "Dual-Currency System",
+    description:
+      "Earn Reputation Points for learning and Spark Credits for achievements",
+    href: "/spark/onboarding"
+  },
+  {
+    icon: "Award",
+    title: "Level Progression",
+    description:
+      "Unlock opportunities as you advance through 5 distinct trust levels",
+    href: "/spark/dashboard"
+  },
+  {
+    icon: "Users",
+    title: "Community Ranking",
+    description:
+      "Compete fairly on community leaderboards and track your growth",
+    href: "/spark/dashboard?tab=ranking"
+  },
+  {
+    icon: "BarChart3",
+    title: "Transaction Ledger",
+    description:
+      "See exactly how you earned or spent your reputation and credits",
+    href: "/spark/dashboard?tab=transactions"
+  },
+  {
+    icon: "Target",
+    title: "Opportunity Gating",
+    description: "Discover what new opportunities unlock at each level",
+    href: "/spark/dashboard?tab=opportunities"
+  },
+  {
+    icon: "TrendingUp",
+    title: "Advisor Tools",
+    description:
+      "Mentors can track student progress and award meaningful achievements",
+    href: "/spark/advisor"
+  }
+]
+
 export const EntityUpdateBroadCast = "broadcast-entity-update"
