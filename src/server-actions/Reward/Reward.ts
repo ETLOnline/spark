@@ -1,3 +1,5 @@
+"use server"
+
 import {
   AddLedgerEntry,
   AddVerificationEntry,
@@ -28,6 +30,7 @@ export const AddRewardAction = CreateServerAction(
     verification_id?: number
   ) => {
     try {
+      console.log(action_type)
       const activityRule = await GetActivityRule({ action_type })
 
       if (!activityRule) {
@@ -80,6 +83,7 @@ export const AddRewardAction = CreateServerAction(
 
       return { success: true, data: ledgerEntry }
     } catch (error) {
+      console.log(error,"error")
       return { success: false, error: error }
     }
   }
