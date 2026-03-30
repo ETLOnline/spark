@@ -1,13 +1,15 @@
-import { and, eq, sql } from "drizzle-orm"
+import { and, between, eq, gt, lte, sql } from "drizzle-orm"
 import { db } from "../.."
 import {
   activityRulesTable,
   InsertPointLedger,
   InsertTrustVerification,
   pointLedgerTable,
+  rewardLevelTable,
   SelectTrustVerification,
   trustVerificationTable,
-  userRewardBalanceTable
+  userRewardBalanceTable,
+  userRewardsLevelTable
 } from "../../schema"
 
 export type GetActivityRuleFilters = {
@@ -121,6 +123,61 @@ export async function updateTrustVerification(
       .returning()
 
     return res[0]
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function GetRewardLevel(points: number) {
+  try {
+    const res = await db.query.rewardLevelTable.findFirst({
+      where: and(
+        lte(rewardLevelTable.min_points, points),
+        gt(rewardLevelTable.max_points, points)
+      )
+    })
+    return res
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function assignUserRewardLevel(user_id: string, level_id: number) {
+  try {
+    const res = await db
+      .insert(userRewardsLevelTable)
+      .values({
+        user_id,
+        level_id
+      })
+      .returning()
+    return res
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function UpdateUserRewardlevel(user_id: string, level_id: number) {
+  try {
+    const res = await db
+      .update(userRewardsLevelTable)
+      .set({
+        level_id
+      })
+      .where(eq(userRewardsLevelTable.user_id, user_id))
+      .returning()
+    return res
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function GetUserRewardLevel(user_id: string) {
+  try {
+    const res = await db.query.userRewardsLevelTable.findFirst({
+      where: eq(userRewardsLevelTable.user_id, user_id)
+    })
+    return res
   } catch (e: any) {
     throw new Error(e.message)
   }

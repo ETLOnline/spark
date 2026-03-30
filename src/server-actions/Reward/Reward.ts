@@ -4,6 +4,7 @@ import {
   AddLedgerEntry,
   AddVerificationEntry,
   GetActivityRule,
+  GetRewardLevel,
   updateTrustVerification,
   UpsertUserRewardBalance
 } from "@/src/db/data-access/reward/query"
@@ -78,12 +79,12 @@ export const AddRewardAction = CreateServerAction(
           verificationData as InsertTrustVerification
         )
       }
-      // add pusher for send real time 
-      await triggerPusherEvent(user_id, "reward_added",{})
+      // add pusher for send real time
+      await triggerPusherEvent(user_id, "reward_added", {})
 
       return { success: true, data: ledgerEntry }
     } catch (error) {
-      console.log(error,"error")
+      console.log(error, "error")
       return { success: false, error: error }
     }
   }
@@ -130,6 +131,18 @@ export const UpdateTrustVerificationAction = CreateServerAction(
         )
       }
 
+      return { success: true, data: res }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const GetRewardLevelAction = CreateServerAction(
+  true,
+  async (points: number) => {
+    try {
+      const res = await GetRewardLevel(points)
       return { success: true, data: res }
     } catch (error) {
       return { success: false, error }

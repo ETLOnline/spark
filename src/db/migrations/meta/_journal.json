@@ -253,6 +253,13 @@
       "when": 1774525560886,
       "tag": "0035_2026_03_26_164557__rewards_feature",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1774860633105,
+      "tag": "0036_2026_03_30_135028__create_reward_levels_and_user_reward_levels_table",
+      "breakpoints": true
     }
   ]
 }
