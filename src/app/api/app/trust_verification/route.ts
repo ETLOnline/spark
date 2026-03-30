@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { verification_id, status, feedback } = body
 
-    if (!verification_id || status || feedback) {
+    if (!verification_id || !status || !feedback) {
       return NextResponse.json(
         {
           success: false,

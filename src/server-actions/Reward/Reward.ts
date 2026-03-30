@@ -31,7 +31,6 @@ export const AddRewardAction = CreateServerAction(
     verification_id?: number
   ) => {
     try {
-      console.log(action_type)
       const activityRule = await GetActivityRule({ action_type })
 
       if (!activityRule) {
