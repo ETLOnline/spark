@@ -43,6 +43,11 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
     references: [profileTable.user_id],
     relationName: "userToProfile"
   }),
+  userRewardLevel: one(userRewardsLevelTable, {
+    fields: [usersTable.unique_id],
+    references: [userRewardsLevelTable.user_id],
+    relationName: "userRewardsLevelToUser"
+  }),
   chats: many(userChatsTable, {
     relationName: "UserChats"
   }),
@@ -1656,6 +1661,9 @@ export const rewardsMetadataRelations = relations(
     }),
     rewardBalance: many(userRewardBalanceTable, {
       relationName: "userRewardBalanceToReward"
+    }),
+    rewardLevels: many(rewardLevelTable, {
+      relationName: "rewardLevelToReward"
     })
   })
 )
@@ -1802,3 +1810,57 @@ export const userRewardBalanceRelations = relations(
 
 export type InsertUserRewardBalance = typeof userRewardBalanceTable.$inferInsert
 export type SelectUserRewardBalance = typeof userRewardBalanceTable.$inferSelect
+
+export const rewardLevelTable = pgTable("reward_level", {
+  id: integer().primaryKey(),
+  name: varchar().notNull(),
+  description: varchar(),
+  key: varchar().notNull(),
+  min_points: integer().notNull(),
+  max_points: integer(),
+  reward_id: integer().notNull(),
+  ...timestamps
+})
+
+export const rewardLevelRelations = relations(
+  rewardLevelTable,
+  ({ one, many }) => ({
+    userRewardLevels: many(userRewardsLevelTable, {
+      relationName: "userRewardsLevelToRewardLevel"
+    }),
+    reward: one(rewardsMetadataTable, {
+      fields: [rewardLevelTable.reward_id],
+      references: [rewardsMetadataTable.reward_id],
+      relationName: "rewardLevelToReward"
+    })
+  })
+)
+
+export type InsertRewardLevel = typeof rewardLevelTable.$inferInsert
+export type SelectRewardLevel = typeof rewardLevelTable.$inferSelect
+
+export const userRewardsLevelTable = pgTable("user_rewards_level", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  user_id: varchar().notNull(),
+  level_id: integer().notNull(),
+  ...timestamps
+})
+
+export const userRewardsLevelRelations = relations(
+  userRewardsLevelTable,
+  ({ one }) => ({
+    rewardLevel: one(rewardLevelTable, {
+      fields: [userRewardsLevelTable.level_id],
+      references: [rewardLevelTable.id],
+      relationName: "userRewardsLevelToRewardLevel"
+    }),
+    user: one(usersTable, {
+      fields: [userRewardsLevelTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "userRewardsLevelToUser"
+    })
+  })
+)
+
+export type InsertUserRewardsLevel = typeof userRewardsLevelTable.$inferInsert
+export type SelectUserRewardsLevel = typeof userRewardsLevelTable.$inferSelect

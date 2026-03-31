@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { verification_id, status, feedback } = body
 
-    if (!verification_id || status || feedback) {
+    if (!verification_id || !status || !feedback) {
       return NextResponse.json(
         {
           success: false,
@@ -16,7 +16,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const result = await UpdateTrustVerificationAction(verification_id, status, feedback)
+    const result = await UpdateTrustVerificationAction(
+      verification_id,
+      status,
+      feedback
+    )
     return NextResponse.json(result, { status: 200 })
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message })

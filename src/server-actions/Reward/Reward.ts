@@ -4,6 +4,7 @@ import {
   AddLedgerEntry,
   AddVerificationEntry,
   GetActivityRule,
+  GetRewardLevel,
   GetUserRewardBalance,
   InsertUserRewardBalance,
   updateTrustVerification,
@@ -32,7 +33,6 @@ export const AddRewardAction = CreateServerAction(
     verification_id?: number
   ) => {
     try {
-      console.log(action_type)
       const activityRule = await GetActivityRule({ action_type })
 
       if (!activityRule) {
@@ -187,6 +187,17 @@ export const InsertUserRewardBalanceAction = CreateServerAction(
       return { success: true, data: res }
     } catch (error) {
       return { success: false, error: "Failed to insert balance" }
+    }
+  }
+)
+export const GetRewardLevelAction = CreateServerAction(
+  true,
+  async (points: number) => {
+    try {
+      const res = await GetRewardLevel(points)
+      return { success: true, data: res }
+    } catch (error) {
+      return { success: false, error }
     }
   }
 )
