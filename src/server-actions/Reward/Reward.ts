@@ -4,14 +4,16 @@ import {
   AddLedgerEntry,
   AddVerificationEntry,
   GetActivityRule,
+  GetUserRewardBalance,
+  InsertUserRewardBalance,
   updateTrustVerification,
-  UpsertUserRewardBalance
+  UpdateUserRewardBalance
+
 } from "@/src/db/data-access/reward/query"
 import { CreateServerAction } from ".."
 import {
   InsertPointLedger,
   InsertTrustVerification,
-  SelectTrustVerification
 } from "@/src/db/schema"
 import { AuthUserAction } from "../User/AuthUserAction"
 import {
@@ -55,11 +57,18 @@ export const AddRewardAction = CreateServerAction(
 
       const ledgerEntry = await AddLedgerEntry(ledgerData as InsertPointLedger)
 
-      await UpsertUserRewardBalance(
-        user_id,
-        activityRule.reward_id,
-        activityRule.base_points
-      )
+
+      const existingBalanceResponse = await GetUserRewardBalanceAction(user_id, activityRule.reward_id);
+
+      let userRewardBalance;
+
+      if (existingBalanceResponse?.success && existingBalanceResponse.data) {
+        const existingBalance = existingBalanceResponse.data;
+        const newTotal = (existingBalance.current_balance || 0) + activityRule.base_points;
+        userRewardBalance = await UpdateUserRewardBalanceAction(user_id, activityRule.reward_id, newTotal);
+      } else {
+        userRewardBalance = await InsertUserRewardBalanceAction(user_id, activityRule.reward_id, activityRule.base_points);
+      }
 
       if (activityRule.required_verification) {
         const activity = await GetActivityRule({
@@ -79,11 +88,11 @@ export const AddRewardAction = CreateServerAction(
         )
       }
       // add pusher for send real time 
-      await triggerPusherEvent(user_id, "reward_added",{})
+      await triggerPusherEvent(user_id, "reward_added", userRewardBalance)
 
       return { success: true, data: ledgerEntry }
     } catch (error) {
-      console.log(error,"error")
+      console.log(error, "error")
       return { success: false, error: error }
     }
   }
@@ -133,6 +142,51 @@ export const UpdateTrustVerificationAction = CreateServerAction(
       return { success: true, data: res }
     } catch (error) {
       return { success: false, error }
+    }
+  }
+)
+
+/**
+ * Action to fetch the current balance for a specific user and reward type.
+ */
+export const GetUserRewardBalanceAction = CreateServerAction(
+  true,
+  async (user_id: string, reward_id: number) => {
+    try {
+      const balance = await GetUserRewardBalance(user_id, reward_id)
+      return { success: true, data: balance }
+    } catch (error) {
+      return { success: false, error: "Failed to fetch balance" }
+    }
+  }
+)
+
+/**
+ * Action to update an existing reward balance with a new total.
+ */
+export const UpdateUserRewardBalanceAction = CreateServerAction(
+  true,
+  async (user_id: string, reward_id: number, new_balance: number) => {
+    try {
+      const res = await UpdateUserRewardBalance(user_id, reward_id, new_balance)
+      return { success: true, data: res }
+    } catch (error) {
+      return { success: false, error: "Failed to update balance" }
+    }
+  }
+)
+
+/**
+ * Action to create a new reward balance entry for a user.
+ */
+export const InsertUserRewardBalanceAction = CreateServerAction(
+  true,
+  async (user_id: string, reward_id: number, amount: number) => {
+    try {
+      const res = await InsertUserRewardBalance(user_id, reward_id, amount)
+      return { success: true, data: res }
+    } catch (error) {
+      return { success: false, error: "Failed to insert balance" }
     }
   }
 )

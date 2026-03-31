@@ -65,48 +65,43 @@ export async function AddVerificationEntry(data: InsertTrustVerification) {
   }
 }
 
-export async function UpsertUserRewardBalance(
-  user_id: string,
-  reward_id: number,
-  amount: number
-) {
-  try {
-    const existing = await db.query.userRewardBalanceTable.findFirst({
-      where: and(
+// 1. Fetch current balance
+export async function GetUserRewardBalance(user_id: string, reward_id: number) {
+  return await db.query.userRewardBalanceTable.findFirst({
+    where: and(
+      eq(userRewardBalanceTable.user_id, user_id),
+      eq(userRewardBalanceTable.reward_id, reward_id)
+    )
+  });
+}
+
+// 2. Simple Update
+export async function UpdateUserRewardBalance(user_id: string, reward_id: number, new_balance: number) {
+  return await db
+    .update(userRewardBalanceTable)
+    .set({
+      current_balance: new_balance,
+      last_updated_at: sql`now()`
+    })
+    .where(
+      and(
         eq(userRewardBalanceTable.user_id, user_id),
         eq(userRewardBalanceTable.reward_id, reward_id)
       )
-    })
+    )
+    .returning();
+}
 
-    if (existing) {
-      const res = await db
-        .update(userRewardBalanceTable)
-        .set({
-          current_balance: existing.current_balance + amount,
-          last_updated_at: sql`now()`
-        })
-        .where(
-          and(
-            eq(userRewardBalanceTable.user_id, user_id),
-            eq(userRewardBalanceTable.reward_id, reward_id)
-          )
-        )
-        .returning()
-      return res
-    } else {
-      const res = await db
-        .insert(userRewardBalanceTable)
-        .values({
-          user_id,
-          reward_id,
-          current_balance: amount
-        })
-        .returning()
-      return res
-    }
-  } catch (e: any) {
-    throw new Error(e.message)
-  }
+// 3. Simple Insert
+export async function InsertUserRewardBalance(user_id: string, reward_id: number, amount: number) {
+  return await db
+    .insert(userRewardBalanceTable)
+    .values({
+      user_id,
+      reward_id,
+      current_balance: amount
+    })
+    .returning();
 }
 
 export async function updateTrustVerification(
