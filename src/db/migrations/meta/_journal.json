@@ -246,6 +246,13 @@
       "when": 1772811965589,
       "tag": "0034_2026_03_06_234604__add_inviation_table",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1774952215765,
+      "tag": "0035_2026_03_31_151653__Add_feature_flags_table",
+      "breakpoints": true
     }
   ]
 }
