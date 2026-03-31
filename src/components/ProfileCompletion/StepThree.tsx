@@ -12,7 +12,8 @@ import { toast } from "@/src/hooks/use-toast"
 import { updateUserProfileAction } from "@/src/server-actions/profile/profile"
 import { socialPlatforms } from "./constants"
 import { set } from "zod"
-
+import { AddRewardAction } from "@/src/server-actions/Reward/Reward"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
 interface StepThreeProps {
   step: number
   setStep: Dispatch<SetStateAction<number>>
@@ -23,6 +24,9 @@ interface StepThreeProps {
 export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
   const [submitDataLoading, , , submitUserProfileData] = useServerAction(
     updateUserProfileAction
+  )
+  const [rewardLoading, , , submitReward] = useServerAction(
+    AddRewardAction
   )
   const [isTransitioning, setIsTransitioning] = useState(false)
 
@@ -46,6 +50,8 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
       const hasAnyLink = Object.values(socialPlatforms).some(
         (val) => val && val.trim() !== ""
       )
+      const pathName = window.location.href
+      await submitReward(ActivityTypes.ProfileComplete,user.unique_id,pathName)
 
       if (!hasAnyLink) {
         toast({

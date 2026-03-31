@@ -17,6 +17,7 @@ const isProtectedRoute = createRouteMatcher([
   "/personas(.*)",
   "/communities(.*)",
   "/email_preview(.*)",
+  "/api-keys(.*)",
   "/trust-engine(.*)"
 ])
 
@@ -49,6 +50,8 @@ export const config = {
     "/terms",
     "/privacy",
     "/email_preview(.*)",
+    "/api-keys(.*)",
+    '/api/app/(.*)',
     "/trust-engine(.*)"
     // Always run for API routes
     // '/(api|trpc)(.*)',
