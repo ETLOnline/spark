@@ -1713,6 +1713,7 @@ export const pointLedgerTable = pgTable("point_ledger", {
   external_ref_id: varchar().notNull(),
   metadata: jsonb().notNull(),
   trust_verification_id: integer(),
+  transection_type: varchar().notNull(),
   ...timestamps
 })
 

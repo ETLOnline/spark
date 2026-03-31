@@ -1,6 +1,6 @@
 {
-  "id": "82645822-c33f-47d2-9672-166d300bbcaa",
-  "prevId": "15360ea5-3f12-4f76-95e6-280dc41ffa4b",
+  "id": "1e89d29a-e131-402b-adb8-4e10229ec5ab",
+  "prevId": "e5975d52-e35d-43a3-8bbb-8b19af2f6474",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2101,6 +2101,12 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "transection_type": {
+          "name": "transection_type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
         },
         "updated_at": {
           "name": "updated_at",

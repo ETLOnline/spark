@@ -9,13 +9,9 @@ import {
   InsertUserRewardBalance,
   updateTrustVerification,
   UpdateUserRewardBalance
-
 } from "@/src/db/data-access/reward/query"
 import { CreateServerAction } from ".."
-import {
-  InsertPointLedger,
-  InsertTrustVerification,
-} from "@/src/db/schema"
+import { InsertPointLedger, InsertTrustVerification } from "@/src/db/schema"
 import { AuthUserAction } from "../User/AuthUserAction"
 import {
   ActivityTypes,
@@ -52,22 +48,34 @@ export const AddRewardAction = CreateServerAction(
           milestone_type: null,
           milestone_url: null,
           ...metadata
-        }
+        },
+        transection_type: "debit"
       }
 
       const ledgerEntry = await AddLedgerEntry(ledgerData as InsertPointLedger)
 
+      const existingBalanceResponse = await GetUserRewardBalanceAction(
+        user_id,
+        activityRule.reward_id
+      )
 
-      const existingBalanceResponse = await GetUserRewardBalanceAction(user_id, activityRule.reward_id);
-
-      let userRewardBalance;
+      let userRewardBalance
 
       if (existingBalanceResponse?.success && existingBalanceResponse.data) {
-        const existingBalance = existingBalanceResponse.data;
-        const newTotal = (existingBalance.current_balance || 0) + activityRule.base_points;
-        userRewardBalance = await UpdateUserRewardBalanceAction(user_id, activityRule.reward_id, newTotal);
+        const existingBalance = existingBalanceResponse.data
+        const newTotal =
+          (existingBalance.current_balance || 0) + activityRule.base_points
+        userRewardBalance = await UpdateUserRewardBalanceAction(
+          user_id,
+          activityRule.reward_id,
+          newTotal
+        )
       } else {
-        userRewardBalance = await InsertUserRewardBalanceAction(user_id, activityRule.reward_id, activityRule.base_points);
+        userRewardBalance = await InsertUserRewardBalanceAction(
+          user_id,
+          activityRule.reward_id,
+          activityRule.base_points
+        )
       }
 
       if (activityRule.required_verification) {
@@ -87,7 +95,7 @@ export const AddRewardAction = CreateServerAction(
           verificationData as InsertTrustVerification
         )
       }
-      // add pusher for send real time 
+      // add pusher for send real time
       await triggerPusherEvent(user_id, "reward_added", userRewardBalance)
 
       return { success: true, data: ledgerEntry }
