@@ -129,7 +129,7 @@ export function TaskComment({
 
       setComments((prev) => {
         if (prev.some((c) => c.id === newCommentWithUser.id)) return prev
-        return [...prev, newCommentWithUser]
+        return [newCommentWithUser, ...prev]
       })
 
       setTotalCount((prev) => prev + 1)
