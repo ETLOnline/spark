@@ -17,6 +17,8 @@ import { ShortcutEntityIdSyncSeed } from "./ShortcutEntityIdSyncSeed"
 import { EmailTemplatesForCommunityRequestSeed } from "./EmailTemplatesForCommunityRquest"
 import { JoinInviteEmailSeed } from "./JoinInviteEmail"
 import { FeatureFlagsSeed } from "./FeatureFlagsSeed"
+import { RewardsSeed } from "./RewardsSeed"
+import { RewardLevelsSeed } from "./RewardLevelsSeed"
 
 const SEEDERS: Record<string, () => Promise<void>> = {
   FeatureSeed,
@@ -37,7 +39,9 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   ShortcutEntityIdSyncSeed,
   EmailTemplatesForCommunityRequestSeed,
   JoinInviteEmailSeed,
-  FeatureFlagsSeed
+  FeatureFlagsSeed,
+  RewardsSeed,
+  RewardLevelsSeed
 }
 
 async function runSeeders() {

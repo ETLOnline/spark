@@ -250,8 +250,15 @@
     {
       "idx": 35,
       "version": "7",
-      "when": 1774952215765,
-      "tag": "0035_2026_03_31_151653__Add_feature_flags_table",
+      "when": 1774946973170,
+      "tag": "0035_2026_03_31_134931__Rewards_feature_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1775048953079,
+      "tag": "0036_2026_04_01_180910__add_feature_flags_table",
       "breakpoints": true
     }
   ]
