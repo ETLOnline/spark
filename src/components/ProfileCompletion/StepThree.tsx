@@ -9,11 +9,11 @@ import { SelectUser } from "@/src/db/schema"
 import { Controller, useForm } from "react-hook-form"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { toast } from "@/src/hooks/use-toast"
-import { useRouter } from "next/navigation"
 import { updateUserProfileAction } from "@/src/server-actions/profile/profile"
 import { socialPlatforms } from "./constants"
 import { set } from "zod"
-
+import { AddRewardAction } from "@/src/server-actions/Reward/Reward"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
 interface StepThreeProps {
   step: number
   setStep: Dispatch<SetStateAction<number>>
@@ -25,10 +25,10 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
   const [submitDataLoading, , , submitUserProfileData] = useServerAction(
     updateUserProfileAction
   )
+  const [rewardLoading, , , submitReward] = useServerAction(AddRewardAction)
   const [isTransitioning, setIsTransitioning] = useState(false)
 
   const form = useForm({})
-  const router = useRouter()
 
   const handlePrevious = () => {
     setStep((prev) => prev - 1)
@@ -48,13 +48,19 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
       const hasAnyLink = Object.values(socialPlatforms).some(
         (val) => val && val.trim() !== ""
       )
+      const pathName = window.location.href
+      await submitReward(
+        ActivityTypes.ProfileComplete,
+        user.unique_id,
+        pathName
+      )
 
       if (!hasAnyLink) {
         toast({
           title: "Profile data saved successfully",
           duration: 2000
         })
-        router.push(`/profile`)
+        setStep(4) // Go to completion step
         return
       }
 
@@ -67,7 +73,7 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
         })
 
         if (!submitDataLoading) {
-          router.push(`/profile`)
+          setStep(4) // Go to completion step
         }
       } else {
         setIsTransitioning(false)
