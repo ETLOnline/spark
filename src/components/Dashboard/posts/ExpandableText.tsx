@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { useExpandableText } from "@/src/hooks/useExpandableText"
 import { Button } from "../../ui/button"
+import { MessageContent } from "../Chat/components/MessageContent"
 
 type Props = {
   content: string
@@ -31,22 +32,7 @@ const ExpandableText: React.FC<Props> = ({
 
   return (
     <>
-      {isHtml ? (
-        <div
-          ref={contentRef}
-          style={clampStyle}
-          className={`${className ?? ""} whitespace-pre-wrap break-words`}
-          dangerouslySetInnerHTML={{ __html: content }}
-        />
-      ) : (
-        <p
-          ref={contentRef}
-          style={clampStyle}
-          className={`${className ?? ""} whitespace-pre-wrap break-words`}
-        >
-          {content}
-        </p>
-      )}
+      <MessageContent content={content} />
 
       {showToggle && (
         <Button
