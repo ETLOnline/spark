@@ -2,7 +2,7 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/src/lib/utils"
-import { SquarePen } from "lucide-react"
+import { Edit2 } from "lucide-react"
 import Loader from "../common/Loader/Loader"
 
 const buttonVariants = cva(
@@ -74,7 +74,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={loading || disabled}
         {...props}
       >
-        {variant === "edit" && <SquarePen size={"8"} />}
+        {variant === "edit" && <Edit2 size={"8"} />}
         {children}
         {loading ? <Loader /> : null}
       </Comp>

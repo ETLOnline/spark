@@ -245,8 +245,13 @@ const EditProfileModal: React.FC = () => {
     <>
       <Dialog open={isOpen} onOpenChange={handleDialogChange}>
         <DialogTrigger asChild>
-          <Button variant="edit" size={"sm"} onClick={() => setIsOpen(true)}>
-            Edit
+          <Button
+            className="border p-2 font-semibold bg-muted "
+            variant="edit"
+            size={"sm"}
+            onClick={() => setIsOpen(true)}
+          >
+            Edit Profile
           </Button>
         </DialogTrigger>
         <DialogContent
@@ -264,6 +269,9 @@ const EditProfileModal: React.FC = () => {
               className="edit-profile-form pr-3"
               onSubmit={form.handleSubmit(saveProfileChanges)}
             >
+              {/* Full Name */}
+              {/* Full Name */}
+              {/* Full Name */}
               {/* Full Name */}
               <div className="grid grid-cols-12 gap-2 mb-2">
                 <div className="col-span-6">

@@ -1,0 +1,142 @@
+"use client"
+
+import { TrendingUp, TrendingDown, Zap } from "lucide-react"
+import { Card } from "../../ui/card"
+import { Progress } from "../../ui/progress"
+import { Badge } from "../../ui/badge"
+
+interface TrustDisplayProps {
+  reputationPoints: number
+  sparkCredits: number
+  level: number
+  nextLevelPoints: number
+  currentLevelPoints: number
+  percentile: number
+}
+
+export function TrustDisplay({
+  reputationPoints,
+  sparkCredits,
+  level,
+  nextLevelPoints,
+  currentLevelPoints,
+  percentile
+}: TrustDisplayProps) {
+  const progressPercent =
+    ((reputationPoints - currentLevelPoints) /
+      (nextLevelPoints - currentLevelPoints)) *
+    100
+  const levelTitles = [
+    "Spark Starter",
+    "Spark Contributor",
+    "Spark Collaborator",
+    "Spark Leader",
+    "Spark Champion"
+  ]
+
+  return (
+    <div className="space-y-6">
+      {/* Main Trust Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Reputation Points Card */}
+        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Reputation Points
+              </p>
+              <h3 className="text-3xl font-bold text-primary mt-2">
+                {reputationPoints.toLocaleString()}
+              </h3>
+            </div>
+            <TrendingUp className="w-8 h-8 text-primary/60" />
+          </div>
+          <p className="text-xs text-muted-foreground">+245 this month</p>
+        </Card>
+
+        {/* Spark Credits Card */}
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-5 border-purple-200 p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Spark Credits
+              </p>
+              <h3 className="text-3xl font-bold text-purple-600 mt-2">
+                {sparkCredits.toLocaleString()}
+              </h3>
+            </div>
+            <Zap className="w-8 h-8 text-purple-600/60" />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Earnable through contributions
+          </p>
+        </Card>
+      </div>
+
+      {/* Level & Progress Card */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">
+              Current Level
+            </p>
+            <h3 className="text-2xl font-bold text-foreground mt-1">
+              {levelTitles[Math.min(level, levelTitles.length - 1)]}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Level {level + 1}
+            </p>
+          </div>
+          <Badge className="bg-primary text-white text-lg px-4 py-2">
+            Top {percentile}%
+          </Badge>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">
+              Progress to Next Level
+            </span>
+            <span className="font-medium">{Math.round(progressPercent)}%</span>
+          </div>
+          <Progress value={progressPercent} className="h-2" />
+          <p className="text-xs text-muted-foreground">
+            {nextLevelPoints - reputationPoints} points needed
+          </p>
+        </div>
+      </Card>
+
+      {/* Breakdown Card */}
+      <Card className="p-6">
+        <h4 className="font-semibold text-foreground mb-4">Trust Breakdown</h4>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+            <span className="text-sm text-muted-foreground">
+              Profile Completeness
+            </span>
+            <span className="text-sm font-medium text-foreground">85%</span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+            <span className="text-sm text-muted-foreground">
+              Community Engagement
+            </span>
+            <span className="text-sm font-medium text-foreground">92%</span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+            <span className="text-sm text-muted-foreground">
+              Skill Verification
+            </span>
+            <span className="text-sm font-medium text-foreground">72%</span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+            <span className="text-sm text-muted-foreground">
+              Project Completion
+            </span>
+            <span className="text-sm font-medium text-foreground">88%</span>
+          </div>
+        </div>
+      </Card>
+    </div>
+  )
+}
