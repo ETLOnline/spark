@@ -6,7 +6,7 @@ export function CreateServerAction<T, Args extends any[]>(
 ) {
   return async (...args: Args): Promise<T> => {
     if (shouldCheckAuth) {
-      const user = await auth({acceptsToken:['api_key','session_token']})
+      const user = await auth({ acceptsToken: ["api_key", "session_token"] })
       if (!user.isAuthenticated || !user.userId) {
         throw new Error("Unauthorized", { cause: 401 })
       }

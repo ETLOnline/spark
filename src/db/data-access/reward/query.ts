@@ -74,11 +74,15 @@ export async function GetUserRewardBalance(user_id: string, reward_id: number) {
       eq(userRewardBalanceTable.user_id, user_id),
       eq(userRewardBalanceTable.reward_id, reward_id)
     )
-  });
+  })
 }
 
 // 2. Simple Update
-export async function UpdateUserRewardBalance(user_id: string, reward_id: number, new_balance: number) {
+export async function UpdateUserRewardBalance(
+  user_id: string,
+  reward_id: number,
+  new_balance: number
+) {
   return await db
     .update(userRewardBalanceTable)
     .set({
@@ -91,11 +95,15 @@ export async function UpdateUserRewardBalance(user_id: string, reward_id: number
         eq(userRewardBalanceTable.reward_id, reward_id)
       )
     )
-    .returning();
+    .returning()
 }
 
 // 3. Simple Insert
-export async function InsertUserRewardBalance(user_id: string, reward_id: number, amount: number) {
+export async function InsertUserRewardBalance(
+  user_id: string,
+  reward_id: number,
+  amount: number
+) {
   return await db
     .insert(userRewardBalanceTable)
     .values({
@@ -103,7 +111,7 @@ export async function InsertUserRewardBalance(user_id: string, reward_id: number
       reward_id,
       current_balance: amount
     })
-    .returning();
+    .returning()
 }
 
 export async function updateTrustVerification(

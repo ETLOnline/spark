@@ -25,9 +25,7 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
   const [submitDataLoading, , , submitUserProfileData] = useServerAction(
     updateUserProfileAction
   )
-  const [rewardLoading, , , submitReward] = useServerAction(
-    AddRewardAction
-  )
+  const [rewardLoading, , , submitReward] = useServerAction(AddRewardAction)
   const [isTransitioning, setIsTransitioning] = useState(false)
 
   const form = useForm({})
@@ -51,7 +49,11 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
         (val) => val && val.trim() !== ""
       )
       const pathName = window.location.href
-      await submitReward(ActivityTypes.ProfileComplete,user.unique_id,pathName)
+      await submitReward(
+        ActivityTypes.ProfileComplete,
+        user.unique_id,
+        pathName
+      )
 
       if (!hasAnyLink) {
         toast({

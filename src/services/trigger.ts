@@ -1,6 +1,5 @@
 import pusherServer from "./realtime/pusherServer"
 
-
 export async function triggerPusherEvent(
   user_id: string,
   event: string,

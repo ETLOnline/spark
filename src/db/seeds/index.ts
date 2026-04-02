@@ -16,6 +16,7 @@ import { ChatSlugCorrectionSyncSeed } from "./ChatSlugCorrectionSyncSeed"
 import { ShortcutEntityIdSyncSeed } from "./ShortcutEntityIdSyncSeed"
 import { EmailTemplatesForCommunityRequestSeed } from "./EmailTemplatesForCommunityRquest"
 import { JoinInviteEmailSeed } from "./JoinInviteEmail"
+import { FeatureFlagsSeed } from "./FeatureFlagsSeed"
 import { RewardsSeed } from "./RewardsSeed"
 import { RewardLevelsSeed } from "./RewardLevelsSeed"
 
@@ -38,6 +39,7 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   ShortcutEntityIdSyncSeed,
   EmailTemplatesForCommunityRequestSeed,
   JoinInviteEmailSeed,
+  FeatureFlagsSeed,
   RewardsSeed,
   RewardLevelsSeed
 }

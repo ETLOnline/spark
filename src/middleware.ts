@@ -51,7 +51,7 @@ export const config = {
     "/privacy",
     "/email_preview(.*)",
     "/api-keys(.*)",
-    '/api/app/(.*)',
+    "/api/app/(.*)",
     "/trust-engine(.*)"
     // Always run for API routes
     // '/(api|trpc)(.*)',

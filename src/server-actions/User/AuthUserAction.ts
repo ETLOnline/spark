@@ -7,7 +7,7 @@ import { readFileSync } from "fs"
 
 export const AuthUserAction = CreateServerAction(true, async () => {
   try {
-    const clerkUser = await auth({acceptsToken:['api_key','session_token']})
+    const clerkUser = await auth({ acceptsToken: ["api_key", "session_token"] })
     if (!clerkUser || !clerkUser.isAuthenticated || !clerkUser.userId) {
       throw new Error("Unauthorized", { cause: 401 })
     }
