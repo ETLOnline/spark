@@ -58,8 +58,7 @@ import { userStore } from "@/src/store/user/userStore"
 import EditSocialLinksModal from "./user/SocialLinksModal"
 import { SocialLinkItem } from "./user/SocialLinkItem"
 import UserProfileCard from "./UserProfileCard"
-import TrustEngineCard from "../TrustEngine/TrustEngineCard"
-
+import TrustEngineCard from "../../TrustEngine/TrustEngineCard"
 type ProfileScreenProps = {
   tab?: string
   user: SelectUser

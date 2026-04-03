@@ -1,12 +1,12 @@
 "use client"
 
 import { TrendingUp, Zap, Users } from "lucide-react"
-import { Card } from "../../ui/card"
-import { Progress } from "../../ui/progress"
-import { Badge } from "../../ui/badge"
-import { Button } from "../../ui/button"
 import Link from "next/link"
+import { Button } from "../ui/button"
+import { Card } from "../ui/card"
 import { LevelTitles } from "./Constant"
+import { Badge } from "../ui/badge"
+import { Progress } from "../ui/progress"
 
 interface TrustDisplayProps {
   reputationPoints: number

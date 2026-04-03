@@ -1,10 +1,10 @@
 "use client"
 
-import { Avatar, AvatarFallback } from "../../ui/avatar"
-import { Badge } from "../../ui/badge"
-import { Card } from "../../ui/card"
-import { Progress } from "../../ui/progress"
-import { ArrowUp, ArrowDown } from "lucide-react"
+import { ArrowDown, ArrowUp } from "lucide-react"
+import { Card } from "../ui/card"
+import { Avatar, AvatarFallback } from "../ui/avatar"
+import { Badge } from "../ui/badge"
+import { Progress } from "../ui/progress"
 import { CommunityRankingsData } from "./Constant"
 
 export function CommunityRanking() {

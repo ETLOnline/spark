@@ -1,8 +1,8 @@
 import { Zap } from "lucide-react"
-import { Card, CardTitle } from "../../ui/card"
-import { Button } from "../../ui/button"
 import Link from "next/link"
 import { TrustEngineStats } from "./Constant"
+import { Card, CardTitle } from "../ui/card"
+import { Button } from "../ui/button"
 
 export default function TrustEngineCard() {
   const currentRp = 7250
@@ -21,7 +21,7 @@ export default function TrustEngineCard() {
         </div>
 
         <Button>
-          <Link href="/trust-engine">View DashBoard</Link>
+          <Link href="/trust-engine/dashboard">View DashBoard</Link>
         </Button>
       </div>
 

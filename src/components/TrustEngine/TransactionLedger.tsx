@@ -1,11 +1,10 @@
 "use client"
 
 import { ArrowUpRight } from "lucide-react"
-import { Card } from "../../ui/card"
-import { Tabs, TabsContent } from "../../ui/tabs"
-import { Badge } from "../../ui/badge"
 import { TransactionsData, TransactionType } from "./Constant"
-
+import { Badge } from "../ui/badge"
+import { Card } from "../ui/card"
+import { Tabs, TabsContent } from "../ui/tabs"
 const categoryColors: Record<string, string> = {
   engagement: "bg-blue-50 text-blue-700 border-blue-200",
   project: "bg-green-50 text-green-700 border-green-200",
