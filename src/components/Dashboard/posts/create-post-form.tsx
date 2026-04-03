@@ -58,6 +58,9 @@ import {
   AlertDialogCancel,
   AlertDialogAction
 } from "../../ui/alert-dialog"
+import { AddRewardAction } from "@/src/server-actions/Reward/Reward"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 type Props = {
   variant?: "posts" | "spaces"
@@ -92,6 +95,9 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
 
   const [createPostLoading, createdPost, createPostError, createPost] =
     useServerAction(CreatePostAction)
+  const [rewardPostLoading, rewardPostcreated, rewardPostError, rewardPost] =
+    useServerAction(AddRewardAction)
+
   const [
     createFilesPostLoading,
     createdFilesPost,
@@ -205,6 +211,14 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
   }
   const handleCreatePost = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if(!authUser?.unique_id){
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Error creating post please try again!"
+      })
+      return
+    }
     try {
       let postData: SelectPost | SelectFilePost | SelectPollPost =
         {} as SelectPost
@@ -537,6 +551,13 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         images: []
       })
       setPollOptions([])
+      console.log(currentSpace)
+      let prrof_url = createAbsoluteUrl(`/posts/${postData.id}`)
+      if (variant == "spaces"){
+        prrof_url = createAbsoluteUrl(`/channels/${currentSpace?.channel?.channel_slug}/spaces/${currentSpace?.space_slug}?page-type=posts&post-id=${postData.id}`)
+      }
+
+      await rewardPost(ActivityTypes.SocialPost,authUser?.unique_id,prrof_url)
     } catch (error) {
       toast({
         variant: "destructive",

@@ -73,9 +73,9 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 5,
-    action_type: ActivityTypes.SocialSharing,
+    action_type: ActivityTypes.SocialPost,
     reward_id: 2,
-    base_points: 5,
+    base_points: 15,
     category_group: "social",
     required_verification: false,
     is_active: true,
@@ -210,7 +210,27 @@ const activityRules: InsertActivityRules[] = [
     required_verification: true,
     is_active: true,
     description: "RP awarded upon successful completion of an assigned task"
-  }
+  },
+  {
+    rule_id: 18,
+    action_type: ActivityTypes.SocialPostLike,
+    reward_id: 2,
+    base_points: 1,
+    category_group: "social",
+    required_verification: false,
+    is_active: true,
+    description: "SC for verified internal media share (monthly cap applies)"
+  },
+  {
+    rule_id: 19,
+    action_type: ActivityTypes.SocialPostComment,
+    reward_id: 2,
+    base_points: 5,
+    category_group: "social",
+    required_verification: false,
+    is_active: true,
+    description: "SC for verified internal media share (monthly cap applies)"
+  },
 ]
 
 export const RewardsSeed = async () => {

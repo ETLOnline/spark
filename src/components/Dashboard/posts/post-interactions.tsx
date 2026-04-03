@@ -10,6 +10,9 @@ import { SelectLike } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
 import ShareDialog from "./ShareDialog"
 import { useParams } from "next/navigation"
+import { AddRewardAction } from "@/src/server-actions/Reward/Reward"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 type Props = {
   likes: number
@@ -28,6 +31,8 @@ const PostInteractions: React.FC<Props> = ({
 }) => {
   const [toggleLikeLoading, toggleLikedPost, toggleLikeError, toggleLike] =
     useServerAction(ToggleLikeAction)
+  const [rewardLikeLoading, rewardLikePost, rewardLikeError, rewardLike] =
+    useServerAction(AddRewardAction)
 
   const [isLiked, setIsLiked] = useState<boolean>(false)
   const [shareDialogOpen, setShareDialogOpen] = useState<boolean>(false)
@@ -53,8 +58,19 @@ const PostInteractions: React.FC<Props> = ({
             : post
         )
       )
+      if(!userId){
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Error liking post please try again!"
+        })
+        return
+      }
       const response = await toggleLike(postId, isLiked, likes, spaceId)
+      const prrof_url = createAbsoluteUrl(`/posts/${postId}`)
       if (response?.data) {
+        const a  = await rewardLike(ActivityTypes.SocialPostLike,userId,prrof_url)
+        console.log(a ,"aaaaaaaaaa")
         setIsLiked(!isLiked)
       }
       if (response?.error) {

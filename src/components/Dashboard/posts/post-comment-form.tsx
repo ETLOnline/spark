@@ -10,6 +10,9 @@ import { userStore } from "@/src/store/user/userStore"
 import { useToast } from "@/src/hooks/use-toast"
 import { SelectComment } from "@/src/db/schema"
 import { X } from "lucide-react"
+import { AddRewardAction } from "@/src/server-actions/Reward/Reward"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
 
 type PostCommentFormProps = {
   postId: string
@@ -42,6 +45,9 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
     createCommentError,
     createComment
   ] = useServerAction(CreateCommentAction)
+  const [rewardCommentLoading, rewardCommentPost, rewardCommentError, rewardComment] =
+    useServerAction(AddRewardAction)
+
 
   const name = `${user?.first_name} ${user?.last_name}`
   const isEditMode = !!editingComment
@@ -63,6 +69,14 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
         variant: "destructive",
         title: "Error",
         description: "Please write something in the comment box before posting."
+      })
+      return
+    }
+    if(!user?.unique_id){
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Error adding comment post please try again!"
       })
       return
     }
@@ -101,6 +115,8 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
             title: "Comment added",
             description: "Your comment has been added successfully"
           })
+          const prrof_url = createAbsoluteUrl(`/posts/${postId}`)
+          await rewardComment(ActivityTypes.SocialPostComment,user?.unique_id,prrof_url)
         } else {
           toast({
             variant: "destructive",
