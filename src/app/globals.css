@@ -10,6 +10,14 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+
+  .spark-gradient-panel-bg {
+    @apply bg-gradient-to-r from-primary/20 to-purple-500/20;
+  }
+
+  .spark-gradient-icon-bg {
+    @apply bg-gradient-to-r from-primary to-purple-500;
+  }
 }
 
 @layer base {
