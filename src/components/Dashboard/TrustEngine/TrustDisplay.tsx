@@ -1,9 +1,11 @@
 "use client"
 
-import { TrendingUp, Zap } from "lucide-react"
+import { TrendingUp, Zap, Users } from "lucide-react"
 import { Card } from "../../ui/card"
 import { Progress } from "../../ui/progress"
 import { Badge } from "../../ui/badge"
+import { Button } from "../../ui/button"
+import Link from "next/link"
 import { LevelTitles } from "./Constant"
 
 interface TrustDisplayProps {
@@ -30,6 +32,23 @@ export function TrustDisplay({
 
   return (
     <div className="space-y-6">
+      {/* Join Community Prompt - When No Activity */}
+      {reputationPoints === 0 && (
+        <div className="rounded-lg border-2 border-dashed p-8 text-center">
+          <Users className="h-16 w-16 text-teal-600 dark:text-teal-400 mx-auto mb-4" />
+          <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+            Join a Community to Start Earning RP
+          </h3>
+          <p className="text-base text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+            Get involved in communities, contribute to projects, and build your
+            reputation to earn Reputation Points (RP).
+          </p>
+          <Link href="/communities">
+            <Button className=" px-6 py-2">Browse Communities</Button>
+          </Link>
+        </div>
+      )}
+
       {/* Main Trust Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Reputation Points Card */}

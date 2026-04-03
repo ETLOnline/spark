@@ -46,12 +46,12 @@ export default function TrustEngineScreen() {
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             <TrustDisplay
-              reputationPoints={4290}
+              reputationPoints={0}
               sparkCredits={1850}
-              level={2}
-              nextLevelPoints={3000}
-              currentLevelPoints={1500}
-              percentile={8}
+              level={0}
+              nextLevelPoints={1000}
+              currentLevelPoints={0}
+              percentile={100}
             />
           </TabsContent>
 
