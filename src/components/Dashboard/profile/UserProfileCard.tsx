@@ -4,13 +4,10 @@ import { TooltipProvider } from "@radix-ui/react-tooltip"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../ui/tooltip"
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
 import { Button } from "../../ui/button"
-import { useRef, useState, useEffect } from "react"
-import { useToast } from "@/src/hooks/use-toast"
-import { UpdateUserProfilePictureAction } from "@/src/server-actions/User/User"
-import { useServerAction } from "@/src/hooks/useServerAction"
-import { useUser } from "@clerk/nextjs"
+import { useRef } from "react"
+import ExpandableText from "../posts/ExpandableText"
 
-type AboutSectionProps = {
+type ProfileCardProps = {
   userInfo: {
     userFirstName: string
     userLastName: string
@@ -21,68 +18,17 @@ type AboutSectionProps = {
   }
   handleCopyUrl?: () => void
   onUploadingChange?: (uploading: boolean) => void
+  currentImageUrl?: string | null
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 
 export default function UserProfileCard({
   userInfo,
   handleCopyUrl,
-  onUploadingChange
-}: AboutSectionProps) {
+  currentImageUrl,
+  onFileChange
+}: ProfileCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [uploading, setUploading] = useState(false)
-  const [currentImageUrl, setCurrentImageUrl] = useState(
-    userInfo.userProfileUrl
-  )
-  const { toast } = useToast()
-  const { user: clerkUser } = useUser()
-  const [loading, userData, error, updateUserProfile] = useServerAction(
-    UpdateUserProfilePictureAction
-  )
-
-  // Notify parent when uploading state changes
-  useEffect(() => {
-    onUploadingChange?.(uploading)
-  }, [uploading, onUploadingChange])
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onloadend = async () => {
-      const base64 = reader.result as string
-      setUploading(true)
-      try {
-        const res = await updateUserProfile(file.name, base64, file.type)
-        if (res?.success && res.data) {
-          setCurrentImageUrl(res.data.profile_picture_url)
-          await clerkUser?.reload()
-          toast({
-            title: "Profile picture updated!",
-            description: "Your profile picture has been successfully updated.",
-            duration: 3000
-          })
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: res?.error || "Failed to update profile picture",
-            duration: 3000
-          })
-        }
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Something went wrong",
-          duration: 3000
-        })
-      } finally {
-        setUploading(false)
-      }
-    }
-    reader.readAsDataURL(file)
-  }
   return (
     <div className="rounded-xl border border-white/20 bg-white/95 dark:bg-slate-900/95 backdrop-blur p-6 shadow-lg">
       <div className="flex gap-6">
@@ -91,7 +37,11 @@ export default function UserProfileCard({
           <div className="relative">
             <Avatar className="h-28 w-28 border-4 border-black rounded-full">
               <AvatarImage
-                src={currentImageUrl || "/default-avatar.png"}
+                src={
+                  currentImageUrl ||
+                  userInfo.userProfileUrl ||
+                  "/default-avatar.png"
+                }
                 alt="Profile"
                 className="object-cover"
               />
@@ -102,7 +52,6 @@ export default function UserProfileCard({
               variant="outline"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
               className="absolute bottom-1 -right-1 h-6 w-6 rounded-full p-0  hover:bg-gray-900 hover:border-gray-900 hover:shadow-xl transition-all duration-200 group"
             >
               <PencilIcon className="h-4 w-4  group-hover:text-white transition-colors duration-200" />
@@ -112,7 +61,7 @@ export default function UserProfileCard({
               ref={fileInputRef}
               accept="image/*"
               className="hidden"
-              onChange={handleFileChange}
+              onChange={onFileChange}
             />
           </div>
 
@@ -148,11 +97,12 @@ export default function UserProfileCard({
             </p>
           </div>
 
-          <p className="mb-4 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-            {userInfo.userBio || "This user hasn't added a bio yet."}
-          </p>
-
-          <div className="mb-4 flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
+          <ExpandableText
+            content={userInfo.userBio || "This user hasn't added a bio yet."}
+            lines={3}
+            className="mb-4 text-sm leading-relaxed text-gray-600 dark:text-gray-300 text-justify"
+          />
+          <div className="mb-4 flex flex-wrap flex-col gap-4 text-sm text-gray-600 dark:text-gray-400">
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-teal-600 dark:text-teal-400" />
               <span>Islamabad, Pakistan</span>

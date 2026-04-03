@@ -1,34 +1,10 @@
-import { Zap, TrendingUp } from "lucide-react"
+import { Zap } from "lucide-react"
 import { Card, CardTitle } from "../../ui/card"
+import { Button } from "../../ui/button"
+import Link from "next/link"
+import { TrustEngineStats } from "./Constant"
 
-export default function TrustEngine() {
-  const stats = [
-    {
-      label: "Reputation Points",
-      value: "1,250",
-      change: "+12% this month",
-      color: "text-teal-600 dark:text-teal-400"
-    },
-    {
-      label: "Spark Credits",
-      value: "485",
-      change: "Available",
-      color: "text-purple-600 dark:text-purple-400"
-    },
-    {
-      label: "Current Level",
-      value: "Spark Mentor",
-      change: "Level 4/5",
-      color: "text-teal-600 dark:text-teal-400"
-    },
-    {
-      label: "Community Rank",
-      value: "#12",
-      change: "Top 96%",
-      color: "text-orange-600 dark:text-orange-400"
-    }
-  ]
-
+export default function TrustEngineCard() {
   const currentRp = 7250
   const maxRp = 10000
   const progressPercent = (currentRp / maxRp) * 100
@@ -36,20 +12,23 @@ export default function TrustEngine() {
   return (
     <Card className="rounded-xl border p-6 shadow-sm">
       {/* Header */}
-      <div className="mb-6 flex items-center gap-2">
-        <Zap className="h-6 w-6 text-teal-600 dark:text-teal-400" />
-        <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
-          Trust Engine
-        </CardTitle>
+      <div className="mb-6 flex justify-between items-center gap-2">
+        <div className="flex items-center gap-2">
+          <Zap className="h-6 w-6 text-teal-600 dark:text-teal-400" />
+          <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+            Trust Engine
+          </CardTitle>
+        </div>
+
+        <Button>
+          <Link href="/trust-engine">View DashBoard</Link>
+        </Button>
       </div>
 
       {/* Stats Grid */}
       <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-lg border border-white/40 dark:border-slate-700/40 bg-white dark:bg-slate-800/50 p-4"
-          >
+        {TrustEngineStats.map((stat) => (
+          <div key={stat.label} className="rounded-lg border p-4">
             <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
               {stat.label}
             </p>

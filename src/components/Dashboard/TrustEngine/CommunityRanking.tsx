@@ -5,67 +5,10 @@ import { Badge } from "../../ui/badge"
 import { Card } from "../../ui/card"
 import { Progress } from "../../ui/progress"
 import { ArrowUp, ArrowDown } from "lucide-react"
-
-interface Ranking {
-  rank: number
-  name: string
-  avatar: string
-  rpPoints: number
-  growth: number
-  isCurrentUser: boolean
-  trend: "up" | "down" | "neutral"
-}
-
-const rankings: Ranking[] = [
-  {
-    rank: 1,
-    name: "Sarah Chen",
-    avatar: "SC",
-    rpPoints: 4850,
-    growth: 245,
-    isCurrentUser: false,
-    trend: "up"
-  },
-  {
-    rank: 2,
-    name: "Alex Johnson",
-    avatar: "AJ",
-    rpPoints: 4620,
-    growth: 120,
-    isCurrentUser: false,
-    trend: "down"
-  },
-  {
-    rank: 3,
-    name: "Usama Tariq",
-    avatar: "UT",
-    rpPoints: 4290,
-    growth: 280,
-    isCurrentUser: true,
-    trend: "up"
-  },
-  {
-    rank: 4,
-    name: "Emma Davis",
-    avatar: "ED",
-    rpPoints: 4150,
-    growth: 85,
-    isCurrentUser: false,
-    trend: "neutral"
-  },
-  {
-    rank: 5,
-    name: "Marco Silva",
-    avatar: "MS",
-    rpPoints: 3920,
-    growth: 180,
-    isCurrentUser: false,
-    trend: "up"
-  }
-]
+import { CommunityRankingsData } from "./Constant"
 
 export function CommunityRanking() {
-  const currentUserRank = rankings.find((r) => r.isCurrentUser)
+  const currentUserRank = CommunityRankingsData.find((r) => r.isCurrentUser)
 
   return (
     <div className="space-y-6">
@@ -109,8 +52,10 @@ export function CommunityRanking() {
         </h3>
 
         <div className="space-y-3">
-          {rankings.map((ranking, index) => {
-            const maxRP = Math.max(...rankings.map((r) => r.rpPoints))
+          {CommunityRankingsData.map((ranking, index) => {
+            const maxRP = Math.max(
+              ...CommunityRankingsData.map((r) => r.rpPoints)
+            )
             const percentage = (ranking.rpPoints / maxRP) * 100
 
             return (

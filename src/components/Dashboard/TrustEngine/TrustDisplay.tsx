@@ -1,9 +1,10 @@
 "use client"
 
-import { TrendingUp, TrendingDown, Zap } from "lucide-react"
+import { TrendingUp, Zap } from "lucide-react"
 import { Card } from "../../ui/card"
 import { Progress } from "../../ui/progress"
 import { Badge } from "../../ui/badge"
+import { LevelTitles } from "./Constant"
 
 interface TrustDisplayProps {
   reputationPoints: number
@@ -26,13 +27,6 @@ export function TrustDisplay({
     ((reputationPoints - currentLevelPoints) /
       (nextLevelPoints - currentLevelPoints)) *
     100
-  const levelTitles = [
-    "Spark Starter",
-    "Spark Contributor",
-    "Spark Collaborator",
-    "Spark Leader",
-    "Spark Champion"
-  ]
 
   return (
     <div className="space-y-6">
@@ -81,7 +75,7 @@ export function TrustDisplay({
               Current Level
             </p>
             <h3 className="text-2xl font-bold text-foreground mt-1">
-              {levelTitles[Math.min(level, levelTitles.length - 1)]}
+              {LevelTitles[Math.min(level, LevelTitles.length - 1)]}
             </h3>
             <p className="text-xs text-muted-foreground mt-1">
               Level {level + 1}

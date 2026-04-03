@@ -1,4 +1,4 @@
-import { BarChart3, TrendingUp, Users } from "lucide-react"
+import { BarChart3, TrendingUp } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
 import { TrustDisplay } from "./TrustDisplay"
 import { TransactionLedger } from "./TransactionLedger"
@@ -37,10 +37,6 @@ export default function TrustEngineScreen() {
               <TrendingUp className="w-4 h-4" />
               <span className="hidden sm:inline">Transactions</span>
             </TabsTrigger>
-            {/* <TabsTrigger value="opportunities" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Unlock</span>
-            </TabsTrigger> */}
             <TabsTrigger value="ranking" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">Ranking</span>

@@ -32,12 +32,6 @@ import { ExtendedRecommendations, Profile } from "./types/profile-types"
 import { Button } from "@/src/components/ui/button"
 import { useToast } from "@/src/hooks/use-toast"
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from "@/src/components/ui/tooltip"
-import {
   Card,
   CardHeader,
   CardTitle,
@@ -64,7 +58,7 @@ import { userStore } from "@/src/store/user/userStore"
 import EditSocialLinksModal from "./user/SocialLinksModal"
 import { SocialLinkItem } from "./user/SocialLinkItem"
 import UserProfileCard from "./UserProfileCard"
-import TrustEngine from "../TrustEngine/TrustEngineSection"
+import TrustEngineCard from "../TrustEngine/TrustEngineCard"
 
 type ProfileScreenProps = {
   tab?: string
@@ -209,7 +203,7 @@ export default function ProfileScreen({
 
   return (
     <>
-      <div className="container relative">
+      <div className="container mx-auto md:p-6 p-2 relative">
         {loading || uploading ? (
           <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-50">
             <Loader size={LoaderSizes.xl} />
@@ -242,16 +236,17 @@ export default function ProfileScreen({
           )}
         </div>
         {/* Main Section */}
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-6 mx-6 -mt-16 md:-mt-16">
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-6 mx-16 -mt-16 md:-mt-16">
           {/* Left */}
           <div className="lg:col-span-2 space-y-6">
             <UserProfileCard
               userInfo={userInfo}
+              currentImageUrl={currentImageUrl}
               handleCopyUrl={handleCopyUrl}
-              onUploadingChange={setUploading}
+              onFileChange={handleFileChange}
             />
-
-            <TrustEngine />
+            {/* Trust Engine Section  */}
+            <TrustEngineCard />
 
             <ProfileBio
               userBio={user?.profile?.bio as string}
@@ -348,7 +343,10 @@ export default function ProfileScreen({
               <CardContent className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <MailIcon className="h-5 w-5 text-gray-500" />
-                  <span className="truncate ">{user?.email}</span>
+                  <div>
+                    <h1 className="text-gray-400">Email</h1>
+                    <span className="truncate ">{user?.email}</span>
+                  </div>
                 </div>
                 {/* for future use */}
                 {/* <div className="flex items-center space-x-2">
@@ -534,7 +532,6 @@ export default function ProfileScreen({
             {/* Your Standing Card */}
             <Card className="p-6">
               <CardTitle className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-primary" />
                 Your Standing
               </CardTitle>
               <div className="space-y-3">

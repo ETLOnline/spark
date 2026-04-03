@@ -270,9 +270,6 @@ const EditProfileModal: React.FC = () => {
               onSubmit={form.handleSubmit(saveProfileChanges)}
             >
               {/* Full Name */}
-              {/* Full Name */}
-              {/* Full Name */}
-              {/* Full Name */}
               <div className="grid grid-cols-12 gap-2 mb-2">
                 <div className="col-span-6">
                   <Label htmlFor="first_name" className="font-semibold">
