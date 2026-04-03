@@ -15,10 +15,13 @@ import { OnboardingCompletion } from "../TrustEngine/OnboardingCompletion"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import { SelectUser } from "@/src/db/schema"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
+import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
+import { useRouter } from "next/navigation"
 
 export default function ProfileCompletionForm() {
   const [step, setStep] = useState(1)
   const [user, setUser] = useState<SelectUser>()
+  const [isTrustEngineEnabled, setIsTrustEngineEnabled] = useState(false)
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -30,6 +33,16 @@ export default function ProfileCompletionForm() {
     }
     fetchUserData()
   }, [step])
+
+  useEffect(() => {
+    const fetchFeatureFlag = async () => {
+      const res = await getFeatureFlagAction("Trust_Engine_Enabled")
+      if (res.success && res.data?.is_enabled) {
+        setIsTrustEngineEnabled(true)
+      }
+    }
+    fetchFeatureFlag()
+  }, [])
 
   const steps = [
     {
@@ -50,6 +63,14 @@ export default function ProfileCompletionForm() {
     }
   ]
   const progress = ((step - 1) / 3) * 100
+
+  const router = useRouter()
+
+  useEffect(() => {
+    if (step === 4 && !isTrustEngineEnabled) {
+      router.push("/profile")
+    }
+  }, [step, isTrustEngineEnabled, router])
 
   return (
     <Card className="w-full">
@@ -109,7 +130,7 @@ export default function ProfileCompletionForm() {
             setUser={setUser}
           />
         )}
-        {step === 4 && (
+        {step === 4 && isTrustEngineEnabled && (
           <OnboardingCompletion
             redirectTo="/profile"
             buttonLabel="Go to Profile"
