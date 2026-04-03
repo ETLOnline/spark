@@ -1053,9 +1053,9 @@ export default function TaskForm({
                           return (
                             <>
                               {shownParent ? (
-                                <div className="flex flex-col items-center gap-2">
+                                <div className="flex flex-col items-center gap-2 w-full">
                                   <div
-                                    className="flex items-center gap-2 rounded-md border p-2 cursor-pointer"
+                                    className="flex items-center gap-2 rounded-md border p-2 cursor-pointer w-full overflow-hidden"
                                     onClick={() => {
                                       if (!isEditable || isTaskEpic) return
                                       setActiveField("parent")
@@ -1066,7 +1066,7 @@ export default function TaskForm({
                                       type={shownParent.task_type}
                                     />
 
-                                    <div className="flex-1 min-w-0">
+                                    <div className="flex-1 min-w-0 overflow-hidden">
                                       <span
                                         className="block text-sm font-medium truncate"
                                         title={`${shownParent.task_num} - ${shownParent.task_title}`}
