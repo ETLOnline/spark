@@ -30,7 +30,7 @@ export const AddRewardAction = CreateServerAction(
     verification_id?: number
   ) => {
     try {
-      const fetureFlag = await getFeatureFlagAction("Trust_Engine_Enabled")
+      const fetureFlag = await getFeatureFlagAction(["Trust_Engine_Enabled"])
       if (!fetureFlag?.success || !fetureFlag.data?.is_enabled) {
         return { success: true, data: null }
       }

@@ -440,7 +440,7 @@ export default function HomePage() {
         page: "home"
       })
 
-      const featureFlag = await GetFeatureFlag("Trust_Engine_Enabled")
+      const featureFlag = await GetFeatureFlag(["Trust_Engine_Enabled"])
       if (featureFlag?.success && featureFlag?.data?.is_enabled) {
         setIsFeatureEnable(true)
       }
@@ -800,11 +800,7 @@ export default function HomePage() {
       </section>
 
       {/* trust engine section */}
-      {getFeatureFlagLoading ? (
-        <div className="col-span-4 flex justify-center py-20">
-          <Loader size={LoaderSizes.lg} />
-        </div>
-      ) : isFeatureEnable ? (
+      {isFeatureEnable ? (
         <section>
           <div className="bg-gradient-to-br from-background to-primary/5">
             <div className="container mx-auto px-4 py-16">

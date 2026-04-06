@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm"
+import { eq, inArray } from "drizzle-orm"
 import { db } from "../.."
 import {
   featureFlagsTable,
@@ -7,11 +7,11 @@ import {
 } from "../../schema"
 
 export const getFeatureFlag = async (
-  key: string
+  key: string[]
 ): Promise<SelectFeatureFlag | undefined> => {
   try {
     const flag = await db.query.featureFlagsTable.findFirst({
-      where: eq(featureFlagsTable.key, key)
+      where: inArray(featureFlagsTable.key, key)
     })
     return flag
   } catch (error: any) {

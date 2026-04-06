@@ -36,7 +36,7 @@ export default function ProfileCompletionForm() {
 
   useEffect(() => {
     const fetchFeatureFlag = async () => {
-      const res = await getFeatureFlagAction("Trust_Engine_Enabled")
+      const res = await getFeatureFlagAction(["Trust_Engine_Enabled"])
       if (res.success && res.data?.is_enabled) {
         setIsTrustEngineEnabled(true)
       }

@@ -37,7 +37,7 @@ export default function SparkTrustEngine() {
     useServerAction(getFeatureFlagAction)
 
   async function getFetureFlag() {
-    const res = await GetFeatureFlag("Trust_Engine_Enabled")
+    const res = await GetFeatureFlag(["Trust_Engine_Enabled"])
     if (res?.success && res?.data?.is_enabled) {
       setIsTrustEngineEnabled(true)
     }

@@ -16,7 +16,7 @@ export default function ProfileCompletionShell() {
     useServerAction(getFeatureFlagAction)
 
   async function getFetureFlag() {
-    const res = await GetFeatureFlag("Trust_Engine_Enabled")
+    const res = await GetFeatureFlag(["Trust_Engine_Enabled"])
     if (res?.success && res?.data?.is_enabled) {
       setIsTrustEngineEnabled(true)
     }
@@ -28,11 +28,7 @@ export default function ProfileCompletionShell() {
 
   return (
     <div>
-      {isTrustEngineLoading ? (
-        <div className="flex justify-center h-full w-full">
-          <Loader size={LoaderSizes.xl} />
-        </div>
-      ) : isTrustEngineEnabled && !showProfile ? (
+      {isTrustEngineEnabled && !showProfile ? (
         <OnboardingFlow onFinish={() => setShowProfile(true)} />
       ) : (
         <ProfileCompletionForm />
