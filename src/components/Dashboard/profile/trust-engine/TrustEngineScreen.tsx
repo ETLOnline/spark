@@ -1,15 +1,45 @@
-import { BarChart3, TrendingUp } from "lucide-react"
+"use client"
+
+import { BarChart3, TrendingUp, Lock } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../ui/tabs"
 import { TransactionLedger } from "./TransactionLedger"
 import { CommunityRanking } from "./CommunityRanking"
 import { TrustOverView } from "./TrustOverView"
-
-export const metadata = {
-  title: "Student Dashboard | SPARK",
-  description: "View your reputation points, spark credits, and progress"
-}
+import { useEffect, useState } from "react"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
+import NoDataCard from "../../../Dashboard/Channels/ChannelDetails/NoDataCard"
 
 export default function TrustEngineScreen() {
+  const [isTrustEngineEnabled, setIsTrustEngineEnabled] = useState(false)
+  const [isTrustEngineLoading, , , GetFeatureFlag] =
+    useServerAction(getFeatureFlagAction)
+
+  async function getFeatureFlag() {
+    const res = await GetFeatureFlag(["Trust_Engine_Enabled"])
+    if (res?.success && res?.data?.is_enabled) {
+      setIsTrustEngineEnabled(true)
+    }
+  }
+
+  useEffect(() => {
+    getFeatureFlag()
+  }, [])
+
+  if (!isTrustEngineEnabled) {
+    return (
+      <main className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-16">
+          <NoDataCard
+            title="Feature Disabled"
+            description="This feature is currently disabled by the admin."
+            icon={<Lock className="h-16 w-16 text-muted-foreground mb-4" />}
+          />
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-background ">
       <div className="container mx-auto px-4 ">
