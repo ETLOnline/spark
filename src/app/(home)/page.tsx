@@ -63,7 +63,7 @@ import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
 import CommunityRequestBanner from "@/src/components/communities/CommunityRequestBanner"
-import { getFeatureFlagWithoutAuthenticationAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
+import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
 
 const fadeInUp = {
   initial: { opacity: 0, y: 60 },
@@ -430,9 +430,8 @@ export default function HomePage() {
   )
   const [getCommunitiesLoading, communities, , GetCommunities] =
     useServerAction(GetFeaturedCommunitiesAction)
-  const [getFeatureFlagLoading, , , GetFeatureFlag] = useServerAction(
-    getFeatureFlagWithoutAuthenticationAction
-  )
+  const [getFeatureFlagLoading, , , GetFeatureFlag] =
+    useServerAction(getFeatureFlagAction)
 
   useEffect(() => {
     const fetchData = async () => {
