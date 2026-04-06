@@ -1,8 +1,8 @@
 import { Zap } from "lucide-react"
 import Link from "next/link"
 import { TrustEngineStats } from "./Constant"
-import { Card, CardTitle } from "../ui/card"
-import { Button } from "../ui/button"
+import { Card, CardTitle } from "../../../ui/card"
+import { Button } from "../../../ui/button"
 
 export default function TrustEngineCard() {
   const currentRp = 7250

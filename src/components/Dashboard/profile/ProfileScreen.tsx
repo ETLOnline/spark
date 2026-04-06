@@ -58,7 +58,8 @@ import { userStore } from "@/src/store/user/userStore"
 import EditSocialLinksModal from "./user/SocialLinksModal"
 import { SocialLinkItem } from "./user/SocialLinkItem"
 import UserProfileCard from "./UserProfileCard"
-import TrustEngineCard from "../../TrustEngine/TrustEngineCard"
+import TrustEngineCard from "./trust-engine/TrustEngineCard"
+import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
 type ProfileScreenProps = {
   tab?: string
   user: SelectUser
@@ -80,6 +81,7 @@ export default function ProfileScreen({
   const [authUser, setAuthUser] = useState<SelectUser | null>(null)
   const [profile, setProfile] = useState(user.profile)
   const [certificates, setCertificates] = useState(user.certificates)
+  const [isFeatureEnable, setIsFeatureEnable] = useState(false)
   const [isQualificationModalOpen, setIsQualificationModalOpen] =
     useState(false)
   const [selectedCertificate, setSelectedCertificate] =
@@ -104,6 +106,8 @@ export default function ProfileScreen({
   const [recommendationLoading, , , GetRecommendations] = useServerAction(
     GetRecommendationAction
   )
+  const [getFeatureFlagLoading, , , GetFeatureFlag] =
+    useServerAction(getFeatureFlagAction)
 
   useEffect(() => {
     const GetAuthUser = async () => {
@@ -191,6 +195,16 @@ export default function ProfileScreen({
     setIsQualificationModalOpen(true)
   }
 
+  useEffect(() => {
+    const fetchFeatureFlag = async () => {
+      const res = await GetFeatureFlag(["Trust_Engine_Enabled"])
+      if (res?.success && res?.data?.is_enabled) {
+        setIsFeatureEnable(true)
+      }
+    }
+    fetchFeatureFlag()
+  }, [])
+
   const userInfo = {
     userFirstName: displayUser?.first_name || "",
     userLastName: displayUser?.last_name || "",
@@ -245,7 +259,8 @@ export default function ProfileScreen({
               onFileChange={handleFileChange}
             />
             {/* Trust Engine Section  */}
-            <TrustEngineCard />
+
+            {isFeatureEnable && <TrustEngineCard />}
 
             <ProfileBio
               userBio={user?.profile?.bio as string}
@@ -529,27 +544,29 @@ export default function ProfileScreen({
             </Card>
 
             {/* Your Standing Card */}
-            <Card className="p-6">
-              <CardTitle className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                {authUser?.unique_id === user?.unique_id
-                  ? "Your Standing"
-                  : "Standing"}
-              </CardTitle>
-              <div className="space-y-3">
-                <div>
-                  <div className="text-sm text-muted-foreground mb-1">
-                    Community Members
+            {isFeatureEnable && (
+              <Card className="p-6">
+                <CardTitle className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                  {authUser?.unique_id === user?.unique_id
+                    ? "Your Standing"
+                    : "Standing"}
+                </CardTitle>
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">
+                      Community Members
+                    </div>
+                    <div className="text-lg font-bold text-primary">348</div>
                   </div>
-                  <div className="text-lg font-bold text-primary">348</div>
-                </div>
-                <div className="border-t ">
-                  <div className="text-sm text-muted-foreground  pt-3">
-                    Your Percentile Rank
+                  <div className="border-t ">
+                    <div className="text-sm text-muted-foreground  pt-3">
+                      Your Percentile Rank
+                    </div>
+                    <div className="text-lg font-bold text-primary">96%</div>
                   </div>
-                  <div className="text-lg font-bold text-primary">96%</div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            )}
           </div>
         </div>
       </div>

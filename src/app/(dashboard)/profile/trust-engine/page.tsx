@@ -1,4 +1,4 @@
-import TrustEngineScreen from "@/src/components/TrustEngine/TrustEngineScreen"
+import TrustEngineScreen from "@/src/components/Dashboard/profile/trust-engine/TrustEngineScreen"
 import React from "react"
 
 const TrustEngineDashboard = () => {

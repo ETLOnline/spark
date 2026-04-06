@@ -102,20 +102,6 @@ export default function UserProfileCard({
             lines={2}
             className="mb-4 text-sm leading-relaxed text-gray-600 dark:text-gray-300 text-justify"
           />
-          {/* <div className="mb-4 flex flex-wrap flex-col gap-4 text-sm text-gray-600 dark:text-gray-400">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-              <span>Islamabad, Pakistan</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Briefcase className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-              <span>ETL Consulting</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-              <span>Joined Jan 2023</span>
-            </div>
-          </div> */}
         </div>
       </div>
     </div>

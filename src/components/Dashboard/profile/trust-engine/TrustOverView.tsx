@@ -2,11 +2,11 @@
 
 import { TrendingUp, Zap, Users } from "lucide-react"
 import Link from "next/link"
-import { Button } from "../ui/button"
-import { Card } from "../ui/card"
+import { Button } from "../../../ui/button"
+import { Card } from "../../../ui/card"
 import { LevelTitles } from "./Constant"
-import { Badge } from "../ui/badge"
-import { Progress } from "../ui/progress"
+import { Badge } from "../../../ui/badge"
+import { Progress } from "../../../ui/progress"
 
 interface TrustOverViewProps {
   reputationPoints: number

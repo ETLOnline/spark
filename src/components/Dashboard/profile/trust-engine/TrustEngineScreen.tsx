@@ -1,5 +1,5 @@
 import { BarChart3, TrendingUp } from "lucide-react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../ui/tabs"
 import { TransactionLedger } from "./TransactionLedger"
 import { CommunityRanking } from "./CommunityRanking"
 import { TrustOverView } from "./TrustOverView"

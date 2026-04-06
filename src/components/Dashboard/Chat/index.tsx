@@ -67,7 +67,7 @@ import {
   EmojiPickerFooter,
   EmojiPickerSearch
 } from "../../ui/emoji-picker"
-// import "@/src/components/common/Tiptap/RichEditorFormat.css"
+import "@/src/components/common/Tiptap/RichEditorFormat.css"
 import { toast } from "@/src/hooks/use-toast"
 import {
   DropdownMenu,
