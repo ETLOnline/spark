@@ -21,7 +21,7 @@ export default function TrustEngineCard() {
         </div>
 
         <Button>
-          <Link href="/trust-engine/dashboard">View DashBoard</Link>
+          <Link href="/profile/trust-engine">View DashBoard</Link>
         </Button>
       </div>
 

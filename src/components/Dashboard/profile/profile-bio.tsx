@@ -43,10 +43,16 @@ const ProfileBio: React.FC<ProfileBioProps> = ({ userBio, tags }) => {
         onValueChange={(value) => setActiveTab(value as "skills" | "interests")}
       >
         <TabsList className="grid w-full grid-cols-2 bg-muted">
-          <TabsTrigger className="text-black font-" value="skills">
+          <TabsTrigger
+            className="text-black dark:text-white font-"
+            value="skills"
+          >
             Skills
           </TabsTrigger>
-          <TabsTrigger className="text-black font-thin" value="interests">
+          <TabsTrigger
+            className="text-black dark:text-white font-thin"
+            value="interests"
+          >
             Interests
           </TabsTrigger>
         </TabsList>
@@ -54,7 +60,7 @@ const ProfileBio: React.FC<ProfileBioProps> = ({ userBio, tags }) => {
         <TabsContent value="skills" className="mt-4">
           <Card className="flex flex-col flex-wrap gap-5 p-3">
             <CardTitle>Technical Skills</CardTitle>
-            <div className="flex flex-wrap gap-2 mt-3">
+            <div className="flex flex-wrap gap-2">
               {skills.length ? (
                 skills.map((skill) => (
                   <Badge key={skill.id} variant="secondary">

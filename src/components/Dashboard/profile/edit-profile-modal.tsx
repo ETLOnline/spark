@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Input } from "../../ui/input"
 import { Button } from "../../ui/button"
+import { Edit2 } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -249,6 +250,7 @@ const EditProfileModal: React.FC = () => {
             className="border p-2 font-semibold bg-muted "
             variant="edit"
             size={"sm"}
+            icon={Edit2}
             onClick={() => setIsOpen(true)}
           >
             Edit Profile

@@ -2,7 +2,7 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/src/lib/utils"
-import { Edit2 } from "lucide-react"
+import { SquarePen } from "lucide-react"
 import Loader from "../common/Loader/Loader"
 
 const buttonVariants = cva(
@@ -43,6 +43,7 @@ const buttonVariants = cva(
 
 interface CustomButtonProps {
   loading?: boolean
+  icon?: React.ComponentType<any>
 }
 
 export interface ButtonProps
@@ -62,11 +63,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       children,
       loading,
       disabled,
+      icon,
       ...props
     },
     ref
   ) => {
     const Comp = asChild ? Slot : "button"
+    const IconComponent = icon || (variant === "edit" ? SquarePen : null)
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
@@ -74,7 +77,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={loading || disabled}
         {...props}
       >
-        {variant === "edit" && <Edit2 size={"8"} />}
+        {IconComponent && <IconComponent size={"8"} />}
         {children}
         {loading ? <Loader /> : null}
       </Comp>

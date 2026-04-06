@@ -1,8 +1,8 @@
 import { BarChart3, TrendingUp } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
-import { TrustDisplay } from "./TrustDisplay"
 import { TransactionLedger } from "./TransactionLedger"
 import { CommunityRanking } from "./CommunityRanking"
+import { TrustOverView } from "./TrustOverView"
 
 export const metadata = {
   title: "Student Dashboard | SPARK",
@@ -11,10 +11,10 @@ export const metadata = {
 
 export default function TrustEngineScreen() {
   return (
-    <main className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+    <main className="min-h-screen bg-background ">
+      <div className="container mx-auto px-4 ">
         {/* Header */}
-        <div className="mb-8">
+        <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Trust Dashboard
           </h1>
@@ -45,7 +45,7 @@ export default function TrustEngineScreen() {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            <TrustDisplay
+            <TrustOverView
               reputationPoints={0}
               sparkCredits={1850}
               level={0}

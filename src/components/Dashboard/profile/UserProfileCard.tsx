@@ -99,10 +99,10 @@ export default function UserProfileCard({
 
           <ExpandableText
             content={userInfo.userBio || "This user hasn't added a bio yet."}
-            lines={3}
+            lines={2}
             className="mb-4 text-sm leading-relaxed text-gray-600 dark:text-gray-300 text-justify"
           />
-          <div className="mb-4 flex flex-wrap flex-col gap-4 text-sm text-gray-600 dark:text-gray-400">
+          {/* <div className="mb-4 flex flex-wrap flex-col gap-4 text-sm text-gray-600 dark:text-gray-400">
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-teal-600 dark:text-teal-400" />
               <span>Islamabad, Pakistan</span>
@@ -115,7 +115,7 @@ export default function UserProfileCard({
               <Calendar className="h-4 w-4 text-teal-600 dark:text-teal-400" />
               <span>Joined Jan 2023</span>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

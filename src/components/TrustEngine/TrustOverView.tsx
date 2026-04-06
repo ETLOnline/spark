@@ -8,7 +8,7 @@ import { LevelTitles } from "./Constant"
 import { Badge } from "../ui/badge"
 import { Progress } from "../ui/progress"
 
-interface TrustDisplayProps {
+interface TrustOverViewProps {
   reputationPoints: number
   sparkCredits: number
   level: number
@@ -17,14 +17,14 @@ interface TrustDisplayProps {
   percentile: number
 }
 
-export function TrustDisplay({
+export function TrustOverView({
   reputationPoints,
   sparkCredits,
   level,
   nextLevelPoints,
   currentLevelPoints,
   percentile
-}: TrustDisplayProps) {
+}: TrustOverViewProps) {
   const progressPercent =
     ((reputationPoints - currentLevelPoints) /
       (nextLevelPoints - currentLevelPoints)) *
@@ -52,7 +52,7 @@ export function TrustDisplay({
       {/* Main Trust Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Reputation Points Card */}
-        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 p-6">
+        <Card className="border p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
@@ -68,7 +68,7 @@ export function TrustDisplay({
         </Card>
 
         {/* Spark Credits Card */}
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-5 border-purple-200 p-6">
+        <Card className=" p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground">

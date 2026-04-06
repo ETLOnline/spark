@@ -19,14 +19,9 @@ export function TransactionLedger() {
       <h3 className="font-semibold text-foreground mb-4">
         Transaction History
       </h3>
-
-      <Tabs defaultValue="all" className="w-full">
-        <TabsContent value="all" className="space-y-3">
-          {TransactionsData.map((transaction) => (
-            <TransactionRow key={transaction.id} transaction={transaction} />
-          ))}
-        </TabsContent>
-      </Tabs>
+      {TransactionsData.map((transaction) => (
+        <TransactionRow key={transaction.id} transaction={transaction} />
+      ))}
     </Card>
   )
 }
@@ -35,7 +30,7 @@ function TransactionRow({ transaction }: { transaction: TransactionType }) {
   return (
     <div className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
       <div
-        className={`p-2 rounded-lg flex items-center justify-center w-10 h-10 ${categoryColors[transaction.category]}`}
+        className={`p-2 rounded-lg flex items-center justify-center w-10 h-10 border`}
       >
         <ArrowUpRight className="w-4 h-4" />
       </div>

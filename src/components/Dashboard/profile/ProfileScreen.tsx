@@ -235,7 +235,7 @@ export default function ProfileScreen({
           )}
         </div>
         {/* Main Section */}
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-6 mx-16 -mt-16 md:-mt-16">
+        <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-6 mx-16 -mt-16 md:-mt-16">
           {/* Left */}
           <div className="lg:col-span-2 space-y-6">
             <UserProfileCard
@@ -531,7 +531,9 @@ export default function ProfileScreen({
             {/* Your Standing Card */}
             <Card className="p-6">
               <CardTitle className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                Your Standing
+                {authUser?.unique_id === user?.unique_id
+                  ? "Your Standing"
+                  : "Standing"}
               </CardTitle>
               <div className="space-y-3">
                 <div>
@@ -541,7 +543,7 @@ export default function ProfileScreen({
                   <div className="text-lg font-bold text-primary">348</div>
                 </div>
                 <div className="border-t ">
-                  <div className="text-sm text-muted-foreground mb-1">
+                  <div className="text-sm text-muted-foreground  pt-3">
                     Your Percentile Rank
                   </div>
                   <div className="text-lg font-bold text-primary">96%</div>
