@@ -26,6 +26,7 @@ import {
   projectTaskPriority,
   projectTaskTypes
 } from "../../constants/projectManagment"
+import { useSearchParams } from "next/navigation"
 
 interface Props {
   subtask: any
@@ -88,6 +89,17 @@ function SubTask({
     }
   }
 
+  const searchParams = useSearchParams()
+
+  const hasTaskQuery = searchParams.has("task_id")
+
+  let href = ""
+
+  if (hasTaskQuery) {
+    href = `?task_id=${subtask.id}`
+  } else {
+    href = `/project/${projectId}/task/${subtask.id}`
+  }
   return (
     <div key={subtask.id} className="subtask-row">
       <div className="flex items-center gap-4">
@@ -99,7 +111,7 @@ function SubTask({
             <TooltipContent>{ToUpperCase(subtask.task_type)}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <Link href={`?task_id=${subtask.id}`} className="flex gap-4">
+        <Link href={href} className="flex gap-4">
           <span className="hover:underline hover:text-blue-600">
             {subtask.task_num}
           </span>
