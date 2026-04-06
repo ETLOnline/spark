@@ -1640,6 +1640,17 @@ export const invitationsRelations = relations(invitationsTable, ({ one }) => ({
 export type InsertInvitation = typeof invitationsTable.$inferInsert
 export type SelectInvitation = typeof invitationsTable.$inferSelect
 
+export const featureFlagsTable = pgTable("feature_flags", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  key: varchar().notNull().unique(),
+  label: varchar().notNull(),
+  is_enabled: boolean().notNull().default(false),
+  description: text(),
+  ...timestamps
+})
+
+export type InsertFeatureFlag = typeof featureFlagsTable.$inferInsert
+export type SelectFeatureFlag = typeof featureFlagsTable.$inferSelect
 export const rewardsMetadataTable = pgTable("rewards_metadata", {
   reward_id: integer().primaryKey(),
   internal_name: varchar().notNull(),
