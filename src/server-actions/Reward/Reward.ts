@@ -18,6 +18,7 @@ import {
   TrustVerificationStatus
 } from "@/src/types/Rewards/rewards"
 import { triggerPusherEvent } from "@/src/services/trigger"
+import { getFeatureFlagAction } from "../FeatureFlag/FeatureFlag"
 
 export const AddRewardAction = CreateServerAction(
   true,
@@ -29,6 +30,11 @@ export const AddRewardAction = CreateServerAction(
     verification_id?: number
   ) => {
     try {
+      const fetureFlag = await getFeatureFlagAction(["Trust_Engine_Enabled"])
+      if (!fetureFlag?.success || !fetureFlag.data?.is_enabled) {
+        return { success: true, data: null }
+      }
+
       const activityRule = await GetActivityRule({ action_type })
 
       if (!activityRule) {
