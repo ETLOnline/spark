@@ -67,9 +67,9 @@ const PostInteractions: React.FC<Props> = ({
         return
       }
       const response = await toggleLike(postId, isLiked, likes, spaceId)
-      const prrof_url = createAbsoluteUrl(`/posts/${postId}`)
+     
       if (response?.data) {
-        const a  = await rewardLike(ActivityTypes.SocialPostLike,userId,prrof_url)
+        
         setIsLiked(!isLiked)
       }
       if (response?.error) {

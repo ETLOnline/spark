@@ -115,8 +115,7 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
             title: "Comment added",
             description: "Your comment has been added successfully"
           })
-          const prrof_url = createAbsoluteUrl(`/posts/${postId}`)
-          await rewardComment(ActivityTypes.SocialPostComment,user?.unique_id,prrof_url)
+         
         } else {
           toast({
             variant: "destructive",
