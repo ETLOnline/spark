@@ -101,7 +101,6 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
             title: "Comment added",
             description: "Your comment has been added successfully"
           })
-
         } else {
           toast({
             variant: "destructive",
