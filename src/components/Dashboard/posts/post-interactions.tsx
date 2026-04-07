@@ -10,9 +10,6 @@ import { SelectLike } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
 import ShareDialog from "./ShareDialog"
 import { useParams } from "next/navigation"
-import { AddRewardAction } from "@/src/server-actions/Reward/Reward"
-import { ActivityTypes } from "@/src/types/Rewards/rewards"
-import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 type Props = {
   likes: number
@@ -31,8 +28,6 @@ const PostInteractions: React.FC<Props> = ({
 }) => {
   const [toggleLikeLoading, toggleLikedPost, toggleLikeError, toggleLike] =
     useServerAction(ToggleLikeAction)
-  const [rewardLikeLoading, rewardLikePost, rewardLikeError, rewardLike] =
-    useServerAction(AddRewardAction)
 
   const [isLiked, setIsLiked] = useState<boolean>(false)
   const [shareDialogOpen, setShareDialogOpen] = useState<boolean>(false)

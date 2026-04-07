@@ -10,9 +10,6 @@ import { userStore } from "@/src/store/user/userStore"
 import { useToast } from "@/src/hooks/use-toast"
 import { SelectComment } from "@/src/db/schema"
 import { X } from "lucide-react"
-import { AddRewardAction } from "@/src/server-actions/Reward/Reward"
-import { createAbsoluteUrl } from "@/src/utils/clientHelper"
-import { ActivityTypes } from "@/src/types/Rewards/rewards"
 
 type PostCommentFormProps = {
   postId: string
@@ -45,8 +42,6 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
     createCommentError,
     createComment
   ] = useServerAction(CreateCommentAction)
-  const [rewardCommentLoading, rewardCommentPost, rewardCommentError, rewardComment] =
-    useServerAction(AddRewardAction)
 
 
   const name = `${user?.first_name} ${user?.last_name}`

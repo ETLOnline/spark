@@ -58,9 +58,6 @@ import {
   AlertDialogCancel,
   AlertDialogAction
 } from "../../ui/alert-dialog"
-import { AddRewardAction } from "@/src/server-actions/Reward/Reward"
-import { ActivityTypes } from "@/src/types/Rewards/rewards"
-import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 type Props = {
   variant?: "posts" | "spaces"
@@ -95,8 +92,6 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
 
   const [createPostLoading, createdPost, createPostError, createPost] =
     useServerAction(CreatePostAction)
-  const [rewardPostLoading, rewardPostcreated, rewardPostError, rewardPost] =
-    useServerAction(AddRewardAction)
 
   const [
     createFilesPostLoading,
