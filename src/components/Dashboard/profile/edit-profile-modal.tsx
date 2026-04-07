@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Input } from "../../ui/input"
 import { Button } from "../../ui/button"
+import { Edit2 } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -245,8 +246,14 @@ const EditProfileModal: React.FC = () => {
     <>
       <Dialog open={isOpen} onOpenChange={handleDialogChange}>
         <DialogTrigger asChild>
-          <Button variant="edit" size={"sm"} onClick={() => setIsOpen(true)}>
-            Edit
+          <Button
+            className="border p-2 font-semibold bg-muted "
+            variant="edit"
+            size={"sm"}
+            icon={Edit2}
+            onClick={() => setIsOpen(true)}
+          >
+            Edit Profile
           </Button>
         </DialogTrigger>
         <DialogContent
