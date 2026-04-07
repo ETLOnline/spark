@@ -63,6 +63,7 @@ import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
 import CommunityRequestBanner from "@/src/components/communities/CommunityRequestBanner"
+import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
 
 const fadeInUp = {
   initial: { opacity: 0, y: 60 },
@@ -421,7 +422,7 @@ export default function HomePage() {
   const [featuredCommunities, setFeaturedCommunities] = useState<
     SelectCommunity[]
   >([])
-
+  const [isFeatureEnable, setIsFeatureEnable] = useState(false)
   const [GetSiteSettingsLoading, siteSettings, , GetSiteSettings] =
     useServerAction(GetSitSettingsAction)
   const [getMentorsLoading, getMenotrs, , GetMentors] = useServerAction(
@@ -429,12 +430,19 @@ export default function HomePage() {
   )
   const [getCommunitiesLoading, communities, , GetCommunities] =
     useServerAction(GetFeaturedCommunitiesAction)
+  const [getFeatureFlagLoading, , , GetFeatureFlag] =
+    useServerAction(getFeatureFlagAction)
 
   useEffect(() => {
     const fetchData = async () => {
       await GetSiteSettings({
         page: "home"
       })
+
+      const featureFlag = await GetFeatureFlag(["Trust_Engine_Enabled"])
+      if (featureFlag?.success && featureFlag?.data?.is_enabled) {
+        setIsFeatureEnable(true)
+      }
     }
     fetchData()
   }, [])
@@ -791,64 +799,66 @@ export default function HomePage() {
       </section>
 
       {/* trust engine section */}
-      <section>
-        <div className="bg-gradient-to-br from-background to-primary/5">
-          <div className="container mx-auto px-4 py-16">
-            <div className="max-w-3xl mx-auto text-center mb-20">
-              {/* Animated Badge */}
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-              >
-                <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
-                  Trust & Reputation System
-                </Badge>
-              </motion.div>
+      {isFeatureEnable ? (
+        <section>
+          <div className="bg-gradient-to-br from-background to-primary/5">
+            <div className="container mx-auto px-4 py-16">
+              <div className="max-w-3xl mx-auto text-center mb-20">
+                {/* Animated Badge */}
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                  viewport={{ once: true }}
+                >
+                  <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
+                    Trust & Reputation System
+                  </Badge>
+                </motion.div>
 
-              {/* Animated Heading */}
-              <motion.h1
-                className="text-5xl md:text-6xl font-bold text-foreground mb-6 text-balance"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                viewport={{ once: true }}
-              >
-                SPARK Trust Engine
-              </motion.h1>
+                {/* Animated Heading */}
+                <motion.h1
+                  className="text-5xl md:text-6xl font-bold text-foreground mb-6 text-balance"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  viewport={{ once: true }}
+                >
+                  SPARK Trust Engine
+                </motion.h1>
 
-              {/* Animated Paragraph */}
-              <motion.p
-                className="text-xl text-muted-foreground mb-8 text-balance"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-                viewport={{ once: true }}
-              >
-                A comprehensive dual-currency reputation system that rewards
-                learning, collaboration, and growth. Track your journey from
-                Spark Starter to Spark Champion.
-              </motion.p>
+                {/* Animated Paragraph */}
+                <motion.p
+                  className="text-xl text-muted-foreground mb-8 text-balance"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  viewport={{ once: true }}
+                >
+                  A comprehensive dual-currency reputation system that rewards
+                  learning, collaboration, and growth. Track your journey from
+                  Spark Starter to Spark Champion.
+                </motion.p>
 
-              {/* Animated Button */}
-              <motion.div
-                className="flex flex-col sm:flex-row gap-4 justify-center"
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-                viewport={{ once: true }}
-              >
-                <Link href="/trust-engine">
-                  <Button className="bg-primary text-white hover:bg-primary/90 px-8 py-6 text-lg shadow-lg hover:scale-105 transition-transform duration-300">
-                    Get Started
-                  </Button>
-                </Link>
-              </motion.div>
+                {/* Animated Button */}
+                <motion.div
+                  className="flex flex-col sm:flex-row gap-4 justify-center"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6, delay: 0.6 }}
+                  viewport={{ once: true }}
+                >
+                  <Link href="/trust-engine">
+                    <Button className="bg-primary text-white hover:bg-primary/90 px-8 py-6 text-lg shadow-lg hover:scale-105 transition-transform duration-300">
+                      Get Started
+                    </Button>
+                  </Link>
+                </motion.div>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
       {/* Featured Mentors Section */}
 
       <section id="mentors" className="py-24 px-6  relative overflow-hidden">

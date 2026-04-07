@@ -18,7 +18,8 @@ import {
   Linkedin,
   Twitter,
   Instagram,
-  Globe
+  Globe,
+  Trophy
 } from "lucide-react"
 import {
   SelectCertificate,
@@ -31,12 +32,6 @@ import { ExtendedRecommendations, Profile } from "./types/profile-types"
 import { Button } from "@/src/components/ui/button"
 import { useToast } from "@/src/hooks/use-toast"
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from "@/src/components/ui/tooltip"
-import {
   Card,
   CardHeader,
   CardTitle,
@@ -44,7 +39,6 @@ import {
   CardFooter
 } from "@/src/components/ui/card"
 import { generateUrl, getPagePath, getUserRole } from "@/src/utils/helpers"
-import EditProfileModal from "./edit-profile-modal"
 import { UpdateUserProfilePictureAction } from "@/src/server-actions/User/User"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import Loader from "../../common/Loader/Loader"
@@ -63,7 +57,9 @@ import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import EditSocialLinksModal from "./user/SocialLinksModal"
 import { SocialLinkItem } from "./user/SocialLinkItem"
-
+import UserProfileCard from "./UserProfileCard"
+import TrustEngineCard from "./trust-engine/TrustEngineCard"
+import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
 type ProfileScreenProps = {
   tab?: string
   user: SelectUser
@@ -76,7 +72,6 @@ export default function ProfileScreen({
   profileData
 }: ProfileScreenProps) {
   const { toast } = useToast()
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [loading, userData, error, updateUserProfile] = useServerAction(
     UpdateUserProfilePictureAction
@@ -86,6 +81,7 @@ export default function ProfileScreen({
   const [authUser, setAuthUser] = useState<SelectUser | null>(null)
   const [profile, setProfile] = useState(user.profile)
   const [certificates, setCertificates] = useState(user.certificates)
+  const [isFeatureEnable, setIsFeatureEnable] = useState(false)
   const [isQualificationModalOpen, setIsQualificationModalOpen] =
     useState(false)
   const [selectedCertificate, setSelectedCertificate] =
@@ -110,6 +106,8 @@ export default function ProfileScreen({
   const [recommendationLoading, , , GetRecommendations] = useServerAction(
     GetRecommendationAction
   )
+  const [getFeatureFlagLoading, , , GetFeatureFlag] =
+    useServerAction(getFeatureFlagAction)
 
   useEffect(() => {
     const GetAuthUser = async () => {
@@ -197,15 +195,34 @@ export default function ProfileScreen({
     setIsQualificationModalOpen(true)
   }
 
+  useEffect(() => {
+    const fetchFeatureFlag = async () => {
+      const res = await GetFeatureFlag(["Trust_Engine_Enabled"])
+      if (res?.success && res?.data?.is_enabled) {
+        setIsFeatureEnable(true)
+      }
+    }
+    fetchFeatureFlag()
+  }, [])
+
+  const userInfo = {
+    userFirstName: displayUser?.first_name || "",
+    userLastName: displayUser?.last_name || "",
+    userEmail: displayUser?.email || "",
+    userProfileUrl: displayUser?.profile_url || null,
+    userBio: displayUser?.profile?.bio || null,
+    userRole: getUserRole(displayUser)
+  }
+
   return (
     <>
       <div className="container mx-auto md:p-6 p-2 relative">
-        {loading ? (
+        {loading || uploading ? (
           <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-50">
             <Loader size={LoaderSizes.xl} />
           </div>
         ) : null}
-        {/* Banner with Avatar */}
+        {/* Banner */}
         <div className="relative sm:h-44 h-36 shadow-sm  rounded-lg">
           {coverImage ? (
             <Image
@@ -230,113 +247,21 @@ export default function ProfileScreen({
               <PencilIcon className="h-4 w-4" />
             </Button>
           )}
-
-          <div className="absolute bottom-0 left-16 transform -translate-x-1/2 translate-y-1/2">
-            <div className="relative">
-              {/* Added relative positioning for the button */}
-              <Avatar className="h-28 w-28 border-4 bg-secondary border-black">
-                <AvatarImage
-                  src={currentImageUrl || "/placeholder.png"} // Use currentImageUrl state
-                  alt="Profile"
-                  className="object-contain"
-                />
-                <AvatarFallback>IMG</AvatarFallback>
-              </Avatar>
-              {/* Edit Profile Picture Button */}
-              {authUser?.unique_id === user?.unique_id ? (
-                <>
-                  <button
-                    className="absolute bottom-0 right-0 bg-background border rounded-full p-1 hover:bg-muted"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={loading || uploading} // Disable while loading or uploading
-                  >
-                    <PencilIcon className="h-4 w-4" />
-                  </button>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                </>
-              ) : null}
-            </div>
-          </div>
         </div>
-
-        {/* Profile */}
-        <div className="mt-16 flex flex-wrap justify-between items-center">
-          <div className="flex flex-col items-start">
-            <div className="flex items-center">
-              <div className="flex flex-col items-center">
-                <h2 className="text-xl sm:text-2xl font-bold inline-flex items-center">
-                  {displayUser.first_name}{" "}
-                  {displayUser.last_name.length > 15
-                    ? `${displayUser.last_name.slice(0, 15)}...`
-                    : displayUser.last_name}
-                </h2>
-                <p className="w-full text-sm text-muted-foreground">
-                  {getUserRole(displayUser)}
-                </p>
-              </div>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="ml-2"
-                      onClick={handleCopyUrl}
-                    >
-                      <LinkIcon className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Copy profile URL</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            {/* <p className="text-base text-muted-foreground">Postion</p>
-          <p className="text-sm text-muted-foreground">Company Name</p> */}
-
-            {/* for future use */}
-            {/* <div className="mt-2 flex flex-wrap sm:gap-6 gap-3 text-sm">
-            <div className="flex items-center gap-1">
-              <UserIcon className="h-4 w-4" />
-              <span className="font-medium">{user.contacts?.filter(c=> c.is_accepted === 1).length}</span>
-              <span className="text-muted-foreground">connections</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="font-medium">000</span>
-              <span className="text-muted-foreground">followers</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="font-medium">000</span>
-              <span className="text-muted-foreground">following</span>
-            </div>
-          </div> */}
-          </div>
-
-          {authUser === null ? null : authUser?.unique_id ===
-            user?.unique_id ? null : (
-            <ProfileFollowActions user={user} />
-          )}
-        </div>
-
         {/* Main Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-6 mx-16 -mt-16 md:-mt-16">
           {/* Left */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Bio Section */}
-            <div className="flex items-center justify-between ">
-              <div className="flex items-center gap-2">
-                <UserIcon className="h-4 w-4" />
-                <span>Bio / Basic</span>
-              </div>
-              {authUser?.unique_id === user?.unique_id ? (
-                <EditProfileModal />
-              ) : null}
-            </div>
+            <UserProfileCard
+              userInfo={userInfo}
+              currentImageUrl={currentImageUrl}
+              handleCopyUrl={handleCopyUrl}
+              onFileChange={handleFileChange}
+            />
+            {/* Trust Engine Section  */}
+
+            {isFeatureEnable && <TrustEngineCard />}
+
             <ProfileBio
               userBio={user?.profile?.bio as string}
               tags={profileData?.tags as SelectTag[]}
@@ -432,7 +357,10 @@ export default function ProfileScreen({
               <CardContent className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <MailIcon className="h-5 w-5 text-gray-500" />
-                  <span className="truncate ">{user?.email}</span>
+                  <div>
+                    <h1 className="text-gray-400">Email</h1>
+                    <span className="truncate ">{user?.email}</span>
+                  </div>
                 </div>
                 {/* for future use */}
                 {/* <div className="flex items-center space-x-2">
@@ -614,10 +542,34 @@ export default function ProfileScreen({
                 )}
               </CardContent>
             </Card>
+
+            {/* Your Standing Card */}
+            {isFeatureEnable && (
+              <Card className="p-6">
+                <CardTitle className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                  {authUser?.unique_id === user?.unique_id
+                    ? "Your Standing"
+                    : "Standing"}
+                </CardTitle>
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">
+                      Community Members
+                    </div>
+                    <div className="text-lg font-bold text-primary">348</div>
+                  </div>
+                  <div className="border-t ">
+                    <div className="text-sm text-muted-foreground  pt-3">
+                      Your Percentile Rank
+                    </div>
+                    <div className="text-lg font-bold text-primary">96%</div>
+                  </div>
+                </div>
+              </Card>
+            )}
           </div>
         </div>
       </div>
-
       <ChangeCoverImageDialog
         user={user}
         isChangeCoverImageOpen={isChangeCoverImageOpen}

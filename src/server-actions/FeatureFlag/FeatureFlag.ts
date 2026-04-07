@@ -1,3 +1,4 @@
+"use server"
 import {
   createFeatureFlag,
   getFeatureFlag,
@@ -6,13 +7,18 @@ import {
 import { CreateServerAction } from ".."
 
 export const getFeatureFlagAction = CreateServerAction(
-  true,
-  async (key: string) => {
+  false,
+  async (key: string[]) => {
     try {
+      if (!key || key.length === 0) {
+        return { success: false, data: null, error: "Key is required" }
+      }
+
       const flag = await getFeatureFlag(key)
+
       return { success: true, data: flag }
     } catch (error: any) {
-      return { error: error.message, data: null }
+      return { success: false, error: error.message, data: null }
     }
   }
 )

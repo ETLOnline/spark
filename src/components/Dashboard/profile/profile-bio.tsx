@@ -1,9 +1,9 @@
 "use client"
 
-import { Card } from "../../ui/card"
-import { useEffect } from "react"
-import { ExtendedRecommendations } from "./types/profile-types"
+import { Card, CardTitle } from "../../ui/card"
+import { useEffect, useState } from "react"
 import { Badge } from "../../ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
 import { SelectTag } from "@/src/db/schema"
 import useUserProfile from "./hooks/useUserProfile"
 
@@ -16,81 +16,85 @@ type ProfileBioProps = {
 const ProfileBio: React.FC<ProfileBioProps> = ({ userBio, tags }) => {
   const [setUserBio, setUserSkills, setUserInterests, skills, interests, bio] =
     useUserProfile()
+  const [activeTab, setActiveTab] = useState<"skills" | "interests">("skills")
 
   useEffect(() => {
     if (tags && tags.length) {
-      const skillTags = tags.filter((tag) => (tag.type || "") === "skill")
-
-      const interestTags = tags.filter((tag) => (tag.type || "") === "interest")
+      const skillTags = tags.filter(
+        (tag) => (tag.type || "").toLowerCase() === "skill"
+      )
+      const interestTags = tags.filter(
+        (tag) => (tag.type || "").toLowerCase() === "interest"
+      )
 
       setUserInterests(interestTags)
-
       setUserSkills(skillTags)
     }
-  }, [tags])
+  }, [tags, setUserInterests, setUserSkills])
 
   useEffect(() => {
     setUserBio(userBio)
-  }, [userBio])
+  }, [userBio, setUserBio])
 
   return (
-    <div className="flex flex-col gap-8">
-      <Card className="p-3 sm:p-5">
-        <div className="bio-summary">
-          <header className="profile-section-header flex justify-between">
-            <h3 className="mb-2 font-semibold">About</h3>
-          </header>
-          <p className="user-bio">
-            {bio ?? (
-              <span style={{ fontStyle: "italic" }}>
-                Time to shine ✨ Tell the world about yourself
-              </span>
-            )}
-          </p>
-        </div>
-      </Card>
+    <div>
+      <Tabs
+        defaultValue={activeTab}
+        onValueChange={(value) => setActiveTab(value as "skills" | "interests")}
+      >
+        <TabsList className="grid w-full grid-cols-2 bg-muted">
+          <TabsTrigger
+            className="text-black dark:text-white font-"
+            value="skills"
+          >
+            Skills
+          </TabsTrigger>
+          <TabsTrigger
+            className="text-black dark:text-white font-thin"
+            value="interests"
+          >
+            Interests
+          </TabsTrigger>
+        </TabsList>
 
-      <Card className="p-3 sm:p-5">
-        <div className="skill-tags">
-          <header className="profile-section-header flex justify-between">
-            <h3 className="mb-2 font-semibold">Skills</h3>
-          </header>
-          <div className="flex flex-wrap gap-2">
-            {skills.length ? (
-              skills.map((skill) => (
-                <Badge key={skill.id} variant="secondary">
-                  {skill.name}
-                </Badge>
-              ))
-            ) : (
-              <span style={{ fontStyle: "italic" }}>
-                HTML ninja? 🥷 Python wizard? 🪄 Show off your superpowers!
-              </span>
-            )}
-          </div>
-        </div>
-      </Card>
+        <TabsContent value="skills" className="mt-4">
+          <Card className="flex flex-col flex-wrap gap-5 p-3">
+            <CardTitle>Technical Skills</CardTitle>
+            <div className="flex flex-wrap gap-2">
+              {skills.length ? (
+                skills.map((skill) => (
+                  <Badge key={skill.id} variant="secondary">
+                    {skill.name}
+                  </Badge>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground italic">
+                  HTML ninja? 🥷 Python wizard? 🪄 Add some skills to show here.
+                </p>
+              )}
+            </div>
+          </Card>
+        </TabsContent>
 
-      <Card className="p-3 sm:p-5">
-        <div className="interest-tags">
-          <div className="profile-section-header flex justify-between">
-            <h3 className="mb-2 font-semibold">Interests</h3>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {interests.length ? (
-              interests.map((interest) => (
-                <Badge key={interest.id} variant="secondary">
-                  {interest.name}
-                </Badge>
-              ))
-            ) : (
-              <span style={{ fontStyle: "italic" }}>
-                💿 Share your passions, hobbies, and guilty coding pleasures 💾
-              </span>
-            )}
-          </div>
-        </div>
-      </Card>
+        <TabsContent value="interests" className="mt-4">
+          <Card className="flex flex-col flex-wrap gap-5 p-3">
+            <CardTitle>Interests</CardTitle>
+            <div className="flex flex-wrap gap-2">
+              {interests.length ? (
+                interests.map((interest) => (
+                  <Badge key={interest.id} variant="secondary">
+                    {interest.name}
+                  </Badge>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground italic">
+                  💿 Share your passions, hobbies, and guilty coding pleasures.
+                </p>
+              )}
+            </div>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
