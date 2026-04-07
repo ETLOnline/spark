@@ -14,6 +14,7 @@ import { socialPlatforms } from "./constants"
 import { set } from "zod"
 import { AddRewardAction } from "@/src/server-actions/Reward/Reward"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
+import { AddsuccessfulReferralAction } from "@/src/server-actions/Referrals/referrals"
 interface StepThreeProps {
   step: number
   setStep: Dispatch<SetStateAction<number>>
@@ -25,9 +26,13 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
   const [submitDataLoading, , , submitUserProfileData] = useServerAction(
     updateUserProfileAction
   )
+  const [submitReferralLoading, , , AddSuccessfulReferral] = useServerAction(
+    AddsuccessfulReferralAction
+  )
   const [rewardLoading, , , submitReward] = useServerAction(AddRewardAction)
   const [isTransitioning, setIsTransitioning] = useState(false)
 
+  const ReferralId = localStorage.getItem("referral_id")
   const form = useForm({})
 
   const handlePrevious = () => {
@@ -54,6 +59,20 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
         user.unique_id,
         pathName
       )
+
+      if (ReferralId) {
+        await submitReward(
+          ActivityTypes.SuccessfulReferral,
+          ReferralId,
+          pathName
+        )
+        await AddSuccessfulReferral({
+          referrer_user_id: ReferralId,
+          referred_user_id: user.unique_id
+        })
+
+        localStorage.removeItem("referral_id")
+      }
 
       if (!hasAnyLink) {
         toast({

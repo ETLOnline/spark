@@ -260,6 +260,13 @@
       "when": 1775048953079,
       "tag": "0036_2026_04_01_180910__add_feature_flags_table",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1775575888200,
+      "tag": "0037_2026_04_07_203124__create_successfull_referral_table",
+      "breakpoints": true
     }
   ]
 }
