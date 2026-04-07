@@ -70,7 +70,6 @@ const PostInteractions: React.FC<Props> = ({
       const prrof_url = createAbsoluteUrl(`/posts/${postId}`)
       if (response?.data) {
         const a  = await rewardLike(ActivityTypes.SocialPostLike,userId,prrof_url)
-        console.log(a ,"aaaaaaaaaa")
         setIsLiked(!isLiked)
       }
       if (response?.error) {

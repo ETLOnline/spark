@@ -551,7 +551,6 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         images: []
       })
       setPollOptions([])
-      console.log(currentSpace)
       let prrof_url = createAbsoluteUrl(`/posts/${postData.id}`)
       if (variant == "spaces"){
         prrof_url = createAbsoluteUrl(`/channels/${currentSpace?.channel?.channel_slug}/spaces/${currentSpace?.space_slug}?page-type=posts&post-id=${postData.id}`)
