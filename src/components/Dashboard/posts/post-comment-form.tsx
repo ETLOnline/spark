@@ -43,7 +43,6 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
     createComment
   ] = useServerAction(CreateCommentAction)
 
-
   const name = `${user?.first_name} ${user?.last_name}`
   const isEditMode = !!editingComment
 
@@ -64,14 +63,6 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
         variant: "destructive",
         title: "Error",
         description: "Please write something in the comment box before posting."
-      })
-      return
-    }
-    if(!user?.unique_id){
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Error adding comment post please try again!"
       })
       return
     }
@@ -110,7 +101,7 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
             title: "Comment added",
             description: "Your comment has been added successfully"
           })
-         
+
         } else {
           toast({
             variant: "destructive",

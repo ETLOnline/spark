@@ -53,18 +53,8 @@ const PostInteractions: React.FC<Props> = ({
             : post
         )
       )
-      if(!userId){
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Error liking post please try again!"
-        })
-        return
-      }
       const response = await toggleLike(postId, isLiked, likes, spaceId)
-     
       if (response?.data) {
-        
         setIsLiked(!isLiked)
       }
       if (response?.error) {

@@ -92,7 +92,6 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
 
   const [createPostLoading, createdPost, createPostError, createPost] =
     useServerAction(CreatePostAction)
-
   const [
     createFilesPostLoading,
     createdFilesPost,
