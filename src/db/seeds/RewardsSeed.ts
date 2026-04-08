@@ -231,6 +231,17 @@ const activityRules: InsertActivityRules[] = [
     is_active: true,
     description: "SC for verified internal media share (monthly cap applies)"
   },
+  {
+    rule_id: 20,
+    action_type: ActivityTypes.EventRegistration,
+    reward_id: 2,
+    base_points: 10,
+    category_group: "event",
+    required_verification: false,
+    is_active: true,
+    description:
+      "SC for registering for a new event"
+  },
 ]
 
 export const RewardsSeed = async () => {
