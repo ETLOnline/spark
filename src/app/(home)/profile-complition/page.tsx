@@ -8,11 +8,11 @@ async function ProfileData() {
   const user = await AuthUserAction()
   const superAdmin = await isSuperAdmin(user)
 
-  // if (!superAdmin) {
-  //   if (user.profile && user.profile.bio && user.profile.degree) {
-  //     redirect("/profile")
-  //   }
-  // }
+  if (!superAdmin) {
+    if (user.profile && user.profile.bio && user.profile.degree) {
+      redirect("/profile")
+    }
+  }
 
   return (
     <div className="py-8 max-w-3xl mx-auto mt-14">
