@@ -267,6 +267,13 @@
       "when": 1775575888200,
       "tag": "0037_2026_04_07_203124__create_successfull_referral_table",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1775650551373,
+      "tag": "0038_2026_04_08_171548__add_is_profile_completed_column_in_profile",
+      "breakpoints": true
     }
   ]
 }

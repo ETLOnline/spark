@@ -172,6 +172,7 @@ export const profileTable = pgTable("profile", {
   sum_of_ratings: integer().default(0),
   number_of_ratings: integer().default(0),
   total_average_rating: varchar().default("0"),
+  is_profile_completed: integer().notNull().default(0),
   ...timestamps
 })
 

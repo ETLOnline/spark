@@ -1,0 +1,1 @@
+ALTER TABLE "profile" ADD COLUMN "is_profile_completed" integer DEFAULT 0 NOT NULL;

@@ -64,7 +64,6 @@ import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import NoDataCard from "@/src/components/Dashboard/Channels/ChannelDetails/NoDataCard"
 import CommunityRequestBanner from "@/src/components/communities/CommunityRequestBanner"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
-import ReferralHandler from "@/src/components/common/GetReferral"
 
 const fadeInUp = {
   initial: { opacity: 0, y: 60 },
@@ -1865,7 +1864,6 @@ export default function HomePage() {
           </div>
         </section>
       </div>
-      <ReferralHandler />
     </>
   )
 }

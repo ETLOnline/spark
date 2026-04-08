@@ -9,12 +9,16 @@ import { SelectUser } from "@/src/db/schema"
 import { Controller, useForm } from "react-hook-form"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { toast } from "@/src/hooks/use-toast"
-import { updateUserProfileAction } from "@/src/server-actions/profile/profile"
+import {
+  updateUserProfileAction,
+  userProfileCompletionAction
+} from "@/src/server-actions/profile/profile"
 import { socialPlatforms } from "./constants"
 import { set } from "zod"
 import { AddRewardAction } from "@/src/server-actions/Reward/Reward"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
 import { AddsuccessfulReferralAction } from "@/src/server-actions/Referrals/referrals"
+import { is } from "drizzle-orm"
 interface StepThreeProps {
   step: number
   setStep: Dispatch<SetStateAction<number>>
@@ -24,7 +28,7 @@ interface StepThreeProps {
 
 export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
   const [submitDataLoading, , , submitUserProfileData] = useServerAction(
-    updateUserProfileAction
+    userProfileCompletionAction
   )
   const [submitReferralLoading, , , AddSuccessfulReferral] = useServerAction(
     AddsuccessfulReferralAction
@@ -53,41 +57,33 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
       const hasAnyLink = Object.values(socialPlatforms).some(
         (val) => val && val.trim() !== ""
       )
-      const pathName = window.location.href
-      await submitReward(
-        ActivityTypes.ProfileComplete,
+
+      // if (!hasAnyLink) {
+      //   toast({
+      //     title: "Profile data saved successfully",
+      //     duration: 2000
+      //   })
+      //   setStep(4) // Go to completion step
+      //   return
+      // }
+
+      const finalData = {
+        ...socialPlatforms,
+        is_profile_completed: 1
+      }
+
+      const res = await submitUserProfileData(
         user.unique_id,
-        pathName
+        finalData,
+        ReferralId || ""
       )
-
-      if (ReferralId) {
-        await submitReward(
-          ActivityTypes.SuccessfulReferral,
-          ReferralId,
-          pathName
-        )
-        await AddSuccessfulReferral({
-          referrer_user_id: ReferralId,
-          referred_user_id: user.unique_id
-        })
-
-        localStorage.removeItem("referral_id")
-      }
-
-      if (!hasAnyLink) {
-        toast({
-          title: "Profile data saved successfully",
-          duration: 2000
-        })
-        setStep(4) // Go to completion step
-        return
-      }
-
-      const res = await submitUserProfileData(user.unique_id, socialPlatforms)
+      console.log("Profile completion response:", res)
 
       if (res?.success) {
         toast({
-          title: "Social links added successfully",
+          title: hasAnyLink
+            ? "Social links added successfully"
+            : "Profile data saved successfully",
           duration: 2000
         })
 
@@ -97,7 +93,8 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
       } else {
         setIsTransitioning(false)
       }
-    } catch {
+    } catch (error) {
+      console.error("Error submitting social links:", error)
       toast({
         title: "Failed to save Data",
         variant: "destructive",
