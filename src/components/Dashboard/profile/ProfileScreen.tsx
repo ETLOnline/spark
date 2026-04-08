@@ -19,7 +19,9 @@ import {
   Twitter,
   Instagram,
   Globe,
-  Trophy
+  Trophy,
+  Share2,
+  CopyIcon
 } from "lucide-react"
 import {
   SelectCertificate,
@@ -60,6 +62,9 @@ import { SocialLinkItem } from "./user/SocialLinkItem"
 import UserProfileCard from "./UserProfileCard"
 import TrustEngineCard from "./trust-engine/TrustEngineCard"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
+import { Input } from "../../ui/input"
+import { Skeleton } from "../../ui/skeleton"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 type ProfileScreenProps = {
   tab?: string
   user: SelectUser
@@ -95,6 +100,7 @@ export default function ProfileScreen({
     user.profile?.total_average_rating
   )
   const [coverImage, setCoverImage] = useState(user.cover_image)
+  const [referralLink, setReferralLink] = useState("")
 
   // Get the updated user from atom store to handle dynamic name updates
   const updatedUser = useAtomValue(userStore.AuthUser)
@@ -213,6 +219,32 @@ export default function ProfileScreen({
     userBio: displayUser?.profile?.bio || null,
     userRole: getUserRole(displayUser)
   }
+
+  const CopyReferralLink = async () => {
+    try {
+      await navigator.clipboard.writeText(referralLink)
+      toast({
+        title: "Referral URL copied!",
+        description: "Your referral link has been copied to clipboard.",
+        duration: 3000
+      })
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to copy referral link",
+        duration: 3000
+      })
+    }
+  }
+
+  useEffect(() => {
+    if (user?.unique_id === authUser?.unique_id) {
+      const encodedId = btoa(user.unique_id)
+      const ReferralURL = createAbsoluteUrl(`/?referral_id=${encodedId}`)
+      setReferralLink(ReferralURL)
+    }
+  }, [user, authUser])
 
   return (
     <>
@@ -373,6 +405,44 @@ export default function ProfileScreen({
               </div> */}
               </CardContent>
             </Card>
+
+            {/* Referral Link */}
+            {authUser?.unique_id === user?.unique_id && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Referral Link</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Share2 className="h-5 w-5 text-gray-500" />
+                      <h1 className="text-gray-400">Link</h1>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-sm text-muted-foreground">
+                      {referralLink ? (
+                        <Input
+                          type="text w-auto"
+                          value={referralLink}
+                          readOnly
+                        />
+                      ) : (
+                        <Skeleton className="h-8 w-32" />
+                      )}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={CopyReferralLink}
+                      disabled={!referralLink}
+                    >
+                      <CopyIcon className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             {/* Education */}
             <Card>
               <CardHeader>

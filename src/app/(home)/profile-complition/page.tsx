@@ -9,7 +9,7 @@ async function ProfileData() {
   const superAdmin = await isSuperAdmin(user)
 
   if (!superAdmin) {
-    if (user.profile && user.profile.bio && user.profile.degree) {
+    if (user.profile && user.profile.is_profile_completed === 1) {
       redirect("/profile")
     }
   }

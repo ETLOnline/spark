@@ -1,9 +1,10 @@
 export enum ActivityTypes {
   ProfileComplete = "profile_complete",
-  AttendPublicWebinar = "attend_public_webinar",
   AttendCommunitySession = "attend_community_session",
   CommunityService = "community_service",
-  SocialSharing = "social_sharing",
+  SocialPost = "social_post",
+  SocialPostLike = "social_post_like",
+  SocialPostComment = "social_post_comment",
   SuccessfulReferral = "successful_referral",
 
   MergedPullRequest = "merged_pull_request",
@@ -17,7 +18,16 @@ export enum ActivityTypes {
   AdvisorStudentRated = "advisor_student_rated",
   AdvisorMentorshipSession = "advisor_mentorship_session",
   TaskCompletion = "task_completion",
-  TaskInprogress = "task_inprogress"
+  TaskInprogress = "task_inprogress",
+  ChannelCreation = "channel_creation",
+  SpaceCreation = "space_creation",
+  ProjectCreation = "project_creation",
+  SpaceFeatureUpdate = "space_feature_update",
+  SpaceOverviewUpdate = "space_overview_update",
+  SpaceFileShare = "space_file_share",
+  SpaceGroupChatCreation = "space_group_chat_creation",
+  EventCreation = "event_creation",
+  EventRegistration = "event_registration",
 }
 
 export enum TrustVerificationStatus {

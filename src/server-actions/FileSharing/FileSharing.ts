@@ -16,7 +16,10 @@ import { getStorageClient } from "@/src/services/storage/client/storage.client"
 import { db } from "@/src/db"
 import { spaceFileDirectoryTable } from "@/src/db/schema"
 import { eq } from "drizzle-orm"
-import { getSpaceUsers } from "@/src/db/data-access/spaces/query"
+import { GetSpaceById, getSpaceUsers } from "@/src/db/data-access/spaces/query"
+import { GetSpaceURL } from "@/src/utils/helpers"
+import { AddRewardAction } from "../Reward/Reward"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
 
 export const CreateNewFolderAction = CreateServerAction(
   true,
@@ -95,6 +98,15 @@ export const CreateNewFileAction = CreateServerAction(
         fileRecord.id,
         user.unique_id
       )
+
+      const space = await GetSpaceById(result[0].space_id || "", true)
+      const URL = GetSpaceURL(
+        space?.channel?.channel_slug || "",
+        space?.space_slug || "",
+        "file-sharing"
+      )
+      await AddRewardAction(ActivityTypes.SpaceFileShare, user.unique_id, URL)
+
       return {
         success: true,
         data: { ...result[0], url: fileUrl }

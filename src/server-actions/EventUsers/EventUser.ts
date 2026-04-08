@@ -9,6 +9,9 @@ import {
   GetEventAttendees,
   GetEventUserByIds
 } from "@/src/db/data-access/eventUsers/query"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
+import { AddRewardAction } from "../Reward/Reward"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 export const CreateEventUsersAction = CreateServerAction(
   true,
@@ -18,6 +21,7 @@ export const CreateEventUsersAction = CreateServerAction(
       if ("error" in newEventUsers) {
         return { success: false, error: newEventUsers.error }
       }
+      await AddRewardAction(ActivityTypes.EventRegistration,eventData.user_id,createAbsoluteUrl(`/events/${eventData.event_id}`))
       return { success: true, data: newEventUsers }
     } catch (error) {
       return { error: error }
