@@ -23,9 +23,8 @@ export default async function DashboardLayout({
     if (!hasPersona) {
       redirect("/personas")
     } else if (
-      !authUser.profile ||
-      !authUser.profile.bio ||
-      !authUser.profile.degree
+      authUser.profile.is_profile_completed === 0 ||
+      authUser.profile.is_profile_completed === null
     ) {
       redirect("/profile-complition")
     }

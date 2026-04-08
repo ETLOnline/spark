@@ -172,6 +172,7 @@ export const profileTable = pgTable("profile", {
   sum_of_ratings: integer().default(0),
   number_of_ratings: integer().default(0),
   total_average_rating: varchar().default("0"),
+  is_profile_completed: integer().notNull().default(0),
   ...timestamps
 })
 
@@ -1876,3 +1877,15 @@ export const userRewardsLevelRelations = relations(
 
 export type InsertUserRewardsLevel = typeof userRewardsLevelTable.$inferInsert
 export type SelectUserRewardsLevel = typeof userRewardsLevelTable.$inferSelect
+
+export const successfullReferralsTable = pgTable("successful_referrals", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  referrer_user_id: varchar().notNull(),
+  referred_user_id: varchar().notNull(),
+  ...timestamps
+})
+
+export type InsertSuccessfulReferral =
+  typeof successfullReferralsTable.$inferInsert
+export type SelectSuccessfulReferral =
+  typeof successfullReferralsTable.$inferSelect

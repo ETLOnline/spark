@@ -25,7 +25,7 @@ export const AddRewardAction = CreateServerAction(
   async (
     action_type: string,
     user_id: string,
-    proof_url: string,
+    proof_url?: string,
     metadata?: any,
     verification_id?: number
   ) => {
