@@ -10,7 +10,10 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { SelectProfile, SelectUser } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
-import { updateUserProfileAction } from "@/src/server-actions/profile/profile"
+import {
+  updateUserProfileAction,
+  userProfileCompletionAction
+} from "@/src/server-actions/profile/profile"
 import moment from "moment"
 
 interface StepTwoProps {
@@ -83,7 +86,7 @@ const userQualificationSchema = z
 
 export function StepTwo({ step, setStep, user, setUser }: StepTwoProps) {
   const [submitDataLoading, , , submitUserProfileData] = useServerAction(
-    updateUserProfileAction
+    userProfileCompletionAction
   )
   const [isTransitioning, setIsTransitioning] = useState(false)
 

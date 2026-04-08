@@ -260,6 +260,13 @@
       "when": 1775048953079,
       "tag": "0036_2026_04_01_180910__add_feature_flags_table",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1775653131161,
+      "tag": "0037_2026_04_08_175848__create_successfull_referrala_table_and_add_column_in_profile_table",
+      "breakpoints": true
     }
   ]
 }

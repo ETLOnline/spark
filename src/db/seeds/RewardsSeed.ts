@@ -27,7 +27,6 @@ const rewardsMetadata: InsertRewardsMetadata[] = [
 ]
 
 const activityRules: InsertActivityRules[] = [
-  // ── Spark Credits (reward_id: 2) ──────────────────────────────────────────
   {
     rule_id: 1,
     action_type: ActivityTypes.ProfileComplete,
@@ -62,26 +61,25 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 4,
-    action_type: ActivityTypes.SocialSharing,
+    action_type: ActivityTypes.CommunityService,
     reward_id: 2,
-    base_points: 5,
+    base_points: 30,
+    category_group: "community_service",
+    required_verification: true,
+    is_active: true,
+    description:
+      "SC for admin-approved community service (moderation or event organising)"
+  },
+  {
+    rule_id: 5,
+    action_type: ActivityTypes.SocialPost,
+    reward_id: 2,
+    base_points: 15,
     category_group: "social",
     required_verification: false,
     is_active: true,
     description: "SC for verified internal media share (monthly cap applies)"
   },
-  {
-    rule_id: 5,
-    action_type: ActivityTypes.SuccessfulReferral,
-    reward_id: 2,
-    base_points: 25,
-    category_group: "referral",
-    required_verification: false,
-    is_active: true,
-    description: "SC awarded after referred friend completes their profile"
-  },
-
-  // ── Reputation Points – Student (reward_id: 1) ────────────────────────────
   {
     rule_id: 6,
     action_type: ActivityTypes.MergedPullRequest,
@@ -146,8 +144,6 @@ const activityRules: InsertActivityRules[] = [
     description:
       "RP for student after a verified mentorship session with feedback"
   },
-
-  // ── Reputation Points – Advisor (reward_id: 1) ────────────────────────────
   {
     rule_id: 12,
     action_type: ActivityTypes.MilestoneVerified,
@@ -200,8 +196,6 @@ const activityRules: InsertActivityRules[] = [
     is_active: true,
     description: "RP awarded upon successful completion of an assigned task"
   },
-
-  // ── Community Service Extensions (reward_id: 2) ────────────────────────────
   {
     rule_id: 17,
     action_type: ActivityTypes.ChannelCreation,
@@ -271,7 +265,37 @@ const activityRules: InsertActivityRules[] = [
     required_verification: false,
     is_active: true,
     description: "SC awarded for creating a group chat in a space"
-  }
+  },
+  {
+    rule_id: 24,
+    action_type: ActivityTypes.SocialPostLike,
+    reward_id: 2,
+    base_points: 1,
+    category_group: "social",
+    required_verification: false,
+    is_active: true,
+    description: "SC for verified internal media share (monthly cap applies)"
+  },
+  {
+    rule_id: 25,
+    action_type: ActivityTypes.SocialPostComment,
+    reward_id: 2,
+    base_points: 5,
+    category_group: "social",
+    required_verification: false,
+    is_active: true,
+    description: "SC for verified internal media share (monthly cap applies)"
+  },
+  {
+    rule_id: 26,
+    action_type: ActivityTypes.SuccessfulReferral,
+    reward_id: 2,
+    base_points: 25,
+    category_group: "referral",
+    required_verification: false,
+    is_active: true,
+    description: "SC awarded after referred friend completes their profile"
+  },
 ]
 
 export const RewardsSeed = async () => {

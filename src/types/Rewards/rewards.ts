@@ -3,7 +3,9 @@ export enum ActivityTypes {
   AttendPublicWebinar = "attend_public_webinar",
   AttendCommunitySession = "attend_community_session",
   CommunityService = "community_service",
-  SocialSharing = "social_sharing",
+  SocialPost = "social_post",
+  SocialPostLike = "social_post_like",
+  SocialPostComment = "social_post_comment",
   SuccessfulReferral = "successful_referral",
 
   MergedPullRequest = "merged_pull_request",
