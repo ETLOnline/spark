@@ -6,3 +6,5 @@ CREATE TABLE IF NOT EXISTS "successful_referrals" (
 	"created_at" varchar DEFAULT CURRENT_TIMESTAMP,
 	"deleted_at" varchar
 );
+--> statement-breakpoint
+ALTER TABLE "profile" ADD COLUMN "is_profile_completed" integer DEFAULT 0 NOT NULL;

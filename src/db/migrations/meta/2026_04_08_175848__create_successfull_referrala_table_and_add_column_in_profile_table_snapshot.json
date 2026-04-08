@@ -1,5 +1,5 @@
 {
-  "id": "1c5745e1-47af-40f1-b754-656a4c183b90",
+  "id": "002c2ec5-fbde-48ff-b3f0-49f8b97bcb60",
   "prevId": "06aa0b55-0484-4bf0-9762-d5ff46533593",
   "version": "7",
   "dialect": "postgresql",
@@ -2594,6 +2594,13 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'0'"
+        },
+        "is_profile_completed": {
+          "name": "is_profile_completed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         },
         "updated_at": {
           "name": "updated_at",

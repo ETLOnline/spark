@@ -14,11 +14,6 @@ import {
   userProfileCompletionAction
 } from "@/src/server-actions/profile/profile"
 import { socialPlatforms } from "./constants"
-import { set } from "zod"
-import { AddRewardAction } from "@/src/server-actions/Reward/Reward"
-import { ActivityTypes } from "@/src/types/Rewards/rewards"
-import { AddsuccessfulReferralAction } from "@/src/server-actions/Referrals/referrals"
-import { is } from "drizzle-orm"
 interface StepThreeProps {
   step: number
   setStep: Dispatch<SetStateAction<number>>
@@ -30,10 +25,6 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
   const [submitDataLoading, , , submitUserProfileData] = useServerAction(
     userProfileCompletionAction
   )
-  const [submitReferralLoading, , , AddSuccessfulReferral] = useServerAction(
-    AddsuccessfulReferralAction
-  )
-  const [rewardLoading, , , submitReward] = useServerAction(AddRewardAction)
   const [isTransitioning, setIsTransitioning] = useState(false)
 
   const ReferralId = localStorage.getItem("referral_id")
@@ -57,15 +48,6 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
       const hasAnyLink = Object.values(socialPlatforms).some(
         (val) => val && val.trim() !== ""
       )
-
-      // if (!hasAnyLink) {
-      //   toast({
-      //     title: "Profile data saved successfully",
-      //     duration: 2000
-      //   })
-      //   setStep(4) // Go to completion step
-      //   return
-      // }
 
       const finalData = {
         ...socialPlatforms,
