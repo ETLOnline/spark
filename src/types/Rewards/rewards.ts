@@ -1,6 +1,5 @@
 export enum ActivityTypes {
   ProfileComplete = "profile_complete",
-  AttendPublicWebinar = "attend_public_webinar",
   AttendCommunitySession = "attend_community_session",
   CommunityService = "community_service",
   SocialSharing = "social_sharing",
@@ -17,7 +16,9 @@ export enum ActivityTypes {
   AdvisorStudentRated = "advisor_student_rated",
   AdvisorMentorshipSession = "advisor_mentorship_session",
   TaskCompletion = "task_completion",
-  TaskInprogress = "task_inprogress"
+  TaskInprogress = "task_inprogress",
+  EventCreation = "event_creation",
+  EventRegistration = "event_registration",
 }
 
 export enum TrustVerificationStatus {

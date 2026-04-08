@@ -14,12 +14,16 @@ import {
   base64ToBuffer,
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
+import { AddRewardAction } from "../Reward/Reward"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 export const CreateEventAction = CreateServerAction(
   true,
   async (eventData: InsertEvent) => {
     try {
       const newEvent = await CreateEvent(eventData)
+      await AddRewardAction(ActivityTypes.EventCreation, eventData.host_id, createAbsoluteUrl(`/events/${newEvent.id}`))
       return { success: true, data: newEvent }
     } catch (error) {
       return { error: error }
