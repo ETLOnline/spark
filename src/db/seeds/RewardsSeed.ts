@@ -39,14 +39,14 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 2,
-    action_type: ActivityTypes.AttendPublicWebinar,
+    action_type: ActivityTypes.EventCreation,
     reward_id: 2,
-    base_points: 10,
-    category_group: "engagement",
+    base_points: 20,
+    category_group: "event",
     required_verification: false,
     is_active: true,
     description:
-      "SC per verified hour attending a public webinar (monthly cap applies)"
+      "SC for creating a new event"
   },
   {
     rule_id: 3,
@@ -295,6 +295,17 @@ const activityRules: InsertActivityRules[] = [
     required_verification: false,
     is_active: true,
     description: "SC awarded after referred friend completes their profile"
+  },
+  {
+    rule_id: 27,
+    action_type: ActivityTypes.EventRegistration,
+    reward_id: 2,
+    base_points: 10,
+    category_group: "event",
+    required_verification: false,
+    is_active: true,
+    description:
+      "SC for registering for a new event"
   },
 ]
 

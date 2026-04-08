@@ -1,6 +1,5 @@
 export enum ActivityTypes {
   ProfileComplete = "profile_complete",
-  AttendPublicWebinar = "attend_public_webinar",
   AttendCommunitySession = "attend_community_session",
   CommunityService = "community_service",
   SocialPost = "social_post",
@@ -26,7 +25,9 @@ export enum ActivityTypes {
   SpaceFeatureUpdate = "space_feature_update",
   SpaceOverviewUpdate = "space_overview_update",
   SpaceFileShare = "space_file_share",
-  SpaceGroupChatCreation = "space_group_chat_creation"
+  SpaceGroupChatCreation = "space_group_chat_creation",
+  EventCreation = "event_creation",
+  EventRegistration = "event_registration",
 }
 
 export enum TrustVerificationStatus {
