@@ -17,7 +17,14 @@ export enum ActivityTypes {
   AdvisorStudentRated = "advisor_student_rated",
   AdvisorMentorshipSession = "advisor_mentorship_session",
   TaskCompletion = "task_completion",
-  TaskInprogress = "task_inprogress"
+  TaskInprogress = "task_inprogress",
+  ChannelCreation = "channel_creation",
+  SpaceCreation = "space_creation",
+  ProjectCreation = "project_creation",
+  SpaceFeatureUpdate = "space_feature_update",
+  SpaceOverviewUpdate = "space_overview_update",
+  SpaceFileShare = "space_file_share",
+  SpaceGroupChatCreation = "space_group_chat_creation"
 }
 
 export enum TrustVerificationStatus {
