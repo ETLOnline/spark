@@ -19,9 +19,14 @@ import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 import StarterKit from "@tiptap/starter-kit"
 import { Editor } from "@tiptap/react"
-import { normalizeHTML } from "@/src/utils/helpers"
+import { GetSpaceURL, normalizeHTML } from "@/src/utils/helpers"
 import { useAtomValue } from "jotai"
 import { onlineUsersStore } from "@/src/store/onlineUsers/onlineUsersStore"
+import { AddRewardAction } from "@/src/server-actions/Reward/Reward"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
+import { auth } from "@clerk/nextjs/server"
+import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
+import { userStore } from "@/src/store/user/userStore"
 
 interface SpaceOverviewProps {
   features?: SelectSpaceFeature[]
@@ -37,6 +42,7 @@ function SpaceOverview({
   const [isEditDetail, setIsEditDetail] = useState(false)
   const [content, setContent] = useState("")
   const OnlineSpaceUsersCount = useAtomValue(onlineUsersStore.spaceOnlineUsers)
+  const authUser = useAtomValue(userStore.AuthUser)
 
   const [overviewLoading, , , updatespaceDetails] =
     useServerAction(UpdateSpaceAction)
@@ -69,6 +75,17 @@ function SpaceOverview({
           overview: content
         })
         if (response?.success && response?.data) {
+          const spaceURL = GetSpaceURL(
+            space.channel?.channel_slug || "",
+            space.space_slug
+          )
+
+          await AddRewardAction(
+            ActivityTypes.SpaceOverviewUpdate,
+            authUser?.unique_id || "",
+            spaceURL
+          )
+
           toast({
             title: "Overview updated successfully",
             description: "Your space overview has been updated.",

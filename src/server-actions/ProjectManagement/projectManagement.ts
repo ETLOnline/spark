@@ -29,6 +29,9 @@ import { SendProjectNotifications } from "@/src/services/notifications/Project/u
 import { createProjectInviteNotification } from "@/src/services/notify/project/project"
 import { NotificationEvent } from "@/src/services/notify/types/events"
 import { getSpaceUsers } from "@/src/db/data-access/spaces/query"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
+import { AddRewardAction } from "../Reward/Reward"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
 
 export const CreateProjectAction = CreateServerAction(
   true,
@@ -50,6 +53,18 @@ export const CreateProjectAction = CreateServerAction(
         `space-${newProject.space_id}-project`,
         "project-add",
         newProject
+      )
+
+      const projectURL = createAbsoluteUrl(`/project/${newProject.id}/Board`)
+
+      await AddRewardAction(
+        ActivityTypes.ProjectCreation,
+        newProject.created_by,
+        projectURL,
+        {
+          project_id: newProject.id,
+          space_id: newProject.space_id
+        }
       )
 
       return { success: true, data: newProject }

@@ -36,6 +36,9 @@ import pusherServer from "@/src/services/realtime/pusherServer"
 import { deleteRoleBasedOnEntityType } from "../CommonHelper/Helper"
 import { attachCommunityUser } from "@/src/db/data-access/communities/query"
 import { EntityUpdateBroadCast } from "@/src/utils/constants"
+import { AddRewardAction } from "../Reward/Reward"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 export const CreateChannelAction = CreateServerAction(
   true,
@@ -65,6 +68,21 @@ export const CreateChannelAction = CreateServerAction(
         community_user_id,
         result.adminRole?.name
       )
+
+      const channelURL = createAbsoluteUrl(
+        `/channels/${newChannel.channel_slug}/spaces`
+      )
+
+      await AddRewardAction(
+        ActivityTypes.ChannelCreation,
+        newChannel.created_by,
+        channelURL,
+        {
+          community_id: newChannel.community_id,
+          channel_id: newChannel.id
+        }
+      )
+
       const channelWithUsers = await GetChannelById(newChannel.id, true)
       return { success: true, data: channelWithUsers }
     } catch (error) {
