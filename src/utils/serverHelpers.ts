@@ -83,12 +83,14 @@ export const addFileToDb = async (
 }
 
 export const getPostUrl = async (postId: string, spaceId?: string) => {
-  const space = spaceId ? await GetSpaceById(spaceId) : null;
-  let communityId = null;
-  let prrof_url = createAbsoluteUrl(`/posts/${postId}`)
+  const space = spaceId ? await GetSpaceById(spaceId) : null
+  let communityId = null
+  let proof_url = createAbsoluteUrl(`/posts/${postId}`)
   if (space) {
-    communityId = space?.channel?.community_id;
-    prrof_url = createAbsoluteUrl(`/channels/${space?.channel?.channel_slug}/spaces/${space?.space_slug}?page-type=posts&post-id=${postId}`)
+    communityId = space?.channel?.community_id
+    proof_url = createAbsoluteUrl(
+      `/channels/${space?.channel?.channel_slug}/spaces/${space?.space_slug}?page-type=posts&post-id=${postId}`
+    )
   }
-  return { prrof_url, communityId }
+  return { proof_url, communityId }
 }

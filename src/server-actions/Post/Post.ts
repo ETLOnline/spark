@@ -58,9 +58,14 @@ export const CreatePostAction = CreateServerAction(
           entity_type: entityType,
           entity_id: entityId
         })
-        const { prrof_url, communityId } = await getPostUrl(postData[0].id, entityId)
+        const { proof_url, communityId } = await getPostUrl(
+          postData[0].id,
+          entityId
+        )
 
-        await AddRewardAction(ActivityTypes.SocialPost, userId, prrof_url, { community_id: communityId })
+        await AddRewardAction(ActivityTypes.SocialPost, userId, proof_url, {
+          community_id: communityId
+        })
         return { success: true, data: postData }
       } else {
         throw new Error("Unauthorized", { cause: 401 })
@@ -230,8 +235,13 @@ export const CreateFilesPostAction = CreateServerAction(
           await AddPostFileLink(postId, fileRecord.id)
           fileRecords.push({ ...fileRecord, url: fileUrl })
         }
-        const { prrof_url, communityId } = await getPostUrl(postData[0].id, entityId)
-        await AddRewardAction(ActivityTypes.SocialPost, userId, prrof_url, { community_id: communityId })
+        const { proof_url, communityId } = await getPostUrl(
+          postData[0].id,
+          entityId
+        )
+        await AddRewardAction(ActivityTypes.SocialPost, userId, proof_url, {
+          community_id: communityId
+        })
 
         return {
           success: true,
@@ -318,14 +328,18 @@ export const CreatePollPostAction = CreateServerAction(
           })
           const pollOptionsData = await AddPollOptions(pollOptions)
           const data = { ...postData[0], options: [...pollOptionsData] }
-          const { prrof_url, communityId } = await getPostUrl(postData[0].id, entityId)
+          const { proof_url, communityId } = await getPostUrl(
+            postData[0].id,
+            entityId
+          )
 
-          await AddRewardAction(ActivityTypes.SocialPost, userId, prrof_url, { community_id: communityId })
+          await AddRewardAction(ActivityTypes.SocialPost, userId, proof_url, {
+            community_id: communityId
+          })
           return { success: true, data }
         } else {
           throw new Error("Failed to create post")
         }
-
       }
     } catch (error: any) {
       return { success: false, error }
@@ -404,8 +418,15 @@ export const ToggleLikeAction = CreateServerAction(
               space
             )
           }
-          const { prrof_url, communityId } = await getPostUrl(postId, space_id)
-          await AddRewardAction(ActivityTypes.SocialPostLike, userId, prrof_url, { community_id: communityId })
+          const { proof_url, communityId } = await getPostUrl(postId, space_id)
+          await AddRewardAction(
+            ActivityTypes.SocialPostLike,
+            userId,
+            proof_url,
+            {
+              community_id: communityId
+            }
+          )
           return { success: true, data }
         }
       } else {
@@ -448,8 +469,13 @@ export const CreateCommentAction = CreateServerAction(
             space
           )
         }
-        const { prrof_url, communityId } = await getPostUrl(postId, space_id)
-        await AddRewardAction(ActivityTypes.SocialPostComment, user?.unique_id, prrof_url, { community_id: communityId })
+        const { proof_url, communityId } = await getPostUrl(postId, space_id)
+        await AddRewardAction(
+          ActivityTypes.SocialPostComment,
+          user?.unique_id,
+          proof_url,
+          { community_id: communityId }
+        )
         return { success: true, data: { ...commentData, commentor: user } }
       } else {
         throw new Error("Unauthorized", { cause: 401 })
@@ -464,10 +490,7 @@ export const CreateCommentAction = CreateServerAction(
 )
 export const UpdateCommentAction = CreateServerAction(
   true,
-  async (
-    commentId: number,
-    newContent: string
-  ) => {
+  async (commentId: number, newContent: string) => {
     try {
       const user = await AuthUserAction()
       if (user?.unique_id) {
