@@ -1,67 +1,63 @@
+"use client"
+
 import { Zap } from "lucide-react"
 import Link from "next/link"
-import { TrustEngineStats } from "./Constant"
 import { Card, CardTitle } from "../../../ui/card"
 import { Button } from "../../../ui/button"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   GetUserRewardBalanceAction,
   GetUSerRewardLevelAction
 } from "@/src/server-actions/Reward/Reward"
-import {
-  SelectRewardLevel,
-  SelectUser,
-  SelectUserRewardsLevel
-} from "@/src/db/schema"
+import { SelectUser, SelectUserRewardsLevel } from "@/src/db/schema"
+import pusherClient from "@/src/services/realtime/PusherClient"
+import { progressPercentHelper } from "@/src/utils/clientHelper"
 
 interface TrustEngineCardProps {
   user: SelectUser
 }
 
 export default function TrustEngineCard({ user }: TrustEngineCardProps) {
-  const currentRp = 7250
-  const maxRp = 10000
-  const progressPercent = (currentRp / maxRp) * 100
-
   const [userSCPoints, setUserSCPoints] = useState(0)
   const [userRPPoints, setUserRPPoints] = useState(0)
+  const [userLevel, setUserLevel] = useState<SelectUserRewardsLevel | null>(null)
 
-  const [getUserRewardBalanceLoading, , , GetUserRewardBalance] =
-    useServerAction(GetUserRewardBalanceAction)
+  const [, , , GetUserRewardBalance] = useServerAction(GetUserRewardBalanceAction)
+  const [, , , GetUserRewardLevel] = useServerAction(GetUSerRewardLevelAction)
 
-  const GetUsersSCPoints = async () => {
-    try {
-      const res = await GetUserRewardBalance(user.unique_id, 1)
-      if (res?.success && res?.data) {
-        setUserSCPoints(res.data.current_balance)
-      } else {
-        console.log("Error fetching SC points:", res?.error)
-      }
-    } catch (error) {
-      console.log("Error fetching SC points:", error)
-    }
-  }
+  const fetchData = useCallback(async () => {
+    const [rpRes, scRes, levelRes] = await Promise.all([
+      GetUserRewardBalance(user.unique_id, 1),
+      GetUserRewardBalance(user.unique_id, 2),
+      GetUserRewardLevel(user.unique_id)
+    ])
 
-  const GetUsersRPPoints = async () => {
-    try {
-      const res = await GetUserRewardBalanceAction(user.unique_id, 2)
-      if (res?.success && res?.data) {
-        setUserRPPoints(res.data.current_balance)
-      } else {
-        console.log("Error fetching RP points:", res?.error)
-      }
-    } catch (error) {
-      console.log("Error fetching RP points:", error)
-    }
-  }
+    if (scRes?.success && scRes.data) setUserSCPoints(scRes.data.current_balance)
+    if (rpRes?.success && rpRes.data) setUserRPPoints(rpRes.data.current_balance)
+    if (levelRes?.success && levelRes.data) setUserLevel(levelRes.data)
+  }, [user.unique_id])
 
   useEffect(() => {
-    if (user) {
-      GetUsersSCPoints()
-      GetUsersRPPoints()
+    fetchData()
+  }, [fetchData])
+
+  useEffect(() => {
+    const channelName = `user-${user.unique_id}`
+    const channel = pusherClient.subscribe(channelName)
+
+    channel.bind("reward_added", () => {
+      fetchData()
+    })
+
+    return () => {
+      pusherClient.unsubscribe(channelName)
     }
-  }, [])
+  }, [user.unique_id, fetchData])
+
+  const minPoints = userLevel?.rewardLevel?.min_points ?? 0
+  const maxPoints = userLevel?.rewardLevel?.max_points ?? 0
+  const progressPercent = progressPercentHelper(userRPPoints,minPoints ,maxPoints)
 
   return (
     <Card className="rounded-xl border p-6 shadow-sm">
@@ -81,62 +77,50 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
 
       {/* Stats Grid */}
       <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-        {/* Reputation Points */}
         <div className="rounded-lg border p-4">
           <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
             Reputation Points
           </p>
           <p className="mb-1 text-2xl font-bold text-teal-600 dark:text-teal-400">
-            {userRPPoints || 0}
+            {userRPPoints}
           </p>
 
-          {/* Todo: for future */}
+           {/* Todo: for future */}
           {/* <p className="text-xs text-gray-500 dark:text-gray-400">
             +12% this month
           </p> */}
         </div>
 
-        {/* Spark Credits */}
+
         <div className="rounded-lg border p-4">
           <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
             Spark Credits
           </p>
           <p className="mb-1 text-2xl font-bold text-purple-600 dark:text-purple-400">
-            {userSCPoints || 0}
+            {userSCPoints}
           </p>
-
-          {/* Todo: for future */}
+           {/* Todo: for future */}
           {/* <p className="text-xs text-gray-500 dark:text-gray-400">
             Available
           </p> */}
         </div>
 
-        {/* Current Level */}
         <div className="rounded-lg border p-4">
           <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
             Current Level
           </p>
           <p className="mb-1 text-xl font-bold text-teal-600 dark:text-teal-400">
-            Spark Mentor
+            {userLevel?.rewardLevel?.name ?? "—"}
           </p>
-          {/* Todo: for future */}
-          {/* <p className="text-xs text-gray-500 dark:text-gray-400">
-            Level 4/5
-          </p> */}
         </div>
 
-        {/* Community Rank */}
         <div className="rounded-lg border p-4">
           <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
             Community Rank
           </p>
           <p className="mb-1 text-2xl font-bold text-orange-600 dark:text-orange-400">
-            #12
+            #0
           </p>
-          {/* Todo: for future */}
-          {/* <p className="text-xs text-gray-500 dark:text-gray-400">
-            Top 96%
-          </p> */}
         </div>
       </div>
 
@@ -147,7 +131,7 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
             Progress to Next Level
           </span>
           <span className="text-xs text-gray-600 dark:text-gray-400">
-            {currentRp.toLocaleString()} / {maxRp.toLocaleString()} RP
+            {userRPPoints.toLocaleString()} / {maxPoints.toLocaleString()} RP
           </span>
         </div>
         <div className="flex h-3 gap-0.5 overflow-hidden rounded-full bg-white/40 dark:bg-slate-700/40">

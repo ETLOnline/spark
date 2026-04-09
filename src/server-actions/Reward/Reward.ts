@@ -3,8 +3,10 @@
 import {
   AddLedgerEntry,
   AddVerificationEntry,
+  assignUserRewardLevel,
   GetActivityRule,
   GetRewardLevel,
+  GetUserPointLedger,
   GetUserRewardBalance,
   GetUserRewardLevel,
   InsertUserRewardBalance,
@@ -240,39 +242,50 @@ export const SyncUserRewardLevelAction = CreateServerAction(
   true,
   async (user_id: string, currentBalance: number) => {
     try {
-      // 1. Get user's current reward level
-      const currentLevel = await GetUserRewardLevel(user_id)
-
-      if (!currentLevel) {
-        return { success: false, error: "User reward not found" }
-      }
-
-      // 2. Get level based on points
-      const levelBasedOnPoints = await GetRewardLevel(currentBalance)
+      const [currentLevel, levelBasedOnPoints] = await Promise.all([
+        GetUserRewardLevel(user_id),
+        GetRewardLevel(currentBalance)
+      ])
 
       if (!levelBasedOnPoints) {
         return { success: false, error: "Reward level not found" }
       }
 
-      // 3. Compare levels
-      if (currentLevel.level_id === levelBasedOnPoints.id) {
-        return {
-          success: true
-        }
+      
+      if (!currentLevel) {
+        const newUserReward = await assignUserRewardLevel(
+          user_id,
+          levelBasedOnPoints.id
+        )
+        return { success: true, data: newUserReward }
       }
 
-      // 4. Update user reward level + balance
+     
+      if (currentLevel.level_id === levelBasedOnPoints.id) {
+        return { success: true }
+      }
+
+    
       const updatedUserReward = await UpdateUserRewardlevel(
         user_id,
         levelBasedOnPoints.id
       )
-
-      return {
-        success: true,
-        data: updatedUserReward
-      }
+      return { success: true, data: updatedUserReward }
     } catch (error) {
       return { success: false, error }
     }
   }
 )
+
+export const GetUserTransactionsAction = CreateServerAction(
+  true,
+  async (user_id: string) => {
+    try {
+      const transactions = await GetUserPointLedger(user_id);
+      return { success: true, data: transactions };
+    } catch (error) {
+      console.error("Error fetching user transactions:", error);
+      return { success: false, error: "Failed to fetch transactions" };
+    }
+  }
+);

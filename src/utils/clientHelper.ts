@@ -300,3 +300,10 @@ export function getFriendlyAcceptLabel(
 
   return readable.join(", ")
 }
+
+export function progressPercentHelper(userRPPoints : number,minPoints: number ,maxPoints: number){
+   const result = maxPoints > minPoints
+  ? Math.round(((userRPPoints - minPoints) / (maxPoints - minPoints)) * 100)
+  : 0
+  return result
+}
