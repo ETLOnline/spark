@@ -208,6 +208,10 @@ const CreateNewChat = ({
         if (contactFilter) await getUserList(contactFilter)
         onSuccess?.()
       } else if (isGroupChat) {
+        if (!groupName.trim()) {
+          setGroupNameError("Group name is required")
+          return
+        }
         // Create Group Logic
         const response = await CreateGroupChatAction(
           [...userIds, authUser?.unique_id],
@@ -343,11 +347,18 @@ const CreateNewChat = ({
             )}
 
             {!isManageMode && isGroupChat && (
-              <Input
-                placeholder="Group Name"
-                value={groupName}
-                onChange={(e) => setGroupName(e.target.value)}
-              />
+              <div className="space-y-2">
+                <Input
+                  placeholder="Group Name"
+                  value={groupName}
+                  onChange={(e) => {
+                    setGroupName(e.target.value)
+                  }}
+                />
+                {groupNameError && (
+                  <p className="text-red-500 text-sm">{groupNameError}</p>
+                )}
+              </div>
             )}
           </div>
 
