@@ -1,0 +1,2 @@
+ALTER TABLE "activity_rules" ALTER COLUMN "rule_id" ADD GENERATED ALWAYS AS IDENTITY (sequence name "activity_rules_rule_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1);--> statement-breakpoint
+ALTER TABLE "rewards_metadata" ALTER COLUMN "reward_id" ADD GENERATED ALWAYS AS IDENTITY (sequence name "rewards_metadata_reward_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1);

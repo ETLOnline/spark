@@ -1653,7 +1653,7 @@ export const featureFlagsTable = pgTable("feature_flags", {
 export type InsertFeatureFlag = typeof featureFlagsTable.$inferInsert
 export type SelectFeatureFlag = typeof featureFlagsTable.$inferSelect
 export const rewardsMetadataTable = pgTable("rewards_metadata", {
-  reward_id: integer().primaryKey(),
+  reward_id: integer().primaryKey().generatedAlwaysAsIdentity(),
   internal_name: varchar().notNull(),
   display_name: varchar().notNull(),
   is_soulbound: boolean().notNull().default(true),
@@ -1684,7 +1684,7 @@ export type InsertRewardsMetadata = typeof rewardsMetadataTable.$inferInsert
 export type SelectRewardsMetadata = typeof rewardsMetadataTable.$inferSelect
 
 export const activityRulesTable = pgTable("activity_rules", {
-  rule_id: integer().primaryKey(),
+  rule_id: integer().primaryKey().generatedAlwaysAsIdentity(),
   action_type: varchar().notNull(),
   reward_id: integer().notNull(),
   base_points: integer().notNull(),
