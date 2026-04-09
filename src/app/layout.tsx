@@ -10,6 +10,7 @@ import { ScreenOverlayProvider } from "../hooks/useScreenOverlay"
 import NotificationProvider from "../services/notifications/NotificationProvider"
 import { Suspense } from "react"
 import ReferralHandler from "../components/common/GetReferral"
+import { RewardToaster } from "../components/common/rewards/earnRewardToast"
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -48,6 +49,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <Toaster />
+            <RewardToaster />
             <Suspense>
               <NotificationProvider />
             </Suspense>

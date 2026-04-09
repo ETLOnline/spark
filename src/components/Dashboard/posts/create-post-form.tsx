@@ -58,6 +58,8 @@ import {
   AlertDialogCancel,
   AlertDialogAction
 } from "../../ui/alert-dialog"
+import { rewardToast } from "../../common/rewards/UseRewardToastHook"
+import LevelUpToast from "../../common/rewards/LevelUpToast"
 
 type Props = {
   variant?: "posts" | "spaces"
@@ -526,6 +528,13 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
         toast({
           title: "Posted!",
           duration: 3000
+        })
+
+        rewardToast({
+          title: "Reward Earned!",
+          description: "You've earned 50 points for creating a post.",
+          duration: 5000,
+          reward: 50
         })
 
         setShowCard(false)
