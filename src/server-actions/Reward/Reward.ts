@@ -53,6 +53,7 @@ export const AddRewardAction = CreateServerAction(
           milestone_id: null,
           milestone_type: null,
           milestone_url: null,
+          proof_url: proof_url || null,
           ...metadata
         },
         transection_type: "debit"
