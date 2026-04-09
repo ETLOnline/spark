@@ -6,9 +6,11 @@ import {
   GetActivityRule,
   GetRewardLevel,
   GetUserRewardBalance,
+  GetUserRewardLevel,
   InsertUserRewardBalance,
   updateTrustVerification,
-  UpdateUserRewardBalance
+  UpdateUserRewardBalance,
+  UpdateUserRewardlevel
 } from "@/src/db/data-access/reward/query"
 import { CreateServerAction } from ".."
 import { InsertPointLedger, InsertTrustVerification } from "@/src/db/schema"
@@ -81,6 +83,12 @@ export const AddRewardAction = CreateServerAction(
           user_id,
           activityRule.reward_id,
           activityRule.base_points
+        )
+      }
+      if (userRewardBalance?.success && userRewardBalance?.data) {
+        await SyncUserRewardLevelAction(
+          user_id,
+          userRewardBalance.data[0].current_balance
         )
       }
 
@@ -210,6 +218,59 @@ export const GetRewardLevelAction = CreateServerAction(
     try {
       const res = await GetRewardLevel(points)
       return { success: true, data: res }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const GetUSerRewardLevelAction = CreateServerAction(
+  true,
+  async (user_id: string) => {
+    try {
+      const res = await GetUserRewardLevel(user_id)
+      return { success: true, data: res }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const SyncUserRewardLevelAction = CreateServerAction(
+  true,
+  async (user_id: string, currentBalance: number) => {
+    try {
+      // 1. Get user's current reward level
+      const currentLevel = await GetUserRewardLevel(user_id)
+
+      if (!currentLevel) {
+        return { success: false, error: "User reward not found" }
+      }
+
+      // 2. Get level based on points
+      const levelBasedOnPoints = await GetRewardLevel(currentBalance)
+
+      if (!levelBasedOnPoints) {
+        return { success: false, error: "Reward level not found" }
+      }
+
+      // 3. Compare levels
+      if (currentLevel.level_id === levelBasedOnPoints.id) {
+        return {
+          success: true
+        }
+      }
+
+      // 4. Update user reward level + balance
+      const updatedUserReward = await UpdateUserRewardlevel(
+        user_id,
+        levelBasedOnPoints.id
+      )
+
+      return {
+        success: true,
+        data: updatedUserReward
+      }
     } catch (error) {
       return { success: false, error }
     }

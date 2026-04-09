@@ -1876,7 +1876,11 @@ export const userRewardsLevelRelations = relations(
 )
 
 export type InsertUserRewardsLevel = typeof userRewardsLevelTable.$inferInsert
-export type SelectUserRewardsLevel = typeof userRewardsLevelTable.$inferSelect
+export type SelectUserRewardsLevel =
+  typeof userRewardsLevelTable.$inferSelect & {
+    rewardLevel?: SelectRewardLevel
+    user?: SelectUser
+  }
 
 export const successfullReferralsTable = pgTable("successful_referrals", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),

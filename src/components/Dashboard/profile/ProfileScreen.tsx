@@ -292,7 +292,7 @@ export default function ProfileScreen({
             />
             {/* Trust Engine Section  */}
 
-            {isFeatureEnable && <TrustEngineCard />}
+            {isFeatureEnable && <TrustEngineCard user={user} />}
 
             <ProfileBio
               userBio={user?.profile?.bio as string}
