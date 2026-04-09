@@ -3,6 +3,7 @@
 import { ArrowUpRight } from "lucide-react"
 import { Badge } from "../../../ui/badge"
 import { Card } from "../../../ui/card"
+import { formatActivityName } from "@/src/utils/clientHelper"
 
 interface TransactionProps {
   transection_id: number
@@ -11,7 +12,7 @@ interface TransactionProps {
   transection_type: string
   created_at: string
   rule?: {
-    action_type: string
+    action_display_name: string
     category_group: string
     description: string
   }
@@ -47,10 +48,10 @@ function TransactionRow({ transaction }: { transaction: TransactionProps }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <h4 className="text-sm font-medium text-foreground">
-            {transaction.rule?.action_type ?? "Reward"}
+            {transaction.rule?.action_display_name ?? "Reward"}
           </h4>
           <Badge variant="outline" className="text-xs">
-            {transaction.rule?.category_group ?? "General"}
+            {formatActivityName(transaction.rule?.category_group ?? "General")}
           </Badge>
         </div>
         <p className="text-xs text-muted-foreground mb-2">

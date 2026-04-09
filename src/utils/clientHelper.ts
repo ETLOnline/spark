@@ -307,3 +307,14 @@ export function progressPercentHelper(userRPPoints : number,minPoints: number ,m
   : 0
   return result
 }
+
+// Example usage:
+// community_service -> Community Service
+// profile_complete -> Profile Complete
+export const formatActivityName = (text: string) => {
+  if (!text) return "";
+  
+  return text
+    .replace(/_/g, " ") 
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};

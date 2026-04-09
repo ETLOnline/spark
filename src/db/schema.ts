@@ -1686,6 +1686,7 @@ export type SelectRewardsMetadata = typeof rewardsMetadataTable.$inferSelect
 export const activityRulesTable = pgTable("activity_rules", {
   rule_id: integer().primaryKey(),
   action_type: varchar().notNull(),
+  action_display_name: varchar().notNull(),
   reward_id: integer().notNull(),
   base_points: integer().notNull(),
   category_group: varchar().notNull(),
