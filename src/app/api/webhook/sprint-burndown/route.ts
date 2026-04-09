@@ -18,9 +18,8 @@ export async function POST(req: Request) {
         sprint_id: String(sprint.id)
       })
 
-      const sprintTasks = Tasks.tasks
+      const sprintTasks = Tasks.tasks.filter((task) => !task.parent_task_id)
       const totalTasks = sprintTasks.length
-
       const completedTasks = sprintTasks.filter(
         (t) => t.status?.status_slug === ProjectStatus.Done
       ).length
