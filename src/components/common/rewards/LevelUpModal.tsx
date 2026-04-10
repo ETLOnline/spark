@@ -10,28 +10,27 @@ import {
   DialogHeader,
   DialogTitle
 } from "../../ui/dialog"
+import { LinkAsButton } from "../../LinkAsButton/LinkAsButton"
 
-interface LevelUpToastProps {
-  title: string
-  description: string
+interface LevelUpModalProps {
+  title?: string
+  description?: string
   rewardAmount: number
-  rewardLabel: string
-  earnedFrom: string
-  actionLabel: string
-  isOpen?: boolean
-  setIsOpen?: Dispatch<SetStateAction<boolean>>
+  rewardLabel?: string
+  levelName: string
+  isOpen: boolean
+  setIsOpen: Dispatch<SetStateAction<boolean>>
 }
 
-function LevelUpToast({
+function LevelUpModal({
   title = "Achievement Unlocked!",
   description = "Congratulations on leveling up! You've earned a new reward for your continued engagement and contributions.",
-  rewardAmount = 100,
+  rewardAmount,
   rewardLabel = "Reputation Points",
-  earnedFrom = "Creating a Post",
-  actionLabel = "View My Profile",
+  levelName,
   isOpen,
   setIsOpen
-}: LevelUpToastProps) {
+}: LevelUpModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       {/* Gradient Header */}
@@ -49,20 +48,22 @@ function LevelUpToast({
           {/* Reward Box */}
           <div className="rounded-lg border p-4 text-center spark-gradient-panel-bg">
             <p className="text-xs font-semibold uppercase tracking-wide">
-              Reward Earned
+              Level Unlocked
             </p>
-            <p className="mt-2 text-4xl font-bold ">+{rewardAmount}</p>
-            <p className="text-sm ">{rewardLabel}</p>
-          </div>
-
-          {/* Earned From */}
-          <div className="flex items-center justify-around text-sm">
-            <span className="">Earned from:</span>
-            <span className="font-semibold ">{earnedFrom}</span>
+            <p className="mt-2 text-4xl font-bold ">{levelName}</p>
+            <p className="text-sm ">
+              {rewardLabel} +{rewardAmount}
+            </p>
           </div>
 
           {/* Action Button */}
-          <Button className="flex-1 font-semibold w-full">{actionLabel}</Button>
+          <LinkAsButton
+            className="flex-1 font-semibold w-full"
+            href="/profile"
+            onClick={() => setIsOpen(false)}
+          >
+            Go to Profile
+          </LinkAsButton>
 
           {/* Share CTA */}
           <p className="text-center text-xs text-gray-500">
@@ -74,4 +75,4 @@ function LevelUpToast({
   )
 }
 
-export default LevelUpToast
+export default LevelUpModal

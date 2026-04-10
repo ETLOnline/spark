@@ -6,6 +6,7 @@ import {
   assignUserRewardLevel,
   GetActivityRule,
   GetRewardLevel,
+  GetRewardLevels,
   GetUserPointLedger,
   GetUserRewardBalance,
   GetUserRewardLevel,
@@ -15,10 +16,15 @@ import {
   UpdateUserRewardlevel
 } from "@/src/db/data-access/reward/query"
 import { CreateServerAction } from ".."
-import { InsertPointLedger, InsertTrustVerification } from "@/src/db/schema"
+import {
+  InsertPointLedger,
+  InsertTrustVerification,
+  SelectActivityRules
+} from "@/src/db/schema"
 import { AuthUserAction } from "../User/AuthUserAction"
 import {
   ActivityTypes,
+  RewardTypes,
   TrustVerificationStatus
 } from "@/src/types/Rewards/rewards"
 import { triggerPusherEvent } from "@/src/services/trigger"
@@ -91,7 +97,8 @@ export const AddRewardAction = CreateServerAction(
       if (userRewardBalance?.success && userRewardBalance?.data) {
         await SyncUserRewardLevelAction(
           user_id,
-          userRewardBalance.data[0].current_balance
+          userRewardBalance.data[0].current_balance,
+          activityRule
         )
       }
 
@@ -113,7 +120,10 @@ export const AddRewardAction = CreateServerAction(
         )
       }
       // add pusher for send real time
-      await triggerPusherEvent(user_id, "reward_added", userRewardBalance)
+      await triggerPusherEvent(user_id, "reward_added", {
+        ledgerEntry,
+        userRewardBalance
+      })
 
       return { success: true, data: ledgerEntry }
     } catch (error) {
@@ -241,37 +251,49 @@ export const GetUSerRewardLevelAction = CreateServerAction(
 
 export const SyncUserRewardLevelAction = CreateServerAction(
   true,
-  async (user_id: string, currentBalance: number) => {
+  async (
+    user_id: string,
+    currentBalance: number,
+    activity_rule: SelectActivityRules
+  ) => {
     try {
-      const [currentLevel, levelBasedOnPoints] = await Promise.all([
-        GetUserRewardLevel(user_id),
-        GetRewardLevel(currentBalance)
-      ])
+      const [currentLevel, levelBasedOnPoints, rewardLevels] =
+        await Promise.all([
+          GetUserRewardLevel(user_id),
+          GetRewardLevel(currentBalance),
+          GetRewardLevels()
+        ])
 
       if (!levelBasedOnPoints) {
         return { success: false, error: "Reward level not found" }
       }
 
-      
       if (!currentLevel) {
         const newUserReward = await assignUserRewardLevel(
           user_id,
-          levelBasedOnPoints.id
+          rewardLevels[0].id
         )
         return { success: true, data: newUserReward }
       }
 
-     
+      if (activity_rule.reward?.internal_name !== RewardTypes.Reputation_Points)
+        return { success: true }
+
       if (currentLevel.level_id === levelBasedOnPoints.id) {
         return { success: true }
       }
 
-    
-      const updatedUserReward = await UpdateUserRewardlevel(
+      const updatedUserRewardLevel = await UpdateUserRewardlevel(
         user_id,
         levelBasedOnPoints.id
       )
-      return { success: true, data: updatedUserReward }
+
+      await triggerPusherEvent(user_id, "level_up", {
+        newLevel: levelBasedOnPoints,
+        currentUserBalance: currentBalance
+      })
+
+      return { success: true, data: updatedUserRewardLevel }
     } catch (error) {
       return { success: false, error }
     }
@@ -282,11 +304,11 @@ export const GetUserTransactionsAction = CreateServerAction(
   true,
   async (user_id: string) => {
     try {
-      const transactions = await GetUserPointLedger(user_id);
-      return { success: true, data: transactions };
+      const transactions = await GetUserPointLedger(user_id)
+      return { success: true, data: transactions }
     } catch (error) {
-      console.error("Error fetching user transactions:", error);
-      return { success: false, error: "Failed to fetch transactions" };
+      console.error("Error fetching user transactions:", error)
+      return { success: false, error: "Failed to fetch transactions" }
     }
   }
-);
+)

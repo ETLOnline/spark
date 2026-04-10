@@ -4,7 +4,7 @@ import * as React from "react"
 import type { ToastProps } from "@/src/components/ui/toast"
 
 const TOAST_LIMIT = 3
-const TOAST_REMOVE_DELAY = 5000
+const TOAST_REMOVE_DELAY = 2000
 
 type RewardToast = ToastProps & {
   id: string

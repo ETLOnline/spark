@@ -8,9 +8,14 @@ import {
   ToastViewport
 } from "@/src/components/ui/toast"
 import { Star } from "lucide-react" // Using Lucide for the star icon
-import { useRewardToast } from "./UseRewardToastHook"
+import { rewardToast, useRewardToast } from "./Hook/UseRewardToastHook"
+import { useEffect } from "react"
+import { useAtomValue } from "jotai"
+import pusherClient from "@/src/services/realtime/PusherClient"
+import { SelectPointLedger, SelectUserRewardBalance } from "@/src/db/schema"
+import { userStore } from "@/src/store/user/userStore"
 
-export function RewardToaster() {
+export function RewardToast() {
   const { toasts } = useRewardToast()
 
   return (

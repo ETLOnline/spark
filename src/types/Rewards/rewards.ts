@@ -1,3 +1,8 @@
+export enum RewardTypes {
+  Reputation_Points = "reputation_points",
+  Spark_Credits = "spark_credits"
+}
+
 export enum ActivityTypes {
   ProfileComplete = "profile_complete",
   AttendCommunitySession = "attend_community_session",
@@ -27,7 +32,7 @@ export enum ActivityTypes {
   SpaceFileShare = "space_file_share",
   SpaceGroupChatCreation = "space_group_chat_creation",
   EventCreation = "event_creation",
-  EventRegistration = "event_registration",
+  EventRegistration = "event_registration"
 }
 
 export const ActivityDisplayNames: Record<string, string> = {
@@ -66,8 +71,8 @@ export const ActivityDisplayNames: Record<string, string> = {
 
   // Events
   [ActivityTypes.EventCreation]: "Event Created",
-  [ActivityTypes.EventRegistration]: "Event Registration",
-};
+  [ActivityTypes.EventRegistration]: "Event Registration"
+}
 
 export enum TrustVerificationStatus {
   Pending = "pending",
