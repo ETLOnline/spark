@@ -267,6 +267,13 @@
       "when": 1775653131161,
       "tag": "0037_2026_04_08_175848__create_successfull_referrala_table_and_add_column_in_profile_table",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1775754157102,
+      "tag": "0038_2026_04_10_010236__add_action_name_in_activitiy_rules_table",
+      "breakpoints": true
     }
   ]
 }

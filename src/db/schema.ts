@@ -1686,6 +1686,7 @@ export type SelectRewardsMetadata = typeof rewardsMetadataTable.$inferSelect
 export const activityRulesTable = pgTable("activity_rules", {
   rule_id: integer().primaryKey(),
   action_type: varchar().notNull(),
+  action_display_name: varchar().notNull(),
   reward_id: integer().notNull(),
   base_points: integer().notNull(),
   category_group: varchar().notNull(),
@@ -1876,7 +1877,11 @@ export const userRewardsLevelRelations = relations(
 )
 
 export type InsertUserRewardsLevel = typeof userRewardsLevelTable.$inferInsert
-export type SelectUserRewardsLevel = typeof userRewardsLevelTable.$inferSelect
+export type SelectUserRewardsLevel =
+  typeof userRewardsLevelTable.$inferSelect & {
+    rewardLevel?: SelectRewardLevel
+    user?: SelectUser
+  }
 
 export const successfullReferralsTable = pgTable("successful_referrals", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),

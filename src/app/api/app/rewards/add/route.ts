@@ -5,8 +5,9 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const { action_type, user_id, proof_url } = body
+    
 
-    if (!action_type || !user_id || proof_url) {
+    if (!action_type || !user_id || !proof_url) {
       return NextResponse.json(
         {
           success: false,
