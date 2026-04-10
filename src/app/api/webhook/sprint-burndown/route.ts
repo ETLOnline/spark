@@ -19,22 +19,19 @@ export async function POST(req: Request) {
         excludedTypes: [TaskType.SUBTASK]
       })
 
-      const totalTasks = Tasks.tasks.length
-      const completedTasks = Tasks.tasks.filter(
+      const sprintTasks = Tasks.tasks
+      const totalTasks = sprintTasks.length
+
+      const completedTasks = sprintTasks.filter(
         (t) => t.status?.status_slug === ProjectStatus.Done
       ).length
 
-      const storyPointTasks = Tasks.tasks.filter(
-        (task) =>
-          task.task_type === TaskType.STORY ||
-          task.task_type === TaskType.FEATURE
-      )
-      const totalStoryPoints = storyPointTasks.reduce(
+      const totalStoryPoints = sprintTasks.reduce(
         (sum, t) => sum + Number(t.story_points || 0),
         0
       )
 
-      const completedStoryPoints = storyPointTasks
+      const completedStoryPoints = sprintTasks
         .filter((t) => t.status?.status_slug === ProjectStatus.Done)
         .reduce((sum, t) => sum + Number(t.story_points || 0), 0)
 
