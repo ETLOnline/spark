@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Spark — Navigation Design Concepts (Desktop + Mobile)</title>
+<style>
+:root {
+  --bg:#0f0f13;--surface:#17171f;--surface2:#1e1e2a;--surface3:#26263a;
+  --border:#2e2e42;--border2:#3a3a52;
+  --accent:#7c6af7;--accent2:#9d8fff;--accent-glow:rgba(124,106,247,.18);--accent-dim:rgba(124,106,247,.12);
+  --text:#e8e8f0;--text2:#a0a0bc;--text3:#6a6a88;
+  --green:#34d399;--orange:#fb923c;--red:#f87171;--blue:#60a5fa;--pink:#f472b6;--yellow:#fbbf24;
+  --r:10px;--rs:6px;--font:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── TAB BAR ── */
+.tab-bar{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(15,15,19,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;padding:10px 20px;overflow-x:auto;}
+.tab-bar::-webkit-scrollbar{display:none;}
+.logo{font-weight:700;font-size:15px;color:var(--accent2);letter-spacing:-.3px;margin-right:16px;display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.logo svg{width:20px;height:20px;}
+.tp{padding:6px 13px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;border:1px solid transparent;color:var(--text2);background:transparent;white-space:nowrap;flex-shrink:0;}
+.tp:hover{color:var(--text);background:var(--surface2);}
+.tp.active{background:var(--accent-dim);color:var(--accent2);border-color:rgba(124,106,247,.4);}
+.badge{background:var(--accent);color:white;font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:4px;}
+
+/* ── SECTIONS ── */
+.section{display:none;padding:72px 0 60px;min-height:100vh;}
+.section.active{display:block;}
+
+/* ── HERO ── */
+.hero{text-align:center;padding:36px 20px 40px;max-width:640px;margin:0 auto;}
+.hero h1{font-size:26px;font-weight:700;letter-spacing:-.5px;margin-bottom:10px;line-height:1.25;}
+.hero p{color:var(--text2);font-size:14px;line-height:1.65;}
+.tag{display:inline-block;background:var(--accent-dim);color:var(--accent2);border:1px solid rgba(124,106,247,.4);font-size:11px;font-weight:600;letter-spacing:.5px;padding:3px 10px;border-radius:20px;margin-bottom:12px;text-transform:uppercase;}
+
+/* ── LAYOUT ── */
+.wrap{max-width:1280px;margin:0 auto;padding:0 20px;}
+.cols{display:flex;gap:20px;flex-wrap:wrap;}
+.col-main{flex:1;min-width:300px;}
+.col-side{width:280px;flex-shrink:0;display:flex;flex-direction:column;gap:14px;}
+@media(max-width:900px){.col-side{width:100%;}}
+
+/* ── DEMO SHELL (desktop) ── */
+.shell{background:var(--bg);border-radius:12px;overflow:hidden;border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,.35);height:460px;display:flex;flex-direction:column;}
+.titlebar{height:34px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:6px;flex-shrink:0;}
+.dot{width:10px;height:10px;border-radius:50%;}
+.dot.r{background:#ff5f57;}.dot.y{background:#febc2e;}.dot.g{background:#28c840;}
+.titlebar-lbl{font-size:11px;color:var(--text3);margin:0 auto;}
+.layout{display:flex;flex:1;overflow:hidden;}
+
+/* ── PHONE SHELL ── */
+.phone-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.phone-lbl{font-size:11px;color:var(--text3);font-weight:500;}
+.phone{width:200px;height:420px;border-radius:28px;border:2px solid var(--border2);background:var(--bg);overflow:hidden;position:relative;box-shadow:0 12px 40px rgba(0,0,0,.5);display:flex;flex-direction:column;flex-shrink:0;}
+.phone-notch{height:28px;background:var(--surface);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.phone-notch-pill{width:60px;height:6px;background:var(--border2);border-radius:3px;}
+.phone-body{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+
+/* ── SIDEBAR PRIMITIVES ── */
+.sb{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
+.content{flex:1;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column;}
+
+.si{display:flex;align-items:center;gap:9px;padding:6px 10px;border-radius:var(--rs);font-size:13px;cursor:pointer;transition:background .15s;margin:1px 6px;color:var(--text2);}
+.si:hover{background:var(--surface2);color:var(--text);}
+.si.act{background:var(--accent-dim);color:var(--accent2);}
+.si .ico{width:17px;height:17px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+.si .lbl{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.si .bge{font-size:10px;background:var(--accent);color:white;padding:1px 5px;border-radius:10px;font-weight:600;}
+.ss{padding:12px 10px 4px;font-size:10px;font-weight:700;letter-spacing:.7px;color:var(--text3);text-transform:uppercase;}
+.sdiv{height:1px;background:var(--border);margin:6px 10px;}
+
+/* ── RECENTS WIDGET ── */
+.rw{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 8px;margin:6px 8px;}
+.rw-t{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
+.ri{display:flex;align-items:center;gap:7px;padding:4px 5px;border-radius:5px;cursor:pointer;transition:background .12s;font-size:12px;color:var(--text2);}
+.ri:hover{background:var(--surface3);color:var(--text);}
+.rdot{width:7px;height:7px;border-radius:2px;flex-shrink:0;}
+
+/* ── CMD PALETTE ── */
+.cmd-trigger{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:7px 11px;margin:8px 8px 4px;font-size:12px;color:var(--text3);cursor:pointer;transition:all .15s;}
+.cmd-trigger:hover{border-color:var(--accent);}
+.cmd-trigger .kbd{background:var(--surface3);border-radius:4px;padding:2px 5px;font-size:10px;color:var(--text2);margin-left:auto;}
+.ov{position:absolute;inset:0;background:rgba(10,10,14,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-start;justify-content:center;padding-top:30px;z-index:50;opacity:0;pointer-events:none;transition:opacity .2s;}
+.ov.show{opacity:1;pointer-events:all;}
+.cmd-box{background:var(--surface);border:1px solid var(--border2);border-radius:12px;width:420px;max-width:90%;box-shadow:0 20px 50px rgba(0,0,0,.6);overflow:hidden;}
+.ci-wrap{display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid var(--border);}
+.ci-inp{flex:1;background:transparent;border:none;outline:none;font-size:14px;color:var(--text);font-family:var(--font);caret-color:var(--accent);}
+.ci-inp::placeholder{color:var(--text3);}
+.cs-lbl{font-size:10px;font-weight:600;letter-spacing:.6px;color:var(--text3);text-transform:uppercase;padding:8px 14px 4px;}
+.ci{display:flex;align-items:center;gap:9px;padding:8px 14px;cursor:pointer;transition:background .12s;font-size:12px;}
+.ci:hover,.ci.sel{background:var(--surface2);}
+.ci.sel{border-left:2px solid var(--accent);}
+.ci .cico{width:26px;height:26px;border-radius:6px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.ci .cmeta{color:var(--text3);font-size:10px;}
+.ci .cpath{margin-left:auto;font-size:10px;color:var(--text3);display:flex;gap:3px;}
+.ci .cpath span{background:var(--surface3);padding:1px 5px;border-radius:3px;}
+.cmd-footer{display:flex;gap:10px;padding:8px 14px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);}
+.cmd-footer kbd{background:var(--surface3);padding:2px 4px;border-radius:3px;}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{height:56px;background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding:0 4px;flex-shrink:0;}
+.bn-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 10px;border-radius:10px;cursor:pointer;transition:all .15s;flex:1;position:relative;}
+.bn-item .bn-icon{font-size:18px;transition:transform .15s;}
+.bn-item .bn-lbl{font-size:9px;font-weight:500;color:var(--text3);}
+.bn-item.act .bn-lbl{color:var(--accent2);}
+.bn-item.act .bn-icon{transform:scale(1.1);}
+.bn-dot{position:absolute;top:4px;right:calc(50% - 14px);width:7px;height:7px;border-radius:50%;background:var(--red);border:1.5px solid var(--surface);}
+/* pill indicator above active icon */
+.bn-item.act::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:28px;height:3px;background:var(--accent);border-radius:0 0 3px 3px;}
+
+/* ── RAIL (concept B) ── */
+.rail{background:var(--bg);border-right:1px solid var(--border);width:52px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:2px;}
+.ri2{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;transition:all .15s;color:var(--text3);position:relative;}
+.ri2:hover{background:var(--surface2);color:var(--text);}
+.ri2.act{background:var(--accent-dim);color:var(--accent2);}
+.ri2.act::before{content:'';position:absolute;left:-1px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--accent);border-radius:0 2px 2px 0;}
+.rsep{height:1px;background:var(--border);width:24px;margin:5px 0;}
+.rav{width:28px;height:28px;border-radius:7px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;margin-top:auto;cursor:pointer;}
+.ndot{position:absolute;top:2px;right:2px;width:6px;height:6px;border-radius:50%;background:var(--red);border:1.5px solid var(--bg);}
+
+/* ── PROJECT TABS ── */
+.proj-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 14px;background:var(--surface);flex-shrink:0;overflow-x:auto;}
+.proj-tabs::-webkit-scrollbar{display:none;}
+.pt{padding:9px 12px;font-size:12px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px;}
+.pt:hover{color:var(--text);}
+.pt.act{color:var(--accent2);border-bottom-color:var(--accent);}
+
+/* ── CHAT ── */
+.chat-view{display:flex;flex-direction:column;flex:1;overflow:hidden;}
+.chat-msgs{flex:1;padding:10px;overflow:auto;display:flex;flex-direction:column;gap:10px;}
+.chat-msg{display:flex;gap:7px;}
+.cav{width:24px;height:24px;border-radius:6px;flex-shrink:0;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;color:white;}
+.chat-bub{flex:1;}
+.chat-name{font-size:10px;font-weight:600;margin-bottom:2px;}
+.chat-name .time{font-size:9px;font-weight:400;color:var(--text3);margin-left:5px;}
+.chat-txt{font-size:11px;color:var(--text2);line-height:1.5;background:var(--surface2);border-radius:6px;padding:6px 9px;}
+.chat-bar{display:flex;gap:7px;padding:8px 10px;border-top:1px solid var(--border);align-items:center;}
+.chat-inp{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:6px 10px;font-size:11px;color:var(--text);outline:none;}
+.chat-inp::placeholder{color:var(--text3);}
+.chat-send{width:28px;height:28px;border-radius:6px;background:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+
+/* ── BOARD ── */
+.board{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;}
+.board::-webkit-scrollbar{height:3px;}
+.board::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.bcol{flex-shrink:0;width:130px;}
+.bch{font-size:10px;font-weight:600;color:var(--text3);padding:0 2px 7px;display:flex;align-items:center;gap:5px;text-transform:uppercase;letter-spacing:.5px;}
+.bch .cnt{background:var(--surface3);border-radius:4px;padding:0 4px;font-size:9px;}
+.bt{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 9px;margin-bottom:5px;font-size:11px;cursor:pointer;transition:border-color .15s;}
+.bt:hover{border-color:var(--border2);}
+.bt-t{color:var(--text);margin-bottom:4px;line-height:1.4;}
+.bt-m{display:flex;gap:4px;align-items:center;}
+.btag{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600;}
+.btag.bl{background:rgba(96,165,250,.15);color:var(--blue);}
+.btag.gn{background:rgba(52,211,153,.15);color:var(--green);}
+.btag.or{background:rgba(251,146,60,.15);color:var(--orange);}
+.bav{width:13px;height:13px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:white;margin-left:auto;}
+
+/* ── CONTENT HEADER ── */
+.ch{height:40px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:10px;background:var(--surface);flex-shrink:0;}
+.ct{font-size:13px;font-weight:600;}
+.bc{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:3px;}
+.bc .crumb{cursor:pointer;}.bc .crumb:hover{color:var(--accent2);}
+
+/* ── BOTTOM SHEET ── */
+.bsheet{position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border2);border-radius:16px 16px 0 0;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);z-index:40;}
+.bsheet.open{transform:translateY(0);}
+.bsheet-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:10px auto 0;}
+.bsheet-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 8px;}
+.bsheet-close{font-size:16px;cursor:pointer;color:var(--text3);padding:2px 6px;}
+
+/* ── INFO CARDS ── */
+.ic{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.ic h3{font-size:13px;font-weight:700;margin-bottom:7px;display:flex;align-items:center;gap:7px;}
+.ic p{font-size:12px;color:var(--text2);line-height:1.6;}
+.ic ul{list-style:none;margin-top:8px;}
+.ic ul li{font-size:12px;color:var(--text2);padding:3px 0;display:flex;align-items:flex-start;gap:7px;}
+.ic ul li::before{content:'→';color:var(--accent);font-size:11px;margin-top:2px;flex-shrink:0;}
+.sn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--accent-dim);color:var(--accent2);font-size:10px;font-weight:700;flex-shrink:0;}
+code{background:var(--surface3);padding:1px 4px;border-radius:3px;font-size:11px;}
+
+/* ── OVERVIEW GRID ── */
+.ov-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;max-width:1000px;margin:0 auto;padding:0 20px;}
+.ov-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.ov-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 28px rgba(124,106,247,.12);}
+.ov-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--accent-glow),transparent);opacity:0;transition:opacity .2s;}
+.ov-card:hover::before{opacity:1;}
+.ov-num{font-size:26px;margin-bottom:7px;}
+.ov-title{font-size:14px;font-weight:700;margin-bottom:5px;}
+.ov-desc{font-size:12px;color:var(--text2);line-height:1.5;}
+.ov-tag{display:inline-block;margin-top:10px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;}
+.ov-tag.rec{background:rgba(52,211,153,.15);color:var(--green);}
+.ov-tag.alt{background:rgba(96,165,250,.15);color:var(--blue);}
+.ov-tag.add{background:rgba(251,146,60,.15);color:var(--orange);}
+.ov-tag.mob{background:rgba(244,114,182,.15);color:var(--pink);}
+
+/* ── DEVICE PAIR ── */
+.pair{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;}
+.pair-desktop{flex:1;min-width:340px;}
+.pair-mobile{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.pair-lbl{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+
+/* ── FLOAT BTN ── */
+.float-cmd{position:absolute;bottom:66px;right:12px;width:44px;height:44px;border-radius:14px;background:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 18px rgba(124,106,247,.5);transition:all .2s;font-size:18px;z-index:20;}
+.float-cmd:hover{transform:scale(1.08);box-shadow:0 6px 24px rgba(124,106,247,.6);}
+
+/* ── PHONE BOTTOM NAV ── */
+.ph-bottom-nav{height:52px;background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;flex-shrink:0;}
+.pbn{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;cursor:pointer;position:relative;padding:4px 0;}
+.pbn .pi{font-size:16px;}
+.pbn .pl{font-size:8px;font-weight:500;color:var(--text3);}
+.pbn.act .pl{color:var(--accent2);}
+.pbn.act::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:24px;height:3px;background:var(--accent);border-radius:0 0 3px 3px;}
+.pbn .pd{position:absolute;top:2px;right:calc(50% - 10px);width:6px;height:6px;border-radius:50%;background:var(--red);border:1.5px solid var(--surface);}
+
+/* ── PHONE HEADER ── */
+.ph-header{height:44px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;flex-shrink:0;}
+.ph-title{font-size:14px;font-weight:700;}
+.ph-actions{margin-left:auto;display:flex;gap:10px;align-items:center;}
+
+/* ── FULL SCREEN SEARCH (mobile) ── */
+.fs-search{position:absolute;inset:0;background:var(--bg);z-index:50;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .2s;}
+.fs-search.open{opacity:1;pointer-events:all;}
+.fs-top{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);}
+.fs-back{font-size:18px;cursor:pointer;color:var(--text2);}
+.fs-inp{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;}
+.fs-inp::placeholder{color:var(--text3);}
+.fs-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid rgba(46,46,66,.5);}
+.fs-item:active{background:var(--surface2);}
+.fs-ico{width:34px;height:34px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.fs-name{font-size:13px;font-weight:500;}
+.fs-path{font-size:10px;color:var(--text3);margin-top:1px;}
+.fs-section{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text3);padding:12px 14px 6px;}
+
+/* ── PHONE CONTENT ── */
+.phone-content{flex:1;overflow:auto;}
+.pcard{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;margin:8px 10px;}
+.pcard-t{font-size:13px;font-weight:600;margin-bottom:4px;}
+.pcard-sub{font-size:11px;color:var(--text2);}
+.pcard-meta{display:flex;gap:6px;margin-top:8px;align-items:center;}
+.ptag{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.fu{animation:fadeUp .4s ease forwards;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.cursor{display:inline-block;width:1px;height:13px;background:var(--accent);animation:blink 1s infinite;vertical-align:text-bottom;margin-left:1px;}
+</style>
+</head>
+<body>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    Spark
+  </div>
+  <div class="tp active" onclick="showTab('overview')">Overview</div>
+  <div class="tp" onclick="showTab('a')">A — Cmd Palette <span class="badge">⭐</span></div>
+  <div class="tp" onclick="showTab('b')">B — Dual Rail</div>
+  <div class="tp" onclick="showTab('c')">C — Project Chat</div>
+  <div class="tp" onclick="showTab('mobile')">📱 Mobile Bottom Nav</div>
+</div>
+
+<!-- ══════════════ OVERVIEW ══════════════ -->
+<div class="section active" id="tab-overview">
+  <div class="hero fu">
+    <div class="tag">Desktop + Mobile</div>
+    <h1>Navigation Redesign — 4 Concepts</h1>
+    <p>Community → Channel → Space → Project is 4 levels deep. No bottom nav on mobile. Projects have no direct chat access. These concepts fix all three on both platforms.</p>
+  </div>
+  <div class="ov-grid">
+    <div class="ov-card" onclick="showTab('a')">
+      <div class="ov-num">⌘</div>
+      <div class="ov-title">A — Command Palette + Recents</div>
+      <div class="ov-desc">⌘K global jump + automatic Recents strip. On mobile: floating search button + full-screen search panel.</div>
+      <div class="ov-tag rec">Recommended</div>
+    </div>
+    <div class="ov-card" onclick="showTab('b')">
+      <div class="ov-num">⊞</div>
+      <div class="ov-title">B — Dual Rail Sidebar</div>
+      <div class="ov-desc">Community icon rail + context panel on desktop. On mobile the rail becomes a bottom tab bar — the hierarchy is one tap away.</div>
+      <div class="ov-tag alt">Alternative</div>
+    </div>
+    <div class="ov-card" onclick="showTab('c')">
+      <div class="ov-num">💬</div>
+      <div class="ov-title">C — Project Chat Panel</div>
+      <div class="ov-desc">Chat tab embedded inside every project. On mobile: a bottom sheet that slides up from a chat button.</div>
+      <div class="ov-tag add">Additive</div>
+    </div>
+    <div class="ov-card" onclick="showTab('mobile')">
+      <div class="ov-num">📱</div>
+      <div class="ov-title">Mobile — Bottom Nav Bar</div>
+      <div class="ov-desc">A persistent 5-tab bottom nav replaces the hamburger drawer on mobile. The highest-impact mobile-only change.</div>
+      <div class="ov-tag mob">Mobile-first</div>
+    </div>
+  </div>
+  <div class="wrap" style="margin-top:20px">
+    <div class="cols">
+      <div class="ic">
+        <h3>🔥 The Problems</h3>
+        <ul>
+          <li>4 clicks minimum to reach a project from scratch</li>
+          <li>Mobile: hamburger drawer is fine for a menu, bad for a work app</li>
+          <li>Projects and their Space chat are disconnected — different URL trees</li>
+          <li>Shortcuts need manual setup — won't help new or casual users</li>
+        </ul>
+      </div>
+      <div class="ic">
+        <h3>✅ Best Combination to Ship</h3>
+        <ul>
+          <li><strong>A</strong> — Command palette (works on both desktop + mobile)</li>
+          <li><strong>C</strong> — Project chat panel (biggest missing feature)</li>
+          <li><strong>Mobile tab</strong> — Bottom nav bar (standalone mobile win, low risk)</li>
+          <li>All three can be shipped independently — no sidebar refactor needed</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ CONCEPT A ══════════════ -->
+<div class="section" id="tab-a">
+  <div class="hero fu">
+    <div class="tag">Concept A</div>
+    <h1>Command Palette + Recents</h1>
+    <p>Desktop: ⌘K or click "Jump to…" in the sidebar. Mobile: a floating search button (thumb-reachable, bottom right) opens a full-screen fuzzy search. Recents are automatic — no manual pinning.</p>
+  </div>
+  <div class="wrap">
+    <div class="pair">
+      <!-- DESKTOP demo -->
+      <div class="pair-desktop">
+        <div class="pair-lbl">🖥 Desktop</div>
+        <div class="shell">
+          <div class="titlebar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="titlebar-lbl">Spark — dashboard</span></div>
+          <div class="layout">
+            <div class="sb" style="width:210px">
+              <div class="cmd-trigger" onclick="tog('cmdA')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                Jump to…<span class="kbd">⌘K</span>
+              </div>
+              <div class="rw">
+                <div class="rw-t">Recent</div>
+                <div class="ri"><div class="rdot" style="background:#7c6af7"></div>Auth Module Redesign</div>
+                <div class="ri"><div class="rdot" style="background:#60a5fa"></div>#general-chat</div>
+                <div class="ri"><div class="rdot" style="background:#34d399"></div>Web Dev Community</div>
+                <div class="ri"><div class="rdot" style="background:#fb923c"></div>Sprint 3 Backlog</div>
+                <div class="ri"><div class="rdot" style="background:#f472b6"></div>Design System Space</div>
+              </div>
+              <div class="sdiv"></div>
+              <div class="ss">Platform</div>
+              <div class="si"><div class="ico">👤</div><span class="lbl">Profile</span></div>
+              <div class="si act"><div class="ico">📁</div><span class="lbl">Projects</span></div>
+              <div class="si"><div class="ico">💬</div><span class="lbl">Chat</span><span class="bge">3</span></div>
+              <div class="si"><div class="ico">📅</div><span class="lbl">Events</span></div>
+              <div class="si"><div class="ico">🌐</div><span class="lbl">Communities</span></div>
+              <div class="sdiv"></div>
+              <div class="ss">Shortcuts</div>
+              <div class="si"><div class="ico">⚡</div><span class="lbl">Auth Module</span></div>
+            </div>
+            <div class="content">
+              <div class="ch"><div class="bc"><span class="crumb">Web Dev</span><span>/</span><span class="crumb">Backend</span><span>/</span><span style="color:var(--text)">Auth Module</span></div></div>
+              <div style="padding:12px;overflow:auto">
+                <div class="board">
+                  <div class="bcol"><div class="bch">Todo <span class="cnt">3</span></div>
+                    <div class="bt"><div class="bt-t">OAuth flow</div><div class="bt-m"><span class="btag bl">Auth</span><div class="bav" style="background:#7c6af7">U</div></div></div>
+                    <div class="bt"><div class="bt-t">Unit tests</div><div class="bt-m"><span class="btag gn">Test</span></div></div>
+                  </div>
+                  <div class="bcol"><div class="bch">In Progress <span class="cnt">1</span></div>
+                    <div class="bt"><div class="bt-t">JWT middleware</div><div class="bt-m"><span class="btag or">Backend</span></div></div>
+                  </div>
+                  <div class="bcol"><div class="bch">Done <span class="cnt">4</span></div>
+                    <div class="bt"><div class="bt-t">DB schema</div><div class="bt-m"><span class="btag bl">DB</span></div></div>
+                  </div>
+                </div>
+              </div>
+              <!-- CMD OVERLAY -->
+              <div class="ov" id="cmdA" onclick="if(event.target===this)tog('cmdA')">
+                <div class="cmd-box">
+                  <div class="ci-wrap">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    <input class="ci-inp" placeholder="Jump to project, space, chat…"/><span class="cursor"></span>
+                  </div>
+                  <div class="cs-lbl">Recent</div>
+                  <div class="ci sel"><div class="cico">📁</div><div><div>Auth Module Redesign</div><div class="cmeta">Project</div></div><div class="cpath"><span>Web Dev</span><span>Backend</span></div></div>
+                  <div class="ci"><div class="cico">💬</div><div><div>#general-chat</div><div class="cmeta">Space</div></div><div class="cpath"><span>Web Dev</span></div></div>
+                  <div class="ci"><div class="cico">🌐</div><div><div>Web Dev Community</div><div class="cmeta">Community</div></div><div class="cpath"></div></div>
+                  <div class="cs-lbl">Actions</div>
+                  <div class="ci"><div class="cico">➕</div><div><div>New task</div><div class="cmeta">in Auth Module Redesign</div></div></div>
+                  <div class="ci"><div class="cico">💬</div><div><div>Open space chat</div><div class="cmeta">Backend Space</div></div></div>
+                  <div class="cmd-footer"><span><kbd>↑↓</kbd> Navigate</span><span><kbd>↵</kbd> Open</span><span><kbd>Esc</kbd> Close</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOBILE demo -->
+      <div class="pair-mobile">
+        <div class="pair-lbl">📱 Mobile</div>
+        <div class="phone">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-body">
+            <div class="ph-header">
+              <span class="ph-title">Projects</span>
+              <div class="ph-actions">
+                <span style="font-size:18px;cursor:pointer;color:var(--text2)">🔔</span>
+              </div>
+            </div>
+            <div class="phone-content">
+              <div style="padding:10px 10px 0;font-size:11px;color:var(--text3);font-weight:600">RECENT</div>
+              <div class="pcard" style="margin-bottom:0">
+                <div style="display:flex;flex-direction:column;gap:5px">
+                  <div style="display:flex;align-items:center;gap:7px;font-size:12px"><div style="width:7px;height:7px;border-radius:2px;background:#7c6af7;flex-shrink:0"></div>Auth Module Redesign</div>
+                  <div style="display:flex;align-items:center;gap:7px;font-size:12px"><div style="width:7px;height:7px;border-radius:2px;background:#60a5fa;flex-shrink:0"></div>#general-chat</div>
+                  <div style="display:flex;align-items:center;gap:7px;font-size:12px"><div style="width:7px;height:7px;border-radius:2px;background:#34d399;flex-shrink:0"></div>Web Dev Community</div>
+                </div>
+              </div>
+              <div style="padding:10px 10px 0;font-size:11px;color:var(--text3);font-weight:600;margin-top:6px">MY PROJECTS</div>
+              <div class="pcard">
+                <div class="pcard-t">Auth Module Redesign</div>
+                <div class="pcard-sub">Backend · Sprint 3</div>
+                <div class="pcard-meta"><span class="ptag" style="background:rgba(251,146,60,.15);color:var(--orange)">In Progress</span><span style="font-size:10px;color:var(--text3);margin-left:auto">7/12 tasks</span></div>
+              </div>
+              <div class="pcard">
+                <div class="pcard-t">API Gateway</div>
+                <div class="pcard-sub">Backend · Sprint 2</div>
+                <div class="pcard-meta"><span class="ptag" style="background:rgba(52,211,153,.15);color:var(--green)">Active</span></div>
+              </div>
+            </div>
+            <!-- Floating search btn -->
+            <div class="float-cmd" onclick="tog('mobileSearch')">🔍</div>
+            <!-- Full-screen search -->
+            <div class="fs-search" id="mobileSearch">
+              <div class="fs-top">
+                <span class="fs-back" onclick="tog('mobileSearch')">←</span>
+                <input class="fs-inp" placeholder="Search projects, spaces, chats…" autofocus/>
+              </div>
+              <div class="fs-section">Recent</div>
+              <div class="fs-item"><div class="fs-ico">📁</div><div><div class="fs-name">Auth Module Redesign</div><div class="fs-path">Web Dev → Backend</div></div></div>
+              <div class="fs-item"><div class="fs-ico">💬</div><div><div class="fs-name">#general-chat</div><div class="fs-path">Web Dev → General Space</div></div></div>
+              <div class="fs-item"><div class="fs-ico">🌐</div><div><div class="fs-name">Web Dev Community</div><div class="fs-path">Community</div></div></div>
+              <div class="fs-section">Suggested</div>
+              <div class="fs-item"><div class="fs-ico">🏃</div><div><div class="fs-name">Sprint 3 Board</div><div class="fs-path">Auth Module Redesign</div></div></div>
+              <div class="fs-item"><div class="fs-ico">👥</div><div><div class="fs-name">Team — Backend Squad</div><div class="fs-path">Web Dev Community</div></div></div>
+            </div>
+          </div>
+          <div class="ph-bottom-nav">
+            <div class="pbn"><div class="pi">🏠</div><div class="pl">Home</div></div>
+            <div class="pbn act"><div class="pi">📁</div><div class="pl">Projects</div></div>
+            <div class="pbn"><div class="pi">💬</div><div class="pl">Chat</div><div class="pd"></div></div>
+            <div class="pbn"><div class="pi">🌐</div><div class="pl">Community</div></div>
+            <div class="pbn"><div class="pi">👤</div><div class="pl">Profile</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cols" style="margin-top:20px">
+      <div class="ic"><h3>⚡ How It Adapts</h3>
+        <ul><li>Desktop: ⌘K or click the sidebar "Jump to…" trigger — full command palette overlay</li>
+        <li>Mobile: floating 🔍 button (bottom-right, above bottom nav) opens full-screen search with large touch targets</li>
+        <li>Recents section appears in both — automatically tracked, no manual setup</li>
+        <li>Same search index powers both — one server action, two surfaces</li></ul>
+      </div>
+      <div class="ic"><h3>🛠 What to Build</h3>
+        <ul><li><span class="sn">1</span> Extend existing <code>CommandCenter</code> component already in the header</li>
+        <li><span class="sn">2</span> Recent-visits tracker — store last 8 in localStorage + Jotai atom</li>
+        <li><span class="sn">3</span> <code>MobileSearch</code> full-screen component (shows below breakpoint)</li>
+        <li><span class="sn">4</span> Floating button shown only on mobile (Tailwind <code>block md:hidden</code>)</li></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ CONCEPT B ══════════════ -->
+<div class="section" id="tab-b">
+  <div class="hero fu">
+    <div class="tag">Concept B</div>
+    <h1>Dual Rail — Community Switcher</h1>
+    <p>Desktop: icon rail + context panel. Mobile: the icon rail becomes a bottom tab bar — each community is one tap from anywhere, no drawer required.</p>
+  </div>
+  <div class="wrap">
+    <div class="pair">
+      <!-- DESKTOP -->
+      <div class="pair-desktop">
+        <div class="pair-lbl">🖥 Desktop</div>
+        <div class="shell">
+          <div class="titlebar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="titlebar-lbl">Spark — Web Dev Community</span></div>
+          <div class="layout">
+            <div class="rail">
+              <div style="font-weight:700;font-size:12px;color:var(--accent2);margin-bottom:6px">S</div>
+              <div class="rsep"></div>
+              <div class="ri2 act" onclick="switchRail('rA')" title="Web Dev">🌐</div>
+              <div class="ri2" onclick="switchRail('rB')" style="position:relative" title="Design">🎨<div class="ndot"></div></div>
+              <div class="ri2" onclick="switchRail('rC')" title="ML Research">🧪</div>
+              <div class="ri2" onclick="switchRail('rD')" title="Open Source">⚡</div>
+              <div class="rsep"></div>
+              <div class="ri2" title="All Messages">💬</div>
+              <div class="ri2" title="Events">📅</div>
+              <div class="ri2" title="Search">🔍</div>
+              <div class="rav">U</div>
+            </div>
+            <!-- Context panels -->
+            <div class="sb" style="width:180px" id="rA">
+              <div style="padding:10px 10px 5px"><div style="font-weight:700;font-size:13px">🌐 Web Dev</div><div style="font-size:10px;color:var(--text3);margin-top:1px">32 members</div></div>
+              <div class="sdiv"></div>
+              <div class="ss">Channels</div>
+              <div class="si act"><div class="ico">📢</div><span class="lbl">Backend</span></div>
+              <div style="padding-left:18px">
+                <div class="si" style="font-size:11px"><div class="ico" style="font-size:9px">#</div><span class="lbl">#general</span></div>
+                <div class="si" style="font-size:11px"><div class="ico" style="font-size:9px">📁</div><span class="lbl">Auth Module</span></div>
+              </div>
+              <div class="si"><div class="ico">📢</div><span class="lbl">Frontend</span></div>
+              <div class="si"><div class="ico">📢</div><span class="lbl">DevOps</span></div>
+              <div class="sdiv"></div>
+              <div class="si"><div class="ico">💬</div><span class="lbl">All Spaces</span><span class="bge">5</span></div>
+              <div class="si"><div class="ico">📁</div><span class="lbl">All Projects</span></div>
+            </div>
+            <div class="sb" style="width:180px;display:none" id="rB">
+              <div style="padding:10px 10px 5px"><div style="font-weight:700;font-size:13px">🎨 Design</div><div style="font-size:10px;color:var(--text3);margin-top:1px">18 members</div></div>
+              <div class="sdiv"></div>
+              <div class="ss">Channels</div>
+              <div class="si act"><div class="ico">📢</div><span class="lbl">UI / UX</span></div>
+              <div class="si"><div class="ico">📢</div><span class="lbl">Branding</span></div>
+              <div class="sdiv"></div>
+              <div class="si"><div class="ico">💬</div><span class="lbl">All Spaces</span><span class="bge">2</span></div>
+              <div class="si"><div class="ico">📁</div><span class="lbl">All Projects</span></div>
+            </div>
+            <div class="sb" style="width:180px;display:none" id="rC">
+              <div style="padding:10px 10px 5px"><div style="font-weight:700;font-size:13px">🧪 ML Research</div></div>
+              <div class="sdiv"></div>
+              <div class="ss">Channels</div>
+              <div class="si act"><div class="ico">📢</div><span class="lbl">NLP</span></div>
+              <div class="si"><div class="ico">📢</div><span class="lbl">Vision</span></div>
+            </div>
+            <div class="sb" style="width:180px;display:none" id="rD">
+              <div style="padding:10px 10px 5px"><div style="font-weight:700;font-size:13px">⚡ Open Source</div></div>
+              <div class="sdiv"></div>
+              <div class="ss">Channels</div>
+              <div class="si act"><div class="ico">📢</div><span class="lbl">Contributions</span></div>
+              <div class="si"><div class="ico">📢</div><span class="lbl">Issues</span></div>
+            </div>
+            <div class="content">
+              <div class="ch"><div class="bc"><span class="crumb" style="color:var(--accent2)">Web Dev</span><span>/</span><span class="crumb">Backend</span><span>/</span><span>Auth Module</span></div></div>
+              <div style="padding:12px;overflow:auto">
+                <div class="board">
+                  <div class="bcol"><div class="bch">Todo <span class="cnt">3</span></div>
+                    <div class="bt"><div class="bt-t">OAuth flow</div><div class="bt-m"><span class="btag bl">Auth</span></div></div>
+                    <div class="bt"><div class="bt-t">Unit tests</div><div class="bt-m"><span class="btag gn">Test</span></div></div>
+                  </div>
+                  <div class="bcol"><div class="bch">In Progress <span class="cnt">1</span></div>
+                    <div class="bt"><div class="bt-t">JWT middleware</div><div class="bt-m"><span class="btag or">Backend</span></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOBILE: bottom nav = community switcher -->
+      <div class="pair-mobile">
+        <div class="pair-lbl">📱 Mobile — rail becomes bottom tabs</div>
+        <div class="phone">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-body">
+            <div class="ph-header">
+              <span class="ph-title">🌐 Web Dev</span>
+              <div class="ph-actions"><span style="font-size:16px;color:var(--text2)">🔔</span><span style="font-size:16px;color:var(--text2);margin-left:8px">🔍</span></div>
+            </div>
+            <!-- channel list for this community -->
+            <div class="phone-content">
+              <div style="padding:8px 8px 0;font-size:10px;color:var(--text3);font-weight:700;letter-spacing:.5px;text-transform:uppercase">Channels</div>
+              <div class="pcard" style="padding:10px">
+                <div style="font-size:13px;font-weight:600">📢 Backend</div>
+                <div style="padding-left:14px;margin-top:6px;display:flex;flex-direction:column;gap:4px">
+                  <div style="font-size:12px;color:var(--text2)"># general</div>
+                  <div style="font-size:12px;color:var(--accent2)">📁 Auth Module<span style="background:var(--accent);color:white;font-size:9px;padding:1px 4px;border-radius:3px;margin-left:6px">active</span></div>
+                  <div style="font-size:12px;color:var(--text2)">📁 API Gateway</div>
+                </div>
+              </div>
+              <div class="pcard" style="padding:10px">
+                <div style="font-size:13px;font-weight:600">📢 Frontend</div>
+              </div>
+              <div class="pcard" style="padding:10px">
+                <div style="font-size:13px;font-weight:600">📢 DevOps</div>
+              </div>
+            </div>
+          </div>
+          <!-- Bottom nav = community switcher -->
+          <div class="ph-bottom-nav">
+            <div class="pbn act" onclick="switchMobileRail(this,0)"><div class="pi">🌐</div><div class="pl">Web Dev</div></div>
+            <div class="pbn" onclick="switchMobileRail(this,1)" style="position:relative"><div class="pi">🎨</div><div class="pl">Design</div><div class="pd"></div></div>
+            <div class="pbn" onclick="switchMobileRail(this,2)"><div class="pi">🧪</div><div class="pl">ML</div></div>
+            <div class="pbn" onclick="switchMobileRail(this,3)"><div class="pi">⚡</div><div class="pl">OSS</div></div>
+            <div class="pbn" onclick="switchMobileRail(this,4)"><div class="pi">➕</div><div class="pl">More</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="cols" style="margin-top:20px">
+      <div class="ic"><h3>🔁 Desktop ↔ Mobile Mapping</h3>
+        <ul><li>Desktop left rail icon → mobile bottom tab (same communities, same tap behavior)</li>
+        <li>Desktop context panel → mobile full-screen channel list for that community</li>
+        <li>Notification dot on rail = notification dot on bottom tab</li>
+        <li>Desktop collapse → mobile hides context panel, shows content full-width</li></ul>
+      </div>
+      <div class="ic"><h3>🛠 What to Build</h3>
+        <ul><li><span class="sn">1</span> New <code>RailNav</code> icon strip component (desktop)</li>
+        <li><span class="sn">2</span> <code>BottomNav</code> component for mobile — same data source as rail</li>
+        <li><span class="sn">3</span> Context panel loads community channels/projects on select</li>
+        <li><span class="sn">4</span> Refactor <code>app-sidebar</code> layout to flex-row with conditional rail</li></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ CONCEPT C ══════════════ -->
+<div class="section" id="tab-c">
+  <div class="hero fu">
+    <div class="tag">Concept C</div>
+    <h1>Project-Embedded Chat Panel</h1>
+    <p>Desktop: Chat tab inside the project (tab mode or split view). Mobile: a sticky chat button at the bottom of any project page opens a bottom sheet — chat without leaving the project.</p>
+  </div>
+  <div class="wrap">
+    <div class="pair">
+      <!-- DESKTOP: tab mode -->
+      <div class="pair-desktop">
+        <div class="pair-lbl">🖥 Desktop — Chat as project tab</div>
+        <div class="shell">
+          <div class="titlebar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="titlebar-lbl">Auth Module Redesign</span></div>
+          <div class="layout">
+            <div class="sb" style="width:190px">
+              <div class="ss">Platform</div>
+              <div class="si"><div class="ico">🌐</div><span class="lbl">Communities</span></div>
+              <div class="si act"><div class="ico">📁</div><span class="lbl">Projects</span></div>
+              <div class="si"><div class="ico">💬</div><span class="lbl">Chat</span><span class="bge">3</span></div>
+              <div class="sdiv"></div>
+              <div class="ss">This Project</div>
+              <div class="si act"><div class="ico">📋</div><span class="lbl">Overview</span></div>
+              <div class="si"><div class="ico">✅</div><span class="lbl">Tasks</span></div>
+              <div class="si"><div class="ico">🏃</div><span class="lbl">Sprint</span></div>
+              <div class="si"><div class="ico">📦</div><span class="lbl">Backlog</span></div>
+              <div class="si" style="color:var(--accent2);border:1px solid var(--border);" onclick="switchPT('ptChat')"><div class="ico">💬</div><span class="lbl">Chat</span><span class="bge">5</span></div>
+            </div>
+            <div class="content">
+              <div class="proj-tabs" id="ptBar">
+                <div class="pt act" onclick="switchPT('ptOverview')">📋 Overview</div>
+                <div class="pt" onclick="switchPT('ptTasks')">✅ Tasks</div>
+                <div class="pt" onclick="switchPT('ptSprint')">🏃 Sprint</div>
+                <div class="pt" onclick="switchPT('ptChat')" style="color:var(--accent2)">💬 Chat <span style="background:var(--accent);color:white;font-size:9px;padding:1px 4px;border-radius:3px">5</span></div>
+              </div>
+              <div id="ptOverview" style="flex:1;padding:12px;overflow:auto">
+                <div style="font-weight:700;font-size:15px;margin-bottom:5px">Auth Module Redesign</div>
+                <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Refactoring auth system to JWT + refresh tokens.</div>
+                <div style="display:flex;gap:8px">
+                  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;flex:1"><div style="font-size:10px;color:var(--text3)">Status</div><div style="font-size:12px;font-weight:600;color:var(--orange)">In Progress</div></div>
+                  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;flex:1"><div style="font-size:10px;color:var(--text3)">Tasks</div><div style="font-size:12px;font-weight:600">7 / 12</div></div>
+                  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;flex:1"><div style="font-size:10px;color:var(--text3)">Sprint</div><div style="font-size:12px;font-weight:600;color:var(--green)">Sprint 3</div></div>
+                </div>
+              </div>
+              <div id="ptTasks" style="display:none;flex:1;padding:12px;overflow:auto">
+                <div class="board">
+                  <div class="bcol"><div class="bch">Todo <span class="cnt">2</span></div>
+                    <div class="bt"><div class="bt-t">OAuth flow</div><div class="bt-m"><span class="btag bl">Auth</span></div></div>
+                    <div class="bt"><div class="bt-t">Unit tests</div><div class="bt-m"><span class="btag gn">Test</span></div></div>
+                  </div>
+                  <div class="bcol"><div class="bch">In Progress <span class="cnt">1</span></div>
+                    <div class="bt"><div class="bt-t">JWT middleware</div><div class="bt-m"><span class="btag or">Backend</span></div></div>
+                  </div>
+                </div>
+              </div>
+              <div id="ptSprint" style="display:none;flex:1;padding:12px"><div style="font-size:13px;color:var(--text2)">Sprint 3 · Apr 8–21 · 7 tasks</div></div>
+              <div id="ptChat" style="display:none;flex-direction:column;flex:1">
+                <div style="padding:6px 12px;background:var(--surface2);font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);flex-shrink:0">💬 Backend Space · #general</div>
+                <div class="chat-view">
+                  <div class="chat-msgs">
+                    <div class="chat-msg"><div class="cav" style="background:#7c6af7">U</div><div class="chat-bub"><div class="chat-name">Usama<span class="time">2:14 PM</span></div><div class="chat-txt">JWT refresh working in staging 🎉</div></div></div>
+                    <div class="chat-msg"><div class="cav" style="background:#34d399">A</div><div class="chat-bub"><div class="chat-name">Alex<span class="time">2:17 PM</span></div><div class="chat-txt">Should we close the PR or keep open for review?</div></div></div>
+                    <div class="chat-msg"><div class="cav" style="background:#60a5fa">S</div><div class="chat-bub"><div class="chat-name">Sara<span class="time">2:19 PM</span></div><div class="chat-txt">Keep open — review middleware order first</div></div></div>
+                  </div>
+                  <div class="chat-bar"><input class="chat-inp" placeholder="Message #general…"/><div class="chat-send"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOBILE: bottom sheet chat -->
+      <div class="pair-mobile">
+        <div class="pair-lbl">📱 Mobile — chat bottom sheet</div>
+        <div class="phone">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-body" style="position:relative">
+            <div class="ph-header">
+              <span style="font-size:14px;cursor:pointer;color:var(--text2);margin-right:8px">←</span>
+              <span class="ph-title">Auth Module</span>
+              <div class="ph-actions"><span style="font-size:15px;color:var(--text2)">⋯</span></div>
+            </div>
+            <!-- Project tabs mobile -->
+            <div class="proj-tabs" style="padding:0 10px">
+              <div class="pt act" style="font-size:11px;padding:7px 10px">Overview</div>
+              <div class="pt" style="font-size:11px;padding:7px 10px">Tasks</div>
+              <div class="pt" style="font-size:11px;padding:7px 10px">Sprint</div>
+              <div class="pt" style="font-size:11px;padding:7px 10px;color:var(--accent2)" onclick="openSheet('chatSheet')">💬<span style="background:var(--accent);color:white;font-size:8px;padding:0 3px;border-radius:3px;margin-left:3px">5</span></div>
+            </div>
+            <div class="phone-content">
+              <div class="pcard">
+                <div class="pcard-t">Auth Module Redesign</div>
+                <div class="pcard-sub">JWT + refresh token refactor</div>
+                <div class="pcard-meta">
+                  <span class="ptag" style="background:rgba(251,146,60,.15);color:var(--orange)">In Progress</span>
+                  <span style="font-size:10px;color:var(--text3);margin-left:auto">7/12</span>
+                </div>
+              </div>
+              <div style="padding:6px 10px;font-size:11px;font-weight:600;color:var(--text2)">Recent Tasks</div>
+              <div class="pcard" style="padding:9px">
+                <div style="font-size:12px">OAuth flow setup</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:3px">Assigned to you</div>
+              </div>
+              <div class="pcard" style="padding:9px">
+                <div style="font-size:12px">JWT middleware</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:3px">In Progress</div>
+              </div>
+            </div>
+            <!-- Chat bottom sheet -->
+            <div class="bsheet" id="chatSheet" style="height:75%">
+              <div class="bsheet-handle" onclick="closeSheet('chatSheet')" style="cursor:pointer"></div>
+              <div class="bsheet-header">
+                <div style="font-size:13px;font-weight:600">💬 Backend Space · #general</div>
+                <div class="bsheet-close" onclick="closeSheet('chatSheet')">✕</div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;height:calc(100% - 60px)">
+                <div class="chat-msgs" style="padding:8px">
+                  <div class="chat-msg"><div class="cav" style="background:#7c6af7;width:22px;height:22px;border-radius:5px;font-size:8px">U</div><div class="chat-bub"><div class="chat-name" style="font-size:10px">Usama<span class="time">2:14</span></div><div class="chat-txt" style="font-size:11px">JWT refresh working 🎉</div></div></div>
+                  <div class="chat-msg"><div class="cav" style="background:#34d399;width:22px;height:22px;border-radius:5px;font-size:8px">A</div><div class="chat-bub"><div class="chat-name" style="font-size:10px">Alex<span class="time">2:17</span></div><div class="chat-txt" style="font-size:11px">Close PR or keep open?</div></div></div>
+                  <div class="chat-msg"><div class="cav" style="background:#f472b6;width:22px;height:22px;border-radius:5px;font-size:8px">S</div><div class="chat-bub"><div class="chat-name" style="font-size:10px">Sara<span class="time">2:19</span></div><div class="chat-txt" style="font-size:11px">Keep open, review order first</div></div></div>
+                </div>
+                <div class="chat-bar" style="padding:8px"><input class="chat-inp" style="font-size:12px" placeholder="Message #general…"/></div>
+              </div>
+            </div>
+          </div>
+          <div class="ph-bottom-nav">
+            <div class="pbn"><div class="pi">🏠</div><div class="pl">Home</div></div>
+            <div class="pbn act"><div class="pi">📁</div><div class="pl">Projects</div></div>
+            <div class="pbn"><div class="pi">💬</div><div class="pl">Chat</div><div class="pd"></div></div>
+            <div class="pbn"><div class="pi">🌐</div><div class="pl">Community</div></div>
+            <div class="pbn"><div class="pi">👤</div><div class="pl">Profile</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="cols" style="margin-top:20px">
+      <div class="ic"><h3>🔁 Desktop ↔ Mobile</h3>
+        <ul><li>Desktop: Chat tab in project header bar alongside Overview, Tasks, Sprint</li>
+        <li>Mobile: tapping Chat tab opens a <strong>bottom sheet</strong> — partial overlay, doesn't lose your spot in the project</li>
+        <li>Bottom sheet is draggable (50–80% height) — common iOS/Android pattern</li>
+        <li>Unread badge on both tab and bottom nav Chat icon</li></ul>
+      </div>
+      <div class="ic"><h3>🛠 What to Build</h3>
+        <ul><li><span class="sn">1</span> Add <code>ChatTab</code> route to <code>/dashboard/project/[id]/</code></li>
+        <li><span class="sn">2</span> <code>ProjectChatPanel</code> — reuses existing chat component, accepts <code>spaceId</code></li>
+        <li><span class="sn">3</span> <code>BottomSheet</code> component (CSS transform + touch events) for mobile</li>
+        <li><span class="sn">4</span> Link project → space: add <code>space_id</code> FK to <code>projectsTable</code> if not present</li></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MOBILE BOTTOM NAV ══════════════ -->
+<div class="section" id="tab-mobile">
+  <div class="hero fu">
+    <div class="tag">Mobile-First</div>
+    <h1>Bottom Navigation Bar</h1>
+    <p>The single highest-impact mobile change — replace the hamburger drawer with a persistent 5-tab bottom nav. Thumb-reachable, instant, always visible. The pattern used by every major mobile work app.</p>
+  </div>
+  <div class="wrap">
+    <!-- Three phone variants -->
+    <div style="display:flex;gap:28px;justify-content:center;flex-wrap:wrap;padding:0 20px">
+
+      <!-- Phone 1: default state -->
+      <div class="phone-wrap">
+        <div class="phone-lbl">Default — Projects tab</div>
+        <div class="phone">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-body">
+            <div class="ph-header">
+              <span class="ph-title">My Projects</span>
+              <div class="ph-actions">
+                <span style="font-size:17px;cursor:pointer;color:var(--text2)">🔔</span>
+                <span style="font-size:17px;cursor:pointer;color:var(--text2);margin-left:10px">➕</span>
+              </div>
+            </div>
+            <div class="phone-content">
+              <div class="pcard">
+                <div class="pcard-t">Auth Module Redesign</div>
+                <div class="pcard-sub">Web Dev · Backend · Sprint 3</div>
+                <div class="pcard-meta"><span class="ptag" style="background:rgba(251,146,60,.15);color:var(--orange)">In Progress</span><span style="font-size:10px;color:var(--text3);margin-left:auto">7/12 tasks</span></div>
+              </div>
+              <div class="pcard">
+                <div class="pcard-t">API Gateway</div>
+                <div class="pcard-sub">Web Dev · Backend · Sprint 2</div>
+                <div class="pcard-meta"><span class="ptag" style="background:rgba(52,211,153,.15);color:var(--green)">Active</span></div>
+              </div>
+              <div class="pcard">
+                <div class="pcard-t">ML Dashboard</div>
+                <div class="pcard-sub">ML Research · NLP · Sprint 1</div>
+                <div class="pcard-meta"><span class="ptag" style="background:rgba(96,165,250,.15);color:var(--blue)">Planning</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="ph-bottom-nav">
+            <div class="pbn"><div class="pi">🏠</div><div class="pl">Home</div></div>
+            <div class="pbn act"><div class="pi">📁</div><div class="pl">Projects</div></div>
+            <div class="pbn"><div class="pi">💬</div><div class="pl">Chat</div><div class="pd"></div></div>
+            <div class="pbn"><div class="pi">🌐</div><div class="pl">Community</div></div>
+            <div class="pbn"><div class="pi">👤</div><div class="pl">Profile</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phone 2: chat tab active -->
+      <div class="phone-wrap">
+        <div class="phone-lbl">Chat tab — with unread badge</div>
+        <div class="phone">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-body">
+            <div class="ph-header">
+              <span class="ph-title">Chat</span>
+              <div class="ph-actions"><span style="font-size:17px;cursor:pointer;color:var(--text2)">✏️</span></div>
+            </div>
+            <div class="phone-content">
+              <div style="padding:8px 8px 2px;font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Direct Messages</div>
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 10px;border-bottom:1px solid var(--border)">
+                <div style="width:34px;height:34px;border-radius:50%;background:#7c6af7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;flex-shrink:0">A</div>
+                <div style="flex:1"><div style="font-size:13px;font-weight:600">Alex Chen</div><div style="font-size:11px;color:var(--text3)">Should we close the PR?</div></div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><div style="font-size:10px;color:var(--text3)">2:17</div><div style="width:16px;height:16px;border-radius:50%;background:var(--accent);color:white;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center">2</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 10px;border-bottom:1px solid var(--border)">
+                <div style="width:34px;height:34px;border-radius:50%;background:#34d399;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;flex-shrink:0">S</div>
+                <div style="flex:1"><div style="font-size:13px;font-weight:600">Sara M.</div><div style="font-size:11px;color:var(--text3)">Review middleware order first</div></div>
+                <div style="font-size:10px;color:var(--text3)">2:19</div>
+              </div>
+              <div style="padding:8px 8px 2px;font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:6px">Spaces</div>
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 10px;border-bottom:1px solid var(--border)">
+                <div style="width:34px;height:34px;border-radius:8px;background:#2e2e42;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">#</div>
+                <div style="flex:1"><div style="font-size:13px;font-weight:600">#general · Backend</div><div style="font-size:11px;color:var(--text3)">JWT refresh working 🎉</div></div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><div style="font-size:10px;color:var(--text3)">2:14</div><div style="width:16px;height:16px;border-radius:50%;background:var(--red);color:white;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center">1</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="ph-bottom-nav">
+            <div class="pbn"><div class="pi">🏠</div><div class="pl">Home</div></div>
+            <div class="pbn"><div class="pi">📁</div><div class="pl">Projects</div></div>
+            <div class="pbn act"><div class="pi">💬</div><div class="pl">Chat</div></div>
+            <div class="pbn"><div class="pi">🌐</div><div class="pl">Community</div></div>
+            <div class="pbn"><div class="pi">👤</div><div class="pl">Profile</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phone 3: community tab -->
+      <div class="phone-wrap">
+        <div class="phone-lbl">Community tab — one tap to hierarchy</div>
+        <div class="phone">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-body">
+            <div class="ph-header">
+              <span class="ph-title">Community</span>
+              <div class="ph-actions"><span style="font-size:17px;cursor:pointer;color:var(--text2)">🔍</span></div>
+            </div>
+            <div class="phone-content">
+              <div style="padding:8px 8px 2px;font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.5px">My Communities</div>
+              <div class="pcard" style="display:flex;align-items:center;gap:10px;padding:12px">
+                <div style="width:36px;height:36px;border-radius:10px;background:var(--accent-dim);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">🌐</div>
+                <div><div style="font-size:13px;font-weight:600">Web Dev Community</div><div style="font-size:11px;color:var(--text3)">32 members · 5 channels</div></div>
+                <div style="margin-left:auto;font-size:12px;color:var(--accent2)">›</div>
+              </div>
+              <div class="pcard" style="display:flex;align-items:center;gap:10px;padding:12px">
+                <div style="width:36px;height:36px;border-radius:10px;background:rgba(244,114,182,.1);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">🎨</div>
+                <div><div style="font-size:13px;font-weight:600">Design Community</div><div style="font-size:11px;color:var(--text3)">18 members · 3 channels</div></div>
+                <div style="margin-left:auto;display:flex;align-items:center;gap:6px"><div style="width:16px;height:16px;border-radius:50%;background:var(--red);color:white;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center">2</div><div style="font-size:12px;color:var(--accent2)">›</div></div>
+              </div>
+              <div class="pcard" style="display:flex;align-items:center;gap:10px;padding:12px">
+                <div style="width:36px;height:36px;border-radius:10px;background:rgba(52,211,153,.1);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">🧪</div>
+                <div><div style="font-size:13px;font-weight:600">ML Research</div><div style="font-size:11px;color:var(--text3)">11 members · 2 channels</div></div>
+                <div style="margin-left:auto;font-size:12px;color:var(--accent2)">›</div>
+              </div>
+              <div class="pcard" style="border:1px dashed var(--border2);background:transparent;display:flex;align-items:center;gap:10px;padding:12px;cursor:pointer">
+                <div style="width:36px;height:36px;border-radius:10px;background:transparent;border:1px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">➕</div>
+                <div style="font-size:13px;color:var(--text3)">Discover communities</div>
+              </div>
+            </div>
+          </div>
+          <div class="ph-bottom-nav">
+            <div class="pbn"><div class="pi">🏠</div><div class="pl">Home</div></div>
+            <div class="pbn"><div class="pi">📁</div><div class="pl">Projects</div></div>
+            <div class="pbn"><div class="pi">💬</div><div class="pl">Chat</div><div class="pd"></div></div>
+            <div class="pbn act"><div class="pi">🌐</div><div class="pl">Community</div></div>
+            <div class="pbn"><div class="pi">👤</div><div class="pl">Profile</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cols" style="margin-top:28px">
+      <div class="ic"><h3>📱 Why Bottom Nav First</h3>
+        <ul><li>Current hamburger drawer requires 2 taps minimum to navigate anywhere</li>
+        <li>Bottom nav = 1 tap to any top-level section, always visible, always reachable with thumb</li>
+        <li>Standard pattern in Linear, Notion, Slack, GitHub, Figma mobile apps</li>
+        <li>Works great with Concept A (floating search) and C (chat bottom sheet)</li></ul>
+      </div>
+      <div class="ic"><h3>🛠 What to Build</h3>
+        <ul><li><span class="sn">1</span> New <code>BottomNav</code> component — <code>block md:hidden</code> (show only on mobile)</li>
+        <li><span class="sn">2</span> 5 tabs: Home, Projects, Chat (with unread badge), Community, Profile</li>
+        <li><span class="sn">3</span> Keep the existing sidebar drawer but auto-hide on mobile when bottom nav is present</li>
+        <li><span class="sn">4</span> Add <code>pb-14</code> padding to dashboard layout on mobile to avoid content hiding behind nav</li>
+        <li><span class="sn">5</span> Persist active tab in Jotai or URL state</li></ul>
+      </div>
+      <div class="ic"><h3>⚡ 5-Tab Structure</h3>
+        <ul><li>🏠 <strong>Home</strong> — dashboard / activity feed</li>
+        <li>📁 <strong>Projects</strong> — all your active projects across communities</li>
+        <li>💬 <strong>Chat</strong> — DMs + space chats, with global unread badge</li>
+        <li>🌐 <strong>Community</strong> — browse/switch communities, channels</li>
+        <li>👤 <strong>Profile</strong> — your profile, settings, sign-out</li></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showTab(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tp').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+function tog(id){
+  const el=document.getElementById(id);
+  el.classList.toggle('show');
+  el.addEventListener('click',function(e){if(e.target===el)el.classList.remove('show');});
+}
+function switchRail(active){
+  const panels=['rA','rB','rC','rD'];
+  panels.forEach(p=>{const el=document.getElementById(p);if(el)el.style.display='none';});
+  const t=document.getElementById(active);if(t)t.style.display='flex';
+  document.querySelectorAll('.ri2').forEach(r=>r.classList.remove('act'));
+  event.currentTarget.classList.add('act');
+}
+function switchMobileRail(el){
+  document.querySelectorAll('.pbn').forEach(b=>b.classList.remove('act'));
+  el.classList.add('act');
+}
+function switchPT(id){
+  const tabs=['ptOverview','ptTasks','ptSprint','ptChat'];
+  tabs.forEach(t=>{const el=document.getElementById(t);if(el){el.style.display='none';el.style.flex='';}});
+  const t=document.getElementById(id);
+  if(t){t.style.display=id==='ptChat'?'flex':'block';t.style.flex='1';}
+  document.querySelectorAll('#ptBar .pt').forEach(p=>p.classList.remove('act'));
+  const map={'ptOverview':0,'ptTasks':1,'ptSprint':2,'ptChat':3};
+  const pts=document.querySelectorAll('#ptBar .pt');
+  if(pts[map[id]])pts[map[id]].classList.add('act');
+}
+function openSheet(id){document.getElementById(id).classList.add('open');}
+function closeSheet(id){document.getElementById(id).classList.remove('open');}
+</script>
+</body>
+</html>
