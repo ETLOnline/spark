@@ -233,10 +233,9 @@ export function StepOne({ step, setStep, user, setUser }: StepOneProps) {
   }
   const first_name = form.watch("first_name")
   const last_name = form.watch("last_name")
-  const bio = form.watch("bio")
   useEffect(() => {
-    form.trigger(["first_name", "last_name", "bio"])
-  }, [first_name, last_name, bio])
+    form.trigger(["first_name", "last_name"])
+  }, [first_name, last_name])
 
   return (
     <div className="space-y-6">
