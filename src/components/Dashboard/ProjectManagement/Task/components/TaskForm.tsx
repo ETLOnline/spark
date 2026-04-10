@@ -103,7 +103,8 @@ const projectSchema = z.object({
   status_id: z.string().optional(),
   assign_to: z.string().optional(),
   assign_by: z.string().optional(),
-  parent_task_id: z.string().optional()
+  parent_task_id: z.string().optional(),
+  tested_by: z.string().optional()
 })
 
 export default function TaskForm({
@@ -136,6 +137,7 @@ export default function TaskForm({
   const [getSubTaskTaskLoading, setGetSubTaskTaskLoading] = useState(false)
   const [popoverOpen, setPopoverOpen] = useState(false)
   const authUser = useAtomValue(userStore.AuthUser)
+  const [tester, setTester] = useState<SelectUser | null>(null)
   const form = useForm({
     resolver: zodResolver(projectSchema)
   })
@@ -156,6 +158,11 @@ export default function TaskForm({
   ]
 
   const assignorOptions: MultiSelectOption[] = usersList.map((user) => ({
+    label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
+    value: user?.unique_id ?? ""
+  }))
+
+  const testerOptions: MultiSelectOption[] = usersList.map((user) => ({
     label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
     value: user?.unique_id ?? ""
   }))
@@ -453,6 +460,26 @@ export default function TaskForm({
     setAssignor(user || null)
     setActiveField(null)
   }
+
+  const handleTesterChange = (val: string, field: any) => {
+    field.onChange(val)
+    const user = usersList.find((u) => u?.unique_id === val)
+    setTester(user || null)
+    setActiveField(null)
+  }
+
+  useEffect(() => {
+    if (selectedTask?.tested_by) {
+      const testUser = usersList.find(
+        (u) => u?.unique_id === selectedTask.tested_by
+      )
+
+      if (testUser) {
+        setTester(testUser)
+        form.setValue("tested_by", testUser.unique_id)
+      }
+    }
+  }, [selectedTask, usersList])
 
   const isEditable = isAllowedAction && !isSprintCompleted
 
@@ -804,6 +831,64 @@ export default function TaskForm({
                                     " " +
                                     assignor.last_name
                                   : "Select Option"}
+                              </span>
+                            </div>
+                          )
+                        }
+                      />
+                    </div>
+
+                    {/* Tested By */}
+                    {/* Tested By */}
+                    <div className="space-y-2">
+                      <Label>Tested By</Label>
+
+                      <Controller
+                        name="tested_by"
+                        control={form.control}
+                        render={({ field }) =>
+                          activeField === "testedBy" ? (
+                            <SearchableSingleSelect
+                              id="tested_by_input"
+                              options={testerOptions}
+                              value={field.value}
+                              disabled={!isEditable}
+                              onChange={(val) => handleTesterChange(val, field)}
+                              placeholder="Select Tester"
+                            />
+                          ) : (
+                            <div
+                              className="py-2 cursor-pointer flex items-center gap-2"
+                              onClick={() => {
+                                setActiveField("testedBy")
+                                requestAnimationFrame(() => {
+                                  document
+                                    .getElementById("tested_by_input")
+                                    ?.click()
+                                })
+                              }}
+                            >
+                              <Avatar className="h-5 w-5">
+                                <AvatarImage
+                                  src={
+                                    tester?.profile_url || "/placeholder.svg"
+                                  }
+                                  alt={tester?.first_name}
+                                />
+                                <AvatarFallback className="text-xs">
+                                  {tester?.first_name?.[0]}
+                                  {tester?.last_name?.[0]}
+                                </AvatarFallback>
+                              </Avatar>
+
+                              <span
+                                className={
+                                  !tester ? "text-muted-foreground" : ""
+                                }
+                              >
+                                {tester
+                                  ? tester.first_name + " " + tester.last_name
+                                  : "Select Tester"}
                               </span>
                             </div>
                           )
