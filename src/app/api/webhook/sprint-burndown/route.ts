@@ -16,16 +16,11 @@ export async function POST(req: Request) {
     for (const sprint of sprintsWithRecentUpdates) {
       const Tasks = await GetTasks({
         sprint_id: String(sprint.id),
-        excludedTypes: [TaskType.EPIC]
+        excludedTypes: [TaskType.SUBTASK]
       })
 
-      const sprintTasks = Tasks.tasks.filter(
-        (task) =>
-          task.task_type !== TaskType.EPIC &&
-          task.task_type !== TaskType.SUBTASK
-      )
-      const totalTasks = sprintTasks.length
-      const completedTasks = sprintTasks.filter(
+      const totalTasks = Tasks.tasks.length
+      const completedTasks = Tasks.tasks.filter(
         (t) => t.status?.status_slug === ProjectStatus.Done
       ).length
 
