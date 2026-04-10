@@ -4,36 +4,26 @@ import { TrendingUp, Zap, Users } from "lucide-react"
 import Link from "next/link"
 import { Button } from "../../../ui/button"
 import { Card } from "../../../ui/card"
-import { LevelTitles } from "./Constant"
-import { Badge } from "../../../ui/badge"
 import { Progress } from "../../../ui/progress"
 
 interface TrustOverViewProps {
-  reputationPoints: number
-  sparkCredits: number
-  level: number
-  nextLevelPoints: number
-  currentLevelPoints: number
-  percentile: number
+  rpPoints: number
+  scPoints: number
+  levelName: string
+  progressPercent: number
+  pointsNeeded: number
 }
 
 export function TrustOverView({
-  reputationPoints,
-  sparkCredits,
-  level,
-  nextLevelPoints,
-  currentLevelPoints,
-  percentile
+  rpPoints,
+  scPoints,
+  levelName,
+  progressPercent,
+  pointsNeeded
 }: TrustOverViewProps) {
-  const progressPercent =
-    ((reputationPoints - currentLevelPoints) /
-      (nextLevelPoints - currentLevelPoints)) *
-    100
-
   return (
     <div className="space-y-6">
-      {/* Join Community Prompt - When No Activity */}
-      {reputationPoints === 0 && (
+      {rpPoints === 0 && (
         <div className="rounded-lg border-2 border-dashed p-8 text-center">
           <Users className="h-16 w-16 text-teal-600 dark:text-teal-400 mx-auto mb-4" />
           <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -44,14 +34,12 @@ export function TrustOverView({
             reputation to earn Reputation Points (RP).
           </p>
           <Link href="/communities">
-            <Button className=" px-6 py-2">Browse Communities</Button>
+            <Button className="px-6 py-2">Browse Communities</Button>
           </Link>
         </div>
       )}
 
-      {/* Main Trust Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Reputation Points Card */}
         <Card className="border p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
@@ -59,23 +47,21 @@ export function TrustOverView({
                 Reputation Points
               </p>
               <h3 className="text-3xl font-bold text-primary mt-2">
-                {reputationPoints.toLocaleString()}
+                {rpPoints.toLocaleString()}
               </h3>
             </div>
             <TrendingUp className="w-8 h-8 text-primary/60" />
           </div>
-          <p className="text-xs text-muted-foreground">+245 this month</p>
         </Card>
 
-        {/* Spark Credits Card */}
-        <Card className=" p-6">
+        <Card className="p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
                 Spark Credits
               </p>
               <h3 className="text-3xl font-bold text-purple-600 mt-2">
-                {sparkCredits.toLocaleString()}
+                {scPoints.toLocaleString()}
               </h3>
             </div>
             <Zap className="w-8 h-8 text-purple-600/60" />
@@ -86,41 +72,30 @@ export function TrustOverView({
         </Card>
       </div>
 
-      {/* Level & Progress Card */}
       <Card className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">
-              Current Level
-            </p>
-            <h3 className="text-2xl font-bold text-foreground mt-1">
-              {LevelTitles[Math.min(level, LevelTitles.length - 1)]}
-            </h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              Level {level + 1}
-            </p>
-          </div>
-          <Badge className="bg-primary text-white text-lg px-4 py-2">
-            Top {percentile}%
-          </Badge>
+        <div className="mb-6">
+          <p className="text-sm font-medium text-muted-foreground">
+            Current Level
+          </p>
+          <h3 className="text-2xl font-bold text-foreground mt-1">
+            {levelName}
+          </h3>
         </div>
 
-        {/* Progress Bar */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">
               Progress to Next Level
             </span>
-            <span className="font-medium">{Math.round(progressPercent)}%</span>
+            <span className="font-medium">{progressPercent}%</span>
           </div>
           <Progress value={progressPercent} className="h-2" />
           <p className="text-xs text-muted-foreground">
-            {nextLevelPoints - reputationPoints} points needed
+            {pointsNeeded.toLocaleString()} points needed
           </p>
         </div>
       </Card>
 
-      {/* Breakdown Card */}
       <Card className="p-6">
         <h4 className="font-semibold text-foreground mb-4">Trust Breakdown</h4>
         <div className="space-y-3">

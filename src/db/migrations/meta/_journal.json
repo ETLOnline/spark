@@ -271,8 +271,15 @@
     {
       "idx": 38,
       "version": "7",
-      "when": 1775815432718,
-      "tag": "0038_2026_04_10_150350__add_tested_by_in_task_table",
+      "when": 1775754157102,
+      "tag": "0038_2026_04_10_010236__add_action_name_in_activitiy_rules_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1775834177814,
+      "tag": "0039_2026_04_10_201609__add_tested_by_column_in_task_table",
       "breakpoints": true
     }
   ]

@@ -300,3 +300,24 @@ export function getFriendlyAcceptLabel(
 
   return readable.join(", ")
 }
+
+export function progressPercentHelper(
+  userRPPoints: number,
+  minPoints: number,
+  maxPoints: number
+) {
+  const result =
+    maxPoints > minPoints
+      ? Math.round(((userRPPoints - minPoints) / (maxPoints - minPoints)) * 100)
+      : 0
+  return result
+}
+
+// Example usage:
+// community_service -> Community Service
+// profile_complete -> Profile Complete
+export const formatActivityName = (text: string) => {
+  if (!text) return ""
+
+  return text.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
+}

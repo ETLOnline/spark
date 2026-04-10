@@ -5,26 +5,93 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../ui/tabs"
 import { TransactionLedger } from "./TransactionLedger"
 import { CommunityRanking } from "./CommunityRanking"
 import { TrustOverView } from "./TrustOverView"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
 import NoDataCard from "../../../Dashboard/Channels/ChannelDetails/NoDataCard"
+import {
+  GetUserRewardBalanceAction,
+  GetUSerRewardLevelAction,
+  GetUserTransactionsAction
+} from "@/src/server-actions/Reward/Reward"
+import { useAtomValue } from "jotai"
+import { userStore } from "@/src/store/user/userStore"
+import { SelectUserRewardsLevel } from "@/src/db/schema"
+import pusherClient from "@/src/services/realtime/PusherClient"
+import Loader from "@/src/components/common/Loader/Loader"
+import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import { progressPercentHelper } from "@/src/utils/clientHelper"
 
 export default function TrustEngineScreen() {
-  const [isTrustEngineEnabled, setIsTrustEngineEnabled] = useState(false)
-  const [isTrustEngineLoading, , , GetFeatureFlag] =
-    useServerAction(getFeatureFlagAction)
+  const authUser = useAtomValue(userStore.AuthUser)
 
-  async function getFeatureFlag() {
-    const res = await GetFeatureFlag(["Trust_Engine_Enabled"])
-    if (res?.success && res?.data?.is_enabled) {
-      setIsTrustEngineEnabled(true)
-    }
-  }
+  const [isTrustEngineEnabled, setIsTrustEngineEnabled] = useState(false)
+  const [isFlagLoading, setIsFlagLoading] = useState(true)
+  const [rpPoints, setRpPoints] = useState(0)
+  const [scPoints, setScPoints] = useState(0)
+  const [userLevel, setUserLevel] = useState<SelectUserRewardsLevel | null>(
+    null
+  )
+  const [transactions, setTransactions] = useState<any[]>([])
+
+  const [, , , GetFeatureFlag] = useServerAction(getFeatureFlagAction)
 
   useEffect(() => {
-    getFeatureFlag()
+    const checkFlag = async () => {
+      const res = await GetFeatureFlag(["Trust_Engine_Enabled"])
+      if (res?.success && res?.data?.is_enabled) setIsTrustEngineEnabled(true)
+      setIsFlagLoading(false)
+    }
+    checkFlag()
   }, [])
+
+  const fetchAllData = useCallback(async () => {
+    if (!authUser?.unique_id) return
+
+    const [rpRes, scRes, levelRes, txRes] = await Promise.all([
+      GetUserRewardBalanceAction(authUser.unique_id, 1),
+      GetUserRewardBalanceAction(authUser.unique_id, 2),
+      GetUSerRewardLevelAction(authUser.unique_id),
+      GetUserTransactionsAction(authUser.unique_id)
+    ])
+
+    if (rpRes?.success && rpRes.data) setRpPoints(rpRes.data.current_balance)
+    if (scRes?.success && scRes.data) setScPoints(scRes.data.current_balance)
+    if (levelRes?.success && levelRes.data) setUserLevel(levelRes.data)
+    if (txRes?.success && txRes.data) setTransactions(txRes.data)
+  }, [authUser?.unique_id])
+
+  useEffect(() => {
+    fetchAllData()
+  }, [fetchAllData])
+
+  useEffect(() => {
+    if (!authUser?.unique_id) return
+
+    const channelName = `user-${authUser.unique_id}`
+    const channel = pusherClient.subscribe(channelName)
+
+    channel.bind("reward_added", () => {
+      fetchAllData()
+    })
+
+    return () => {
+      pusherClient.unsubscribe(channelName)
+    }
+  }, [authUser?.unique_id, fetchAllData])
+
+  const minPoints = userLevel?.rewardLevel?.min_points ?? 0
+  const maxPoints = userLevel?.rewardLevel?.max_points ?? 0
+  const progressPercent = progressPercentHelper(rpPoints, minPoints, maxPoints)
+  const pointsNeeded = maxPoints > rpPoints ? maxPoints - rpPoints : 0
+
+  if (isFlagLoading) {
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <Loader size={LoaderSizes.xl} />
+      </main>
+    )
+  }
 
   if (!isTrustEngineEnabled) {
     return (
@@ -41,9 +108,8 @@ export default function TrustEngineScreen() {
   }
 
   return (
-    <main className="min-h-screen bg-background ">
-      <div className="container mx-auto px-4 ">
-        {/* Header */}
+    <main className="min-h-screen bg-background">
+      <div className="container mx-auto px-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Trust Dashboard
@@ -53,7 +119,6 @@ export default function TrustEngineScreen() {
           </p>
         </div>
 
-        {/* Main Tabs */}
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="overview" className="flex items-center gap-2">
@@ -73,24 +138,20 @@ export default function TrustEngineScreen() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             <TrustOverView
-              reputationPoints={0}
-              sparkCredits={1850}
-              level={0}
-              nextLevelPoints={1000}
-              currentLevelPoints={0}
-              percentile={100}
+              rpPoints={rpPoints}
+              scPoints={scPoints}
+              levelName={userLevel?.rewardLevel?.name ?? "—"}
+              progressPercent={progressPercent}
+              pointsNeeded={pointsNeeded}
             />
           </TabsContent>
 
-          {/* Transactions Tab */}
           <TabsContent value="transactions">
-            <TransactionLedger />
+            <TransactionLedger TransactionsData={transactions} />
           </TabsContent>
 
-          {/* Ranking Tab */}
           <TabsContent value="ranking">
             <CommunityRanking />
           </TabsContent>

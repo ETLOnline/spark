@@ -178,7 +178,26 @@ export async function UpdateUserRewardlevel(user_id: string, level_id: number) {
 export async function GetUserRewardLevel(user_id: string) {
   try {
     const res = await db.query.userRewardsLevelTable.findFirst({
-      where: eq(userRewardsLevelTable.user_id, user_id)
+      where: eq(userRewardsLevelTable.user_id, user_id),
+      with: {
+        rewardLevel: true,
+        user: true
+      }
+    })
+    return res
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function GetUserPointLedger(user_id: string) {
+  try {
+    const res = await db.query.pointLedgerTable.findMany({
+      where: eq(pointLedgerTable.user_id, user_id),
+      with: {
+        rule: true
+      },
+      orderBy: (ledger, { desc }) => [desc(ledger.created_at)]
     })
     return res
   } catch (e: any) {
