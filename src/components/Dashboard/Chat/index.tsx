@@ -757,6 +757,12 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     return otherUser ? users.has(otherUser.user_id) : false
   })()
 
+  const convertMentionsToHtml = (text: string) => {
+    return text.replace(/@\[\s*(.*?)\s*\]\((.*?)\)/g, (_, label, id) => {
+      return `<span data-type="mention" data-id="${id}" data-label="${label}">@${label}</span>`
+    })
+  }
+
   return (
     <>
       <div className="flex h-[calc(100vh-7rem)] gap-4">
@@ -1085,8 +1091,13 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                               <DropdownMenuItem
                                                 onClick={() => {
                                                   setEditingMessage(message)
+
+                                                  const formatted =
+                                                    convertMentionsToHtml(
+                                                      message.message
+                                                    )
                                                   setRichMessageContent(
-                                                    message.message
+                                                    formatted
                                                   )
                                                 }}
                                               >

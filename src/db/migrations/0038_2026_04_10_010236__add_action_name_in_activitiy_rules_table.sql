@@ -1,0 +1,1 @@
+ALTER TABLE "activity_rules" ADD COLUMN "action_display_name" varchar NOT NULL;
