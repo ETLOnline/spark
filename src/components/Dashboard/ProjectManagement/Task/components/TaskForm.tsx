@@ -702,9 +702,6 @@ export default function TaskForm({
                               className=" py-2 cursor-pointer flex items-center gap-2"
                               onClick={() => {
                                 setActiveField("status")
-                                requestAnimationFrame(() => {
-                                  document.getElementById("status_id")?.click()
-                                })
                               }}
                             >
                               <div>
@@ -747,9 +744,6 @@ export default function TaskForm({
                               className=" py-2 cursor-pointer flex items-center gap-2"
                               onClick={() => {
                                 setActiveField("assignTo")
-                                requestAnimationFrame(() => {
-                                  document.getElementById("assign_to")?.click()
-                                })
                               }}
                             >
                               <Avatar className="h-5 w-5">
@@ -807,9 +801,6 @@ export default function TaskForm({
                               className=" py-2 cursor-pointer flex items-center gap-2"
                               onClick={() => {
                                 setActiveField("assignBy")
-                                requestAnimationFrame(() => {
-                                  document.getElementById("assign_to")?.click()
-                                })
                               }}
                             >
                               <Avatar className="h-5 w-5">
@@ -861,11 +852,6 @@ export default function TaskForm({
                               className="py-2 cursor-pointer flex items-center gap-2"
                               onClick={() => {
                                 setActiveField("testedBy")
-                                requestAnimationFrame(() => {
-                                  document
-                                    .getElementById("tested_by_input")
-                                    ?.click()
-                                })
                               }}
                             >
                               <Avatar className="h-5 w-5">
@@ -940,11 +926,6 @@ export default function TaskForm({
                                 className=" py-2 cursor-pointer flex items-center gap-2"
                                 onClick={() => {
                                   setActiveField("priority")
-                                  requestAnimationFrame(() => {
-                                    document
-                                      .getElementById("task_priority")
-                                      ?.click()
-                                  })
                                 }}
                               >
                                 <PriorityIcon priority={field.value} />
@@ -1015,11 +996,6 @@ export default function TaskForm({
                                 className=" py-2 cursor-pointer flex items-center gap-2"
                                 onClick={() => {
                                   setActiveField("issueType")
-                                  requestAnimationFrame(() => {
-                                    document
-                                      .getElementById("task_type")
-                                      ?.click()
-                                  })
                                 }}
                               >
                                 <IssueTypeIcon type={field.value} />
