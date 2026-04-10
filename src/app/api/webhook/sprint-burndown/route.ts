@@ -1,5 +1,5 @@
 import { ProjectStatus } from "@/src/components/Dashboard/ProjectManagement/types/projectStatus.type"
-import { db } from "@/src/db"
+import { TaskType } from "@/src/components/Dashboard/ProjectManagement/constants/projectManagment"
 import {
   addSprintBurnDown,
   getLatestBurnDown,
@@ -15,21 +15,31 @@ export async function POST(req: Request) {
 
     for (const sprint of sprintsWithRecentUpdates) {
       const Tasks = await GetTasks({
-        sprint_id: String(sprint.id)
+        sprint_id: String(sprint.id),
+        excludedTypes: [TaskType.EPIC]
       })
 
-      const sprintTasks = Tasks.tasks.filter((task) => !task.parent_task_id)
+      const sprintTasks = Tasks.tasks.filter(
+        (task) =>
+          task.task_type !== TaskType.EPIC &&
+          task.task_type !== TaskType.SUBTASK
+      )
       const totalTasks = sprintTasks.length
       const completedTasks = sprintTasks.filter(
         (t) => t.status?.status_slug === ProjectStatus.Done
       ).length
 
-      const totalStoryPoints = sprintTasks.reduce(
+      const storyPointTasks = Tasks.tasks.filter(
+        (task) =>
+          task.task_type === TaskType.STORY ||
+          task.task_type === TaskType.FEATURE
+      )
+      const totalStoryPoints = storyPointTasks.reduce(
         (sum, t) => sum + Number(t.story_points || 0),
         0
       )
 
-      const completedStoryPoints = sprintTasks
+      const completedStoryPoints = storyPointTasks
         .filter((t) => t.status?.status_slug === ProjectStatus.Done)
         .reduce((sum, t) => sum + Number(t.story_points || 0), 0)
 
