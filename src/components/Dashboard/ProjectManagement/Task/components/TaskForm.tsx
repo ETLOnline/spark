@@ -16,10 +16,8 @@ import {
   AlertCircle,
   ArrowRight,
   BarChart2,
-  Boxes,
   CircleAlert,
   Flag,
-  MoreHorizontal,
   Search
 } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
@@ -37,9 +35,7 @@ import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import "@/src/components/common/Tiptap/RichEditorFormat.css"
 import Tiptap from "@/src/components/common/Tiptap/TiptapRichEditor"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import MultiSelect, {
-  MultiSelectOption
-} from "@/src/components/ui/multi-select"
+import { MultiSelectOption } from "@/src/components/ui/multi-select"
 import { useParams } from "next/navigation"
 import { GetProjectUsersAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
@@ -66,7 +62,7 @@ import {
 import { getChildTypes, getParentTypes } from "../utils/helper"
 import { GetLinkedTasksAction } from "@/src/server-actions/Tasks/Task"
 import Loader from "@/src/components/common/Loader/Loader"
-import { SearchableSingleSelect } from "@/src/components/ui/searchable-single-select"
+import UserSelector from "./UserSelector"
 interface Props {
   onSubmit: (task: any) => void
   statuses?: InsertTaskStatus[]
@@ -121,12 +117,6 @@ export default function TaskForm({
 }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null)
   const [usersList, setUsersList] = useState<(SelectUser | null)[]>([])
-  const [selectedAssignee, setSelectedAssignee] = useState<MultiSelectOption[]>(
-    []
-  )
-  const [selectedAssignor, setSelectedAssignor] = useState<MultiSelectOption[]>(
-    []
-  )
   const [assignee, setAssignee] = useState<SelectUser | null>(null)
   const [assignor, setAssignor] = useState<SelectUser | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
@@ -147,7 +137,7 @@ export default function TaskForm({
   const params = useParams<{ id: string }>()
   const projectId = params?.id
 
-  const assigneeOptions: MultiSelectOption[] = [
+  const userOptions: MultiSelectOption[] = [
     { label: "Unassigned", value: "" },
     ...usersList
       .filter((user) => user !== null)
@@ -156,16 +146,6 @@ export default function TaskForm({
         value: user?.unique_id ?? ""
       }))
   ]
-
-  const assignorOptions: MultiSelectOption[] = usersList.map((user) => ({
-    label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
-    value: user?.unique_id ?? ""
-  }))
-
-  const testerOptions: MultiSelectOption[] = usersList.map((user) => ({
-    label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
-    value: user?.unique_id ?? ""
-  }))
 
   useEffect(() => {
     if (setIsChanged) setIsChanged(form.formState.isDirty)
@@ -213,35 +193,6 @@ export default function TaskForm({
   }, [selectedTask])
 
   useEffect(() => {
-    const getSelectedUsers = async () => {
-      const assign_to = usersList.find(
-        (u) => u?.unique_id === selectedAssignee?.[0]?.value
-      )
-      const assign_by = usersList.find(
-        (u) => u?.unique_id === selectedAssignor?.[0]?.value
-      )
-
-      if (selectedAssignee?.[0]?.value === "") {
-        setAssignee(null)
-        form.setValue("assign_to", "")
-      } else if (assign_to) {
-        setAssignee(assign_to)
-        form.setValue("assign_to", assign_to.unique_id)
-      }
-
-      if (selectedAssignor?.[0]?.value === "") {
-        setAssignor(null)
-        form.setValue("assign_by", "")
-      } else if (assign_by) {
-        setAssignor(assign_by)
-        form.setValue("assign_by", assign_by.unique_id)
-      }
-    }
-
-    getSelectedUsers()
-  }, [selectedAssignee, selectedAssignor])
-
-  useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement
 
@@ -287,34 +238,20 @@ export default function TaskForm({
         ? selectedTask?.assignor
         : usersList.find((u) => u?.unique_id === selectedTask?.assign_by)
 
+      const testedBy = selectedTask?.testedBy
+        ? selectedTask?.testedBy
+        : usersList.find((u) => u?.unique_id === selectedTask?.tested_by)
+
       if (taskAssignee) {
         setAssignee(taskAssignee)
-        setSelectedAssignee([
-          {
-            label: `${taskAssignee.first_name} ${taskAssignee.last_name}`,
-            value: taskAssignee.unique_id
-          }
-        ])
         form.setValue("assign_to", taskAssignee.unique_id)
       } else {
         setAssignee(null)
-        setSelectedAssignee([
-          {
-            label: "Select Assignee",
-            value: ""
-          }
-        ])
         form.setValue("assign_to", "")
       }
 
       if (taskAssignor) {
         setAssignor(taskAssignor)
-        setSelectedAssignor([
-          {
-            label: `${taskAssignor.first_name} ${taskAssignor.last_name}`,
-            value: taskAssignor.unique_id
-          }
-        ])
         form.setValue("assign_by", taskAssignor.unique_id)
       } else {
         // If no assignor, default to current user
@@ -323,19 +260,18 @@ export default function TaskForm({
         )
         if (currentUser) {
           setAssignor(currentUser)
-          setSelectedAssignor([
-            {
-              label: `${currentUser.first_name} ${currentUser.last_name}`,
-              value: currentUser.unique_id
-            }
-          ])
           form.setValue("assign_by", currentUser.unique_id)
         }
+      }
+
+      if (testedBy) {
+        setTester(testedBy)
+        form.setValue("tested_by", testedBy.unique_id)
       }
     }
 
     LoadUsersFromTask()
-  }, [selectedTask])
+  }, [selectedTask, usersList])
 
   function IssueTypeIcon({ type }: { type: string }) {
     const typeMap = projectTaskTypes.find((t) => t.key === type)
@@ -467,19 +403,6 @@ export default function TaskForm({
     setTester(user || null)
     setActiveField(null)
   }
-
-  useEffect(() => {
-    if (selectedTask?.tested_by) {
-      const testUser = usersList.find(
-        (u) => u?.unique_id === selectedTask.tested_by
-      )
-
-      if (testUser) {
-        setTester(testUser)
-        form.setValue("tested_by", testUser.unique_id)
-      }
-    }
-  }, [selectedTask, usersList])
 
   const isEditable = isAllowedAction && !isSprintCompleted
 
@@ -722,165 +645,64 @@ export default function TaskForm({
                     </div>
 
                     {/* Assign To */}
-                    <div className="space-y-2">
-                      <Label>Select Assignee</Label>
-                      <Controller
-                        name="assign_to"
-                        control={form.control}
-                        render={({ field }) =>
-                          activeField === "assignTo" ? (
-                            <SearchableSingleSelect
-                              id="assign_to_input"
-                              options={assigneeOptions}
-                              value={field.value}
-                              disabled={!isEditable}
-                              onChange={(val) =>
-                                handleAssigneeChange(val, field)
-                              }
-                              placeholder="Select Option"
-                            />
-                          ) : (
-                            <div
-                              className=" py-2 cursor-pointer flex items-center gap-2"
-                              onClick={() => {
-                                setActiveField("assignTo")
-                              }}
-                            >
-                              <Avatar className="h-5 w-5">
-                                <AvatarImage
-                                  src={
-                                    assignee?.profile_url || "/placeholder.svg"
-                                  }
-                                  alt={assignee?.first_name}
-                                />
-                                <AvatarFallback className="text-xs">
-                                  {assignee?.first_name?.[0]}
-                                  {assignee?.last_name?.[0]}
-                                </AvatarFallback>
-                              </Avatar>
-
-                              <span
-                                className={
-                                  !assignee ? "text-muted-foreground" : ""
-                                }
-                              >
-                                {assignee
-                                  ? assignee.first_name +
-                                    " " +
-                                    assignee.last_name
-                                  : "Unassigned"}
-                              </span>
-                            </div>
-                          )
-                        }
-                      />
-                    </div>
+                    <Controller
+                      name="assign_to"
+                      control={form.control}
+                      render={({ field }) => (
+                        <UserSelector
+                          label="Select Assignee"
+                          value={field.value}
+                          user={assignee}
+                          options={userOptions}
+                          activeField={activeField}
+                          fieldKey="assignTo"
+                          setActiveField={setActiveField}
+                          disabled={!isEditable}
+                          placeholder="Unassigned"
+                          onChange={(val) => handleAssigneeChange(val, field)}
+                        />
+                      )}
+                    />
 
                     {/* Assign By */}
-                    <div className="space-y-2">
-                      <Label>Assigned By</Label>
-                      <Controller
-                        name="assign_by"
-                        control={form.control}
-                        render={({ field }) =>
-                          activeField === "assignBy" ? (
-                            <SearchableSingleSelect
-                              id="assign_by_input"
-                              options={assignorOptions.filter(
-                                (opt) => opt.value !== ""
-                              )}
-                              value={field.value}
-                              disabled={!isEditable}
-                              onChange={(val) =>
-                                handleAssignorChange(val, field)
-                              }
-                              placeholder="Select Option"
-                            />
-                          ) : (
-                            <div
-                              className=" py-2 cursor-pointer flex items-center gap-2"
-                              onClick={() => {
-                                setActiveField("assignBy")
-                              }}
-                            >
-                              <Avatar className="h-5 w-5">
-                                <AvatarImage
-                                  src={
-                                    assignor?.profile_url || "/placeholder.svg"
-                                  }
-                                  alt={assignor?.first_name}
-                                />
-                                <AvatarFallback className="text-xs">
-                                  {assignor?.first_name[0]}
-                                  {assignor?.last_name[0]}
-                                </AvatarFallback>
-                              </Avatar>
-
-                              <span>
-                                {assignor
-                                  ? assignor.first_name +
-                                    " " +
-                                    assignor.last_name
-                                  : "Select Option"}
-                              </span>
-                            </div>
-                          )
-                        }
-                      />
-                    </div>
-
+                    <Controller
+                      name="assign_by"
+                      control={form.control}
+                      render={({ field }) => (
+                        <UserSelector
+                          label="Assigned By"
+                          value={field.value}
+                          user={assignor}
+                          options={userOptions.filter(
+                            (opt) => opt.value !== ""
+                          )}
+                          activeField={activeField}
+                          fieldKey="assignBy"
+                          setActiveField={setActiveField}
+                          disabled={!isEditable}
+                          onChange={(val) => handleAssignorChange(val, field)}
+                        />
+                      )}
+                    />
                     {/* Tested By */}
-                    {/* Tested By */}
-                    <div className="space-y-2">
-                      <Label>Tested By</Label>
-
-                      <Controller
-                        name="tested_by"
-                        control={form.control}
-                        render={({ field }) =>
-                          activeField === "testedBy" ? (
-                            <SearchableSingleSelect
-                              id="tested_by_input"
-                              options={testerOptions}
-                              value={field.value}
-                              disabled={!isEditable}
-                              onChange={(val) => handleTesterChange(val, field)}
-                              placeholder="Select Tester"
-                            />
-                          ) : (
-                            <div
-                              className="py-2 cursor-pointer flex items-center gap-2"
-                              onClick={() => {
-                                setActiveField("testedBy")
-                              }}
-                            >
-                              <Avatar className="h-5 w-5">
-                                <AvatarImage
-                                  src={
-                                    tester?.profile_url || "/placeholder.svg"
-                                  }
-                                  alt={tester?.first_name}
-                                />
-                                <AvatarFallback className="text-xs">
-                                  {tester?.first_name?.[0]}
-                                  {tester?.last_name?.[0]}
-                                </AvatarFallback>
-                              </Avatar>
-
-                              <span
-                                className={
-                                  !tester ? "text-muted-foreground" : ""
-                                }
-                              >
-                                {tester
-                                  ? tester.first_name + " " + tester.last_name
-                                  : "Select Tester"}
-                              </span>
-                            </div>
-                          )
-                        }
-                      />
-                    </div>
+                    <Controller
+                      name="tested_by"
+                      control={form.control}
+                      render={({ field }) => (
+                        <UserSelector
+                          label="Tested By"
+                          value={field.value}
+                          user={tester}
+                          options={userOptions}
+                          activeField={activeField}
+                          fieldKey="testedBy"
+                          setActiveField={setActiveField}
+                          disabled={!isEditable}
+                          placeholder="Select Tester"
+                          onChange={(val) => handleTesterChange(val, field)}
+                        />
+                      )}
+                    />
 
                     {/* Priority */}
                     <div className="space-y-2">
