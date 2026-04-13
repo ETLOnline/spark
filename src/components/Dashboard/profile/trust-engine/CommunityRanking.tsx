@@ -15,7 +15,12 @@ export function CommunityRanking() {
   return (
     <div className="space-y-6">
       {/* Current User Ranking Highlight */}
-      {currentUserRank && <RankingCard currentUserRank={currentUserRank} />}
+      {currentUserRank && (
+        <RankingCard
+          currentUserRank={currentUserRank}
+          communityTitle="Spark Community"
+        />
+      )}
 
       {/* Leaderboard */}
       <LeaderboardCard data={CommunityRankingsData} />

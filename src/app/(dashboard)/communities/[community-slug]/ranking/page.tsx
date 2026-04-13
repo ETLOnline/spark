@@ -6,15 +6,15 @@ import LeaderboardCard from "@/src/components/communities/LeaderboardCard"
 import RankingCard from "@/src/components/communities/RankingCard"
 
 interface CommunityRankingPageProps {
-  params: {
+  params: Promise<{
     "community-slug": string
-  }
+  }>
 }
 
-export default function CommunityRankingPage({
+export default async function CommunityRankingPage({
   params
 }: CommunityRankingPageProps) {
-  const slug = params["community-slug"]
+  const { "community-slug": slug } = await params
 
   return (
     <Suspense fallback={<Loader size={LoaderSizes.xl} />}>
