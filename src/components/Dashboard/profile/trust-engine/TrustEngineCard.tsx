@@ -21,9 +21,13 @@ interface TrustEngineCardProps {
 export default function TrustEngineCard({ user }: TrustEngineCardProps) {
   const [userSCPoints, setUserSCPoints] = useState(0)
   const [userRPPoints, setUserRPPoints] = useState(0)
-  const [userLevel, setUserLevel] = useState<SelectUserRewardsLevel | null>(null)
+  const [userLevel, setUserLevel] = useState<SelectUserRewardsLevel | null>(
+    null
+  )
 
-  const [, , , GetUserRewardBalance] = useServerAction(GetUserRewardBalanceAction)
+  const [, , , GetUserRewardBalance] = useServerAction(
+    GetUserRewardBalanceAction
+  )
   const [, , , GetUserRewardLevel] = useServerAction(GetUSerRewardLevelAction)
 
   const fetchData = useCallback(async () => {
@@ -33,8 +37,10 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
       GetUserRewardLevel(user.unique_id)
     ])
 
-    if (scRes?.success && scRes.data) setUserSCPoints(scRes.data.current_balance)
-    if (rpRes?.success && rpRes.data) setUserRPPoints(rpRes.data.current_balance)
+    if (scRes?.success && scRes.data)
+      setUserSCPoints(scRes.data.current_balance)
+    if (rpRes?.success && rpRes.data)
+      setUserRPPoints(rpRes.data.current_balance)
     if (levelRes?.success && levelRes.data) setUserLevel(levelRes.data)
   }, [user.unique_id])
 
@@ -57,7 +63,11 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
 
   const minPoints = userLevel?.rewardLevel?.min_points ?? 0
   const maxPoints = userLevel?.rewardLevel?.max_points ?? 0
-  const progressPercent = progressPercentHelper(userRPPoints,minPoints ,maxPoints)
+  const progressPercent = progressPercentHelper(
+    userRPPoints,
+    minPoints,
+    maxPoints
+  )
 
   return (
     <Card className="rounded-xl border p-6 shadow-sm">
@@ -85,12 +95,11 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
             {userRPPoints}
           </p>
 
-           {/* Todo: for future */}
+          {/* Todo: for future */}
           {/* <p className="text-xs text-gray-500 dark:text-gray-400">
             +12% this month
           </p> */}
         </div>
-
 
         <div className="rounded-lg border p-4">
           <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
@@ -99,7 +108,7 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
           <p className="mb-1 text-2xl font-bold text-purple-600 dark:text-purple-400">
             {userSCPoints}
           </p>
-           {/* Todo: for future */}
+          {/* Todo: for future */}
           {/* <p className="text-xs text-gray-500 dark:text-gray-400">
             Available
           </p> */}
