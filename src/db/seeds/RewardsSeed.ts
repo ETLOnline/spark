@@ -1,6 +1,7 @@
 import {
   ActivityDisplayNames,
-  ActivityTypes
+  ActivityTypes,
+  RewardTypes
 } from "@/src/types/Rewards/rewards"
 import { db } from ".."
 import {
@@ -13,7 +14,7 @@ import {
 const rewardsMetadata: InsertRewardsMetadata[] = [
   {
     reward_id: 1,
-    internal_name: "reputation_points",
+    internal_name: RewardTypes.Reputation_Points,
     display_name: "Reputation Points",
     is_soulbound: true,
     has_decay: true,
@@ -21,7 +22,7 @@ const rewardsMetadata: InsertRewardsMetadata[] = [
   },
   {
     reward_id: 2,
-    internal_name: "spark_credits",
+    internal_name: RewardTypes.Spark_Credits,
     display_name: "Spark Credits",
     is_soulbound: false,
     has_decay: false,

@@ -1,3 +1,8 @@
+export enum RewardTypes {
+  Reputation_Points = "reputation_points",
+  Spark_Credits = "spark_credits"
+}
+
 export enum ActivityTypes {
   ProfileComplete = "profile_complete",
   AttendCommunitySession = "attend_community_session",
