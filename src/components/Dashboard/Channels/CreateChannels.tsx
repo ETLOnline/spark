@@ -40,13 +40,13 @@ import Loader from "../../common/Loader/Loader"
 import { LoaderSizes } from "../../common/types/loader-types"
 import { Switch } from "../../ui/switch"
 import { useDebouncedCallback } from "use-debounce"
-import { useAuthUser } from "@/src/hooks/useAuthUser"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { CommunityDetailData } from "@/src/db/data-access/communities/query"
 import { slugify } from "@/src/utils/helpers"
 import { ScrollArea } from "../../ui/scroll-area"
 import { UnsavedChangesDialog } from "../../common/unsavedChangesDialog"
 import { useConfirmClose } from "@/src/hooks/useConfirmClose"
+import useAuthUserRefresh from "@/src/hooks/useAuthUserRefresh"
 
 const channelSchema = z.object({
   channel_name: z
@@ -77,7 +77,7 @@ function CreateChannels({
   onActionComplete,
   community
 }: CreateChannelsProps) {
-  const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
+  const { refreshAuthUser } = useAuthUserRefresh()
   const [editChannel, setEditChannel] = useState<boolean>(false)
   const [slugAvailableMessage, setSlugAvailableMessage] = useState<string>("")
 

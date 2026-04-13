@@ -29,7 +29,9 @@ export default function TrustEngineScreen() {
   const [isFlagLoading, setIsFlagLoading] = useState(true)
   const [rpPoints, setRpPoints] = useState(0)
   const [scPoints, setScPoints] = useState(0)
-  const [userLevel, setUserLevel] = useState<SelectUserRewardsLevel | null>(null)
+  const [userLevel, setUserLevel] = useState<SelectUserRewardsLevel | null>(
+    null
+  )
   const [transactions, setTransactions] = useState<any[]>([])
 
   const [, , , GetFeatureFlag] = useServerAction(getFeatureFlagAction)
@@ -63,24 +65,9 @@ export default function TrustEngineScreen() {
     fetchAllData()
   }, [fetchAllData])
 
-  useEffect(() => {
-    if (!authUser?.unique_id) return
-
-    const channelName = `user-${authUser.unique_id}`
-    const channel = pusherClient.subscribe(channelName)
-
-    channel.bind("reward_added", () => {
-      fetchAllData()
-    })
-
-    return () => {
-      pusherClient.unsubscribe(channelName)
-    }
-  }, [authUser?.unique_id, fetchAllData])
-
   const minPoints = userLevel?.rewardLevel?.min_points ?? 0
   const maxPoints = userLevel?.rewardLevel?.max_points ?? 0
-  const progressPercent = progressPercentHelper(rpPoints,minPoints ,maxPoints)
+  const progressPercent = progressPercentHelper(rpPoints, minPoints, maxPoints)
   const pointsNeeded = maxPoints > rpPoints ? maxPoints - rpPoints : 0
 
   if (isFlagLoading) {
@@ -123,7 +110,10 @@ export default function TrustEngineScreen() {
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="transactions" className="flex items-center gap-2">
+            <TabsTrigger
+              value="transactions"
+              className="flex items-center gap-2"
+            >
               <TrendingUp className="w-4 h-4" />
               <span className="hidden sm:inline">Transactions</span>
             </TabsTrigger>

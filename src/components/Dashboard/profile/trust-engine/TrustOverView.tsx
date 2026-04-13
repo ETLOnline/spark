@@ -84,7 +84,9 @@ export function TrustOverView({
 
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Progress to Next Level</span>
+            <span className="text-muted-foreground">
+              Progress to Next Level
+            </span>
             <span className="font-medium">{progressPercent}%</span>
           </div>
           <Progress value={progressPercent} className="h-2" />
@@ -98,19 +100,27 @@ export function TrustOverView({
         <h4 className="font-semibold text-foreground mb-4">Trust Breakdown</h4>
         <div className="space-y-3">
           <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <span className="text-sm text-muted-foreground">Profile Completeness</span>
+            <span className="text-sm text-muted-foreground">
+              Profile Completeness
+            </span>
             <span className="text-sm font-medium text-foreground">85%</span>
           </div>
           <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <span className="text-sm text-muted-foreground">Community Engagement</span>
+            <span className="text-sm text-muted-foreground">
+              Community Engagement
+            </span>
             <span className="text-sm font-medium text-foreground">92%</span>
           </div>
           <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <span className="text-sm text-muted-foreground">Skill Verification</span>
+            <span className="text-sm text-muted-foreground">
+              Skill Verification
+            </span>
             <span className="text-sm font-medium text-foreground">72%</span>
           </div>
           <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <span className="text-sm text-muted-foreground">Project Completion</span>
+            <span className="text-sm text-muted-foreground">
+              Project Completion
+            </span>
             <span className="text-sm font-medium text-foreground">88%</span>
           </div>
         </div>

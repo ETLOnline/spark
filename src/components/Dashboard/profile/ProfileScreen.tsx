@@ -1,12 +1,10 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react" // Added useRef and useState
+import React, { useEffect, useState } from "react" // Added useRef and useState
 import ProfileBio from "@/src/components/Dashboard/profile/profile-bio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   CalendarIcon,
-  LinkIcon,
-  UserIcon,
   MailIcon,
   Plus,
   PencilIcon,
@@ -19,7 +17,6 @@ import {
   Twitter,
   Instagram,
   Globe,
-  Trophy,
   Share2,
   CopyIcon
 } from "lucide-react"
@@ -37,8 +34,7 @@ import {
   Card,
   CardHeader,
   CardTitle,
-  CardContent,
-  CardFooter
+  CardContent
 } from "@/src/components/ui/card"
 import { generateUrl, getPagePath, getUserRole } from "@/src/utils/helpers"
 import { UpdateUserProfilePictureAction } from "@/src/server-actions/User/User"
@@ -46,8 +42,6 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import Loader from "../../common/Loader/Loader"
 import { LoaderSizes } from "../../common/types/loader-types"
 import { useUser } from "@clerk/nextjs"
-import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import ProfileFollowActions from "./user/ProfileFollowActions"
 import EditEducationModal from "./EditEducationModal"
 import CertificateModal from "./CertificateModal"
 import RecommendationsModal from "./RecommendationsModal"
@@ -83,7 +77,6 @@ export default function ProfileScreen({
   )
   const { user: clerkUser } = useUser()
   const [currentImageUrl, setCurrentImageUrl] = useState(user?.profile_url) // State to manage current profile image URL
-  const [authUser, setAuthUser] = useState<SelectUser | null>(null)
   const [profile, setProfile] = useState(user.profile)
   const [certificates, setCertificates] = useState(user.certificates)
   const [isFeatureEnable, setIsFeatureEnable] = useState(false)
@@ -92,6 +85,7 @@ export default function ProfileScreen({
   const [selectedCertificate, setSelectedCertificate] =
     useState<SelectCertificate | null>(null)
   const [isChangeCoverImageOpen, setIsChangeCoverImageOpen] = useState(false)
+  const [isMyProfile, setIsMyProfile] = useState(false)
 
   const [recommendations, setRecommendations] = useState<
     SelectRecommendation[]
@@ -101,13 +95,9 @@ export default function ProfileScreen({
   )
   const [coverImage, setCoverImage] = useState(user.cover_image)
   const [referralLink, setReferralLink] = useState("")
+  const authUser = useAtomValue(userStore.AuthUser)
 
-  // Get the updated user from atom store to handle dynamic name updates
-  const updatedUser = useAtomValue(userStore.AuthUser)
-
-  // Use updated user data if this is the current user's profile, otherwise use prop
-  const displayUser =
-    authUser?.unique_id === user?.unique_id ? updatedUser || user : user
+  const displayUser = isMyProfile && authUser ? authUser : user
 
   const [recommendationLoading, , , GetRecommendations] = useServerAction(
     GetRecommendationAction
@@ -116,14 +106,10 @@ export default function ProfileScreen({
     useServerAction(getFeatureFlagAction)
 
   useEffect(() => {
-    const GetAuthUser = async () => {
-      const authUser = await AuthUserAction()
-      if (authUser) {
-        setAuthUser(authUser as SelectUser)
-      }
+    if (authUser && user) {
+      setIsMyProfile(authUser.unique_id === user.unique_id)
     }
-    GetAuthUser()
-  }, [user])
+  }, [authUser, user])
 
   useEffect(() => {
     const GetUserRecommendations = async () => {
@@ -239,12 +225,12 @@ export default function ProfileScreen({
   }
 
   useEffect(() => {
-    if (user?.unique_id === authUser?.unique_id) {
+    if (isMyProfile) {
       const encodedId = btoa(user.unique_id)
       const ReferralURL = createAbsoluteUrl(`/?referral_id=${encodedId}`)
       setReferralLink(ReferralURL)
     }
-  }, [user, authUser])
+  }, [isMyProfile])
 
   return (
     <>
@@ -270,7 +256,7 @@ export default function ProfileScreen({
           )}
 
           {/* Change Cover Image Button */}
-          {authUser?.unique_id === user?.unique_id && (
+          {isMyProfile && (
             <Button
               variant={"outline"}
               className="absolute top-2 right-2 bg-background"
@@ -316,7 +302,7 @@ export default function ProfileScreen({
                       ) : null}
                     </p>
                   </div>
-                  {authUser?.unique_id !== user?.unique_id && (
+                  {!isMyProfile && (
                     <RecommendationsModal
                       userId={user?.unique_id}
                       authUserId={authUser?.unique_id}
@@ -407,7 +393,7 @@ export default function ProfileScreen({
             </Card>
 
             {/* Referral Link */}
-            {authUser?.unique_id === user?.unique_id && (
+            {isMyProfile && (
               <Card>
                 <CardHeader>
                   <CardTitle>Referral Link</CardTitle>
@@ -448,7 +434,7 @@ export default function ProfileScreen({
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   Education
-                  {authUser?.unique_id === user?.unique_id && (
+                  {isMyProfile && (
                     <EditEducationModal
                       user={user}
                       profile={profile as SelectProfile}
@@ -483,7 +469,7 @@ export default function ProfileScreen({
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   Social Links
-                  {authUser?.unique_id === user?.unique_id && (
+                  {isMyProfile && (
                     <EditSocialLinksModal
                       user={user}
                       profile={profile as SelectProfile}
@@ -551,7 +537,7 @@ export default function ProfileScreen({
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   Qualifications & Certifications
-                  {authUser?.unique_id === user?.unique_id && (
+                  {isMyProfile && (
                     <Button
                       size={"sm"}
                       variant={"outline"}
@@ -581,7 +567,7 @@ export default function ProfileScreen({
                       <div className="space-y-1" key={certificate.id}>
                         <h4 className="font-medium text-sm flex items-center justify-between">
                           {certificate.title}
-                          {authUser?.unique_id === user?.unique_id && (
+                          {isMyProfile && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -615,24 +601,22 @@ export default function ProfileScreen({
 
             {/* Your Standing Card */}
             {isFeatureEnable && (
-              <Card className="p-6">
+              <Card className="p-6 spark-gradient-panel-bg">
                 <CardTitle className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                  {authUser?.unique_id === user?.unique_id
-                    ? "Your Standing"
-                    : "Standing"}
+                  {isMyProfile ? "Your Standing" : "Standing"}
                 </CardTitle>
                 <div className="space-y-3">
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">
                       Community Members
                     </div>
-                    <div className="text-lg font-bold text-primary">348</div>
+                    <div className="text-lg font-bold text-primary">0</div>
                   </div>
                   <div className="border-t ">
                     <div className="text-sm text-muted-foreground  pt-3">
                       Your Percentile Rank
                     </div>
-                    <div className="text-lg font-bold text-primary">96%</div>
+                    <div className="text-lg font-bold text-primary">0%</div>
                   </div>
                 </div>
               </Card>
