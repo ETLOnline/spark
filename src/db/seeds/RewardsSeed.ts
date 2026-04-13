@@ -341,8 +341,7 @@ const activityRules: InsertActivityRules[] = [
     category_group: "event",
     required_verification: false,
     is_active: true,
-    description:
-      "SC for registering for a new event"
+    description: "SC for registering for a new event"
   },
   {
     rule_id: 28,

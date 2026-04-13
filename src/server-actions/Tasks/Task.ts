@@ -192,8 +192,6 @@ export const UpdateTaskAction = CreateServerAction(
         const newStatusSlug = UpdatedTask.status?.status_slug
         const assigneeId = UpdatedTask.assign_to
 
-        console.log(oldStatusSlug !== ProjectStatus.InProgress ,
-          newStatusSlug === ProjectStatus.InProgress)
         // task moved to in-progress — only for assignee
         if (
           assigneeId &&
