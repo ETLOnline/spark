@@ -1,4 +1,8 @@
-import { ActivityDisplayNames, ActivityTypes } from "@/src/types/Rewards/rewards"
+import {
+  ActivityDisplayNames,
+  ActivityTypes,
+  RewardTypes
+} from "@/src/types/Rewards/rewards"
 import { db } from ".."
 import {
   activityRulesTable,
@@ -10,7 +14,7 @@ import {
 const rewardsMetadata: InsertRewardsMetadata[] = [
   {
     reward_id: 1,
-    internal_name: "reputation_points",
+    internal_name: RewardTypes.Reputation_Points,
     display_name: "Reputation Points",
     is_soulbound: true,
     has_decay: true,
@@ -18,7 +22,7 @@ const rewardsMetadata: InsertRewardsMetadata[] = [
   },
   {
     reward_id: 2,
-    internal_name: "spark_credits",
+    internal_name: RewardTypes.Spark_Credits,
     display_name: "Spark Credits",
     is_soulbound: false,
     has_decay: false,
@@ -40,19 +44,19 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 2,
-    action_display_name:ActivityDisplayNames[ActivityTypes.EventCreation] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.EventCreation],
     action_type: ActivityTypes.EventCreation,
     reward_id: 2,
     base_points: 20,
     category_group: "event",
     required_verification: false,
     is_active: true,
-    description:
-      "SC for creating a new event"
+    description: "SC for creating a new event"
   },
   {
     rule_id: 3,
-    action_display_name:ActivityDisplayNames[ActivityTypes.AttendCommunitySession] ,
+    action_display_name:
+      ActivityDisplayNames[ActivityTypes.AttendCommunitySession],
     action_type: ActivityTypes.AttendCommunitySession,
     reward_id: 2,
     base_points: 10,
@@ -64,7 +68,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 4,
-    action_display_name:ActivityDisplayNames[ActivityTypes.CommunityService] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.CommunityService],
     action_type: ActivityTypes.CommunityService,
     reward_id: 2,
     base_points: 30,
@@ -76,7 +80,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 5,
-    action_display_name:ActivityDisplayNames[ActivityTypes.SocialPost] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.SocialPost],
     action_type: ActivityTypes.SocialPost,
     reward_id: 2,
     base_points: 15,
@@ -87,7 +91,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 6,
-    action_display_name:ActivityDisplayNames[ActivityTypes.MergedPullRequest] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.MergedPullRequest],
     action_type: ActivityTypes.MergedPullRequest,
     reward_id: 1,
     base_points: 30,
@@ -98,7 +102,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 7,
-    action_display_name:ActivityDisplayNames[ActivityTypes.IssueResolution] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.IssueResolution],
     action_type: ActivityTypes.IssueResolution,
     reward_id: 1,
     base_points: 20,
@@ -109,7 +113,8 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 8,
-    action_display_name:ActivityDisplayNames[ActivityTypes.MilestoneDeployment] ,
+    action_display_name:
+      ActivityDisplayNames[ActivityTypes.MilestoneDeployment],
     action_type: ActivityTypes.MilestoneDeployment,
     reward_id: 1,
     base_points: 40,
@@ -121,7 +126,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 9,
-    action_display_name:ActivityDisplayNames[ActivityTypes.PeerReview] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.PeerReview],
     action_type: ActivityTypes.PeerReview,
     reward_id: 1,
     base_points: 10,
@@ -133,7 +138,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 10,
-    action_display_name:ActivityDisplayNames[ActivityTypes.MilestoneApproval] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.MilestoneApproval],
     action_type: ActivityTypes.MilestoneApproval,
     reward_id: 1,
     base_points: 40,
@@ -145,7 +150,8 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 11,
-    action_display_name:ActivityDisplayNames[ActivityTypes.MentorshipSessionStudent] ,
+    action_display_name:
+      ActivityDisplayNames[ActivityTypes.MentorshipSessionStudent],
     action_type: ActivityTypes.MentorshipSessionStudent,
     reward_id: 1,
     base_points: 5,
@@ -157,7 +163,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 12,
-    action_display_name:ActivityDisplayNames[ActivityTypes.MilestoneVerified] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.MilestoneVerified],
     action_type: ActivityTypes.MilestoneVerified,
     reward_id: 1,
     base_points: 5,
@@ -169,7 +175,8 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 13,
-    action_display_name:ActivityDisplayNames[ActivityTypes.AdvisorStudentRated] ,
+    action_display_name:
+      ActivityDisplayNames[ActivityTypes.AdvisorStudentRated],
     action_type: ActivityTypes.AdvisorStudentRated,
     reward_id: 1,
     base_points: 15,
@@ -180,7 +187,8 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 14,
-    action_display_name:ActivityDisplayNames[ActivityTypes.AdvisorMentorshipSession] ,
+    action_display_name:
+      ActivityDisplayNames[ActivityTypes.AdvisorMentorshipSession],
     action_type: ActivityTypes.AdvisorMentorshipSession,
     reward_id: 1,
     base_points: 20,
@@ -192,7 +200,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 15,
-    action_display_name:ActivityDisplayNames[ActivityTypes.TaskInprogress] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.TaskInprogress],
     action_type: ActivityTypes.TaskInprogress,
     reward_id: 2,
     base_points: 10,
@@ -203,7 +211,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 16,
-    action_display_name:ActivityDisplayNames[ActivityTypes.TaskCompletion] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.TaskCompletion],
     action_type: ActivityTypes.TaskCompletion,
     reward_id: 1,
     base_points: 20,
@@ -214,7 +222,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 17,
-    action_display_name:ActivityDisplayNames[ActivityTypes.ChannelCreation] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.ChannelCreation],
     action_type: ActivityTypes.ChannelCreation,
     reward_id: 2,
     base_points: 15,
@@ -225,7 +233,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 18,
-    action_display_name:ActivityDisplayNames[ActivityTypes.SpaceCreation] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.SpaceCreation],
     action_type: ActivityTypes.SpaceCreation,
     reward_id: 2,
     base_points: 15,
@@ -236,7 +244,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 19,
-    action_display_name:ActivityDisplayNames[ActivityTypes.ProjectCreation] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.ProjectCreation],
     action_type: ActivityTypes.ProjectCreation,
     reward_id: 2,
     base_points: 15,
@@ -247,7 +255,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 20,
-    action_display_name:ActivityDisplayNames[ActivityTypes.SpaceFeatureUpdate] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.SpaceFeatureUpdate],
     action_type: ActivityTypes.SpaceFeatureUpdate,
     reward_id: 2,
     base_points: 15,
@@ -258,7 +266,8 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 21,
-    action_display_name:ActivityDisplayNames[ActivityTypes.SpaceOverviewUpdate] ,
+    action_display_name:
+      ActivityDisplayNames[ActivityTypes.SpaceOverviewUpdate],
     action_type: ActivityTypes.SpaceOverviewUpdate,
     reward_id: 2,
     base_points: 50,
@@ -269,7 +278,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 22,
-    action_display_name:ActivityDisplayNames[ActivityTypes.SpaceFileShare] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.SpaceFileShare],
     action_type: ActivityTypes.SpaceFileShare,
     reward_id: 2,
     base_points: 20,
@@ -280,7 +289,8 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 23,
-    action_display_name:ActivityDisplayNames[ActivityTypes.SpaceGroupChatCreation] ,
+    action_display_name:
+      ActivityDisplayNames[ActivityTypes.SpaceGroupChatCreation],
     action_type: ActivityTypes.SpaceGroupChatCreation,
     reward_id: 2,
     base_points: 20,
@@ -291,7 +301,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 24,
-    action_display_name:ActivityDisplayNames[ActivityTypes.SocialPostLike] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.SocialPostLike],
     action_type: ActivityTypes.SocialPostLike,
     reward_id: 2,
     base_points: 1,
@@ -302,7 +312,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 25,
-    action_display_name:ActivityDisplayNames[ActivityTypes.SocialPostComment] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.SocialPostComment],
     action_type: ActivityTypes.SocialPostComment,
     reward_id: 2,
     base_points: 5,
@@ -313,7 +323,7 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 26,
-    action_display_name:ActivityDisplayNames[ActivityTypes.SuccessfulReferral] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.SuccessfulReferral],
     action_type: ActivityTypes.SuccessfulReferral,
     reward_id: 2,
     base_points: 25,
@@ -324,16 +334,15 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 27,
-    action_display_name:ActivityDisplayNames[ActivityTypes.EventRegistration] ,
+    action_display_name: ActivityDisplayNames[ActivityTypes.EventRegistration],
     action_type: ActivityTypes.EventRegistration,
     reward_id: 2,
     base_points: 10,
     category_group: "event",
     required_verification: false,
     is_active: true,
-    description:
-      "SC for registering for a new event"
-  },
+    description: "SC for registering for a new event"
+  }
 ]
 
 export const RewardsSeed = async () => {

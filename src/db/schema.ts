@@ -1714,7 +1714,9 @@ export const activityRulesRelations = relations(
 )
 
 export type InsertActivityRules = typeof activityRulesTable.$inferInsert
-export type SelectActivityRules = typeof activityRulesTable.$inferSelect
+export type SelectActivityRules = typeof activityRulesTable.$inferSelect & {
+  reward?: SelectRewardsMetadata
+}
 
 export const pointLedgerTable = pgTable("point_ledger", {
   transection_id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -1754,7 +1756,12 @@ export const pointLedgerRelations = relations(pointLedgerTable, ({ one }) => ({
 }))
 
 export type InsertPointLedger = typeof pointLedgerTable.$inferInsert
-export type SelectPointLedger = typeof pointLedgerTable.$inferSelect
+export type SelectPointLedger = typeof pointLedgerTable.$inferSelect & {
+  user?: SelectUser
+  reward?: SelectRewardsMetadata
+  rule?: SelectActivityRules
+  trustVerification?: SelectTrustVerification
+}
 
 export const trustVerificationTable = pgTable("trust_verification", {
   verification_id: integer().primaryKey().generatedAlwaysAsIdentity(),

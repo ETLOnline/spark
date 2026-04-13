@@ -24,7 +24,10 @@ export async function GetActivityRule(
       where: eq(
         activityRulesTable.action_type,
         GetactivityRuleFilters.action_type
-      )
+      ),
+      with: {
+        reward: true
+      }
     })
     return res
   } catch (e: any) {
@@ -35,6 +38,23 @@ export async function GetActivityRule(
 export async function AddLedgerEntry(data: InsertPointLedger) {
   try {
     const res = await db.insert(pointLedgerTable).values(data).returning()
+
+    const ledgerEntry = await GetLedgerEntryById(res[0].transection_id)
+
+    return ledgerEntry
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function GetLedgerEntryById(ledger_id: number) {
+  try {
+    const res = await db.query.pointLedgerTable.findFirst({
+      where: eq(pointLedgerTable.transection_id, ledger_id),
+      with: {
+        rule: true
+      }
+    })
     return res
   } catch (e: any) {
     throw new Error(e.message)
@@ -50,7 +70,10 @@ export async function GetLedgerEntryByUserAndRule(
       where: and(
         eq(pointLedgerTable.user_id, user_id),
         eq(pointLedgerTable.rule_id, rule_id)
-      )
+      ),
+      with: {
+        rule: true
+      }
     })
     return res
   } catch (e: any) {
@@ -195,12 +218,21 @@ export async function GetUserPointLedger(user_id: string) {
     const res = await db.query.pointLedgerTable.findMany({
       where: eq(pointLedgerTable.user_id, user_id),
       with: {
-        rule: true,
+        rule: true
       },
-      orderBy: (ledger, { desc }) => [desc(ledger.created_at)],
-    });
-    return res;
+      orderBy: (ledger, { desc }) => [desc(ledger.created_at)]
+    })
+    return res
   } catch (e: any) {
-    throw new Error(e.message);
+    throw new Error(e.message)
+  }
+}
+
+export async function GetRewardLevels() {
+  try {
+    const res = await db.query.rewardLevelTable.findMany()
+    return res
+  } catch (e: any) {
+    throw new Error(e.message)
   }
 }
