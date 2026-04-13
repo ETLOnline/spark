@@ -32,6 +32,7 @@ import { getSpaceUsers } from "@/src/db/data-access/spaces/query"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 import { AddRewardAction } from "../Reward/Reward"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
+import { AuthUserAction } from "../User/AuthUserAction"
 
 export const CreateProjectAction = CreateServerAction(
   true,
@@ -91,6 +92,19 @@ export const UpdateProjectAction = CreateServerAction(
         "project-edit",
         updatedProject
       )
+      const projectUrl = createAbsoluteUrl(`/project/${updatedProject.id}/details`)
+
+      if ("description" in project_data && updatedProject.created_by) {
+        const user = await AuthUserAction()
+        if (user?.unique_id) {
+          await AddRewardAction(
+            ActivityTypes.ProjectOverviewUpdate,
+            user.unique_id,
+            projectUrl,
+            { project_id: updatedProject.id }
+          )
+        }
+      }
 
       return { success: true, data: updatedProject }
     } catch (error) {

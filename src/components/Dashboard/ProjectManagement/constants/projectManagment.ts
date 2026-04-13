@@ -159,6 +159,11 @@ export const ProjectManagementPages = [
     icon: "picture-in-picture-2"
   },
   {
+    key: "details",
+    title: "About Project",
+    icon: "info"
+  },
+  {
     key: "sprint",
     title: "Sprint",
     icon: "chart-gantt"

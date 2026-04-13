@@ -14,6 +14,10 @@ import { SelectSprint } from "@/src/db/schema"
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { GetTasks } from "@/src/db/data-access/tasks/query"
 import { AuthUserAction } from "../User/AuthUserAction"
+import { AddRewardAction } from "../Reward/Reward"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
+import { SprintStatus } from "@/src/components/Dashboard/ProjectManagement/constants/projectManagment"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 export const CreateSprintAction = CreateServerAction(
   true,
@@ -26,6 +30,16 @@ export const CreateSprintAction = CreateServerAction(
         "sprint-add",
         sprint
       )
+      const sprintUrl = createAbsoluteUrl(`/project/${sprint.projectId}/sprint`)
+      const user = await AuthUserAction()
+      if (user?.unique_id) {
+        await AddRewardAction(
+          ActivityTypes.SprintCreation,
+          user.unique_id,
+          sprintUrl,
+          { sprint_id: sprint.id, project_id: sprint.projectId }
+        )
+      }
 
       return { success: true, data: sprint }
     } catch (error) {
@@ -39,7 +53,6 @@ export const GetSprintAction = CreateServerAction(
   async (filters?: sprintQueryFilters) => {
     try {
       const sprints = await getSprints({ ...filters })
-
       return { success: true, data: sprints }
     } catch (error) {
       return { error: error }
@@ -62,6 +75,18 @@ export const UpdateSprintAction = CreateServerAction(
         "sprint-edit",
         updatedSprint
       )
+      const sprintUrl = createAbsoluteUrl(`/project/${updatedSprint.projectId}/sprint`)
+      if (sprintData.sprint_status === SprintStatus.ENDED) {
+        const user = await AuthUserAction()
+        if (user?.unique_id) {
+          await AddRewardAction(
+            ActivityTypes.SprintCompletion,
+            user.unique_id,
+            sprintUrl,
+            { sprint_id: updatedSprint.id, project_id: updatedSprint.projectId }
+          )
+        }
+      }
 
       return { success: true, data: updatedSprint }
     } catch (error) {

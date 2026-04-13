@@ -36,6 +36,10 @@ import { NotificationEvent } from "@/src/services/notify/types/events"
 import { addProjectRecentActivity } from "@/src/utils/taskHelpr"
 import { AddTaskHistoryAction } from "./TaskHistory"
 import { extractMentionsFromMessage } from "@/src/services/realtime/utils/helper"
+import { AddRewardAction } from "../Reward/Reward"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
+import { ProjectStatus } from "@/src/components/Dashboard/ProjectManagement/types/projectStatus.type"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 export const CreateTaskAction = CreateServerAction(
   true,
@@ -63,6 +67,13 @@ export const CreateTaskAction = CreateServerAction(
       if (task) {
         await SendTaskNotifications("task_assigned", task, project)
         await addProjectRecentActivity("task_created", task)
+        const taskUrl = createAbsoluteUrl(`/project/${task.project_id}/task/${task.id}`)
+        await AddRewardAction(
+          ActivityTypes.TaskCreation,
+          task.created_by,
+          taskUrl,
+          { task_id: task.id, project_id: task.project_id }
+        )
       }
 
       return { success: true, data: task }
@@ -181,6 +192,36 @@ export const UpdateTaskAction = CreateServerAction(
         )
 
         await AddTaskHistoryAction(oldTask, UpdatedTask)
+        const taskUrl = createAbsoluteUrl(`/project/${UpdatedTask.project_id}/task/${UpdatedTask.id}`)
+        const oldStatusSlug = oldTask.status?.status_slug
+        const newStatusSlug = UpdatedTask.status?.status_slug
+        const assigneeId = UpdatedTask.assign_to
+
+        if (
+          assigneeId &&
+          oldStatusSlug !== ProjectStatus.InProgress &&
+          newStatusSlug === ProjectStatus.InProgress
+        ) {
+          await AddRewardAction(
+            ActivityTypes.TaskInprogress,
+            assigneeId,
+            taskUrl,
+            { task_id: UpdatedTask.id, project_id: UpdatedTask.project_id }
+          )
+        }
+
+        if (
+          assigneeId &&
+          oldStatusSlug !== ProjectStatus.Done &&
+          newStatusSlug === ProjectStatus.Done
+        ) {
+          await AddRewardAction(
+            ActivityTypes.TaskCompletion,
+            assigneeId,
+            taskUrl,
+            { task_id: UpdatedTask.id, project_id: UpdatedTask.project_id }
+          )
+        }
 
         return { success: true, data: UpdatedTask }
       }

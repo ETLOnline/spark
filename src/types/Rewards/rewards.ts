@@ -32,7 +32,16 @@ export enum ActivityTypes {
   SpaceFileShare = "space_file_share",
   SpaceGroupChatCreation = "space_group_chat_creation",
   EventCreation = "event_creation",
-  EventRegistration = "event_registration"
+  EventRegistration = "event_registration",
+
+  SprintCreation = "sprint_creation",
+  SprintCompletion = "sprint_completion",
+  TaskCreation = "task_creation",
+  TaskTestCompletion = "task_test_completion",
+  TaskCompletionVerification = "task_completion_verification",
+  TaskCompletionReview = "task_completion_review",
+  TaskComment = "task_comment",
+  ProjectOverviewUpdate = "project_overview_update"
 }
 
 export const ActivityDisplayNames: Record<string, string> = {
@@ -71,8 +80,18 @@ export const ActivityDisplayNames: Record<string, string> = {
 
   // Events
   [ActivityTypes.EventCreation]: "Event Created",
-  [ActivityTypes.EventRegistration]: "Event Registration"
-}
+  [ActivityTypes.EventRegistration]: "Event Registration",
+
+  // Project Management
+  [ActivityTypes.SprintCreation]: "Sprint Created",
+  [ActivityTypes.SprintCompletion]: "Sprint Completed",
+  [ActivityTypes.TaskCreation]: "Task Created",
+  [ActivityTypes.TaskTestCompletion]: "Task Test Completed",
+  [ActivityTypes.TaskCompletionVerification]: "Task Completion Verified",
+  [ActivityTypes.TaskCompletionReview]: "Task Completion Reviewed",
+  [ActivityTypes.TaskComment]: "Task Comment Added",
+  [ActivityTypes.ProjectOverviewUpdate]: "Project Overview Updated"
+};
 
 export enum TrustVerificationStatus {
   Pending = "pending",
