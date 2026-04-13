@@ -2,26 +2,15 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Label } from "@/src/components/ui/label"
+import { MultiSelectOption } from "@/src/components/ui/multi-select"
 import { SearchableSingleSelect } from "@/src/components/ui/searchable-single-select"
 import { SelectUser } from "@/src/db/schema"
-
-interface UserType {
-  first_name?: string
-  last_name?: string
-  profile_url?: string
-  unique_id?: string
-}
-
-interface OptionType {
-  label: string
-  value: string
-}
 
 interface Props {
   label: string
   value?: string
   user: SelectUser | null
-  options: OptionType[]
+  options: MultiSelectOption[]
   activeField: string | null
   fieldKey: string
   setActiveField: (val: string | null) => void
