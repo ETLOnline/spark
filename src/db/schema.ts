@@ -128,6 +128,9 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
   userRewardBalance: many(userRewardBalanceTable, {
     relationName: "userRewardBalanceToUser"
+  }),
+  testedTasks: many(taskTable, {
+    relationName: "taskTester"
   })
 }))
 
@@ -1076,6 +1079,7 @@ export const taskTable = pgTable("task", {
   assign_to: varchar(),
   assign_by: varchar(),
   parent_task_id: varchar(),
+  tested_by: varchar(),
   ...timestamps
 })
 
@@ -1087,6 +1091,7 @@ export type SelectTask = typeof taskTable.$inferSelect & {
   parentTask?: SelectTask | null
   subTasks?: SelectTask[]
   creator?: SelectUser | null
+  testedBy?: SelectUser | null
 }
 
 export const taskRelations = relations(taskTable, ({ one, many }) => ({
@@ -1120,6 +1125,11 @@ export const taskRelations = relations(taskTable, ({ one, many }) => ({
     fields: [taskTable.created_by],
     references: [usersTable.unique_id],
     relationName: "taskCreator"
+  }),
+  testedBy: one(usersTable, {
+    fields: [taskTable.tested_by],
+    references: [usersTable.unique_id],
+    relationName: "taskTester"
   })
 }))
 
