@@ -48,19 +48,6 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
     fetchData()
   }, [fetchData])
 
-  useEffect(() => {
-    const channelName = `user-${user.unique_id}`
-    const channel = pusherClient.subscribe(channelName)
-
-    channel.bind("reward_added", () => {
-      fetchData()
-    })
-
-    return () => {
-      pusherClient.unsubscribe(channelName)
-    }
-  }, [user.unique_id, fetchData])
-
   const minPoints = userLevel?.rewardLevel?.min_points ?? 0
   const maxPoints = userLevel?.rewardLevel?.max_points ?? 0
   const progressPercent = progressPercentHelper(
@@ -70,7 +57,7 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
   )
 
   return (
-    <Card className="rounded-xl border p-6 shadow-sm">
+    <Card className="rounded-xl border p-6 shadow-sm spark-gradient-panel-bg">
       {/* Header */}
       <div className="mb-6 flex justify-between items-center gap-2">
         <div className="flex items-center gap-2">
@@ -86,8 +73,8 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
       </div>
 
       {/* Stats Grid */}
-      <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-        <div className="rounded-lg border p-4">
+      <div className="mb-8 grid grid-cols-2 gap-2 md:grid-cols-4">
+        <div className="rounded-lg border p-4 bg-card flex flex-col justify-between h-full">
           <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
             Reputation Points
           </p>
@@ -101,7 +88,7 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
           </p> */}
         </div>
 
-        <div className="rounded-lg border p-4">
+        <div className="rounded-lg border p-4 bg-card  flex flex-col justify-between h-full">
           <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
             Spark Credits
           </p>
@@ -114,16 +101,19 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
           </p> */}
         </div>
 
-        <div className="rounded-lg border p-4">
+        <div className="rounded-lg border p-4 bg-card flex flex-col justify-between h-full">
           <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
             Current Level
           </p>
-          <p className="mb-1 text-xl font-bold text-teal-600 dark:text-teal-400">
+          <p
+            className="mb-1 font-bold text-teal-600 dark:text-teal-400 line-clamp-2 break-words"
+            title={userLevel?.rewardLevel?.name ?? "—"}
+          >
             {userLevel?.rewardLevel?.name ?? "—"}
           </p>
         </div>
 
-        <div className="rounded-lg border p-4">
+        <div className="rounded-lg border p-4 bg-card flex flex-col justify-between h-full">
           <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
             Community Rank
           </p>
@@ -143,7 +133,7 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
             {userRPPoints.toLocaleString()} / {maxPoints.toLocaleString()} RP
           </span>
         </div>
-        <div className="flex h-3 gap-0.5 overflow-hidden rounded-full bg-white/40 dark:bg-slate-700/40">
+        <div className="flex h-3 gap-0.5 overflow-hidden rounded-full bg-card">
           <div
             className="bg-gradient-to-r from-teal-500 to-blue-500 dark:from-teal-400 dark:to-blue-400 transition-all duration-300"
             style={{ width: `${progressPercent}%` }}

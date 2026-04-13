@@ -30,7 +30,7 @@ export default function UserProfileCard({
 }: ProfileCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   return (
-    <div className="rounded-xl border border-white/20 bg-white/95 dark:bg-slate-900/95 backdrop-blur p-6 shadow-lg">
+    <div className="rounded-xl border bg-card backdrop-blur p-6 shadow-lg">
       <div className="flex gap-6">
         {/* Avatar Section */}
         <div className="flex flex-col items-center gap-3">

@@ -65,21 +65,6 @@ export default function TrustEngineScreen() {
     fetchAllData()
   }, [fetchAllData])
 
-  useEffect(() => {
-    if (!authUser?.unique_id) return
-
-    const channelName = `user-${authUser.unique_id}`
-    const channel = pusherClient.subscribe(channelName)
-
-    channel.bind("reward_added", () => {
-      fetchAllData()
-    })
-
-    return () => {
-      pusherClient.unsubscribe(channelName)
-    }
-  }, [authUser?.unique_id, fetchAllData])
-
   const minPoints = userLevel?.rewardLevel?.min_points ?? 0
   const maxPoints = userLevel?.rewardLevel?.max_points ?? 0
   const progressPercent = progressPercentHelper(rpPoints, minPoints, maxPoints)
