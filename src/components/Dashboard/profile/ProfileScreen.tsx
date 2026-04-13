@@ -610,13 +610,13 @@ export default function ProfileScreen({
                     <div className="text-sm text-muted-foreground mb-1">
                       Community Members
                     </div>
-                    <div className="text-lg font-bold text-primary">348</div>
+                    <div className="text-lg font-bold text-primary">0</div>
                   </div>
                   <div className="border-t ">
                     <div className="text-sm text-muted-foreground  pt-3">
                       Your Percentile Rank
                     </div>
-                    <div className="text-lg font-bold text-primary">96%</div>
+                    <div className="text-lg font-bold text-primary">0%</div>
                   </div>
                 </div>
               </Card>
