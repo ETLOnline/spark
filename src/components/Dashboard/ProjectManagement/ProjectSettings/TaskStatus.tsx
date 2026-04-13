@@ -65,6 +65,8 @@ import {
 import Link from "next/link"
 import { projectStore } from "@/src/store/project/projectStore"
 import { projectDefaultStatuses } from "../constants/projectManagment"
+import { ProjectStatus } from "../types/projectStatus.type"
+import DefinitionOfCompletion from "./DefinitionOfCompletion"
 
 export default function TaskStatus() {
   const [statuses, setStatuses] = useAtom(projectStore.projectStatusList) // Default statuses as initial state
@@ -78,6 +80,9 @@ export default function TaskStatus() {
   const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] =
     useState(false)
   const [isChangesSaved, setIsChangesSaved] = useState(false)
+  const [definitionOfCompletion, setDefinitionOfCompletion] = useState<string>(
+    ProjectStatus.Done
+  )
 
   const [createLoading, data, error, createTaskStatus] = useServerAction(
     CreateTaskStatusAction
@@ -264,6 +269,10 @@ export default function TaskStatus() {
     }
   }
 
+  const isDefinationOfCompletionTrue = (statusName: string) => {
+    return statusName === definitionOfCompletion ? true : false
+  }
+
   // Function to save the current status configuration
   const saveStatusConfiguration = async () => {
     setIsSaving(true)
@@ -274,7 +283,8 @@ export default function TaskStatus() {
           const payload = {
             ...status,
             position: statuses.findIndex((s) => s.name === status.name),
-            project_id: projectId
+            project_id: projectId,
+            defination_of_completion: isDefinationOfCompletionTrue(status.name)
           }
           return await createTaskStatus(payload)
         })
@@ -318,13 +328,19 @@ export default function TaskStatus() {
             const payload = {
               ...status,
               position: statuses.findIndex((s) => s.name === status.name),
-              id: status.id
+              id: status.id,
+              defination_of_completion: isDefinationOfCompletionTrue(
+                status.name
+              )
             }
             await UpdateTaskStatus(payload.id, payload)
           } else {
             const payload = {
               ...status,
-              position: statuses.findIndex((s) => s.name === status.name)
+              position: statuses.findIndex((s) => s.name === status.name),
+              defination_of_completion: isDefinationOfCompletionTrue(
+                status.name
+              )
             }
             const AddedStatus = await createTaskStatus(payload)
             if (AddedStatus?.success && AddedStatus.data) {
@@ -403,6 +419,13 @@ export default function TaskStatus() {
     }
   }
 
+  useEffect(() => {
+    const exists = statuses.find((s) => s.name === definitionOfCompletion)
+    if (!exists && statuses.length > 0) {
+      setDefinitionOfCompletion("Done")
+    }
+  }, [statuses])
+
   return (
     <>
       <Card className="shadow-sm">
@@ -435,6 +458,12 @@ export default function TaskStatus() {
                 </form>
               </CardContent>
             </Card>
+
+            <DefinitionOfCompletion
+              statusList={statuses}
+              value={definitionOfCompletion}
+              onChange={setDefinitionOfCompletion}
+            />
 
             <Card className="border shadow-none">
               <CardHeader className="py-3">
