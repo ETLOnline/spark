@@ -1,6 +1,6 @@
 {
-  "id": "f219f2d9-4a61-497c-baa4-64de51c9f2f7",
-  "prevId": "002c2ec5-fbde-48ff-b3f0-49f8b97bcb60",
+  "id": "95f50ae9-e735-4b33-b02b-37a44b5a8c84",
+  "prevId": "f219f2d9-4a61-497c-baa4-64de51c9f2f7",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -4021,6 +4021,12 @@
         },
         "parent_task_id": {
           "name": "parent_task_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tested_by": {
+          "name": "tested_by",
           "type": "varchar",
           "primaryKey": false,
           "notNull": false

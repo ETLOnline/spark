@@ -18,7 +18,11 @@ interface TransactionProps {
   }
 }
 
-export function TransactionLedger({ TransactionsData }: { TransactionsData: TransactionProps[] }) {
+export function TransactionLedger({
+  TransactionsData
+}: {
+  TransactionsData: TransactionProps[]
+}) {
   const data = Array.isArray(TransactionsData) ? TransactionsData : []
 
   return (
@@ -27,7 +31,10 @@ export function TransactionLedger({ TransactionsData }: { TransactionsData: Tran
         Transaction History
       </h3>
       {data.map((transaction) => (
-        <TransactionRow key={transaction.transection_id} transaction={transaction} />
+        <TransactionRow
+          key={transaction.transection_id}
+          transaction={transaction}
+        />
       ))}
       {data.length === 0 && (
         <p className="text-sm text-muted-foreground text-center py-4">
