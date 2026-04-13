@@ -1,16 +1,12 @@
 "use client"
 import { useEffect, useCallback } from "react"
-import { useAtom, useSetAtom } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useAuth, useUser } from "@clerk/nextjs"
 import pusherClient from "../services/realtime/PusherClient"
-
 import { userStore } from "@/src/store/user/userStore"
-
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import { getUserPermissionRowsAction } from "@/src/server-actions/UserRoles/UserRole"
-import { buildUserPerms } from "@/src/utils/clientHelper"
-import { SelectUser } from "@/src/db/schema"
 import type { Channel } from "pusher-js"
+import useAuthUserRefresh from "./useAuthUserRefresh"
 
 /**
  * Custom hook to manage user authentication state, fetch user data from the database,
@@ -23,6 +19,7 @@ export const useAuthUser = () => {
 
   // Jotai setters for our user store atoms
   const setUser = useSetAtom(userStore.AuthUser)
+  const authUser = useAtomValue(userStore.AuthUser)
   const setIam = useSetAtom(userStore.Iam)
   const setPermissions = useSetAtom(userStore.Permissions)
   const setSuperAdmin = useSetAtom(userStore.SuperAdmin)
@@ -31,80 +28,7 @@ export const useAuthUser = () => {
     userStore.IsReloadingPermissions
   )
 
-  const fetchAndSetUserData = useCallback(
-    async (userResource: typeof clerkUser) => {
-      if (!userResource) {
-        setUser(null)
-        setIam(null)
-        setPermissions(null)
-        setSuperAdmin(false)
-        setLoadingUser(false)
-        setIsReloadingPermissions(false)
-        return
-      }
-
-      setLoadingUser(true)
-      setIsReloadingPermissions(true)
-
-      try {
-        const userRes: Omit<SelectUser, "bio"> | undefined =
-          await AuthUserAction()
-
-        if (!userRes) {
-          console.warn(
-            "User not found in DB after Clerk auth. Consider creating the user or handling this case."
-          )
-          // If user not in your DB, clear state and return
-          setUser(null)
-          setIam(null)
-          setPermissions(null)
-          setSuperAdmin(false)
-          return // Early exit
-        }
-
-        // 2. Fetch permissions based on the unique ID from your fetched user
-        const rawPerms = await getUserPermissionRowsAction(userRes.unique_id)
-
-        // Determine if the user is a super admin
-        const isSuperadmin = userRes?.roles?.some(
-          (userRole) => userRole.role?.name === "Super_Admin"
-        ) ?? false
-        
-
-        // 3. Update Jotai atoms with the fetched user data
-        setUser(userRes as SelectUser) // Cast if AuthUserAction returns slightly different type
-        setIam(userRes as SelectUser)
-        setSuperAdmin(isSuperadmin)
-
-        // 4. Transform and set permissions
-        if (rawPerms?.data) {
-          const transformed = buildUserPerms(rawPerms.data)
-          setPermissions(transformed)
-        } else {
-          setPermissions(null) // Ensure permissions are cleared if none found
-        }
-      } catch (error) {
-        console.error("Failed to fetch and set user data:", error)
-        // On error, clear user state to ensure no stale data is kept
-        setUser(null)
-        setIam(null)
-        setPermissions(null)
-        setSuperAdmin(false)
-      } finally {
-        // Always reset loading states when the operation completes
-        setLoadingUser(false)
-        setIsReloadingPermissions(false)
-      }
-    },
-    [
-      setUser,
-      setIam,
-      setPermissions,
-      setSuperAdmin,
-      setLoadingUser,
-      setIsReloadingPermissions
-    ]
-  )
+  const { fetchAndSetUserData } = useAuthUserRefresh()
 
   // Effect hook to run when Clerk's authentication state changes.
   // This handles the initial load and sign-in/sign-out events.
@@ -137,16 +61,15 @@ export const useAuthUser = () => {
     setIsReloadingPermissions
   ])
 
+  const handleRoleUpdate = (data: any) => {
+    fetchAndSetUserData(clerkUser)
+  }
+
   // Pusher effect to listen for role updates
   useEffect(() => {
-    if (!isSignedIn || !clerkUser) return
+    if (!authUser?.unique_id) return
 
     let channel: Channel | null = null
-
-    const handleRoleUpdate = (data: any) => {
-      console.log("Role update received:", data)
-      fetchAndSetUserData(clerkUser)
-    }
 
     const fetchUserAndSetupPusher = async () => {
       try {
@@ -165,7 +88,7 @@ export const useAuthUser = () => {
           channel = pusherClient.subscribe(channelName)
         }
 
-        channel.unbind("update-role", handleRoleUpdate)
+        // channel.unbind("update-role", handleRoleUpdate)
         channel.bind("update-role", handleRoleUpdate)
       } catch (error) {
         console.error("Failed to setup Pusher subscription:", error)
@@ -180,36 +103,9 @@ export const useAuthUser = () => {
         pusherClient.unsubscribe(channel.name)
       }
     }
-  }, [isSignedIn, clerkUser, fetchAndSetUserData, AuthUserAction])
-
-  const refreshAuthUser = useCallback(async () => {
-    if (isSignedIn && clerkUser) {
-      // Re-run the data fetching logic
-      await fetchAndSetUserData(clerkUser)
-    } else {
-      console.warn("Cannot refresh user data: User is not signed in.")
-      // Optionally, handle refresh attempt when not signed in (e.g., clear state)
-      setUser(null)
-      setIam(null)
-      setPermissions(null)
-      setSuperAdmin(false)
-      setLoadingUser(false)
-      setIsReloadingPermissions(false)
-    }
-  }, [
-    isSignedIn,
-    clerkUser,
-    fetchAndSetUserData,
-    setUser,
-    setIam,
-    setPermissions,
-    setSuperAdmin,
-    setLoadingUser,
-    setIsReloadingPermissions
-  ])
+  }, [authUser?.unique_id])
 
   return {
-    refreshAuthUser,
     isReloadingPermissions
   }
 }

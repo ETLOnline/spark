@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "@/src/hooks/use-toast"
 import { useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
-import { useAuthUser } from "@/src/hooks/useAuthUser"
+import useAuthUserRefresh from "@/src/hooks/useAuthUserRefresh"
 
 interface SelectPersonaPageProps {
   roles: SelectRole[]
@@ -24,7 +24,7 @@ export default function SelectPersonaPage({
   roles,
   userAuth
 }: SelectPersonaPageProps) {
-  const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
+  const { refreshAuthUser, isReloadingPermissions } = useAuthUserRefresh()
   const [selectedPersona, setSelectedPersona] = useState<number | null>(null)
   const [isPersonaSaved, setIsPersonaSaved] = useState<boolean>(false)
 

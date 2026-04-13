@@ -29,16 +29,16 @@ import {
 import { useToast } from "@/src/hooks/use-toast"
 import "./../../../../../../style.css"
 import { getRoleIdOnMatch } from "@/src/services/realtime/utils/helper"
-import { useAuthUser } from "@/src/hooks/useAuthUser"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
+import useAuthUserRefresh from "@/src/hooks/useAuthUserRefresh"
 
 interface Props {
   space: SelectSpace
 }
 
 function SpaceSidebar({ space }: Props) {
-  const { refreshAuthUser } = useAuthUser()
+  const { refreshAuthUser } = useAuthUserRefresh()
   const pathname = usePathname()
   const pageType = useSearchParams()
   const { setOpen: setSideBarCollapse } = useSidebar()

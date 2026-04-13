@@ -58,8 +58,9 @@ function RewardNotification() {
 
     return () => {
       channel.unbind("reward_added")
+      channel.unbind("level_up")
     }
-  }, [authUser])
+  }, [authUser?.unique_id])
 
   useEffect(() => {
     if (!isRewardModalVisible) setLevelUp(null)
