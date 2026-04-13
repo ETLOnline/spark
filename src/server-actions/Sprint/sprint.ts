@@ -69,6 +69,7 @@ export const UpdateSprintAction = CreateServerAction(
   ) => {
     try {
       const updatedSprint = await UpdateSprint(SprintId, sprintData)
+      const user = await AuthUserAction()
 
       pusherServer.trigger(
         `project-${updatedSprint.projectId}-sprints`,
@@ -76,8 +77,8 @@ export const UpdateSprintAction = CreateServerAction(
         updatedSprint
       )
       const sprintUrl = createAbsoluteUrl(`/project/${updatedSprint.projectId}/sprint`)
-      if (sprintData.sprint_status === SprintStatus.ENDED) {
-        const user = await AuthUserAction()
+      console.log(updatedSprint.sprint_status === SprintStatus.CLOSED,"asdasdasdasdasd")
+      if (updatedSprint.sprint_status === SprintStatus.CLOSED) {
         if (user?.unique_id) {
           await AddRewardAction(
             ActivityTypes.SprintCompletion,

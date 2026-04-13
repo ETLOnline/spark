@@ -29,6 +29,7 @@ import {
 } from "@/src/types/Rewards/rewards"
 import { triggerPusherEvent } from "@/src/services/trigger"
 import { getFeatureFlagAction } from "../FeatureFlag/FeatureFlag"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 export const AddRewardAction = CreateServerAction(
   true,
@@ -154,17 +155,47 @@ export const UpdateTrustVerificationAction = CreateServerAction(
       const isApproved = res?.status === TrustVerificationStatus.Approved
       const isRejected = res?.status === TrustVerificationStatus.Rejected
 
+      const taskCompletionRule = await GetActivityRule({
+        action_type: ActivityTypes.TaskCompletion
+      })
+
+      const isTaskCompletion =
+        taskCompletionRule && res.rule_id === taskCompletionRule.rule_id
+
       if (isApproved) {
-        await AddRewardAction(
-          ActivityTypes.MilestoneApproval,
-          res.user_id,
-          res.proof_url,
-          {},
-          verification_id
-        )
+        if (isTaskCompletion) {
+          // Task completion verified — reward assignee
+          await AddRewardAction(
+            ActivityTypes.TaskCompletionVerification,
+            res.user_id,
+            res.proof_url,
+            {},
+            verification_id
+          )
+
+          // Reward the reviewer
+          if (res.approved_by) {
+            await AddRewardAction(
+              ActivityTypes.TaskCompletionReview,
+              res.approved_by,
+              res.proof_url,
+              {},
+              verification_id
+            )
+          }
+        } else {
+          // Milestone approval flow
+          await AddRewardAction(
+            ActivityTypes.MilestoneApproval,
+            res.user_id,
+            res.proof_url,
+            {},
+            verification_id
+          )
+        }
       }
 
-      if (isApproved || isRejected) {
+      if ((isApproved || isRejected) && !isTaskCompletion) {
         await AddRewardAction(
           ActivityTypes.MilestoneVerified,
           res.approved_by || "",
@@ -309,6 +340,44 @@ export const GetUserTransactionsAction = CreateServerAction(
     } catch (error) {
       console.error("Error fetching user transactions:", error)
       return { success: false, error: "Failed to fetch transactions" }
+    }
+  }
+)
+
+export const AddTaskRewardAction = CreateServerAction(
+  true,
+  async (
+    activityType: ActivityTypes,
+    payload: {
+      user_id: string
+      task_id?: string
+      project_id?: string
+      sprint_id?: string
+      comment_id?: number
+    }
+  ) => {
+    try {
+      const { user_id, task_id, project_id, sprint_id, comment_id } = payload
+
+      if (!user_id) return { success: false, error: "user_id is required" }
+
+      let proof_url: string | undefined
+      let metadata: Record<string, any> = {}
+
+      if (task_id && project_id) {
+        proof_url = createAbsoluteUrl(`/project/${project_id}/task/${task_id}`)
+        metadata = { task_id, project_id, ...(comment_id ? { comment_id } : {}) }
+      } else if (sprint_id && project_id) {
+        proof_url = createAbsoluteUrl(`/project/${project_id}/sprint`)
+        metadata = { sprint_id, project_id }
+      } else if (project_id) {
+        proof_url = createAbsoluteUrl(`/project/${project_id}/details`)
+        metadata = { project_id }
+      }
+
+      return await AddRewardAction(activityType, user_id, proof_url, metadata)
+    } catch (error) {
+      return { success: false, error }
     }
   }
 )

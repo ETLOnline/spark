@@ -202,12 +202,12 @@ const activityRules: InsertActivityRules[] = [
     rule_id: 15,
     action_display_name: ActivityDisplayNames[ActivityTypes.TaskInprogress],
     action_type: ActivityTypes.TaskInprogress,
-    reward_id: 2,
+    reward_id: 1,
     base_points: 10,
     category_group: "engagement",
     required_verification: false,
     is_active: true,
-    description: "SC awarded when a task is moved to in-progress status"
+    description: "RP awarded when a task is moved to in-progress status"
   },
   {
     rule_id: 16,
@@ -425,12 +425,12 @@ const activityRules: InsertActivityRules[] = [
     rule_id: 35,
     action_display_name: ActivityDisplayNames[ActivityTypes.ProjectOverviewUpdate],
     action_type: ActivityTypes.ProjectOverviewUpdate,
-    reward_id: 2,
+    reward_id: 1,
     base_points: 20,
     category_group: "project_management",
     required_verification: false,
     is_active: true,
-    description: "SC awarded for updating a project overview"
+    description: "RP awarded for updating a project overview"
   },
 ]
 
