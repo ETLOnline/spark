@@ -113,7 +113,7 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
           </p>
           <img
             src={`/images/rewards/levels/compressed/level-${userLevel?.rewardLevel?.id ?? 1}.png`}
-            className="absolute top-[-14] right-[-14] w-12 h-12"
+            className="absolute -top-4 -right-4 w-12 h-12"
             alt=""
           />
         </div>
