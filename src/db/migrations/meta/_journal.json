@@ -281,6 +281,13 @@
       "when": 1775834177814,
       "tag": "0039_2026_04_10_201609__add_tested_by_column_in_task_table",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1776097925005,
+      "tag": "0040_2026_04_13_213159__add_defination_of_completion",
+      "breakpoints": true
     }
   ]
 }
