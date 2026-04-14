@@ -22,7 +22,7 @@ export enum TaskPriority {
 export enum SprintStatus {
   UPCOMING = "upcomming",
   ACTIVE = "active",
-  ENDED = "ended"
+  CLOSED = "closed"
 }
 
 export const projectTaskTypes = [
@@ -159,6 +159,11 @@ export const ProjectManagementPages = [
     icon: "picture-in-picture-2"
   },
   {
+    key: "details",
+    title: "About Project",
+    icon: "info"
+  },
+  {
     key: "sprint",
     title: "Sprint",
     icon: "chart-gantt"
@@ -203,7 +208,7 @@ export const sprintStatuses = [
     badgeVariants: "default"
   },
   {
-    key: SprintStatus.ENDED,
+    key: SprintStatus.CLOSED,
     title: "Ended",
     badgeVariants: "secondary"
   }

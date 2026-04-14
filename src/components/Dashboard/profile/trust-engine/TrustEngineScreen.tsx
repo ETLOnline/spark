@@ -25,6 +25,8 @@ import { progressPercentHelper } from "@/src/utils/clientHelper"
 export default function TrustEngineScreen() {
   const authUser = useAtomValue(userStore.AuthUser)
 
+  const PAGE_SIZE = 10
+
   const [isTrustEngineEnabled, setIsTrustEngineEnabled] = useState(false)
   const [isFlagLoading, setIsFlagLoading] = useState(true)
   const [rpPoints, setRpPoints] = useState(0)
@@ -33,6 +35,8 @@ export default function TrustEngineScreen() {
     null
   )
   const [transactions, setTransactions] = useState<any[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalTransactions, setTotalTransactions] = useState(0)
 
   const [, , , GetFeatureFlag] = useServerAction(getFeatureFlagAction)
 
@@ -45,25 +49,63 @@ export default function TrustEngineScreen() {
     checkFlag()
   }, [])
 
+  const fetchTransactions = useCallback(
+    async (page: number) => {
+      if (!authUser?.unique_id) return
+      const txRes = await GetUserTransactionsAction(
+        authUser.unique_id,
+        page,
+        PAGE_SIZE
+      )
+      if (txRes?.success && txRes.data) {
+        setTransactions(txRes.data)
+        setTotalTransactions(txRes.total ?? 0)
+      }
+    },
+    [authUser?.unique_id]
+  )
+
   const fetchAllData = useCallback(async () => {
     if (!authUser?.unique_id) return
 
-    const [rpRes, scRes, levelRes, txRes] = await Promise.all([
+    const [rpRes, scRes, levelRes] = await Promise.all([
       GetUserRewardBalanceAction(authUser.unique_id, 1),
       GetUserRewardBalanceAction(authUser.unique_id, 2),
-      GetUSerRewardLevelAction(authUser.unique_id),
-      GetUserTransactionsAction(authUser.unique_id)
+      GetUSerRewardLevelAction(authUser.unique_id)
     ])
 
     if (rpRes?.success && rpRes.data) setRpPoints(rpRes.data.current_balance)
     if (scRes?.success && scRes.data) setScPoints(scRes.data.current_balance)
     if (levelRes?.success && levelRes.data) setUserLevel(levelRes.data)
-    if (txRes?.success && txRes.data) setTransactions(txRes.data)
-  }, [authUser?.unique_id])
+
+    await fetchTransactions(1)
+  }, [authUser?.unique_id, fetchTransactions])
 
   useEffect(() => {
     fetchAllData()
   }, [fetchAllData])
+
+  useEffect(() => {
+    if (!authUser?.unique_id) return
+
+    const channelName = `user-${authUser.unique_id}`
+    const channel = pusherClient.subscribe(channelName)
+
+    channel.bind("reward_added", () => {
+      fetchAllData()
+    })
+
+    return () => {
+      pusherClient.unsubscribe(channelName)
+    }
+  }, [authUser?.unique_id, fetchAllData])
+
+  const handlePageChange = async (newPage: number) => {
+    setCurrentPage(newPage)
+    await fetchTransactions(newPage)
+  }
+
+  const totalPages = Math.ceil(totalTransactions / PAGE_SIZE)
 
   const minPoints = userLevel?.rewardLevel?.min_points ?? 0
   const maxPoints = userLevel?.rewardLevel?.max_points ?? 0
@@ -135,7 +177,12 @@ export default function TrustEngineScreen() {
           </TabsContent>
 
           <TabsContent value="transactions">
-            <TransactionLedger TransactionsData={transactions} />
+            <TransactionLedger
+              TransactionsData={transactions}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           </TabsContent>
 
           <TabsContent value="ranking">

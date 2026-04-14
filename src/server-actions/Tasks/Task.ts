@@ -36,6 +36,11 @@ import { NotificationEvent } from "@/src/services/notify/types/events"
 import { addProjectRecentActivity } from "@/src/utils/taskHelpr"
 import { AddTaskHistoryAction } from "./TaskHistory"
 import { extractMentionsFromMessage } from "@/src/services/realtime/utils/helper"
+import { AddRewardAction, AddTaskRewardAction } from "../Reward/Reward"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
+import { ProjectStatus } from "@/src/components/Dashboard/ProjectManagement/types/projectStatus.type"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
+import { getTaskCompletionRecipients, meetsCompletionCriteria } from "@/src/utils/taskRewards"
 
 export const CreateTaskAction = CreateServerAction(
   true,
@@ -63,6 +68,11 @@ export const CreateTaskAction = CreateServerAction(
       if (task) {
         await SendTaskNotifications("task_assigned", task, project)
         await addProjectRecentActivity("task_created", task)
+        await AddTaskRewardAction(ActivityTypes.TaskCreation, {
+          user_id: task.created_by,
+          task_id: task.id,
+          project_id: task.project_id
+        })
       }
 
       return { success: true, data: task }
@@ -174,18 +184,52 @@ export const UpdateTaskAction = CreateServerAction(
           "task-update",
           UpdatedTask
         )
-        createTaskNotification(
-          NotificationEvent.UPDATE_TASK,
-          UpdatedTask,
-          oldTask
-        )
-
+        createTaskNotification(NotificationEvent.UPDATE_TASK, UpdatedTask, oldTask)
         await AddTaskHistoryAction(oldTask, UpdatedTask)
+
+        const oldStatusSlug = oldTask.status?.status_slug
+        const newStatusSlug = UpdatedTask.status?.status_slug
+        const assigneeId = UpdatedTask.assign_to
+
+        // task moved to in-progress — only for assignee
+        if (
+          assigneeId &&
+          oldStatusSlug !== ProjectStatus.InProgress &&
+          newStatusSlug === ProjectStatus.InProgress
+        ) {
+          await AddTaskRewardAction(ActivityTypes.TaskInprogress, {
+            user_id: assigneeId,
+            task_id: UpdatedTask.id,
+            project_id: UpdatedTask.project_id
+          })
+        }
+
+        // task completion — criteria and recipients are fully owned by taskRewards.ts
+        // when completion_definition column arrives, only taskRewards.ts changes
+        if (!meetsCompletionCriteria(oldTask) && meetsCompletionCriteria(UpdatedTask)) {
+          const recipients = getTaskCompletionRecipients(UpdatedTask)
+          await Promise.all(
+            recipients.map((user_id) =>
+              AddTaskRewardAction(ActivityTypes.TaskCompletion, {
+                user_id,
+                task_id: UpdatedTask.id,
+                project_id: UpdatedTask.project_id
+              })
+            )
+          )
+        }
+
+        // tested_by newly assigned — reward the tester
+        if (!oldTask.tested_by && UpdatedTask.tested_by) {
+          await AddTaskRewardAction(ActivityTypes.TaskTestCompletion, {
+            user_id: UpdatedTask.tested_by,
+            task_id: UpdatedTask.id,
+            project_id: UpdatedTask.project_id
+          })
+        }
 
         return { success: true, data: UpdatedTask }
       }
-
-      return { success: true, data: UpdatedTask }
     } catch (error) {
       return { error: error }
     }
