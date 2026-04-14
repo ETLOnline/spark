@@ -26,7 +26,7 @@ import { Switch } from "@/src/components/ui/switch"
 import { Textarea } from "@/src/components/ui/textarea"
 import { InsertSpace } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
-import { useAuthUser } from "@/src/hooks/useAuthUser"
+import useAuthUserRefresh from "@/src/hooks/useAuthUserRefresh"
 import { useConfirmClose } from "@/src/hooks/useConfirmClose"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
@@ -42,7 +42,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { CircleCheck, CircleXIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { space } from "postcss/lib/list"
 import React, { useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { useDebouncedCallback } from "use-debounce"
@@ -77,7 +76,7 @@ function CreateSpaceModal({
   const selectedChannel = useAtomValue(channelStore.selectedChannel)
   const [selectedSpace, setSelectedSpace] = useAtom(spaceStore.selectedSpace)
   const [spaces, setSpaces] = useAtom(spaceStore.spaces)
-  const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
+  const { refreshAuthUser, isReloadingPermissions } = useAuthUserRefresh()
 
   const [slugAvailableMessage, setslugAvailableMessage] = useState<string>("")
 

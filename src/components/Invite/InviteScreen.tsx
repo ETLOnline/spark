@@ -27,17 +27,20 @@ import { userStore } from "@/src/store/user/userStore"
 import { useToast } from "@/src/hooks/use-toast"
 import { AttachSpaceUserAction } from "@/src/server-actions/Space/Space"
 import { useRouter } from "next/navigation"
-import { useAuthUser } from "@/src/hooks/useAuthUser"
 import { AttachCommunityUserAction } from "@/src/server-actions/Community/Community"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
-import { AcceptInvitationAction, VerifyInviteAction } from "@/src/server-actions/Invite/Invite"
+import {
+  AcceptInvitationAction,
+  VerifyInviteAction
+} from "@/src/server-actions/Invite/Invite"
+import useAuthUserRefresh from "@/src/hooks/useAuthUserRefresh"
 
 interface Props {
   entityType: "channel" | "space" | "community"
   entity: SelectChannel | SelectSpace | SelectCommunity
-  inviteKey?: string;
+  inviteKey?: string
 }
 
 const getEntityRedirectPath = (
@@ -56,7 +59,7 @@ const getEntityRedirectPath = (
 }
 
 const InviteScreen = ({ entityType, entity, inviteKey }: Props) => {
-  const { refreshAuthUser } = useAuthUser()
+  const { refreshAuthUser } = useAuthUserRefresh()
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [navigate, setNavigate] = useState(false)
   const [hasCheckedMembership, setHasCheckedMembership] = useState(false)
@@ -64,9 +67,9 @@ const InviteScreen = ({ entityType, entity, inviteKey }: Props) => {
   const router = useRouter()
   const authUser = useAtomValue(userStore.AuthUser)
   const { toast } = useToast()
-  const [isVerifying, setIsVerifying] = useState(!!inviteKey);
-  const [verificationFailed, setVerificationFailed] = useState(false); // New state
-  const [invitationData, setInvitationData] = useState<any>(null);
+  const [isVerifying, setIsVerifying] = useState(!!inviteKey)
+  const [verificationFailed, setVerificationFailed] = useState(false) // New state
+  const [invitationData, setInvitationData] = useState<any>(null)
 
   const isUserMember = isEntityUser(entity, authUser?.unique_id ?? "")
 
@@ -111,7 +114,6 @@ const InviteScreen = ({ entityType, entity, inviteKey }: Props) => {
         })
         const path = getEntityRedirectPath(entity)
         router.replace(path)
-
       } else {
         setHasCheckedMembership(true)
       }
@@ -128,31 +130,31 @@ const InviteScreen = ({ entityType, entity, inviteKey }: Props) => {
   useEffect(() => {
     const verify = async () => {
       if (!inviteKey) {
-        setIsVerifying(false);
-        return;
+        setIsVerifying(false)
+        return
       }
 
-      if (!authUser?.email) return;
+      if (!authUser?.email) return
 
-      const result = await VerifyInviteAction({ key: inviteKey });
+      const result = await VerifyInviteAction({ key: inviteKey })
 
       if (result.success) {
-        setInvitationData(result.data);
-        setVerificationFailed(false);
-        setIsVerifying(false);
+        setInvitationData(result.data)
+        setVerificationFailed(false)
+        setIsVerifying(false)
       } else {
-        setVerificationFailed(true);
-        setIsVerifying(false);
+        setVerificationFailed(true)
+        setIsVerifying(false)
         toast({
           title: "Invalid Invitation",
           description: result.error,
-          variant: "destructive",
-        });
+          variant: "destructive"
+        })
       }
-    };
+    }
 
-    verify();
-  }, [inviteKey, authUser]);
+    verify()
+  }, [inviteKey, authUser])
 
   const handleJoin = async () => {
     if (isLoading) return
@@ -213,8 +215,11 @@ const InviteScreen = ({ entityType, entity, inviteKey }: Props) => {
           </div>
           <CardTitle className="text-xl">{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
-          {(isVerifying || verificationFailed) &&
-            <CardDescription className="text-center p-4 text-destructive font-bold">Invalid invitation, you were not invited with this email</CardDescription>}
+          {(isVerifying || verificationFailed) && (
+            <CardDescription className="text-center p-4 text-destructive font-bold">
+              Invalid invitation, you were not invited with this email
+            </CardDescription>
+          )}
         </CardHeader>
 
         <CardContent>
@@ -243,7 +248,7 @@ const InviteScreen = ({ entityType, entity, inviteKey }: Props) => {
             </div>
           </div>
         </CardContent>
-        {(isVerifying || !verificationFailed) &&
+        {(isVerifying || !verificationFailed) && (
           <CardFooter className="flex flex-col sm:flex-row gap-3">
             <Button
               loading={isLoading}
@@ -255,7 +260,7 @@ const InviteScreen = ({ entityType, entity, inviteKey }: Props) => {
               {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
             </Button>
           </CardFooter>
-        }
+        )}
       </Card>
     </div>
   )

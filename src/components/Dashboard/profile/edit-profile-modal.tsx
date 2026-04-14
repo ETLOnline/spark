@@ -25,13 +25,13 @@ import { MultiSelectOption } from "../../ui/multi-select"
 import useUserProfile from "./hooks/useUserProfile"
 import TagSelect from "../../TagsInput/tags"
 import { ScrollArea } from "../../ui/scroll-area"
-import { useAuthUser } from "@/src/hooks/useAuthUser"
 import { useUser } from "@clerk/nextjs"
 import { UnsavedChangesDialog } from "../../common/unsavedChangesDialog"
 import { useConfirmClose } from "@/src/hooks/useConfirmClose"
 import { Controller, SubmitHandler, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import z from "zod"
+import useAuthUserRefresh from "@/src/hooks/useAuthUserRefresh"
 
 const editProfileSchema = z.object({
   first_name: z
@@ -60,7 +60,7 @@ const EditProfileModal: React.FC = () => {
   const user = useAtomValue(userStore.AuthUser)
   const setUser = useSetAtom(userStore.AuthUser)
   const { toast } = useToast()
-  const { refreshAuthUser } = useAuthUser()
+  const { refreshAuthUser } = useAuthUserRefresh()
   const { user: clerkUser } = useUser()
 
   const [isOpen, setIsOpen] = useState<boolean>(false)
