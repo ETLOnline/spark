@@ -1,4 +1,4 @@
-import { and, between, eq, gt, lte, sql } from "drizzle-orm"
+import { and, between, count, eq, gt, lte, sql } from "drizzle-orm"
 import { db } from "../.."
 import {
   activityRulesTable,
@@ -213,16 +213,31 @@ export async function GetUserRewardLevel(user_id: string) {
   }
 }
 
-export async function GetUserPointLedger(user_id: string) {
+export async function GetUserPointLedger(
+  user_id: string,
+  page: number = 1,
+  pageSize: number = 10
+) {
   try {
-    const res = await db.query.pointLedgerTable.findMany({
-      where: eq(pointLedgerTable.user_id, user_id),
-      with: {
-        rule: true
-      },
-      orderBy: (ledger, { desc }) => [desc(ledger.created_at)]
-    })
-    return res
+    const offset = (page - 1) * pageSize
+
+    const [data, totalResult] = await Promise.all([
+      db.query.pointLedgerTable.findMany({
+        where: eq(pointLedgerTable.user_id, user_id),
+        with: {
+          rule: true
+        },
+        orderBy: (ledger, { desc }) => [desc(ledger.created_at)],
+        limit: pageSize,
+        offset
+      }),
+      db
+        .select({ total: count() })
+        .from(pointLedgerTable)
+        .where(eq(pointLedgerTable.user_id, user_id))
+    ])
+
+    return { data, total: totalResult[0]?.total ?? 0 }
   } catch (e: any) {
     throw new Error(e.message)
   }

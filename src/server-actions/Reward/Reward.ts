@@ -333,10 +333,10 @@ export const SyncUserRewardLevelAction = CreateServerAction(
 
 export const GetUserTransactionsAction = CreateServerAction(
   true,
-  async (user_id: string) => {
+  async (user_id: string, page: number = 1, pageSize: number = 10) => {
     try {
-      const transactions = await GetUserPointLedger(user_id)
-      return { success: true, data: transactions }
+      const result = await GetUserPointLedger(user_id, page, pageSize)
+      return { success: true, data: result.data, total: result.total }
     } catch (error) {
       console.error("Error fetching user transactions:", error)
       return { success: false, error: "Failed to fetch transactions" }
