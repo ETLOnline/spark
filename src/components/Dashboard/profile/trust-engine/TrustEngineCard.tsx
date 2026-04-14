@@ -101,7 +101,7 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
           </p> */}
         </div>
 
-        <div className="rounded-lg border p-4 bg-card flex flex-col justify-between h-full">
+        <div className="rounded-lg border p-4 bg-card flex flex-col justify-between h-full relative">
           <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
             Current Level
           </p>
@@ -111,6 +111,11 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
           >
             {userLevel?.rewardLevel?.name ?? "—"}
           </p>
+          <img
+            src={`/images/rewards/levels/compressed/level-${userLevel?.rewardLevel?.id ?? 1}.png`}
+            className="absolute top-[-14] right-[-14] w-12 h-12"
+            alt=""
+          />
         </div>
 
         <div className="rounded-lg border p-4 bg-card flex flex-col justify-between h-full">
