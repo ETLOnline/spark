@@ -68,7 +68,6 @@ export const CreateTaskAction = CreateServerAction(
       if (task) {
         await SendTaskNotifications("task_assigned", task, project)
         await addProjectRecentActivity("task_created", task)
-        const taskUrl = createAbsoluteUrl(`/project/${task.project_id}/task/${task.id}`)
         await AddTaskRewardAction(ActivityTypes.TaskCreation, {
           user_id: task.created_by,
           task_id: task.id,
