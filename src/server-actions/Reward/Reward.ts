@@ -312,3 +312,12 @@ export const GetUserTransactionsAction = CreateServerAction(
     }
   }
 )
+
+export const getRewardLevelsAction = CreateServerAction(true, async () => {
+  try {
+    const levels = await GetRewardLevels()
+    return { success: true, data: levels }
+  } catch (error) {
+    return { success: false, error }
+  }
+})
