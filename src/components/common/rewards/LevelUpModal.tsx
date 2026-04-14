@@ -39,10 +39,10 @@ function LevelUpModal({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       {/* Gradient Header */}
       <DialogContent className="p-0 overflow-visible border-none bg-[#000000000] w-full [&>button]:hidden">
-        <div className="absolute z-1">
+        <div className="absolute z-1 w-full">
           <img
             src="/images/rewards/levels/compressed/paper-scroll.png"
-            className="relative h-full top-[-130]"
+            className="relative h-full w-full -top-[120px] "
             alt=""
           />
         </div>
@@ -58,7 +58,7 @@ function LevelUpModal({
             />
             <img
               src={`/images/rewards/levels/compressed/level-${levelIconId}.png`}
-              className="w-32 h-32 absolute top-[0]"
+              className="w-32 h-32 absolute top-0"
               alt=""
             />
           </div>
