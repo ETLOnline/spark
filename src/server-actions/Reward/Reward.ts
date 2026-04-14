@@ -1,35 +1,28 @@
 "use server"
 
 import {
-  AddLedgerEntry,
-  AddVerificationEntry,
-  assignUserRewardLevel,
-  GetActivityRule,
-  GetRewardLevel,
-  GetRewardLevels,
   GetUserPointLedger,
   GetUserRewardBalance,
-  GetUserRewardLevel,
   InsertUserRewardBalance,
-  updateTrustVerification,
   UpdateUserRewardBalance,
-  UpdateUserRewardlevel
+  GetUserRewardLevel,
+  GetRewardLevel,
+  GetRewardLevels,
+  assignUserRewardLevel,
+  UpdateUserRewardlevel,
+  updateTrustVerification
 } from "@/src/db/data-access/reward/query"
 import { CreateServerAction } from ".."
-import {
-  InsertPointLedger,
-  InsertTrustVerification,
-  SelectActivityRules
-} from "@/src/db/schema"
+import { SelectActivityRules } from "@/src/db/schema"
 import { AuthUserAction } from "../User/AuthUserAction"
-import {
-  ActivityTypes,
-  RewardTypes,
-  TrustVerificationStatus
-} from "@/src/types/Rewards/rewards"
+import { ActivityTypes, RewardTypes } from "@/src/types/Rewards/rewards"
 import { triggerPusherEvent } from "@/src/services/trigger"
-import { getFeatureFlagAction } from "../FeatureFlag/FeatureFlag"
+import { enqueue } from "@/src/services/jobs/queue"
 
+/**
+ * Enqueues an add-reward background job and returns immediately.
+ * The actual reward logic runs asynchronously in the worker process.
+ */
 export const AddRewardAction = CreateServerAction(
   true,
   async (
@@ -40,95 +33,17 @@ export const AddRewardAction = CreateServerAction(
     verification_id?: number
   ) => {
     try {
-      const fetureFlag = await getFeatureFlagAction(["Trust_Engine_Enabled"])
-      if (!fetureFlag?.success || !fetureFlag.data?.is_enabled) {
-        return { success: true, data: null }
-      }
-
-      const activityRule = await GetActivityRule({ action_type })
-
-      if (!activityRule) {
-        return { success: false, error: "Activity rule not found" }
-      }
-
-      const ledgerData = {
-        user_id: user_id,
-        reward_id: activityRule.reward_id,
-        rule_id: activityRule.rule_id,
-        amount: activityRule.base_points,
-        source_system: "internal_app",
-        external_ref_id: "",
-        trust_verification_id: verification_id || null,
-        metadata: {
-          milestone_id: null,
-          milestone_type: null,
-          milestone_url: null,
-          proof_url: proof_url || null,
-          ...metadata
-        },
-        transection_type: "debit"
-      }
-
-      const ledgerEntry = await AddLedgerEntry(ledgerData as InsertPointLedger)
-
-      const existingBalanceResponse = await GetUserRewardBalanceAction(
+      await enqueue("rewards", "add-reward", {
+        action_type,
         user_id,
-        activityRule.reward_id
-      )
-
-      let userRewardBalance
-
-      if (existingBalanceResponse?.success && existingBalanceResponse.data) {
-        const existingBalance = existingBalanceResponse.data
-        const newTotal =
-          (existingBalance.current_balance || 0) + activityRule.base_points
-        userRewardBalance = await UpdateUserRewardBalanceAction(
-          user_id,
-          activityRule.reward_id,
-          newTotal
-        )
-      } else {
-        userRewardBalance = await InsertUserRewardBalanceAction(
-          user_id,
-          activityRule.reward_id,
-          activityRule.base_points
-        )
-      }
-      if (userRewardBalance?.success && userRewardBalance?.data) {
-        await SyncUserRewardLevelAction(
-          user_id,
-          userRewardBalance.data[0].current_balance,
-          activityRule
-        )
-      }
-
-      if (activityRule.required_verification) {
-        const activity = await GetActivityRule({
-          action_type: ActivityTypes.MilestoneApproval
-        })
-
-        const verificationData = {
-          user_id: user_id,
-          rule_id: activityRule.rule_id,
-          status: TrustVerificationStatus.Pending,
-          points: activity?.base_points,
-          proof_url: proof_url
-        }
-
-        const verificationEntry = await AddVerificationEntry(
-          verificationData as InsertTrustVerification
-        )
-      }
-      // add pusher for send real time
-      await triggerPusherEvent(user_id, "reward_added", {
-        ledgerEntry,
-        userRewardBalance
+        proof_url,
+        metadata,
+        verification_id
       })
-
-      return { success: true, data: ledgerEntry }
+      return { success: true, data: null }
     } catch (error) {
       console.log(error, "error")
-      return { success: false, error: error }
+      return { success: false, error }
     }
   }
 )
@@ -151,8 +66,8 @@ export const UpdateTrustVerificationAction = CreateServerAction(
 
       const res = await updateTrustVerification(verification_id, data)
 
-      const isApproved = res?.status === TrustVerificationStatus.Approved
-      const isRejected = res?.status === TrustVerificationStatus.Rejected
+      const isApproved = res?.status === "approved"
+      const isRejected = res?.status === "rejected"
 
       if (isApproved) {
         await AddRewardAction(
@@ -225,6 +140,7 @@ export const InsertUserRewardBalanceAction = CreateServerAction(
     }
   }
 )
+
 export const GetRewardLevelAction = CreateServerAction(
   true,
   async (points: number) => {
