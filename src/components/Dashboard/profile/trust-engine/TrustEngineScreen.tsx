@@ -170,6 +170,7 @@ export default function TrustEngineScreen() {
               rpPoints={rpPoints}
               scPoints={scPoints}
               levelName={userLevel?.rewardLevel?.name ?? "—"}
+              levelId={userLevel?.rewardLevel?.id ?? 1}
               progressPercent={progressPercent}
               pointsNeeded={pointsNeeded}
             />

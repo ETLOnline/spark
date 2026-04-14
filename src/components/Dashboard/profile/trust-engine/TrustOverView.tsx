@@ -10,6 +10,7 @@ interface TrustOverViewProps {
   rpPoints: number
   scPoints: number
   levelName: string
+  levelId: number
   progressPercent: number
   pointsNeeded: number
 }
@@ -18,6 +19,7 @@ export function TrustOverView({
   rpPoints,
   scPoints,
   levelName,
+  levelId,
   progressPercent,
   pointsNeeded
 }: TrustOverViewProps) {
@@ -77,9 +79,16 @@ export function TrustOverView({
           <p className="text-sm font-medium text-muted-foreground">
             Current Level
           </p>
-          <h3 className="text-2xl font-bold text-foreground mt-1">
-            {levelName}
-          </h3>
+          <div className="flex flex-row items-center gap-2">
+            <h3 className="text-2xl font-bold text-foreground mt-1">
+              {levelName}
+            </h3>
+            <img
+              src={`/images/rewards/levels/compressed/level-${levelId ?? 1}.png`}
+              className=" w-12 h-12"
+              alt=""
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
