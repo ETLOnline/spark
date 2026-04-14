@@ -65,6 +65,7 @@ import {
 import Link from "next/link"
 import { projectStore } from "@/src/store/project/projectStore"
 import { projectDefaultStatuses } from "../constants/projectManagment"
+import DefinitionOfCompletion from "./DefinitionOfCompletion"
 
 export default function TaskStatus() {
   const [statuses, setStatuses] = useAtom(projectStore.projectStatusList) // Default statuses as initial state
@@ -78,6 +79,9 @@ export default function TaskStatus() {
   const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] =
     useState(false)
   const [isChangesSaved, setIsChangesSaved] = useState(false)
+  const [definitionOfCompletion, setDefinitionOfCompletion] =
+    useState<string>("Done")
+  const [isDeletingDOC, setIsDeletingDOC] = useState(false)
 
   const [createLoading, data, error, createTaskStatus] = useServerAction(
     CreateTaskStatusAction
@@ -128,6 +132,16 @@ export default function TaskStatus() {
       const taskStatuses = res.data
       setStatuses([...taskStatuses])
       setEditStatus(true)
+
+      const docStatus = taskStatuses.find(
+        (status) => status.defination_of_completion === true
+      )
+
+      if (docStatus) {
+        setDefinitionOfCompletion(docStatus.name)
+      } else {
+        setDefinitionOfCompletion("Done")
+      }
     } else {
       setEditStatus(false)
       setStatuses(
@@ -137,7 +151,9 @@ export default function TaskStatus() {
           position: status.position || 0
         }))
       )
+      setDefinitionOfCompletion("Done")
     }
+
     setIsChangesSaved(false)
   }
 
@@ -264,6 +280,16 @@ export default function TaskStatus() {
     }
   }
 
+  const isDefinationOfCompletionTrue = (statusName: string) => {
+    return statusName === definitionOfCompletion ? true : false
+  }
+  const buildStatusPayload = (status: (typeof statuses)[0]) => ({
+    ...status,
+    position: statuses.findIndex((s) => s.name === status.name),
+    project_id: projectId,
+    defination_of_completion: isDefinationOfCompletionTrue(status.name)
+  })
+
   // Function to save the current status configuration
   const saveStatusConfiguration = async () => {
     setIsSaving(true)
@@ -271,12 +297,7 @@ export default function TaskStatus() {
       // Simulate saving the status configuration, this would be replaced with an API call
       const res = await Promise.all(
         statuses.map(async (status) => {
-          const payload = {
-            ...status,
-            position: statuses.findIndex((s) => s.name === status.name),
-            project_id: projectId
-          }
-          return await createTaskStatus(payload)
+          return await createTaskStatus(buildStatusPayload(status))
         })
       )
       setStatuses(
@@ -315,18 +336,12 @@ export default function TaskStatus() {
       const taskStatus = await Promise.all(
         statuses.map(async (status) => {
           if (status.id) {
-            const payload = {
-              ...status,
-              position: statuses.findIndex((s) => s.name === status.name),
-              id: status.id
-            }
-            await UpdateTaskStatus(payload.id, payload)
+            const payload = buildStatusPayload(status)
+            await UpdateTaskStatus(payload.id!, payload)
           } else {
-            const payload = {
-              ...status,
-              position: statuses.findIndex((s) => s.name === status.name)
-            }
-            const AddedStatus = await createTaskStatus(payload)
+            const AddedStatus = await createTaskStatus(
+              buildStatusPayload(status)
+            )
             if (AddedStatus?.success && AddedStatus.data) {
               fetchStatuses()
             }
@@ -353,6 +368,16 @@ export default function TaskStatus() {
 
   async function handleUpdateTaskStatus() {
     try {
+      const deletingDOC = removedStatus.some(
+        (status) => status.name === definitionOfCompletion
+      )
+
+      setIsDeletingDOC(deletingDOC)
+
+      if (deletingDOC) {
+        setDefinitionOfCompletion("Done")
+      }
+
       if (tasks.length === 0) {
         if (removedStatus.length > 0) {
           const deleted = await Promise.all(
@@ -362,6 +387,8 @@ export default function TaskStatus() {
           )
           setStatuses(statuses.filter((s) => s.name !== removedStatus[0].name))
           setIsDeleteStatusModelOpen(false)
+          setRemovedStatus([])
+          setTasks([])
           fetchStatuses()
           toast({
             title: "Status deleted",
@@ -384,6 +411,8 @@ export default function TaskStatus() {
         setStatuses(statuses.filter((s) => s.name !== removedStatus[0].name))
 
         setIsDeleteStatusModelOpen(false)
+        setRemovedStatus([])
+        setTasks([])
         fetchStatuses()
         toast({
           title: "Status deleted",
@@ -402,6 +431,20 @@ export default function TaskStatus() {
       })
     }
   }
+
+  useEffect(() => {
+    if (isDeletingDOC) {
+      handleEditStatus()
+      setIsDeletingDOC(false)
+    }
+  }, [definitionOfCompletion, isDeletingDOC])
+
+  useEffect(() => {
+    const exists = statuses.find((s) => s.name === definitionOfCompletion)
+    if (!exists && statuses.length > 0) {
+      setDefinitionOfCompletion("Done")
+    }
+  }, [statuses])
 
   return (
     <>
@@ -435,6 +478,12 @@ export default function TaskStatus() {
                 </form>
               </CardContent>
             </Card>
+
+            <DefinitionOfCompletion
+              statusList={statuses}
+              value={definitionOfCompletion}
+              onChange={setDefinitionOfCompletion}
+            />
 
             <Card className="border shadow-none">
               <CardHeader className="py-3">

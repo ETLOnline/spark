@@ -3,29 +3,30 @@ import { ProjectDetailView } from "@/src/components/Dashboard/Projects/Details/P
 import { GetSpaceById } from "@/src/db/data-access/spaces/query"
 import { GetProjectByIdAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import React from "react"
+import { ScrollArea } from "@/src/components/ui/scroll-area"
 
 interface Props {
   params: Promise<{ id: string }>
 }
 
-const ProjectDetailPage = async ({ params }: Props) => {
+const ProjectDetailsPage = async ({ params }: Props) => {
   const { id } = await params
-  const projectId = id
 
-  const selectedProject = await GetProjectByIdAction(projectId || "")
-
-  const currspace = await GetSpaceById(selectedProject.data?.space_id || "")
+  const selectedProject = await GetProjectByIdAction(id || "")
+  const currSpace = await GetSpaceById(selectedProject.data?.space_id || "")
 
   if (!selectedProject.success || !selectedProject.data) {
     return <NotFound />
   }
 
   return (
-    <ProjectDetailView
-      selectedProject={selectedProject.data}
-      currSpace={currspace}
-    />
+    <ScrollArea className="min-h-full">
+      <ProjectDetailView
+        selectedProject={selectedProject.data}
+        currSpace={currSpace}
+      />
+    </ScrollArea>
   )
 }
 
-export default ProjectDetailPage
+export default ProjectDetailsPage

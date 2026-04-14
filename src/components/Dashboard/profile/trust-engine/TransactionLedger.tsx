@@ -3,6 +3,7 @@
 import { ArrowUpRight } from "lucide-react"
 import { Badge } from "../../../ui/badge"
 import { Card } from "../../../ui/card"
+import PaginationComponent from "@/src/components/common/Pagination"
 import { formatActivityName } from "@/src/utils/clientHelper"
 
 interface TransactionProps {
@@ -18,11 +19,19 @@ interface TransactionProps {
   }
 }
 
-export function TransactionLedger({
-  TransactionsData
-}: {
+interface TransactionLedgerProps {
   TransactionsData: TransactionProps[]
-}) {
+  currentPage: number
+  totalPages: number
+  onPageChange: (page: number) => void
+}
+
+export function TransactionLedger({
+  TransactionsData,
+  currentPage,
+  totalPages,
+  onPageChange
+}: TransactionLedgerProps) {
   const data = Array.isArray(TransactionsData) ? TransactionsData : []
 
   return (
@@ -30,16 +39,28 @@ export function TransactionLedger({
       <h3 className="font-semibold text-foreground mb-4">
         Transaction History
       </h3>
-      {data.map((transaction) => (
-        <TransactionRow
-          key={transaction.transection_id}
-          transaction={transaction}
-        />
-      ))}
-      {data.length === 0 && (
-        <p className="text-sm text-muted-foreground text-center py-4">
-          No transactions found.
-        </p>
+
+      <div className="space-y-3">
+        {data.map((transaction) => (
+          <TransactionRow
+            key={transaction.transection_id}
+            transaction={transaction}
+          />
+        ))}
+        {data.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-4">
+            No transactions found.
+          </p>
+        )}
+      </div>
+
+      {totalPages > 1 && (
+        <div className="mt-6 pt-4 border-t">
+          <PaginationComponent
+            pagination={{ page: currentPage, totalPages, total: 0, limit: 10 }}
+            onPageChange={onPageChange}
+          />
+        </div>
       )}
     </Card>
   )
