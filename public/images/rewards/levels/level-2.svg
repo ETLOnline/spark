@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <radialGradient id="bg2" cx="42%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#51ecdc"/>
+      <stop offset="100%" stop-color="#0e8a7e"/>
+    </radialGradient>
+    <radialGradient id="scallop2" cx="42%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#a0f7ee"/>
+      <stop offset="100%" stop-color="#29c4b5"/>
+    </radialGradient>
+    <radialGradient id="inner2" cx="42%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#1ecfbe"/>
+      <stop offset="100%" stop-color="#076b61"/>
+    </radialGradient>
+    <radialGradient id="shine2" cx="30%" cy="26%" r="50%">
+      <stop offset="0%" stop-color="white" stop-opacity="0.5"/>
+      <stop offset="60%" stop-color="white" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="drop2">
+      <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#00000055"/>
+    </filter>
+    <filter id="glow2">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Outer glow aura -->
+  <circle cx="100" cy="100" r="85" fill="#51ecdc" opacity="0.18" filter="url(#glow2)"/>
+
+  <!-- Outer medal body -->
+  <circle cx="100" cy="100" r="85" fill="url(#bg2)" filter="url(#drop2)"/>
+
+  <!-- Scalloped rosette ring -->
+  <polygon
+    points="100,26 116.6,38.2 137,35.9 145.3,54.7 164.1,63 161.8,83.4 174,100 161.8,116.6 164.1,137 145.3,145.3 137,164.1 116.6,161.8 100,174 83.4,161.8 63,164.1 54.7,145.3 35.9,137 38.2,116.6 26,100 38.2,83.4 35.9,63 54.7,54.7 63,35.9 83.4,38.2"
+    fill="url(#scallop2)"/>
+
+  <!-- Inner circle -->
+  <circle cx="100" cy="100" r="57" fill="url(#inner2)"/>
+
+  <!-- Inner ring edge highlight -->
+  <circle cx="100" cy="100" r="57" fill="none" stroke="white" stroke-width="1" stroke-opacity="0.3"/>
+
+  <!-- Gloss shine overlay -->
+  <circle cx="100" cy="100" r="85" fill="url(#shine2)"/>
+
+  <!-- 5-pointed star -->
+  <polygon
+    points="100,68 107.6,89.5 130.4,90.1 112.4,104 118.8,125.9 100,113 81.2,125.9 87.6,104 69.6,90.1 92.4,89.5"
+    fill="white" opacity="0.97"/>
+</svg>

@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 238" fill="none">
+  <defs>
+    <radialGradient id="bg5" cx="42%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#e879f9"/>
+      <stop offset="100%" stop-color="#6b21a8"/>
+    </radialGradient>
+    <radialGradient id="scallop5" cx="42%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#f5d0fe"/>
+      <stop offset="100%" stop-color="#c084fc"/>
+    </radialGradient>
+    <radialGradient id="inner5" cx="42%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#4a1272"/>
+    </radialGradient>
+    <radialGradient id="shine5" cx="30%" cy="26%" r="50%">
+      <stop offset="0%" stop-color="white" stop-opacity="0.55"/>
+      <stop offset="60%" stop-color="white" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ribL5" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6b21a8"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+    <linearGradient id="ribR5" x1="100%" y1="0%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#6b21a8"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+    <filter id="drop5">
+      <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#00000060"/>
+    </filter>
+    <filter id="glow5">
+      <feGaussianBlur stdDeviation="11" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="sparkGlow5">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <mask id="rayMask5">
+      <rect width="200" height="238" fill="white"/>
+      <circle cx="100" cy="100" r="87" fill="black"/>
+    </mask>
+  </defs>
+
+  <!-- Ray burst (masked to outside medal) -->
+  <g mask="url(#rayMask5)" opacity="0.38">
+    <polygon points="100,100 212,88 212,112" fill="#e9d5ff"/>
+    <polygon points="100,100 212,88 212,112" fill="#e9d5ff" transform="rotate(30,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#e9d5ff" transform="rotate(60,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#e9d5ff" transform="rotate(90,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#e9d5ff" transform="rotate(120,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#e9d5ff" transform="rotate(150,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#e9d5ff" transform="rotate(180,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#e9d5ff" transform="rotate(210,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#e9d5ff" transform="rotate(240,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#e9d5ff" transform="rotate(270,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#e9d5ff" transform="rotate(300,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#e9d5ff" transform="rotate(330,100,100)"/>
+  </g>
+
+  <!-- Sparkle 4-pointed stars around the medal -->
+  <!-- Top-left sparkle (large) -->
+  <path d="M 32,28 L 33.8,33.5 L 39,35 L 33.8,36.5 L 32,42 L 30.2,36.5 L 25,35 L 30.2,33.5 Z"
+    fill="white" opacity="0.9" filter="url(#sparkGlow5)"/>
+  <!-- Top-right sparkle (small) -->
+  <path d="M 163,34 L 164.4,37.8 L 168,39 L 164.4,40.2 L 163,44 L 161.6,40.2 L 158,39 L 161.6,37.8 Z"
+    fill="white" opacity="0.85" filter="url(#sparkGlow5)"/>
+  <!-- Right sparkle (medium) -->
+  <path d="M 174,78 L 175.5,82.5 L 180,84 L 175.5,85.5 L 174,90 L 172.5,85.5 L 168,84 L 172.5,82.5 Z"
+    fill="white" opacity="0.8" filter="url(#sparkGlow5)"/>
+  <!-- Bottom-right sparkle (small) -->
+  <path d="M 162,152 L 163.2,155.2 L 166,156 L 163.2,156.8 L 162,160 L 160.8,156.8 L 158,156 L 160.8,155.2 Z"
+    fill="white" opacity="0.75" filter="url(#sparkGlow5)"/>
+  <!-- Left sparkle (medium) -->
+  <path d="M 26,82 L 27.5,86.5 L 32,88 L 27.5,89.5 L 26,94 L 24.5,89.5 L 20,88 L 24.5,86.5 Z"
+    fill="white" opacity="0.7" filter="url(#sparkGlow5)"/>
+  <!-- Small dot accents -->
+  <circle cx="170" cy="52" r="2.5" fill="white" opacity="0.7"/>
+  <circle cx="35" cy="136" r="2" fill="white" opacity="0.65"/>
+  <circle cx="166" cy="130" r="2" fill="white" opacity="0.6"/>
+
+  <!-- Ribbon tabs (behind medal) -->
+  <polygon points="75,176 93,176 93,228 83.5,219 75,228" fill="url(#ribL5)"/>
+  <polygon points="87,176 93,176 93,225 90,218 87,225" fill="#e9d5ff" opacity="0.5"/>
+  <polygon points="107,176 125,176 125,228 116.5,219 107,228" fill="url(#ribR5)"/>
+  <polygon points="107,176 113,176 113,225 110,218 107,225" fill="#e9d5ff" opacity="0.5"/>
+
+  <!-- Outer glow aura (strong for Master level) -->
+  <circle cx="100" cy="100" r="85" fill="#a855f7" opacity="0.28" filter="url(#glow5)"/>
+
+  <!-- Outer medal body -->
+  <circle cx="100" cy="100" r="85" fill="url(#bg5)" filter="url(#drop5)"/>
+
+  <!-- Scalloped rosette ring -->
+  <polygon
+    points="100,26 116.6,38.2 137,35.9 145.3,54.7 164.1,63 161.8,83.4 174,100 161.8,116.6 164.1,137 145.3,145.3 137,164.1 116.6,161.8 100,174 83.4,161.8 63,164.1 54.7,145.3 35.9,137 38.2,116.6 26,100 38.2,83.4 35.9,63 54.7,54.7 63,35.9 83.4,38.2"
+    fill="url(#scallop5)"/>
+
+  <!-- Inner circle -->
+  <circle cx="100" cy="100" r="57" fill="url(#inner5)"/>
+  <circle cx="100" cy="100" r="57" fill="none" stroke="white" stroke-width="1" stroke-opacity="0.35"/>
+
+  <!-- Gloss shine overlay -->
+  <circle cx="100" cy="100" r="85" fill="url(#shine5)"/>
+
+  <!-- 5-pointed star -->
+  <polygon
+    points="100,68 107.6,89.5 130.4,90.1 112.4,104 118.8,125.9 100,113 81.2,125.9 87.6,104 69.6,90.1 92.4,89.5"
+    fill="white" opacity="0.97"/>
+</svg>

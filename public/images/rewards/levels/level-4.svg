@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 238" fill="none">
+  <defs>
+    <radialGradient id="bg4" cx="42%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#a5b4fc"/>
+      <stop offset="100%" stop-color="#3730a3"/>
+    </radialGradient>
+    <radialGradient id="scallop4" cx="42%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#e0e7ff"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </radialGradient>
+    <radialGradient id="inner4" cx="42%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#1e1b6e"/>
+    </radialGradient>
+    <radialGradient id="shine4" cx="30%" cy="26%" r="50%">
+      <stop offset="0%" stop-color="white" stop-opacity="0.5"/>
+      <stop offset="60%" stop-color="white" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ribL4" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3730a3"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <linearGradient id="ribR4" x1="100%" y1="0%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#3730a3"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <filter id="drop4">
+      <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#00000060"/>
+    </filter>
+    <filter id="glow4">
+      <feGaussianBlur stdDeviation="9" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <mask id="rayMask4">
+      <rect width="200" height="238" fill="white"/>
+      <circle cx="100" cy="100" r="87" fill="black"/>
+    </mask>
+  </defs>
+
+  <!-- Ray burst (visible only outside medal via mask) -->
+  <g mask="url(#rayMask4)" opacity="0.45">
+    <polygon points="100,100 212,88 212,112" fill="#c7d2fe"/>
+    <polygon points="100,100 212,88 212,112" fill="#c7d2fe" transform="rotate(30,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#c7d2fe" transform="rotate(60,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#c7d2fe" transform="rotate(90,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#c7d2fe" transform="rotate(120,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#c7d2fe" transform="rotate(150,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#c7d2fe" transform="rotate(180,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#c7d2fe" transform="rotate(210,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#c7d2fe" transform="rotate(240,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#c7d2fe" transform="rotate(270,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#c7d2fe" transform="rotate(300,100,100)"/>
+    <polygon points="100,100 212,88 212,112" fill="#c7d2fe" transform="rotate(330,100,100)"/>
+  </g>
+
+  <!-- Ribbon tabs (behind medal) -->
+  <polygon points="75,176 93,176 93,228 83.5,219 75,228" fill="url(#ribL4)"/>
+  <polygon points="87,176 93,176 93,225 90,218 87,225" fill="#c7d2fe" opacity="0.5"/>
+  <polygon points="107,176 125,176 125,228 116.5,219 107,228" fill="url(#ribR4)"/>
+  <polygon points="107,176 113,176 113,225 110,218 107,225" fill="#c7d2fe" opacity="0.5"/>
+
+  <!-- Outer glow aura -->
+  <circle cx="100" cy="100" r="85" fill="#818cf8" opacity="0.22" filter="url(#glow4)"/>
+
+  <!-- Outer medal body -->
+  <circle cx="100" cy="100" r="85" fill="url(#bg4)" filter="url(#drop4)"/>
+
+  <!-- Scalloped rosette ring -->
+  <polygon
+    points="100,26 116.6,38.2 137,35.9 145.3,54.7 164.1,63 161.8,83.4 174,100 161.8,116.6 164.1,137 145.3,145.3 137,164.1 116.6,161.8 100,174 83.4,161.8 63,164.1 54.7,145.3 35.9,137 38.2,116.6 26,100 38.2,83.4 35.9,63 54.7,54.7 63,35.9 83.4,38.2"
+    fill="url(#scallop4)"/>
+
+  <!-- Inner circle -->
+  <circle cx="100" cy="100" r="57" fill="url(#inner4)"/>
+  <circle cx="100" cy="100" r="57" fill="none" stroke="white" stroke-width="1" stroke-opacity="0.3"/>
+
+  <!-- Gloss shine overlay -->
+  <circle cx="100" cy="100" r="85" fill="url(#shine4)"/>
+
+  <!-- 5-pointed star -->
+  <polygon
+    points="100,68 107.6,89.5 130.4,90.1 112.4,104 118.8,125.9 100,113 81.2,125.9 87.6,104 69.6,90.1 92.4,89.5"
+    fill="white" opacity="0.97"/>
+</svg>
