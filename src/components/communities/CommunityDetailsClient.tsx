@@ -116,10 +116,6 @@ export default function CommunityDetailsClient({
     "COMMUNITY",
     community?.id
   )
-  const user = useAtomValue(userStore.AuthUser)
-  const roleDisplay = user?.roles?.find(
-    (r) => r.role?.name?.toLowerCase() === "student"
-  )?.role?.name
   useEffect(() => {
     if (community) {
       const transformedCommunity: SelectCommunity = {
@@ -662,12 +658,14 @@ export default function CommunityDetailsClient({
                   ))}
                 </div>
               </div>
-              {roleDisplay && (
-                <RankingCard
-                  communityTitle={community.title}
-                  currentUserRank={currentUserRank}
-                />
-              )}
+
+              <RankingCard
+                communityTitle={community.title}
+                currentUserRank={currentUserRank}
+                handleClick={() =>
+                  router.push(`/communities/${encodedCommunitySlug}/ranking`)
+                }
+              />
             </div>
           </div>
 

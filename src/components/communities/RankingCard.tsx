@@ -12,16 +12,21 @@ type UserRank = {
 interface RankingCardProps {
   currentUserRank?: UserRank | null
   communityTitle?: string
+  handleClick?: () => void
 }
 
 const RankingCard: React.FC<RankingCardProps> = ({
   currentUserRank,
-  communityTitle
+  communityTitle,
+  handleClick
 }) => {
   if (!currentUserRank) return null
 
   return (
-    <Card className="p-6  border-primary/20">
+    <Card
+      onClick={handleClick}
+      className="p-6 hover:cursor-pointer border-primary/20"
+    >
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-muted-foreground mb-2">Your Ranking</p>
