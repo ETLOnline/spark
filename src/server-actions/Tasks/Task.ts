@@ -190,8 +190,7 @@ export const UpdateTaskAction = CreateServerAction(
         const oldStatusSlug = oldTask.status?.status_slug
         const newStatusSlug = UpdatedTask.status?.status_slug
         const assigneeId = UpdatedTask.assign_to
-        const assigneeChanged =
-          assigneeId && oldTask.assign_to !== UpdatedTask.assign_to
+        
         const shouldCheckInProgress =
           assigneeId &&
           oldStatusSlug !== ProjectStatus.InProgress &&
@@ -213,9 +212,6 @@ export const UpdateTaskAction = CreateServerAction(
           }
         }
 
-        // ── TaskCompletion RP ──────────────────────────────────────────────
-        // Trigger: Task status moved TO completion (only if assignee/tester assigned at that moment)
-        // No rewards if ticket moved back from completion or assignee/tester changed
         const taskIsComplete = meetsCompletionCriteria(UpdatedTask)
         const justCompleted = !meetsCompletionCriteria(oldTask) && taskIsComplete
 
@@ -238,6 +234,22 @@ export const UpdateTaskAction = CreateServerAction(
               }
             })
           )
+
+          if (UpdatedTask.tested_by) {
+            const testCheck = await CheckRewardAlreadyGivenAction(
+              UpdatedTask.tested_by,
+              ActivityTypes.TaskTestCompletion,
+              "task_id",
+              UpdatedTask.id
+            )
+            if (!testCheck?.data?.alreadyRewarded) {
+              await AddTaskRewardAction(ActivityTypes.TaskTestCompletion, {
+                user_id: UpdatedTask.tested_by,
+                task_id: UpdatedTask.id,
+                project_id: UpdatedTask.project_id
+              })
+            }
+          }
         }
 
         return { success: true, data: UpdatedTask }
