@@ -19,6 +19,7 @@ import {
   getProjectRecentActivities,
   getProjectusersProfileUrl
 } from "@/src/db/data-access/project-management/query"
+import { AddRewardAction, CheckRewardAlreadyGivenAction } from "../Reward/Reward"
 import {
   createScopedProjectRolesAndAssignAdmin,
   deleteUserRole,
@@ -30,7 +31,6 @@ import { createProjectInviteNotification } from "@/src/services/notify/project/p
 import { NotificationEvent } from "@/src/services/notify/types/events"
 import { getSpaceUsers } from "@/src/db/data-access/spaces/query"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
-import { AddRewardAction } from "../Reward/Reward"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
 import { AuthUserAction } from "../User/AuthUserAction"
 
@@ -97,12 +97,21 @@ export const UpdateProjectAction = CreateServerAction(
       if ("description" in project_data && updatedProject.created_by) {
         const user = await AuthUserAction()
         if (user?.unique_id) {
-          await AddRewardAction(
-            ActivityTypes.ProjectOverviewUpdate,
+          const overviewCheck = await CheckRewardAlreadyGivenAction(
             user.unique_id,
-            projectUrl,
-            { project_id: updatedProject.id }
+            ActivityTypes.ProjectOverviewUpdate,
+            "project_id",
+            updatedProject.id
           )
+
+          if (!overviewCheck?.data?.alreadyRewarded) {
+            await AddRewardAction(
+              ActivityTypes.ProjectOverviewUpdate,
+              user.unique_id,
+              projectUrl,
+              { project_id: updatedProject.id }
+            )
+          }
         }
       }
 
