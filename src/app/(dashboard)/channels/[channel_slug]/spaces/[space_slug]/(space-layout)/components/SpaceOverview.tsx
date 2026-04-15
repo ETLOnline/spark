@@ -22,7 +22,7 @@ import { Editor } from "@tiptap/react"
 import { GetSpaceURL, normalizeHTML } from "@/src/utils/helpers"
 import { useAtomValue } from "jotai"
 import { onlineUsersStore } from "@/src/store/onlineUsers/onlineUsersStore"
-import { AddRewardAction, CheckRewardAlreadyGivenAction } from "@/src/server-actions/Reward/Reward"
+import { AddRewardAction } from "@/src/server-actions/Reward/Reward"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
 import { auth } from "@clerk/nextjs/server"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
@@ -80,26 +80,18 @@ function SpaceOverview({
             space.space_slug
           )
 
-         
-          const overviewCheck = await CheckRewardAlreadyGivenAction(
-            authUser?.unique_id || "",
+          await AddRewardAction(
             ActivityTypes.SpaceOverviewUpdate,
+            authUser?.unique_id || "",
+            spaceURL,
+            {
+              space_id: space.id,
+              channel_id: space.channel?.id
+            },
+            undefined,
             "space_id",
             space.id
           )
-
-          
-          if (!overviewCheck?.data?.alreadyRewarded) {
-            await AddRewardAction(
-              ActivityTypes.SpaceOverviewUpdate,
-              authUser?.unique_id || "",
-              spaceURL,
-              {
-                space_id: space.id,
-                channel_id: space.channel?.id
-              }
-            )
-          }
 
           toast({
             title: "Overview updated successfully",

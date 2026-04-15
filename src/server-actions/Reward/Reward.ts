@@ -39,7 +39,9 @@ export const AddRewardAction = CreateServerAction(
     user_id: string,
     proof_url?: string,
     metadata?: any,
-    verification_id?: number
+    verification_id?: number,
+    idempotency_field?: string,
+    idempotency_value?: string
   ) => {
     try {
       const fetureFlag = await getFeatureFlagAction(["Trust_Engine_Enabled"])
@@ -51,6 +53,19 @@ export const AddRewardAction = CreateServerAction(
 
       if (!activityRule) {
         return { success: false, error: "Activity rule not found" }
+      }
+
+      if (idempotency_field && idempotency_value) {
+        const alreadyRewarded = await HasUserBeenRewardedForResource(
+          user_id,
+          activityRule.rule_id,
+          idempotency_field,
+          idempotency_value
+        )
+
+        if (alreadyRewarded) {
+          return { success: true, data: null, skipped: true }
+        }
       }
 
       const ledgerData = {

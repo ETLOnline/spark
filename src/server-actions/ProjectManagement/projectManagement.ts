@@ -19,7 +19,7 @@ import {
   getProjectRecentActivities,
   getProjectusersProfileUrl
 } from "@/src/db/data-access/project-management/query"
-import { AddRewardAction, CheckRewardAlreadyGivenAction } from "../Reward/Reward"
+import { AddRewardAction } from "../Reward/Reward"
 import {
   createScopedProjectRolesAndAssignAdmin,
   deleteUserRole,
@@ -97,21 +97,15 @@ export const UpdateProjectAction = CreateServerAction(
       if ("description" in project_data && updatedProject.created_by) {
         const user = await AuthUserAction()
         if (user?.unique_id) {
-          const overviewCheck = await CheckRewardAlreadyGivenAction(
-            user.unique_id,
+          await AddRewardAction(
             ActivityTypes.ProjectOverviewUpdate,
+            user.unique_id,
+            projectUrl,
+            { project_id: updatedProject.id },
+            undefined,
             "project_id",
             updatedProject.id
           )
-
-          if (!overviewCheck?.data?.alreadyRewarded) {
-            await AddRewardAction(
-              ActivityTypes.ProjectOverviewUpdate,
-              user.unique_id,
-              projectUrl,
-              { project_id: updatedProject.id }
-            )
-          }
         }
       }
 
