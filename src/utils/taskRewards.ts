@@ -4,17 +4,21 @@ import { ProjectStatus } from "@/src/components/Dashboard/ProjectManagement/type
 /**
  * Determines whether a task meets the completion criteria.
  *
- * Currently: task status slug must be "done".
+ * Logic:
+ * 1. Check if task's status has `defination_of_completion = true` in tasks_status table
+ *    → If yes, task is complete
+ * 2. Fallback: Check if status slug is "done"
+ *    → If yes, task is complete
+ * 3. Otherwise: Not complete
  *
- * Future: when a `completion_definition` column is added to the task table,
- * this function will read that column and apply the configured criteria.
- * No other file needs to change — only this function.
+ * This allows projects to configure which statuses count as "completion"
  */
 export function meetsCompletionCriteria(task: SelectTask): boolean {
-  // Future hook — swap this block when completion_definition column is ready:
-  // if (task.completion_definition) {
-  //   return evaluateCompletionDefinition(task, task.completion_definition)
-  // }
+  
+  if (task.status?.defination_of_completion === true) {
+    return true
+  }
+
   return task.status?.status_slug === ProjectStatus.Done
 }
 
