@@ -4,7 +4,7 @@ import { attachSpaceFeatures } from "@/src/db/data-access/spaces/query"
 import { SelectFeature } from "@/src/db/schema"
 import { CreateServerAction } from ".."
 import { getFeatures } from "@/src/db/data-access/feature/query"
-import { AddRewardAction } from "../Reward/Reward"
+import { AddRewardAction, CheckRewardAlreadyGivenAction } from "../Reward/Reward"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
 import { AuthUserAction } from "../User/AuthUserAction"
 import { GetSpaceURL } from "@/src/utils/helpers"
@@ -34,11 +34,26 @@ export const attachSpaceFeaturesAction = CreateServerAction(
         space?.space_slug || ""
       )
 
-      await AddRewardAction(
-        ActivityTypes.SpaceCreation,
+     
+      const featureCheck = await CheckRewardAlreadyGivenAction(
         authUser.unique_id,
-        spaceURL
+        ActivityTypes.SpaceFeatureUpdate,
+        "space_id",
+        spaceId
       )
+
+     
+      if (!featureCheck?.data?.alreadyRewarded) {
+        await AddRewardAction(
+          ActivityTypes.SpaceFeatureUpdate,
+          authUser.unique_id,
+          spaceURL,
+          {
+            space_id: spaceId,
+            channel_id: space?.channel?.id
+          }
+        )
+      }
 
       return { success: true, data: space }
     } catch (error) {
