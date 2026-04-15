@@ -35,7 +35,7 @@ import { GetSpaceById } from "@/src/db/data-access/spaces/query"
 import moment from "moment"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
-import { AddRewardAction } from "../Reward/Reward"
+import { AddRewardAction, CheckRewardAlreadyGivenAction } from "../Reward/Reward"
 import { getPostUrl } from "@/src/utils/serverHelpers"
 
 export const CreatePostAction = CreateServerAction(
@@ -419,14 +419,23 @@ export const ToggleLikeAction = CreateServerAction(
             )
           }
           const { proof_url, communityId } = await getPostUrl(postId, space_id)
-          await AddRewardAction(
-            ActivityTypes.SocialPostLike,
+          const likeCheck = await CheckRewardAlreadyGivenAction(
             userId,
-            proof_url,
-            {
-              community_id: communityId
-            }
+            ActivityTypes.SocialPostLike,
+            "post_id",
+            postId
           )
+          if (!likeCheck?.data?.alreadyRewarded) {
+            await AddRewardAction(
+              ActivityTypes.SocialPostLike,
+              userId,
+              proof_url,
+              {
+                community_id: communityId,
+                post_id: postId
+              }
+            )
+          }
           return { success: true, data }
         }
       } else {

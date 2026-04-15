@@ -10,6 +10,7 @@ import {
   GetUserPointLedger,
   GetUserRewardBalance,
   GetUserRewardLevel,
+  HasUserBeenRewardedForResource,
   InsertUserRewardBalance,
   updateTrustVerification,
   UpdateUserRewardBalance,
@@ -389,3 +390,44 @@ export const getRewardLevelsAction = CreateServerAction(true, async () => {
     return { success: false, error }
   }
 })
+
+/**
+ * Check whether a user has already been rewarded for a specific resource.
+ *
+ * @param user_id     - The user to check
+ * @param action_type - The ActivityTypes key (used to look up the rule_id)
+ * @param field       - The JSONB metadata key to match (e.g. "post_id", "task_id", "sprint_id")
+ * @param value       - The resource ID value to match
+ *
+ * Returns { alreadyRewarded: true } when a matching ledger entry already exists,
+ * so callers can skip AddRewardAction and avoid duplicate points.
+ */
+export const CheckRewardAlreadyGivenAction = CreateServerAction(
+  true,
+  async (
+    user_id: string,
+    action_type: string,
+    field: string,
+    value: string
+  ) => {
+    try {
+      const activityRule = await GetActivityRule({ action_type })
+
+      if (!activityRule) {
+        // Rule doesn't exist — treat as not rewarded so the reward flow can handle it
+        return { success: true, data: { alreadyRewarded: false } }
+      }
+
+      const alreadyRewarded = await HasUserBeenRewardedForResource(
+        user_id,
+        activityRule.rule_id,
+        field,
+        value
+      )
+
+      return { success: true, data: { alreadyRewarded } }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)

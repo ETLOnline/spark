@@ -36,7 +36,7 @@ import { NotificationEvent } from "@/src/services/notify/types/events"
 import { addProjectRecentActivity } from "@/src/utils/taskHelpr"
 import { AddTaskHistoryAction } from "./TaskHistory"
 import { extractMentionsFromMessage } from "@/src/services/realtime/utils/helper"
-import { AddRewardAction, AddTaskRewardAction } from "../Reward/Reward"
+import { AddRewardAction, AddTaskRewardAction, CheckRewardAlreadyGivenAction } from "../Reward/Reward"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
 import { ProjectStatus } from "@/src/components/Dashboard/ProjectManagement/types/projectStatus.type"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
@@ -190,42 +190,97 @@ export const UpdateTaskAction = CreateServerAction(
         const oldStatusSlug = oldTask.status?.status_slug
         const newStatusSlug = UpdatedTask.status?.status_slug
         const assigneeId = UpdatedTask.assign_to
+        const assigneeChanged =
+          assigneeId && oldTask.assign_to !== UpdatedTask.assign_to
 
-        // task moved to in-progress — only for assignee
-        if (
-          assigneeId &&
-          oldStatusSlug !== ProjectStatus.InProgress &&
-          newStatusSlug === ProjectStatus.InProgress
-        ) {
-          await AddTaskRewardAction(ActivityTypes.TaskInprogress, {
-            user_id: assigneeId,
-            task_id: UpdatedTask.id,
-            project_id: UpdatedTask.project_id
-          })
+        // ── TaskInprogress RP ──────────────────────────────────────────────
+        // Trigger 1: status just moved to InProgress (any assignee)
+        // Trigger 2: assignee changed while task is already InProgress
+        const shouldCheckInProgress =
+          (assigneeId &&
+            oldStatusSlug !== ProjectStatus.InProgress &&
+            newStatusSlug === ProjectStatus.InProgress) ||
+          (assigneeChanged && newStatusSlug === ProjectStatus.InProgress)
+
+        if (shouldCheckInProgress && assigneeId) {
+          const inProgressCheck = await CheckRewardAlreadyGivenAction(
+            assigneeId,
+            ActivityTypes.TaskInprogress,
+            "task_id",
+            UpdatedTask.id
+          )
+          if (!inProgressCheck?.data?.alreadyRewarded) {
+            await AddTaskRewardAction(ActivityTypes.TaskInprogress, {
+              user_id: assigneeId,
+              task_id: UpdatedTask.id,
+              project_id: UpdatedTask.project_id
+            })
+          }
         }
 
-        // task completion — criteria and recipients are fully owned by taskRewards.ts
-        // when completion_definition column arrives, only taskRewards.ts changes
-        if (!meetsCompletionCriteria(oldTask) && meetsCompletionCriteria(UpdatedTask)) {
+        // ── TaskCompletion RP ──────────────────────────────────────────────
+        // Trigger 1: task just reached completion criteria (any recipients)
+        // Trigger 2: assignee changed while task is already complete → reward new assignee
+        const taskIsComplete = meetsCompletionCriteria(UpdatedTask)
+        const justCompleted = !meetsCompletionCriteria(oldTask) && taskIsComplete
+
+        if (justCompleted) {
           const recipients = getTaskCompletionRecipients(UpdatedTask)
           await Promise.all(
-            recipients.map((user_id) =>
-              AddTaskRewardAction(ActivityTypes.TaskCompletion, {
+            recipients.map(async (user_id) => {
+              const completionCheck = await CheckRewardAlreadyGivenAction(
                 user_id,
-                task_id: UpdatedTask.id,
-                project_id: UpdatedTask.project_id
-              })
-            )
+                ActivityTypes.TaskCompletion,
+                "task_id",
+                UpdatedTask.id
+              )
+              if (!completionCheck?.data?.alreadyRewarded) {
+                await AddTaskRewardAction(ActivityTypes.TaskCompletion, {
+                  user_id,
+                  task_id: UpdatedTask.id,
+                  project_id: UpdatedTask.project_id
+                })
+              }
+            })
           )
+        } else if (assigneeChanged && taskIsComplete && assigneeId) {
+          // Task was already complete — new assignee missed the original reward
+          const completionCheck = await CheckRewardAlreadyGivenAction(
+            assigneeId,
+            ActivityTypes.TaskCompletion,
+            "task_id",
+            UpdatedTask.id
+          )
+          if (!completionCheck?.data?.alreadyRewarded) {
+            await AddTaskRewardAction(ActivityTypes.TaskCompletion, {
+              user_id: assigneeId,
+              task_id: UpdatedTask.id,
+              project_id: UpdatedTask.project_id
+            })
+          }
         }
 
-        // tested_by newly assigned — reward the tester
-        if (!oldTask.tested_by && UpdatedTask.tested_by) {
-          await AddTaskRewardAction(ActivityTypes.TaskTestCompletion, {
-            user_id: UpdatedTask.tested_by,
-            task_id: UpdatedTask.id,
-            project_id: UpdatedTask.project_id
-          })
+        // ── TaskTestCompletion RP ──────────────────────────────────────────
+        // Trigger 1: tested_by first assigned
+        // Trigger 2: tested_by changed to a different user
+        const testerChanged =
+          UpdatedTask.tested_by &&
+          oldTask.tested_by !== UpdatedTask.tested_by
+
+        if (testerChanged && UpdatedTask.tested_by) {
+          const testCheck = await CheckRewardAlreadyGivenAction(
+            UpdatedTask.tested_by,
+            ActivityTypes.TaskTestCompletion,
+            "task_id",
+            UpdatedTask.id
+          )
+          if (!testCheck?.data?.alreadyRewarded) {
+            await AddTaskRewardAction(ActivityTypes.TaskTestCompletion, {
+              user_id: UpdatedTask.tested_by,
+              task_id: UpdatedTask.id,
+              project_id: UpdatedTask.project_id
+            })
+          }
         }
 
         return { success: true, data: UpdatedTask }

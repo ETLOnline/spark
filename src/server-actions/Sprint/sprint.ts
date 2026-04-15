@@ -14,7 +14,7 @@ import { SelectSprint } from "@/src/db/schema"
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { GetTasks } from "@/src/db/data-access/tasks/query"
 import { AuthUserAction } from "../User/AuthUserAction"
-import { AddRewardAction } from "../Reward/Reward"
+import { AddRewardAction, CheckRewardAlreadyGivenAction } from "../Reward/Reward"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
 import { SprintStatus } from "@/src/components/Dashboard/ProjectManagement/constants/projectManagment"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
@@ -79,12 +79,20 @@ export const UpdateSprintAction = CreateServerAction(
       const sprintUrl = createAbsoluteUrl(`/project/${updatedSprint.projectId}/sprint`)
       if (updatedSprint.sprint_status === SprintStatus.CLOSED) {
         if (user?.unique_id) {
-          await AddRewardAction(
-            ActivityTypes.SprintCompletion,
+          const sprintCheck = await CheckRewardAlreadyGivenAction(
             user.unique_id,
-            sprintUrl,
-            { sprint_id: updatedSprint.id, project_id: updatedSprint.projectId }
+            ActivityTypes.SprintCompletion,
+            "sprint_id",
+            updatedSprint.id
           )
+          if (!sprintCheck?.data?.alreadyRewarded) {
+            await AddRewardAction(
+              ActivityTypes.SprintCompletion,
+              user.unique_id,
+              sprintUrl,
+              { sprint_id: updatedSprint.id, project_id: updatedSprint.projectId }
+            )
+          }
         }
       }
 

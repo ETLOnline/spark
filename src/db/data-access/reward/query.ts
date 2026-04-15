@@ -251,3 +251,28 @@ export async function GetRewardLevels() {
     throw new Error(e.message)
   }
 }
+
+/**
+ * Check whether a user has already been awarded for a specific resource.
+ * Uses a JSONB metadata lookup: metadata->>'field' = 'value'
+ * e.g. field = "post_id", value = "abc-123"
+ */
+export async function HasUserBeenRewardedForResource(
+  user_id: string,
+  rule_id: number,
+  field: string,
+  value: string
+): Promise<boolean> {
+  try {
+    const res = await db.query.pointLedgerTable.findFirst({
+      where: and(
+        eq(pointLedgerTable.user_id, user_id),
+        eq(pointLedgerTable.rule_id, rule_id),
+        sql`${pointLedgerTable.metadata}->>${field} = ${value}`
+      )
+    })
+    return !!res
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
