@@ -52,11 +52,7 @@ function RewardNotification() {
         newLevel: SelectRewardLevel
         currentUserBalance: number
       }) => {
-        setLevelUp({
-          levelName: newLevel.name,
-          levelIconId: newLevel.id.toString(),
-          currentUserBalance
-        })
+        setLevelUp({ levelName: newLevel.name, levelIconId: newLevel.id.toString(), currentUserBalance })
         setRewardModalVisible(true)
       }
     )

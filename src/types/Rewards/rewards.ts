@@ -91,7 +91,7 @@ export const ActivityDisplayNames: Record<string, string> = {
   [ActivityTypes.TaskCompletionReview]: "Task Completion Reviewed",
   [ActivityTypes.TaskComment]: "Task Comment Added",
   [ActivityTypes.ProjectOverviewUpdate]: "Project Overview Updated"
-}
+};
 
 export enum TrustVerificationStatus {
   Pending = "pending",
