@@ -69,6 +69,8 @@ import PrivatePage from "../common/Overlay/PrivatePage"
 import pusherClient from "@/src/services/realtime/PusherClient"
 import { EntityUpdateBroadCast } from "@/src/utils/constants"
 import { onlineUsersStore } from "@/src/store/onlineUsers/onlineUsersStore"
+import RankingCard from "./RankingCard"
+import { CommunityRankingsData } from "../Dashboard/profile/trust-engine/Constant"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -114,7 +116,6 @@ export default function CommunityDetailsClient({
     "COMMUNITY",
     community?.id
   )
-
   useEffect(() => {
     if (community) {
       const transformedCommunity: SelectCommunity = {
@@ -321,6 +322,8 @@ export default function CommunityDetailsClient({
   if (showAccessDeniedOverlay) {
     return <PrivatePage page="Community" pageHref="/communities" />
   }
+  const currentUserRank = CommunityRankingsData.find((r) => r.isCurrentUser)
+
   return (
     <div className="min-h-screen bg-background relative">
       {/* Added relative for the overlay positioning */}
@@ -655,6 +658,14 @@ export default function CommunityDetailsClient({
                   ))}
                 </div>
               </div>
+
+              <RankingCard
+                communityTitle={community.title}
+                currentUserRank={currentUserRank}
+                handleClick={() =>
+                  router.push(`/communities/${encodedCommunitySlug}/ranking`)
+                }
+              />
             </div>
           </div>
 
@@ -747,7 +758,7 @@ export default function CommunityDetailsClient({
         open={isInviteDialogOpen}
         onOpenChange={setIsInviteDialogOpen}
         spaceName="Platform"
-        type={["link","email"]}
+        type={["link", "email"]}
         entityType="community"
         entity={community}
       />
