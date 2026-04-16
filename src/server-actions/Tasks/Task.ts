@@ -36,7 +36,7 @@ import { NotificationEvent } from "@/src/services/notify/types/events"
 import { addProjectRecentActivity } from "@/src/utils/taskHelpr"
 import { AddTaskHistoryAction } from "./TaskHistory"
 import { extractMentionsFromMessage } from "@/src/services/realtime/utils/helper"
-import { AddRewardAction, AddTaskRewardAction, CheckRewardAlreadyGivenAction } from "../Reward/Reward"
+import { AddRewardAction, AddTaskRewardAction } from "../Reward/Reward"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
 import { ProjectStatus } from "@/src/components/Dashboard/ProjectManagement/types/projectStatus.type"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
@@ -197,19 +197,16 @@ export const UpdateTaskAction = CreateServerAction(
           newStatusSlug === ProjectStatus.InProgress
 
         if (shouldCheckInProgress && assigneeId) {
-          const inProgressCheck = await CheckRewardAlreadyGivenAction(
-            assigneeId,
+          await AddTaskRewardAction(
             ActivityTypes.TaskInprogress,
-            "task_id",
-            UpdatedTask.id
-          )
-          if (!inProgressCheck?.data?.alreadyRewarded) {
-            await AddTaskRewardAction(ActivityTypes.TaskInprogress, {
+            {
               user_id: assigneeId,
               task_id: UpdatedTask.id,
               project_id: UpdatedTask.project_id
-            })
-          }
+            },
+            "task_id",
+            UpdatedTask.id
+          )
         }
 
         const taskIsComplete = meetsCompletionCriteria(UpdatedTask)
@@ -219,36 +216,30 @@ export const UpdateTaskAction = CreateServerAction(
           const recipients = getTaskCompletionRecipients(UpdatedTask)
           await Promise.all(
             recipients.map(async (user_id) => {
-              const completionCheck = await CheckRewardAlreadyGivenAction(
-                user_id,
+              await AddTaskRewardAction(
                 ActivityTypes.TaskCompletion,
-                "task_id",
-                UpdatedTask.id
-              )
-              if (!completionCheck?.data?.alreadyRewarded) {
-                await AddTaskRewardAction(ActivityTypes.TaskCompletion, {
+                {
                   user_id,
                   task_id: UpdatedTask.id,
                   project_id: UpdatedTask.project_id
-                })
-              }
+                },
+                "task_id",
+                UpdatedTask.id
+              )
             })
           )
 
           if (UpdatedTask.tested_by) {
-            const testCheck = await CheckRewardAlreadyGivenAction(
-              UpdatedTask.tested_by,
+            await AddTaskRewardAction(
               ActivityTypes.TaskTestCompletion,
-              "task_id",
-              UpdatedTask.id
-            )
-            if (!testCheck?.data?.alreadyRewarded) {
-              await AddTaskRewardAction(ActivityTypes.TaskTestCompletion, {
+              {
                 user_id: UpdatedTask.tested_by,
                 task_id: UpdatedTask.id,
                 project_id: UpdatedTask.project_id
-              })
-            }
+              },
+              "task_id",
+              UpdatedTask.id
+            )
           }
         }
 

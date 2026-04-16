@@ -370,7 +370,9 @@ export const AddTaskRewardAction = CreateServerAction(
       project_id?: string
       sprint_id?: string
       comment_id?: number
-    }
+    },
+    idempotency_field?: string,
+    idempotency_value?: string
   ) => {
     try {
       const { user_id, task_id, project_id, sprint_id, comment_id } = payload
@@ -391,7 +393,15 @@ export const AddTaskRewardAction = CreateServerAction(
         metadata = { project_id }
       }
 
-      return await AddRewardAction(activityType, user_id, proof_url, metadata)
+      return await AddRewardAction(
+        activityType,
+        user_id,
+        proof_url,
+        metadata,
+        undefined,
+        idempotency_field,
+        idempotency_value
+      )
     } catch (error) {
       return { success: false, error }
     }
