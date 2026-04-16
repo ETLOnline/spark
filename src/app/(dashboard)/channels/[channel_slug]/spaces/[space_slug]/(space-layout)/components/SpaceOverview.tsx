@@ -83,7 +83,14 @@ function SpaceOverview({
           await AddRewardAction(
             ActivityTypes.SpaceOverviewUpdate,
             authUser?.unique_id || "",
-            spaceURL
+            spaceURL,
+            {
+              space_id: space.id,
+              channel_id: space.channel?.id
+            },
+            undefined,
+            "space_id",
+            space.id
           )
 
           toast({

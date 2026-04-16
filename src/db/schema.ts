@@ -1168,6 +1168,7 @@ export const TaskStatusTable = pgTable("tasks_status", {
   name: varchar().notNull(),
   position: integer().notNull(),
   status_slug: varchar(),
+  defination_of_completion: boolean(),
   ...timestamps
 })
 

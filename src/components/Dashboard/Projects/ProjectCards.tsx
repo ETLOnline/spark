@@ -12,7 +12,7 @@ import { SelectProject } from "@/src/db/schema"
 import { ProjectType } from "../ProjectManagement/types/project.type"
 import { Button } from "../../ui/button"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import { Kanban, ScanEye, Users } from "lucide-react"
+import { Kanban, Users } from "lucide-react"
 import { countProjectMembersAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 
 interface Props {
@@ -23,7 +23,6 @@ interface Props {
 function ProjectCards({ project, onEdit }: Props) {
   const [members, setMembers] = useState(0)
 
-  // PERMISSIONS INITATE
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "PROJECT",
@@ -32,9 +31,6 @@ function ProjectCards({ project, onEdit }: Props) {
 
   const canViewLaunchBoard = permissionChecker
     ? permissionChecker.canAccess("project.launch.board")
-    : false
-  const canViewDetail = permissionChecker
-    ? permissionChecker.canAccess("project.detail")
     : false
   const canUpdate = permissionChecker
     ? permissionChecker.canAccess("project.update")
@@ -82,11 +78,11 @@ function ProjectCards({ project, onEdit }: Props) {
         </div>
       </CardHeader>
       <CardFooter className="flex justify-between">
-        <div className="flex flex-col  ">
+        <div className="flex flex-col">
           <p className="flex flex-row gap-2 text-muted-foreground text-sm">
             <span>{members}</span>
             <span className="flex items-center gap-1">
-              <Users className=" h-4 w-4" />
+              <Users className="h-4 w-4" />
             </span>
           </p>
         </div>
@@ -100,13 +96,6 @@ function ProjectCards({ project, onEdit }: Props) {
               Scrum Board
             </LinkAsButton>
           )}
-          <LinkAsButton
-            href={`/project/${project.id}/details`}
-            className="text-xs"
-          >
-            <ScanEye />
-            Details
-          </LinkAsButton>
         </div>
       </CardFooter>
     </Card>

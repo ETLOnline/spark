@@ -13,6 +13,9 @@ import {
 import { GetTaskById } from "@/src/db/data-access/tasks/query"
 import { SendTaskNotifications } from "@/src/services/notifications/Tasks/utils"
 import { addProjectRecentActivity } from "@/src/utils/taskHelpr"
+import { AddRewardAction } from "../Reward/Reward"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 export const CreateTaskCommentAction = CreateServerAction(
   true,
@@ -47,8 +50,15 @@ export const CreateTaskCommentAction = CreateServerAction(
         )
         await addProjectRecentActivity("task_commented", task)
       }
-
+      const taskUrl = createAbsoluteUrl(
+        `/project/${task?.project_id}/task/${task_id}`
+      )
       if (newComment) {
+        await AddRewardAction(ActivityTypes.TaskComment, user_id, taskUrl, {
+          task_id,
+          comment_id: newComment.id
+        })
+
         return { success: true, data: newComment }
       } else {
         return { success: false, error: "Failed to create comment." }

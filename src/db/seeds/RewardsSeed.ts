@@ -202,12 +202,12 @@ const activityRules: InsertActivityRules[] = [
     rule_id: 15,
     action_display_name: ActivityDisplayNames[ActivityTypes.TaskInprogress],
     action_type: ActivityTypes.TaskInprogress,
-    reward_id: 2,
+    reward_id: 1,
     base_points: 10,
     category_group: "engagement",
     required_verification: false,
     is_active: true,
-    description: "SC awarded when a task is moved to in-progress status"
+    description: "RP awarded when a task is moved to in-progress status"
   },
   {
     rule_id: 16,
@@ -342,6 +342,98 @@ const activityRules: InsertActivityRules[] = [
     required_verification: false,
     is_active: true,
     description: "SC for registering for a new event"
+  },
+  {
+    rule_id: 28,
+    action_display_name: ActivityDisplayNames[ActivityTypes.SprintCreation],
+    action_type: ActivityTypes.SprintCreation,
+    reward_id: 1,
+    base_points: 10,
+    category_group: "project_management",
+    required_verification: false,
+    is_active: true,
+    description: "RP awarded when a sprint is created"
+  },
+  {
+    rule_id: 29,
+    action_display_name: ActivityDisplayNames[ActivityTypes.SprintCompletion],
+    action_type: ActivityTypes.SprintCompletion,
+    reward_id: 1,
+    base_points: 20,
+    category_group: "project_management",
+    required_verification: false,
+    is_active: true,
+    description: "RP awarded when a sprint is completed"
+  },
+  {
+    rule_id: 30,
+    action_display_name: ActivityDisplayNames[ActivityTypes.TaskCreation],
+    action_type: ActivityTypes.TaskCreation,
+    reward_id: 1,
+    base_points: 20,
+    category_group: "project_management",
+    required_verification: false,
+    is_active: true,
+    description: "RP awarded when a task is created"
+  },
+  {
+    rule_id: 31,
+    action_display_name: ActivityDisplayNames[ActivityTypes.TaskTestCompletion],
+    action_type: ActivityTypes.TaskTestCompletion,
+    reward_id: 1,
+    base_points: 15,
+    category_group: "project_management",
+    required_verification: false,
+    is_active: true,
+    description: "RP awarded to the tester when task testing is completed"
+  },
+  {
+    rule_id: 32,
+    action_display_name:
+      ActivityDisplayNames[ActivityTypes.TaskCompletionVerification],
+    action_type: ActivityTypes.TaskCompletionVerification,
+    reward_id: 1,
+    base_points: 20,
+    category_group: "project_management",
+    required_verification: false,
+    is_active: true,
+    description:
+      "RP awarded to the assignee when their task completion is verified"
+  },
+  {
+    rule_id: 33,
+    action_display_name:
+      ActivityDisplayNames[ActivityTypes.TaskCompletionReview],
+    action_type: ActivityTypes.TaskCompletionReview,
+    reward_id: 1,
+    base_points: 20,
+    category_group: "project_management",
+    required_verification: false,
+    is_active: true,
+    description: "RP awarded to the reviewer for reviewing a task completion"
+  },
+  {
+    rule_id: 34,
+    action_display_name: ActivityDisplayNames[ActivityTypes.TaskComment],
+    action_type: ActivityTypes.TaskComment,
+    reward_id: 1,
+    base_points: 5,
+    category_group: "engagement",
+    required_verification: false,
+    is_active: true,
+    description: "RP awarded for adding a comment on a task"
+  },
+  {
+    rule_id: 35,
+    action_display_name:
+      ActivityDisplayNames[ActivityTypes.ProjectOverviewUpdate],
+    action_type: ActivityTypes.ProjectOverviewUpdate,
+    reward_id: 1,
+    base_points: 20,
+    category_group: "project_management",
+    required_verification: false,
+    is_active: true,
+    description: "RP awarded for updating a project overview"
   }
 ]
 

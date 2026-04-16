@@ -424,8 +424,12 @@ export const ToggleLikeAction = CreateServerAction(
             userId,
             proof_url,
             {
-              community_id: communityId
-            }
+              community_id: communityId,
+              post_id: postId
+            },
+            undefined,
+            "post_id",
+            postId
           )
           return { success: true, data }
         }

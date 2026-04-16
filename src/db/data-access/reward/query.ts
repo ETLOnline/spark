@@ -1,4 +1,4 @@
-import { and, between, eq, gt, lte, sql } from "drizzle-orm"
+import { and, between, count, eq, gt, lte, sql } from "drizzle-orm"
 import { db } from "../.."
 import {
   activityRulesTable,
@@ -213,16 +213,31 @@ export async function GetUserRewardLevel(user_id: string) {
   }
 }
 
-export async function GetUserPointLedger(user_id: string) {
+export async function GetUserPointLedger(
+  user_id: string,
+  page: number = 1,
+  pageSize: number = 10
+) {
   try {
-    const res = await db.query.pointLedgerTable.findMany({
-      where: eq(pointLedgerTable.user_id, user_id),
-      with: {
-        rule: true
-      },
-      orderBy: (ledger, { desc }) => [desc(ledger.created_at)]
-    })
-    return res
+    const offset = (page - 1) * pageSize
+
+    const [data, totalResult] = await Promise.all([
+      db.query.pointLedgerTable.findMany({
+        where: eq(pointLedgerTable.user_id, user_id),
+        with: {
+          rule: true
+        },
+        orderBy: (ledger, { desc }) => [desc(ledger.created_at)],
+        limit: pageSize,
+        offset
+      }),
+      db
+        .select({ total: count() })
+        .from(pointLedgerTable)
+        .where(eq(pointLedgerTable.user_id, user_id))
+    ])
+
+    return { data, total: totalResult[0]?.total ?? 0 }
   } catch (e: any) {
     throw new Error(e.message)
   }
@@ -232,6 +247,31 @@ export async function GetRewardLevels() {
   try {
     const res = await db.query.rewardLevelTable.findMany()
     return res
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+/**
+ * Check whether a user has already been awarded for a specific resource.
+ * Uses a JSONB metadata lookup: metadata->>'field' = 'value'
+ * e.g. field = "post_id", value = "abc-123"
+ */
+export async function HasUserBeenRewardedForResource(
+  user_id: string,
+  rule_id: number,
+  field: string,
+  value: string
+): Promise<boolean> {
+  try {
+    const res = await db.query.pointLedgerTable.findFirst({
+      where: and(
+        eq(pointLedgerTable.user_id, user_id),
+        eq(pointLedgerTable.rule_id, rule_id),
+        sql`${pointLedgerTable.metadata}->>${field} = ${value}`
+      )
+    })
+    return !!res
   } catch (e: any) {
     throw new Error(e.message)
   }

@@ -16,6 +16,7 @@ function RewardNotification() {
   const [isRewardModalVisible, setRewardModalVisible] = useState(false)
   const [levelUp, setLevelUp] = useState<{
     levelName: string
+    levelIconId: string
     currentUserBalance: number
   } | null>(null)
   const authUser = useAtomValue(userStore.AuthUser)
@@ -51,7 +52,11 @@ function RewardNotification() {
         newLevel: SelectRewardLevel
         currentUserBalance: number
       }) => {
-        setLevelUp({ levelName: newLevel.name, currentUserBalance })
+        setLevelUp({
+          levelName: newLevel.name,
+          levelIconId: newLevel.id.toString(),
+          currentUserBalance
+        })
         setRewardModalVisible(true)
       }
     )
@@ -72,6 +77,7 @@ function RewardNotification() {
       <LevelUpModal
         levelName={levelUp?.levelName || ""}
         rewardAmount={levelUp?.currentUserBalance || 0}
+        levelIconId={levelUp?.levelIconId || "1"}
         isOpen={isRewardModalVisible}
         setIsOpen={setRewardModalVisible}
       />

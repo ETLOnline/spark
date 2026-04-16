@@ -86,7 +86,7 @@ export function OnboardingCompletion({
 
         <div className="flex items-center gap-3">
           <Button
-            className="flex-1 bg-primary text-white hover:bg-primary/90 flex items-center gap-2"
+            className="flex-1 flex items-center gap-2"
             onClick={handleComplete}
             disabled={completed}
           >

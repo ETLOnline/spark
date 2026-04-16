@@ -18,6 +18,7 @@ import NoDataCard from "../../Channels/ChannelDetails/NoDataCard"
 import { Ban } from "lucide-react"
 import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
+
 interface Props {
   currProject: SelectProject
 }
@@ -51,6 +52,7 @@ export function ProjectSettings({ currProject }: Props) {
       </div>
     )
   }
+
   return canUpdate ? (
     <div className="space-y-6">
       <Tabs

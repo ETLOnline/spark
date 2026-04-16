@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Progress } from "../ui/progress"
 import { Badge } from "../ui/badge"
 import { Card } from "../ui/card"
@@ -19,9 +19,26 @@ import {
   Sparkles,
   Trophy
 } from "lucide-react"
+import { SelectRewardLevel } from "@/src/db/schema"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { getRewardLevelsAction } from "@/src/server-actions/Reward/Reward"
 
 export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
   const [currentStep, setCurrentStep] = useState(0)
+  const [levels, setLevels] = useState<SelectRewardLevel[]>([])
+
+  const [getLevelsLoading, , , getLevels] = useServerAction(
+    getRewardLevelsAction
+  )
+
+  const fetchLevels = async () => {
+    const res = await getLevels()
+    if (res?.success && res?.data) setLevels(res.data)
+  }
+
+  useEffect(() => {
+    fetchLevels()
+  }, [fetchLevels])
 
   const steps = [
     {
@@ -91,13 +108,25 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
             levels, each unlocking new opportunities:
           </p>
           <div className="space-y-3">
-            {onboardingLevelData.map((item, i) => (
-              <div key={i} className="p-3 border rounded-lg">
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge className="bg-primary text-white">{item.level}</Badge>
-                  <span className="text-xs">{item.rp} RP</span>
+            {levels.map((item, i) => (
+              <div
+                key={i}
+                className="p-3 border rounded-lg flex items-center justify-between"
+              >
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge>{item.name}</Badge>
+                    <span className="text-xs">
+                      {item.min_points} - {item.max_points} RP
+                    </span>
+                  </div>
+                  <p className="text-sm">{item.description}</p>
                 </div>
-                <p className="text-sm">{item.features}</p>
+                <img
+                  src={`/images/rewards/levels/compressed/level-${item.id ?? 1}.png`}
+                  className=" w-12 h-12"
+                  alt=""
+                />
               </div>
             ))}
           </div>
@@ -112,7 +141,7 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
         <div className="space-y-4 text-center">
           <div className="space-y-4">
             <div className="p-8 border rounded-lg">
-              <div className="inline-block p-4 bg-primary text-white rounded-full mb-4">
+              <div className="inline-block p-4 bg-primary rounded-full mb-4">
                 <CheckCircle className="w-8 h-8" />
               </div>
               <h4 className="text-xl font-semibold text-foreground mb-2">
@@ -201,7 +230,7 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
           )}
           {currentStep < steps.length - 1 ? (
             <Button
-              className="flex-1 bg-primary text-white hover:bg-primary/90 flex items-center gap-2"
+              className="flex-1 flex items-center gap-2"
               onClick={() => setCurrentStep(currentStep + 1)}
             >
               Continue
@@ -209,7 +238,7 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
             </Button>
           ) : (
             <Button
-              className="flex-1 bg-primary text-white hover:bg-primary/90 flex items-center gap-2"
+              className="flex-1 flex items-center gap-2"
               onClick={handleComplete}
             >
               <Sparkles className="w-4 h-4" />
