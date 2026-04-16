@@ -288,6 +288,13 @@
       "when": 1776097925005,
       "tag": "0040_2026_04_13_213159__add_defination_of_completion",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1776358504307,
+      "tag": "0041_2026_04_16_215503__create_jobs_table",
+      "breakpoints": true
     }
   ]
 }

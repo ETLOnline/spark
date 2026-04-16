@@ -2,14 +2,12 @@ import { SelectTask } from "@/src/db/schema"
 import { ProjectStatus } from "@/src/components/Dashboard/ProjectManagement/types/projectStatus.type"
 
 export function meetsCompletionCriteria(task: SelectTask): boolean {
-  
   if (task.status?.defination_of_completion === true) {
     return true
   }
 
   return task.status?.status_slug === ProjectStatus.Done
 }
-
 
 export function getTaskCompletionRecipients(task: SelectTask): string[] {
   const recipients: string[] = []

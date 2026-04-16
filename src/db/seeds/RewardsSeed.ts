@@ -389,18 +389,21 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 32,
-    action_display_name: ActivityDisplayNames[ActivityTypes.TaskCompletionVerification],
+    action_display_name:
+      ActivityDisplayNames[ActivityTypes.TaskCompletionVerification],
     action_type: ActivityTypes.TaskCompletionVerification,
     reward_id: 1,
     base_points: 20,
     category_group: "project_management",
     required_verification: false,
     is_active: true,
-    description: "RP awarded to the assignee when their task completion is verified"
+    description:
+      "RP awarded to the assignee when their task completion is verified"
   },
   {
     rule_id: 33,
-    action_display_name: ActivityDisplayNames[ActivityTypes.TaskCompletionReview],
+    action_display_name:
+      ActivityDisplayNames[ActivityTypes.TaskCompletionReview],
     action_type: ActivityTypes.TaskCompletionReview,
     reward_id: 1,
     base_points: 20,
@@ -422,7 +425,8 @@ const activityRules: InsertActivityRules[] = [
   },
   {
     rule_id: 35,
-    action_display_name: ActivityDisplayNames[ActivityTypes.ProjectOverviewUpdate],
+    action_display_name:
+      ActivityDisplayNames[ActivityTypes.ProjectOverviewUpdate],
     action_type: ActivityTypes.ProjectOverviewUpdate,
     reward_id: 1,
     base_points: 20,
@@ -430,7 +434,7 @@ const activityRules: InsertActivityRules[] = [
     required_verification: false,
     is_active: true,
     description: "RP awarded for updating a project overview"
-  },
+  }
 ]
 
 export const RewardsSeed = async () => {
