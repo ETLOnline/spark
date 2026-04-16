@@ -11,3 +11,6 @@ CREATE TABLE IF NOT EXISTS "jobs" (
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
+--> statement-breakpoint
+ALTER TABLE "tasks_status" ALTER COLUMN "defination_of_completion" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "tasks_status" ALTER COLUMN "defination_of_completion" DROP NOT NULL;

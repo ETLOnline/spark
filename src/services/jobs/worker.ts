@@ -1,7 +1,7 @@
 import { db } from "@/src/db"
 import { jobsTable } from "@/src/db/schema"
 import { and, eq, lt, lte } from "drizzle-orm"
-import { processJob } from "./handlers"
+import { processJob } from "./handler"
 
 const POLL_INTERVAL = 5000 // ms — how often to check for pending jobs
 

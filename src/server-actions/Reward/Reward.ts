@@ -338,7 +338,7 @@ export const getRewardLevelsAction = CreateServerAction(true, async () => {
  * so callers can skip AddRewardAction and avoid duplicate points.
  */
 export const CheckRewardAlreadyGivenAction = CreateServerAction(
-  true,
+  false,
   async (
     user_id: string,
     action_type: string,
