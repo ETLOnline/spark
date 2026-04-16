@@ -56,14 +56,14 @@ export const AddRewardAction = CreateServerAction(
       }
 
       if (idempotency_field && idempotency_value) {
-        const alreadyRewarded = await HasUserBeenRewardedForResource(
+        const checkResult = await CheckRewardAlreadyGivenAction(
           user_id,
-          activityRule.rule_id,
+          action_type,
           idempotency_field,
           idempotency_value
         )
 
-        if (alreadyRewarded) {
+        if (checkResult?.data?.alreadyRewarded) {
           return { success: true, data: null, skipped: true }
         }
       }
