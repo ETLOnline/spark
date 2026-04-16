@@ -19,6 +19,7 @@ import {
   getProjectRecentActivities,
   getProjectusersProfileUrl
 } from "@/src/db/data-access/project-management/query"
+import { AddRewardAction } from "../Reward/Reward"
 import {
   createScopedProjectRolesAndAssignAdmin,
   deleteUserRole,
@@ -30,7 +31,6 @@ import { createProjectInviteNotification } from "@/src/services/notify/project/p
 import { NotificationEvent } from "@/src/services/notify/types/events"
 import { getSpaceUsers } from "@/src/db/data-access/spaces/query"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
-import { AddRewardAction } from "../Reward/Reward"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
 import { AuthUserAction } from "../User/AuthUserAction"
 
@@ -101,7 +101,10 @@ export const UpdateProjectAction = CreateServerAction(
             ActivityTypes.ProjectOverviewUpdate,
             user.unique_id,
             projectUrl,
-            { project_id: updatedProject.id }
+            { project_id: updatedProject.id },
+            undefined,
+            "project_id",
+            updatedProject.id
           )
         }
       }
