@@ -31,7 +31,7 @@ function LevelUpModal({
   setIsOpen
 }: LevelUpModalProps) {
   return (
-    <Dialog open={true} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="p-0 border-0 bg-transparent shadow-none  w-full max-w-sm [&>button]:hidden overflow-visible">
         <DialogTitle className="sr-only">{title}</DialogTitle>
 
@@ -71,7 +71,7 @@ function LevelUpModal({
             </div>
             <div className="relative -mt-8 mx-4 rounded-xl bg-background border border-border shadow-lg px-5 py-4 flex flex-col items-center gap-1 z-10">
               <p className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500 uppercase">
-                {"Spark Starter"}
+                {levelName}
               </p>
               <div className="flex items-center gap-1.5 mt-1">
                 <Star className="w-3.5 h-3.5 text-primary fill-primary" />
