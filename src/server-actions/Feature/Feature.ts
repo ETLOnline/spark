@@ -35,9 +35,16 @@ export const attachSpaceFeaturesAction = CreateServerAction(
       )
 
       await AddRewardAction(
-        ActivityTypes.SpaceCreation,
+        ActivityTypes.SpaceFeatureUpdate,
         authUser.unique_id,
-        spaceURL
+        spaceURL,
+        {
+          space_id: spaceId,
+          channel_id: space?.channel?.id
+        },
+        undefined,
+        "space_id",
+        spaceId
       )
 
       return { success: true, data: space }

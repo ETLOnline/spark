@@ -190,42 +190,57 @@ export const UpdateTaskAction = CreateServerAction(
         const oldStatusSlug = oldTask.status?.status_slug
         const newStatusSlug = UpdatedTask.status?.status_slug
         const assigneeId = UpdatedTask.assign_to
-
-        // task moved to in-progress — only for assignee
-        if (
+        
+        const shouldCheckInProgress =
           assigneeId &&
           oldStatusSlug !== ProjectStatus.InProgress &&
           newStatusSlug === ProjectStatus.InProgress
-        ) {
-          await AddTaskRewardAction(ActivityTypes.TaskInprogress, {
-            user_id: assigneeId,
-            task_id: UpdatedTask.id,
-            project_id: UpdatedTask.project_id
-          })
-        }
 
-        // task completion — criteria and recipients are fully owned by taskRewards.ts
-        // when completion_definition column arrives, only taskRewards.ts changes
-        if (!meetsCompletionCriteria(oldTask) && meetsCompletionCriteria(UpdatedTask)) {
-          const recipients = getTaskCompletionRecipients(UpdatedTask)
-          await Promise.all(
-            recipients.map((user_id) =>
-              AddTaskRewardAction(ActivityTypes.TaskCompletion, {
-                user_id,
-                task_id: UpdatedTask.id,
-                project_id: UpdatedTask.project_id
-              })
-            )
+        if (shouldCheckInProgress && assigneeId) {
+          await AddTaskRewardAction(
+            ActivityTypes.TaskInprogress,
+            {
+              user_id: assigneeId,
+              task_id: UpdatedTask.id,
+              project_id: UpdatedTask.project_id
+            },
+            "task_id",
+            UpdatedTask.id
           )
         }
 
-        // tested_by newly assigned — reward the tester
-        if (!oldTask.tested_by && UpdatedTask.tested_by) {
-          await AddTaskRewardAction(ActivityTypes.TaskTestCompletion, {
-            user_id: UpdatedTask.tested_by,
-            task_id: UpdatedTask.id,
-            project_id: UpdatedTask.project_id
-          })
+        const taskIsComplete = meetsCompletionCriteria(UpdatedTask)
+        const justCompleted = !meetsCompletionCriteria(oldTask) && taskIsComplete
+
+        if (justCompleted) {
+          const recipients = getTaskCompletionRecipients(UpdatedTask)
+          await Promise.all(
+            recipients.map(async (user_id) => {
+              await AddTaskRewardAction(
+                ActivityTypes.TaskCompletion,
+                {
+                  user_id,
+                  task_id: UpdatedTask.id,
+                  project_id: UpdatedTask.project_id
+                },
+                "task_id",
+                UpdatedTask.id
+              )
+            })
+          )
+
+          if (UpdatedTask.tested_by) {
+            await AddTaskRewardAction(
+              ActivityTypes.TaskTestCompletion,
+              {
+                user_id: UpdatedTask.tested_by,
+                task_id: UpdatedTask.id,
+                project_id: UpdatedTask.project_id
+              },
+              "task_id",
+              UpdatedTask.id
+            )
+          }
         }
 
         return { success: true, data: UpdatedTask }

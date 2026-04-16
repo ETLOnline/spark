@@ -10,6 +10,7 @@ import {
   GetUserPointLedger,
   GetUserRewardBalance,
   GetUserRewardLevel,
+  HasUserBeenRewardedForResource,
   InsertUserRewardBalance,
   updateTrustVerification,
   UpdateUserRewardBalance,
@@ -38,7 +39,9 @@ export const AddRewardAction = CreateServerAction(
     user_id: string,
     proof_url?: string,
     metadata?: any,
-    verification_id?: number
+    verification_id?: number,
+    idempotency_field?: string,
+    idempotency_value?: string
   ) => {
     try {
       const fetureFlag = await getFeatureFlagAction(["Trust_Engine_Enabled"])
@@ -50,6 +53,19 @@ export const AddRewardAction = CreateServerAction(
 
       if (!activityRule) {
         return { success: false, error: "Activity rule not found" }
+      }
+
+      if (idempotency_field && idempotency_value) {
+        const checkResult = await CheckRewardAlreadyGivenAction(
+          user_id,
+          action_type,
+          idempotency_field,
+          idempotency_value
+        )
+
+        if (checkResult?.data?.alreadyRewarded) {
+          return { success: true, data: null, skipped: true }
+        }
       }
 
       const ledgerData = {
@@ -354,7 +370,9 @@ export const AddTaskRewardAction = CreateServerAction(
       project_id?: string
       sprint_id?: string
       comment_id?: number
-    }
+    },
+    idempotency_field?: string,
+    idempotency_value?: string
   ) => {
     try {
       const { user_id, task_id, project_id, sprint_id, comment_id } = payload
@@ -375,7 +393,15 @@ export const AddTaskRewardAction = CreateServerAction(
         metadata = { project_id }
       }
 
-      return await AddRewardAction(activityType, user_id, proof_url, metadata)
+      return await AddRewardAction(
+        activityType,
+        user_id,
+        proof_url,
+        metadata,
+        undefined,
+        idempotency_field,
+        idempotency_value
+      )
     } catch (error) {
       return { success: false, error }
     }
@@ -389,3 +415,44 @@ export const getRewardLevelsAction = CreateServerAction(true, async () => {
     return { success: false, error }
   }
 })
+
+/**
+ * Check whether a user has already been rewarded for a specific resource.
+ *
+ * @param user_id     - The user to check
+ * @param action_type - The ActivityTypes key (used to look up the rule_id)
+ * @param field       - The JSONB metadata key to match (e.g. "post_id", "task_id", "sprint_id")
+ * @param value       - The resource ID value to match
+ *
+ * Returns { alreadyRewarded: true } when a matching ledger entry already exists,
+ * so callers can skip AddRewardAction and avoid duplicate points.
+ */
+export const CheckRewardAlreadyGivenAction = CreateServerAction(
+  true,
+  async (
+    user_id: string,
+    action_type: string,
+    field: string,
+    value: string
+  ) => {
+    try {
+      const activityRule = await GetActivityRule({ action_type })
+
+      if (!activityRule) {
+        // Rule doesn't exist — treat as not rewarded so the reward flow can handle it
+        return { success: true, data: { alreadyRewarded: false } }
+      }
+
+      const alreadyRewarded = await HasUserBeenRewardedForResource(
+        user_id,
+        activityRule.rule_id,
+        field,
+        value
+      )
+
+      return { success: true, data: { alreadyRewarded } }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)

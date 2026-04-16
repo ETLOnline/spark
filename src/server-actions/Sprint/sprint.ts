@@ -77,13 +77,17 @@ export const UpdateSprintAction = CreateServerAction(
         updatedSprint
       )
       const sprintUrl = createAbsoluteUrl(`/project/${updatedSprint.projectId}/sprint`)
+
       if (updatedSprint.sprint_status === SprintStatus.CLOSED) {
         if (user?.unique_id) {
           await AddRewardAction(
             ActivityTypes.SprintCompletion,
             user.unique_id,
             sprintUrl,
-            { sprint_id: updatedSprint.id, project_id: updatedSprint.projectId }
+            { sprint_id: updatedSprint.id, project_id: updatedSprint.projectId },
+            undefined,
+            "sprint_id",
+            updatedSprint.id
           )
         }
       }

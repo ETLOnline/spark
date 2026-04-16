@@ -141,7 +141,7 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
         <div className="space-y-4 text-center">
           <div className="space-y-4">
             <div className="p-8 border rounded-lg">
-              <div className="inline-block p-4 bg-primary text-white rounded-full mb-4">
+              <div className="inline-block p-4 bg-primary rounded-full mb-4">
                 <CheckCircle className="w-8 h-8" />
               </div>
               <h4 className="text-xl font-semibold text-foreground mb-2">
@@ -230,7 +230,7 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
           )}
           {currentStep < steps.length - 1 ? (
             <Button
-              className="flex-1 bg-primary text-white hover:bg-primary/90 flex items-center gap-2"
+              className="flex-1 flex items-center gap-2"
               onClick={() => setCurrentStep(currentStep + 1)}
             >
               Continue
@@ -238,7 +238,7 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
             </Button>
           ) : (
             <Button
-              className="flex-1 bg-primary text-white hover:bg-primary/90 flex items-center gap-2"
+              className="flex-1 flex items-center gap-2"
               onClick={handleComplete}
             >
               <Sparkles className="w-4 h-4" />
