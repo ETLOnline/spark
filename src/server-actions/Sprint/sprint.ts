@@ -76,9 +76,7 @@ export const UpdateSprintAction = CreateServerAction(
         "sprint-edit",
         updatedSprint
       )
-      const sprintUrl = createAbsoluteUrl(
-        `/project/${updatedSprint.projectId}/sprint`
-      )
+      const sprintUrl = createAbsoluteUrl(`/project/${updatedSprint.projectId}/sprint`)
 
       if (updatedSprint.sprint_status === SprintStatus.CLOSED) {
         if (user?.unique_id) {
@@ -86,10 +84,7 @@ export const UpdateSprintAction = CreateServerAction(
             ActivityTypes.SprintCompletion,
             user.unique_id,
             sprintUrl,
-            {
-              sprint_id: updatedSprint.id,
-              project_id: updatedSprint.projectId
-            },
+            { sprint_id: updatedSprint.id, project_id: updatedSprint.projectId },
             undefined,
             "sprint_id",
             updatedSprint.id

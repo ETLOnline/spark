@@ -40,10 +40,7 @@ import { AddRewardAction, AddTaskRewardAction } from "../Reward/Reward"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
 import { ProjectStatus } from "@/src/components/Dashboard/ProjectManagement/types/projectStatus.type"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
-import {
-  getTaskCompletionRecipients,
-  meetsCompletionCriteria
-} from "@/src/utils/taskRewards"
+import { getTaskCompletionRecipients, meetsCompletionCriteria } from "@/src/utils/taskRewards"
 
 export const CreateTaskAction = CreateServerAction(
   true,
@@ -187,17 +184,13 @@ export const UpdateTaskAction = CreateServerAction(
           "task-update",
           UpdatedTask
         )
-        createTaskNotification(
-          NotificationEvent.UPDATE_TASK,
-          UpdatedTask,
-          oldTask
-        )
+        createTaskNotification(NotificationEvent.UPDATE_TASK, UpdatedTask, oldTask)
         await AddTaskHistoryAction(oldTask, UpdatedTask)
 
         const oldStatusSlug = oldTask.status?.status_slug
         const newStatusSlug = UpdatedTask.status?.status_slug
         const assigneeId = UpdatedTask.assign_to
-
+        
         const shouldCheckInProgress =
           assigneeId &&
           oldStatusSlug !== ProjectStatus.InProgress &&
@@ -217,8 +210,7 @@ export const UpdateTaskAction = CreateServerAction(
         }
 
         const taskIsComplete = meetsCompletionCriteria(UpdatedTask)
-        const justCompleted =
-          !meetsCompletionCriteria(oldTask) && taskIsComplete
+        const justCompleted = !meetsCompletionCriteria(oldTask) && taskIsComplete
 
         if (justCompleted) {
           const recipients = getTaskCompletionRecipients(UpdatedTask)

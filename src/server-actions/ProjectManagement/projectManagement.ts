@@ -92,9 +92,7 @@ export const UpdateProjectAction = CreateServerAction(
         "project-edit",
         updatedProject
       )
-      const projectUrl = createAbsoluteUrl(
-        `/project/${updatedProject.id}/details`
-      )
+      const projectUrl = createAbsoluteUrl(`/project/${updatedProject.id}/details`)
 
       if ("description" in project_data && updatedProject.created_by) {
         const user = await AuthUserAction()

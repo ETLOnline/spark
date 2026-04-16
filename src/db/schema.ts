@@ -8,8 +8,7 @@ import {
   json,
   boolean,
   text,
-  jsonb,
-  timestamp
+  jsonb
 } from "drizzle-orm/pg-core"
 // import { integer, primaryKey, pgTable, varchar } from "drizzle-orm/sqlite-core"
 
@@ -1913,26 +1912,3 @@ export type InsertSuccessfulReferral =
   typeof successfullReferralsTable.$inferInsert
 export type SelectSuccessfulReferral =
   typeof successfullReferralsTable.$inferSelect
-
-// ---------------------------------------------------------------------------
-// Background Jobs Queue
-// ---------------------------------------------------------------------------
-
-export const jobsTable = pgTable("jobs", {
-  id: varchar("id", { length: 36 })
-    .primaryKey()
-    .$defaultFn(() => randomUUID()),
-  queue: varchar("queue").notNull(),
-  name: varchar("name").notNull(),
-  payload: jsonb("payload").notNull().default({}),
-  status: varchar("status").notNull().default("pending"), // pending | running | done | failed
-  attempts: integer("attempts").notNull().default(0),
-  max_attempts: integer("max_attempts").notNull().default(3),
-  error: text("error"),
-  run_at: timestamp("run_at").notNull().defaultNow(),
-  created_at: timestamp("created_at").notNull().defaultNow(),
-  updated_at: timestamp("updated_at").notNull().defaultNow()
-})
-
-export type InsertJob = typeof jobsTable.$inferInsert
-export type SelectJob = typeof jobsTable.$inferSelect

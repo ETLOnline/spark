@@ -34,7 +34,11 @@ const PaginationComponent = ({ pagination, onPageChange }: props) => {
   const getHref = (p: number) =>
     `${pathname}?page=${p}${isRestQuery ? `&${restQueryParams}` : ""}`
 
-  const handleClick = (e: React.MouseEvent, p: number, disabled: boolean) => {
+  const handleClick = (
+    e: React.MouseEvent,
+    p: number,
+    disabled: boolean
+  ) => {
     if (!onPageChange) return
     e.preventDefault()
     if (!disabled) onPageChange(p)
