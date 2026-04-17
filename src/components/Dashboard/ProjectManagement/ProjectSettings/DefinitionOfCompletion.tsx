@@ -33,13 +33,12 @@ function DefinitionOfCompletion({
   error
 }: Props) {
   const handleChange = (val: string) => {
+    onChange(val)
     if (val === ProjectStatus.InProgress || val === ProjectStatus.ToDo) {
       setError("You cannot set this status as definition of completion")
-      return
+    } else {
+      setError("")
     }
-
-    setError("")
-    onChange(val)
   }
 
   return (
