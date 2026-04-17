@@ -66,6 +66,8 @@ import Link from "next/link"
 import { projectStore } from "@/src/store/project/projectStore"
 import { projectDefaultStatuses } from "../constants/projectManagment"
 import DefinitionOfCompletion from "./DefinitionOfCompletion"
+import { ProjectStatus } from "../types/projectStatus.type"
+import { slugify } from "@/src/utils/helpers"
 
 export default function TaskStatus() {
   const [statuses, setStatuses] = useAtom(projectStore.projectStatusList) // Default statuses as initial state
@@ -79,9 +81,11 @@ export default function TaskStatus() {
   const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] =
     useState(false)
   const [isChangesSaved, setIsChangesSaved] = useState(false)
-  const [definitionOfCompletion, setDefinitionOfCompletion] =
-    useState<string>("Done")
+  const [definitionOfCompletion, setDefinitionOfCompletion] = useState<string>(
+    ProjectStatus.Done
+  )
   const [isDeletingDOC, setIsDeletingDOC] = useState(false)
+  const [docError, setDocError] = useState("")
 
   const [createLoading, data, error, createTaskStatus] = useServerAction(
     CreateTaskStatusAction
@@ -138,9 +142,9 @@ export default function TaskStatus() {
       )
 
       if (docStatus) {
-        setDefinitionOfCompletion(docStatus.name)
+        setDefinitionOfCompletion(docStatus.status_slug || "")
       } else {
-        setDefinitionOfCompletion("Done")
+        setDefinitionOfCompletion(ProjectStatus.Done)
       }
     } else {
       setEditStatus(false)
@@ -151,7 +155,7 @@ export default function TaskStatus() {
           position: status.position || 0
         }))
       )
-      setDefinitionOfCompletion("Done")
+      setDefinitionOfCompletion(ProjectStatus.Done)
     }
 
     setIsChangesSaved(false)
@@ -183,11 +187,14 @@ export default function TaskStatus() {
       })
       return
     }
+
+    const newStatusSlug = slugify(newStatus.trim())
     // Find the index of "Done" to insert before it
     const doneIndex = statuses.findIndex((status) => status.name === "Done")
     const newStatuses = [...statuses]
     newStatuses.splice(doneIndex, 0, {
       name: newStatus.trim(),
+      status_slug: newStatusSlug,
       project_id: projectId,
       position: doneIndex
     }) // Insert before Done
@@ -280,14 +287,16 @@ export default function TaskStatus() {
     }
   }
 
-  const isDefinationOfCompletionTrue = (statusName: string) => {
-    return statusName === definitionOfCompletion ? true : false
+  const isDefinationOfCompletionTrue = (
+    statusSlug: string | null | undefined
+  ) => {
+    return statusSlug === definitionOfCompletion ? true : false
   }
   const buildStatusPayload = (status: (typeof statuses)[0]) => ({
     ...status,
     position: statuses.findIndex((s) => s.name === status.name),
     project_id: projectId,
-    defination_of_completion: isDefinationOfCompletionTrue(status.name)
+    defination_of_completion: isDefinationOfCompletionTrue(status.status_slug)
   })
 
   // Function to save the current status configuration
@@ -369,13 +378,13 @@ export default function TaskStatus() {
   async function handleUpdateTaskStatus() {
     try {
       const deletingDOC = removedStatus.some(
-        (status) => status.name === definitionOfCompletion
+        (status) => status.status_slug === definitionOfCompletion
       )
 
       setIsDeletingDOC(deletingDOC)
 
       if (deletingDOC) {
-        setDefinitionOfCompletion("Done")
+        setDefinitionOfCompletion(ProjectStatus.Done)
       }
 
       if (tasks.length === 0) {
@@ -440,9 +449,11 @@ export default function TaskStatus() {
   }, [definitionOfCompletion, isDeletingDOC])
 
   useEffect(() => {
-    const exists = statuses.find((s) => s.name === definitionOfCompletion)
+    const exists = statuses.find(
+      (s) => s.status_slug === definitionOfCompletion
+    )
     if (!exists && statuses.length > 0) {
-      setDefinitionOfCompletion("Done")
+      setDefinitionOfCompletion(ProjectStatus.Done)
     }
   }, [statuses])
 
@@ -483,6 +494,8 @@ export default function TaskStatus() {
               statusList={statuses}
               value={definitionOfCompletion}
               onChange={setDefinitionOfCompletion}
+              error={docError}
+              setError={setDocError}
             />
 
             <Card className="border shadow-none">
@@ -618,6 +631,7 @@ export default function TaskStatus() {
           </Link>
           {editStatus ? (
             <Button
+              disabled={!!docError}
               loading={createLoading || updateStatusLoading}
               onClick={handleEditStatus}
               className="w-full sm:w-auto"
@@ -627,6 +641,7 @@ export default function TaskStatus() {
             </Button>
           ) : (
             <Button
+              disabled={!!docError}
               loading={createLoading}
               onClick={saveStatusConfiguration}
               className="w-full sm:w-auto"

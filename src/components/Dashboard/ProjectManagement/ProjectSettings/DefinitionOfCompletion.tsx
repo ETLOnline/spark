@@ -6,7 +6,6 @@ import {
   CardHeader,
   CardTitle
 } from "@/src/components/ui/card"
-import { Input } from "@/src/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -14,37 +13,56 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/src/components/ui/select"
-import { Plus } from "lucide-react"
+import { InsertTaskStatus } from "@/src/db/schema"
 import React from "react"
-import { projectDefaultStatuses } from "../constants/projectManagment"
-import { InsertTaskStatus, SelectTaskStatus } from "@/src/db/schema"
+import { ProjectStatus } from "../types/projectStatus.type"
 
 interface Props {
   statusList: InsertTaskStatus[]
   value: string
   onChange: (val: string) => void
+  error: string
+  setError: (val: string) => void
 }
 
-function DefinitionOfCompletion({ statusList, value, onChange }: Props) {
+function DefinitionOfCompletion({
+  statusList,
+  value,
+  onChange,
+  setError,
+  error
+}: Props) {
+  const handleChange = (val: string) => {
+    if (val === ProjectStatus.InProgress || val === ProjectStatus.ToDo) {
+      setError("You cannot set this status as definition of completion")
+      return
+    }
+
+    setError("")
+    onChange(val)
+  }
+
   return (
     <Card className="border shadow-none">
       <CardHeader className="py-3">
         <CardTitle className="text-base">Definition of Completion</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-row items-center gap-2">
-          <Select value={value} onValueChange={onChange}>
+        <div className="flex flex-col gap-2">
+          <Select value={value} onValueChange={handleChange}>
             <SelectTrigger className="max-w-sm">
               <SelectValue placeholder="Select definition of completion" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[220px] overflow-auto">
               {statusList.map((status) => (
-                <SelectItem key={status.name} value={status.name || ""}>
+                <SelectItem key={status.name} value={status.status_slug || ""}>
                   {status.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+
+          {error && <p className="text-sm text-red-500">{error}</p>}
         </div>
       </CardContent>
     </Card>
