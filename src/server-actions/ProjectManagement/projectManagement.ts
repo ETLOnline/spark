@@ -92,16 +92,26 @@ export const UpdateProjectAction = CreateServerAction(
         "project-edit",
         updatedProject
       )
-      const projectUrl = createAbsoluteUrl(`/project/${updatedProject.id}/details`)
+      const projectUrl = createAbsoluteUrl(
+        `/project/${updatedProject.id}/details`
+      )
 
       if ("description" in project_data && updatedProject.created_by) {
         const user = await AuthUserAction()
         if (user?.unique_id) {
+          const projectWithChannel = await getProjectById(
+            updatedProject.id,
+            true
+          )
           await AddRewardAction(
             ActivityTypes.ProjectOverviewUpdate,
             user.unique_id,
             projectUrl,
-            { project_id: updatedProject.id },
+            {
+              project_id: updatedProject.id,
+              space_id: updatedProject.space_id,
+              community_id: projectWithChannel?.channel?.community_id
+            },
             undefined,
             "project_id",
             updatedProject.id

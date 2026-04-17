@@ -18,6 +18,7 @@ import { AddRewardAction } from "../Reward/Reward"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
 import { SprintStatus } from "@/src/components/Dashboard/ProjectManagement/constants/projectManagment"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
+import { getProjectById } from "@/src/db/data-access/project-management/query"
 
 export const CreateSprintAction = CreateServerAction(
   true,
@@ -76,15 +77,24 @@ export const UpdateSprintAction = CreateServerAction(
         "sprint-edit",
         updatedSprint
       )
-      const sprintUrl = createAbsoluteUrl(`/project/${updatedSprint.projectId}/sprint`)
+      const sprintUrl = createAbsoluteUrl(
+        `/project/${updatedSprint.projectId}/sprint`
+      )
 
       if (updatedSprint.sprint_status === SprintStatus.CLOSED) {
         if (user?.unique_id) {
+          const project = await getProjectById(updatedSprint.projectId, true)
+          const communityId = project?.channel?.community_id
+
           await AddRewardAction(
             ActivityTypes.SprintCompletion,
             user.unique_id,
             sprintUrl,
-            { sprint_id: updatedSprint.id, project_id: updatedSprint.projectId },
+            {
+              sprint_id: updatedSprint.id,
+              project_id: updatedSprint.projectId,
+              community_id: communityId
+            },
             undefined,
             "sprint_id",
             updatedSprint.id

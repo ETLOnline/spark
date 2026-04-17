@@ -370,12 +370,20 @@ export const AddTaskRewardAction = CreateServerAction(
       project_id?: string
       sprint_id?: string
       comment_id?: number
+      community_id?: string | null
     },
     idempotency_field?: string,
     idempotency_value?: string
   ) => {
     try {
-      const { user_id, task_id, project_id, sprint_id, comment_id } = payload
+      const {
+        user_id,
+        task_id,
+        project_id,
+        sprint_id,
+        comment_id,
+        community_id
+      } = payload
 
       if (!user_id) return { success: false, error: "user_id is required" }
 
@@ -384,13 +392,22 @@ export const AddTaskRewardAction = CreateServerAction(
 
       if (task_id && project_id) {
         proof_url = createAbsoluteUrl(`/project/${project_id}/task/${task_id}`)
-        metadata = { task_id, project_id, ...(comment_id ? { comment_id } : {}) }
+        metadata = {
+          task_id,
+          project_id,
+          ...(comment_id ? { comment_id } : {}),
+          ...(community_id ? { community_id } : {})
+        }
       } else if (sprint_id && project_id) {
         proof_url = createAbsoluteUrl(`/project/${project_id}/sprint`)
-        metadata = { sprint_id, project_id }
+        metadata = {
+          sprint_id,
+          project_id,
+          ...(community_id ? { community_id } : {})
+        }
       } else if (project_id) {
         proof_url = createAbsoluteUrl(`/project/${project_id}/details`)
-        metadata = { project_id }
+        metadata = { project_id, ...(community_id ? { community_id } : {}) }
       }
 
       return await AddRewardAction(

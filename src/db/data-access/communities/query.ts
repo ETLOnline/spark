@@ -10,7 +10,10 @@ import {
   ChannelUsersTable,
   communityCategoriesTable,
   SelectCommunityCategory,
-  SelectUser
+  SelectUser,
+  leaderboardSnapshotsTable,
+  InsertLeaderboardSnapshot,
+  SelectLeaderboardSnapshot
 } from "../../schema"
 import {
   eq,
@@ -22,7 +25,9 @@ import {
   and,
   ilike,
   ne,
-  inArray
+  inArray,
+  desc,
+  max
 } from "drizzle-orm"
 
 export type CommunityType = "public" | "private" | "restricted"
@@ -541,5 +546,202 @@ export const getCommunitiesByIds = async function (communityIds: string[]) {
   } catch (error) {
     console.error("Error fetching communities:", error)
     throw new Error("Failed to fetch communities")
+  }
+}
+
+/**
+ * Get leaderboard snapshot for a community (top N users)
+ * Gets the most recent snapshot for the given date
+ */
+export async function getCommunityLeaderboard(
+  communityId: string,
+  limit: number = 10,
+  snapshotDate?: string
+) {
+  try {
+    const today = snapshotDate || new Date().toISOString().split("T")[0]
+
+    // First, get the most recent snapshot_datetime for this date
+    const latestSnapshot = await db
+      .select({
+        snapshot_datetime: sql<string>`MAX(${leaderboardSnapshotsTable.snapshot_datetime})`
+      })
+      .from(leaderboardSnapshotsTable)
+      .where(
+        and(
+          eq(leaderboardSnapshotsTable.community_id, communityId),
+          eq(leaderboardSnapshotsTable.snapshot_date, today)
+        )
+      )
+
+    const latestDateTime = latestSnapshot[0]?.snapshot_datetime
+
+    if (!latestDateTime) {
+      return []
+    }
+
+    // Now get all users from that specific snapshot
+    const leaderboard = await db.query.leaderboardSnapshotsTable.findMany({
+      where: and(
+        eq(leaderboardSnapshotsTable.community_id, communityId),
+        eq(leaderboardSnapshotsTable.snapshot_datetime, latestDateTime)
+      ),
+      columns: {
+        user_id: true,
+        rank: true,
+        points: true,
+        points_gained: true,
+        trend: true,
+        rank_change: true,
+        snapshot_date: true
+      },
+      with: {
+        user: {
+          columns: {
+            unique_id: true,
+            first_name: true,
+            last_name: true,
+            profile_url: true
+          }
+        }
+      },
+      orderBy: desc(leaderboardSnapshotsTable.points),
+      limit: limit
+    })
+
+    return leaderboard || []
+  } catch (error: any) {
+    console.error("Error fetching community leaderboard:", error)
+    throw new Error(`Failed to fetch leaderboard: ${error.message}`)
+  }
+}
+
+/**
+ * Get current user's rank in a community
+ * Gets the most recent snapshot for the given date
+ */
+export async function getCurrentUserRank(
+  userId: string,
+  communityId: string,
+  snapshotDate?: string
+) {
+  try {
+    const today = snapshotDate || new Date().toISOString().split("T")[0]
+
+    // First, get the most recent snapshot_datetime for this date and user
+    const latestSnapshot = await db
+      .select({
+        snapshot_datetime: sql<string>`MAX(${leaderboardSnapshotsTable.snapshot_datetime})`
+      })
+      .from(leaderboardSnapshotsTable)
+      .where(
+        and(
+          eq(leaderboardSnapshotsTable.community_id, communityId),
+          eq(leaderboardSnapshotsTable.user_id, userId),
+          eq(leaderboardSnapshotsTable.snapshot_date, today)
+        )
+      )
+
+    const latestDateTime = latestSnapshot[0]?.snapshot_datetime
+
+    if (!latestDateTime) {
+      return null
+    }
+
+    // Get the user's rank from that specific snapshot
+    const userRank = await db.query.leaderboardSnapshotsTable.findFirst({
+      where: and(
+        eq(leaderboardSnapshotsTable.community_id, communityId),
+        eq(leaderboardSnapshotsTable.user_id, userId),
+        eq(leaderboardSnapshotsTable.snapshot_datetime, latestDateTime)
+      ),
+      columns: {
+        user_id: true,
+        rank: true,
+        points: true,
+        points_gained: true,
+        trend: true,
+        rank_change: true,
+        snapshot_date: true
+      },
+      with: {
+        user: true
+      }
+    })
+
+    return userRank || null
+  } catch (error: any) {
+    console.error("Error fetching user rank:", error)
+    throw new Error(`Failed to fetch user rank: ${error.message}`)
+  }
+}
+
+/**
+ * Add or update leaderboard snapshot entry
+ */
+export async function upsertLeaderboardSnapshot(
+  data: InsertLeaderboardSnapshot
+) {
+  try {
+    const existing = await db
+      .select()
+      .from(leaderboardSnapshotsTable)
+      .where(
+        and(
+          eq(leaderboardSnapshotsTable.community_id, data.community_id),
+          eq(leaderboardSnapshotsTable.user_id, data.user_id),
+          eq(leaderboardSnapshotsTable.snapshot_date, data.snapshot_date)
+        )
+      )
+      .limit(1)
+
+    if (existing.length > 0) {
+      const updated = await db
+        .update(leaderboardSnapshotsTable)
+        .set(data)
+        .where(
+          and(
+            eq(leaderboardSnapshotsTable.community_id, data.community_id),
+            eq(leaderboardSnapshotsTable.user_id, data.user_id),
+            eq(leaderboardSnapshotsTable.snapshot_date, data.snapshot_date)
+          )
+        )
+        .returning()
+
+      return updated[0]
+    } else {
+      const created = await db
+        .insert(leaderboardSnapshotsTable)
+        .values(data)
+        .returning()
+
+      return created[0]
+    }
+  } catch (error: any) {
+    console.error("Error upserting leaderboard snapshot:", error)
+    throw new Error(`Failed to upsert leaderboard snapshot: ${error.message}`)
+  }
+}
+
+/**
+ * Get all communities user is a member of
+ */
+export async function getUserCommunities(userId: string) {
+  try {
+    const communities = await db.query.communityUsersTable.findMany({
+      where: eq(communityUsersTable.user_id, userId),
+      with: {
+        community: {
+          with: {
+            category: true
+          }
+        }
+      }
+    })
+
+    return communities.map((cu) => cu.community).filter(Boolean) || []
+  } catch (error: any) {
+    console.error("Error fetching user communities:", error)
+    throw new Error(`Failed to fetch user communities: ${error.message}`)
   }
 }

@@ -71,6 +71,7 @@ import { EntityUpdateBroadCast } from "@/src/utils/constants"
 import { onlineUsersStore } from "@/src/store/onlineUsers/onlineUsersStore"
 import RankingCard from "./RankingCard"
 import { CommunityRankingsData } from "../Dashboard/profile/trust-engine/Constant"
+import { GetCurrentUserRankAction } from "@/src/server-actions/Communities/CommunityRanking"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -111,6 +112,7 @@ export default function CommunityDetailsClient({
   const [isCommunityMember, setIsCommunityMember] = useState<boolean | null>(
     null
   )
+  const [communityUserRank, setCommunityUserRank] = useState<any>(null)
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "COMMUNITY",
@@ -144,6 +146,23 @@ export default function CommunityDetailsClient({
       setIsCommunityMember(isMember)
     }
   }, [community, currentUserId])
+
+  // Fetch user's ranking for this community
+  useEffect(() => {
+    const fetchUserRank = async () => {
+      if (!community?.id) return
+      try {
+        const res = await GetCurrentUserRankAction(community.id)
+        if (res.success && res.data) {
+          setCommunityUserRank(res.data)
+        }
+      } catch (error) {
+        console.error("Error fetching user rank:", error)
+      }
+    }
+
+    fetchUserRank()
+  }, [community?.id])
 
   const showAccessDeniedOverlay =
     community.type === "private" && isCommunityMember === false && !isSuperAdmin
@@ -322,7 +341,6 @@ export default function CommunityDetailsClient({
   if (showAccessDeniedOverlay) {
     return <PrivatePage page="Community" pageHref="/communities" />
   }
-  const currentUserRank = CommunityRankingsData.find((r) => r.isCurrentUser)
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -659,13 +677,15 @@ export default function CommunityDetailsClient({
                 </div>
               </div>
 
-              <RankingCard
-                communityTitle={community.title}
-                currentUserRank={currentUserRank}
-                handleClick={() =>
-                  router.push(`/communities/${encodedCommunitySlug}/ranking`)
-                }
-              />
+              {communityUserRank && (
+                <RankingCard
+                  communityTitle={community.title}
+                  currentUserRank={communityUserRank}
+                  handleClick={() =>
+                    router.push(`/communities/${encodedCommunitySlug}/ranking`)
+                  }
+                />
+              )}
             </div>
           </div>
 

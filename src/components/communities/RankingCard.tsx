@@ -1,5 +1,5 @@
 import React from "react"
-import { ArrowUp } from "lucide-react"
+import { ArrowUp, ArrowDown } from "lucide-react"
 import { Card } from "../ui/card"
 
 type UserRank = {
@@ -7,6 +7,7 @@ type UserRank = {
   rpPoints: number
   trend?: "up" | "down" | "neutral"
   change?: number // e.g. +2, -1
+  pointsGained?: number // Points gained since yesterday
 }
 
 interface RankingCardProps {
@@ -44,15 +45,32 @@ const RankingCard: React.FC<RankingCardProps> = ({
             </div>
           </div>
         </div>
-        {currentUserRank.trend === "up" && (
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <ArrowUp className="w-5 h-5 text-green-600" />
-              <span className="text-lg font-bold text-green-600">+2</span>
+        {currentUserRank.trend !== "neutral" &&
+          currentUserRank.pointsGained !== undefined && (
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                {currentUserRank.trend === "up" && (
+                  <ArrowUp className="w-5 h-5 text-green-600" />
+                )}
+                {currentUserRank.trend === "down" && (
+                  <ArrowDown className="w-5 h-5 text-red-600" />
+                )}
+                <span
+                  className={`text-lg font-bold ${
+                    currentUserRank.trend === "up"
+                      ? "text-green-600"
+                      : currentUserRank.trend === "down"
+                        ? "text-red-600"
+                        : "text-muted-foreground"
+                  }`}
+                >
+                  {currentUserRank.pointsGained > 0 ? "+" : ""}
+                  {currentUserRank.pointsGained}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">points gained</p>
             </div>
-            <p className="text-xs text-muted-foreground">from last week</p>
-          </div>
-        )}
+          )}
       </div>
     </Card>
   )

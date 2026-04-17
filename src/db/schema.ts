@@ -1912,3 +1912,46 @@ export type InsertSuccessfulReferral =
   typeof successfullReferralsTable.$inferInsert
 export type SelectSuccessfulReferral =
   typeof successfullReferralsTable.$inferSelect
+
+export const leaderboardSnapshotsTable = pgTable("leaderboard_snapshots", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  community_id: varchar("community_id", { length: 36 })
+    .notNull()
+    .references(() => communitiesTable.id, { onDelete: "cascade" }),
+  user_id: varchar("user_id", { length: 36 })
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  reward_id: integer().notNull(),
+  rank: integer().notNull(),
+  points: integer().notNull().default(0),
+  points_gained: integer().notNull().default(0),
+  trend: varchar("trend").default("neutral"),
+  rank_change: integer().default(0),
+  snapshot_date: varchar().notNull(), // Keep for daily reference
+  snapshot_datetime: varchar().notNull(), // Timestamp for flexible scheduling
+  ...timestamps
+})
+
+export const leaderboardSnapshotsRelations = relations(
+  leaderboardSnapshotsTable,
+  ({ one }) => ({
+    community: one(communitiesTable, {
+      fields: [leaderboardSnapshotsTable.community_id],
+      references: [communitiesTable.id],
+      relationName: "leaderboardToCommunity"
+    }),
+    user: one(usersTable, {
+      fields: [leaderboardSnapshotsTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "leaderboardToUser"
+    })
+  })
+)
+
+export type InsertLeaderboardSnapshot =
+  typeof leaderboardSnapshotsTable.$inferInsert
+export type SelectLeaderboardSnapshot =
+  typeof leaderboardSnapshotsTable.$inferSelect & {
+    user?: SelectUser
+    community?: SelectCommunity
+  }
