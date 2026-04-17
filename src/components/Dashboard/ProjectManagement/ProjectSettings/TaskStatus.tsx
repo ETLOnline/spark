@@ -188,7 +188,7 @@ export default function TaskStatus() {
       return
     }
 
-    const newStatusSlug = slugify(newStatus.trim())
+    const newStatusSlug = slugify(newStatus)
     // Find the index of "Done" to insert before it
     const doneIndex = statuses.findIndex((status) => status.name === "Done")
     const newStatuses = [...statuses]
