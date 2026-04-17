@@ -152,6 +152,7 @@ export default function TaskStatus() {
         projectDefaultStatuses.map((status) => ({
           name: status.name || "",
           project_id: projectId,
+          status_slug: status.status_slug || "",
           position: status.position || 0
         }))
       )
