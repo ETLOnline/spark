@@ -13,31 +13,31 @@ import { AuthUserAction } from "../User/AuthUserAction"
 
 export const GetCommunityLeaderboardAction = CreateServerAction(
   true,
-  async (communityId: string, limit: number = 10) => {
+  async (communityId: string, page: number = 1, limit: number = 5) => {
     try {
       const user = await AuthUserAction()
       if (!communityId) {
         return { success: false, error: "Community ID is required" }
       }
 
-      // Verify community exists
       const community = await GetCommunityById(communityId)
       if (!community) {
         return { success: false, error: "Community not found" }
       }
 
-      // Get leaderboard data
-      const leaderboardData = await getCommunityLeaderboard(communityId, limit)
+      const offset = (page - 1) * limit
+      const { data, total } = await getCommunityLeaderboard(
+        communityId,
+        limit,
+        offset
+      )
 
-      // Transform for component
-      const formattedLeaderboard = leaderboardData.map((entry) => ({
+      const formattedLeaderboard = data.map((entry) => ({
         rank: entry.rank,
         name: entry.user
           ? `${entry.user.first_name} ${entry.user.last_name}`.trim()
           : "Unknown",
-        avatar:
-          // entry.user?.profile_url ||
-          `${entry.user?.first_name?.[0] || "U"}${entry.user?.last_name?.[0] || ""}`,
+        avatar: `${entry.user?.first_name?.[0] || "U"}${entry.user?.last_name?.[0] || ""}`,
         rpPoints: entry.points,
         growth: entry.rank_change || 0,
         pointsGained: entry.points_gained || 0,
@@ -49,7 +49,10 @@ export const GetCommunityLeaderboardAction = CreateServerAction(
         success: true,
         data: {
           leaderboard: formattedLeaderboard,
-          community
+          community,
+          total,
+          totalPages: Math.ceil(total / limit),
+          currentPage: page
         }
       }
     } catch (error) {
@@ -61,7 +64,6 @@ export const GetCommunityLeaderboardAction = CreateServerAction(
     }
   }
 )
-
 export const GetCurrentUserRankAction = CreateServerAction(
   true,
   async (communityId: string) => {

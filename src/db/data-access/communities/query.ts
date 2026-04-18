@@ -557,36 +557,12 @@ export const getCommunitiesByIds = async function (communityIds: string[]) {
 export async function getCommunityLeaderboard(
   communityId: string,
   limit: number = 10,
-  snapshotDate?: string
+  offset: number = 0
 ) {
-  try {
-    const today = snapshotDate || new Date().toISOString().split("T")[0]
-
-    // First, get the most recent snapshot_datetime for this date
-    const latestSnapshot = await db
-      .select({
-        snapshot_datetime: sql<string>`MAX(${leaderboardSnapshotsTable.snapshot_datetime})`
-      })
-      .from(leaderboardSnapshotsTable)
-      .where(
-        and(
-          eq(leaderboardSnapshotsTable.community_id, communityId),
-          eq(leaderboardSnapshotsTable.snapshot_date, today)
-        )
-      )
-
-    const latestDateTime = latestSnapshot[0]?.snapshot_datetime
-
-    if (!latestDateTime) {
-      return []
-    }
-
-    // Now get all users from that specific snapshot
-    const leaderboard = await db.query.leaderboardSnapshotsTable.findMany({
-      where: and(
-        eq(leaderboardSnapshotsTable.community_id, communityId),
-        eq(leaderboardSnapshotsTable.snapshot_datetime, latestDateTime)
-      ),
+  const [data, totalResult] = await Promise.all([
+    db.query.leaderboardSnapshotsTable.findMany({
+      where: eq(leaderboardSnapshotsTable.community_id, communityId),
+      with: { user: true },
       columns: {
         user_id: true,
         rank: true,
@@ -596,85 +572,42 @@ export async function getCommunityLeaderboard(
         rank_change: true,
         snapshot_date: true
       },
-      with: {
-        user: {
-          columns: {
-            unique_id: true,
-            first_name: true,
-            last_name: true,
-            profile_url: true
-          }
-        }
-      },
       orderBy: desc(leaderboardSnapshotsTable.points),
-      limit: limit
-    })
+      limit,
+      offset
+    }),
+    db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(leaderboardSnapshotsTable)
+      .where(eq(leaderboardSnapshotsTable.community_id, communityId))
+  ])
 
-    return leaderboard || []
-  } catch (error: any) {
-    console.error("Error fetching community leaderboard:", error)
-    throw new Error(`Failed to fetch leaderboard: ${error.message}`)
-  }
+  return { data, total: Number(totalResult[0]?.count ?? 0) }
 }
 
 /**
  * Get current user's rank in a community
  * Gets the most recent snapshot for the given date
  */
-export async function getCurrentUserRank(
-  userId: string,
-  communityId: string,
-  snapshotDate?: string
-) {
-  try {
-    const today = snapshotDate || new Date().toISOString().split("T")[0]
+export async function getCurrentUserRank(userId: string, communityId: string) {
+  const result = await db.query.leaderboardSnapshotsTable.findFirst({
+    where: and(
+      eq(leaderboardSnapshotsTable.community_id, communityId),
+      eq(leaderboardSnapshotsTable.user_id, userId)
+    ),
+    columns: {
+      user_id: true,
+      rank: true,
+      points: true,
+      points_gained: true,
+      trend: true,
+      rank_change: true,
+      snapshot_date: true
+    },
+    with: { user: true }
+  })
 
-    // First, get the most recent snapshot_datetime for this date and user
-    const latestSnapshot = await db
-      .select({
-        snapshot_datetime: sql<string>`MAX(${leaderboardSnapshotsTable.snapshot_datetime})`
-      })
-      .from(leaderboardSnapshotsTable)
-      .where(
-        and(
-          eq(leaderboardSnapshotsTable.community_id, communityId),
-          eq(leaderboardSnapshotsTable.user_id, userId),
-          eq(leaderboardSnapshotsTable.snapshot_date, today)
-        )
-      )
-
-    const latestDateTime = latestSnapshot[0]?.snapshot_datetime
-
-    if (!latestDateTime) {
-      return null
-    }
-
-    // Get the user's rank from that specific snapshot
-    const userRank = await db.query.leaderboardSnapshotsTable.findFirst({
-      where: and(
-        eq(leaderboardSnapshotsTable.community_id, communityId),
-        eq(leaderboardSnapshotsTable.user_id, userId),
-        eq(leaderboardSnapshotsTable.snapshot_datetime, latestDateTime)
-      ),
-      columns: {
-        user_id: true,
-        rank: true,
-        points: true,
-        points_gained: true,
-        trend: true,
-        rank_change: true,
-        snapshot_date: true
-      },
-      with: {
-        user: true
-      }
-    })
-
-    return userRank || null
-  } catch (error: any) {
-    console.error("Error fetching user rank:", error)
-    throw new Error(`Failed to fetch user rank: ${error.message}`)
-  }
+  return result ?? null
 }
 
 /**

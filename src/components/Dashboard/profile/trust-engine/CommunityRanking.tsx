@@ -1,12 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ArrowDown, ArrowUp, X } from "lucide-react"
+import { X } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "../../../ui/card"
-import { Avatar, AvatarFallback } from "../../../ui/avatar"
-import { Badge } from "../../../ui/badge"
-import { Progress } from "../../../ui/progress"
-import { CommunityRankingsData } from "./Constant"
 import RankingCard from "@/src/components/communities/RankingCard"
 import LeaderboardCard, {
   Ranking
@@ -20,11 +16,14 @@ import {
   SelectTrigger,
   SelectValue
 } from "../../../ui/select"
+import PaginationComponent from "@/src/components/common/Pagination"
 import {
   GetCommunityLeaderboardAction,
   GetCurrentUserRankAction,
   GetUserCommunitiesAction
 } from "@/src/server-actions/Communities/CommunityRanking"
+
+const PAGE_SIZE = 5
 
 export function CommunityRanking() {
   const [selectedCommunityId, setSelectedCommunityId] = useState<string | null>(
@@ -35,8 +34,9 @@ export function CommunityRanking() {
   const [userRank, setUserRank] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [communitiesLoading, setCommunitiesLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
 
-  // Fetch user's communities on mount
   useEffect(() => {
     const fetchCommunities = async () => {
       try {
@@ -44,7 +44,6 @@ export function CommunityRanking() {
         const res = await GetUserCommunitiesAction()
         if (res.success && res.data) {
           setUserCommunities(res.data)
-          // Auto-select first community
           if (res.data.length > 0) {
             setSelectedCommunityId(res.data[0].id)
           }
@@ -58,68 +57,74 @@ export function CommunityRanking() {
     fetchCommunities()
   }, [])
 
-  // Fetch leaderboard data when community is selected
+  const fetchLeaderboard = async (communityId: string, page: number) => {
+    setLoading(true)
+    try {
+      const [leaderboardRes, rankRes] = await Promise.all([
+        GetCommunityLeaderboardAction(communityId, page, PAGE_SIZE),
+        GetCurrentUserRankAction(communityId)
+      ])
+
+      if (leaderboardRes.success && leaderboardRes.data) {
+        const formattedData: Ranking[] = leaderboardRes.data.leaderboard.map(
+          (item: any) => ({
+            ...item,
+            isCurrentUser: item.isCurrentUser || false
+          })
+        )
+        setLeaderboardData(formattedData)
+        setTotalPages(leaderboardRes.data.totalPages ?? 1)
+      }
+
+      setUserRank(rankRes.success && rankRes.data ? rankRes.data : null)
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error)
+      setLeaderboardData(null)
+      setUserRank(null)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
     if (!selectedCommunityId) return
-
-    const fetchLeaderboardData = async () => {
-      setLoading(true)
-      try {
-        const [leaderboardRes, rankRes] = await Promise.all([
-          GetCommunityLeaderboardAction(selectedCommunityId, 10),
-          GetCurrentUserRankAction(selectedCommunityId)
-        ])
-
-        if (leaderboardRes.success && leaderboardRes.data) {
-          const formattedData: Ranking[] = leaderboardRes.data.leaderboard.map(
-            (item: any) => ({
-              ...item,
-              isCurrentUser: item.isCurrentUser || false
-            })
-          )
-          setLeaderboardData(formattedData)
-        }
-
-        if (rankRes.success && rankRes.data) {
-          setUserRank(rankRes.data)
-        } else {
-          setUserRank(null)
-        }
-      } catch (error) {
-        console.error("Error fetching leaderboard:", error)
-        setLeaderboardData(null)
-        setUserRank(null)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchLeaderboardData()
+    setCurrentPage(1)
+    fetchLeaderboard(selectedCommunityId, 1)
   }, [selectedCommunityId])
+
+  const handlePageChange = (page: number) => {
+    if (!selectedCommunityId) return
+    setCurrentPage(page)
+    fetchLeaderboard(selectedCommunityId, page)
+  }
+
+  const handleCommunityChange = (id: string) => {
+    setSelectedCommunityId(id)
+    setLeaderboardData(null)
+    setUserRank(null)
+  }
 
   const selectedCommunity = userCommunities.find(
     (c) => c.id === selectedCommunityId
   )
-  const currentUserRank = userRank
 
-  // Calculate insights dynamically
   const pointsToNextRank =
-    leaderboardData && currentUserRank
+    leaderboardData && userRank
       ? (() => {
           const nextRankUser = leaderboardData.find(
-            (user) => user.rank === currentUserRank.rank - 1
+            (u) => u.rank === userRank.rank - 1
           )
           return nextRankUser
-            ? Math.max(0, nextRankUser.rpPoints - currentUserRank.rpPoints)
+            ? Math.max(0, nextRankUser.rpPoints - userRank.rpPoints)
             : 0
         })()
       : 0
 
-  const rankGrowth = currentUserRank?.pointsGained || 0
+  const rankGrowth = userRank?.pointsGained || 0
 
   return (
     <div className="space-y-6">
-      {/* Community Selector Dropdown */}
+      {/* Community Selector */}
       <Card>
         <CardHeader>
           <CardTitle className="text-sm">Select Community</CardTitle>
@@ -132,7 +137,7 @@ export function CommunityRanking() {
               <div className="flex-1">
                 <Select
                   value={selectedCommunityId || ""}
-                  onValueChange={setSelectedCommunityId}
+                  onValueChange={handleCommunityChange}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Choose a community..." />
@@ -182,25 +187,40 @@ export function CommunityRanking() {
         </CardContent>
       </Card>
 
-      {/* Current User Ranking Highlight */}
+      {/* User Rank Card */}
       {loading ? (
         <Skeleton className="h-32 w-full" />
-      ) : currentUserRank ? (
+      ) : userRank ? (
         <RankingCard
-          currentUserRank={currentUserRank}
+          currentUserRank={userRank}
           communityTitle={selectedCommunity?.title}
         />
       ) : null}
 
-      {/* Leaderboard */}
+      {/* Leaderboard + Pagination */}
       {loading ? (
         <Skeleton className="h-96 w-full" />
       ) : leaderboardData && leaderboardData.length > 0 ? (
-        <LeaderboardCard data={leaderboardData} />
+        <Card className="p-6">
+          <LeaderboardCard data={leaderboardData} />
+          {totalPages > 1 && (
+            <div className="mt-6 pt-4 border-t">
+              <PaginationComponent
+                pagination={{
+                  page: currentPage,
+                  totalPages,
+                  total: 0,
+                  limit: PAGE_SIZE
+                }}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          )}
+        </Card>
       ) : null}
 
       {/* Insights */}
-      {currentUserRank && selectedCommunityId && (
+      {userRank && selectedCommunityId && (
         <Card className="p-6">
           <h4 className="font-semibold text-foreground mb-4">
             Your Ranking Insights
@@ -214,8 +234,8 @@ export function CommunityRanking() {
                 {pointsToNextRank}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {currentUserRank.rank > 1
-                  ? `Until rank ${currentUserRank.rank - 1}`
+                {userRank.rank > 1
+                  ? `Until rank ${userRank.rank - 1}`
                   : "You're at the top!"}
               </p>
             </div>
@@ -224,9 +244,7 @@ export function CommunityRanking() {
                 Latest Points Gained
               </p>
               <p
-                className={`text-2xl font-bold ${
-                  rankGrowth > 0 ? "text-green-600" : "text-muted-foreground"
-                }`}
+                className={`text-2xl font-bold ${rankGrowth > 0 ? "text-green-600" : "text-muted-foreground"}`}
               >
                 {rankGrowth > 0 ? "+" : ""}
                 {rankGrowth}
