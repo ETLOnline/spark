@@ -3,14 +3,14 @@ export async function POST(req: Request) {
   try {
     const result = await UpdateCommunityLeaderboardAction()
 
-    if (result.success) {
-      return Response.json({ success: true, data: result.data })
-    } else {
+    if (!result?.success) {
       return Response.json(
-        { success: false, error: result.error },
+        { success: false, error: "Leaderboard update failed" },
         { status: 500 }
       )
     }
+
+    return Response.json({ success: true, data: result.data })
   } catch (error) {
     console.error("Leaderboard update failed:", error)
     return Response.json(
