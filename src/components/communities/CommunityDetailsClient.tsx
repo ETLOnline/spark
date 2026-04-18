@@ -676,16 +676,6 @@ export default function CommunityDetailsClient({
                   ))}
                 </div>
               </div>
-
-              {communityUserRank && (
-                <RankingCard
-                  communityTitle={community.title}
-                  currentUserRank={communityUserRank}
-                  handleClick={() =>
-                    router.push(`/communities/${encodedCommunitySlug}/ranking`)
-                  }
-                />
-              )}
             </div>
           </div>
 
@@ -735,6 +725,16 @@ export default function CommunityDetailsClient({
                 </div>
               </CardContent>
             </Card>
+            {communityUserRank && (
+              <RankingCard
+                communityTitle={community.title}
+                currentUserRank={communityUserRank}
+                handleClick={() =>
+                  router.push(`/communities/${encodedCommunitySlug}/ranking`)
+                }
+                grandient={true}
+              />
+            )}
 
             {/* About Section */}
             <Card>

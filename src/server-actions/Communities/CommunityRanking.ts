@@ -5,7 +5,8 @@ import {
   getCurrentUserRank,
   GetCommunityById,
   getUserCommunities,
-  GetCommunityBySlug
+  GetCommunityBySlug,
+  getUserTopCommunityRank
 } from "@/src/db/data-access/communities/query"
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
@@ -153,6 +154,32 @@ export const GetCommunityIdBySlugAction = CreateServerAction(
         success: false,
         error: error instanceof Error ? error.message : "Unknown error"
       }
+    }
+  }
+)
+
+export const GetUserTopCommunityRankAction = CreateServerAction(
+  true,
+  async (userId: string) => {
+    try {
+      const topRank = await getUserTopCommunityRank(userId)
+
+      if (!topRank) {
+        return { success: true, data: null }
+      }
+
+      return {
+        success: true,
+        data: {
+          rank: topRank.rank,
+          community_id: topRank.community_id,
+          community_title: topRank.community_title,
+          points: topRank.points
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching user top community rank:", error)
+      return { success: false, error: "Failed to fetch top community rank" }
     }
   }
 )

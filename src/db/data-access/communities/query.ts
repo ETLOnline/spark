@@ -13,7 +13,8 @@ import {
   SelectUser,
   leaderboardSnapshotsTable,
   InsertLeaderboardSnapshot,
-  SelectLeaderboardSnapshot
+  SelectLeaderboardSnapshot,
+  pointLedgerTable
 } from "../../schema"
 import {
   eq,
@@ -744,4 +745,52 @@ export async function getUserCommunities(userId: string) {
     console.error("Error fetching user communities:", error)
     throw new Error(`Failed to fetch user communities: ${error.message}`)
   }
+}
+
+export async function getCommunityLedgerTotals(communityId: string) {
+  return db
+    .select({
+      user_id: pointLedgerTable.user_id,
+      reward_id: pointLedgerTable.reward_id,
+      total_points: sql<number>`CAST(SUM(${pointLedgerTable.amount}) AS INTEGER)`
+    })
+    .from(pointLedgerTable)
+    .where(sql`${pointLedgerTable.metadata}->>'community_id' = ${communityId}`)
+    .groupBy(pointLedgerTable.user_id, pointLedgerTable.reward_id)
+    .orderBy(sql`SUM(${pointLedgerTable.amount}) DESC`)
+}
+
+export async function replaceLeaderboardSnapshots(
+  communityId: string,
+  snapshots: InsertLeaderboardSnapshot[]
+) {
+  return db.transaction(async (tx) => {
+    await tx
+      .delete(leaderboardSnapshotsTable)
+      .where(eq(leaderboardSnapshotsTable.community_id, communityId))
+
+    if (snapshots.length === 0) return []
+
+    return tx.insert(leaderboardSnapshotsTable).values(snapshots).returning()
+  })
+}
+
+export async function getUserTopCommunityRank(userId: string) {
+  const result = await db
+    .select({
+      rank: leaderboardSnapshotsTable.rank,
+      points: leaderboardSnapshotsTable.points,
+      community_id: leaderboardSnapshotsTable.community_id,
+      community_title: communitiesTable.title
+    })
+    .from(leaderboardSnapshotsTable)
+    .innerJoin(
+      communitiesTable,
+      eq(leaderboardSnapshotsTable.community_id, communitiesTable.id)
+    )
+    .where(eq(leaderboardSnapshotsTable.user_id, userId))
+    .orderBy(leaderboardSnapshotsTable.rank)
+    .limit(1)
+
+  return result[0] ?? null
 }
