@@ -657,26 +657,21 @@ export async function upsertLeaderboardSnapshot(
   }
 }
 
-/**
- * Get all communities user is a member of
- */
-export async function getUserCommunities(userId: string) {
+export async function getCommunitiesWithUserPoints(userId: string) {
   try {
-    const communities = await db.query.communityUsersTable.findMany({
-      where: eq(communityUsersTable.user_id, userId),
-      with: {
-        community: {
-          with: {
-            category: true
-          }
-        }
-      }
-    })
+    const results = await db
+      .selectDistinct({ community: communitiesTable })
+      .from(leaderboardSnapshotsTable)
+      .innerJoin(
+        communitiesTable,
+        eq(leaderboardSnapshotsTable.community_id, communitiesTable.id)
+      )
+      .where(eq(leaderboardSnapshotsTable.user_id, userId))
 
-    return communities.map((cu) => cu.community).filter(Boolean) || []
+    return results.map((r) => r.community) || []
   } catch (error: any) {
-    console.error("Error fetching user communities:", error)
-    throw new Error(`Failed to fetch user communities: ${error.message}`)
+    console.error("Error fetching communities with user points:", error)
+    throw new Error(`Failed to fetch communities: ${error.message}`)
   }
 }
 

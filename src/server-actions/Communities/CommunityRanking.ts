@@ -4,7 +4,7 @@ import {
   getCommunityLeaderboard,
   getCurrentUserRank,
   GetCommunityById,
-  getUserCommunities,
+  getCommunitiesWithUserPoints,
   GetCommunityBySlug,
   getUserTopCommunityRank
 } from "@/src/db/data-access/communities/query"
@@ -116,8 +116,7 @@ export const GetUserCommunitiesAction = CreateServerAction(true, async () => {
       return { success: false, error: "User not authenticated" }
     }
 
-    // Fetch communities the user is part of
-    const communities = await getUserCommunities(user.unique_id)
+    const communities = await getCommunitiesWithUserPoints(user.unique_id)
 
     return {
       success: true,

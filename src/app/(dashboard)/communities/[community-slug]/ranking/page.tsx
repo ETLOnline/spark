@@ -50,7 +50,7 @@ export default function CommunityRankingPage({
       try {
         setLoading(true)
         const [leaderboardRes, rankRes] = await Promise.all([
-          GetCommunityLeaderboardAction(communityId, 10),
+          GetCommunityLeaderboardAction(communityId, 1, 10),
           GetCurrentUserRankAction(communityId)
         ])
 
