@@ -6,7 +6,7 @@ import { chatStore } from "@/src/store/chat/chatStore"
 import { projectStore } from "@/src/store/project/projectStore"
 import { spaceStore } from "@/src/store/space/spaceStore"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
-import React, { Suspense, useEffect } from "react"
+import React, { useEffect } from "react"
 
 function Page() {
   const currentSpace = useAtomValue(spaceStore.currentSpace)
@@ -30,11 +30,7 @@ function Page() {
     }
   }, [currentSpace])
 
-  return (
-    <Suspense>
-      <ChatScreen allChatsSSR={myChats} currentChatSSR={undefined} />
-    </Suspense>
-  )
+  return <ChatScreen allChatsSSR={myChats} currentChatSSR={undefined} />
 }
 
 export default Page

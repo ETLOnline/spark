@@ -54,7 +54,7 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
   )
 
   useEffect(() => {
-    setCurrSpace(currSpace)
+    if (currSpace) setCurrSpace(currSpace)
   }, [currSpace])
 
   useEffect(() => {
