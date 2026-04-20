@@ -1,41 +1,48 @@
 import React from "react"
-import { ArrowUp } from "lucide-react"
+import { ArrowUp, ArrowDown } from "lucide-react"
 import { Card } from "../ui/card"
 
 type UserRank = {
   rank: number
   rpPoints: number
   trend?: "up" | "down" | "neutral"
-  change?: number // e.g. +2, -1
+  change?: number
+  pointsGained?: number
 }
 
 interface RankingCardProps {
   currentUserRank?: UserRank | null
   communityTitle?: string
   handleClick?: () => void
+  grandient?: boolean
 }
 
 const RankingCard: React.FC<RankingCardProps> = ({
   currentUserRank,
   communityTitle,
-  handleClick
+  handleClick,
+  grandient
 }) => {
   if (!currentUserRank) return null
+
+  const hasTrend =
+    currentUserRank.trend !== "neutral" &&
+    currentUserRank.pointsGained !== undefined
 
   return (
     <Card
       onClick={handleClick}
-      className="p-6 hover:cursor-pointer border-primary/20"
+      className={`p-4 sm:p-6 hover:cursor-pointer border-primary/20 ${grandient ? "spark-gradient-panel-bg" : ""}`}
     >
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <p className="text-sm text-muted-foreground mb-2">Your Ranking</p>
           <div className="flex items-center gap-3">
-            <div className="text-4xl font-bold text-green-600">
+            <div className="text-3xl sm:text-4xl font-bold text-green-600 shrink-0">
               #{currentUserRank.rank}
             </div>
-            <div>
-              <h4 className="font-semibold text-foreground">
+            <div className="min-w-0">
+              <h4 className="font-semibold text-foreground truncate">
                 {communityTitle}
               </h4>
               <p className="text-sm text-muted-foreground">
@@ -44,13 +51,30 @@ const RankingCard: React.FC<RankingCardProps> = ({
             </div>
           </div>
         </div>
-        {currentUserRank.trend === "up" && (
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <ArrowUp className="w-5 h-5 text-green-600" />
-              <span className="text-lg font-bold text-green-600">+2</span>
+
+        {hasTrend && (
+          <div className="flex items-center gap-3 sm:flex-col sm:items-center sm:gap-1 sm:text-center">
+            <div className="flex items-center gap-1">
+              {currentUserRank.trend === "up" && (
+                <ArrowUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+              )}
+              {currentUserRank.trend === "down" && (
+                <ArrowDown className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+              )}
+              <span
+                className={`text-base sm:text-lg font-bold ${
+                  currentUserRank.trend === "up"
+                    ? "text-green-600"
+                    : currentUserRank.trend === "down"
+                      ? "text-red-600"
+                      : "text-muted-foreground"
+                }`}
+              >
+                {currentUserRank.pointsGained! > 0 ? "+" : ""}
+                {currentUserRank.pointsGained}
+              </span>
             </div>
-            <p className="text-xs text-muted-foreground">from last week</p>
+            <p className="text-xs text-muted-foreground">points gained</p>
           </div>
         )}
       </div>

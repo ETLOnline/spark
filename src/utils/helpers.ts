@@ -356,6 +356,7 @@ export function slugify(input: string): string {
     .replace(/[^a-z0-9]+/gi, "-")
     .replace(/^-+|-+$/g, "")
     .replace(/-+/g, "-")
+    .trim()
 }
 
 export function joinPresenceChannel(chatId: number) {
