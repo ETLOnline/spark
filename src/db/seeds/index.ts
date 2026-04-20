@@ -43,7 +43,7 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   FeatureFlagsSeed,
   RewardsSeed,
   RewardLevelsSeed,
-  FeedbackEmailTemplatesSeed: seedFeedbackEmailTemplates
+  seedFeedbackEmailTemplates
 }
 
 async function runSeeders() {
