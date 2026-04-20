@@ -609,21 +609,37 @@ export async function getCurrentUserRank(userId: string, communityId: string) {
 
   return result ?? null
 }
-
-export async function getCommunitiesWithUserPoints(userId: string) {
+/**
+ * Get all communities user is a member of
+ */
+export async function getUserCommunitiesWithRanking(userId: string) {
   try {
-    const results = await db
-      .selectDistinct({ community: communitiesTable })
-      .from(leaderboardSnapshotsTable)
-      .innerJoin(
-        communitiesTable,
-        eq(leaderboardSnapshotsTable.community_id, communitiesTable.id)
-      )
-      .where(eq(leaderboardSnapshotsTable.user_id, userId))
+    const [joinedRows, rankedRows] = await Promise.all([
+      db
+        .select({ community_id: communityUsersTable.community_id })
+        .from(communityUsersTable)
+        .where(eq(communityUsersTable.user_id, userId)),
+      db
+        .selectDistinct({
+          community_id: leaderboardSnapshotsTable.community_id
+        })
+        .from(leaderboardSnapshotsTable)
+        .where(eq(leaderboardSnapshotsTable.user_id, userId))
+    ])
+    const allIds = [
+      ...new Set([
+        ...joinedRows.map((r) => r.community_id),
+        ...rankedRows.map((r) => r.community_id)
+      ])
+    ]
 
-    return results.map((r) => r.community) || []
+    if (allIds.length === 0) return []
+    return db.query.communitiesTable.findMany({
+      where: inArray(communitiesTable.id, allIds),
+      with: { category: true }
+    })
   } catch (error: any) {
-    console.error("Error fetching communities with user points:", error)
+    console.error("Error fetching user communities with ranking:", error)
     throw new Error(`Failed to fetch communities: ${error.message}`)
   }
 }

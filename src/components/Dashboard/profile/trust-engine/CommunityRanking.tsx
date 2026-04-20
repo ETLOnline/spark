@@ -36,6 +36,7 @@ export function CommunityRanking() {
   const [communitiesLoading, setCommunitiesLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [communityHasRanking, setCommunityHasRanking] = useState(false)
 
   useEffect(() => {
     const fetchCommunities = async () => {
@@ -74,6 +75,7 @@ export function CommunityRanking() {
         )
         setLeaderboardData(formattedData)
         setTotalPages(leaderboardRes.data.totalPages ?? 1)
+        setCommunityHasRanking(leaderboardRes.data.total > 0)
       }
 
       setUserRank(rankRes.success && rankRes.data ? rankRes.data : null)
@@ -102,6 +104,7 @@ export function CommunityRanking() {
     setSelectedCommunityId(id)
     setLeaderboardData(null)
     setUserRank(null)
+    setCommunityHasRanking(false)
   }
 
   const selectedCommunity = userCommunities.find(
@@ -190,16 +193,24 @@ export function CommunityRanking() {
       {/* User Rank Card */}
       {loading ? (
         <Skeleton className="h-32 w-full" />
-      ) : userRank ? (
+      ) : selectedCommunityId ? (
         <RankingCard
           currentUserRank={userRank}
           communityTitle={selectedCommunity?.title}
+          noRankMessage="You haven't contributed yet to earn a rank in this community."
         />
       ) : null}
 
       {/* Leaderboard + Pagination */}
       {loading ? (
         <Skeleton className="h-96 w-full" />
+      ) : !communityHasRanking ? (
+        <Card className="p-6">
+          <p className="text-sm font-medium text-muted-foreground text-center">
+            This community doesn't have any rankings yet. Be the first to earn
+            points!
+          </p>
+        </Card>
       ) : leaderboardData && leaderboardData.length > 0 ? (
         <Card className="p-6">
           <LeaderboardCard data={leaderboardData} />
