@@ -164,6 +164,11 @@ export const ProjectManagementPages = [
     icon: "info"
   },
   {
+    key: "chat",
+    title: "Chat",
+    icon: "message-circle-more"
+  },
+  {
     key: "sprint",
     title: "Sprint",
     icon: "chart-gantt"

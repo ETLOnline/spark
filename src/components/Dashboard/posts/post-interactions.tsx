@@ -4,7 +4,7 @@ import { MessageCircle, Share2, ThumbsUp } from "lucide-react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useAtomValue, useSetAtom } from "jotai"
 import { postStore } from "@/src/store/post/postStore"
-import { useEffect, useState } from "react"
+import { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { useToast } from "@/src/hooks/use-toast"
 import { SelectLike } from "@/src/db/schema"
 import { userStore } from "@/src/store/user/userStore"
@@ -17,6 +17,8 @@ type Props = {
   postId: string
   likers?: SelectLike[]
   spaceId?: string
+  isCommentsVisible: boolean
+  setIsCommentsVisible: Dispatch<SetStateAction<boolean>>
 }
 
 const PostInteractions: React.FC<Props> = ({
@@ -24,7 +26,9 @@ const PostInteractions: React.FC<Props> = ({
   comments,
   postId,
   likers,
-  spaceId
+  spaceId,
+  isCommentsVisible,
+  setIsCommentsVisible
 }) => {
   const [toggleLikeLoading, toggleLikedPost, toggleLikeError, toggleLike] =
     useServerAction(ToggleLikeAction)
@@ -114,8 +118,18 @@ const PostInteractions: React.FC<Props> = ({
           {likes}
         </Button>
       )}
-      <Button variant="ghost" size="sm">
-        <MessageCircle className="mr-2 h-4 w-4" />
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setIsCommentsVisible(!isCommentsVisible)}
+      >
+        <MessageCircle
+          className={`mr-2 h-4 w-4 ${
+            isCommentsVisible
+              ? "text-primary dark:text-primary fill-primary dark:fill-white"
+              : ""
+          }`}
+        />
         {comments}
       </Button>
       <Button variant="ghost" size="sm" onClick={handleShare}>
