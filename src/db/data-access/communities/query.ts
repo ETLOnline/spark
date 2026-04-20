@@ -609,74 +609,38 @@ export async function getCurrentUserRank(userId: string, communityId: string) {
 
   return result ?? null
 }
-
-/**
- * Add or update leaderboard snapshot entry
- */
-export async function upsertLeaderboardSnapshot(
-  data: InsertLeaderboardSnapshot
-) {
-  try {
-    const existing = await db
-      .select()
-      .from(leaderboardSnapshotsTable)
-      .where(
-        and(
-          eq(leaderboardSnapshotsTable.community_id, data.community_id),
-          eq(leaderboardSnapshotsTable.user_id, data.user_id),
-          eq(leaderboardSnapshotsTable.snapshot_date, data.snapshot_date)
-        )
-      )
-      .limit(1)
-
-    if (existing.length > 0) {
-      const updated = await db
-        .update(leaderboardSnapshotsTable)
-        .set(data)
-        .where(
-          and(
-            eq(leaderboardSnapshotsTable.community_id, data.community_id),
-            eq(leaderboardSnapshotsTable.user_id, data.user_id),
-            eq(leaderboardSnapshotsTable.snapshot_date, data.snapshot_date)
-          )
-        )
-        .returning()
-
-      return updated[0]
-    } else {
-      const created = await db
-        .insert(leaderboardSnapshotsTable)
-        .values(data)
-        .returning()
-
-      return created[0]
-    }
-  } catch (error: any) {
-    console.error("Error upserting leaderboard snapshot:", error)
-    throw new Error(`Failed to upsert leaderboard snapshot: ${error.message}`)
-  }
-}
-
 /**
  * Get all communities user is a member of
  */
-export async function getUserCommunities(userId: string) {
+export async function getUserCommunitiesWithRanking(userId: string) {
   try {
-    const communities = await db.query.communityUsersTable.findMany({
-      where: eq(communityUsersTable.user_id, userId),
-      with: {
-        community: {
-          with: {
-            category: true
-          }
-        }
-      }
-    })
+    const [joinedRows, rankedRows] = await Promise.all([
+      db
+        .select({ community_id: communityUsersTable.community_id })
+        .from(communityUsersTable)
+        .where(eq(communityUsersTable.user_id, userId)),
+      db
+        .selectDistinct({
+          community_id: leaderboardSnapshotsTable.community_id
+        })
+        .from(leaderboardSnapshotsTable)
+        .where(eq(leaderboardSnapshotsTable.user_id, userId))
+    ])
+    const allIds = [
+      ...new Set([
+        ...joinedRows.map((r) => r.community_id),
+        ...rankedRows.map((r) => r.community_id)
+      ])
+    ]
 
-    return communities.map((cu) => cu.community).filter(Boolean) || []
+    if (allIds.length === 0) return []
+    return db.query.communitiesTable.findMany({
+      where: inArray(communitiesTable.id, allIds),
+      with: { category: true }
+    })
   } catch (error: any) {
-    console.error("Error fetching user communities:", error)
-    throw new Error(`Failed to fetch user communities: ${error.message}`)
+    console.error("Error fetching user communities with ranking:", error)
+    throw new Error(`Failed to fetch communities: ${error.message}`)
   }
 }
 

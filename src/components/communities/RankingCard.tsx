@@ -1,6 +1,7 @@
 import React from "react"
 import { ArrowUp, ArrowDown } from "lucide-react"
 import { Card } from "../ui/card"
+import { Button } from "../ui/button"
 
 type UserRank = {
   rank: number
@@ -8,6 +9,7 @@ type UserRank = {
   trend?: "up" | "down" | "neutral"
   change?: number
   pointsGained?: number
+  noRankMessage?: string
 }
 
 interface RankingCardProps {
@@ -15,15 +17,39 @@ interface RankingCardProps {
   communityTitle?: string
   handleClick?: () => void
   grandient?: boolean
+  noRankMessage?: string
 }
 
 const RankingCard: React.FC<RankingCardProps> = ({
   currentUserRank,
   communityTitle,
   handleClick,
-  grandient
+  grandient,
+  noRankMessage
 }) => {
-  if (!currentUserRank) return null
+  if (!currentUserRank) {
+    return (
+      <Card
+        className={`p-4 border-primary/20 ${grandient ? "spark-gradient-panel-bg" : ""}`}
+      >
+        <p className="text-sm text-muted-foreground mb-1">Your Ranking</p>
+        <p className="text-sm font-medium text-muted-foreground">
+          {noRankMessage ??
+            "You don't have a rank yet. Start contributing to earn points!"}
+        </p>
+        {handleClick && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3 w-full"
+            onClick={handleClick}
+          >
+            View Leaderboard
+          </Button>
+        )}
+      </Card>
+    )
+  }
 
   const hasTrend =
     currentUserRank.trend !== "neutral" &&
@@ -31,8 +57,7 @@ const RankingCard: React.FC<RankingCardProps> = ({
 
   return (
     <Card
-      onClick={handleClick}
-      className={`p-4 sm:p-6 hover:cursor-pointer border-primary/20 ${grandient ? "spark-gradient-panel-bg" : ""}`}
+      className={`p-4 sm:p-6 border-primary/20 ${grandient ? "spark-gradient-panel-bg" : ""} ${handleClick ? "hover:cursor-pointer" : ""}`}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
@@ -78,6 +103,17 @@ const RankingCard: React.FC<RankingCardProps> = ({
           </div>
         )}
       </div>
+
+      {handleClick && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-4 w-full"
+          onClick={handleClick}
+        >
+          View Leaderboard
+        </Button>
+      )}
     </Card>
   )
 }
