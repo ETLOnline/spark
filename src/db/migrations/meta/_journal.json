@@ -295,6 +295,13 @@
       "when": 1776413682420,
       "tag": "0041_2026_04_17_161441__add_snapshot_table_for_community_rank",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1776673973473,
+      "tag": "0042_2026_04_20_133251__add_feedback_table",
+      "breakpoints": true
     }
   ]
 }

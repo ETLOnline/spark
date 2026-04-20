@@ -2,14 +2,12 @@
 
 import {
   CreateFeedback,
-  GetAllFeedback,
-  GetAllSuperAdmins
+  GetAllFeedback
 } from "@/src/db/data-access/feedback/query"
-import { getEmailTemplateByName } from "@/src/db/data-access/emails/query"
-import { MailService } from "@/src/services/mail/sendMail"
-import Handlebars from "handlebars"
-
-const mailer = new MailService()
+import {
+  notifyUserFeedbackSubmitted,
+  notifyAdminNewFeedback
+} from "@/src/services/notify/feedback/feedback"
 
 export async function SubmitFeedbackAction(data: {
   name: string
@@ -28,64 +26,26 @@ export async function SubmitFeedbackAction(data: {
       file_url: data.file_url || null
     })
 
-    // Send confirmation email to user
-    const userTemplate = await getEmailTemplateByName("feedback_submitted")
-    if (userTemplate) {
-      const compiled = Handlebars.compile(userTemplate.body)
-      const renderedBody = compiled({
-        userName: data.name,
-        userEmail: data.email,
-        subject: data.subject,
-        description: data.description,
-        submittedAt: new Date().toLocaleString()
-      })
+    const submittedAt = new Date().toLocaleString()
 
-      const compiledSubject = Handlebars.compile(userTemplate.subject)
-      const renderedSubject = compiledSubject({
-        userName: data.name
-      })
+    // Send confirmation email to user via queue
+    await notifyUserFeedbackSubmitted("feedback_submitted", {
+      name: data.name,
+      email: data.email,
+      subject: data.subject,
+      description: data.description,
+      submittedAt
+    })
 
-      await mailer.sendEmail({
-        to: data.email,
-        from: process.env.EMAIL_FROM_ADDRESS!,
-        subject: renderedSubject,
-        body: renderedBody
-      })
-    }
-
-    // Send notification to all super admins
-    const superAdmins = await GetAllSuperAdmins()
-    if (superAdmins.length > 0) {
-      const adminTemplate = await getEmailTemplateByName("new_feedback_admin")
-      if (adminTemplate) {
-        const compiled = Handlebars.compile(adminTemplate.body)
-        const renderedBody = compiled({
-          userName: data.name,
-          userEmail: data.email,
-          subject: data.subject,
-          description: data.description,
-          fileUrl: data.file_url || "No file attached",
-          submittedAt: new Date().toLocaleString(),
-          feedbackId: feedback.id
-        })
-
-        const compiledSubject = Handlebars.compile(adminTemplate.subject)
-        const renderedSubject = compiledSubject({
-          subject: data.subject
-        })
-
-        await Promise.all(
-          superAdmins.map((admin) =>
-            mailer.sendEmail({
-              to: admin.email,
-              from: process.env.EMAIL_FROM_ADDRESS!,
-              subject: renderedSubject,
-              body: renderedBody
-            })
-          )
-        )
-      }
-    }
+    // Send notification to all super admins via queue
+    await notifyAdminNewFeedback("new_feedback_admin", {
+      name: data.name,
+      email: data.email,
+      subject: data.subject,
+      description: data.description,
+      submittedAt,
+      feedbackId: feedback.id
+    })
 
     return { success: true, feedback }
   } catch (error: any) {

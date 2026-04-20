@@ -1,0 +1,57 @@
+import { MailService } from "@/src/services/mail/sendMail"
+import { getEmailTemplateByName } from "@/src/db/data-access/emails/query"
+import Handlebars from "handlebars"
+
+const mailer = new MailService()
+
+export async function processFeedbackSubmittedNotification(job: {
+  sendingTo: string[]
+  event: string
+  payload: any
+}) {
+  const template = await getEmailTemplateByName("feedback_submitted")
+  if (!template) throw new Error(`Template not found: feedback_submitted`)
+
+  const compiledBody = Handlebars.compile(template.body)
+  const renderedBody = compiledBody(job.payload)
+
+  const compiledSubject = Handlebars.compile(template.subject)
+  const renderedSubject = compiledSubject(job.payload)
+
+  await Promise.all(
+    job.sendingTo.map((to) =>
+      mailer.sendEmail({
+        to,
+        from: process.env.EMAIL_FROM_ADDRESS!,
+        subject: renderedSubject,
+        body: renderedBody
+      })
+    )
+  )
+}
+
+export async function processNewFeedbackAdminNotification(job: {
+  sendingTo: string[]
+  event: string
+  payload: any
+}) {
+  const template = await getEmailTemplateByName("new_feedback_admin")
+  if (!template) throw new Error(`Template not found: new_feedback_admin`)
+
+  const compiledBody = Handlebars.compile(template.body)
+  const renderedBody = compiledBody(job.payload)
+
+  const compiledSubject = Handlebars.compile(template.subject)
+  const renderedSubject = compiledSubject(job.payload)
+
+  await Promise.all(
+    job.sendingTo.map((to) =>
+      mailer.sendEmail({
+        to,
+        from: process.env.EMAIL_FROM_ADDRESS!,
+        subject: renderedSubject,
+        body: renderedBody
+      })
+    )
+  )
+}

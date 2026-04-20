@@ -42,7 +42,7 @@
               <td align="center" style="padding: 24px 0 16px 0">
                 <img
                   src="{{logoUrl}}"
-                  alt="Platform Logo"
+                  alt="YourPlatform Logo"
                   width="120"
                   style="display: block; max-width: 120px; height: auto"
                 />
@@ -51,31 +51,34 @@
 
             <!-- Header -->
             <tr>
-              <td style="padding: 24px 40px 16px 40px; text-align: center">
-                <h1
-                  style="
-                    margin: 0;
-                    font-size: 24px;
-                    font-weight: 600;
-                    color: #1a1a1a;
-                  "
-                >
-                  Feedback Received
-                </h1>
+              <td
+                align="center"
+                style="
+                  background-color: #51ecdc;
+                  padding: 20px;
+                  color: #0f172a;
+                  font-size: 20px;
+                  font-weight: bold;
+                "
+              >
+                Feedback Submitted
               </td>
             </tr>
 
-            <!-- Content -->
+            <!-- Body -->
             <tr>
-              <td style="padding: 0 40px 24px 40px">
-                <p
-                  style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.5"
-                >
-                  Hi {{userEmail}},
+              <td
+                style="
+                  padding: 32px;
+                  font-size: 16px;
+                  line-height: 1.5;
+                  color: #1a1a1a;
+                "
+              >
+                <p style="margin: 0 0 16px">
+                  Hi <strong>{{userName}}</strong>,
                 </p>
-                <p
-                  style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.5"
-                >
+                <p style="margin: 0 0 16px">
                   Thank you for submitting your feedback. We have received your
                   submission and our team will review it shortly.
                 </p>
@@ -123,7 +126,7 @@
                           line-height: 1.5;
                         "
                       >
-                        {{message}}
+                        {{description}}
                       </p>
                     </td>
                   </tr>

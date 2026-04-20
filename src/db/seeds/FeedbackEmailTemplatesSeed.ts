@@ -1,5 +1,6 @@
 import { emailTemplatesTable } from "../schema"
 import { db } from "../index"
+import { sql } from "drizzle-orm"
 import fs from "fs"
 import path from "path"
 
@@ -23,52 +24,23 @@ const feedbackTemplatesToSeed = [
   }
 ]
 
-export async function seedFeedbackEmailTemplates() {
-  console.log("Seeding feedback email templates...")
-
-  for (const template of feedbackTemplatesToSeed) {
+export const seedFeedbackEmailTemplates = async () => {
+  return await db.transaction(async (tx) => {
     try {
-      // Check if template already exists
-      const existing = await db
-        .select()
-        .from(emailTemplatesTable)
-        .where((table) => table.name === template.name)
+      console.log("🌱 Seeding feedback email templates...")
 
-      if (existing.length > 0) {
-        // Update existing template
-        await db
-          .update(emailTemplatesTable)
-          .set({
-            subject: template.subject,
-            body: template.body,
-            updated_at: new Date().toISOString()
-          })
-          .where((table) => table.name === template.name)
-        console.log(`Updated template: ${template.name}`)
-      } else {
-        // Insert new template
-        await db.insert(emailTemplatesTable).values({
-          unique_id: crypto.randomUUID(),
-          name: template.name,
-          subject: template.subject,
-          body: template.body,
-          isActive: true,
-          created_at: new Date().toISOString()
-        })
-        console.log(`Created template: ${template.name}`)
-      }
+      // Delete existing feedback templates
+      await tx.execute(
+        sql`DELETE FROM email_templates WHERE name IN ('feedback_submitted', 'new_feedback_admin')`
+      )
+
+      // Insert new templates
+      await tx.insert(emailTemplatesTable).values(feedbackTemplatesToSeed)
+
+      console.log("✅ Feedback email templates seeded successfully!")
     } catch (error) {
-      console.error(`Error seeding template ${template.name}:`, error)
+      console.error("Error seeding feedback email templates:", error)
+      throw error
     }
-  }
-
-  console.log("Feedback email templates seeded successfully!")
-}
-
-// Run if called directly
-seedFeedbackEmailTemplates()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error)
-    process.exit(1)
   })
+}

@@ -19,6 +19,7 @@ import { JoinInviteEmailSeed } from "./JoinInviteEmail"
 import { FeatureFlagsSeed } from "./FeatureFlagsSeed"
 import { RewardsSeed } from "./RewardsSeed"
 import { RewardLevelsSeed } from "./RewardLevelsSeed"
+import { seedFeedbackEmailTemplates } from "./FeedbackEmailTemplatesSeed"
 
 const SEEDERS: Record<string, () => Promise<void>> = {
   FeatureSeed,
@@ -41,7 +42,8 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   JoinInviteEmailSeed,
   FeatureFlagsSeed,
   RewardsSeed,
-  RewardLevelsSeed
+  RewardLevelsSeed,
+  FeedbackEmailTemplatesSeed: seedFeedbackEmailTemplates
 }
 
 async function runSeeders() {
