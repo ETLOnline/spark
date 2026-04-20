@@ -1913,7 +1913,6 @@ export type InsertSuccessfulReferral =
 export type SelectSuccessfulReferral =
   typeof successfullReferralsTable.$inferSelect
 
-// Feedback table for user feedback submissions
 export const feedbackTable = pgTable("feedback", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   name: varchar().notNull(),
@@ -1926,6 +1925,7 @@ export const feedbackTable = pgTable("feedback", {
 
 export type InsertFeedback = typeof feedbackTable.$inferInsert
 export type SelectFeedback = typeof feedbackTable.$inferSelect
+
 export const leaderboardSnapshotsTable = pgTable("leaderboard_snapshots", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   community_id: varchar("community_id", { length: 36 })
