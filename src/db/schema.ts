@@ -1912,3 +1912,17 @@ export type InsertSuccessfulReferral =
   typeof successfullReferralsTable.$inferInsert
 export type SelectSuccessfulReferral =
   typeof successfullReferralsTable.$inferSelect
+
+// Feedback table for user feedback submissions
+export const feedbackTable = pgTable("feedback", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  name: varchar().notNull(),
+  email: varchar().notNull(),
+  subject: varchar().notNull(),
+  description: varchar().notNull(),
+  file_url: varchar(),
+  ...timestamps
+})
+
+export type InsertFeedback = typeof feedbackTable.$inferInsert
+export type SelectFeedback = typeof feedbackTable.$inferSelect
