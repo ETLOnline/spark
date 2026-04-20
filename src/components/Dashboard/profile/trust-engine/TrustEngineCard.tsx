@@ -13,6 +13,7 @@ import {
 import { SelectUser, SelectUserRewardsLevel } from "@/src/db/schema"
 import pusherClient from "@/src/services/realtime/PusherClient"
 import { progressPercentHelper } from "@/src/utils/clientHelper"
+import { GetUserTopCommunityRankAction } from "@/src/server-actions/Communities/CommunityRanking"
 
 interface TrustEngineCardProps {
   user: SelectUser
@@ -24,6 +25,14 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
   const [userLevel, setUserLevel] = useState<SelectUserRewardsLevel | null>(
     null
   )
+  const [topRank, setTopRank] = useState<{
+    rank: number
+    community_title: string
+  } | null>(null)
+
+  const [, , , GetUserTopCommunityRank] = useServerAction(
+    GetUserTopCommunityRankAction
+  )
 
   const [, , , GetUserRewardBalance] = useServerAction(
     GetUserRewardBalanceAction
@@ -31,10 +40,11 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
   const [, , , GetUserRewardLevel] = useServerAction(GetUSerRewardLevelAction)
 
   const fetchData = useCallback(async () => {
-    const [rpRes, scRes, levelRes] = await Promise.all([
+    const [rpRes, scRes, levelRes, topRankRes] = await Promise.all([
       GetUserRewardBalance(user.unique_id, 1),
       GetUserRewardBalance(user.unique_id, 2),
-      GetUserRewardLevel(user.unique_id)
+      GetUserRewardLevel(user.unique_id),
+      GetUserTopCommunityRank(user.unique_id)
     ])
 
     if (scRes?.success && scRes.data)
@@ -42,6 +52,7 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
     if (rpRes?.success && rpRes.data)
       setUserRPPoints(rpRes.data.current_balance)
     if (levelRes?.success && levelRes.data) setUserLevel(levelRes.data)
+    if (topRankRes?.success && topRankRes.data) setTopRank(topRankRes.data)
   }, [user.unique_id])
 
   useEffect(() => {
@@ -123,7 +134,13 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
             Community Rank
           </p>
           <p className="mb-1 text-2xl font-bold text-orange-600 dark:text-orange-400">
-            #0
+            #{topRank?.rank ?? ""}
+          </p>
+          <p
+            className="text-xs text-muted-foreground truncate"
+            title={topRank?.community_title}
+          >
+            {topRank?.community_title}
           </p>
         </div>
       </div>

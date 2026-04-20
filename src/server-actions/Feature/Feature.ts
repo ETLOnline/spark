@@ -40,7 +40,8 @@ export const attachSpaceFeaturesAction = CreateServerAction(
         spaceURL,
         {
           space_id: spaceId,
-          channel_id: space?.channel?.id
+          channel_id: space?.channel?.id,
+          community_id: space?.channel?.community_id
         },
         undefined,
         "space_id",
