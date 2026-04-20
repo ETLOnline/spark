@@ -8,22 +8,41 @@ import {
   notifyUserFeedbackSubmitted,
   notifyAdminNewFeedback
 } from "@/src/services/notify/feedback/feedback"
+import {
+  base64ToBuffer,
+  uploadFileAndSaveMetadata
+} from "@/src/services/storage/utils/fileUtils"
 
 export async function SubmitFeedbackAction(data: {
   name: string
   email: string
   subject: string
   description: string
-  file_url?: string
+  fileBase64?: string
+  fileName?: string
+  fileType?: string
 }) {
   try {
+    let fileUrl: string | null = null
+
+    if (data.fileBase64 && data.fileName && data.fileType) {
+      const fileBuffer = base64ToBuffer(data.fileBase64)
+      const uploaded = await uploadFileAndSaveMetadata(
+        fileBuffer,
+        data.fileName,
+        data.fileType,
+        "feedback"
+      )
+      fileUrl = uploaded.fileUrl
+    }
+
     // Create feedback record
     const feedback = await CreateFeedback({
       name: data.name,
       email: data.email,
       subject: data.subject,
       description: data.description,
-      file_url: data.file_url || null
+      file_url: fileUrl
     })
 
     const submittedAt = new Date().toLocaleString()

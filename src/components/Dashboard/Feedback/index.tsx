@@ -75,16 +75,29 @@ export function FeedbackScreen() {
     setIsLoading(true)
 
     try {
-      // In a real implementation, you would upload the file first and get a URL
-      // For now, we'll just pass the file name or a placeholder URL
-      const fileUrl = selectedFile ? `uploads/${selectedFile.name}` : undefined
+      let fileBase64: string | undefined
+      let fileName: string | undefined
+      let fileType: string | undefined
+
+      if (selectedFile) {
+        fileName = selectedFile.name
+        fileType = selectedFile.type
+        fileBase64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(selectedFile)
+        })
+      }
 
       const result = await SubmitFeedbackAction({
         name: formData.name,
         email: formData.email,
         subject: formData.subject,
         description: formData.description,
-        file_url: fileUrl
+        fileBase64,
+        fileName,
+        fileType
       })
 
       if (result.success) {
