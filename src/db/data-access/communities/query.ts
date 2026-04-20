@@ -610,53 +610,6 @@ export async function getCurrentUserRank(userId: string, communityId: string) {
   return result ?? null
 }
 
-/**
- * Add or update leaderboard snapshot entry
- */
-export async function upsertLeaderboardSnapshot(
-  data: InsertLeaderboardSnapshot
-) {
-  try {
-    const existing = await db
-      .select()
-      .from(leaderboardSnapshotsTable)
-      .where(
-        and(
-          eq(leaderboardSnapshotsTable.community_id, data.community_id),
-          eq(leaderboardSnapshotsTable.user_id, data.user_id),
-          eq(leaderboardSnapshotsTable.snapshot_date, data.snapshot_date)
-        )
-      )
-      .limit(1)
-
-    if (existing.length > 0) {
-      const updated = await db
-        .update(leaderboardSnapshotsTable)
-        .set(data)
-        .where(
-          and(
-            eq(leaderboardSnapshotsTable.community_id, data.community_id),
-            eq(leaderboardSnapshotsTable.user_id, data.user_id),
-            eq(leaderboardSnapshotsTable.snapshot_date, data.snapshot_date)
-          )
-        )
-        .returning()
-
-      return updated[0]
-    } else {
-      const created = await db
-        .insert(leaderboardSnapshotsTable)
-        .values(data)
-        .returning()
-
-      return created[0]
-    }
-  } catch (error: any) {
-    console.error("Error upserting leaderboard snapshot:", error)
-    throw new Error(`Failed to upsert leaderboard snapshot: ${error.message}`)
-  }
-}
-
 export async function getCommunitiesWithUserPoints(userId: string) {
   try {
     const results = await db
