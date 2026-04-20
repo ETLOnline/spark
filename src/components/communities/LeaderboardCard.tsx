@@ -11,6 +11,7 @@ export type Ranking = {
   avatar: string
   rpPoints: number
   growth: number
+  pointsGained: number
   isCurrentUser: boolean
   trend: "up" | "down" | "neutral"
 }
@@ -83,7 +84,7 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({ data }) => {
                   </p>
                 </div>
 
-                {/* Growth */}
+                {/* Points Gained with Trend */}
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {ranking.trend === "up" && (
                     <ArrowUp className="w-4 h-4 text-green-600" />
@@ -102,8 +103,12 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({ data }) => {
                     }`}
                   >
                     {ranking.trend !== "neutral" &&
-                      (ranking.growth > 0 ? "+" : "-")}
-                    {ranking.growth}
+                      (ranking.pointsGained > 0 ? "+" : "")}
+                    {ranking.pointsGained > 0
+                      ? ranking.pointsGained
+                      : ranking.pointsGained === 0
+                        ? "—"
+                        : ranking.pointsGained}
                   </span>
                 </div>
               </div>
