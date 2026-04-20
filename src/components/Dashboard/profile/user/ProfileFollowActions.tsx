@@ -21,6 +21,7 @@ import { useAtomValue } from "jotai"
 import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
 import { ActivityType } from "../../Connections/types/connections.types"
+import { UserPlus2 } from "lucide-react"
 
 interface Props {
   user: SelectUser
@@ -191,19 +192,20 @@ const ProfileFollowActions = ({ user }: Props) => {
 
   return (
     <div className="flex gap-2">
-      <Button>Follow</Button>
       {connectionContact && connectionContact.is_accepted ? (
         <>
           <Button
             variant="outline"
             onClick={handledeleteContact}
             loading={deleteContactLoading}
+            size={"sm"}
           >
             Disconnect
           </Button>
           <Button
             loading={createChatLoading || mutualChatLoading}
             onClick={handleMessage}
+            size={"sm"}
           >
             Message
           </Button>
@@ -217,11 +219,16 @@ const ProfileFollowActions = ({ user }: Props) => {
             <Button
               onClick={handleAcceptConnection}
               loading={acceptConnectionLoading}
+              size={"sm"}
             >
               Accept Connection
             </Button>
           ) : (
-            <Button disabled className="bg-muted text-muted-foreground">
+            <Button
+              disabled
+              className="bg-muted text-muted-foreground"
+              size={"sm"}
+            >
               {contactLoading ? <Loader /> : null} Connect Requested
             </Button>
           )}
@@ -232,8 +239,11 @@ const ProfileFollowActions = ({ user }: Props) => {
         <Button
           onClick={handleConnect}
           disabled={contactLoading || connectLoading}
+          size={"sm"}
         >
-          {contactLoading || connectLoading ? <Loader /> : null} Connect
+          {contactLoading || connectLoading ? <Loader /> : null}
+          <UserPlus2 className="h-4 w-4" />
+          Connect
         </Button>
       ) : null}
     </div>

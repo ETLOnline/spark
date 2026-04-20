@@ -20,12 +20,19 @@ type Props = {
 
 const TextPost: React.FC<Props> = ({ post, spaceId }) => {
   const content = post.content ?? ""
-  const [editingComment, setEditingComment] = useState<SelectComment | null>(null)
+  const [editingComment, setEditingComment] = useState<SelectComment | null>(
+    null
+  )
   const { toast } = useToast()
   const setPosts = useSetAtom(postStore.posts)
+  const [iscCommetsVisible, setIsCommentsVisible] = useState(false)
 
-  const [updateCommentLoading, updatedComment, updateCommentError, updateComment] =
-    useServerAction(UpdateCommentAction)
+  const [
+    updateCommentLoading,
+    updatedComment,
+    updateCommentError,
+    updateComment
+  ] = useServerAction(UpdateCommentAction)
 
   const handleEditComment = (comment: SelectComment) => {
     setEditingComment(comment)
@@ -74,7 +81,7 @@ const TextPost: React.FC<Props> = ({ post, spaceId }) => {
 
   return (
     <>
-      <CardContent>
+      <CardContent className="p-0">
         {post.category && (
           <Badge variant="outline" className="mb-2">
             {post.category}
@@ -91,19 +98,25 @@ const TextPost: React.FC<Props> = ({ post, spaceId }) => {
             ))}
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col items-start space-y-4">
+      <CardFooter className="flex flex-col items-start space-y-4 p-0">
         <PostInteractions
           postId={post.id}
           likes={post.likes}
           comments={post.comments}
           likers={post.postLikes}
           spaceId={spaceId}
+          isCommentsVisible={iscCommetsVisible}
+          setIsCommentsVisible={setIsCommentsVisible}
         />
         <Separator />
-        <PostCommentsSection
-          comments={post.postComments || []}
-          onEditComment={handleEditComment}
-        />
+        {iscCommetsVisible ? (
+          <>
+            <PostCommentsSection
+              comments={post.postComments || []}
+              onEditComment={handleEditComment}
+            />
+          </>
+        ) : null}
         <PostCommentForm
           postId={post.id}
           comments={post.comments}

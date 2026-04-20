@@ -1,4 +1,4 @@
-'use client';
+"use client"
 
 import React from "react"
 
@@ -12,7 +12,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/src/components/ui/dropdown-menu"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
@@ -35,7 +35,9 @@ const PostComments: React.FC<Props> = ({ comment, onEdit }) => {
         <div className="flex items-center gap-3">
           <Avatar className="h-9 w-9 ring-2 ring-border/50">
             <AvatarImage
-              src={comment.commentor.profile_url as string || "/placeholder.svg"}
+              src={
+                (comment.commentor.profile_url as string) || "/placeholder.svg"
+              }
               alt={name}
             />
             <AvatarFallback className="text-xs font-medium bg-muted text-muted-foreground">
@@ -43,11 +45,16 @@ const PostComments: React.FC<Props> = ({ comment, onEdit }) => {
             </AvatarFallback>
           </Avatar>
 
-          <div className="flex flex-col">
-            <p className="font-semibold text-sm leading-tight text-foreground">{name}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {formatRelativeTime(comment.created_at || "")}
-            </p>
+          <div>
+            <div className="flex flex-row gap-2 items-center">
+              <p className="font-semibold text-sm leading-tight text-foreground">
+                {name}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {formatRelativeTime(comment.created_at || "")}
+              </p>
+            </div>
+            <ExpandableText content={comment.content} lines={3} />
           </div>
         </div>
 
@@ -64,17 +71,16 @@ const PostComments: React.FC<Props> = ({ comment, onEdit }) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-36">
-              <DropdownMenuItem onClick={() => onEdit(comment)} className="cursor-pointer">
+              <DropdownMenuItem
+                onClick={() => onEdit(comment)}
+                className="cursor-pointer"
+              >
                 <Pencil className="h-4 w-4 mr-2" />
                 Edit
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-      </div>
-
-      <div className="pl-12">
-        <ExpandableText content={comment.content} lines={3} />
       </div>
     </div>
   )

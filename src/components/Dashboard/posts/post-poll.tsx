@@ -3,7 +3,10 @@ import { Label } from "../../ui/label"
 import { RadioGroupItem } from "../../ui/radio-group"
 import { Button } from "../../ui/button"
 import { SelectComment, SelectPollPost } from "@/src/db/schema"
-import { VotePollAction, UpdateCommentAction } from "@/src/server-actions/Post/Post"
+import {
+  VotePollAction,
+  UpdateCommentAction
+} from "@/src/server-actions/Post/Post"
 import { useEffect, useState } from "react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
@@ -29,8 +32,11 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
   const [selectedOption, setSelectedOption] = useState<string>("")
   const [tempSelectedOption, setTempSelectedOption] = useState<string>("")
   const [hasVoted, setHasVoted] = useState<boolean>(false)
-  const [editingComment, setEditingComment] = useState<SelectComment | null>(null)
+  const [editingComment, setEditingComment] = useState<SelectComment | null>(
+    null
+  )
   const { navigateToPost } = usePostNavigation()
+  const [iscCommetsVisible, setIsCommentsVisible] = useState(false)
 
   const setPosts = useSetAtom(postStore.posts)
   const userId = useAtomValue(userStore.AuthUser)?.unique_id
@@ -38,8 +44,12 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
   const [votePollLoading, votePollData, votePollError, votePoll] =
     useServerAction(VotePollAction)
 
-  const [updateCommentLoading, updatedComment, updateCommentError, updateComment] =
-    useServerAction(UpdateCommentAction)
+  const [
+    updateCommentLoading,
+    updatedComment,
+    updateCommentError,
+    updateComment
+  ] = useServerAction(UpdateCommentAction)
 
   const { toast } = useToast()
 
@@ -167,7 +177,7 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
   return (
     <>
       <CardContent
-        className={spaceId !== undefined ? "cursor-pointer" : ""}
+        className={`p-0 ${spaceId !== undefined ? "cursor-pointer" : ""}`}
         onClick={spaceId !== undefined ? handleContentClick : undefined}
       >
         {post.category && (
@@ -246,19 +256,25 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
             ))}
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col items-start space-y-4">
+      <CardFooter className="flex flex-col items-start space-y-4 p-0">
         <PostInteractions
           postId={post.id}
           likes={post.likes}
           comments={post.comments}
           likers={post.postLikes}
           spaceId={spaceId}
+          isCommentsVisible={iscCommetsVisible}
+          setIsCommentsVisible={setIsCommentsVisible}
         />
         <Separator />
-        <PostCommentsSection
-          comments={post.postComments || []}
-          onEditComment={handleEditComment}
-        />
+        {iscCommetsVisible ? (
+          <>
+            <PostCommentsSection
+              comments={post.postComments || []}
+              onEditComment={handleEditComment}
+            />
+          </>
+        ) : null}
         <PostCommentForm
           postId={post.id}
           comments={post.comments}

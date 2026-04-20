@@ -31,6 +31,7 @@ import { channelStore } from "@/src/store/channel/channelStore"
 import { SelectChannel, SelectCommunity } from "@/src/db/schema"
 import { GetChannelsAction } from "@/src/server-actions/Channel/Channel"
 import Loader from "@/src/components/common/Loader/Loader"
+import { Skeleton } from "@/src/components/ui/skeleton"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import PaginationComponent from "../common/Pagination"
 import { PaginationType } from "../common/types/pagination.type"
@@ -71,7 +72,10 @@ import { EntityUpdateBroadCast } from "@/src/utils/constants"
 import { onlineUsersStore } from "@/src/store/onlineUsers/onlineUsersStore"
 import RankingCard from "./RankingCard"
 import { CommunityRankingsData } from "../Dashboard/profile/trust-engine/Constant"
-import { GetCurrentUserRankAction } from "@/src/server-actions/Communities/CommunityRanking"
+import {
+  GetCommunityLeaderboardAction,
+  GetCurrentUserRankAction
+} from "@/src/server-actions/Communities/CommunityRanking"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -112,6 +116,9 @@ export default function CommunityDetailsClient({
   const [isCommunityMember, setIsCommunityMember] = useState<boolean | null>(
     null
   )
+  const [communityHasRanking, setCommunityHasRanking] = useState<
+    boolean | null
+  >(null)
   const [communityUserRank, setCommunityUserRank] = useState<any>(null)
   const { permissionChecker } = usePermissionChecker(
     "scoped",
@@ -148,19 +155,22 @@ export default function CommunityDetailsClient({
   }, [community, currentUserId])
 
   // Fetch user's ranking for this community
-  useEffect(() => {
-    const fetchUserRank = async () => {
-      if (!community?.id) return
-      try {
-        const res = await GetCurrentUserRankAction(community.id)
-        if (res.success && res.data) {
-          setCommunityUserRank(res.data)
-        }
-      } catch (error) {
-        console.error("Error fetching user rank:", error)
+  const fetchUserRank = async () => {
+    if (!community?.id) return
+    try {
+      const [rankRes, leaderboardRes] = await Promise.all([
+        GetCurrentUserRankAction(community.id),
+        GetCommunityLeaderboardAction(community.id, 1, 1)
+      ])
+      if (rankRes.success && rankRes.data) setCommunityUserRank(rankRes.data)
+      if (leaderboardRes.success && leaderboardRes.data) {
+        setCommunityHasRanking(leaderboardRes.data.total > 0)
       }
+    } catch (error) {
+      console.error("Error fetching user rank:", error)
     }
-
+  }
+  useEffect(() => {
     fetchUserRank()
   }, [community?.id])
 
@@ -725,7 +735,9 @@ export default function CommunityDetailsClient({
                 </div>
               </CardContent>
             </Card>
-            {communityUserRank && (
+            {communityHasRanking === null ? (
+              <Skeleton className="h-32 w-full" />
+            ) : (
               <RankingCard
                 communityTitle={community.title}
                 currentUserRank={communityUserRank}
@@ -733,6 +745,11 @@ export default function CommunityDetailsClient({
                   router.push(`/communities/${encodedCommunitySlug}/ranking`)
                 }
                 grandient={true}
+                noRankMessage={
+                  !communityHasRanking
+                    ? "This community doesn't have any rankings yet."
+                    : "You haven't contributed yet to earn a rank in this community."
+                }
               />
             )}
 
