@@ -111,7 +111,7 @@ const PostFeed: React.FC<PostFeedProps> = ({
 
             return (
               <Card className="bg-background shadow-lg" key={post.id}>
-                <CardHeader>
+                <CardHeader className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <Avatar className="h-12 w-12">
@@ -134,7 +134,7 @@ const PostFeed: React.FC<PostFeedProps> = ({
                     <PostMenu post={post} spaceId={spaceId} />
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 pt-0">
                   {post.type === "text" ? (
                     <TextPost key={post.id} post={post} spaceId={spaceId} />
                   ) : post.type === "image" ? (

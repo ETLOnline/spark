@@ -24,12 +24,19 @@ type Props = {
 
 const FilePost: React.FC<Props> = ({ post, spaceId }) => {
   const { navigateToPost } = usePostNavigation()
-  const [editingComment, setEditingComment] = useState<SelectComment | null>(null)
+  const [editingComment, setEditingComment] = useState<SelectComment | null>(
+    null
+  )
   const { toast } = useToast()
   const setPosts = useSetAtom(postStore.posts)
+  const [iscCommetsVisible, setIsCommentsVisible] = useState(false)
 
-  const [updateCommentLoading, updatedComment, updateCommentError, updateComment] =
-    useServerAction(UpdateCommentAction)
+  const [
+    updateCommentLoading,
+    updatedComment,
+    updateCommentError,
+    updateComment
+  ] = useServerAction(UpdateCommentAction)
 
   const handleContentClick = () => {
     navigateToPost(post.id, spaceId)
@@ -87,7 +94,7 @@ const FilePost: React.FC<Props> = ({ post, spaceId }) => {
   return (
     <>
       <CardContent
-        className={spaceId !== "shared" ? "cursor-pointer" : ""}
+        className={`p-0 ${spaceId !== "shared" ? "cursor-pointer" : ""}`}
         onClick={spaceId !== "shared" ? handleContentClick : undefined}
       >
         {post.category && (
@@ -116,19 +123,25 @@ const FilePost: React.FC<Props> = ({ post, spaceId }) => {
             ))}
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col items-start space-y-4">
+      <CardFooter className="flex flex-col items-start space-y-4 p-0">
         <PostInteractions
           postId={post.id}
           likes={post.likes}
           comments={post.comments}
           likers={post.postLikes}
           spaceId={spaceId}
+          isCommentsVisible={iscCommetsVisible}
+          setIsCommentsVisible={setIsCommentsVisible}
         />
         <Separator />
-        <PostCommentsSection
-          comments={post.postComments || []}
-          onEditComment={handleEditComment}
-        />
+        {iscCommetsVisible ? (
+          <>
+            <PostCommentsSection
+              comments={post.postComments || []}
+              onEditComment={handleEditComment}
+            />
+          </>
+        ) : null}
         <PostCommentForm
           postId={post.id}
           comments={post.comments}

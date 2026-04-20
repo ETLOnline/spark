@@ -139,7 +139,7 @@ const TeamPage: React.FC = () => {
   }
 
   return (
-    <ScrollArea className="min-h-full px-4">
+    <ScrollArea className="min-h-full px-2">
       <div className="p-6">
         <ProjectTeamList
           projectId={currProject.id}
