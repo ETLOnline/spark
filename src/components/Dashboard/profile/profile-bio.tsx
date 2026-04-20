@@ -6,14 +6,20 @@ import { Badge } from "../../ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
 import { SelectTag } from "@/src/db/schema"
 import useUserProfile from "./hooks/useUserProfile"
+import EditProfileModal from "./edit-profile-modal"
 
 type ProfileBioProps = {
   userBio: string
   editable?: boolean
   tags: SelectTag[]
+  isMyProfile?: boolean
 }
 
-const ProfileBio: React.FC<ProfileBioProps> = ({ userBio, tags }) => {
+const ProfileBio: React.FC<ProfileBioProps> = ({
+  userBio,
+  tags,
+  isMyProfile
+}) => {
   const [setUserBio, setUserSkills, setUserInterests, skills, interests, bio] =
     useUserProfile()
   const [activeTab, setActiveTab] = useState<"skills" | "interests">("skills")
@@ -59,7 +65,10 @@ const ProfileBio: React.FC<ProfileBioProps> = ({ userBio, tags }) => {
 
         <TabsContent value="skills" className="mt-4">
           <Card className="flex flex-col flex-wrap gap-5 p-3">
-            <CardTitle>Technical Skills</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              Technical Skills
+              {isMyProfile ? <EditProfileModal /> : null}
+            </CardTitle>
             <div className="flex flex-wrap gap-2">
               {skills.length ? (
                 skills.map((skill) => (
@@ -78,7 +87,10 @@ const ProfileBio: React.FC<ProfileBioProps> = ({ userBio, tags }) => {
 
         <TabsContent value="interests" className="mt-4">
           <Card className="flex flex-col flex-wrap gap-5 p-3">
-            <CardTitle>Interests</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              Interests
+              {isMyProfile ? <EditProfileModal /> : null}
+            </CardTitle>
             <div className="flex flex-wrap gap-2">
               {interests.length ? (
                 interests.map((interest) => (
