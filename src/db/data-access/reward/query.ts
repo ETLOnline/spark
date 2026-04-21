@@ -1,4 +1,4 @@
-import { and, between, count, eq, gt, lte, sql } from "drizzle-orm"
+import { and, between, count, eq, gt, inArray, lte, sql } from "drizzle-orm"
 import { db } from "../.."
 import {
   activityRulesTable,
@@ -247,6 +247,26 @@ export async function GetRewardLevels() {
   try {
     const res = await db.query.rewardLevelTable.findMany()
     return res
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function GetTaskVerificationStatuses(task_ids: string[]) {
+  if (!task_ids.length) return []
+
+  try {
+    const taskIdExpr = sql<string>`(${trustVerificationTable.metadata}->>'task_id')`
+
+    return await db
+      .select({
+        task_id: taskIdExpr,
+        status: trustVerificationTable.status,
+        verification_id: trustVerificationTable.verification_id,
+        feedback: trustVerificationTable.feedback
+      })
+      .from(trustVerificationTable)
+      .where(inArray(taskIdExpr, task_ids))
   } catch (e: any) {
     throw new Error(e.message)
   }

@@ -38,6 +38,10 @@ import { TaskType } from "../../constants/projectManagment"
 interface Props {
   sprint: SelectSprint
   tasks: SelectTask[]
+  verificationMap: Record<
+    string,
+    { status: string; verification_id: number; feedback: string | null }
+  >
   isTaskModalOpen: boolean
   setIsTaskModalOpen: Dispatch<SetStateAction<boolean>>
   selectedTask: SelectTask | null
@@ -48,6 +52,7 @@ interface Props {
 function SprintBoardCard({
   sprint,
   tasks,
+  verificationMap,
   isTaskModalOpen,
   setIsTaskModalOpen,
   selectedTask,
@@ -247,6 +252,7 @@ function SprintBoardCard({
                     sprint={sprint}
                     status={status}
                     tasks={tasks}
+                    verificationMap={verificationMap}
                     onTaskClick={handleOnTaskClick}
                     setTasks={setTasks}
                   />
