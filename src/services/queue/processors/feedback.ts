@@ -4,6 +4,23 @@ import Handlebars from "handlebars"
 
 const mailer = new MailService()
 
+async function sendEmailToRecipient({
+  to,
+  subject,
+  body
+}: {
+  to: string
+  subject: string
+  body: string
+}) {
+  await mailer.sendEmail({
+    to,
+    from: process.env.EMAIL_FROM_ADDRESS!,
+    subject,
+    body
+  })
+}
+
 export async function processFeedbackSubmittedNotification(job: {
   sendingTo: string[]
   event: string
@@ -18,16 +35,13 @@ export async function processFeedbackSubmittedNotification(job: {
   const compiledSubject = Handlebars.compile(template.subject)
   const renderedSubject = compiledSubject(job.payload)
 
-  await Promise.all(
-    job.sendingTo.map((to) =>
-      mailer.sendEmail({
-        to,
-        from: process.env.EMAIL_FROM_ADDRESS!,
-        subject: renderedSubject,
-        body: renderedBody
-      })
-    )
-  )
+  for (const to of job.sendingTo) {
+    await sendEmailToRecipient({
+      to,
+      subject: renderedSubject,
+      body: renderedBody
+    })
+  }
 }
 
 export async function processNewFeedbackAdminNotification(job: {
@@ -44,14 +58,11 @@ export async function processNewFeedbackAdminNotification(job: {
   const compiledSubject = Handlebars.compile(template.subject)
   const renderedSubject = compiledSubject(job.payload)
 
-  await Promise.all(
-    job.sendingTo.map((to) =>
-      mailer.sendEmail({
-        to,
-        from: process.env.EMAIL_FROM_ADDRESS!,
-        subject: renderedSubject,
-        body: renderedBody
-      })
-    )
-  )
+  for (const to of job.sendingTo) {
+    await sendEmailToRecipient({
+      to,
+      subject: renderedSubject,
+      body: renderedBody
+    })
+  }
 }
