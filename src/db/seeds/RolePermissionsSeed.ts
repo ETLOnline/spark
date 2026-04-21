@@ -283,7 +283,9 @@ const userRolePermissions = [
           permissions.project.teamsUpdate,
           permissions.project.teamsView,
           permissions.project.update,
-          permissions.project.view
+          permissions.project.view,
+          permissions.project.DetailView,
+          permissions.project.ChatView
         ]
       }
     ]
@@ -312,7 +314,9 @@ const userRolePermissions = [
           permissions.project.taskView,
           permissions.project.teamsView,
           permissions.project.update,
-          permissions.project.view
+          permissions.project.view,
+          permissions.project.DetailView,
+          permissions.project.ChatView
         ]
       }
     ]
@@ -333,7 +337,9 @@ const userRolePermissions = [
           permissions.project.sprintView,
           permissions.project.taskView,
           permissions.project.teamsView,
-          permissions.project.view
+          permissions.project.view,
+          permissions.project.DetailView,
+          permissions.project.ChatView
         ]
       }
     ]
