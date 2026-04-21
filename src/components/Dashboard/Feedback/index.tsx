@@ -18,6 +18,7 @@ import {
 } from "@/src/server-actions/Feedback/Feedback"
 import { useToast } from "@/src/hooks/use-toast"
 import { FileUpload } from "../../ui/file-upload"
+import { Loader2, Send } from "lucide-react"
 
 interface FeedbackData {
   id: number
@@ -117,6 +118,17 @@ export function FeedbackScreen() {
     }
   }
 
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleScreenshotChange = (files: File[]) => {
+    setSelectedFile(files[0] || null)
+  }
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -128,88 +140,111 @@ export function FeedbackScreen() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
-      {/* Feedback Form */}
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>Submit Feedback</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                placeholder="Enter your name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, name: e.target.value }))
-                }
-                required
-              />
-            </div>
+    <main className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-1">Feedback</h1>
+          <p className="text-muted-foreground text-sm">
+            Found a bug or have a suggestion? We'd love to hear from you.
+          </p>
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, email: e.target.value }))
-                }
-                required
-              />
-            </div>
+        <Card className="spark-gradient-panel-bg">
+          <CardHeader>
+            <CardTitle className="text-lg">Submit Feedback</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-1.5">
+                <Label htmlFor="name">
+                  Name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="name"
+                  name="name"
+                  placeholder="Your name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  required
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="subject">Subject</Label>
-              <Input
-                id="subject"
-                placeholder="Enter feedback subject"
-                value={formData.subject}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, subject: e.target.value }))
-                }
-                required
-              />
-            </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="email">
+                  Email <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  required
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Describe your feedback in detail"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    description: e.target.value
-                  }))
-                }
-                rows={5}
-                required
-              />
-            </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="subject">
+                  Subject <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="subject"
+                  name="subject"
+                  placeholder="Short summary of your feedback"
+                  value={formData.subject}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  required
+                />
+              </div>
 
-            <div className="space-y-2">
-              <p>Screenshot or Image (optional)</p>
-              <FileUpload
-                key={fileUploadResetKey}
-                onChange={(files) => setSelectedFile(files[0] || null)}
-                accept="image/*"
-                fileType="image"
-                multiple={false}
-              />
-            </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="description">
+                  Description <span className="text-destructive">*</span>
+                </Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  placeholder="Describe your feedback, bug, or suggestion in detail..."
+                  rows={5}
+                  value={formData.description}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="resize-none"
+                  required
+                />
+              </div>
 
-            <Button type="submit" disabled={isLoading} className="w-full">
-              {isLoading ? "Submitting..." : "Submit Feedback"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+              <div className="space-y-1.5">
+                <Label>Screenshot or Image (optional)</Label>
+                <FileUpload
+                  key={fileUploadResetKey}
+                  fileType="image"
+                  accept="image/*"
+                  multiple={false}
+                  onChange={handleScreenshotChange}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full gap-2"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+                {isLoading ? "Submitting..." : "Submit Feedback"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </main>
   )
 }
