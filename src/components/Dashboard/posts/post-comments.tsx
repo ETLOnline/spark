@@ -30,7 +30,7 @@ const PostComments: React.FC<Props> = ({ comment, onEdit }) => {
   const initials = `${comment.commentor.first_name?.[0] ?? ""}${comment.commentor.last_name?.[0] ?? ""}`
 
   return (
-    <div className="rounded-2xl bg-card border border-border/50 p-4 flex flex-col w-full gap-3 transition-colors hover:bg-accent/30">
+    <div className="rounded-2xl bg-card border border-border/50 p-2 flex flex-col w-full gap-3 transition-colors hover:bg-accent/30">
       <div className="flex items-start gap-3 justify-between">
         <div className="flex items-center gap-3">
           <Avatar className="h-9 w-9 ring-2 ring-border/50">
