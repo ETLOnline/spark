@@ -53,7 +53,8 @@ export async function SubmitFeedbackAction(data: {
       email: data.email,
       subject: data.subject,
       description: data.description,
-      submittedAt
+      submittedAt,
+      fileUrl
     })
 
     // Send notification to all super admins via queue
@@ -63,7 +64,8 @@ export async function SubmitFeedbackAction(data: {
       subject: data.subject,
       description: data.description,
       submittedAt,
-      feedbackId: feedback.id
+      feedbackId: feedback.id,
+      fileUrl
     })
 
     return { success: true, feedback }

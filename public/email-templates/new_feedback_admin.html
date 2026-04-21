@@ -143,6 +143,25 @@
                       >
                         {{description}}
                       </p>
+
+                      <p
+                        style="
+                          margin: 16px 0 0 0;
+                          font-size: 14px;
+                          color: #64748b;
+                        "
+                      >
+                        <strong>Attachment:</strong>
+                        {{#if fileUrl}}
+                        <a
+                          href="{{fileUrl}}"
+                          style="color: #0ea5e9; text-decoration: none"
+                          >View Attachment</a
+                        >
+                        {{else}}
+                        <span style="color: #94a3b8">No attachment</span>
+                        {{/if}}
+                      </p>
                     </td>
                   </tr>
                 </table>

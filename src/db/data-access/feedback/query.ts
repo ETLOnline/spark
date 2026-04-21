@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm"
+import { eq, and, exists } from "drizzle-orm"
 import { db } from "../.."
 import {
   feedbackTable,
@@ -26,30 +26,36 @@ export async function GetFeedbackById(id: number) {
 }
 
 export async function GetAllSuperAdmins() {
-  const superAdminRole = await db.query.rolesTable.findFirst({
-    where:
-      eq(rolesTable.name, "Super_Admin") && eq(rolesTable.role_type, "SYSTEM")
-  })
-
-  if (!superAdminRole) {
-    return []
-  }
-
-  const usersWithSuperAdminRole = await db.query.userRolesTable.findMany({
-    where: eq(userRolesTable.role_id, superAdminRole.id),
-    with: {
-      user: true
-    }
-  })
-
-  // Map to get email, first_name, last_name
-  const superAdmins = usersWithSuperAdminRole
-    .filter((ur) => ur.user)
-    .map((ur) => ({
-      email: ur.user!.email,
-      first_name: ur.user!.first_name,
-      last_name: ur.user!.last_name
-    }))
-
-  return superAdmins
+  // Single query using where clause to filter users with Super_Admin role
+  return await db
+    .select({
+      email: usersTable.email,
+      first_name: usersTable.first_name,
+      last_name: usersTable.last_name
+    })
+    .from(usersTable)
+    .where(
+      exists(
+        db
+          .select()
+          .from(userRolesTable)
+          .where(
+            and(
+              eq(userRolesTable.user_id, usersTable.unique_id),
+              exists(
+                db
+                  .select()
+                  .from(rolesTable)
+                  .where(
+                    and(
+                      eq(rolesTable.id, userRolesTable.role_id),
+                      eq(rolesTable.name, "Super_Admin"),
+                      eq(rolesTable.role_type, "SYSTEM")
+                    )
+                  )
+              )
+            )
+          )
+      )
+    )
 }

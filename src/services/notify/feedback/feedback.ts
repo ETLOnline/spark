@@ -9,6 +9,7 @@ type FeedbackPayloadInput = {
   description: string
   submittedAt: string
   feedbackId?: number
+  fileUrl?: string | null
 }
 
 function buildFeedbackPayload(data: FeedbackPayloadInput) {
@@ -22,6 +23,7 @@ function buildFeedbackPayload(data: FeedbackPayloadInput) {
     submittedAt: data.submittedAt
   }
   if (data.feedbackId !== undefined) payload.feedbackId = data.feedbackId
+  if (data.fileUrl) payload.fileUrl = data.fileUrl
   return payload
 }
 
@@ -33,6 +35,7 @@ export const notifyUserFeedbackSubmitted = async (
     subject: string
     description: string
     submittedAt: string
+    fileUrl?: string | null
   }
 ) => {
   const payload = buildFeedbackPayload(userData)
@@ -53,11 +56,12 @@ export const notifyAdminNewFeedback = async (
     description: string
     submittedAt: string
     feedbackId: number
+    fileUrl?: string | null
   }
 ) => {
   const superAdmins = await GetAllSuperAdmins()
   if (superAdmins.length === 0) return
-
+  console.log("url", feedbackData.fileUrl)
   const superAdminEmails = superAdmins.map((admin) => admin.email)
   const payload = buildFeedbackPayload(feedbackData)
   await AddToQueue({

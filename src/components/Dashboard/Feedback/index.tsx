@@ -11,14 +11,7 @@ import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
 import { Textarea } from "@/src/components/ui/textarea"
 import { Label } from "@/src/components/ui/label"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/src/components/ui/table"
+
 import {
   SubmitFeedbackAction,
   GetAllFeedbackAction
@@ -47,7 +40,8 @@ export function FeedbackScreen() {
     name: "",
     email: "",
     subject: "",
-    description: ""
+    description: "",
+    fileUrl: null
   })
 
   const loadFeedbackList = async () => {
@@ -107,7 +101,13 @@ export function FeedbackScreen() {
             "Your feedback has been submitted successfully. You will receive a confirmation email shortly.",
           variant: "default"
         })
-        setFormData({ name: "", email: "", subject: "", description: "" })
+        setFormData({
+          name: "",
+          email: "",
+          subject: "",
+          description: "",
+          fileUrl: null
+        })
         setSelectedFile(null)
         if (fileInputRef.current) {
           fileInputRef.current.value = ""
