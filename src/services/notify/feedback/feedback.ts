@@ -61,7 +61,6 @@ export const notifyAdminNewFeedback = async (
 ) => {
   const superAdmins = await GetAllSuperAdmins()
   if (superAdmins.length === 0) return
-  console.log("url", feedbackData.fileUrl)
   const superAdminEmails = superAdmins.map((admin) => admin.email)
   const payload = buildFeedbackPayload(feedbackData)
   await AddToQueue({

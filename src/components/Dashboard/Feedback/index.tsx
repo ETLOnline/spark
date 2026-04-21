@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState } from "react"
 import {
   CardTitle,
   CardHeader,
@@ -17,7 +17,7 @@ import {
   GetAllFeedbackAction
 } from "@/src/server-actions/Feedback/Feedback"
 import { useToast } from "@/src/hooks/use-toast"
-import { Upload } from "lucide-react"
+import { FileUpload } from "../../ui/file-upload"
 
 interface FeedbackData {
   id: number
@@ -31,11 +31,11 @@ interface FeedbackData {
 
 export function FeedbackScreen() {
   const { toast } = useToast()
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [feedbackList, setFeedbackList] = useState<FeedbackData[]>([])
   const [isLoadingList, setIsLoadingList] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [fileUploadResetKey, setFileUploadResetKey] = useState(0)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -55,12 +55,6 @@ export function FeedbackScreen() {
       console.error("Error loading feedback:", error)
     } finally {
       setIsLoadingList(false)
-    }
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0])
     }
   }
 
@@ -109,9 +103,7 @@ export function FeedbackScreen() {
           fileUrl: null
         })
         setSelectedFile(null)
-        if (fileInputRef.current) {
-          fileInputRef.current.value = ""
-        }
+        setFileUploadResetKey((prev) => prev + 1)
         loadFeedbackList()
       }
     } catch (error: any) {
@@ -202,22 +194,14 @@ export function FeedbackScreen() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="file">Attachment (Optional)</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="file"
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  className="flex-1"
-                  accept="image/*,.pdf,.doc,.docx,.txt"
-                />
-                {selectedFile && (
-                  <span className="text-sm text-gray-500">
-                    {selectedFile.name}
-                  </span>
-                )}
-              </div>
+              <p>Screenshot or Image (optional)</p>
+              <FileUpload
+                key={fileUploadResetKey}
+                onChange={(files) => setSelectedFile(files[0] || null)}
+                accept="image/*"
+                fileType="image"
+                multiple={false}
+              />
             </div>
 
             <Button type="submit" disabled={isLoading} className="w-full">
