@@ -32,7 +32,7 @@ export default function ProfileCompletionForm() {
       }
     }
     fetchUserData()
-  }, [])
+  }, [step])
 
   useEffect(() => {
     const fetchFeatureFlag = async () => {
