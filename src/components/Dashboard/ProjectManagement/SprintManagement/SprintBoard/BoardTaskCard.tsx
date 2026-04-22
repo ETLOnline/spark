@@ -201,8 +201,8 @@ function BoardTaskCard({ task, onClick, setTasks, taskList }: Props) {
           className="p-3"
           onClick={() => onClick(task)}
         >
-          <div className="flex justify-between items-start">
-            <div>
+          <div className="flex justify-between items-start gap-2">
+            <div className="flex-1">
               <span className="text-xs flex items-center gap-2 mb-2">
                 <TooltipProvider>
                   <Tooltip>
@@ -216,14 +216,18 @@ function BoardTaskCard({ task, onClick, setTasks, taskList }: Props) {
                 </TooltipProvider>
                 <span className="text-muted-foreground">{task.task_num}</span>
               </span>
-              <h4 className="font-medium text-sm line-clamp-2">
+              <h4 className="font-medium text-sm line-clamp-3">
                 {task.task_title}
               </h4>
             </div>
             {canUpdate && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 shrink-0"
+                  >
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -244,7 +248,7 @@ function BoardTaskCard({ task, onClick, setTasks, taskList }: Props) {
 
           {task.parentTask ? (
             <div className="p-1 border rounded-md mt-2 flex items-center gap-2">
-              <div>
+              <div className="shrink-0">
                 <IssueTypeIcon type={task.parentTask?.task_type} />
               </div>
               <span className="text-xs line-clamp-1">
@@ -253,13 +257,13 @@ function BoardTaskCard({ task, onClick, setTasks, taskList }: Props) {
             </div>
           ) : null}
 
-          <div className="flex flex-wrap justify-between items-center mt-3">
-            <div className="flex gap-2 items-center">
+          <div className="flex flex-wrap justify-between items-center mt-3 gap-2">
+            <div className="flex gap-2 items-center min-w-0">
               {task.assign_to ? (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Avatar className="h-5 w-5 cursor-pointer">
+                      <Avatar className="h-5 w-5 cursor-pointer shrink-0">
                         <AvatarImage
                           src={task.assignee?.profile_url || ""}
                           alt={task.assignee?.first_name}
@@ -278,13 +282,15 @@ function BoardTaskCard({ task, onClick, setTasks, taskList }: Props) {
                   </Tooltip>
                 </TooltipProvider>
               ) : (
-                <CircleHelp className="h-5 w-5" />
+                <CircleHelp className="h-5 w-5 shrink-0" />
               )}
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-muted-foreground truncate">
                 {task.assignee?.first_name} {task.assignee?.last_name}
               </span>
             </div>
-            {getPriorityBadge(task.task_priority)}
+            <div className="shrink-0">
+              {getPriorityBadge(task.task_priority)}
+            </div>
           </div>
         </div>
 
@@ -303,7 +309,7 @@ function BoardTaskCard({ task, onClick, setTasks, taskList }: Props) {
       </Card>
 
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[95vw] sm:max-w-md rounded-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>

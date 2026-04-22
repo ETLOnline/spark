@@ -53,7 +53,7 @@ interface Props {
   isSprintCompleted?: boolean
 }
 
-function SprintTasks({
+export default function SprintTasks({
   task,
   currSprint,
   setIsTaskModelOpen,
@@ -164,9 +164,10 @@ function SprintTasks({
     <>
       <div
         key={task.id}
-        className="grid grid-cols-12 gap-2 p-4 border-t items-center hover:bg-muted/50  transition delay-150 duration-300"
+        className="flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-2 p-4 border-t items-start md:items-center hover:bg-muted/50 transition delay-150 duration-300 relative"
       >
-        <div className="col-span-1">
+        {/* Mobile First Row Combo (Type + ID) & Desktop Type */}
+        <div className="md:col-span-1 flex items-center gap-2">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger className="">
@@ -175,91 +176,109 @@ function SprintTasks({
               <TooltipContent>{ToUpperCase(task.task_type)}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
+          {/* Display ID inline next to icon on mobile */}
+          <div
+            className="md:hidden text-sm font-medium text-muted-foreground cursor-pointer"
+            onClick={() => EditTask(task)}
+          >
+            #{task.task_num}
+          </div>
         </div>
 
+        {/* Desktop ID (Hidden on mobile) */}
         <div
-          className={`col-span-1 text-sm font-medium text-muted-foreground cursor-pointer`}
+          className="hidden md:block md:col-span-1 text-sm font-medium text-muted-foreground cursor-pointer"
           onClick={() => EditTask(task)}
         >
           #{task.task_num}
         </div>
 
-        <div className="col-span-3 ">
+        {/* Title */}
+        <div className="md:col-span-3 w-full pr-8 md:pr-0">
           <div
-            className={`font-semibold break-words whitespace-normal line-clamp-2 cursor-pointer`}
+            className="font-semibold break-words whitespace-normal line-clamp-2 cursor-pointer"
             onClick={() => EditTask(task)}
           >
             {task.task_title}
           </div>
         </div>
 
-        <div className="col-span-1 text-center">
-          {task.parentTask ? (
+        {/* Badges Container (Uses md:contents to flatten into desktop grid, flex-wrap on mobile) */}
+        <div className="flex flex-wrap items-center gap-2 w-full md:contents">
+          <div className="md:col-span-1 md:text-center">
+            {task.parentTask ? (
+              <Badge variant={"outline"}>
+                <IssueTypeIcon type={task.parentTask?.task_type} />
+                <span className="ml-1">{task.parentTask?.task_num}</span>
+              </Badge>
+            ) : null}
+          </div>
+
+          <div className="md:col-span-2 md:text-center">
             <Badge variant={"outline"}>
-              <IssueTypeIcon type={task.parentTask?.task_type} />
-              {task.parentTask?.task_num}
+              {status.find((s) => s.id === task.status_id)?.name}
             </Badge>
-          ) : null}
-        </div>
+          </div>
 
-        <div className="col-span-2  text-center">
-          <Badge variant={"outline"}>
-            {status.find((s) => s.id === task.status_id)?.name}
-          </Badge>
-        </div>
-
-        <div className="col-span-1 text-center">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <PriorityIcon priority={task.task_priority} />
-              </TooltipTrigger>
-              <TooltipContent>{ToUpperCase(task.task_priority)}</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-
-        <div className="col-span-1 text-center">
-          {task.story_points && task.story_points !== "0"
-            ? task.story_points
-            : "-"}
-        </div>
-
-        <div className="col-span-1 text-center">
-          {task.assign_to ? (
+          <div className="md:col-span-1 md:text-center">
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <Avatar className="h-8 w-8 cursor-pointer">
-                    <AvatarImage
-                      src={getInitials(
-                        `${task?.assignee?.first_name ?? ""} ${task?.assignee?.last_name ?? ""}`
-                      )}
-                      alt={task.assignee?.first_name ?? ""}
-                    />
-                    <AvatarFallback className="text-xs">
-                      {getInitials(
-                        `${task?.assignee?.first_name ?? ""} ${task?.assignee?.last_name ?? ""}`
-                      )}
-                    </AvatarFallback>
-                  </Avatar>
+                <TooltipTrigger>
+                  <PriorityIcon priority={task.task_priority} />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <span>
-                    {task.assignee?.first_name} {task.assignee?.last_name}
-                  </span>
+                  {ToUpperCase(task.task_priority)}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          ) : (
-            <CircleHelp />
-          )}
+          </div>
+
+          <div className="md:col-span-1 md:text-center text-sm font-medium">
+            <span className="md:hidden text-muted-foreground text-xs mr-1">
+              Pts:
+            </span>
+            {task.story_points && task.story_points !== "0"
+              ? task.story_points
+              : "-"}
+          </div>
+
+          <div className="md:col-span-1 md:text-center flex items-center">
+            {task.assign_to ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Avatar className="h-8 w-8 cursor-pointer">
+                      <AvatarImage
+                        src={getInitials(
+                          `${task?.assignee?.first_name ?? ""} ${task?.assignee?.last_name ?? ""}`
+                        )}
+                        alt={task.assignee?.first_name ?? ""}
+                      />
+                      <AvatarFallback className="text-xs">
+                        {getInitials(
+                          `${task?.assignee?.first_name ?? ""} ${task?.assignee?.last_name ?? ""}`
+                        )}
+                      </AvatarFallback>
+                    </Avatar>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span>
+                      {task.assignee?.first_name} {task.assignee?.last_name}
+                    </span>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <CircleHelp className="h-5 w-5 text-muted-foreground" />
+            )}
+          </div>
         </div>
 
-        <div className="col-span-1 text-center">
+        {/* Actions (Absolute on Mobile, Centered on Desktop) */}
+        <div className="absolute right-4 top-4 md:static md:col-span-1 md:text-center">
           {canUpdateTask &&
             (isSprintCompleted ? (
-              <span>-</span>
+              <span className="hidden md:inline">-</span>
             ) : (
               <DropdownMenu
                 open={isTaskDropDownOpen}
@@ -289,7 +308,7 @@ function SprintTasks({
       </div>
 
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[95vw] max-w-lg rounded-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -312,5 +331,3 @@ function SprintTasks({
     </>
   )
 }
-
-export default SprintTasks

@@ -119,7 +119,7 @@ const SpacePostComponent: React.FC = () => {
   return (
     <div className="container mx-auto space-y-8 max-w-3xl">
       <CreatePostForm variant="spaces" />
-      <Card className="border-none shadow-none">
+      <Card className="border-none shadow-none bg-background">
         <CardHeader className="p-0 pb-6">
           <CardTitle>Feed</CardTitle>
           <CardDescription>Latest posts from {activeCategory}</CardDescription>

@@ -150,9 +150,10 @@ function BacklogItems({ task }: Props) {
     <>
       <div
         key={task.id}
-        className="grid grid-cols-12 gap-3 p-4 border-t items-center hover:bg-muted/50  transition delay-150 duration-300"
+        className="flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-2 p-4 border-t items-start md:items-center hover:bg-muted/50 transition delay-150 duration-300 relative"
       >
-        <div className={`col-span-1`}>
+        {/* Mobile Type & ID */}
+        <div className="md:col-span-1 flex items-center gap-2">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>
@@ -161,118 +162,145 @@ function BacklogItems({ task }: Props) {
               <TooltipContent>{task.task_type}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
+          {/* Mobile Only ID */}
+          <div
+            className="md:hidden text-sm font-medium cursor-pointer"
+            onClick={() => EditTask(task)}
+          >
+            #{task.task_num}
+          </div>
         </div>
 
+        {/* Desktop Only ID */}
         <div
-          className={`col-span-1 text-sm font-medium cursor-pointer text-left`}
+          className="hidden md:block md:col-span-1 text-sm font-medium cursor-pointer text-left"
           onClick={() => EditTask(task)}
         >
-          {task.task_num}
+          #{task.task_num}
         </div>
-        <div className={"col-span-3"}>
+
+        {/* Title */}
+        <div className="md:col-span-3 w-full pr-8 md:pr-0">
           <div
-            className={`font-medium break-words whitespace-normal line-clamp-2 cursor-pointer text-left`}
+            className="font-medium break-words whitespace-normal line-clamp-2 cursor-pointer text-left"
             onClick={() => EditTask(task)}
           >
             {task.task_title}
           </div>
         </div>
 
-        <div className="col-span-1 text-center">
-          {task.parentTask ? (
+        {/* Wrapper for Badges and extra info */}
+        <div className="flex flex-wrap items-center gap-2 w-full md:contents">
+          {/* Parent Badge */}
+          <div className="md:col-span-1 md:text-center">
+            {task.parentTask ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Badge variant={"outline"}>
+                      <Link
+                        href={`/project/${projectId}/task/${task.parentTask?.id}`}
+                        className="flex flex-row items-center gap-1"
+                      >
+                        <IssueTypeIcon type={task.parentTask.task_type} />
+                        <span className="ml-1">
+                          {task.parentTask?.task_num}
+                        </span>
+                      </Link>
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>{task.parentTask?.task_title}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : null}
+          </div>
+
+          {/* Status Badge */}
+          <div className="md:col-span-2 md:text-center">
+            <Badge variant={"outline"}>
+              {status.find((s) => s.id === task.status_id)?.name}
+            </Badge>
+          </div>
+
+          {/* Priority */}
+          <div className="md:col-span-1 md:text-center">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
-                  <Badge variant={"outline"}>
-                    <Link
-                      href={`/project/${projectId}/task/${task.parentTask?.id}`}
-                      className="flex flex-row items-center gap-2"
-                    >
-                      <IssueTypeIcon type={task.parentTask.task_type} />
-                      {task.parentTask?.task_num}
-                    </Link>
-                  </Badge>
+                  <PriorityIcon priority={task.task_priority} />
                 </TooltipTrigger>
-                <TooltipContent>{task.parentTask?.task_title}</TooltipContent>
+                <TooltipContent>
+                  {ToUpperCase(task.task_priority)}
+                </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          ) : null}
-        </div>
+          </div>
 
-        <div className="col-span-2 text-center">
-          <Badge variant={"outline"}>
-            {status.find((s) => s.id === task.status_id)?.name}
-          </Badge>
-        </div>
-
-        <div className="col-span-1 text-center">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <PriorityIcon priority={task.task_priority} />
-              </TooltipTrigger>
-              <TooltipContent>{ToUpperCase(task.task_priority)}</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-
-        <div className="col-span-1 text-center">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <div className="truncate max-w-[50px] mx-auto">
-                  {task.story_points && task.story_points !== "0"
-                    ? task.story_points
-                    : "-"}
-                </div>
-              </TooltipTrigger>
-
-              <TooltipContent>
-                <span>
-                  {task.story_points && task.story_points !== "0"
-                    ? task.story_points
-                    : "-"}
-                </span>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-
-        <div className="col-span-1 text-center">
-          {task.assign_to ? (
-            <div className="flex justify-center items-center">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Avatar className="h-8 w-8 cursor-pointer">
-                      <AvatarImage
-                        src={getInitials(
-                          `${task?.assignee?.first_name ?? ""} ${task?.assignee?.last_name ?? ""}`
-                        )}
-                        alt={task.assignee?.first_name ?? ""}
-                      />
-                      <AvatarFallback className="text-xs">
-                        {getInitials(
-                          `${task?.assignee?.first_name ?? ""} ${task?.assignee?.last_name ?? ""}`
-                        )}
-                      </AvatarFallback>
-                    </Avatar>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <span>
-                      {task.assignee?.first_name} {task.assignee?.last_name}
+          {/* Story Points */}
+          <div className="md:col-span-1 md:text-center">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <div className="flex items-center gap-1 text-sm font-medium md:truncate md:max-w-[50px] mx-auto">
+                    <span className="md:hidden text-muted-foreground text-xs">
+                      Pts:
                     </span>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          ) : (
-            <div className="flex justify-center items-center">
-              <CircleHelp />
-            </div>
-          )}
+                    {task.story_points && task.story_points !== "0"
+                      ? task.story_points
+                      : "-"}
+                  </div>
+                </TooltipTrigger>
+
+                <TooltipContent>
+                  <span>
+                    {task.story_points && task.story_points !== "0"
+                      ? task.story_points
+                      : "-"}
+                  </span>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          {/* Assignee */}
+          <div className="md:col-span-1 md:text-center">
+            {task.assign_to ? (
+              <div className="flex justify-start md:justify-center items-center">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Avatar className="h-8 w-8 cursor-pointer">
+                        <AvatarImage
+                          src={getInitials(
+                            `${task?.assignee?.first_name ?? ""} ${task?.assignee?.last_name ?? ""}`
+                          )}
+                          alt={task.assignee?.first_name ?? ""}
+                        />
+                        <AvatarFallback className="text-xs">
+                          {getInitials(
+                            `${task?.assignee?.first_name ?? ""} ${task?.assignee?.last_name ?? ""}`
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <span>
+                        {task.assignee?.first_name} {task.assignee?.last_name}
+                      </span>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            ) : (
+              <div className="flex justify-start md:justify-center items-center">
+                <CircleHelp className="h-5 w-5 text-muted-foreground" />
+              </div>
+            )}
+          </div>
         </div>
-        <div className="col-span-1 text-center">
+
+        {/* Options */}
+        <div className="absolute right-4 top-4 md:static md:col-span-1 md:text-center">
           {(canUpdate || canDelete) && (
             <DropdownMenu
               open={isDropdownOpen}
@@ -315,12 +343,13 @@ function BacklogItems({ task }: Props) {
           )}
         </div>
       </div>
+
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[95vw] sm:max-w-md rounded-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action will remove Task permanentl and can't be undo.
+              This action will remove Task permanently and can't be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

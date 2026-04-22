@@ -32,7 +32,8 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
   const pusherChannel = useAtomValue(projectStore.pusherChannel)
   const authUser = useAtomValue(userStore.AuthUser)
   const [previousSearchedItem, setPreviousSearchedItem] = useState<string>("")
-  const [previousFilters, setPreviousFilters] = useState<TaskFiltersType | null>(null)
+  const [previousFilters, setPreviousFilters] =
+    useState<TaskFiltersType | null>(null)
 
   const projectId = useParams().id as string
   const searchParams = useSearchParams()
@@ -40,7 +41,7 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
 
   const fatchTasks = async (resetPage: boolean = false) => {
     let page = parseInt(searchParams.get("page") || "1", 10)
-    
+
     if (resetPage) {
       page = 1
       const params = new URLSearchParams(searchParams.toString())
@@ -76,7 +77,7 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
   }, [searchedItem])
 
   useEffect(() => {
-    const filtersChanged = 
+    const filtersChanged =
       filters?.assignee !== previousFilters?.assignee ||
       filters?.creator !== previousFilters?.creator ||
       filters?.priority !== previousFilters?.priority ||
@@ -136,21 +137,40 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
       <h2 className="font-semibold leading-none tracking-tight">
         Backlog Items
       </h2>
-      <p className="text-sm text-muted-foreground !mt-2">
+      <p className="text-sm text-muted-foreground !mt-2 mb-4">
         Manage your project backlog items
       </p>
-      <div className="w-full overflow-x-auto">
+      <div className="w-full">
         <div className="rounded-md border">
-          <div className="grid grid-cols-12 gap-3 p-4 bg-muted/50 text-sm font-medium">
-            <div className="col-span-1">Type</div>
-            <div className="col-span-1 text-left">ID</div>
-            <div className="col-span-3 text-left">Title</div>
-            <div className="col-span-1 text-center">Parent</div>
-            <div className="col-span-2 text-center">Status</div>
-            <div className="col-span-1 text-center">Priority</div>
-            <div className="col-span-1 text-center">Points</div>
-            <div className="col-span-1 text-center">Assignee</div>
-            <div className="col-span-1 text-center">Option</div>
+          {/* Desktop Table Header */}
+          <div className="hidden md:grid md:grid-cols-12 gap-3 p-4 bg-muted/50 text-sm font-medium">
+            <div className="col-span-1 truncate" title="Type">
+              Type
+            </div>
+            <div className="col-span-1 text-left truncate" title="ID">
+              ID
+            </div>
+            <div className="col-span-3 text-left truncate" title="Title">
+              Title
+            </div>
+            <div className="col-span-1 text-center truncate" title="Parent">
+              Parent
+            </div>
+            <div className="col-span-2 text-center truncate" title="Status">
+              Status
+            </div>
+            <div className="col-span-1 text-center truncate" title="Priority">
+              Priority
+            </div>
+            <div className="col-span-1 text-center truncate" title="Points">
+              Points
+            </div>
+            <div className="col-span-1 text-center truncate" title="Assignee">
+              Assignee
+            </div>
+            <div className="col-span-1 text-center truncate" title="Option">
+              Option
+            </div>
           </div>
           {tasksLoading ? (
             <div className="flex justify-center h-full w-full my-4">
@@ -161,7 +181,7 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
               No backlog items found
             </div>
           ) : (
-            <div className="pb-2">
+            <div className="pb-2 divider-y">
               {tasks &&
                 canView &&
                 tasks.map(
@@ -171,7 +191,9 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
                     )
                 )}
               {Pagination && canView && (
-                <PaginationComponent pagination={Pagination} />
+                <div className="mt-4 px-2">
+                  <PaginationComponent pagination={Pagination} />
+                </div>
               )}
             </div>
           )}

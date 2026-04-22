@@ -222,16 +222,20 @@ export function SprintManagement() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-bold">Sprint Management</h2>
-        <div className="flex flex-row items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
+            className="flex-1 sm:flex-none"
             loading={isNavigating}
             onClick={handleNavigateToCompleted}
           >
             Show Completed Sprints
           </Button>
           {canCreate && (
-            <Button onClick={() => setIsCreateSprintOpen(true)}>
+            <Button
+              className="flex-1 sm:flex-none"
+              onClick={() => setIsCreateSprintOpen(true)}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Create Sprint
             </Button>
