@@ -5,6 +5,7 @@ import {
   AddVerificationEntry,
   assignUserRewardLevel,
   GetActivityRule,
+  GetActivityRules,
   GetRewardLevel,
   GetRewardLevels,
   GetUserApprovedVerificationCount,
@@ -498,3 +499,12 @@ export const CheckRewardAlreadyGivenAction = CreateServerAction(
     }
   }
 )
+
+export const GetActivityRulesAction = CreateServerAction(true, async () => {
+  try {
+    const rules = await GetActivityRules()
+    return { success: true, data: rules }
+  } catch (error) {
+    return { success: false, error }
+  }
+})
