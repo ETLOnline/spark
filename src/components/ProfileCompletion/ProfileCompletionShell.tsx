@@ -8,7 +8,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import Loader from "../common/Loader/Loader"
 import { LoaderSizes } from "../common/types/loader-types"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import { getNextProfileCompletionStep } from "@/src/utils/clientHelper"
+import { getNextProfileCompletionStep } from "@/src/utils/helpers"
 
 export default function ProfileCompletionShell() {
   const [showProfile, setShowProfile] = useState(false)

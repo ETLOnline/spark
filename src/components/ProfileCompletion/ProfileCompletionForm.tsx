@@ -17,7 +17,7 @@ import { SelectUser } from "@/src/db/schema"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
 import { useRouter } from "next/navigation"
-import { getNextProfileCompletionStep } from "@/src/utils/clientHelper"
+import { getNextProfileCompletionStep } from "@/src/utils/helpers"
 
 export default function ProfileCompletionForm({
   initialStep = 1
