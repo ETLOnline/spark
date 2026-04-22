@@ -7,6 +7,7 @@ import {
   GetActivityRule,
   GetRewardLevel,
   GetRewardLevels,
+  GetUserApprovedVerificationCount,
   GetUserPointLedger,
   GetUserRewardBalance,
   GetUserRewardLevel,
@@ -221,7 +222,7 @@ export const UpdateTrustVerificationAction = CreateServerAction(
         }
       }
 
-      if ((isApproved || isRejected) && !isTaskCompletion) {
+      if (isApproved && !isTaskCompletion) {
         await AddRewardAction(
           ActivityTypes.MilestoneVerified,
           res.approved_by || "",
@@ -436,6 +437,18 @@ export const AddTaskRewardAction = CreateServerAction(
     }
   }
 )
+export const GetUserApprovedVerificationCountAction = CreateServerAction(
+  true,
+  async (user_id: string) => {
+    try {
+      const count = await GetUserApprovedVerificationCount(user_id)
+      return { success: true, data: count }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
 export const getRewardLevelsAction = CreateServerAction(true, async () => {
   try {
     const levels = await GetRewardLevels()

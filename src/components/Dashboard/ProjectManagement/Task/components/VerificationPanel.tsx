@@ -4,18 +4,11 @@ import { useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import { Label } from "@/src/components/ui/label"
 import { Textarea } from "@/src/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/src/components/ui/select"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { UpdateTrustVerificationAction } from "@/src/server-actions/Reward/Reward"
 import { TrustVerificationStatus } from "@/src/types/Rewards/rewards"
 import { toast } from "@/src/hooks/use-toast"
-import { ShieldCheck } from "lucide-react"
+import { ShieldCheck, ShieldX } from "lucide-react"
 
 interface Props {
   verificationStatus: {
@@ -30,7 +23,6 @@ export default function VerificationPanel({
   verificationStatus,
   onStatusChange
 }: Props) {
-  const [status, setStatus] = useState<string>(verificationStatus.status)
   const [feedback, setFeedback] = useState<string>(
     verificationStatus.feedback ?? ""
   )
@@ -49,22 +41,22 @@ export default function VerificationPanel({
   // Rejected can still be re-reviewed and approved
   const isLocked = savedStatus === TrustVerificationStatus.Approved
 
-  const handleSave = async () => {
-    if (!status || isLocked) return
+  const handleAction = async (newStatus: string) => {
+    if (isLocked) return
 
     const res = await updateVerification(
       verificationStatus.verification_id,
-      status,
+      newStatus,
       feedback
     )
 
     if (res?.success) {
-      setSavedStatus(status)
+      setSavedStatus(newStatus)
       setSavedFeedback(feedback)
-      onStatusChange?.(status, feedback)
+      onStatusChange?.(newStatus, feedback)
       toast({
         title: "Verification updated",
-        description: `Status set to ${status}`,
+        description: `Status set to ${newStatus}`,
         duration: 3000
       })
     } else {
@@ -73,21 +65,6 @@ export default function VerificationPanel({
         variant: "destructive",
         duration: 3000
       })
-    }
-  }
-
-  const statusConfig: Record<string, { label: string; className: string }> = {
-    [TrustVerificationStatus.Pending]: {
-      label: "Pending",
-      className: "text-yellow-400"
-    },
-    [TrustVerificationStatus.Approved]: {
-      label: "Approved",
-      className: "text-green-400"
-    },
-    [TrustVerificationStatus.Rejected]: {
-      label: "Rejected",
-      className: "text-red-400"
     }
   }
 
@@ -110,39 +87,18 @@ export default function VerificationPanel({
         {isLocked && (
           <p className="text-xs text-muted-foreground">
             This verification has been{" "}
-            <span className={statusConfig[savedStatus]?.className}>
-              approved
-            </span>
-            . Points have already been awarded and cannot be changed.
+            <span className="text-green-400">approved</span>. Points have
+            already been awarded and cannot be changed.
           </p>
         )}
 
-        {/* Status dropdown */}
-        <div className="space-y-1.5">
-          <Label className="text-sm text-muted-foreground">Status</Label>
-          <Select value={status} onValueChange={setStatus} disabled={isLocked}>
-            <SelectTrigger className="bg-background/50 border-white/10 disabled:opacity-60">
-              <SelectValue placeholder="Select status">
-                {status && (
-                  <span className={statusConfig[status]?.className}>
-                    {statusConfig[status]?.label}
-                  </span>
-                )}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={TrustVerificationStatus.Pending}>
-                <span className="text-yellow-400">Pending</span>
-              </SelectItem>
-              <SelectItem value={TrustVerificationStatus.Approved}>
-                <span className="text-green-400">Approved</span>
-              </SelectItem>
-              <SelectItem value={TrustVerificationStatus.Rejected}>
-                <span className="text-red-400">Rejected</span>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Current status badge when locked */}
+        {isLocked && (
+          <div className="flex items-center gap-2 text-sm font-medium text-green-400">
+            <ShieldCheck className="h-4 w-4" />
+            Approved
+          </div>
+        )}
 
         {/* Feedback / Recommendation */}
         <div className="space-y-1.5">
@@ -167,17 +123,31 @@ export default function VerificationPanel({
           )}
         </div>
 
-        {/* Save button */}
+        {/* Action buttons */}
         {!isLocked && (
-          <Button
-            type="button"
-            className="w-full bg-primary text-primary-foreground"
-            onClick={handleSave}
-            loading={loading}
-            disabled={loading}
-          >
-            Save Verification
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-400"
+              onClick={() => handleAction(TrustVerificationStatus.Rejected)}
+              loading={loading}
+              disabled={loading}
+            >
+              <ShieldX className="h-4 w-4 mr-2" />
+              Reject
+            </Button>
+            <Button
+              type="button"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => handleAction(TrustVerificationStatus.Approved)}
+              loading={loading}
+              disabled={loading}
+            >
+              <ShieldCheck className="h-4 w-4 mr-2" />
+              Verify
+            </Button>
+          </div>
         )}
       </div>
     </div>
