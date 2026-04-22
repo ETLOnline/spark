@@ -17,20 +17,11 @@ import { SelectUser } from "@/src/db/schema"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
 import { useRouter } from "next/navigation"
-import { getNextProfileCompletionStep } from "@/src/utils/helpers"
 
-export default function ProfileCompletionForm({
-  initialStep = 1
-}: {
-  initialStep?: number
-}) {
-  const [step, setStep] = useState(initialStep)
+export default function ProfileCompletionForm() {
+  const [step, setStep] = useState(1)
   const [user, setUser] = useState<SelectUser>()
   const [isTrustEngineEnabled, setIsTrustEngineEnabled] = useState(false)
-
-  useEffect(() => {
-    setStep(initialStep)
-  }, [initialStep])
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -38,8 +29,6 @@ export default function ProfileCompletionForm({
 
       if (currUser) {
         setUser(currUser)
-        const nextStep = getNextProfileCompletionStep(currUser.profile)
-        setStep((previousStep) => Math.max(previousStep, nextStep))
       }
     }
     fetchUserData()
