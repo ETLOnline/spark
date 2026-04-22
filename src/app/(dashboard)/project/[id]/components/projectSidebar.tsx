@@ -44,6 +44,7 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
   )
   const setCrumbRoutes = useSetAtom(navStore.crumbRoutes)
   const setPusherChannel = useSetAtom(projectStore.pusherChannel)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const { setOpen: setSideBarCollapse } = useSidebar()
   const pathName = usePathname()
@@ -113,6 +114,7 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
             <Link
               href={`/project/${currProject.id}/${page.key}`}
               key={page.key}
+              onClick={() => setIsSidebarOpen(true)}
             >
               <SidebarMenuItem
                 className={`flex flex-row items-center gap-2 p-2 rounded transition-colors
@@ -146,7 +148,7 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
   return (
     <div className="w-full">
       <div className="block md:hidden p-2">
-        <Sheet>
+        <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
           <SheetTrigger asChild>
             <Button className="flex items-center gap-2 " size="sm">
               <Menu className="h-4 w-4 shrink-0" />

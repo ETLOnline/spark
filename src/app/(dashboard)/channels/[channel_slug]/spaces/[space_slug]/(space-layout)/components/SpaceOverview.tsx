@@ -113,7 +113,7 @@ function SpaceOverview({
 
   return (
     <div className="w-full">
-      <div className="bg-background border-b px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+      <div className="bg-background border-b px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2 min-w-0">
           <LayoutDashboard className="w-5 h-5 shrink-0" />
           <h1 className="text-lg sm:text-xl font-semibold truncate">

@@ -1,4 +1,6 @@
 "use client"
+
+import { useEffect, useState } from "react"
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -13,7 +15,7 @@ import { LogOut, PlusCircle, Users, Menu } from "lucide-react"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import React, { useEffect, useState } from "react"
+import React from "react"
 import { spaceStaticFeatures } from "./constants"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import { useAtom, useAtomValue } from "jotai"
@@ -61,6 +63,8 @@ function SpaceSidebar({ space }: Props) {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [isSpaceMember, setIsSpaceMember] = useState<boolean>(false)
   const currentUserId = authUser?.unique_id
+
+  const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
     if (currentUserId !== undefined) {
@@ -260,7 +264,10 @@ function SpaceSidebar({ space }: Props) {
       </div>
 
       {/* space overview */}
-      <Link href={`/channels/${encodedChannelSlug}/spaces/${encodedSpaceSlug}`}>
+      <Link
+        href={`/channels/${encodedChannelSlug}/spaces/${encodedSpaceSlug}`}
+        onClick={() => setIsOpen(false)}
+      >
         <SidebarMenuItem
           className={`flex flex-row items-center gap-2 p-2 rounded
            ${
@@ -285,6 +292,7 @@ function SpaceSidebar({ space }: Props) {
             href={
               feature ? getFeatureUrl(feature.feature?.feature_slug ?? "") : "#"
             }
+            onClick={() => setIsOpen(false)}
           >
             <SidebarMenuItem
               className={`flex flex-row items-center gap-2 p-2 rounded
@@ -326,6 +334,7 @@ function SpaceSidebar({ space }: Props) {
           <Link
             key={feature.slug}
             href={feature ? getFeatureUrl(feature.slug ?? "") : "#"}
+            onClick={() => setIsOpen(false)}
           >
             <SidebarMenuItem
               className={`flex flex-row items-center gap-2 p-2 rounded
@@ -352,11 +361,10 @@ function SpaceSidebar({ space }: Props) {
     <div className="w-full">
       {/* Mobile Sheet Trigger */}
       <div className="block md:hidden p-2">
-        <Sheet>
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
             <Button className="flex items-center gap-2 " size="sm">
               <Menu className="h-4 w-4 shrink-0" />
-              {/* <span className="font-medium text-sm truncate">{space.space_name}</span> */}
             </Button>
           </SheetTrigger>
           <SheetTitle className="hidden">{space.space_name}</SheetTitle>
