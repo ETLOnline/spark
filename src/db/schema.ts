@@ -1784,6 +1784,7 @@ export const trustVerificationTable = pgTable("trust_verification", {
   points: integer().notNull(),
   feedback: varchar(),
   verified_at: varchar(),
+  metadata: jsonb(),
   ...timestamps
 })
 

@@ -7,6 +7,7 @@ import {
   GetActivityRule,
   GetRewardLevel,
   GetRewardLevels,
+  GetUserApprovedVerificationCount,
   GetUserPointLedger,
   GetUserRewardBalance,
   GetUserRewardLevel,
@@ -129,7 +130,12 @@ export const AddRewardAction = CreateServerAction(
           rule_id: activityRule.rule_id,
           status: TrustVerificationStatus.Pending,
           points: activity?.base_points,
-          proof_url: proof_url
+          proof_url: proof_url,
+          metadata: {
+            task_id: metadata?.task_id ?? null,
+            project_id: metadata?.project_id ?? null,
+            proof_url: proof_url ?? null
+          }
         }
 
         const verificationEntry = await AddVerificationEntry(
@@ -185,18 +191,21 @@ export const UpdateTrustVerificationAction = CreateServerAction(
             ActivityTypes.TaskCompletionVerification,
             res.user_id,
             res.proof_url,
-            {},
-            verification_id
+            { verification_id },
+            verification_id,
+            "verification_id",
+            String(verification_id)
           )
 
-          // Reward the reviewer
           if (res.approved_by) {
             await AddRewardAction(
               ActivityTypes.TaskCompletionReview,
               res.approved_by,
               res.proof_url,
-              {},
-              verification_id
+              { verification_id },
+              verification_id,
+              "verification_id",
+              String(verification_id)
             )
           }
         } else {
@@ -205,19 +214,23 @@ export const UpdateTrustVerificationAction = CreateServerAction(
             ActivityTypes.MilestoneApproval,
             res.user_id,
             res.proof_url,
-            {},
-            verification_id
+            { verification_id },
+            verification_id,
+            "verification_id",
+            String(verification_id)
           )
         }
       }
 
-      if ((isApproved || isRejected) && !isTaskCompletion) {
+      if (isApproved && !isTaskCompletion) {
         await AddRewardAction(
           ActivityTypes.MilestoneVerified,
           res.approved_by || "",
           res.proof_url,
-          {},
-          verification_id
+          { verification_id },
+          verification_id,
+          "verification_id",
+          String(verification_id)
         )
       }
 
@@ -424,6 +437,18 @@ export const AddTaskRewardAction = CreateServerAction(
     }
   }
 )
+export const GetUserApprovedVerificationCountAction = CreateServerAction(
+  true,
+  async (user_id: string) => {
+    try {
+      const count = await GetUserApprovedVerificationCount(user_id)
+      return { success: true, data: count }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
 export const getRewardLevelsAction = CreateServerAction(true, async () => {
   try {
     const levels = await GetRewardLevels()

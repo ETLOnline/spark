@@ -19,9 +19,13 @@ import {
   ChevronsUp,
   ChevronUp,
   CircleHelp,
+  Clock,
   Equal,
-  MoreHorizontal
+  MoreHorizontal,
+  ShieldCheck,
+  ShieldX
 } from "lucide-react"
+import { TrustVerificationStatus } from "@/src/types/Rewards/rewards"
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import {
   AlertDialog,
@@ -50,9 +54,20 @@ interface Props {
   onClick: (task: SelectTask) => void
   setTasks: Dispatch<SetStateAction<SelectTask[]>>
   taskList?: SelectTask[]
+  verificationStatus?: {
+    status: string
+    verification_id: number
+    feedback: string | null
+  } | null
 }
 
-function BoardTaskCard({ task, onClick, setTasks, taskList }: Props) {
+function BoardTaskCard({
+  task,
+  onClick,
+  setTasks,
+  taskList,
+  verificationStatus
+}: Props) {
   const [isAlertOpen, setIsAlertOpen] = useState(false)
 
   const [removeTaskLoading, , , RemoveTask] = useServerAction(UpdateTaskAction)
@@ -181,6 +196,50 @@ function BoardTaskCard({ task, onClick, setTasks, taskList }: Props) {
     opacity: isDragging ? 0.5 : 1
   }
 
+  function getVerificationBadge() {
+    if (!verificationStatus) return null
+    const { status } = verificationStatus
+    const badgeConfig = {
+      [TrustVerificationStatus.Pending]: {
+        label: "Pending",
+        icon: <Clock className="h-3 w-3" />,
+        className: "bg-yellow-500/15 text-yellow-500",
+        tooltip: "Verification pending review"
+      },
+      [TrustVerificationStatus.Approved]: {
+        label: "Approved",
+        icon: <ShieldCheck className="h-3 w-3" />,
+        className: "bg-green-500/15 text-green-500",
+        tooltip: "Verification approved"
+      },
+      [TrustVerificationStatus.Rejected]: {
+        label: "Rejected",
+        icon: <ShieldX className="h-3 w-3" />,
+        className: "bg-red-500/15 text-red-500",
+        tooltip: "Verification rejected"
+      }
+    }
+
+    const config = badgeConfig[status as TrustVerificationStatus]
+    if (!config) return null
+
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${config.className}`}
+            >
+              {config.icon}
+              {config.label}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>{config.tooltip}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
+  }
+
   const subTasks = taskList?.filter((t) => t.parent_task_id === task.id)
 
   const filteredSubTasks = subTasks?.filter(
@@ -284,7 +343,10 @@ function BoardTaskCard({ task, onClick, setTasks, taskList }: Props) {
                 {task.assignee?.first_name} {task.assignee?.last_name}
               </span>
             </div>
-            {getPriorityBadge(task.task_priority)}
+            <div className="flex items-center gap-2">
+              {getVerificationBadge()}
+              {getPriorityBadge(task.task_priority)}
+            </div>
           </div>
         </div>
 

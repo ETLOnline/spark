@@ -5,7 +5,6 @@ import ProfileBio from "@/src/components/Dashboard/profile/profile-bio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   CalendarIcon,
-  MailIcon,
   Plus,
   PencilIcon,
   GraduationCap,
@@ -56,6 +55,7 @@ import { SocialLinkItem } from "./user/SocialLinkItem"
 import UserProfileCard from "./UserProfileCard"
 import TrustEngineCard from "./trust-engine/TrustEngineCard"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
+import { GetUserApprovedVerificationCountAction } from "@/src/server-actions/Reward/Reward"
 import { Input } from "../../ui/input"
 import { Skeleton } from "../../ui/skeleton"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
@@ -105,6 +105,11 @@ export default function ProfileScreen({
   )
   const [getFeatureFlagLoading, , , GetFeatureFlag] =
     useServerAction(getFeatureFlagAction)
+
+  const [verifiedTaskCount, setVerifiedTaskCount] = useState<number>(0)
+  const [, , , GetVerifiedTaskCount] = useServerAction(
+    GetUserApprovedVerificationCountAction
+  )
 
   useEffect(() => {
     if (authUser && user) {
@@ -197,6 +202,16 @@ export default function ProfileScreen({
     }
     fetchFeatureFlag()
   }, [])
+
+  useEffect(() => {
+    const fetchVerifiedCount = async () => {
+      const res = await GetVerifiedTaskCount(user.unique_id)
+      if (res?.success && res.data !== undefined) {
+        setVerifiedTaskCount(res.data)
+      }
+    }
+    fetchVerifiedCount()
+  }, [user.unique_id])
 
   const CopyReferralLink = async () => {
     try {
@@ -361,30 +376,30 @@ export default function ProfileScreen({
           </div>
           {/* Right Column */}
           <div className="space-y-4 sm:space-y-6">
-            {/* Contact Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex items-center space-x-2 break-all">
-                  <MailIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <h1 className="text-gray-400">Email</h1>
-                    <span className="truncate block">{user?.email}</span>
+            {/* Your Standing Card */}
+            {isFeatureEnable && (
+              <Card className="p-4 sm:p-6 spark-gradient-panel-bg">
+                <CardTitle className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                  {isMyProfile ? "Your Standing" : "Standing"}
+                </CardTitle>
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">
+                      Verified Task Completions
+                    </div>
+                    <div className="text-lg font-bold text-primary">
+                      {verifiedTaskCount}
+                    </div>
                   </div>
+                  {/* <div className="border-t">
+                    <div className="text-sm text-muted-foreground pt-3">
+                      Your Percentile Rank
+                    </div>
+                    <div className="text-lg font-bold text-primary">0%</div>
+                  </div> */}
                 </div>
-                {/* for future use */}
-                {/* <div className="flex items-center space-x-2">
-                <PhoneIcon className="h-5 w-5 text-gray-500" />
-                <span>+923001234567</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <MapPinIcon className="h-5 w-5 text-gray-500" />
-                <span>City, Country</span>
-              </div> */}
-              </CardContent>
-            </Card>
+              </Card>
+            )}
 
             {/* Referral Link */}
             {isMyProfile && (
@@ -598,29 +613,6 @@ export default function ProfileScreen({
                 )}
               </CardContent>
             </Card>
-
-            {/* Your Standing Card */}
-            {isFeatureEnable && (
-              <Card className="p-4 sm:p-6 spark-gradient-panel-bg">
-                <CardTitle className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                  {isMyProfile ? "Your Standing" : "Standing"}
-                </CardTitle>
-                <div className="space-y-3">
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-1">
-                      Community Members
-                    </div>
-                    <div className="text-lg font-bold text-primary">0</div>
-                  </div>
-                  <div className="border-t">
-                    <div className="text-sm text-muted-foreground pt-3">
-                      Your Percentile Rank
-                    </div>
-                    <div className="text-lg font-bold text-primary">0%</div>
-                  </div>
-                </div>
-              </Card>
-            )}
           </div>
         </div>
       </div>
