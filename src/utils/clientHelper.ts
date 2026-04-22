@@ -3,7 +3,8 @@ import {
   SelectChannel,
   SelectChat,
   SelectCommunity,
-  SelectSpace
+  SelectSpace,
+  SelectProfile
 } from "../db/schema"
 import { isEntityChannel, isEntityCommunity, isEntitySpace } from "./helpers"
 
@@ -320,4 +321,35 @@ export const formatActivityName = (text: string) => {
   if (!text) return ""
 
   return text.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+export function getNextProfileCompletionStep(
+  profile?: SelectProfile | null
+): number {
+  if (!profile) {
+    return 1
+  }
+
+  if (profile.is_profile_completed === 1) {
+    return 4
+  }
+
+  const hasEducationData = Boolean(
+    profile.degree?.trim() ||
+      profile.institute?.trim() ||
+      profile.education_start_date?.trim() ||
+      profile.education_end_date?.trim()
+  )
+
+  if (hasEducationData) {
+    return 3
+  }
+
+  const hasBasicProfileData = Boolean(profile.bio?.trim())
+
+  if (hasBasicProfileData) {
+    return 2
+  }
+
+  return 1
 }
