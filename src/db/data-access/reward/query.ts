@@ -267,6 +267,18 @@ export async function GetRewardLevels() {
   }
 }
 
+export async function GetActivityRules() {
+  try {
+    const res = await db.query.activityRulesTable.findMany({
+      where: eq(activityRulesTable.is_active, true),
+      with: { reward: true }
+    })
+    return res
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
 export async function GetTaskVerificationStatuses(task_ids: string[]) {
   if (!task_ids.length) return []
 
