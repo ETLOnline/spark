@@ -33,8 +33,6 @@ interface FeedbackData {
 export function FeedbackScreen() {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
-  const [feedbackList, setFeedbackList] = useState<FeedbackData[]>([])
-  const [isLoadingList, setIsLoadingList] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [fileUploadResetKey, setFileUploadResetKey] = useState(0)
   const [formData, setFormData] = useState({
@@ -44,20 +42,6 @@ export function FeedbackScreen() {
     description: "",
     fileUrl: null
   })
-
-  const loadFeedbackList = async () => {
-    setIsLoadingList(true)
-    try {
-      const result = await GetAllFeedbackAction()
-      if (result.success) {
-        setFeedbackList(result.feedback as FeedbackData[])
-      }
-    } catch (error) {
-      console.error("Error loading feedback:", error)
-    } finally {
-      setIsLoadingList(false)
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -105,7 +89,6 @@ export function FeedbackScreen() {
         })
         setSelectedFile(null)
         setFileUploadResetKey((prev) => prev + 1)
-        loadFeedbackList()
       }
     } catch (error: any) {
       toast({
@@ -127,16 +110,6 @@ export function FeedbackScreen() {
 
   const handleScreenshotChange = (files: File[]) => {
     setSelectedFile(files[0] || null)
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    })
   }
 
   return (
