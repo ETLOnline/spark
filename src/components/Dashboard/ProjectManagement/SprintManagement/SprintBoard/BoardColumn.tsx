@@ -9,11 +9,22 @@ interface Props {
   sprint?: SelectSprint
   status?: InsertTaskStatus
   tasks: SelectTask[]
+  verificationMap: Record<
+    string,
+    { status: string; verification_id: number; feedback: string | null }
+  >
   onTaskClick: (task: SelectTask) => void
   setTasks: Dispatch<SetStateAction<SelectTask[]>>
 }
 
-function BoardColumn({ sprint, status, tasks, onTaskClick, setTasks }: Props) {
+function BoardColumn({
+  sprint,
+  status,
+  tasks,
+  verificationMap,
+  onTaskClick,
+  setTasks
+}: Props) {
   const { setNodeRef } = useDroppable({
     id: status?.id || "",
     data: { statusId: status?.id }
@@ -49,6 +60,7 @@ function BoardColumn({ sprint, status, tasks, onTaskClick, setTasks }: Props) {
           onClick={onTaskClick}
           setTasks={setTasks}
           taskList={tasks}
+          verificationStatus={verificationMap[task.id] ?? null}
         />
       ))}
 

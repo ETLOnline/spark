@@ -45,6 +45,7 @@ import { TaskComment } from "./task-comment"
 import { Dialog, DialogContent, DialogTitle } from "@/src/components/ui/dialog"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
 import AddSubTask from "./AddSubTask"
+import VerificationPanel from "./VerificationPanel"
 import "./TaskFormStyle.css"
 import Link from "next/link"
 import SubTask from "./SubTask"
@@ -74,6 +75,12 @@ interface Props {
   isSprintCompleted?: boolean
   refetchComments?: boolean
   setRefetchComments?: Dispatch<SetStateAction<boolean>>
+  verificationStatus?: {
+    status: string
+    verification_id: number
+    feedback: string | null
+  } | null
+  onVerificationStatusChange?: (newStatus: string, newFeedback: string) => void
 }
 
 const projectSchema = z.object({
@@ -113,7 +120,9 @@ export default function TaskForm({
   onSubTaskCreate,
   isSprintCompleted,
   refetchComments,
-  setRefetchComments
+  setRefetchComments,
+  verificationStatus,
+  onVerificationStatusChange
 }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null)
   const [usersList, setUsersList] = useState<(SelectUser | null)[]>([])
@@ -121,7 +130,9 @@ export default function TaskForm({
   const [assignor, setAssignor] = useState<SelectUser | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false)
-  const [subTasks, setSubTasks] = useState<SelectTask[]>([])
+  const [subTasks, setSubTasks] = useState<SelectTask[]>(
+    (selectedTask?.subTasks as SelectTask[]) ?? []
+  )
   const [searchParentTask, setSearchParentTask] = useState("")
   const [parentTasks, setParentTasks] = useState<SelectTask[]>([])
   const [getSubTaskTaskLoading, setGetSubTaskTaskLoading] = useState(false)
@@ -366,7 +377,6 @@ export default function TaskForm({
     setGetSubTaskTaskLoading(true)
     const res = await GetLinkedTasksAction({
       project_id: projectId,
-      sprint_id: selectedTask.sprint_id || undefined,
       parent_id: selectedTask?.id
     })
     if (res.success && res.data) {
@@ -376,10 +386,10 @@ export default function TaskForm({
   }
 
   useEffect(() => {
-    if (!selectedTask) return
-
-    getSubTasks()
-  }, [selectedTask])
+    if (selectedTask?.subTasks) {
+      setSubTasks(selectedTask.subTasks as SelectTask[])
+    }
+  }, [selectedTask?.id])
 
   const handleAssigneeChange = (val: string, field: any) => {
     field.onChange(val)
@@ -543,6 +553,14 @@ export default function TaskForm({
                   onSubTaskCreate={onSubTaskCreate}
                 />
               </div>
+
+              {/* Verification Panel — board only */}
+              {verificationStatus && (
+                <VerificationPanel
+                  verificationStatus={verificationStatus}
+                  onStatusChange={onVerificationStatusChange}
+                />
+              )}
 
               {/* Comments */}
               {selectedTask && (
