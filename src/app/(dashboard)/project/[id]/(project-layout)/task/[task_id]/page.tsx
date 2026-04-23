@@ -22,7 +22,7 @@ async function page({ params }: Props) {
   const currTask = await GetTaskByIdAction(taskId)
 
   return (
-    <ScrollArea className="min-h-full px-4">
+    <ScrollArea className="min-h-full px-2">
       <TaskScreenPage
         statuses={projectStatusList.data || []}
         task={currTask.data}

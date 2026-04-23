@@ -38,6 +38,10 @@ import { TaskType } from "../../constants/projectManagment"
 interface Props {
   sprint: SelectSprint
   tasks: SelectTask[]
+  verificationMap: Record<
+    string,
+    { status: string; verification_id: number; feedback: string | null }
+  >
   isTaskModalOpen: boolean
   setIsTaskModalOpen: Dispatch<SetStateAction<boolean>>
   selectedTask: SelectTask | null
@@ -48,6 +52,7 @@ interface Props {
 function SprintBoardCard({
   sprint,
   tasks,
+  verificationMap,
   isTaskModalOpen,
   setIsTaskModalOpen,
   selectedTask,
@@ -209,7 +214,7 @@ function SprintBoardCard({
   }
 
   return (
-    <div className="px-6">
+    <div className="px-2">
       <Card key={sprint.id} className="mb-6 ">
         <CardHeader className="pb-2">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
@@ -247,6 +252,7 @@ function SprintBoardCard({
                     sprint={sprint}
                     status={status}
                     tasks={tasks}
+                    verificationMap={verificationMap}
                     onTaskClick={handleOnTaskClick}
                     setTasks={setTasks}
                   />

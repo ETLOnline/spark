@@ -36,6 +36,12 @@ interface TaskModalProps {
   isReady?: boolean
   onSubTaskCreate?: (task: SelectTask) => void
   isSprintCompleted?: boolean
+  verificationStatus?: {
+    status: string
+    verification_id: number
+    feedback: string | null
+  } | null
+  onVerificationStatusChange?: (newStatus: string, newFeedback: string) => void
 }
 
 export const TaskModal = ({
@@ -47,7 +53,9 @@ export const TaskModal = ({
   sprintId,
   isReady,
   onSubTaskCreate,
-  isSprintCompleted = false
+  isSprintCompleted = false,
+  verificationStatus,
+  onVerificationStatusChange
 }: TaskModalProps) => {
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [taskIdFromUrl, setTaskIdFromUrl] = useState<string | null>(null)
@@ -175,6 +183,8 @@ export const TaskModal = ({
             isSprintCompleted={isSprintCompleted}
             refetchComments={refetchComments}
             setRefetchComments={setRefetchComments}
+            verificationStatus={verificationStatus}
+            onVerificationStatusChange={onVerificationStatusChange}
           />
         </DialogContent>
       </Dialog>

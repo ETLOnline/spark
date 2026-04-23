@@ -79,12 +79,12 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
         </div>
 
         <Button>
-          <Link href="/profile/trust-engine">View DashBoard</Link>
+          <Link href="/profile/trust-engine">View Dashboard</Link>
         </Button>
       </div>
 
       {/* Stats Grid */}
-      <div className="mb-8 grid grid-cols-2 gap-2 md:grid-cols-4">
+      <div className="mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="rounded-lg border p-4 bg-card flex flex-col justify-between h-full">
           <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
             Reputation Points
@@ -99,7 +99,7 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
           </p> */}
         </div>
 
-        <div className="rounded-lg border p-4 bg-card  flex flex-col justify-between h-full">
+        <div className="rounded-lg border p-4 bg-card flex flex-col justify-between h-full">
           <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
             Spark Credits
           </p>

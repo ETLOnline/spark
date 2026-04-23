@@ -302,6 +302,13 @@
       "when": 1776673973473,
       "tag": "0042_2026_04_20_133251__add_feedback_table",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1776776693811,
+      "tag": "0042_2026_04_21_210452__add_json_into_verificaiton_table",
+      "breakpoints": true
     }
   ]
 }

@@ -220,7 +220,9 @@ export const permissions = {
     teamsAdd: "teams.add",
     teamsUpdate: "teams.update",
     teamsDelete: "teams.delete",
-    settingsView: "settings.view"
+    settingsView: "settings.view",
+    DetailView: "details.view",
+    ChatView: "chat.view"
   }
 }
 

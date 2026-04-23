@@ -6,6 +6,9 @@ import { CheckCircle, Target, Trophy, Sparkles } from "lucide-react"
 import { Badge } from "../ui/badge"
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
+import { useServerAction } from "@/src/hooks/useServerAction"
+import { GetActivityRulesAction } from "@/src/server-actions/Reward/Reward"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
 
 export function OnboardingCompletion({
   redirectTo = "/spark/dashboard",
@@ -16,6 +19,30 @@ export function OnboardingCompletion({
 }) {
   const router = useRouter()
   const [completed, setCompleted] = useState(false)
+  const [profileReward, setProfileReward] = useState<{
+    points: number
+    currency: string
+  } | null>(null)
+
+  const [, , , getActivityRules] = useServerAction(GetActivityRulesAction)
+
+  useEffect(() => {
+    const fetchProfileRule = async () => {
+      const res = await getActivityRules()
+      if (res?.success && res.data) {
+        const rule = res.data.find(
+          (r: any) => r.action_type === ActivityTypes.ProfileComplete
+        )
+        if (rule) {
+          setProfileReward({
+            points: rule.base_points,
+            currency: rule.reward?.display_name ?? "Points"
+          })
+        }
+      }
+    }
+    fetchProfileRule()
+  }, [])
 
   const handleComplete = () => {
     setCompleted(true)
@@ -66,8 +93,11 @@ export function OnboardingCompletion({
                   Welcome to SPARK, Champion!
                 </h4>
                 <p className="mb-4 text-gray-500 dark:text-white/70">
-                  You've unlocked your Spark Starter badge and earned 50 initial
-                  RP. Your journey begins now!
+                  You've unlocked your Spark Starter badge and earned{" "}
+                  {profileReward
+                    ? `${profileReward.points} initial ${profileReward.currency}`
+                    : "initial points"}
+                  . Your journey begins now!
                 </p>
                 <div className="space-y-2">
                   <div className="p-3 rounded-lg border border-primary/50 dark:border-primary/30">
@@ -75,7 +105,9 @@ export function OnboardingCompletion({
                       Initial Balance
                     </p>
                     <p className="text-lg font-bold text-foreground">
-                      50 Reputation Points
+                      {profileReward
+                        ? `${profileReward.points} ${profileReward.currency}`
+                        : "—"}
                     </p>
                   </div>
                 </div>
