@@ -49,7 +49,7 @@ export default function FileSharing() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="w-full max-w-full mx-auto py-4 md:py-8 px-2 sm:px-4 overflow-hidden">
       <FileDir addItemToPath={addItemToPath} findItemByPath={findItemByPath} />
     </div>
   )

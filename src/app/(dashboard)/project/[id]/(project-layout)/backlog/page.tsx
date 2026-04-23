@@ -4,7 +4,7 @@ import React from "react"
 
 function ProjectBackolgs() {
   return (
-    <ScrollArea className="min-h-full px-2">
+    <ScrollArea className="min-h-full px-3">
       <BacklogManagement />
     </ScrollArea>
   )

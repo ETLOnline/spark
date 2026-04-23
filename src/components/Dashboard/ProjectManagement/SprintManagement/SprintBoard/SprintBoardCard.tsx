@@ -156,7 +156,6 @@ function SprintBoardCard({
 
     setTasks((prev) => {
       return prev.map((task) => {
-        // update the dragged task’s status
         if (task.id === taskId && task.status_id !== overStatusId) {
           prevStatusId = task.status_id
           statusChanged = true
@@ -164,7 +163,6 @@ function SprintBoardCard({
           return movedParent
         }
 
-        // if this task is a child of the moved parent → update its embedded parentTask reference
         if (task.parent_task_id === taskId && task.parentTask) {
           return {
             ...task,
@@ -203,7 +201,7 @@ function SprintBoardCard({
         })
 
         toast({
-          title: "Failed to update task  status",
+          title: "Failed to update task status",
           variant: "destructive",
           duration: 2000
         })
@@ -214,38 +212,40 @@ function SprintBoardCard({
   }
 
   return (
-    <div className="px-2">
-      <Card key={sprint.id} className="mb-6 ">
-        <CardHeader className="pb-2">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-            <div>
-              <CardTitle>{sprint.title}</CardTitle>
+    <div className="px-0 sm:px-2">
+      <Card key={sprint.id} className="mb-6 overflow-hidden">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+            <div className="w-full xl:w-auto">
+              <CardTitle className="text-xl">{sprint.title}</CardTitle>
               <CardDescription>
                 {new Date(sprint.start_date).toLocaleDateString()} -{" "}
                 {new Date(sprint.end_date).toLocaleDateString()}
               </CardDescription>
             </div>
-            <div className="flex items-center space-x-2 mt-2 sm:mt-0">
-              <Badge>Active</Badge>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto mt-2 xl:mt-0">
+              <Badge className="w-fit self-start sm:self-auto">Active</Badge>
 
-              <TaskFilters
-                projectId={sprint.projectId}
-                onApplyFilters={HandleTaskFilters}
-              />
+              <div className="w-full sm:w-auto">
+                <TaskFilters
+                  projectId={sprint.projectId}
+                  onApplyFilters={HandleTaskFilters}
+                />
+              </div>
             </div>
           </div>
 
           <SprintProgressBar tasks={tasks} statuses={projectStatusList} />
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-2 sm:p-6">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="flex overflow-x-auto  ">
-              <div className="flex justify-between gap-2 w-full">
+            <div className="flex overflow-x-auto pb-4 snap-x snap-mandatory hide-scrollbar">
+              <div className="flex gap-4 min-w-full px-2 sm:px-0">
                 {projectStatusList.map((status) => (
                   <BoardColumn
                     key={status.id}

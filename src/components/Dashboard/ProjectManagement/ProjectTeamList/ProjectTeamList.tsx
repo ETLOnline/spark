@@ -35,7 +35,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/src/components/ui/dialog"
-import { MoreHorizontal, PlusCircle } from "lucide-react"
+import { Mail, MailCheck, MoreHorizontal, PlusCircle } from "lucide-react"
 import { Badge } from "@/src/components/ui/badge"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
@@ -106,13 +106,9 @@ export default function ProjectTeamList({
 
   const canChangeUserRole = (targetUser: SelectUser | undefined) => {
     if (!targetUser) return false
-
     if (targetUser.unique_id === authUser?.unique_id) return false
-
     if (isSuperAdmin) return true
-
     if (targetUser.unique_id === projectCreatorId) return false
-
     if (authUser?.unique_id === projectCreatorId) return true
 
     if (isScopedAdminFn(authUser || undefined)) {
@@ -350,23 +346,26 @@ export default function ProjectTeamList({
     : false
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Project Team</h1>
+    <div className="w-full">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h1 className="text-xl md:text-2xl font-bold">Project Team</h1>
         {canCreate && (
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button
+            className="w-full sm:w-auto"
+            onClick={() => setDialogOpen(true)}
+          >
             <PlusCircle className="mr-2 h-4 w-4" /> Add Users
           </Button>
         )}
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="p-4 md:p-6">
           <CardTitle>All Project Users</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <div className="grid grid-cols-12 p-4 bg-muted font-medium">
+        <CardContent className="p-0 md:p-6 md:pt-0">
+          <div className="rounded-none md:rounded-md border-y md:border">
+            <div className="hidden md:grid md:grid-cols-12 p-4 bg-muted font-medium">
               <div className="col-span-4">User</div>
               <div className="col-span-4">Email</div>
               <div
@@ -384,7 +383,7 @@ export default function ProjectTeamList({
             </div>
             <div className="divide-y">
               {usersList.length === 0 ? (
-                <div className="text-center py-6 text-muted-foreground">
+                <div className="text-center py-6 text-muted-foreground text-sm md:text-base">
                   No users in project yet.
                 </div>
               ) : (
@@ -395,10 +394,10 @@ export default function ProjectTeamList({
                   return (
                     <div
                       key={user.unique_id}
-                      className="grid grid-cols-12 p-4 items-center"
+                      className="flex flex-col md:grid md:grid-cols-12 p-4 gap-3 md:gap-0 items-start md:items-center relative"
                     >
-                      <div className="col-span-4 flex items-center gap-3">
-                        <Avatar>
+                      <div className="md:col-span-4 flex items-center gap-3 md:pr-0 w-full md:w-auto">
+                        <Avatar className="h-10 w-10 md:h-10 md:w-10">
                           <AvatarImage
                             src={user.profile_url ?? undefined}
                             alt={user.first_name}
@@ -408,19 +407,23 @@ export default function ProjectTeamList({
                             {user.last_name?.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="font-medium">{user.first_name}</div>
+                        <div className="font-medium truncate">
+                          {user.first_name}
+                        </div>
                       </div>
-                      <div className="col-span-4 text-sm text-muted-foreground">
+
+                      <div className="flex flex-row  gap-2 md:col-span-4 text-sm text-muted-foreground w-full break-all">
+                        <Mail className="block h-[14px] w-[14px] mt-1 md:hidden" />
                         {user.email}
                       </div>
                       <div
                         className={
                           isScopedAdminFn(authUser || undefined) || isSuperAdmin
-                            ? "col-span-3 flex gap-1"
-                            : "col-span-4  gap-1"
+                            ? "md:col-span-3 flex gap-1 w-full md:w-auto"
+                            : "md:col-span-4 flex gap-1 w-full md:w-auto"
                         }
                       >
-                        <div className="flex flex-col items-center">
+                        <div className="flex flex-wrap items-center gap-2">
                           <Badge
                             className="capitalize"
                             variant={
@@ -429,18 +432,23 @@ export default function ProjectTeamList({
                           >
                             {cu.role}
                           </Badge>
-                          {user.unique_id === projectCreatorId ? (
+                          {user.unique_id === projectCreatorId && (
                             <Badge variant="outline">{"(Creator)"}</Badge>
-                          ) : null}
+                          )}
                         </div>
                       </div>
-                      {isScopedAdminFn(authUser || undefined) ||
-                      isSuperAdmin ? (
-                        <div className="col-span-1 text-center">
+
+                      {(isScopedAdminFn(authUser || undefined) ||
+                        isSuperAdmin) && (
+                        <div className="absolute right-4 top-4 md:static md:col-span-1 md:flex md:justify-center">
                           {canChangeUserRole(user) ? (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                >
                                   <MoreHorizontal className="h-4 w-4" />
                                   <span className="sr-only">More options</span>
                                 </Button>
@@ -477,12 +485,12 @@ export default function ProjectTeamList({
                               </DropdownMenuContent>
                             </DropdownMenu>
                           ) : (
-                            <span className="text-muted-foreground text-xs">
+                            <span className="hidden md:inline text-muted-foreground text-xs">
                               -
                             </span>
                           )}
                         </div>
-                      ) : null}
+                      )}
                     </div>
                   )
                 })
@@ -492,9 +500,11 @@ export default function ProjectTeamList({
         </CardContent>
       </Card>
 
-      {/* Add Users Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent
+          className="w-[95vw] sm:max-w-md rounded-lg"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Add Users to Project</DialogTitle>
           </DialogHeader>
@@ -514,16 +524,19 @@ export default function ProjectTeamList({
           </Button>
         </DialogContent>
       </Dialog>
-      {/* Change Role Dialog */}
+
       <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
-        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent
+          className="w-[95vw] sm:max-w-md rounded-lg"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Change User Role</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <Label htmlFor="channel_type">User Role</Label>
-              <div className="w-[70%]">
+              <div className="w-full sm:w-[70%]">
                 <Select
                   onValueChange={(value) => {
                     setNewRoleName(value)
@@ -552,10 +565,10 @@ export default function ProjectTeamList({
           </div>
           <DialogFooter>
             <Button
+              className="w-full sm:w-auto"
               loading={updateProjectUserRoleLoading}
               onClick={handleSaveRole}
             >
-              {" "}
               Save
             </Button>
           </DialogFooter>

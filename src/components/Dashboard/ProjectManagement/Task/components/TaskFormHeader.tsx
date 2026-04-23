@@ -41,8 +41,8 @@ function TaskFormHeader({ selectedTask }: Props) {
   }, [project])
 
   return (
-    <header className=" border-b  px-4 py-3 flex items-center">
-      <nav className="flex items-center text-sm">
+    <header className="border-b px-2 sm:px-4 py-2 sm:py-3 flex items-center pr-8 sm:pr-10">
+      <nav className="flex flex-wrap items-center gap-y-1 text-xs sm:text-sm">
         <Link
           href={
             space
