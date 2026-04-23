@@ -55,7 +55,7 @@ async function Layout({ params, children }: Props) {
 
         <div className="col-span-10 overflow-hidden">
           <div className="grid grid-cols-1 h-full">
-            <ScrollArea className="min-h-full px-2 md:px-4 ">
+            <ScrollArea className="min-h-full px-3 md:px-4 ">
               {children}
             </ScrollArea>
           </div>

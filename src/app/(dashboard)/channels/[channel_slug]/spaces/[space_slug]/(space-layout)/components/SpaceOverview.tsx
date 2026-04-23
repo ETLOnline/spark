@@ -205,7 +205,6 @@ function SpaceOverview({
                     dangerouslySetInnerHTML={{
                       __html: normalizeHTML(content) ?? ""
                     }}
-                    className="break-words overflow-y-auto w-min prose dark:prose-invert max-w-none"
                   />
                 </Card>
               ) : (
@@ -214,7 +213,6 @@ function SpaceOverview({
                     dangerouslySetInnerHTML={{
                       __html: normalizeHTML(content) ?? ""
                     }}
-                    className="break-words overflow-y-auto w-min prose dark:prose-invert max-w-none"
                   />
                 </Card>
               )}

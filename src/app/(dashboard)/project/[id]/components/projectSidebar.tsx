@@ -114,7 +114,7 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
             <Link
               href={`/project/${currProject.id}/${page.key}`}
               key={page.key}
-              onClick={() => setIsSidebarOpen(true)}
+              onClick={() => setIsSidebarOpen(false)}
             >
               <SidebarMenuItem
                 className={`flex flex-row items-center gap-2 p-2 rounded transition-colors

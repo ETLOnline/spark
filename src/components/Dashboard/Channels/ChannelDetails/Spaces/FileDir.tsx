@@ -414,7 +414,7 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
             />
           </div>
 
-          <div className="flex gap-2 w-full sm:w-auto shrink-0">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto shrink-0">
             {/* Upload File Drawer */}
             <Drawer
               open={isNewFileDrawerOpen}
