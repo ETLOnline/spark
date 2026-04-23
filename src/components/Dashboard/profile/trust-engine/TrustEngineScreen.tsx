@@ -91,14 +91,16 @@ export default function TrustEngineScreen() {
     const channelName = `user-${authUser.unique_id}`
     const channel = pusherClient.subscribe(channelName)
 
-    channel.bind("reward_added", () => {
+    const handleRewardAdded = () => {
       fetchAllData()
-    })
+    }
+
+    channel.bind("reward_added", handleRewardAdded)
 
     return () => {
-      pusherClient.unsubscribe(channelName)
+      channel.unbind("reward_added", handleRewardAdded)
     }
-  }, [authUser?.unique_id, fetchAllData])
+  }, [authUser?.unique_id])
 
   const handlePageChange = async (newPage: number) => {
     setCurrentPage(newPage)

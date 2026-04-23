@@ -4,7 +4,7 @@ import React from "react"
 
 function ProjectOverviewPage() {
   return (
-    <ScrollArea className="min-h-full px-2">
+    <ScrollArea className="min-h-full px-3">
       <ProjectOverView />
     </ScrollArea>
   )

@@ -79,7 +79,7 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
         </div>
 
         <Button>
-          <Link href="/profile/trust-engine">View DashBoard</Link>
+          <Link href="/profile/trust-engine">View Dashboard</Link>
         </Button>
       </div>
 

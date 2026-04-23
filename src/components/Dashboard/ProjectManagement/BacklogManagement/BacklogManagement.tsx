@@ -151,22 +151,25 @@ export function BacklogManagement() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h2 className="text-xl font-bold">Backlog</h2>
           {canCreateTask && (
-            <Button onClick={() => setIsTaskModalOpen(true)}>
+            <Button
+              className="w-full sm:w-auto"
+              onClick={() => setIsTaskModalOpen(true)}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Add Item
             </Button>
           )}
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-          <div className="relative w-full sm:w-64 flex">
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-4">
+          <div className="relative w-full xl:w-80 flex shrink-0">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search by title or ticket ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="pl-8 rounded-r-none"
+              className="pl-8 rounded-r-none w-full"
             />
             <Button
               className="rounded-l-none"
@@ -176,15 +179,19 @@ export function BacklogManagement() {
               <Search />
             </Button>
           </div>
-          <div className="flex items-center space-x-2">
-            <TaskFilters
-              projectId={params.id as string}
-              onApplyFilters={handleFilters}
-            />
+
+          <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
+            <div className="flex-1 sm:flex-none">
+              <TaskFilters
+                projectId={params.id as string}
+                onApplyFilters={handleFilters}
+              />
+            </div>
 
             <Button
               variant="outline"
               size="sm"
+              className="flex-1 sm:flex-none h-9"
               onClick={() => setOrderList(orderList === "asc" ? "desc" : "asc")}
             >
               <ArrowUpDown className="mr-2 h-4 w-4" />
@@ -195,7 +202,7 @@ export function BacklogManagement() {
               value={String(limit)}
               onValueChange={(value) => setLimit(Number(value))}
             >
-              <SelectTrigger className="w-20">
+              <SelectTrigger className="w-[80px] h-9 shrink-0">
                 <SelectValue placeholder="Limit" />
               </SelectTrigger>
               <SelectContent>

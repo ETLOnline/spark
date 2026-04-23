@@ -260,7 +260,7 @@ function ProjectFormModal({
           </DialogTrigger>
         )}
         <DialogContent
-          className=""
+          className="max-w-xs sm:max-w-lg"
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>

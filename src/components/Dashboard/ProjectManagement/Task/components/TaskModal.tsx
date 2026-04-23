@@ -36,6 +36,12 @@ interface TaskModalProps {
   isReady?: boolean
   onSubTaskCreate?: (task: SelectTask) => void
   isSprintCompleted?: boolean
+  verificationStatus?: {
+    status: string
+    verification_id: number
+    feedback: string | null
+  } | null
+  onVerificationStatusChange?: (newStatus: string, newFeedback: string) => void
 }
 
 export const TaskModal = ({
@@ -47,7 +53,9 @@ export const TaskModal = ({
   sprintId,
   isReady,
   onSubTaskCreate,
-  isSprintCompleted = false
+  isSprintCompleted = false,
+  verificationStatus,
+  onVerificationStatusChange
 }: TaskModalProps) => {
   const setSelectedTask = useSetAtom(taskStore.selectedTask)
   const [taskIdFromUrl, setTaskIdFromUrl] = useState<string | null>(null)
@@ -152,7 +160,7 @@ export const TaskModal = ({
     <>
       <Dialog open={isTaskModelOpen} onOpenChange={handleClose}>
         <DialogContent
-          className="sm:max-w-5xl [&>button]:w-6 [&>button]:h-6 [&>button>svg]:w-6 [&>button>svg]:h-6"
+          className="w-[95vw] max-w-[95vw] sm:max-w-5xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-3 sm:p-6 [&>button]:w-5 [&>button]:h-5 sm:[&>button]:w-6 sm:[&>button]:h-6 [&>button>svg]:w-5 [&>button>svg]:h-5 sm:[&>button>svg]:w-6 sm:[&>button>svg]:h-6"
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>
@@ -175,6 +183,8 @@ export const TaskModal = ({
             isSprintCompleted={isSprintCompleted}
             refetchComments={refetchComments}
             setRefetchComments={setRefetchComments}
+            verificationStatus={verificationStatus}
+            onVerificationStatusChange={onVerificationStatusChange}
           />
         </DialogContent>
       </Dialog>
