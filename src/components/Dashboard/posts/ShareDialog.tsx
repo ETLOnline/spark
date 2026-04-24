@@ -62,7 +62,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm sm:max-w-md">
+      <DialogContent className="max-w-xs sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Share Post</DialogTitle>
         </DialogHeader>
