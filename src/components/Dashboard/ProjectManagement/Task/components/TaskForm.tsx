@@ -559,6 +559,10 @@ export default function TaskForm({
                 <VerificationPanel
                   verificationStatus={verificationStatus}
                   onStatusChange={onVerificationStatusChange}
+                  isAssignee={
+                    !!selectedTask?.assign_to &&
+                    selectedTask.assign_to === authUser?.unique_id
+                  }
                 />
               )}
 

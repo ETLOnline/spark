@@ -16,11 +16,13 @@ interface Props {
     verification_id: number
     feedback: string | null
   }
+  isAssignee?: boolean
   onStatusChange?: (newStatus: string, newFeedback: string) => void
 }
 
 export default function VerificationPanel({
   verificationStatus,
+  isAssignee = false,
   onStatusChange
 }: Props) {
   const [feedback, setFeedback] = useState<string>(
@@ -40,9 +42,11 @@ export default function VerificationPanel({
   // Once approved, lock permanently — points have been awarded and cannot be undone
   // Rejected can still be re-reviewed and approved
   const isLocked = savedStatus === TrustVerificationStatus.Approved
+  const isRejected = savedStatus === TrustVerificationStatus.Rejected
+  const isReadOnly = isLocked || isAssignee
 
   const handleAction = async (newStatus: string) => {
-    if (isLocked) return
+    if (isLocked || isAssignee) return
 
     const res = await updateVerification(
       verificationStatus.verification_id,
@@ -83,21 +87,40 @@ export default function VerificationPanel({
           border: "1px solid rgba(99,102,241,0.25)"
         }}
       >
-        {/* Locked notice */}
         {isLocked && (
-          <p className="text-xs text-muted-foreground">
-            This verification has been{" "}
-            <span className="text-green-400">approved</span>. Points have
-            already been awarded and cannot be changed.
-          </p>
+          <>
+            <p className="text-xs text-muted-foreground">
+              This verification has been{" "}
+              <span className="text-green-400">approved</span>. Points have
+              already been awarded and cannot be changed.
+            </p>
+            <div className="flex items-center gap-2 text-sm font-medium text-green-400">
+              <ShieldCheck className="h-4 w-4" />
+              Approved
+            </div>
+          </>
         )}
 
-        {/* Current status badge when locked */}
-        {isLocked && (
-          <div className="flex items-center gap-2 text-sm font-medium text-green-400">
-            <ShieldCheck className="h-4 w-4" />
-            Approved
-          </div>
+        {/* Rejected notice */}
+        {isRejected && (
+          <>
+            <p className="text-xs text-muted-foreground">
+              This verification has been{" "}
+              <span className="text-red-400">rejected</span>. Review the
+              feedback below — the reviewer can re-verify once changes are made.
+            </p>
+            <div className="flex items-center gap-2 text-sm font-medium text-red-400">
+              <ShieldX className="h-4 w-4" />
+              Rejected
+            </div>
+          </>
+        )}
+
+        {isAssignee && !isLocked && (
+          <p className="text-xs text-muted-foreground">
+            You are the assignee of this task and cannot verify or reject it.
+            Only the reviewer can take action here.
+          </p>
         )}
 
         {/* Feedback / Recommendation */}
@@ -105,7 +128,7 @@ export default function VerificationPanel({
           <Label className="text-sm text-muted-foreground">
             Feedback / Recommendation
           </Label>
-          {isLocked ? (
+          {isReadOnly ? (
             <div className="bg-background/50 border border-white/10 rounded-md px-3 py-2 text-sm min-h-[90px] whitespace-pre-wrap">
               {savedFeedback || (
                 <span className="text-muted-foreground italic">
@@ -123,8 +146,7 @@ export default function VerificationPanel({
           )}
         </div>
 
-        {/* Action buttons */}
-        {!isLocked && (
+        {!isLocked && !isAssignee && (
           <div className="flex gap-3">
             <Button
               type="button"

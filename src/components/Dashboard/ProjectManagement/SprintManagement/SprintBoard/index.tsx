@@ -24,16 +24,19 @@ import { userStore } from "@/src/store/user/userStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import { SprintStatus, TaskType } from "../../constants/projectManagment"
 
+type VerificationEntry = {
+  status: string
+  verification_id: number
+  feedback: string | null
+}
+
 function SprintBoard() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
 
   const [tasks, setTasks] = useState<SelectTask[]>([])
   const [verificationMap, setVerificationMap] = useState<
-    Record<
-      string,
-      { status: string; verification_id: number; feedback: string | null }
-    >
+    Record<string, VerificationEntry>
   >({})
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
@@ -164,13 +167,21 @@ function SprintBoard() {
     }
   }
 
-  const handleTaskUpdate = async (task: SelectTask) => {
+  const refreshTaskVerification = async (taskId: string) => {
+    const res = await GetTaskVerificationStatusAction(taskId)
+    if (!res?.success) return
+    setVerificationMap((prev) => {
+      if (res.data) return { ...prev, [taskId]: res.data }
+      const next = { ...prev }
+      delete next[taskId]
+      return next
+    })
+  }
+
+  const handleTaskUpdate = (task: SelectTask) => {
     setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
     setSelectedTask(task)
-    const res = await GetTaskVerificationStatusAction(task.id)
-    if (res?.success && res.data) {
-      setVerificationMap((prev) => ({ ...prev, [task.id]: res.data! }))
-    }
+    refreshTaskVerification(task.id)
   }
 
   const handleVerificationStatusChange = (
@@ -231,6 +242,7 @@ function SprintBoard() {
               selectedTask={selectedTask}
               setSelectedTask={setSelectedTask}
               setTasks={setTasks}
+              onTaskVerificationRefresh={refreshTaskVerification}
             />
           )
         })}
