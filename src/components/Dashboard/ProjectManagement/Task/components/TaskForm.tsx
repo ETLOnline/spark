@@ -512,6 +512,22 @@ export default function TaskForm({
                 />
               </div>
 
+              {/* Mobile/Tablet submit button — shown when sidebar stacks below */}
+              {isEditable && (
+                <div className="lg:hidden pl-2">
+                  <Button
+                    type="submit"
+                    form="task-form"
+                    loading={loading}
+                    variant={"outline"}
+                    className="w-full bg-primary text-black"
+                    disabled={loading}
+                  >
+                    {selectedTask ? "Update Task" : "Create Task"}
+                  </Button>
+                </div>
+              )}
+
               {/* Subtasks */}
               <div className="space-y-2 flex flex-col pl-2">
                 <Label className="text-lg sm:text-xl font-semibold">
@@ -559,6 +575,10 @@ export default function TaskForm({
                 <VerificationPanel
                   verificationStatus={verificationStatus}
                   onStatusChange={onVerificationStatusChange}
+                  isAssignee={
+                    !!selectedTask?.assign_to &&
+                    selectedTask.assign_to === authUser?.unique_id
+                  }
                 />
               )}
 
@@ -583,6 +603,7 @@ export default function TaskForm({
 
         {/* Sidebar (right side) */}
         <form
+          id="task-form"
           onSubmit={form.handleSubmit(onSubmit)}
           onKeyDown={(e) => {
             if (e.key === "Enter") e.preventDefault()

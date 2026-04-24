@@ -257,12 +257,15 @@ export const UpdateTaskAction = CreateServerAction(
         const newStatusSlug = UpdatedTask.status?.status_slug
         const assigneeId = UpdatedTask.assign_to
 
-        const shouldCheckInProgress =
-          assigneeId &&
+        const taskIsComplete = meetsCompletionCriteria(UpdatedTask)
+        const wasComplete = meetsCompletionCriteria(oldTask)
+
+        const reachedInProgress =
           oldStatusSlug !== ProjectStatus.InProgress &&
           newStatusSlug === ProjectStatus.InProgress
+        const skippedToComplete = !wasComplete && taskIsComplete
 
-        if (shouldCheckInProgress && assigneeId) {
+        if (assigneeId && (reachedInProgress || skippedToComplete)) {
           await AddTaskRewardAction(
             ActivityTypes.TaskInprogress,
             {
@@ -276,7 +279,6 @@ export const UpdateTaskAction = CreateServerAction(
           )
         }
 
-        const taskIsComplete = meetsCompletionCriteria(UpdatedTask)
         const justCompleted =
           !meetsCompletionCriteria(oldTask) && taskIsComplete
 

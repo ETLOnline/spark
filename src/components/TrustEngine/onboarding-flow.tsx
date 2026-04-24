@@ -188,7 +188,7 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
               </p>
             </div>
             <div className="p-4 border rounded-lg">
-              <p className="text-sm font-medium text-foreground mb-3">
+              <p className="text-sm font-bold text-foreground mb-3">
                 Quick Start Actions:
               </p>
               <ul className="text-sm  space-y-2">

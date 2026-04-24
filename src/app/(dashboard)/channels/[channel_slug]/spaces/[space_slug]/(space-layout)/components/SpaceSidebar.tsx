@@ -359,12 +359,25 @@ function SpaceSidebar({ space }: Props) {
 
   return (
     <div className="w-full">
-      {/* Mobile Sheet Trigger */}
-      <div className="block md:hidden p-2">
+      {/* Mobile top bar: full-width, space name + menu trigger */}
+      <div className="md:hidden flex items-center justify-between gap-2 px-3 py-2 bg-background">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md overflow-hidden">
+            <Avvvatars value={space.space_name} size={32} style="shape" />
+          </div>
+          <div className="font-semibold text-sm sm:text-base truncate min-w-0 uppercase">
+            {space.space_name}
+          </div>
+        </div>
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <Button className="flex items-center gap-2 " size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 shrink-0"
+            >
               <Menu className="h-4 w-4 shrink-0" />
+              <span>Menu</span>
             </Button>
           </SheetTrigger>
           <SheetTitle className="hidden">{space.space_name}</SheetTitle>
