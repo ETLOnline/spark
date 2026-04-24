@@ -147,17 +147,25 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
 
   return (
     <div className="w-full">
-      <div className="block md:hidden p-2">
+      {/* Mobile top bar: full-width, project name + menu trigger */}
+      <div className="md:hidden flex items-center justify-between gap-2 px-3 pb-2 bg-background">
+        <div className="font-semibold text-sm sm:text-base truncate min-w-0 uppercase">
+          {currProject.project_name}
+        </div>
         <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
           <SheetTrigger asChild>
-            <Button className="flex items-center gap-2 " size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 shrink-0"
+            >
               <Menu className="h-4 w-4 shrink-0" />
+              <span>Menu</span>
             </Button>
           </SheetTrigger>
 
           <SheetTitle className="hidden">{currProject.project_name}</SheetTitle>
 
-          {/* Add side="left" here */}
           <SheetContent
             side="left"
             className="p-4 flex flex-col gap-4 overflow-y-auto w-[80vw] sm:w-[350px]"
@@ -171,6 +179,8 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
           </SheetContent>
         </Sheet>
       </div>
+
+      {/* Desktop sidebar column */}
       <div className="hidden md:block">
         <SidebarGroup className="p-0">
           <SidebarGroupLabel>{currProject.project_name}</SidebarGroupLabel>
