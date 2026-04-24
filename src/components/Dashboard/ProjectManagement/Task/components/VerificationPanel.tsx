@@ -25,9 +25,7 @@ export default function VerificationPanel({
   isAssignee = false,
   onStatusChange
 }: Props) {
-  const [feedback, setFeedback] = useState<string>(
-    verificationStatus.feedback ?? ""
-  )
+  const [feedback, setFeedback] = useState<string>("")
   const [savedStatus, setSavedStatus] = useState<string>(
     verificationStatus.status
   )
@@ -58,6 +56,8 @@ export default function VerificationPanel({
       setSavedStatus(newStatus)
       setSavedFeedback(feedback)
       onStatusChange?.(newStatus, feedback)
+      setFeedback("")
+
       toast({
         title: "Verification updated",
         description: `Status set to ${newStatus}`,
@@ -94,9 +94,25 @@ export default function VerificationPanel({
               <span className="text-green-400">approved</span>. Points have
               already been awarded and cannot be changed.
             </p>
-            <div className="flex items-center gap-2 text-sm font-medium text-green-400">
-              <ShieldCheck className="h-4 w-4" />
-              Approved
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-green-400">
+                <ShieldCheck className="h-4 w-4" />
+                Approved
+              </div>
+              <div className="pl-6 border-l-2 border-green-400/50 ml-1.5 py-1 space-y-1">
+                <p className="text-xs font-semibold text-green-400 uppercase tracking-wide">
+                  Feedback
+                </p>
+                {savedFeedback ? (
+                  <p className="text-sm text-foreground/90 whitespace-pre-wrap">
+                    {savedFeedback}
+                  </p>
+                ) : (
+                  <p className="text-sm italic text-muted-foreground">
+                    No approval feedback was provided.
+                  </p>
+                )}
+              </div>
             </div>
           </>
         )}
@@ -109,9 +125,25 @@ export default function VerificationPanel({
               <span className="text-red-400">rejected</span>. Review the
               feedback below — the reviewer can re-verify once changes are made.
             </p>
-            <div className="flex items-center gap-2 text-sm font-medium text-red-400">
-              <ShieldX className="h-4 w-4" />
-              Rejected
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-red-400">
+                <ShieldX className="h-4 w-4" />
+                Rejected
+              </div>
+              <div className="pl-6 border-l-2 border-red-400/50 ml-1.5 py-1 space-y-1">
+                <p className="text-xs font-semibold text-red-400 uppercase tracking-wide">
+                  Reason
+                </p>
+                {savedFeedback ? (
+                  <p className="text-sm text-foreground/90 whitespace-pre-wrap">
+                    {savedFeedback}
+                  </p>
+                ) : (
+                  <p className="text-sm italic text-muted-foreground">
+                    No rejection feedback was provided.
+                  </p>
+                )}
+              </div>
             </div>
           </>
         )}
@@ -123,28 +155,28 @@ export default function VerificationPanel({
           </p>
         )}
 
-        {/* Feedback / Recommendation */}
-        <div className="space-y-1.5">
-          <Label className="text-sm text-muted-foreground">
-            Feedback / Recommendation
-          </Label>
-          {isReadOnly ? (
-            <div className="bg-background/50 border border-white/10 rounded-md px-3 py-2 text-sm min-h-[90px] whitespace-pre-wrap">
-              {savedFeedback || (
+        {/* Feedback / Recommendation — hidden when approved (shown above under status) */}
+        {!isLocked && (
+          <div className="space-y-1.5">
+            <Label className="text-sm text-muted-foreground">
+              Feedback / Recommendation
+            </Label>
+            {isReadOnly ? (
+              <div className="bg-background/50 border border-white/10 rounded-md px-3 py-2 text-sm min-h-[90px] whitespace-pre-wrap">
                 <span className="text-muted-foreground italic">
                   No feedback provided
                 </span>
-              )}
-            </div>
-          ) : (
-            <Textarea
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              placeholder="Add feedback or recommendation..."
-              className="bg-background/50 border-white/10 resize-none min-h-[90px]"
-            />
-          )}
-        </div>
+              </div>
+            ) : (
+              <Textarea
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                placeholder="Add feedback or recommendation..."
+                className="bg-background/50 border-white/10 resize-none min-h-[90px]"
+              />
+            )}
+          </div>
+        )}
 
         {!isLocked && !isAssignee && (
           <div className="flex gap-3">
