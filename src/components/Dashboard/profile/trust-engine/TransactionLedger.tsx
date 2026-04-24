@@ -1,10 +1,11 @@
 "use client"
 
-import { ArrowUpRight } from "lucide-react"
+import { ArrowUpRight, ExternalLink } from "lucide-react"
 import { Badge } from "../../../ui/badge"
 import { Card } from "../../../ui/card"
 import PaginationComponent from "@/src/components/common/Pagination"
 import { formatActivityName } from "@/src/utils/clientHelper"
+import { LinkAsButton } from "@/src/components/LinkAsButton/LinkAsButton"
 
 interface TransactionProps {
   transection_id: number
@@ -12,6 +13,8 @@ interface TransactionProps {
   amount: number
   transection_type: string
   created_at: string
+  trust_verification_id?: number | null
+  metadata?: { proof_url?: string | null } | null
   rule?: {
     action_display_name: string
     category_group: string
@@ -67,6 +70,8 @@ export function TransactionLedger({
 }
 
 function TransactionRow({ transaction }: { transaction: TransactionProps }) {
+  const proofUrl = transaction.metadata?.proof_url ?? null
+  const isVerifiedTask = transaction.trust_verification_id != null && !!proofUrl
   return (
     <div className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
       <div className="p-2 rounded-lg flex items-center justify-center w-10 h-10 border">
@@ -87,6 +92,19 @@ function TransactionRow({ transaction }: { transaction: TransactionProps }) {
         </p>
         <p className="text-xs text-muted-foreground">
           {new Date(transaction.created_at).toLocaleDateString()}
+          {isVerifiedTask && (
+            <LinkAsButton
+              href={proofUrl!}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="link"
+              size="sm"
+              className="h-auto px-2 mt-2"
+            >
+              View task
+              <ExternalLink className="w-3 h-3" />
+            </LinkAsButton>
+          )}
         </p>
       </div>
 

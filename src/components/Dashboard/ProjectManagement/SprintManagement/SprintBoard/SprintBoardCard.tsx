@@ -47,6 +47,7 @@ interface Props {
   selectedTask: SelectTask | null
   setSelectedTask: Dispatch<SetStateAction<SelectTask | null>>
   setTasks: Dispatch<SetStateAction<SelectTask[]>>
+  onTaskVerificationRefresh?: (taskId: string) => void | Promise<void>
 }
 
 function SprintBoardCard({
@@ -57,7 +58,8 @@ function SprintBoardCard({
   setIsTaskModalOpen,
   selectedTask,
   setSelectedTask,
-  setTasks
+  setTasks,
+  onTaskVerificationRefresh
 }: Props) {
   const projectStatusList = useAtomValue(projectStore.projectStatusList)
   const [filters, setFilters] = useState<TaskFiltersType | null>(null)
@@ -147,8 +149,8 @@ function SprintBoardCard({
       return
     }
 
-    const taskId = active.id
-    const overStatusId = over.data?.current?.statusId
+    const taskId = active.id as string
+    const overStatusId = over.data?.current?.statusId as string
 
     let statusChanged = false
     let movedParent: any = null
@@ -179,8 +181,8 @@ function SprintBoardCard({
 
     if (statusChanged) {
       try {
-        const res = await UpdateTaskAction(taskId as string, {
-          status_id: overStatusId as string
+        const res = await UpdateTaskAction(taskId, {
+          status_id: overStatusId
         })
 
         if (res?.success && res.data) {
@@ -188,6 +190,8 @@ function SprintBoardCard({
             title: `Task #${res.data.task_num} status updated successfully`,
             duration: 2000
           })
+
+          onTaskVerificationRefresh?.(taskId)
         }
       } catch (error) {
         setTasks((prev) => {
