@@ -44,6 +44,7 @@ import {
   getTaskCompletionRecipients,
   meetsCompletionCriteria
 } from "@/src/utils/taskRewards"
+import { GetTaskVerificationStatuses } from "@/src/db/data-access/reward/query"
 
 export const CreateTaskAction = CreateServerAction(
   true,
@@ -103,13 +104,55 @@ export const GetBacklogTasksAction = CreateServerAction(
   }
 )
 
+const buildVerificationMap = (
+  rows: {
+    task_id: string
+    status: string
+    verification_id: number
+    feedback: string | null
+  }[]
+): Record<
+  string,
+  { status: string; verification_id: number; feedback: string | null }
+> =>
+  rows.reduce(
+    (map, row) => {
+      if (row.task_id)
+        map[row.task_id] = {
+          status: row.status,
+          verification_id: row.verification_id,
+          feedback: row.feedback ?? null
+        }
+      return map
+    },
+    {} as Record<
+      string,
+      { status: string; verification_id: number; feedback: string | null }
+    >
+  )
+
 export const GetSprintTasksAction = CreateServerAction(
   true,
   async (filters?: taskQueryFilters) => {
     try {
       const tasks: GetTaskResponseType = await GetTasks({ ...filters })
 
-      return { success: true, data: tasks }
+      let verificationMap: Record<
+        string,
+        { status: string; verification_id: number; feedback: string | null }
+      > = {}
+      try {
+        const taskIds = tasks.tasks.map((t) => t.id)
+        const rows = await GetTaskVerificationStatuses(taskIds)
+        verificationMap = buildVerificationMap(rows)
+      } catch (verificationError) {
+        console.error(
+          "GetSprintTasksAction: failed to fetch verification statuses",
+          verificationError
+        )
+      }
+
+      return { success: true, data: { ...tasks, verificationMap } }
     } catch (error) {
       return { error: error }
     }
@@ -138,6 +181,19 @@ export const GetTaskByIdAction = CreateServerAction(
       return { success: true, data: task }
     } catch (error) {
       return { error: error }
+    }
+  }
+)
+
+export const GetTaskVerificationStatusAction = CreateServerAction(
+  true,
+  async (task_id: string) => {
+    try {
+      const rows = await GetTaskVerificationStatuses([task_id])
+      const map = buildVerificationMap(rows)
+      return { success: true, data: map[task_id] ?? null }
+    } catch (error) {
+      return { error }
     }
   }
 )
@@ -201,12 +257,15 @@ export const UpdateTaskAction = CreateServerAction(
         const newStatusSlug = UpdatedTask.status?.status_slug
         const assigneeId = UpdatedTask.assign_to
 
-        const shouldCheckInProgress =
-          assigneeId &&
+        const taskIsComplete = meetsCompletionCriteria(UpdatedTask)
+        const wasComplete = meetsCompletionCriteria(oldTask)
+
+        const reachedInProgress =
           oldStatusSlug !== ProjectStatus.InProgress &&
           newStatusSlug === ProjectStatus.InProgress
+        const skippedToComplete = !wasComplete && taskIsComplete
 
-        if (shouldCheckInProgress && assigneeId) {
+        if (assigneeId && (reachedInProgress || skippedToComplete)) {
           await AddTaskRewardAction(
             ActivityTypes.TaskInprogress,
             {
@@ -220,7 +279,6 @@ export const UpdateTaskAction = CreateServerAction(
           )
         }
 
-        const taskIsComplete = meetsCompletionCriteria(UpdatedTask)
         const justCompleted =
           !meetsCompletionCriteria(oldTask) && taskIsComplete
 

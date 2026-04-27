@@ -41,7 +41,8 @@ export enum ActivityTypes {
   TaskCompletionVerification = "task_completion_verification",
   TaskCompletionReview = "task_completion_review",
   TaskComment = "task_comment",
-  ProjectOverviewUpdate = "project_overview_update"
+  ProjectOverviewUpdate = "project_overview_update",
+  SendConnectionRequest = "send_connection_request"
 }
 
 export const ActivityDisplayNames: Record<string, string> = {
@@ -90,8 +91,9 @@ export const ActivityDisplayNames: Record<string, string> = {
   [ActivityTypes.TaskCompletionVerification]: "Task Completion Verified",
   [ActivityTypes.TaskCompletionReview]: "Task Completion Reviewed",
   [ActivityTypes.TaskComment]: "Task Comment Added",
-  [ActivityTypes.ProjectOverviewUpdate]: "Project Overview Updated"
-};
+  [ActivityTypes.ProjectOverviewUpdate]: "Project Overview Updated",
+  [ActivityTypes.SendConnectionRequest]: "Connection Request Sent"
+}
 
 export enum TrustVerificationStatus {
   Pending = "pending",

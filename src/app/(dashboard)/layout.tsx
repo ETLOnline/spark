@@ -18,14 +18,12 @@ export default async function DashboardLayout({
   }
   const superAdmin = await isSuperAdmin(authUser)
   const hasPersona = await checkUserPersonaCompletion(authUser)
+  const isProfileCompleted = authUser.profile?.is_profile_completed === 1
 
   if (!superAdmin) {
     if (!hasPersona) {
       redirect("/personas")
-    } else if (
-      authUser.profile.is_profile_completed === 0 ||
-      authUser.profile.is_profile_completed === null
-    ) {
+    } else if (!isProfileCompleted) {
       redirect("/profile-complition")
     }
   }

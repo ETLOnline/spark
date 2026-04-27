@@ -14,6 +14,8 @@ import { SendConnectionPushNotification } from "@/src/services/notifications/Con
 import { createContactEmailNotification } from "@/src/services/notify/contact/contact"
 import { NotificationEvent } from "@/src/services/notify/types/events"
 import pusherServer from "@/src/services/realtime/pusherServer"
+import { AddRewardAction } from "../Reward/Reward"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
 
 export const CreateContactAction = CreateServerAction(
   true,
@@ -25,6 +27,8 @@ export const CreateContactAction = CreateServerAction(
       const newRequest = await CreateContact(user.unique_id, contact_id)
       if (!newRequest?.[0])
         return { error: "Failed to create contact", success: false }
+
+      await AddRewardAction(ActivityTypes.SendConnectionRequest, user.unique_id)
 
       await pusherServer.trigger(contact_id, ActivityType.request, {
         ...newRequest[0],

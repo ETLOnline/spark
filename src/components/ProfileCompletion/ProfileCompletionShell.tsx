@@ -21,14 +21,17 @@ export default function ProfileCompletionShell() {
       setIsTrustEngineEnabled(true)
     }
   }
-
   useEffect(() => {
     getFetureFlag()
   }, [])
 
   return (
     <div>
-      {isTrustEngineEnabled && !showProfile ? (
+      {isTrustEngineLoading ? (
+        <div className="flex items-center justify-center h-64">
+          <Loader size={LoaderSizes.lg} />
+        </div>
+      ) : isTrustEngineEnabled && !showProfile ? (
         <OnboardingFlow onFinish={() => setShowProfile(true)} />
       ) : (
         <ProfileCompletionForm />

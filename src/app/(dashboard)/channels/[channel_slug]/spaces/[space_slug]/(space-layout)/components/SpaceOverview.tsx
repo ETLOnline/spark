@@ -112,58 +112,61 @@ function SpaceOverview({
   }
 
   return (
-    <div>
-      <div className="bg-background border-b px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <LayoutDashboard className="w-5 h-5" />
-          <h1 className="text-xl font-semibold">Overview</h1>
+    <div className="w-full">
+      <div className="bg-background border-b px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-2 min-w-0">
+          <LayoutDashboard className="w-5 h-5 shrink-0" />
+          <h1 className="text-lg sm:text-xl font-semibold truncate">
+            Overview
+          </h1>
         </div>
-        <CreateShortcut
-          type="space"
-          entity={{
-            slug: `${encodedChannelSlug}/spaces/${encodedSpaceSlug}`,
-            title: `${space?.space_name}`,
-            entity_id: space?.id
-          }}
-        />
+        <div className="shrink-0">
+          <CreateShortcut
+            type="space"
+            entity={{
+              slug: `${encodedChannelSlug}/spaces/${encodedSpaceSlug}`,
+              title: `${space?.space_name}`,
+              entity_id: space?.id
+            }}
+          />
+        </div>
       </div>
 
-      {/* Content */}
-      <div className="flex flex-col   overflow-auto">
-        {/* Space Details Section */}
-        <div className="flex items-center justify-between border-b p-4">
+      <div className="flex flex-col overflow-auto w-full">
+        <div className="flex items-center justify-between border-b p-4 sm:px-6">
           <div>
-            <h2 className="text-lg font-semibold">Space Details</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-base sm:text-lg font-semibold">
+              Space Details
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Space overview and information
             </p>
           </div>
         </div>
 
-        {/* Stats Card */}
-        <div className="flex flex-col gap-4 p-4">
+        <div className="flex flex-col gap-4 p-4 sm:p-6 w-full">
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Users className="w-4 h-4" />
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-4 sm:gap-6 w-full">
+                  <div className="flex items-center gap-2 text-muted-foreground w-full sm:w-auto">
+                    <Users className="w-4 h-4 shrink-0" />
                     <span className="font-medium text-foreground">
                       {space.users?.length || 0}
                     </span>
                     <span className="text-sm">members</span>
                   </div>
                   {hasAnyFeatureAccess && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <CircleCheckBig className="h-4 w-4 text-green-500" />
+                    <div className="flex items-center gap-2 text-muted-foreground w-full sm:w-auto">
+                      <CircleCheckBig className="h-4 w-4 text-green-500 shrink-0" />
                       <span className="font-medium text-foreground">
                         {features?.length || 0}
                       </span>
                       <span className="text-sm">active features</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Clock className="w-4 h-4 text-blue-500 " />
+                  <div className="flex items-center gap-2 text-muted-foreground w-full sm:w-auto">
+                    <Clock className="w-4 h-4 text-blue-500 shrink-0" />
                     <span className="font-medium text-foreground">
                       {OnlineSpaceUsersCount}
                     </span>
@@ -176,25 +179,26 @@ function SpaceOverview({
             </CardContent>
           </Card>
 
-          {/* Welcome Section */}
-          <div className="space-y-8 rich-editor">
-            <div>
+          <div className="space-y-4 sm:space-y-8 rich-editor w-full overflow-hidden">
+            <div className="w-full">
               {isEditDetail ? (
                 canEditDetails ? (
-                  <div className="space-y-2">
+                  <div className="space-y-4 w-full">
                     <Tiptap value={content} onChange={setContent} />
-                    <Button
-                      className="float-right"
-                      onClick={() => handleEditDetails()}
-                      loading={overviewLoading}
-                    >
-                      Save
-                    </Button>
+                    <div className="flex justify-end">
+                      <Button
+                        className="w-full sm:w-auto"
+                        onClick={() => handleEditDetails()}
+                        loading={overviewLoading}
+                      >
+                        Save
+                      </Button>
+                    </div>
                   </div>
                 ) : null
               ) : canEditDetails ? (
                 <Card
-                  className="p-4 cursor-pointer"
+                  className="p-4 cursor-pointer overflow-x-auto w-full"
                   onClick={() => setIsEditDetail(true)}
                 >
                   <div
@@ -204,7 +208,7 @@ function SpaceOverview({
                   />
                 </Card>
               ) : (
-                <Card className="p-4">
+                <Card className="p-4 overflow-x-auto w-full">
                   <div
                     dangerouslySetInnerHTML={{
                       __html: normalizeHTML(content) ?? ""

@@ -6,10 +6,6 @@ import { Badge } from "../ui/badge"
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
 import {
-  onboardingRewardData,
-  onboardingLevelData
-} from "@/src/utils/constants"
-import {
   CheckCircle,
   Target,
   Award,
@@ -19,26 +15,63 @@ import {
   Sparkles,
   Trophy
 } from "lucide-react"
-import { SelectRewardLevel } from "@/src/db/schema"
+import { SelectActivityRules, SelectRewardLevel } from "@/src/db/schema"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { getRewardLevelsAction } from "@/src/server-actions/Reward/Reward"
+import {
+  getRewardLevelsAction,
+  GetActivityRulesAction
+} from "@/src/server-actions/Reward/Reward"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
+
+// Which activity types to feature in onboarding, with friendly labels
+const FEATURED_ACTIVITIES: { type: ActivityTypes; label: string }[] = [
+  { type: ActivityTypes.ProfileComplete, label: "Complete Your Profile" },
+  { type: ActivityTypes.SocialPost, label: "Share Your First Post" },
+  { type: ActivityTypes.PeerReview, label: "Help Another Member" },
+  { type: ActivityTypes.MilestoneApproval, label: "Complete a Milestone" },
+  { type: ActivityTypes.TaskCompletionVerification, label: "Get Task Verified" }
+]
+
+function formatReward(
+  rule: SelectActivityRules & { reward?: { display_name: string } | null }
+) {
+  const currency = rule.reward?.display_name ?? "Points"
+  return `+${rule.base_points} ${currency}`
+}
 
 export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
   const [currentStep, setCurrentStep] = useState(0)
   const [levels, setLevels] = useState<SelectRewardLevel[]>([])
+  const [rewardRows, setRewardRows] = useState<
+    { label: string; reward: string }[]
+  >([])
 
-  const [getLevelsLoading, , , getLevels] = useServerAction(
-    getRewardLevelsAction
-  )
-
-  const fetchLevels = async () => {
-    const res = await getLevels()
-    if (res?.success && res?.data) setLevels(res.data)
-  }
+  const [, , , getLevels] = useServerAction(getRewardLevelsAction)
+  const [, , , getActivityRules] = useServerAction(GetActivityRulesAction)
 
   useEffect(() => {
-    fetchLevels()
-  }, [fetchLevels])
+    const fetchData = async () => {
+      const [levelsRes, rulesRes] = await Promise.all([
+        getLevels(),
+        getActivityRules()
+      ])
+
+      if (levelsRes?.success && levelsRes.data) setLevels(levelsRes.data)
+
+      if (rulesRes?.success && rulesRes.data) {
+        const rulesMap = new Map(
+          rulesRes.data.map((r: any) => [r.action_type, r])
+        )
+        const rows = FEATURED_ACTIVITIES.flatMap(({ type, label }) => {
+          const rule = rulesMap.get(type)
+          if (!rule) return []
+          return [{ label, reward: formatReward(rule) }]
+        })
+        setRewardRows(rows)
+      }
+    }
+    fetchData()
+  }, [])
 
   const steps = [
     {
@@ -84,13 +117,13 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
         <div className="space-y-4">
           <p>Get rewarded for meaningful contributions:</p>
           <div className="space-y-2">
-            {onboardingRewardData.map((item, i) => (
+            {rewardRows.map((item, i) => (
               <div
                 key={i}
-                className={`p-3 border rounded-lg flex items-center justify-between`}
+                className="p-3 border rounded-lg flex items-center justify-between"
               >
-                <span className="text-sm font-medium">{item.action}</span>
-                <span className="text-sm">{item.reward}</span>
+                <span className="text-sm font-medium">{item.label}</span>
+                <span className="text-sm font-semibold">{item.reward}</span>
               </div>
             ))}
           </div>
@@ -148,11 +181,14 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
                 Ready to Start
               </h4>
               <p>
-                Complete your profile to earn your first 50 reputation points!
+                Complete your profile to earn your first{" "}
+                {rewardRows.find((r) => r.label === "Complete Your Profile")
+                  ?.reward ?? "points"}
+                !
               </p>
             </div>
             <div className="p-4 border rounded-lg">
-              <p className="text-sm font-medium text-foreground mb-3">
+              <p className="text-sm font-bold text-foreground mb-3">
                 Quick Start Actions:
               </p>
               <ul className="text-sm  space-y-2">

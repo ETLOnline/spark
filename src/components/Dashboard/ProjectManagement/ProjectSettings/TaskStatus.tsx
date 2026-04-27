@@ -476,14 +476,21 @@ export default function TaskStatus() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleAddStatus} className="flex gap-2">
+                <form
+                  onSubmit={handleAddStatus}
+                  className="flex flex-col sm:flex-row gap-2"
+                >
                   <Input
                     placeholder="Enter status name..."
                     value={newStatus}
                     onChange={(e) => setNewStatus(e.target.value)}
-                    className="max-w-sm"
+                    className="w-full sm:max-w-sm"
                   />
-                  <Button type="submit" size="sm">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    className="w-full sm:w-auto shrink-0"
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     Add
                   </Button>
@@ -509,7 +516,7 @@ export default function TaskStatus() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="rounded-md overflow-hidden border">
-                  <div className="grid grid-cols-[1fr_100px] font-medium py-2 px-4 bg-muted/50 text-sm">
+                  <div className="grid grid-cols-[1fr_auto] gap-2 font-medium py-2 px-3 sm:px-4 bg-muted/50 text-sm">
                     <div>Status Name</div>
                     <div className="text-right">Actions</div>
                   </div>
@@ -527,15 +534,17 @@ export default function TaskStatus() {
                       {statuses.map((status, index) => (
                         <div
                           key={index}
-                          className="grid grid-cols-[1fr_100px] items-center py-3 px-4 hover:bg-muted/20 transition-colors"
+                          className="grid grid-cols-[1fr_auto] gap-2 items-center py-3 px-3 sm:px-4 hover:bg-muted/20 transition-colors"
                         >
-                          <div className="flex items-center">
-                            <span className="font-medium">{status.name}</span>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-medium break-all">
+                              {status.name}
+                            </span>
                             {projectDefaultStatuses.some(
                               (defaultStatus) =>
                                 defaultStatus.name === status.name
                             ) && (
-                              <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full shrink-0">
                                 Default
                               </span>
                             )}
@@ -544,7 +553,7 @@ export default function TaskStatus() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7"
+                              className="h-7 w-7 sm:h-8 sm:w-8"
                               onClick={() => moveStatus(index, "up")}
                               disabled={
                                 index === 0 ||
@@ -553,13 +562,13 @@ export default function TaskStatus() {
                                 statuses[index - 1].name === "To Do"
                               }
                             >
-                              <ArrowUp className="h-3.5 w-3.5" />
+                              <ArrowUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                               <span className="sr-only">Move up</span>
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7"
+                              className="h-7 w-7 sm:h-8 sm:w-8"
                               onClick={() => moveStatus(index, "down")}
                               disabled={
                                 index === statuses.length - 1 ||
@@ -568,20 +577,20 @@ export default function TaskStatus() {
                                 statuses[index + 1].name === "Done"
                               }
                             >
-                              <ArrowDown className="h-3.5 w-3.5" />
+                              <ArrowDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                               <span className="sr-only">Move down</span>
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7"
+                              className="h-7 w-7 sm:h-8 sm:w-8"
                               onClick={() => handleRemoveStatus(status.name)}
                               disabled={projectDefaultStatuses.some(
                                 (defaultStatus) =>
                                   defaultStatus.name === status.name
                               )}
                             >
-                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-destructive" />
                               <span className="sr-only">Delete</span>
                             </Button>
                           </div>
@@ -600,12 +609,12 @@ export default function TaskStatus() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {statuses.map((status, index) => (
-                    <div key={index} className="flex items-center">
+                    <div key={index} className="flex items-center gap-2">
                       <div
                         key={index}
-                        className={`px-3 py-1.5 rounded-md text-sm border ${
+                        className={`px-3 py-1.5 rounded-md text-sm border truncate max-w-[150px] sm:max-w-none ${
                           projectDefaultStatuses.some(
                             (defaultStatus) =>
                               defaultStatus.name === status.name
@@ -617,7 +626,7 @@ export default function TaskStatus() {
                         {index + 1}. {status.name}
                       </div>
                       {index !== statuses.length - 1 && (
-                        <ArrowBigRightDash className="w-6 h-6 ml-2 text-muted-foreground" />
+                        <ArrowBigRightDash className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground shrink-0" />
                       )}
                     </div>
                   ))}
@@ -626,9 +635,14 @@ export default function TaskStatus() {
             </Card>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-end pt-2 gap-2">
-          <Link href={`/project/${projectId}/board?tab=sprints`}>
-            <Button variant={"outline"}>Go to Project</Button>
+        <CardFooter className="flex flex-col-reverse sm:flex-row justify-end pt-4 gap-2">
+          <Link
+            href={`/project/${projectId}/board?tab=sprints`}
+            className="w-full sm:w-auto"
+          >
+            <Button variant={"outline"} className="w-full">
+              Go to Project
+            </Button>
           </Link>
           {editStatus ? (
             <Button
@@ -665,14 +679,16 @@ export default function TaskStatus() {
             <Loader />
           </div>
         ) : (
-          <DialogContent className="max-w-3xl">
+          <DialogContent className="max-w-3xl w-[95vw]">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-yellow-500" />
-                Delete Status:
-                {removedStatus.length > 0
-                  ? removedStatus[0].name
-                  : "Unknown Status"}
+                <AlertTriangle className="h-5 w-5 text-yellow-500 shrink-0" />
+                <span className="truncate">
+                  Delete Status:{" "}
+                  {removedStatus.length > 0
+                    ? removedStatus[0].name
+                    : "Unknown Status"}
+                </span>
               </DialogTitle>
               <DialogDescription>
                 This status has {tasks.length} tickets assigned to it. Please
@@ -681,8 +697,8 @@ export default function TaskStatus() {
             </DialogHeader>
             {tasks.length > 0 ? (
               <>
-                <div className="max-h-[300px] overflow-y-auto border rounded-md">
-                  <Table>
+                <div className="max-h-[300px] overflow-auto border rounded-md">
+                  <Table className="min-w-[500px]">
                     <TableHeader>
                       <TableRow>
                         <TableHead>Ticket ID</TableHead>
@@ -697,7 +713,7 @@ export default function TaskStatus() {
                           <TableCell>#{task.task_num}</TableCell>
                           <TableCell>{task.task_title}</TableCell>
                           <TableCell className="text-center">
-                            <CircleHelp />
+                            <CircleHelp className="mx-auto" />
                           </TableCell>
                           <TableCell>
                             <Badge variant={"secondary"}>
@@ -720,7 +736,7 @@ export default function TaskStatus() {
                       Select new status for these tickets:
                     </h3>
                     <Select value={newStatusId} onValueChange={setNewStatusId}>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a new status" />
                       </SelectTrigger>
                       <SelectContent>
@@ -745,14 +761,21 @@ export default function TaskStatus() {
               </>
             ) : null}
 
-            <DialogFooter>
-              <Button variant="outline">Cancel</Button>
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 mt-4 sm:mt-0">
+              <Button
+                variant="outline"
+                onClick={() => setIsDeleteStatusModelOpen(false)}
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </Button>
               <Button
                 variant="destructive"
                 onClick={() => {
                   handleUpdateTaskStatus()
                 }}
                 loading={deleteStatusLoading}
+                className="w-full sm:w-auto"
               >
                 {tasks.length > 0 ? "Reassign & Delete" : "Delete"}
               </Button>
@@ -767,10 +790,10 @@ export default function TaskStatus() {
         open={showUnsavedChangesDialog}
         onOpenChange={(open) => setShowUnsavedChangesDialog(open)}
       >
-        <DialogContent>
+        <DialogContent className="w-[95vw] sm:max-w-md rounded-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              <AlertTriangle className="h-5 w-5 text-yellow-500 shrink-0" />
               Unsaved Changes
             </DialogTitle>
             <DialogDescription>
@@ -778,10 +801,11 @@ export default function TaskStatus() {
               or modifying statuses.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 mt-4 sm:mt-0">
             <Button
               variant="outline"
               onClick={() => setShowUnsavedChangesDialog(false)}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
@@ -789,6 +813,7 @@ export default function TaskStatus() {
               onClick={() => {
                 setShowUnsavedChangesDialog(false)
               }}
+              className="w-full sm:w-auto"
             >
               OK
             </Button>

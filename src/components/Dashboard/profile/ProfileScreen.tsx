@@ -1,11 +1,10 @@
 "use client"
 
-import React, { useEffect, useState } from "react" // Added useRef and useState
+import React, { useEffect, useState } from "react"
 import ProfileBio from "@/src/components/Dashboard/profile/profile-bio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   CalendarIcon,
-  MailIcon,
   Plus,
   PencilIcon,
   GraduationCap,
@@ -56,9 +55,11 @@ import { SocialLinkItem } from "./user/SocialLinkItem"
 import UserProfileCard from "./UserProfileCard"
 import TrustEngineCard from "./trust-engine/TrustEngineCard"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
+import { GetUserApprovedVerificationCountAction } from "@/src/server-actions/Reward/Reward"
 import { Input } from "../../ui/input"
 import { Skeleton } from "../../ui/skeleton"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
+
 type ProfileScreenProps = {
   tab?: string
   user: SelectUser
@@ -76,7 +77,7 @@ export default function ProfileScreen({
     UpdateUserProfilePictureAction
   )
   const { user: clerkUser } = useUser()
-  const [currentImageUrl, setCurrentImageUrl] = useState(user?.profile_url) // State to manage current profile image URL
+  const [currentImageUrl, setCurrentImageUrl] = useState(user?.profile_url)
   const [profile, setProfile] = useState(user.profile)
   const [certificates, setCertificates] = useState(user.certificates)
   const [isFeatureEnable, setIsFeatureEnable] = useState(false)
@@ -85,7 +86,7 @@ export default function ProfileScreen({
   const [selectedCertificate, setSelectedCertificate] =
     useState<SelectCertificate | null>(null)
   const [isChangeCoverImageOpen, setIsChangeCoverImageOpen] = useState(false)
-  const [isMyProfile, setIsMyProfile] = useState(false)
+  const [isMyProfile, setIsMyProfile] = useState<boolean | undefined>(undefined)
 
   const [recommendations, setRecommendations] = useState<
     SelectRecommendation[]
@@ -104,6 +105,11 @@ export default function ProfileScreen({
   )
   const [getFeatureFlagLoading, , , GetFeatureFlag] =
     useServerAction(getFeatureFlagAction)
+
+  const [verifiedTaskCount, setVerifiedTaskCount] = useState<number>(0)
+  const [, , , GetVerifiedTaskCount] = useServerAction(
+    GetUserApprovedVerificationCountAction
+  )
 
   useEffect(() => {
     if (authUser && user) {
@@ -197,14 +203,15 @@ export default function ProfileScreen({
     fetchFeatureFlag()
   }, [])
 
-  const userInfo = {
-    userFirstName: displayUser?.first_name || "",
-    userLastName: displayUser?.last_name || "",
-    userEmail: displayUser?.email || "",
-    userProfileUrl: displayUser?.profile_url || null,
-    userBio: displayUser?.profile?.bio || null,
-    userRole: getUserRole(displayUser)
-  }
+  useEffect(() => {
+    const fetchVerifiedCount = async () => {
+      const res = await GetVerifiedTaskCount(user.unique_id)
+      if (res?.success && res.data !== undefined) {
+        setVerifiedTaskCount(res.data)
+      }
+    }
+    fetchVerifiedCount()
+  }, [user.unique_id])
 
   const CopyReferralLink = async () => {
     try {
@@ -234,14 +241,14 @@ export default function ProfileScreen({
 
   return (
     <>
-      <div className="container mx-auto md:p-6 p-2 relative">
+      <div className="container mx-auto p-3 sm:p-6 relative">
         {loading || uploading ? (
           <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-50">
             <Loader size={LoaderSizes.xl} />
           </div>
         ) : null}
         {/* Banner */}
-        <div className="relative sm:h-44 h-36 shadow-sm  rounded-lg">
+        <div className="relative h-32 sm:h-44 shadow-sm rounded-lg">
           {coverImage ? (
             <Image
               src={coverImage}
@@ -249,10 +256,10 @@ export default function ProfileScreen({
               width={1000}
               height={1000}
               objectFit="cover"
-              className="w-full h-36 sm:h-44 rounded-lg"
+              className="w-full h-32 sm:h-44 rounded-lg"
             />
           ) : (
-            <div className=" w-full sm:h-44 h-36 rounded-lg shadow-sm shadow-secondary object-cover cover-pattern" />
+            <div className="w-full h-32 sm:h-44 rounded-lg shadow-sm shadow-secondary object-cover cover-pattern" />
           )}
 
           {/* Change Cover Image Button */}
@@ -267,14 +274,15 @@ export default function ProfileScreen({
           )}
         </div>
         {/* Main Section */}
-        <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-6 mx-16 -mt-16 md:-mt-16">
+        <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mx-2 sm:mx-8 lg:mx-16 -mt-12 sm:-mt-16">
           {/* Left */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             <UserProfileCard
-              userInfo={userInfo}
+              userInfo={displayUser}
               currentImageUrl={currentImageUrl}
               handleCopyUrl={handleCopyUrl}
               onFileChange={handleFileChange}
+              isMyProfile={isMyProfile}
             />
             {/* Trust Engine Section  */}
 
@@ -283,11 +291,12 @@ export default function ProfileScreen({
             <ProfileBio
               userBio={user?.profile?.bio as string}
               tags={profileData?.tags as SelectTag[]}
+              isMyProfile={isMyProfile}
             />
             {/* Recommendations */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+                <CardTitle className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
                   <div className="flex items-center gap-2">
                     Recommendations
                     <p className="flex items-center gap-1 text-muted-foreground">
@@ -318,7 +327,7 @@ export default function ProfileScreen({
                   {recommendations.length > 0 ? (
                     recommendations?.map((recommendation) => (
                       <div
-                        className="flex items-start gap-3"
+                        className="flex flex-col sm:flex-row items-start gap-3"
                         key={recommendation.id}
                       >
                         <Avatar className="h-10 w-10">
@@ -329,8 +338,8 @@ export default function ProfileScreen({
                             {recommendation?.recommender?.first_name || ""}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
+                        <div className="flex-1 w-full">
+                          <div className="flex flex-wrap items-center gap-2">
                             <h4 className="font-medium">
                               {recommendation?.recommender?.first_name}{" "}
                               {recommendation?.recommender?.last_name}
@@ -339,7 +348,7 @@ export default function ProfileScreen({
                               {recommendation.rating}
                               <FlameKindling className="h-4 w-4 text-[#92400e] fill-[#fde68a]" />
                             </span>
-                            <span className="text-sm text-muted-foreground">
+                            <span className="hidden sm:inline text-sm text-muted-foreground">
                               •
                             </span>
                             <span className="text-sm text-muted-foreground">
@@ -366,31 +375,31 @@ export default function ProfileScreen({
             </Card>
           </div>
           {/* Right Column */}
-          <div className="space-y-6">
-            {/* Contact Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <MailIcon className="h-5 w-5 text-gray-500" />
+          <div className="space-y-4 sm:space-y-6">
+            {/* Your Standing Card */}
+            {isFeatureEnable && (
+              <Card className="p-4 sm:p-6 spark-gradient-panel-bg">
+                <CardTitle className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                  {isMyProfile ? "Your Standing" : "Standing"}
+                </CardTitle>
+                <div className="space-y-3">
                   <div>
-                    <h1 className="text-gray-400">Email</h1>
-                    <span className="truncate ">{user?.email}</span>
+                    <div className="text-sm text-muted-foreground mb-1">
+                      Verified Task Completions
+                    </div>
+                    <div className="text-lg font-bold text-primary">
+                      {verifiedTaskCount}
+                    </div>
                   </div>
+                  {/* <div className="border-t">
+                    <div className="text-sm text-muted-foreground pt-3">
+                      Your Percentile Rank
+                    </div>
+                    <div className="text-lg font-bold text-primary">0%</div>
+                  </div> */}
                 </div>
-                {/* for future use */}
-                {/* <div className="flex items-center space-x-2">
-                <PhoneIcon className="h-5 w-5 text-gray-500" />
-                <span>+923001234567</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <MapPinIcon className="h-5 w-5 text-gray-500" />
-                <span>City, Country</span>
-              </div> */}
-              </CardContent>
-            </Card>
+              </Card>
+            )}
 
             {/* Referral Link */}
             {isMyProfile && (
@@ -405,25 +414,28 @@ export default function ProfileScreen({
                       <h1 className="text-gray-400">Link</h1>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="truncate text-sm text-muted-foreground">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <span className="truncate text-sm text-muted-foreground flex-1">
                       {referralLink ? (
                         <Input
-                          type="text w-auto"
+                          type="text"
+                          className="w-full"
                           value={referralLink}
                           readOnly
                         />
                       ) : (
-                        <Skeleton className="h-8 w-32" />
+                        <Skeleton className="h-8 w-full sm:w-32" />
                       )}
                     </span>
                     <Button
                       size="sm"
                       variant="outline"
+                      className="w-full sm:w-auto mt-2 sm:mt-0"
                       onClick={CopyReferralLink}
                       disabled={!referralLink}
                     >
-                      <CopyIcon className="h-4 w-4" />
+                      <CopyIcon className="h-4 w-4 mr-2 sm:mr-0" />
+                      <span className="sm:hidden">Copy Link</span>
                     </Button>
                   </div>
                 </CardContent>
@@ -446,14 +458,14 @@ export default function ProfileScreen({
               <CardContent>
                 <div className="flex items-start gap-3">
                   <GraduationCap className="h-6 w-6 text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <div className="min-w-0 ">
-                    <h4 className="font-medium truncate">
+                  <div className="min-w-0">
+                    <h4 className="font-medium break-words">
                       {profile?.institute}
                     </h4>
-                    <p className="text-sm text-muted-foreground truncate">
+                    <p className="text-sm text-muted-foreground break-words">
                       {profile?.degree}
                     </p>
-                    <div className="flex items-center gap-1 mt-1">
+                    <div className="flex flex-wrap items-center gap-1 mt-1">
                       <CalendarIcon className="h-3 w-3 text-muted-foreground" />
                       <span className="text-xs text-muted-foreground">
                         {profile?.education_start_date} -{" "}
@@ -497,7 +509,6 @@ export default function ProfileScreen({
                     url={profile.personal_website_url}
                   />
                 )}
-
                 {profile?.github_url && (
                   <SocialLinkItem
                     icon={<Github className="h-4 w-4" />}
@@ -505,7 +516,6 @@ export default function ProfileScreen({
                     url={profile.github_url}
                   />
                 )}
-
                 {profile?.linkedin_url && (
                   <SocialLinkItem
                     icon={<Linkedin className="h-4 w-4" />}
@@ -513,7 +523,6 @@ export default function ProfileScreen({
                     url={profile.linkedin_url}
                   />
                 )}
-
                 {profile?.twitter_url && (
                   <SocialLinkItem
                     icon={<Twitter className="h-4 w-4" />}
@@ -521,7 +530,6 @@ export default function ProfileScreen({
                     url={profile.twitter_url}
                   />
                 )}
-
                 {profile?.instagram_url && (
                   <SocialLinkItem
                     icon={<Instagram className="h-4 w-4" />}
@@ -535,26 +543,30 @@ export default function ProfileScreen({
             {/* Qualifications & Certifications */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  Qualifications & Certifications
-                  {isMyProfile && (
-                    <Button
-                      size={"sm"}
-                      variant={"outline"}
-                      onClick={() => setIsQualificationModalOpen(true)}
-                    >
-                      <Plus className=" h-4 w-4" />
-                    </Button>
-                  )}
-                  <CertificateModal
-                    UserId={user.unique_id}
-                    certificates={certificates}
-                    setCertificates={setCertificates}
-                    isDialogOpen={isQualificationModalOpen}
-                    setIsDialogOpen={setIsQualificationModalOpen}
-                    selectedCertificate={selectedCertificate}
-                    setSelectedCertificate={setSelectedCertificate}
-                  />
+                <CardTitle className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+                  <span className="truncate">
+                    Qualifications & Certifications
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {isMyProfile && (
+                      <Button
+                        size={"sm"}
+                        variant={"outline"}
+                        onClick={() => setIsQualificationModalOpen(true)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <CertificateModal
+                      UserId={user.unique_id}
+                      certificates={certificates}
+                      setCertificates={setCertificates}
+                      isDialogOpen={isQualificationModalOpen}
+                      setIsDialogOpen={setIsQualificationModalOpen}
+                      selectedCertificate={selectedCertificate}
+                      setSelectedCertificate={setSelectedCertificate}
+                    />
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -565,19 +577,22 @@ export default function ProfileScreen({
                     )
                     .map((certificate) => (
                       <div className="space-y-1" key={certificate.id}>
-                        <h4 className="font-medium text-sm flex items-center justify-between">
-                          {certificate.title}
+                        <h4 className="font-medium text-sm flex items-start sm:items-center justify-between gap-2">
+                          <span className="break-words flex-1">
+                            {certificate.title}
+                          </span>
                           {isMyProfile && (
                             <Button
                               variant="ghost"
                               size="sm"
+                              className="flex-shrink-0"
                               onClick={() => handleEditCertificate(certificate)}
                             >
-                              <SquarePen className="h-2 w-2" />
+                              <SquarePen className="h-4 w-4 sm:h-2 sm:w-2" />
                             </Button>
                           )}
                         </h4>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground break-words">
                           {certificate.institute}
                         </p>
                         <div className="flex items-center gap-1">
@@ -591,36 +606,13 @@ export default function ProfileScreen({
                 ) : (
                   <div className="w-full">
                     <h4 className="font-medium text-sm flex flex-col items-center justify-center text-muted-foreground text-center">
-                      <ListX className="h-10 w-10 " />
+                      <ListX className="h-10 w-10 mb-2" />
                       No Qualifications & Certifications
                     </h4>
                   </div>
                 )}
               </CardContent>
             </Card>
-
-            {/* Your Standing Card */}
-            {isFeatureEnable && (
-              <Card className="p-6 spark-gradient-panel-bg">
-                <CardTitle className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                  {isMyProfile ? "Your Standing" : "Standing"}
-                </CardTitle>
-                <div className="space-y-3">
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-1">
-                      Community Members
-                    </div>
-                    <div className="text-lg font-bold text-primary">0</div>
-                  </div>
-                  <div className="border-t ">
-                    <div className="text-sm text-muted-foreground  pt-3">
-                      Your Percentile Rank
-                    </div>
-                    <div className="text-lg font-bold text-primary">0%</div>
-                  </div>
-                </div>
-              </Card>
-            )}
           </div>
         </div>
       </div>

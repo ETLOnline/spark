@@ -277,7 +277,10 @@ function CreateSprintModal({
   return (
     <>
       <Dialog open={isCreateSprintOpen} onOpenChange={handleClose}>
-        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent
+          onInteractOutside={(e) => e.preventDefault()}
+          className="max-w-xs sm:max-w-lg"
+        >
           <DialogHeader>
             <DialogTitle>
               {selectedSprint ? "Edit Sprint" : "Create New Sprint"}

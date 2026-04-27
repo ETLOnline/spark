@@ -221,7 +221,13 @@ export async function GetTaskById(taskId: string) {
         assignor: true,
         status: true,
         parentTask: true,
-        subTasks: true,
+        subTasks: {
+          with: {
+            assignee: true,
+            status: true,
+            creator: true
+          }
+        },
         creator: true,
         testedBy: true
       }

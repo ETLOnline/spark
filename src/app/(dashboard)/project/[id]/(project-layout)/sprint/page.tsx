@@ -4,7 +4,7 @@ import React from "react"
 
 function ProjectSprintspage() {
   return (
-    <ScrollArea className="h-full px-2">
+    <ScrollArea className="h-full px-3">
       <SprintManagement />
     </ScrollArea>
   )
