@@ -38,6 +38,7 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
   const setCrumbRoutes = useSetAtom(navStore.crumbRoutes)
   const setPusherChannel = useSetAtom(projectStore.pusherChannel)
   const setCurrSpace = useSetAtom(spaceStore.currentSpace)
+  const setcurrProject = useSetAtom(projectStore.currProject)
 
   const { setOpen: setSideBarCollapse } = useSidebar()
   const pathName = usePathname()
@@ -52,6 +53,10 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
     "PROJECT",
     currProject?.id
   )
+
+  useEffect(() => {
+    if (currProject) setcurrProject(currProject)
+  }, [currProject])
 
   useEffect(() => {
     if (currSpace) setCurrSpace(currSpace)
