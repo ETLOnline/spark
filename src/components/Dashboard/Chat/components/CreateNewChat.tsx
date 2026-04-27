@@ -180,7 +180,6 @@ const CreateNewChat = ({
     const spaceId = currentSpace && isSpacePage ? currentSpace.id : undefined
     const userIds = selectedContacts.map((contact) => contact.value)
 
-    console.log("spaceId:", spaceId)
     try {
       if (isManageMode && currentChat) {
         if (selectedContacts.length === 0) {
