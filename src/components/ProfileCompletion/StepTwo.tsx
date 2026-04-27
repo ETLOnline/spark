@@ -20,7 +20,7 @@ interface StepTwoProps {
   step: number
   setStep: Dispatch<SetStateAction<number>>
   user: SelectUser
-  setUser: Dispatch<SetStateAction<SelectUser | undefined>>
+  setUser: Dispatch<SetStateAction<SelectUser>>
 }
 
 const userQualificationSchema = z

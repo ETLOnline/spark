@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   Card,
   CardContent,
@@ -15,34 +15,39 @@ import { OnboardingCompletion } from "../TrustEngine/OnboardingCompletion"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import { SelectUser } from "@/src/db/schema"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
 import { useRouter } from "next/navigation"
+import Loader from "../common/Loader/Loader"
+import { LoaderSizes } from "../common/types/loader-types"
 
-export default function ProfileCompletionForm() {
+interface ProfileCompletionFormProps {
+  isTrustEngineEnabled: boolean
+  initialUser: SelectUser
+}
+
+export default function ProfileCompletionForm({
+  isTrustEngineEnabled,
+  initialUser
+}: ProfileCompletionFormProps) {
   const [step, setStep] = useState(1)
-  const [user, setUser] = useState<SelectUser>()
-  const [isTrustEngineEnabled, setIsTrustEngineEnabled] = useState(false)
+  const [user, setUser] = useState<SelectUser>(initialUser)
+  const [isLoadingUser, setIsLoadingUser] = useState(false)
+  const isFirstRender = useRef(true)
 
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
     const fetchUserData = async () => {
+      setIsLoadingUser(true)
       const currUser = await AuthUserAction()
-
       if (currUser) {
         setUser(currUser)
       }
+      setIsLoadingUser(false)
     }
     fetchUserData()
   }, [step])
-
-  useEffect(() => {
-    const fetchFeatureFlag = async () => {
-      const res = await getFeatureFlagAction(["Trust_Engine_Enabled"])
-      if (res.success && res.data?.is_enabled) {
-        setIsTrustEngineEnabled(true)
-      }
-    }
-    fetchFeatureFlag()
-  }, [])
 
   const steps = [
     {
@@ -106,35 +111,43 @@ export default function ProfileCompletionForm() {
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {step === 1 && user && (
-          <StepOne
-            step={step}
-            setStep={setStep}
-            user={user}
-            setUser={setUser}
-          />
-        )}
-        {step === 2 && user && (
-          <StepTwo
-            step={step}
-            setStep={setStep}
-            user={user}
-            setUser={setUser}
-          />
-        )}
-        {step === 3 && user && (
-          <StepThree
-            step={step}
-            setStep={setStep}
-            user={user}
-            setUser={setUser}
-          />
-        )}
-        {step === 4 && isTrustEngineEnabled && (
-          <OnboardingCompletion
-            redirectTo="/profile"
-            buttonLabel="Go to Profile"
-          />
+        {isLoadingUser ? (
+          <div className="flex items-center justify-center h-64">
+            <Loader size={LoaderSizes.lg} />
+          </div>
+        ) : (
+          <>
+            {step === 1 && user && (
+              <StepOne
+                step={step}
+                setStep={setStep}
+                user={user}
+                setUser={setUser}
+              />
+            )}
+            {step === 2 && user && (
+              <StepTwo
+                step={step}
+                setStep={setStep}
+                user={user}
+                setUser={setUser}
+              />
+            )}
+            {step === 3 && user && (
+              <StepThree
+                step={step}
+                setStep={setStep}
+                user={user}
+                setUser={setUser}
+              />
+            )}
+            {step === 4 && isTrustEngineEnabled && (
+              <OnboardingCompletion
+                redirectTo="/profile"
+                buttonLabel="Go to Profile"
+              />
+            )}
+          </>
         )}
       </CardContent>
     </Card>

@@ -18,7 +18,7 @@ interface StepThreeProps {
   step: number
   setStep: Dispatch<SetStateAction<number>>
   user: SelectUser
-  setUser: Dispatch<SetStateAction<SelectUser | undefined>>
+  setUser: Dispatch<SetStateAction<SelectUser>>
 }
 
 export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {

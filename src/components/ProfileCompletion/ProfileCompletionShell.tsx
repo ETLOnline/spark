@@ -7,8 +7,15 @@ import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFl
 import { useServerAction } from "@/src/hooks/useServerAction"
 import Loader from "../common/Loader/Loader"
 import { LoaderSizes } from "../common/types/loader-types"
+import { SelectUser } from "@/src/db/schema"
 
-export default function ProfileCompletionShell() {
+interface ProfileCompletionShellProps {
+  initialUser: SelectUser
+}
+
+export default function ProfileCompletionShell({
+  initialUser
+}: ProfileCompletionShellProps) {
   const [showProfile, setShowProfile] = useState(false)
   const [isTrustEngineEnabled, setIsTrustEngineEnabled] = useState(false)
 
@@ -34,7 +41,10 @@ export default function ProfileCompletionShell() {
       ) : isTrustEngineEnabled && !showProfile ? (
         <OnboardingFlow onFinish={() => setShowProfile(true)} />
       ) : (
-        <ProfileCompletionForm />
+        <ProfileCompletionForm
+          isTrustEngineEnabled={isTrustEngineEnabled}
+          initialUser={initialUser}
+        />
       )}
     </div>
   )
