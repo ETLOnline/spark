@@ -15,9 +15,14 @@ import { PaginationType } from "../types/pagination.type"
 interface props {
   pagination: PaginationType
   onPageChange?: (page: number) => void
+  compactOnMobile?: boolean
 }
 
-const PaginationComponent = ({ pagination, onPageChange }: props) => {
+const PaginationComponent = ({
+  pagination,
+  onPageChange,
+  compactOnMobile = false
+}: props) => {
   const pathname = usePathname()
   const query = useSearchParams()
   const urlPage = query.get("page") ? Number(query.get("page")) : 1
@@ -34,11 +39,7 @@ const PaginationComponent = ({ pagination, onPageChange }: props) => {
   const getHref = (p: number) =>
     `${pathname}?page=${p}${isRestQuery ? `&${restQueryParams}` : ""}`
 
-  const handleClick = (
-    e: React.MouseEvent,
-    p: number,
-    disabled: boolean
-  ) => {
+  const handleClick = (e: React.MouseEvent, p: number, disabled: boolean) => {
     if (!onPageChange) return
     e.preventDefault()
     if (!disabled) onPageChange(p)
@@ -46,7 +47,7 @@ const PaginationComponent = ({ pagination, onPageChange }: props) => {
 
   const generatePaginationItems = () => {
     const items = []
-    const maxVisiblePages = 5
+    const maxVisiblePages = compactOnMobile ? 3 : 5
     const halfVisible = Math.floor(maxVisiblePages / 2)
 
     let startPage = Math.max(1, page - halfVisible)
@@ -87,7 +88,11 @@ const PaginationComponent = ({ pagination, onPageChange }: props) => {
             href={onPageChange ? "#" : getHref(i)}
             isActive={i === page}
             onClick={(e) => handleClick(e, i, false)}
-            className="cursor-pointer"
+            className={
+              compactOnMobile
+                ? "h-8 w-8 cursor-pointer p-0 text-xs sm:h-9 sm:w-9 sm:text-sm"
+                : "cursor-pointer"
+            }
           >
             {i}
           </PaginationLink>
@@ -109,7 +114,11 @@ const PaginationComponent = ({ pagination, onPageChange }: props) => {
             href={onPageChange ? "#" : getHref(pagination.totalPages)}
             isActive={pagination.totalPages === page}
             onClick={(e) => handleClick(e, pagination.totalPages, false)}
-            className="cursor-pointer"
+            className={
+              compactOnMobile
+                ? "h-8 w-8 cursor-pointer p-0 text-xs sm:h-9 sm:w-9 sm:text-sm"
+                : "cursor-pointer"
+            }
           >
             {pagination.totalPages}
           </PaginationLink>
@@ -120,16 +129,26 @@ const PaginationComponent = ({ pagination, onPageChange }: props) => {
     return items
   }
 
+  const mobilePreviousNextClass = compactOnMobile
+    ? "h-8 w-8 p-0 sm:h-9 sm:w-9 sm:p-0 lg:h-10 lg:w-auto lg:px-3 [&>span]:hidden lg:[&>span]:inline"
+    : ""
+
   return (
-    <Pagination>
-      <PaginationContent>
+    <Pagination className={compactOnMobile ? "w-full" : undefined}>
+      <PaginationContent
+        className={
+          compactOnMobile
+            ? "flex-wrap justify-center gap-1 sm:gap-2"
+            : undefined
+        }
+      >
         <PaginationItem>
           <PaginationPrevious
             href={onPageChange ? "#" : getHref(page - 1)}
             onClick={(e) => handleClick(e, page - 1, page <= 1)}
-            className={
+            className={`${mobilePreviousNextClass} ${
               page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"
-            }
+            }`}
           />
         </PaginationItem>
 
@@ -141,11 +160,11 @@ const PaginationComponent = ({ pagination, onPageChange }: props) => {
             onClick={(e) =>
               handleClick(e, page + 1, page >= pagination.totalPages)
             }
-            className={
+            className={`${mobilePreviousNextClass} ${
               page === pagination.totalPages
                 ? "pointer-events-none opacity-50"
                 : "cursor-pointer"
-            }
+            }`}
           />
         </PaginationItem>
       </PaginationContent>
