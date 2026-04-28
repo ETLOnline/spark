@@ -98,14 +98,17 @@ export default function ProfileScreen({
   const [referralLink, setReferralLink] = useState("")
   const authUser = useAtomValue(userStore.AuthUser)
 
-  const displayUser = isMyProfile && authUser ? authUser : user
-  const displayUserWithBio = {
-    ...displayUser,
-    profile: {
-      ...(displayUser?.profile || {}),
-      bio: displayUser?.profile?.bio || profile?.bio || user?.profile?.bio || ""
-    }
-  } as SelectUser
+  const displayUser: SelectUser =
+    isMyProfile && authUser
+      ? ({
+          ...authUser,
+          profile: {
+            ...(authUser.profile || {}),
+            bio:
+              authUser.profile?.bio || profile?.bio || user?.profile?.bio || ""
+          }
+        } as SelectUser)
+      : user
 
   const [recommendationLoading, , , GetRecommendations] = useServerAction(
     GetRecommendationAction
@@ -285,7 +288,7 @@ export default function ProfileScreen({
           {/* Left */}
           <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             <UserProfileCard
-              userInfo={displayUserWithBio}
+              userInfo={displayUser}
               currentImageUrl={currentImageUrl}
               handleCopyUrl={handleCopyUrl}
               onFileChange={handleFileChange}
@@ -296,7 +299,7 @@ export default function ProfileScreen({
             {isFeatureEnable && <TrustEngineCard user={user} />}
 
             <ProfileBio
-              userBio={displayUserWithBio?.profile?.bio as string}
+              userBio={displayUser?.profile?.bio as string}
               tags={profileData?.tags as SelectTag[]}
               isMyProfile={isMyProfile}
             />
