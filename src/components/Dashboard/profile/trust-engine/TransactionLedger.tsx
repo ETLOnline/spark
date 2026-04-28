@@ -38,34 +38,41 @@ export function TransactionLedger({
   const data = Array.isArray(TransactionsData) ? TransactionsData : []
 
   return (
-    <Card className="flex flex-col p-4 sm:p-6 ">
+    <Card className="flex min-h-0 flex-col p-2 sm:p-6 overflow-hidden max-h-[calc(100vh-12rem)] md:max-h-[calc(100vh-40rem)] lg:max-h-[calc(100vh-40rem)] xl:max-h-none">
       <h3 className="font-semibold text-foreground mb-4">
         Transaction History
       </h3>
 
-      <div className="space-y-2 overflow-y-auto pr-1 max-h-[42svh] sm:space-y-3 sm:max-h-[57svh] md:max-h-[39svh] lg:max-h-none lg:overflow-visible ">
-        {data.map((transaction) => (
-          <TransactionRow
-            key={transaction.transection_id}
-            transaction={transaction}
-          />
-        ))}
-        {data.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            No transactions found.
-          </p>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1 sm:space-y-3">
+          {data.map((transaction) => (
+            <TransactionRow
+              key={transaction.transection_id}
+              transaction={transaction}
+            />
+          ))}
+          {data.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              No transactions found.
+            </p>
+          )}
+        </div>
+
+        {totalPages > 1 && (
+          <div className="mt-auto shrink-0 border-t pt-4 bg-background/95">
+            <PaginationComponent
+              pagination={{
+                page: currentPage,
+                totalPages,
+                total: 0,
+                limit: 10
+              }}
+              onPageChange={onPageChange}
+              compactOnMobile={true}
+            />
+          </div>
         )}
       </div>
-
-      {totalPages > 1 && (
-        <div className="mt-4 shrink-0 border-t pt-4 sm:mt-6">
-          <PaginationComponent
-            pagination={{ page: currentPage, totalPages, total: 0, limit: 10 }}
-            onPageChange={onPageChange}
-            compactOnMobile={true}
-          />
-        </div>
-      )}
     </Card>
   )
 }
@@ -74,7 +81,7 @@ function TransactionRow({ transaction }: { transaction: TransactionProps }) {
   const proofUrl = transaction.metadata?.proof_url ?? null
   const isVerifiedTask = transaction.trust_verification_id != null && !!proofUrl
   return (
-    <div className="flex flex-col gap-2 rounded-lg bg-muted/30 p-3 transition-colors hover:bg-muted/50 sm:flex-row sm:items-start sm:gap-4 sm:p-4">
+    <div className="flex gap-2 rounded-lg bg-muted/30 p-3 transition-colors hover:bg-muted/50 sm:flex-row sm:items-start sm:gap-4 sm:p-4">
       <div className="p-2 rounded-lg flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 border shrink-0">
         <ArrowUpRight className="w-4 h-4" />
       </div>
