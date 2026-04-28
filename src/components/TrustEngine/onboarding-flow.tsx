@@ -31,14 +31,13 @@ export function OnboardingFlow({ onFinish }: { onFinish?: () => void }) {
     getRewardLevelsAction
   )
 
-  const fetchLevels = async () => {
-    const res = await getLevels()
-    if (res?.success && res?.data) setLevels(res.data)
-  }
-
   useEffect(() => {
+    const fetchLevels = async () => {
+      const res = await getLevels()
+      if (res?.success && res?.data) setLevels(res.data)
+    }
     fetchLevels()
-  }, [fetchLevels])
+  }, [])
 
   const steps = [
     {

@@ -68,7 +68,6 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
             : "Profile data saved successfully",
           duration: 2000
         })
-
         if (!submitDataLoading) {
           setStep(4) // Go to completion step
         }
