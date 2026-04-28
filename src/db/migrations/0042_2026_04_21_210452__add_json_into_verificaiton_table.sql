@@ -1,0 +1,1 @@
+ALTER TABLE "trust_verification" ADD COLUMN "metadata" jsonb;

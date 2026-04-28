@@ -158,7 +158,7 @@ export default function ChannelUserList({
       )
       setFilteredUsers(filtered)
     }
-  }, [searchQuery, usersList, entityType]) // Added entityType to dependencies
+  }, [searchQuery, usersList, entityType])
 
   const entityName =
     entityType === "channel"
@@ -418,10 +418,15 @@ export default function ChannelUserList({
     return false
   }
 
+  const showActions = isScopedAdminFn(authUser || undefined) || isSuperAdmin
+  const mobileGridCols = showActions
+    ? "grid-cols-[1fr_auto_auto]"
+    : "grid-cols-[1fr_auto]"
+
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center space-x-2">
+    <div className="p-4 md:p-6 w-full max-w-full overflow-hidden">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 w-full">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto min-w-0">
           <Link
             href={
               entityType === "community"
@@ -430,30 +435,38 @@ export default function ChannelUserList({
                   ? `/channels/${(entity as SelectChannel).channel_slug}/spaces`
                   : `/channels/${(entity as SelectSpace).channel?.channel_slug}/spaces/${(entity as SelectSpace).space_slug}`
             }
+            className="truncate max-w-full"
           >
-            <h1 className="text-2xl font-bold">{entityName}</h1>
+            <h1 className="text-xl md:text-2xl font-bold truncate">
+              {entityName}
+            </h1>
           </Link>
-          <ArrowBigRightDash />
-          <h1 className="text-2xl font-bold">User Management</h1>
+          <ArrowBigRightDash className="shrink-0 text-muted-foreground hidden sm:block" />
+          <h1 className="text-xl md:text-2xl font-bold shrink-0">
+            User Management
+          </h1>
         </div>
         {canInviteUser && (
-          <Button onClick={() => setIsInviteDialogOpen(true)}>
+          <Button
+            onClick={() => setIsInviteDialogOpen(true)}
+            className="w-full sm:w-auto shrink-0"
+          >
             <UserPlus className="mr-2 h-4 w-4" />
             Invite User
           </Button>
         )}
       </div>
 
-      <Card>
+      <Card className="w-full overflow-hidden">
         <CardHeader className="pb-3">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <CardTitle>All Users</CardTitle>
-            <div className="relative">
+            <div className="relative w-full sm:w-auto shrink-0">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Search users..."
-                className="pl-8 w-[250px]"
+                className="pl-8 w-full sm:w-[250px]"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -464,36 +477,37 @@ export default function ChannelUserList({
             total.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <div className="grid grid-cols-12 px-2 py-4 bg-muted font-medium">
-              <div className="col-span-4 lg:col-span-3">User</div>
-              <div className="col-span-4 lg:col-span-4">Email</div>
-              <div
-                className={
-                  isScopedAdminFn(authUser || undefined) || isSuperAdmin
-                    ? "col-span-3 lg:col-span-4"
-                    : "col-span-4 lg:col-span-5 text-center"
-                }
-              >
-                Role
+        <CardContent className="p-0 sm:p-6 sm:pt-0 overflow-x-auto w-full">
+          <div className="rounded-md border min-w-full w-full">
+            {/* Table Header */}
+            <div
+              className={`hidden md:grid ${mobileGridCols} md:grid-cols-12 px-4 py-3 bg-muted font-medium border-b w-full`}
+            >
+              <div className={showActions ? "md:col-span-4" : "md:col-span-5"}>
+                User
               </div>
-              {isScopedAdminFn(authUser || undefined) || isSuperAdmin ? (
-                <div className="col-span-1">Actions</div>
-              ) : null}
+              <div className="hidden md:block md:col-span-4">Email</div>
+              <div className="md:col-span-3 text-center md:text-left">Role</div>
+              {showActions && (
+                <div className="md:col-span-1 text-center">Actions</div>
+              )}
             </div>
 
-            <div className="divide-y">
+            {/* Table Body */}
+            <div className="divide-y w-full">
               {filteredUsers.map((cu) => {
                 const user = cu.user
                 if (!user) return null
                 return (
                   <div
                     key={user.unique_id}
-                    className="grid grid-cols-12 px-2  py-4 items-center"
+                    className={`grid ${mobileGridCols} md:grid-cols-12 px-3 sm:px-4 py-4 items-center gap-3 md:gap-0 w-full`}
                   >
-                    <div className="col-span-3  lg:col-span-3 flex items-center gap-2">
-                      <Avatar>
+                    {/* User Info */}
+                    <div
+                      className={`flex items-center gap-3 min-w-0 ${showActions ? "md:col-span-4" : "md:col-span-5"}`}
+                    >
+                      <Avatar className="h-9 w-9 md:h-10 md:w-10 shrink-0">
                         <AvatarImage
                           src={user.profile_url || undefined}
                           alt={user.first_name}
@@ -503,50 +517,56 @@ export default function ChannelUserList({
                           {user.first_name.split(" ")[1]?.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="font-medium text-sm lg:text-base">
-                        {user.first_name}
+                      <div className="flex flex-col min-w-0">
+                        <div className="font-medium text-sm lg:text-base truncate">
+                          {user.first_name}
+                        </div>
+                        <div className="text-xs text-muted-foreground md:hidden truncate">
+                          {user.email}
+                        </div>
                       </div>
                     </div>
-                    <div className="col-span-3 lg:col-span-4 text-xs lg:text-sm text-muted-foreground">
+
+                    {/* Email (Desktop Only) */}
+                    <div className="hidden md:block md:col-span-4 text-xs lg:text-sm text-muted-foreground truncate pr-2">
                       {user.email}
                     </div>
 
-                    <div
-                      className={
-                        isScopedAdminFn(authUser || undefined) || isSuperAdmin
-                          ? "col-span-3 lg:col-span-4 flex gap-1"
-                          : "col-span-4 lg:col-span-5"
-                      }
-                    >
-                      <div className="flex flex-col items-center ga">
+                    {/* Role */}
+                    <div className="md:col-span-3 flex flex-col items-end md:items-start justify-center gap-1 min-w-0 shrink-0">
+                      <Badge
+                        className="capitalize text-[10px] sm:text-xs text-center truncate max-w-[80px] sm:max-w-full"
+                        variant={
+                          cu.role === SpaceUserRole.Admin
+                            ? "default"
+                            : "outline"
+                        }
+                        title={cu.role || ""}
+                      >
+                        {cu.role && cu.role.length > 15
+                          ? cu.role.slice(0, 15) + "..."
+                          : cu.role}
+                      </Badge>
+                      {entityCreatorId === user.unique_id && (
                         <Badge
-                          className="capitalize"
-                          variant={
-                            cu.role === SpaceUserRole.Admin
-                              ? "default"
-                              : "outline"
-                          }
+                          variant="outline"
+                          className="text-[9px] sm:text-[10px]"
                         >
-                          {cu.role && cu.role.length > 25
-                            ? cu.role.slice(0, 25) + "..."
-                            : cu.role}
+                          Creator
                         </Badge>
-                        {entityCreatorId === user.unique_id && (
-                          <Badge variant="outline">{"(Creator)"}</Badge>
-                        )}
-                      </div>
+                      )}
                     </div>
 
                     {/* Actions */}
-                    {isScopedAdminFn(authUser || undefined) || isSuperAdmin ? (
-                      <div className="col-span-1 flex justify-center">
+                    {showActions && (
+                      <div className="md:col-span-1 flex justify-end md:justify-center shrink-0 pl-2 md:pl-0">
                         {canChangeUserRole(user) ? (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8"
+                                className="h-8 w-8 shrink-0"
                               >
                                 <MoreHorizontal className="h-4 w-4" />
                                 <span className="sr-only">More options</span>
@@ -581,18 +601,18 @@ export default function ChannelUserList({
                             </DropdownMenuContent>
                           </DropdownMenu>
                         ) : (
-                          <span className="text-muted-foreground text-xs">
+                          <span className="text-muted-foreground text-xs mx-auto">
                             -
                           </span>
                         )}
                       </div>
-                    ) : null}
+                    )}
                   </div>
                 )
               })}
 
               {filteredUsers.length === 0 && (
-                <div className="text-center py-6 text-muted-foreground">
+                <div className="text-center py-8 text-muted-foreground text-sm">
                   No users found matching your search.
                 </div>
               )}
@@ -605,21 +625,24 @@ export default function ChannelUserList({
         open={changeRoleModelVisibility}
         onOpenChange={setChangeRoleModelVisibility}
       >
-        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent
+          className="w-[95vw] sm:max-w-md rounded-lg"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Change User Role</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 w-full">
               <Label htmlFor="channel_type">User Role</Label>
-              <div className="w-[70%]">
+              <div className="w-full sm:w-[70%] shrink-0">
                 <Select
                   onValueChange={(value) => {
                     setSelectedRoleName(value)
                   }}
                   defaultValue={selectedUser?.role || ""}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue
                       className="capitalize"
                       placeholder="Select Role"
@@ -636,8 +659,9 @@ export default function ChannelUserList({
               </div>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="mt-2 sm:mt-0">
             <Button
+              className="w-full sm:w-auto"
               loading={updateEntityUserRoleLoading}
               onClick={() => {
                 if (selectedUser?.user_id) {
@@ -652,16 +676,19 @@ export default function ChannelUserList({
       </Dialog>
 
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[95vw] sm:max-w-md rounded-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action will remove the user from {entityName}.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="flex flex-col sm:flex-row gap-2 mt-4 sm:mt-0">
+            <AlertDialogCancel className="w-full sm:w-auto m-0">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
+              className="w-full sm:w-auto m-0"
               onClick={() => {
                 if (selectedUser?.user_id) {
                   handleRemoveUser(selectedUser.user_id, entity.id)
@@ -679,7 +706,7 @@ export default function ChannelUserList({
         open={isInviteDialogOpen}
         onOpenChange={setIsInviteDialogOpen}
         spaceName="Platform"
-        type={["link","email"]}
+        type={["link", "email"]}
         entityType={entityType}
         entity={entity}
       />

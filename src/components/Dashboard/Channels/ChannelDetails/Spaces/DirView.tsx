@@ -138,9 +138,10 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
     (item) =>
       (item.type === "file" || item.type === "folder") && canDeleteFile(item)
   )
-  const gridCols = hasActions
-    ? "grid-cols-[auto_1fr_auto_auto_auto]"
-    : "grid-cols-[auto_1fr_auto_auto]"
+
+  const gridColsClasses = hasActions
+    ? "grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto_auto]"
+    : "grid-cols-[auto_1fr] md:grid-cols-[auto_1fr_auto_auto]"
 
   const filteredItems = getItemsAtCurrPath().filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -193,128 +194,144 @@ const DirView: React.FC<DirViewProps> = ({ navigateToFolder, searchQuery }) => {
   }, [folderItems, getDirContent, toast])
 
   return (
-    <div className="p-4">
-      <div
-        className={`grid ${gridCols} gap-4 font-medium text-sm text-muted-foreground mb-2 px-2`}
-      >
-        <div>Type</div>
-        <div>Name</div>
-        <div className="text-center w-20">Size</div>
-        <div className="text-center w-24">Last Updated</div>
-        {hasActions && <div className="text-center w-16">Actions</div>}
-      </div>
+    <div className="p-2 md:p-4 w-full overflow-x-auto">
+      <div className="min-w-full flex flex-col">
+        <div
+          className={`grid ${gridColsClasses} gap-2 md:gap-4 font-medium text-sm text-muted-foreground mb-2 px-2`}
+        >
+          <div>Type</div>
+          <div>Name</div>
+          <div className="text-center w-20 hidden md:block">Size</div>
+          <div className="text-center w-24 hidden md:block">Last Updated</div>
+          {hasActions && (
+            <div className="text-center w-12 sm:w-16">Actions</div>
+          )}
+        </div>
 
-      <div className="divide-y">
-        {filteredItems.length === 0 ? (
-          <div className="py-8 text-center text-muted-foreground">
-            {searchQuery
-              ? "No matching files or folders"
-              : "This folder is empty."}
-          </div>
-        ) : (
-          filteredItems.map((item) => (
-            <div
-              key={item.id}
-              className={`grid ${gridCols} gap-4 items-center py-3 px-2 hover:bg-muted/50 rounded-md`}
-            >
-              <div className="flex items-center justify-center w-10 h-10">
-                {item.type === "folder" ? (
-                  <Folder className="h-6 w-6 text-blue-500" />
-                ) : (
-                  <File className="h-6 w-6 text-gray-500" />
-                )}
-              </div>
-              <div
-                className={`font-medium truncate ${
-                  item.type === "folder"
-                    ? "cursor-pointer hover:text-primary"
-                    : ""
-                }`}
-                onClick={() =>
-                  item.type === "folder" && navigateToFolder(item.path)
-                }
-              >
-                {item.type === "file" && item.url ? (
-                  <Link
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {item.name}
-                  </Link>
-                ) : (
-                  item.name
-                )}
-              </div>
-              <div className="text-sm text-muted-foreground text-center w-20">
-                {item.type === "folder"
+        <div className="divide-y w-full">
+          {filteredItems.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground">
+              {searchQuery
+                ? "No matching files or folders"
+                : "This folder is empty."}
+            </div>
+          ) : (
+            filteredItems.map((item) => {
+              const itemSizeText =
+                item.type === "folder"
                   ? folderSizes[item.id] !== undefined
                     ? folderSizes[item.id] > 0
                       ? formatFileSize(folderSizes[item.id])
-                      : "-" // empty folder
+                      : "-"
                     : "-"
                   : item.size
                     ? item.size
-                    : "-"}
-              </div>
-              <div className="text-center w-24">
-                <span className="text-sm text-muted-foreground">
-                  {item.updatedAt}
-                </span>
-              </div>
-              {hasActions && (
-                <div className="flex items-center justify-center w-16">
-                  {(item.type === "file" ||
-                    item.type === "folder" ||
-                    authUser?.unique_id === item.created_by) &&
-                    canDeleteFile(item) && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            title="Delete"
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-2 text-destructive hover:text-destructive"
-                            onClick={() => setSelectedFileId(item.id)}
-                          >
-                            <Trash className="h-4 w-4 mr-1" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              {selectedItem?.type === "folder"
-                                ? "Delete Folder"
-                                : "Delete File"}
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              {selectedItem?.type === "folder"
-                                ? `Are you sure you want to delete "${selectedFileName}" and all its children? This action cannot be undone.`
-                                : `Are you sure you want to delete "${selectedFileName}"? This action cannot be undone.`}
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel
-                              onClick={() => setSelectedFileId(null)}
-                            >
-                              Cancel
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={handleDeleteConfirm}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              disabled={deleteFileLoading}
-                            >
-                              {deleteFileLoading ? "Deleting..." : "Delete"}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                    : "-"
+
+              return (
+                <div
+                  key={item.id}
+                  className={`grid ${gridColsClasses} gap-2 md:gap-4 items-center py-3 px-2 hover:bg-muted/50 rounded-md w-full`}
+                >
+                  <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 shrink-0">
+                    {item.type === "folder" ? (
+                      <Folder className="h-5 w-5 md:h-6 md:w-6 text-blue-500 shrink-0" />
+                    ) : (
+                      <File className="h-5 w-5 md:h-6 md:w-6 text-gray-500 shrink-0" />
                     )}
+                  </div>
+                  <div
+                    className={`font-medium truncate min-w-0 ${
+                      item.type === "folder"
+                        ? "cursor-pointer hover:text-primary"
+                        : ""
+                    }`}
+                    onClick={() =>
+                      item.type === "folder" && navigateToFolder(item.path)
+                    }
+                  >
+                    {item.type === "file" && item.url ? (
+                      <Link
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block truncate"
+                      >
+                        {item.name}
+                      </Link>
+                    ) : (
+                      <span className="block truncate">{item.name}</span>
+                    )}
+                    {/* Mobile Size and Date info */}
+                    <div className="flex md:hidden text-xs text-muted-foreground mt-1 gap-3">
+                      <span>{itemSizeText}</span>
+                      <span>{item.updatedAt}</span>
+                    </div>
+                  </div>
+                  <div className="text-sm text-muted-foreground text-center w-20 hidden md:block shrink-0">
+                    {itemSizeText}
+                  </div>
+                  <div className="text-center w-24 hidden md:block shrink-0">
+                    <span className="text-sm text-muted-foreground">
+                      {item.updatedAt}
+                    </span>
+                  </div>
+                  {hasActions && (
+                    <div className="flex items-center justify-center w-12 sm:w-16 shrink-0">
+                      {(item.type === "file" ||
+                        item.type === "folder" ||
+                        authUser?.unique_id === item.created_by) &&
+                        canDeleteFile(item) && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                title="Delete"
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 px-0 sm:px-2 text-destructive hover:text-destructive"
+                                onClick={() => setSelectedFileId(item.id)}
+                              >
+                                <Trash className="h-4 w-4 shrink-0" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="w-[95vw] sm:max-w-md rounded-lg">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  {selectedItem?.type === "folder"
+                                    ? "Delete Folder"
+                                    : "Delete File"}
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {selectedItem?.type === "folder"
+                                    ? `Are you sure you want to delete "${selectedFileName}" and all its children? This action cannot be undone.`
+                                    : `Are you sure you want to delete "${selectedFileName}"? This action cannot be undone.`}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
+                                <AlertDialogCancel
+                                  onClick={() => setSelectedFileId(null)}
+                                  className="w-full sm:w-auto"
+                                >
+                                  Cancel
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={handleDeleteConfirm}
+                                  className="w-full sm:w-auto bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  disabled={deleteFileLoading}
+                                >
+                                  {deleteFileLoading ? "Deleting..." : "Delete"}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          ))
-        )}
+              )
+            })
+          )}
+        </div>
       </div>
     </div>
   )

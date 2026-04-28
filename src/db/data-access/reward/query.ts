@@ -1,4 +1,4 @@
-import { and, between, count, eq, gt, lte, sql } from "drizzle-orm"
+import { and, between, count, eq, gt, inArray, lte, sql } from "drizzle-orm"
 import { db } from "../.."
 import {
   activityRulesTable,
@@ -76,6 +76,21 @@ export async function GetLedgerEntryByUserAndRule(
       }
     })
     return res
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function GetUserApprovedVerificationCount(user_id: string) {
+  try {
+    return await db.$count(
+      trustVerificationTable,
+      and(
+        eq(trustVerificationTable.user_id, user_id),
+        eq(trustVerificationTable.status, "approved"),
+        sql`${trustVerificationTable.metadata}->>'task_id' IS NOT NULL`
+      )
+    )
   } catch (e: any) {
     throw new Error(e.message)
   }
@@ -247,6 +262,38 @@ export async function GetRewardLevels() {
   try {
     const res = await db.query.rewardLevelTable.findMany()
     return res
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function GetActivityRules() {
+  try {
+    const res = await db.query.activityRulesTable.findMany({
+      where: eq(activityRulesTable.is_active, true),
+      with: { reward: true }
+    })
+    return res
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
+export async function GetTaskVerificationStatuses(task_ids: string[]) {
+  if (!task_ids.length) return []
+
+  try {
+    const taskIdExpr = sql<string>`(${trustVerificationTable.metadata}->>'task_id')`
+
+    return await db
+      .select({
+        task_id: taskIdExpr,
+        status: trustVerificationTable.status,
+        verification_id: trustVerificationTable.verification_id,
+        feedback: trustVerificationTable.feedback
+      })
+      .from(trustVerificationTable)
+      .where(inArray(taskIdExpr, task_ids))
   } catch (e: any) {
     throw new Error(e.message)
   }

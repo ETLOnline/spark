@@ -105,7 +105,8 @@ export function TrustOverView({
         </div>
       </Card>
 
-      <Card className="p-6">
+      {/* For future use */}
+      {/* <Card className="p-6">
         <h4 className="font-semibold text-foreground mb-4">Trust Breakdown</h4>
         <div className="space-y-3">
           <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
@@ -133,7 +134,7 @@ export function TrustOverView({
             <span className="text-sm font-medium text-foreground">88%</span>
           </div>
         </div>
-      </Card>
+      </Card> */}
     </div>
   )
 }

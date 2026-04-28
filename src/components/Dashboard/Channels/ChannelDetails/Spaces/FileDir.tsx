@@ -66,7 +66,6 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
   const authUser = useAtomValue(userStore.AuthUser)
 
   const [fileData, setFileData] = useState<FileData | null>(null)
-
   const [searchQuery, setSearchQuery] = useState("")
 
   const searchParams = useSearchParams()
@@ -75,7 +74,6 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
     useServerAction(CreateNewFileAction)
 
   const newFolderName = useRef<string>("")
-
   const params = useParams()
 
   const spaceSlug = params.space_slug as string
@@ -93,7 +91,6 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
   }
 
   const isMaxDepthReached = getCurrentDepth() < MAX_FOLDER_DEPTH
-
   const { toast } = useToast()
 
   const [spaceLoading, space, spaceError, getSpaceBySlug] =
@@ -152,7 +149,6 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
 
   const getCurrentFolderItems = () => {
     if (currentPath === "/") return dir
-
     const folder = findItemByPath(dir, currentPath)
     return folder?.children || []
   }
@@ -244,8 +240,6 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
 
   const navigateToFolder = async (path: string) => {
     const selectedFolder = findItemByPath(dir, path)
-
-    // Set path immediately for instant navigation
     setCurrentPath(path)
 
     if (selectedFolder && selectedFolder.type === "folder") {
@@ -269,7 +263,6 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
             created_by: item.created_by || undefined
           }))
 
-          // Update the dir state by adding children to the correct folder
           setDir((prevDir) => {
             const updateChildrenInPath = (items: DirItem[]): DirItem[] => {
               return items.map((item) => {
@@ -404,109 +397,122 @@ const FileDir: React.FC<FileDirProps> = ({ addItemToPath, findItemByPath }) => {
   }
 
   return (
-    <section className="directory">
-      <div className="flex justify-between items-center mb-4">
-        <DirNav navigateToFolder={navigateToFolder} />
-        <div className="flex gap-4 items-center">
-          {/* 🔍 NEW — Search Input */}
-          <div className="relative w-64">
+    <section className="directory w-full flex flex-col gap-4">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 w-full">
+        <div className="w-full xl:w-auto overflow-x-auto pb-2 xl:pb-0 hide-scrollbar shrink-0">
+          <DirNav navigateToFolder={navigateToFolder} />
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-stretch sm:items-center w-full xl:w-auto">
+          {/* Search Input */}
+          <div className="relative w-full sm:w-64 shrink-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search in current folder"
-              className="pl-9"
+              className="pl-9 w-full"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          {/* Upload File Drawer */}
-          <Drawer
-            open={isNewFileDrawerOpen}
-            onOpenChange={setIsNewFileDrawerOpen}
-          >
-            <DrawerTrigger asChild>
-              <Button variant="outline">
-                <FolderPlus className="mr-2 h-4 w-4" />
-                Upload File
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent>
-              <div className="mx-auto w-full max-w-lg">
-                <DrawerTitle></DrawerTitle>
-                <div className="p-4 pb-0">
-                  <div className="flex items-center justify-center space-x-2">
-                    <Card className="mb-8 flex flex-col items-center gap-4 pb-8">
-                      <FileUpload
-                        onChange={(files: File[]) => {
-                          processFileForUpload({
-                            target: { files: [...files] }
-                          } as unknown as React.ChangeEvent<HTMLInputElement>)
-                        }}
-                        onRemove={handleRemoveFile}
-                        key={createdFile?.data?.id}
-                      />
-                      <Button
-                        onClick={handleFileUpload}
-                        disabled={!fileData || createFileLoading}
-                        loading={createFileLoading}
-                      >
-                        <Upload className="mr-2 h-4 w-4" />
-                        Upload
-                      </Button>
-                    </Card>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto shrink-0">
+            {/* Upload File Drawer */}
+            <Drawer
+              open={isNewFileDrawerOpen}
+              onOpenChange={setIsNewFileDrawerOpen}
+            >
+              <DrawerTrigger asChild>
+                <Button variant="outline" className="flex-1 sm:flex-none">
+                  <FolderPlus className="mr-2 h-4 w-4" />
+                  Upload File
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent>
+                <div className="mx-auto w-full max-w-lg">
+                  <DrawerTitle></DrawerTitle>
+                  <div className="p-4 pb-0">
+                    <div className="flex items-center justify-center space-x-2 w-full">
+                      <Card className="mb-8 flex flex-col items-center gap-4 pb-8 w-full overflow-hidden">
+                        <FileUpload
+                          onChange={(files: File[]) => {
+                            processFileForUpload({
+                              target: { files: [...files] }
+                            } as unknown as React.ChangeEvent<HTMLInputElement>)
+                          }}
+                          onRemove={handleRemoveFile}
+                          key={createdFile?.data?.id}
+                        />
+                        <Button
+                          onClick={handleFileUpload}
+                          disabled={!fileData || createFileLoading}
+                          loading={createFileLoading}
+                          className="w-full max-w-[200px]"
+                        >
+                          <Upload className="mr-2 h-4 w-4" />
+                          Upload
+                        </Button>
+                      </Card>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </DrawerContent>
-          </Drawer>
+              </DrawerContent>
+            </Drawer>
 
-          {/* Create Folder Dialog */}
-          <Dialog open={isNewFolderDialogOpen} onOpenChange={handleDialogClose}>
-            <DialogTrigger asChild>
-              <Button>
-                <FolderPlus className="mr-2 h-4 w-4" />
-                New Folder
-              </Button>
-            </DialogTrigger>
-            <DialogContent onInteractOutside={(e) => e.preventDefault()}>
-              <DialogHeader>
-                <DialogTitle>Create New Folder</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4">
-                <Input
-                  placeholder="Folder name"
-                  maxLength={100}
-                  onChange={handleFolderNameChange}
-                />
-              </div>
-              {newFolderError && (
-                <span className="text-red-500 text-sm">{newFolderError}</span>
-              )}
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsNewFolderDialogOpen(false)}
-                >
-                  Cancel
+            {/* Create Folder Dialog */}
+            <Dialog
+              open={isNewFolderDialogOpen}
+              onOpenChange={handleDialogClose}
+            >
+              <DialogTrigger asChild>
+                <Button className="flex-1 sm:flex-none">
+                  <FolderPlus className="mr-2 h-4 w-4" />
+                  New Folder
                 </Button>
-                <Button
-                  onClick={createFolder}
-                  loading={createFolderLoading || searchFolderLoading}
-                  disabled={
-                    createFolderLoading ||
-                    searchFolderLoading ||
-                    !!newFolderError
-                  }
-                >
-                  Create
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent
+                className="sm:max-w-md w-[95vw] rounded-lg"
+                onInteractOutside={(e) => e.preventDefault()}
+              >
+                <DialogHeader>
+                  <DialogTitle>Create New Folder</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4">
+                  <Input
+                    placeholder="Folder name"
+                    maxLength={100}
+                    onChange={handleFolderNameChange}
+                  />
+                </div>
+                {newFolderError && (
+                  <span className="text-red-500 text-sm">{newFolderError}</span>
+                )}
+                <div className="flex justify-end gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsNewFolderDialogOpen(false)}
+                    className="w-full sm:w-auto"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={createFolder}
+                    loading={createFolderLoading || searchFolderLoading}
+                    disabled={
+                      createFolderLoading ||
+                      searchFolderLoading ||
+                      !!newFolderError
+                    }
+                    className="w-full sm:w-auto"
+                  >
+                    Create
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </div>
 
-      <Card>
+      <Card className="w-full overflow-hidden border">
         {dirContentLoading || spaceLoading ? (
           <div className="w-full p-10 flex justify-center">
             <Loader size={LoaderSizes.xl} />

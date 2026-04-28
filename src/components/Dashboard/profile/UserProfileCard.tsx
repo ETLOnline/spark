@@ -1,4 +1,11 @@
-import { MapPin, Briefcase, Calendar, LinkIcon, PencilIcon } from "lucide-react"
+import {
+  MapPin,
+  Briefcase,
+  Calendar,
+  LinkIcon,
+  PencilIcon,
+  MailIcon
+} from "lucide-react"
 import EditProfileModal from "./edit-profile-modal"
 import { TooltipProvider } from "@radix-ui/react-tooltip"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../ui/tooltip"
@@ -102,6 +109,12 @@ export default function UserProfileCard({
               </TooltipProvider>
             </div>
 
+            {userInfo.email && (
+              <p className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground mt-1">
+                <MailIcon className="h-3.5 w-3.5 flex-shrink-0" />
+                {userInfo.email}
+              </p>
+            )}
             <p className="text-xs sm:text-sm font-medium text-teal-600 dark:text-teal-400 mt-1">
               {getUserRole(userInfo)}
             </p>
