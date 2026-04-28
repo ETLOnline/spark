@@ -31,6 +31,7 @@ import CreateShortcut from "@/src/components/common/Shortcut/components/CreateSh
 import Loader from "@/src/components/common/Loader/Loader"
 import pusherClient from "@/src/services/realtime/PusherClient"
 import { Button } from "@/src/components/ui/button"
+import { spaceStore } from "@/src/store/space/spaceStore"
 
 interface Props {
   statusList: InsertTaskStatus[]
@@ -44,6 +45,8 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
   )
   const setCrumbRoutes = useSetAtom(navStore.crumbRoutes)
   const setPusherChannel = useSetAtom(projectStore.pusherChannel)
+  const setCurrSpace = useSetAtom(spaceStore.currentSpace)
+  const setcurrProject = useSetAtom(projectStore.currProject)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const { setOpen: setSideBarCollapse } = useSidebar()
@@ -58,6 +61,14 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
     "PROJECT",
     currProject?.id
   )
+
+  useEffect(() => {
+    if (currProject) setcurrProject(currProject)
+  }, [currProject])
+
+  useEffect(() => {
+    if (currSpace) setCurrSpace(currSpace)
+  }, [currSpace])
 
   useEffect(() => {
     const channel = pusherClient.subscribe(`project-${currProject?.id}-tasks`)
