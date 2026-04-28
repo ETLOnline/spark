@@ -38,40 +38,39 @@ export function TransactionLedger({
   const data = Array.isArray(TransactionsData) ? TransactionsData : []
 
   return (
-    <Card className="flex min-h-0 flex-col p-2 sm:p-6 overflow-hidden max-h-[calc(100vh-12rem)] md:max-h-[calc(100vh-40rem)] lg:max-h-[calc(100vh-40rem)] xl:max-h-none">
+    <Card className="flex flex-col p-2 sm:p-6">
       <h3 className="font-semibold text-foreground mb-4">
         Transaction History
       </h3>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1 sm:space-y-3">
-          {data.map((transaction) => (
-            <TransactionRow
-              key={transaction.transection_id}
-              transaction={transaction}
-            />
-          ))}
-          {data.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              No transactions found.
-            </p>
-          )}
-        </div>
-
-        {totalPages > 1 && (
-          <div className="mt-auto shrink-0 border-t pt-4 bg-background/95">
-            <PaginationComponent
-              pagination={{
-                page: currentPage,
-                totalPages,
-                total: 0,
-                limit: 10
-              }}
-              onPageChange={onPageChange}
-            />
-          </div>
+      <div className="space-y-2 pr-1 sm:space-y-3">
+        {data.map((transaction) => (
+          <TransactionRow
+            key={transaction.transection_id}
+            transaction={transaction}
+          />
+        ))}
+        {data.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-4">
+            No transactions found.
+          </p>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="overflow-x-auto border-t pt-4 mt-3">
+          <PaginationComponent
+            pagination={{
+              page: currentPage,
+              totalPages,
+              total: 0,
+              limit: 10
+            }}
+            onPageChange={onPageChange}
+            compactOnMobile={true}
+          />
+        </div>
+      )}
     </Card>
   )
 }

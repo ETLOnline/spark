@@ -137,19 +137,19 @@ export default function TrustEngineScreen() {
   }
 
   return (
-    <main className="min-h-screen bg-background py-6">
-      <div className="container mx-auto  sm:px-6 lg:px-8">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
+    <main className="min-h-screen bg-background py-6 overflow-x-hidden">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
             Trust Dashboard
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm sm:text-base">
             Track your reputation, achievements, and growth
           </p>
         </div>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 gap-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 gap-2 mb-6  pb-10">
             <TabsTrigger
               value="overview"
               className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2"

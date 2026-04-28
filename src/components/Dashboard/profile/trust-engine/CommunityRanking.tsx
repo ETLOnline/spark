@@ -205,17 +205,17 @@ export function CommunityRanking() {
       {loading ? (
         <Skeleton className="h-96 w-full" />
       ) : !communityHasRanking ? (
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <p className="text-sm font-medium text-muted-foreground text-center">
             This community doesn't have any rankings yet. Be the first to earn
             points!
           </p>
         </Card>
       ) : leaderboardData && leaderboardData.length > 0 ? (
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <LeaderboardCard data={leaderboardData} />
           {totalPages > 1 && (
-            <div className="mt-6 pt-4 border-t">
+            <div className="mt-6 pt-4 border-t overflow-x-auto">
               <PaginationComponent
                 pagination={{
                   page: currentPage,
@@ -232,11 +232,11 @@ export function CommunityRanking() {
 
       {/* Insights */}
       {userRank && selectedCommunityId && (
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <h4 className="font-semibold text-foreground mb-4">
             Your Ranking Insights
           </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 bg-muted/50 rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">
                 Points to Next Rank
