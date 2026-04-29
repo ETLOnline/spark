@@ -71,6 +71,8 @@ export const AddRewardAction = CreateServerAction(
         metadata = { ...metadata, community_id: resolvedCommunityId }
       }
 
+      let rewardAlreadyApplied = false
+
       if (idempotency_field && idempotency_value) {
         const checkResult = await CheckRewardAlreadyGivenAction(
           user_id,
@@ -80,6 +82,7 @@ export const AddRewardAction = CreateServerAction(
         )
 
         if (checkResult?.data?.alreadyRewarded) {
+          rewardAlreadyApplied = true
           return { success: true, data: null, skipped: true }
         }
       }
@@ -127,6 +130,7 @@ export const AddRewardAction = CreateServerAction(
           activityRule.base_points
         )
       }
+
       if (userRewardBalance?.success && userRewardBalance?.data) {
         await SyncUserRewardLevelAction(
           user_id,
@@ -135,7 +139,7 @@ export const AddRewardAction = CreateServerAction(
         )
       }
 
-      if (activityRule.required_verification) {
+      if (activityRule.required_verification && !rewardAlreadyApplied) {
         const activity = await GetActivityRule({
           action_type: ActivityTypes.MilestoneApproval
         })
@@ -187,21 +191,25 @@ export const UpdateTrustVerificationAction = CreateServerAction(
         verified_at: new Date().toISOString()
       }
 
-      const res = await updateTrustVerification(verification_id, data)
+      const trustVerification = await updateTrustVerification(
+        verification_id,
+        data
+      )
 
-      const isApproved = res?.status === TrustVerificationStatus.Approved
-      const isRejected = res?.status === TrustVerificationStatus.Rejected
+      const isApproved =
+        trustVerification?.status === TrustVerificationStatus.Approved
 
       const taskCompletionRule = await GetActivityRule({
         action_type: ActivityTypes.TaskCompletion
       })
 
       const isTaskCompletion =
-        taskCompletionRule && res.rule_id === taskCompletionRule.rule_id
+        taskCompletionRule &&
+        trustVerification.rule_id === taskCompletionRule.rule_id
 
       // Forward project_id + task_id from the verification record. AddRewardAction
       // resolves community_id from project_id — single source of truth.
-      const verificationMetadata = (res?.metadata ?? {}) as {
+      const verificationMetadata = (trustVerification?.metadata ?? {}) as {
         project_id?: string
         task_id?: string
       }
@@ -211,36 +219,25 @@ export const UpdateTrustVerificationAction = CreateServerAction(
         verification_id
       }
 
-      if (isApproved) {
-        if (isTaskCompletion) {
-          // Task completion verified — reward assignee
-          await AddRewardAction(
-            ActivityTypes.TaskCompletionVerification,
-            res.user_id,
-            res.proof_url,
-            baseMetadata,
-            verification_id,
-            "verification_id",
-            String(verification_id)
-          )
+      if (isApproved && isTaskCompletion) {
+        const assigneeId = trustVerification.user_id
 
-          if (res.approved_by) {
-            await AddRewardAction(
-              ActivityTypes.TaskCompletionReview,
-              res.approved_by,
-              res.proof_url,
-              baseMetadata,
-              verification_id,
-              "verification_id",
-              String(verification_id)
-            )
-          }
-        } else {
-          // Milestone approval flow
+        // Task completion verified — reward assignee
+        await AddRewardAction(
+          ActivityTypes.TaskCompletionVerification,
+          assigneeId,
+          trustVerification.proof_url,
+          baseMetadata,
+          verification_id,
+          "verification_id",
+          String(verification_id)
+        )
+
+        if (trustVerification?.approved_by) {
           await AddRewardAction(
-            ActivityTypes.MilestoneApproval,
-            res.user_id,
-            res.proof_url,
+            ActivityTypes.TaskCompletionReview,
+            trustVerification.approved_by,
+            trustVerification.proof_url,
             baseMetadata,
             verification_id,
             "verification_id",
@@ -249,19 +246,7 @@ export const UpdateTrustVerificationAction = CreateServerAction(
         }
       }
 
-      if (isApproved && !isTaskCompletion) {
-        await AddRewardAction(
-          ActivityTypes.MilestoneVerified,
-          res.approved_by || "",
-          res.proof_url,
-          baseMetadata,
-          verification_id,
-          "verification_id",
-          String(verification_id)
-        )
-      }
-
-      return { success: true, data: res }
+      return { success: true, data: trustVerification }
     } catch (error) {
       return { success: false, error }
     }
@@ -410,6 +395,7 @@ export const AddTaskRewardAction = CreateServerAction(
       project_id?: string
       sprint_id?: string
       comment_id?: number
+      community_id?: string
     },
     idempotency_field?: string,
     idempotency_value?: string

@@ -27,7 +27,7 @@ import {
   SelectTask
 } from "@/src/db/schema"
 import { getProjectById } from "@/src/db/data-access/project-management/query"
-import { formatContent, getInitials } from "@/src/utils/helpers"
+import { getInitials } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { createTaskNotification } from "@/src/services/notify/task/task"
@@ -35,11 +35,9 @@ import { SendTaskNotifications } from "@/src/services/notifications/Tasks/utils"
 import { NotificationEvent } from "@/src/services/notify/types/events"
 import { addProjectRecentActivity } from "@/src/utils/taskHelpr"
 import { AddTaskHistoryAction } from "./TaskHistory"
-import { extractMentionsFromMessage } from "@/src/services/realtime/utils/helper"
-import { AddRewardAction, AddTaskRewardAction } from "../Reward/Reward"
+import { AddTaskRewardAction } from "../Reward/Reward"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
 import { ProjectStatus } from "@/src/components/Dashboard/ProjectManagement/types/projectStatus.type"
-import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 import {
   getTaskCompletionRecipients,
   meetsCompletionCriteria
