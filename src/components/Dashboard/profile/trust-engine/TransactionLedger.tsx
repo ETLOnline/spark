@@ -39,11 +39,14 @@ export function TransactionLedger({
 
   return (
     <Card className="flex flex-col p-2 sm:p-6">
-      <h3 className="font-semibold text-foreground mb-4">
+      <h3 className="font-semibold text-foreground mb-4 shrink-0">
         Transaction History
       </h3>
 
-      <div className="space-y-2 pr-1 sm:space-y-3">
+      {/* Only rows scroll — keeping pagination outside prevents the browser
+          from invoking scrollIntoView on pagination clicks, which was causing
+          the card to jump to the top of the viewport on mobile. */}
+      <div className="overflow-y-auto max-h-[50vh] sm:max-h-none sm:overflow-y-visible space-y-2 sm:space-y-3 pr-1">
         {data.map((transaction) => (
           <TransactionRow
             key={transaction.transection_id}
@@ -58,7 +61,7 @@ export function TransactionLedger({
       </div>
 
       {totalPages > 1 && (
-        <div className="overflow-x-auto border-t pt-4 mt-3">
+        <div className="overflow-x-auto border-t pt-4 mt-3 shrink-0">
           <PaginationComponent
             pagination={{
               page: currentPage,

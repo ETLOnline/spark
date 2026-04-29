@@ -149,27 +149,27 @@ export default function TrustEngineScreen() {
         </div>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 gap-2 mb-6  pb-10">
+          <TabsList className="grid w-full grid-cols-3 gap-2 mb-6">
             <TabsTrigger
               value="overview"
-              className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2"
+              className="flex w-full items-center justify-center gap-1 sm:gap-2 rounded-lg px-2 py-2 sm:px-3"
             >
-              <BarChart3 className="w-4 h-4" />
-              <span className="hidden sm:inline">Overview</span>
+              <BarChart3 className="w-4 h-4 shrink-0" />
+              <span className="text-xs sm:text-sm truncate">Overview</span>
             </TabsTrigger>
             <TabsTrigger
               value="transactions"
-              className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2"
+              className="flex w-full items-center justify-center gap-1 sm:gap-2 rounded-lg px-2 py-2 sm:px-3"
             >
-              <TrendingUp className="w-4 h-4" />
-              <span className="hidden sm:inline">Transactions</span>
+              <TrendingUp className="w-4 h-4 shrink-0" />
+              <span className="text-xs sm:text-sm truncate">Transactions</span>
             </TabsTrigger>
             <TabsTrigger
               value="ranking"
-              className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2"
+              className="flex w-full items-center justify-center gap-1 sm:gap-2 rounded-lg px-2 py-2 sm:px-3"
             >
-              <BarChart3 className="w-4 h-4" />
-              <span className="hidden sm:inline">Ranking</span>
+              <BarChart3 className="w-4 h-4 shrink-0" />
+              <span className="text-xs sm:text-sm truncate">Ranking</span>
             </TabsTrigger>
           </TabsList>
 
