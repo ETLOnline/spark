@@ -19,7 +19,6 @@ import {
   AddUserToGroupChatAction,
   RemoveUserFromGroupChatAction
 } from "@/src/server-actions/Chat/Chat"
-import { useParams } from "next/navigation"
 import { useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { useDebouncedCallback } from "use-debounce"
@@ -70,11 +69,10 @@ const CreateNewChat = ({
   const [groupName, setGroupName] = useState<string>("")
   const [groupNameError, setGroupNameError] = useState<string>("")
   const [options, setOptions] = useState<MultiSelectOption[]>([])
-  const { space_slug } = useParams()
   const currentSpace = useAtomValue(spaceStore.currentSpace)
   const [contactFilter, setContactFilter] = useState<ChatContactFilters>()
 
-  const isSpacePage = space_slug ? true : false
+  const isSpacePage = currentSpace ? true : false
   const isManageMode = mode === "manage" && currentChat?.is_group
   const existingMemberIds = new Set(
     currentChat?.users?.map((u) => u.user_id) || []
