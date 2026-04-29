@@ -250,9 +250,6 @@ export const UpdateTaskAction = CreateServerAction(
         )
         await AddTaskHistoryAction(oldTask, UpdatedTask)
 
-        const project = await getProjectById(UpdatedTask.project_id, true)
-        const communityId = project?.channel?.community_id
-
         const oldStatusSlug = oldTask.status?.status_slug
         const newStatusSlug = UpdatedTask.status?.status_slug
         const assigneeId = UpdatedTask.assign_to
@@ -271,8 +268,7 @@ export const UpdateTaskAction = CreateServerAction(
             {
               user_id: assigneeId,
               task_id: UpdatedTask.id,
-              project_id: UpdatedTask.project_id,
-              community_id: communityId
+              project_id: UpdatedTask.project_id
             },
             "task_id",
             UpdatedTask.id
@@ -291,8 +287,7 @@ export const UpdateTaskAction = CreateServerAction(
                 {
                   user_id,
                   task_id: UpdatedTask.id,
-                  project_id: UpdatedTask.project_id,
-                  community_id: communityId
+                  project_id: UpdatedTask.project_id
                 },
                 "task_id",
                 UpdatedTask.id
@@ -306,8 +301,7 @@ export const UpdateTaskAction = CreateServerAction(
               {
                 user_id: UpdatedTask.tested_by,
                 task_id: UpdatedTask.id,
-                project_id: UpdatedTask.project_id,
-                community_id: communityId
+                project_id: UpdatedTask.project_id
               },
               "task_id",
               UpdatedTask.id
