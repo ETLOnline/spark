@@ -24,7 +24,7 @@ export function TrustOverView({
   pointsNeeded
 }: TrustOverViewProps) {
   return (
-    <div className="space-y-6">
+    <div className="w-full min-w-0 space-y-6">
       {rpPoints === 0 && (
         <div className="rounded-lg border-2 border-dashed p-6 sm:p-8 text-center">
           <Users className="h-12 w-12 sm:h-16 sm:w-16 text-teal-600 dark:text-teal-400 mx-auto mb-4" />

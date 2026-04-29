@@ -137,67 +137,65 @@ export default function TrustEngineScreen() {
   }
 
   return (
-    <main className="min-h-screen bg-background py-6 overflow-x-hidden">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-            Trust Dashboard
-          </h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Track your reputation, achievements, and growth
-          </p>
-        </div>
-
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 gap-2 mb-6 pb-9 sm:pb-10">
-            <TabsTrigger
-              value="overview"
-              className="flex w-full items-center justify-center gap-1 sm:gap-2 rounded-lg px-2  py-2 sm:px-3"
-            >
-              <BarChart3 className="w-4 h-4 shrink-0" />
-              <span className="text-xs sm:text-sm truncate">Overview</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="transactions"
-              className="flex w-full items-center justify-center gap-1 sm:gap-2 rounded-lg px-2 py-2 sm:px-3"
-            >
-              <TrendingUp className="w-4 h-4 shrink-0" />
-              <span className="text-xs sm:text-sm truncate">Transactions</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="ranking"
-              className="flex w-full items-center justify-center gap-1 sm:gap-2 rounded-lg px-2 py-2 sm:px-3"
-            >
-              <BarChart3 className="w-4 h-4 shrink-0" />
-              <span className="text-xs sm:text-sm truncate">Ranking</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            <TrustOverView
-              rpPoints={rpPoints}
-              scPoints={scPoints}
-              levelName={userLevel?.rewardLevel?.name ?? "—"}
-              levelId={userLevel?.rewardLevel?.id ?? 1}
-              progressPercent={progressPercent}
-              pointsNeeded={pointsNeeded}
-            />
-          </TabsContent>
-
-          <TabsContent value="transactions">
-            <TransactionLedger
-              TransactionsData={transactions}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
-          </TabsContent>
-
-          <TabsContent value="ranking">
-            <CommunityRanking />
-          </TabsContent>
-        </Tabs>
+    <main className="min-h-screen bg-background py-6">
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+          Trust Dashboard
+        </h1>
+        <p className="text-muted-foreground text-sm sm:text-base">
+          Track your reputation, achievements, and growth
+        </p>
       </div>
+
+      <Tabs defaultValue="overview" className="w-full overflow-hidden">
+        <TabsList className="grid w-full grid-cols-3 gap-2 mb-6 pb-9 sm:pb-10">
+          <TabsTrigger
+            value="overview"
+            className="flex w-full items-center justify-center gap-1 sm:gap-2 rounded-lg px-2 py-2 sm:px-3"
+          >
+            <BarChart3 className="w-4 h-4 shrink-0" />
+            <span className="text-xs sm:text-sm truncate">Overview</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="transactions"
+            className="flex w-full items-center justify-center gap-1 sm:gap-2 rounded-lg px-2 py-2 sm:px-3"
+          >
+            <TrendingUp className="w-4 h-4 shrink-0" />
+            <span className="text-xs sm:text-sm truncate">Transactions</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="ranking"
+            className="flex w-full items-center justify-center gap-1 sm:gap-2 rounded-lg px-2 py-2 sm:px-3"
+          >
+            <BarChart3 className="w-4 h-4 shrink-0" />
+            <span className="text-xs sm:text-sm truncate">Ranking</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <TrustOverView
+            rpPoints={rpPoints}
+            scPoints={scPoints}
+            levelName={userLevel?.rewardLevel?.name ?? "—"}
+            levelId={userLevel?.rewardLevel?.id ?? 1}
+            progressPercent={progressPercent}
+            pointsNeeded={pointsNeeded}
+          />
+        </TabsContent>
+
+        <TabsContent value="transactions" className="overflow-hidden">
+          <TransactionLedger
+            TransactionsData={transactions}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </TabsContent>
+
+        <TabsContent value="ranking" className="overflow-hidden">
+          <CommunityRanking />
+        </TabsContent>
+      </Tabs>
     </main>
   )
 }
