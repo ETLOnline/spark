@@ -137,7 +137,7 @@ export function CommunityRanking() {
             <Skeleton className="h-10 w-full" />
           ) : (
             <div className="flex gap-2">
-              <div className="flex-1">
+              <div className="flex-1 w-28 sm:w-full">
                 <Select
                   value={selectedCommunityId || ""}
                   onValueChange={handleCommunityChange}
