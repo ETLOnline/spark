@@ -110,12 +110,12 @@ export default function UserProfileCard({
             </div>
 
             {userInfo.email && (
-              <p className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground mt-1">
+              <p className="flex items-start sm:items-center gap-1.5 text-xs sm:text-sm text-muted-foreground mt-1 break-all sm:break-normal">
                 <MailIcon className="h-3.5 w-3.5 flex-shrink-0" />
                 {userInfo.email}
               </p>
             )}
-            <p className="text-xs sm:text-sm font-medium text-teal-600 dark:text-teal-400 mt-1">
+            <p className="text-xs sm:text-sm font-medium text-teal-600 dark:text-teal-400 mt-1 truncate">
               {getUserRole(userInfo)}
             </p>
           </div>

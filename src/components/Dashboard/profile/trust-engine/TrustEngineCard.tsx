@@ -70,7 +70,7 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
   return (
     <Card className="rounded-xl border p-6 shadow-sm spark-gradient-panel-bg">
       {/* Header */}
-      <div className="mb-6 flex justify-between items-center gap-2">
+      <div className="mb-6 flex flex-col sm:flex-row justify-between  gap-2">
         <div className="flex items-center gap-2">
           <Zap className="h-6 w-6 text-teal-600 dark:text-teal-400" />
           <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -78,7 +78,7 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
           </CardTitle>
         </div>
 
-        <Button>
+        <Button className="w-full sm:w-auto">
           <Link href="/profile/trust-engine">View Dashboard</Link>
         </Button>
       </div>
