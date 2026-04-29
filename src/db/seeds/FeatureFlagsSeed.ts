@@ -6,13 +6,13 @@ const featureFlagsSeedList: InsertFeatureFlag[] = [
   {
     key: "Trust_Engine_Enabled",
     label: "Trust Engine",
-    is_enabled: true,
+    is_enabled: false,
     description: "Enable trust engine features for user recognition and scoring"
   },
   {
     key: "Rewards_Enabled",
     label: "Rewards",
-    is_enabled: true,
+    is_enabled: false,
     description: "Enable rewards and badge system for community engagement"
   }
 ]
