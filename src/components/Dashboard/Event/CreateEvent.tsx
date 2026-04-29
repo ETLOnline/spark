@@ -263,6 +263,7 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
 
   const error = form.formState.errors
   const isChanged = form.formState.isDirty
+  const isSubmitting = form.formState.isSubmitting
 
   async function eventSubmit(data: any) {
     const metadata = JSON.stringify({
@@ -751,12 +752,20 @@ export const CreateEvent = ({ events, setEvents }: Props) => {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                    <Button loading={addUpdatedEventLoading} type="submit">
+                    <Button
+                      loading={isSubmitting || addUpdatedEventLoading}
+                      disabled={isSubmitting || addUpdatedEventLoading}
+                      type="submit"
+                    >
                       Save
                     </Button>
                   </>
                 ) : (
-                  <Button type="submit" loading={addEventLoading}>
+                  <Button
+                    type="submit"
+                    loading={isSubmitting || addEventLoading}
+                    disabled={isSubmitting || addEventLoading}
+                  >
                     Create Event
                   </Button>
                 )}

@@ -160,15 +160,12 @@ export const CreateComment = async (
   })
 }
 
-export const UpdateComment = async (
-  commentId: number,
-  newContent: string
-) => {
+export const UpdateComment = async (commentId: number, newContent: string) => {
   return await db.transaction(async (tx) => {
     // Update the comment content
     const updatedComment = await tx
       .update(commentsTable)
-      .set({ 
+      .set({
         content: newContent,
         updated_at: new Date().toISOString()
       })
@@ -275,7 +272,6 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
             : [postsTable[orderBy]]
       })
     } else {
-      // Global posts - limit comments to 3
       return await db.query.postsTable.findMany({
         limit,
         offset,
@@ -292,7 +288,6 @@ export const GetPosts = async (filters: PostQueryFilters = {}) => {
           },
           postComments: {
             with: { commentor: true },
-            limit: 3,
             orderBy: [desc(commentsTable.created_at)]
           },
           hashtags: { with: { hashtag: true } },

@@ -205,7 +205,10 @@ function SpaceSidebar({ space }: Props) {
 
           {/* Text */}
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-sm leading-tight break-words whitespace-normal text-ellipsis overflow-hidden">
+            <p
+              className="font-semibold text-sm leading-tight break-words whitespace-normal text-ellipsis overflow-hidden truncate line-clamp-2"
+              title={space.space_name}
+            >
               {space.space_name}
             </p>
           </div>
@@ -360,12 +363,15 @@ function SpaceSidebar({ space }: Props) {
   return (
     <div className="w-full">
       {/* Mobile top bar: full-width, space name + menu trigger */}
-      <div className="md:hidden flex items-center justify-between gap-2 px-3 py-2 bg-background">
-        <div className="flex items-center gap-2 min-w-0">
+      <div className="md:hidden flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-background">
+        <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md overflow-hidden">
             <Avvvatars value={space.space_name} size={32} style="shape" />
           </div>
-          <div className="font-semibold text-sm sm:text-base truncate min-w-0 uppercase">
+          <div
+            className="font-semibold text-sm sm:text-base uppercase break-words"
+            title={space.space_name}
+          >
             {space.space_name}
           </div>
         </div>
@@ -374,7 +380,7 @@ function SpaceSidebar({ space }: Props) {
             <Button
               variant="outline"
               size="sm"
-              className="flex items-center gap-2 shrink-0"
+              className="flex items-center gap-2 shrink-0 ml-auto"
             >
               <Menu className="h-4 w-4 shrink-0" />
               <span>Menu</span>
@@ -383,7 +389,7 @@ function SpaceSidebar({ space }: Props) {
           <SheetTitle className="hidden">{space.space_name}</SheetTitle>
           <SheetContent
             side="left"
-            className="p-4 flex flex-col gap-4 overflow-y-auto w-[80vw] sm:w-[350px]"
+            className="p-4 flex flex-col gap-4 overflow-y-auto w-[80vw] sm:w-[350px] pt-7"
           >
             <SidebarMenu>
               <SidebarContent />

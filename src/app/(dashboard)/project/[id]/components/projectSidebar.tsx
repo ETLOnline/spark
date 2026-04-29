@@ -31,6 +31,7 @@ import CreateShortcut from "@/src/components/common/Shortcut/components/CreateSh
 import Loader from "@/src/components/common/Loader/Loader"
 import pusherClient from "@/src/services/realtime/PusherClient"
 import { Button } from "@/src/components/ui/button"
+import { spaceStore } from "@/src/store/space/spaceStore"
 
 interface Props {
   statusList: InsertTaskStatus[]
@@ -44,6 +45,8 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
   )
   const setCrumbRoutes = useSetAtom(navStore.crumbRoutes)
   const setPusherChannel = useSetAtom(projectStore.pusherChannel)
+  const setCurrSpace = useSetAtom(spaceStore.currentSpace)
+  const setcurrProject = useSetAtom(projectStore.currProject)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const { setOpen: setSideBarCollapse } = useSidebar()
@@ -58,6 +61,14 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
     "PROJECT",
     currProject?.id
   )
+
+  useEffect(() => {
+    if (currProject) setcurrProject(currProject)
+  }, [currProject])
+
+  useEffect(() => {
+    if (currSpace) setCurrSpace(currSpace)
+  }, [currSpace])
 
   useEffect(() => {
     const channel = pusherClient.subscribe(`project-${currProject?.id}-tasks`)
@@ -148,8 +159,11 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
   return (
     <div className="w-full">
       {/* Mobile top bar: full-width, project name + menu trigger */}
-      <div className="md:hidden flex items-center justify-between gap-2 px-3 pb-2 bg-background">
-        <div className="font-semibold text-sm sm:text-base truncate min-w-0 uppercase">
+      <div className="md:hidden flex flex-wrap items-center justify-between gap-2 px-3 pb-2 bg-background">
+        <div
+          className="font-semibold text-sm sm:text-base uppercase break-words"
+          title={currProject.project_name}
+        >
           {currProject.project_name}
         </div>
         <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
@@ -157,7 +171,7 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
             <Button
               variant="outline"
               size="sm"
-              className="flex items-center gap-2 shrink-0"
+              className="flex items-center gap-2 shrink-0 ml-auto"
             >
               <Menu className="h-4 w-4 shrink-0" />
               <span>Menu</span>
@@ -168,9 +182,12 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
 
           <SheetContent
             side="left"
-            className="p-4 flex flex-col gap-4 overflow-y-auto w-[80vw] sm:w-[350px]"
+            className="p-4 flex flex-col gap-4 overflow-y-auto w-[80vw] sm:w-[350px] pt-7"
           >
-            <div className="font-semibold text-lg px-2">
+            <div
+              className="font-semibold text-lg px-2 truncate"
+              title={currProject.project_name}
+            >
               {currProject.project_name}
             </div>
             <div className="flex flex-col gap-1 w-full">
@@ -183,7 +200,12 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
       {/* Desktop sidebar column */}
       <div className="hidden md:block">
         <SidebarGroup className="p-0">
-          <SidebarGroupLabel>{currProject.project_name}</SidebarGroupLabel>
+          <SidebarGroupLabel
+            className="line-clamp-2 my-2"
+            title={currProject.project_name}
+          >
+            {currProject.project_name}
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <MenuContent />

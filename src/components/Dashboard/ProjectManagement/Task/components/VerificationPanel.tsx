@@ -180,17 +180,19 @@ export default function VerificationPanel({
 
         {!isLocked && !isAssignee && (
           <div className="flex gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1 border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-400"
-              onClick={() => handleAction(TrustVerificationStatus.Rejected)}
-              loading={loading}
-              disabled={loading}
-            >
-              <ShieldX className="h-4 w-4 mr-2" />
-              Reject
-            </Button>
+            {!isRejected && (
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-400"
+                onClick={() => handleAction(TrustVerificationStatus.Rejected)}
+                loading={loading}
+                disabled={loading}
+              >
+                <ShieldX className="h-4 w-4 mr-2" />
+                Reject
+              </Button>
+            )}
             <Button
               type="button"
               className="flex-1 bg-green-600 hover:bg-green-700 text-white"
