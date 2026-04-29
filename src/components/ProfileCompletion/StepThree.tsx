@@ -14,6 +14,8 @@ import {
   userProfileCompletionAction
 } from "@/src/server-actions/profile/profile"
 import { socialPlatforms } from "./constants"
+import { useSetAtom } from "jotai"
+import { userStore } from "@/src/store/user/userStore"
 interface StepThreeProps {
   step: number
   setStep: Dispatch<SetStateAction<number>>
@@ -26,7 +28,7 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
     userProfileCompletionAction
   )
   const [isTransitioning, setIsTransitioning] = useState(false)
-
+  const setAuthUser = useSetAtom(userStore.AuthUser)
   const ReferralId = localStorage.getItem("referral_id")
   const form = useForm({})
 
@@ -59,9 +61,9 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
         finalData,
         ReferralId || ""
       )
-      console.log("Profile completion response:", res)
 
       if (res?.success) {
+        setAuthUser((prev) => (prev ? { ...prev, profile: res.data } : null))
         toast({
           title: hasAnyLink
             ? "Social links added successfully"

@@ -98,17 +98,7 @@ export default function ProfileScreen({
   const [referralLink, setReferralLink] = useState("")
   const authUser = useAtomValue(userStore.AuthUser)
 
-  const displayUser: SelectUser =
-    isMyProfile && authUser
-      ? ({
-          ...authUser,
-          profile: {
-            ...(authUser.profile || {}),
-            bio:
-              authUser.profile?.bio || profile?.bio || user?.profile?.bio || ""
-          }
-        } as SelectUser)
-      : user
+  const displayUser = isMyProfile && authUser ? authUser : user
 
   const [recommendationLoading, , , GetRecommendations] = useServerAction(
     GetRecommendationAction
