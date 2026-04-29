@@ -46,7 +46,7 @@ export function TransactionLedger({
       {/* Only rows scroll — keeping pagination outside prevents the browser
           from invoking scrollIntoView on pagination clicks, which was causing
           the card to jump to the top of the viewport on mobile. */}
-      <div className="overflow-y-auto max-h-[50vh] sm:max-h-none sm:overflow-y-visible space-y-2 sm:space-y-3 pr-1">
+      <div className="overflow-y-auto max-h-[280px] sm:max-h-[300px]  space-y-2 sm:space-y-3 pr-1">
         {data.map((transaction) => (
           <TransactionRow
             key={transaction.transection_id}
