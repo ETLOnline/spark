@@ -2,6 +2,7 @@
 
 import { BarChart3, TrendingUp, Lock } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../ui/tabs"
+import { ScrollArea } from "../../../ui/scroll-area"
 import { TransactionLedger } from "./TransactionLedger"
 import { CommunityRanking } from "./CommunityRanking"
 import { TrustOverView } from "./TrustOverView"
@@ -137,8 +138,8 @@ export default function TrustEngineScreen() {
   }
 
   return (
-    <main className="min-h-screen bg-background py-6">
-      <div className="mb-6">
+    <main className="h-[calc(100svh-8rem)] flex flex-col bg-background pt-6 overflow-hidden">
+      <div className="mb-6 shrink-0">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
           Trust Dashboard
         </h1>
@@ -147,8 +148,11 @@ export default function TrustEngineScreen() {
         </p>
       </div>
 
-      <Tabs defaultValue="overview" className="w-full overflow-hidden">
-        <TabsList className="grid w-full grid-cols-3 gap-2 mb-6 pb-9 sm:pb-10">
+      <Tabs
+        defaultValue="overview"
+        className="w-full flex-1 flex flex-col overflow-hidden min-h-0"
+      >
+        <TabsList className="grid w-full grid-cols-3 gap-2 mb-6 pb-9 sm:pb-10 shrink-0">
           <TabsTrigger
             value="overview"
             className="flex w-full items-center justify-center gap-1 sm:gap-2 rounded-lg px-2 py-2 sm:px-3"
@@ -172,28 +176,46 @@ export default function TrustEngineScreen() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
-          <TrustOverView
-            rpPoints={rpPoints}
-            scPoints={scPoints}
-            levelName={userLevel?.rewardLevel?.name ?? "—"}
-            levelId={userLevel?.rewardLevel?.id ?? 1}
-            progressPercent={progressPercent}
-            pointsNeeded={pointsNeeded}
-          />
+        <TabsContent
+          value="overview"
+          className="flex-1 overflow-hidden min-h-0"
+        >
+          <ScrollArea className="h-full">
+            <div className="pb-6 space-y-6">
+              <TrustOverView
+                rpPoints={rpPoints}
+                scPoints={scPoints}
+                levelName={userLevel?.rewardLevel?.name ?? "—"}
+                levelId={userLevel?.rewardLevel?.id ?? 1}
+                progressPercent={progressPercent}
+                pointsNeeded={pointsNeeded}
+              />
+            </div>
+          </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="transactions" className="overflow-hidden">
-          <TransactionLedger
-            TransactionsData={transactions}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
+        <TabsContent
+          value="transactions"
+          className="flex-1 overflow-hidden min-h-0"
+        >
+          <ScrollArea className="h-full">
+            <div className="pb-6">
+              <TransactionLedger
+                TransactionsData={transactions}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="ranking" className="overflow-hidden">
-          <CommunityRanking />
+        <TabsContent value="ranking" className="flex-1 overflow-hidden min-h-0">
+          <ScrollArea className="h-full">
+            <div className="pb-6">
+              <CommunityRanking />
+            </div>
+          </ScrollArea>
         </TabsContent>
       </Tabs>
     </main>
