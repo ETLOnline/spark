@@ -142,10 +142,13 @@ export function CommunityRanking() {
                   value={selectedCommunityId || ""}
                   onValueChange={handleCommunityChange}
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Choose a community..." />
+                  <SelectTrigger className="w-full overflow-hidden gap-2 [&>span:first-child]:min-w-0 [&>span:first-child]:max-w-full [&>span:first-child]:truncate [&>span:last-child]:shrink-0 [&>svg:last-child]:flex-shrink-0">
+                    <SelectValue
+                      placeholder="Choose a community..."
+                      className="block w-full max-w-full truncate"
+                    />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-w-[calc(100vw-4rem)]">
                     {userCommunities.length > 0 ? (
                       userCommunities.map((community: any) => (
                         <SelectItem key={community.id} value={community.id}>

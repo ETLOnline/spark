@@ -212,7 +212,7 @@ export default function TrustEngineScreen() {
 
         <TabsContent value="ranking" className="flex-1 overflow-hidden min-h-0">
           <ScrollArea className="h-full">
-            <div className="pb-6">
+            <div className="pb-6 w-[calc(100vw-2rem)] sm:w-full">
               <CommunityRanking />
             </div>
           </ScrollArea>
