@@ -286,7 +286,9 @@ export default function ProfileScreen({
             />
             {/* Trust Engine Section  */}
 
-            {isFeatureEnable && <TrustEngineCard user={user} />}
+            {isFeatureEnable && (
+              <TrustEngineCard user={user} isMyProfile={isMyProfile} />
+            )}
 
             <ProfileBio
               userBio={user?.profile?.bio as string}

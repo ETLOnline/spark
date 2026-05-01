@@ -17,9 +17,13 @@ import { GetUserTopCommunityRankAction } from "@/src/server-actions/Communities/
 
 interface TrustEngineCardProps {
   user: SelectUser
+  isMyProfile?: boolean
 }
 
-export default function TrustEngineCard({ user }: TrustEngineCardProps) {
+export default function TrustEngineCard({
+  user,
+  isMyProfile
+}: TrustEngineCardProps) {
   const [userSCPoints, setUserSCPoints] = useState(0)
   const [userRPPoints, setUserRPPoints] = useState(0)
   const [userLevel, setUserLevel] = useState<SelectUserRewardsLevel | null>(
@@ -67,6 +71,14 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
     maxPoints
   )
 
+  const handleRedirect = () => {
+    if (isMyProfile) {
+      return "/profile/trust-engine"
+    } else {
+      return `/profile/${user.unique_id}/trust-engine`
+    }
+  }
+
   return (
     <Card className="rounded-xl border p-6 shadow-sm spark-gradient-panel-bg">
       {/* Header */}
@@ -79,7 +91,7 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
         </div>
 
         <Button className="w-full sm:w-auto">
-          <Link href="/profile/trust-engine">View Dashboard</Link>
+          <Link href={handleRedirect()}>View Dashboard</Link>
         </Button>
       </div>
 
