@@ -356,6 +356,7 @@ export function slugify(input: string): string {
     .replace(/[^a-z0-9]+/gi, "-")
     .replace(/^-+|-+$/g, "")
     .replace(/-+/g, "-")
+    .trim()
 }
 
 export function joinPresenceChannel(chatId: number) {
@@ -431,4 +432,19 @@ export const isValidInviteLink = (link: string) => {
   } catch {
     return false
   }
+}
+
+export function GetSpaceURL(
+  channel_slug: string,
+  space_slug: string,
+  page?: string
+) {
+  let path = `/channels/${channel_slug}/spaces/${space_slug}`
+
+  if (page) {
+    path = `/channels/${channel_slug}/spaces/${space_slug}?page-type=${page}`
+  }
+
+  const URL = createAbsoluteUrl(path)
+  return URL
 }

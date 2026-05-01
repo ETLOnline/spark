@@ -12,7 +12,12 @@ import {
 } from "@/src/components/ui/card"
 import { Input } from "@/src/components/ui/input"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
-import { Sheet, SheetContent, SheetTrigger } from "@/src/components/ui/sheet"
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger
+} from "@/src/components/ui/sheet"
 import {
   Menu,
   Send,
@@ -757,6 +762,12 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     return otherUser ? users.has(otherUser.user_id) : false
   })()
 
+  const convertMentionsToHtml = (text: string) => {
+    return text.replace(/@\[\s*(.*?)\s*\]\((.*?)\)/g, (_, label, id) => {
+      return `<span data-type="mention" data-id="${id}" data-label="${label}">@${label}</span>`
+    })
+  }
+
   return (
     <>
       <div className="flex h-[calc(100vh-7rem)] gap-4">
@@ -803,6 +814,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       <span className="sr-only">Toggle contacts</span>
                     </Button>
                   </SheetTrigger>
+                  <SheetTitle className="hidden">Chats</SheetTitle>
                   <SheetContent
                     side="left"
                     className="w-[80%] sm:w-[385px] p-0"
@@ -1085,8 +1097,13 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                               <DropdownMenuItem
                                                 onClick={() => {
                                                   setEditingMessage(message)
+
+                                                  const formatted =
+                                                    convertMentionsToHtml(
+                                                      message.message
+                                                    )
                                                   setRichMessageContent(
-                                                    message.message
+                                                    formatted
                                                   )
                                                 }}
                                               >

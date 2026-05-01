@@ -10,7 +10,11 @@ import {
   ChannelUsersTable,
   communityCategoriesTable,
   SelectCommunityCategory,
-  SelectUser
+  SelectUser,
+  leaderboardSnapshotsTable,
+  InsertLeaderboardSnapshot,
+  SelectLeaderboardSnapshot,
+  pointLedgerTable
 } from "../../schema"
 import {
   eq,
@@ -22,7 +26,9 @@ import {
   and,
   ilike,
   ne,
-  inArray
+  inArray,
+  desc,
+  max
 } from "drizzle-orm"
 
 export type CommunityType = "public" | "private" | "restricted"
@@ -542,4 +548,146 @@ export const getCommunitiesByIds = async function (communityIds: string[]) {
     console.error("Error fetching communities:", error)
     throw new Error("Failed to fetch communities")
   }
+}
+
+/**
+ * Get leaderboard snapshot for a community (top N users)
+ * Gets the most recent snapshot for the given date
+ */
+export async function getCommunityLeaderboard(
+  communityId: string,
+  limit: number = 10,
+  offset: number = 0
+) {
+  const [data, totalResult] = await Promise.all([
+    db.query.leaderboardSnapshotsTable.findMany({
+      where: eq(leaderboardSnapshotsTable.community_id, communityId),
+      with: { user: true },
+      columns: {
+        user_id: true,
+        rank: true,
+        points: true,
+        points_gained: true,
+        trend: true,
+        rank_change: true,
+        snapshot_date: true
+      },
+      orderBy: desc(leaderboardSnapshotsTable.points),
+      limit,
+      offset
+    }),
+    db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(leaderboardSnapshotsTable)
+      .where(eq(leaderboardSnapshotsTable.community_id, communityId))
+  ])
+
+  return { data, total: Number(totalResult[0]?.count ?? 0) }
+}
+
+/**
+ * Get current user's rank in a community
+ * Gets the most recent snapshot for the given date
+ */
+export async function getCurrentUserRank(userId: string, communityId: string) {
+  const result = await db.query.leaderboardSnapshotsTable.findFirst({
+    where: and(
+      eq(leaderboardSnapshotsTable.community_id, communityId),
+      eq(leaderboardSnapshotsTable.user_id, userId)
+    ),
+    columns: {
+      user_id: true,
+      rank: true,
+      points: true,
+      points_gained: true,
+      trend: true,
+      rank_change: true,
+      snapshot_date: true
+    },
+    with: { user: true }
+  })
+
+  return result ?? null
+}
+/**
+ * Get all communities user is a member of
+ */
+export async function getUserCommunitiesWithRanking(userId: string) {
+  try {
+    const [joinedRows, rankedRows] = await Promise.all([
+      db
+        .select({ community_id: communityUsersTable.community_id })
+        .from(communityUsersTable)
+        .where(eq(communityUsersTable.user_id, userId)),
+      db
+        .selectDistinct({
+          community_id: leaderboardSnapshotsTable.community_id
+        })
+        .from(leaderboardSnapshotsTable)
+        .where(eq(leaderboardSnapshotsTable.user_id, userId))
+    ])
+    const allIds = [
+      ...new Set([
+        ...joinedRows.map((r) => r.community_id),
+        ...rankedRows.map((r) => r.community_id)
+      ])
+    ]
+
+    if (allIds.length === 0) return []
+    return db.query.communitiesTable.findMany({
+      where: inArray(communitiesTable.id, allIds),
+      with: { category: true }
+    })
+  } catch (error: any) {
+    console.error("Error fetching user communities with ranking:", error)
+    throw new Error(`Failed to fetch communities: ${error.message}`)
+  }
+}
+
+export async function getCommunityLedgerTotals(communityId: string) {
+  return db
+    .select({
+      user_id: pointLedgerTable.user_id,
+      reward_id: pointLedgerTable.reward_id,
+      total_points: sql<number>`CAST(SUM(${pointLedgerTable.amount}) AS INTEGER)`
+    })
+    .from(pointLedgerTable)
+    .where(sql`${pointLedgerTable.metadata}->>'community_id' = ${communityId}`)
+    .groupBy(pointLedgerTable.user_id, pointLedgerTable.reward_id)
+    .orderBy(sql`SUM(${pointLedgerTable.amount}) DESC`)
+}
+
+export async function replaceLeaderboardSnapshots(
+  communityId: string,
+  snapshots: InsertLeaderboardSnapshot[]
+) {
+  return db.transaction(async (tx) => {
+    await tx
+      .delete(leaderboardSnapshotsTable)
+      .where(eq(leaderboardSnapshotsTable.community_id, communityId))
+
+    if (snapshots.length === 0) return []
+
+    return tx.insert(leaderboardSnapshotsTable).values(snapshots).returning()
+  })
+}
+
+export async function getUserTopCommunityRank(userId: string) {
+  const result = await db
+    .select({
+      rank: leaderboardSnapshotsTable.rank,
+      points: leaderboardSnapshotsTable.points,
+      community_id: leaderboardSnapshotsTable.community_id,
+      community_title: communitiesTable.title
+    })
+    .from(leaderboardSnapshotsTable)
+    .innerJoin(
+      communitiesTable,
+      eq(leaderboardSnapshotsTable.community_id, communitiesTable.id)
+    )
+    .where(eq(leaderboardSnapshotsTable.user_id, userId))
+    .orderBy(leaderboardSnapshotsTable.rank)
+    .limit(1)
+
+  return result[0] ?? null
 }

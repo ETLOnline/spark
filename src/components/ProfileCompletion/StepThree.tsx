@@ -9,11 +9,13 @@ import { SelectUser } from "@/src/db/schema"
 import { Controller, useForm } from "react-hook-form"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { toast } from "@/src/hooks/use-toast"
-import { useRouter } from "next/navigation"
-import { updateUserProfileAction } from "@/src/server-actions/profile/profile"
+import {
+  updateUserProfileAction,
+  userProfileCompletionAction
+} from "@/src/server-actions/profile/profile"
 import { socialPlatforms } from "./constants"
-import { set } from "zod"
-
+import { useSetAtom } from "jotai"
+import { userStore } from "@/src/store/user/userStore"
 interface StepThreeProps {
   step: number
   setStep: Dispatch<SetStateAction<number>>
@@ -23,12 +25,13 @@ interface StepThreeProps {
 
 export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
   const [submitDataLoading, , , submitUserProfileData] = useServerAction(
-    updateUserProfileAction
+    userProfileCompletionAction
   )
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const setUserProfile = useSetAtom(userStore.AuthUser)
 
+  const ReferralId = localStorage.getItem("referral_id")
   const form = useForm({})
-  const router = useRouter()
 
   const handlePrevious = () => {
     setStep((prev) => prev - 1)
@@ -49,30 +52,34 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
         (val) => val && val.trim() !== ""
       )
 
-      if (!hasAnyLink) {
-        toast({
-          title: "Profile data saved successfully",
-          duration: 2000
-        })
-        router.push(`/profile`)
-        return
+      const finalData = {
+        ...socialPlatforms,
+        is_profile_completed: 1
       }
 
-      const res = await submitUserProfileData(user.unique_id, socialPlatforms)
+      const res = await submitUserProfileData(
+        user.unique_id,
+        finalData,
+        ReferralId || ""
+      )
 
       if (res?.success) {
+        setUserProfile((prev) => (prev ? { ...prev, profile: res.data } : null))
         toast({
-          title: "Social links added successfully",
+          title: hasAnyLink
+            ? "Social links added successfully"
+            : "Profile data saved successfully",
           duration: 2000
         })
 
         if (!submitDataLoading) {
-          router.push(`/profile`)
+          setStep(4) // Go to completion step
         }
       } else {
         setIsTransitioning(false)
       }
-    } catch {
+    } catch (error) {
+      console.error("Error submitting social links:", error)
       toast({
         title: "Failed to save Data",
         variant: "destructive",

@@ -46,10 +46,10 @@ async function layout({ children, params }: Props) {
     : undefined
 
   return (
-    <div className="grid grid-cols-12 w-full h-[calc(100vh-6rem)] overflow-hidden">
+    <div className="flex flex-col md:grid md:grid-cols-12 w-full h-[calc(100vh-6rem)] overflow-hidden">
       {userRole || isAdmin ? (
         <>
-          <div className="col-span-2 border-r p-2 pl-0 overflow-y-auto">
+          <div className="md:col-span-2 md:border-r md:overflow-y-auto border-b md:border-b-0 mb-2 shrink-0">
             <ProjectSidebar
               currProject={currentProject}
               statusList={projectStatusList.data ?? []}
@@ -57,8 +57,10 @@ async function layout({ children, params }: Props) {
             />
           </div>
 
-          <div className="col-span-10 overflow-hidden">
-            <div className="grid grid-cols-1 h-full">{children}</div>
+          <div className="flex-1 md:col-span-10 overflow-hidden min-h-0">
+            <div className="grid grid-cols-1 h-full px-2 md:px-4">
+              {children}
+            </div>
           </div>
         </>
       ) : (

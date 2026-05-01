@@ -43,6 +43,11 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
     references: [profileTable.user_id],
     relationName: "userToProfile"
   }),
+  userRewardLevel: one(userRewardsLevelTable, {
+    fields: [usersTable.unique_id],
+    references: [userRewardsLevelTable.user_id],
+    relationName: "userRewardsLevelToUser"
+  }),
   chats: many(userChatsTable, {
     relationName: "UserChats"
   }),
@@ -111,6 +116,21 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
   createdChats: many(chatsTable, {
     relationName: "chatToCreator"
+  }),
+  pointLedger: many(pointLedgerTable, {
+    relationName: "pointLedgerToUser"
+  }),
+  advisorTrustVerification: many(trustVerificationTable, {
+    relationName: "trustVerificationToAdvisor"
+  }),
+  userTrustVerification: many(trustVerificationTable, {
+    relationName: "trustVerificationToUser"
+  }),
+  userRewardBalance: many(userRewardBalanceTable, {
+    relationName: "userRewardBalanceToUser"
+  }),
+  testedTasks: many(taskTable, {
+    relationName: "taskTester"
   })
 }))
 
@@ -155,6 +175,7 @@ export const profileTable = pgTable("profile", {
   sum_of_ratings: integer().default(0),
   number_of_ratings: integer().default(0),
   total_average_rating: varchar().default("0"),
+  is_profile_completed: integer().notNull().default(0),
   ...timestamps
 })
 
@@ -1058,6 +1079,7 @@ export const taskTable = pgTable("task", {
   assign_to: varchar(),
   assign_by: varchar(),
   parent_task_id: varchar(),
+  tested_by: varchar(),
   ...timestamps
 })
 
@@ -1069,6 +1091,7 @@ export type SelectTask = typeof taskTable.$inferSelect & {
   parentTask?: SelectTask | null
   subTasks?: SelectTask[]
   creator?: SelectUser | null
+  testedBy?: SelectUser | null
 }
 
 export const taskRelations = relations(taskTable, ({ one, many }) => ({
@@ -1102,6 +1125,11 @@ export const taskRelations = relations(taskTable, ({ one, many }) => ({
     fields: [taskTable.created_by],
     references: [usersTable.unique_id],
     relationName: "taskCreator"
+  }),
+  testedBy: one(usersTable, {
+    fields: [taskTable.tested_by],
+    references: [usersTable.unique_id],
+    relationName: "taskTester"
   })
 }))
 
@@ -1139,6 +1167,7 @@ export const TaskStatusTable = pgTable("tasks_status", {
   name: varchar().notNull(),
   position: integer().notNull(),
   status_slug: varchar(),
+  defination_of_completion: boolean(),
   ...timestamps
 })
 
@@ -1590,36 +1619,340 @@ export type InsertProjectRecentActivity =
 export type SelectProjectRecentActivity =
   typeof projectRecentActivityTable.$inferSelect
 
-
-  export const invitationsTable = pgTable("invitations", {
-    id: varchar("id", { length: 36 })
-      .primaryKey()
-      .$defaultFn(() => randomUUID()),
-    invite_key: varchar("key").notNull().unique(),
-    invite_email: jsonb("invite_email").default([]).notNull(),
-    joined_email: jsonb("joined_email").default([]).notNull(),
-    invited_by: varchar("invited_by", { length: 36 })
-      .notNull()
-      .references(() => usersTable.unique_id),
-    entity_id: varchar("entity_id").notNull(),
-    entity_type: varchar("entity_type").notNull(),
-    role_offer_id: integer("role_offer_id")
+export const invitationsTable = pgTable("invitations", {
+  id: varchar("id", { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  invite_key: varchar("key").notNull().unique(),
+  invite_email: jsonb("invite_email").default([]).notNull(),
+  joined_email: jsonb("joined_email").default([]).notNull(),
+  invited_by: varchar("invited_by", { length: 36 })
+    .notNull()
+    .references(() => usersTable.unique_id),
+  entity_id: varchar("entity_id").notNull(),
+  entity_type: varchar("entity_type").notNull(),
+  role_offer_id: integer("role_offer_id")
     .notNull()
     .references(() => rolesTable.id),
-    ...timestamps
+  ...timestamps
+})
+
+export const invitationsRelations = relations(invitationsTable, ({ one }) => ({
+  inviter: one(usersTable, {
+    fields: [invitationsTable.invited_by],
+    references: [usersTable.unique_id],
+    relationName: "userToInvitations"
+  }),
+  role: one(rolesTable, {
+    fields: [invitationsTable.role_offer_id],
+    references: [rolesTable.id]
   })
-  
-  export const invitationsRelations = relations(invitationsTable, ({ one }) => ({
-    inviter: one(usersTable, {
-      fields: [invitationsTable.invited_by],
-      references: [usersTable.unique_id],
-      relationName: "userToInvitations"
+}))
+
+export type InsertInvitation = typeof invitationsTable.$inferInsert
+export type SelectInvitation = typeof invitationsTable.$inferSelect
+
+export const featureFlagsTable = pgTable("feature_flags", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  key: varchar().notNull().unique(),
+  label: varchar().notNull(),
+  is_enabled: boolean().notNull().default(false),
+  description: text(),
+  ...timestamps
+})
+
+export type InsertFeatureFlag = typeof featureFlagsTable.$inferInsert
+export type SelectFeatureFlag = typeof featureFlagsTable.$inferSelect
+export const rewardsMetadataTable = pgTable("rewards_metadata", {
+  reward_id: integer().primaryKey(),
+  internal_name: varchar().notNull(),
+  display_name: varchar().notNull(),
+  is_soulbound: boolean().notNull().default(true),
+  has_decay: boolean().notNull().default(false),
+  decay_period: integer().notNull(),
+  ...timestamps
+})
+
+export const rewardsMetadataRelations = relations(
+  rewardsMetadataTable,
+  ({ many }) => ({
+    rules: many(activityRulesTable, {
+      relationName: "activityRuleToReward"
     }),
-    role: one(rolesTable, {
-      fields: [invitationsTable.role_offer_id],
-      references: [rolesTable.id],
+    ledger: many(pointLedgerTable, {
+      relationName: "pointLedgerToReward"
+    }),
+    rewardBalance: many(userRewardBalanceTable, {
+      relationName: "userRewardBalanceToReward"
+    }),
+    rewardLevels: many(rewardLevelTable, {
+      relationName: "rewardLevelToReward"
     })
-  }))
-  
-  export type InsertInvitation = typeof invitationsTable.$inferInsert
-  export type SelectInvitation = typeof invitationsTable.$inferSelect
+  })
+)
+
+export type InsertRewardsMetadata = typeof rewardsMetadataTable.$inferInsert
+export type SelectRewardsMetadata = typeof rewardsMetadataTable.$inferSelect
+
+export const activityRulesTable = pgTable("activity_rules", {
+  rule_id: integer().primaryKey(),
+  action_type: varchar().notNull(),
+  action_display_name: varchar().notNull(),
+  reward_id: integer().notNull(),
+  base_points: integer().notNull(),
+  category_group: varchar().notNull(),
+  required_verification: boolean().notNull().default(false),
+  is_active: boolean().notNull().default(true),
+  description: varchar().notNull(),
+  ...timestamps
+})
+
+export const activityRulesRelations = relations(
+  activityRulesTable,
+  ({ one, many }) => ({
+    reward: one(rewardsMetadataTable, {
+      fields: [activityRulesTable.reward_id],
+      references: [rewardsMetadataTable.reward_id],
+      relationName: "activityRuleToReward"
+    }),
+    rules: many(pointLedgerTable, {
+      relationName: "pointLedgerToRule"
+    }),
+    trustVerification: many(trustVerificationTable, {
+      relationName: "trustVerificationToRule"
+    })
+  })
+)
+
+export type InsertActivityRules = typeof activityRulesTable.$inferInsert
+export type SelectActivityRules = typeof activityRulesTable.$inferSelect & {
+  reward?: SelectRewardsMetadata
+}
+
+export const pointLedgerTable = pgTable("point_ledger", {
+  transection_id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  user_id: varchar().notNull(),
+  reward_id: integer().notNull(),
+  rule_id: integer().notNull(),
+  amount: integer().notNull(),
+  source_system: varchar().notNull(),
+  external_ref_id: varchar().notNull(),
+  metadata: jsonb().notNull(),
+  trust_verification_id: integer(),
+  transection_type: varchar().notNull(),
+  ...timestamps
+})
+
+export const pointLedgerRelations = relations(pointLedgerTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [pointLedgerTable.user_id],
+    references: [usersTable.unique_id],
+    relationName: "pointLedgerToUser"
+  }),
+  reward: one(rewardsMetadataTable, {
+    fields: [pointLedgerTable.reward_id],
+    references: [rewardsMetadataTable.reward_id],
+    relationName: "pointLedgerToReward"
+  }),
+  rule: one(activityRulesTable, {
+    fields: [pointLedgerTable.rule_id],
+    references: [activityRulesTable.rule_id],
+    relationName: "pointLedgerToRule"
+  }),
+  trustVerification: one(trustVerificationTable, {
+    fields: [pointLedgerTable.trust_verification_id],
+    references: [trustVerificationTable.verification_id],
+    relationName: "pointLedgerToTrustVerification"
+  })
+}))
+
+export type InsertPointLedger = typeof pointLedgerTable.$inferInsert
+export type SelectPointLedger = typeof pointLedgerTable.$inferSelect & {
+  user?: SelectUser
+  reward?: SelectRewardsMetadata
+  rule?: SelectActivityRules
+  trustVerification?: SelectTrustVerification
+}
+
+export const trustVerificationTable = pgTable("trust_verification", {
+  verification_id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  user_id: varchar().notNull(),
+  rule_id: integer().notNull(),
+  approved_by: varchar(),
+  status: varchar().notNull(),
+  proof_url: varchar().notNull(),
+  points: integer().notNull(),
+  feedback: varchar(),
+  verified_at: varchar(),
+  metadata: jsonb(),
+  ...timestamps
+})
+
+export const trustVerificationRelations = relations(
+  trustVerificationTable,
+  ({ one, many }) => ({
+    user: one(usersTable, {
+      fields: [trustVerificationTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "trustVerificationToUser"
+    }),
+    rule: one(activityRulesTable, {
+      fields: [trustVerificationTable.rule_id],
+      references: [activityRulesTable.rule_id],
+      relationName: "trustVerificationToRule"
+    }),
+    advisor: one(usersTable, {
+      fields: [trustVerificationTable.approved_by],
+      references: [usersTable.unique_id],
+      relationName: "trustVerificationToAdvisor"
+    }),
+    ledger: many(pointLedgerTable, {
+      relationName: "pointLedgerToTrustVerification"
+    })
+  })
+)
+
+export type InsertTrustVerification = typeof trustVerificationTable.$inferInsert
+export type SelectTrustVerification = typeof trustVerificationTable.$inferSelect
+
+export const userRewardBalanceTable = pgTable("user_reward_balance", {
+  user_id: varchar().notNull(),
+  reward_id: integer().notNull(),
+  current_balance: integer().notNull(),
+  last_updated_at: varchar()
+    .default(sql`now()`)
+    .notNull(),
+  ...timestamps
+})
+
+export const userRewardBalanceRelations = relations(
+  userRewardBalanceTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [userRewardBalanceTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "userRewardBalanceToUser"
+    }),
+    reward: one(rewardsMetadataTable, {
+      fields: [userRewardBalanceTable.reward_id],
+      references: [rewardsMetadataTable.reward_id],
+      relationName: "userRewardBalanceToReward"
+    })
+  })
+)
+
+export type InsertUserRewardBalance = typeof userRewardBalanceTable.$inferInsert
+export type SelectUserRewardBalance = typeof userRewardBalanceTable.$inferSelect
+
+export const rewardLevelTable = pgTable("reward_level", {
+  id: integer().primaryKey(),
+  name: varchar().notNull(),
+  description: varchar(),
+  key: varchar().notNull(),
+  min_points: integer().notNull(),
+  max_points: integer(),
+  reward_id: integer().notNull(),
+  ...timestamps
+})
+
+export const rewardLevelRelations = relations(
+  rewardLevelTable,
+  ({ one, many }) => ({
+    userRewardLevels: many(userRewardsLevelTable, {
+      relationName: "userRewardsLevelToRewardLevel"
+    }),
+    reward: one(rewardsMetadataTable, {
+      fields: [rewardLevelTable.reward_id],
+      references: [rewardsMetadataTable.reward_id],
+      relationName: "rewardLevelToReward"
+    })
+  })
+)
+
+export type InsertRewardLevel = typeof rewardLevelTable.$inferInsert
+export type SelectRewardLevel = typeof rewardLevelTable.$inferSelect
+
+export const userRewardsLevelTable = pgTable("user_rewards_level", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  user_id: varchar().notNull(),
+  level_id: integer().notNull(),
+  ...timestamps
+})
+
+export const userRewardsLevelRelations = relations(
+  userRewardsLevelTable,
+  ({ one }) => ({
+    rewardLevel: one(rewardLevelTable, {
+      fields: [userRewardsLevelTable.level_id],
+      references: [rewardLevelTable.id],
+      relationName: "userRewardsLevelToRewardLevel"
+    }),
+    user: one(usersTable, {
+      fields: [userRewardsLevelTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "userRewardsLevelToUser"
+    })
+  })
+)
+
+export type InsertUserRewardsLevel = typeof userRewardsLevelTable.$inferInsert
+export type SelectUserRewardsLevel =
+  typeof userRewardsLevelTable.$inferSelect & {
+    rewardLevel?: SelectRewardLevel
+    user?: SelectUser
+  }
+
+export const successfullReferralsTable = pgTable("successful_referrals", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  referrer_user_id: varchar().notNull(),
+  referred_user_id: varchar().notNull(),
+  ...timestamps
+})
+
+export type InsertSuccessfulReferral =
+  typeof successfullReferralsTable.$inferInsert
+export type SelectSuccessfulReferral =
+  typeof successfullReferralsTable.$inferSelect
+
+export const leaderboardSnapshotsTable = pgTable("leaderboard_snapshots", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  community_id: varchar("community_id", { length: 36 })
+    .notNull()
+    .references(() => communitiesTable.id, { onDelete: "cascade" }),
+  user_id: varchar("user_id", { length: 36 })
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  reward_id: integer().notNull(),
+  rank: integer().notNull(),
+  points: integer().notNull().default(0),
+  points_gained: integer().notNull().default(0),
+  trend: varchar("trend").default("neutral"),
+  rank_change: integer().default(0),
+  snapshot_date: varchar().notNull(), // Keep for daily reference
+  snapshot_datetime: varchar().notNull(), // Timestamp for flexible scheduling
+  ...timestamps
+})
+
+export const leaderboardSnapshotsRelations = relations(
+  leaderboardSnapshotsTable,
+  ({ one }) => ({
+    community: one(communitiesTable, {
+      fields: [leaderboardSnapshotsTable.community_id],
+      references: [communitiesTable.id],
+      relationName: "leaderboardToCommunity"
+    }),
+    user: one(usersTable, {
+      fields: [leaderboardSnapshotsTable.user_id],
+      references: [usersTable.unique_id],
+      relationName: "leaderboardToUser"
+    })
+  })
+)
+
+export type InsertLeaderboardSnapshot =
+  typeof leaderboardSnapshotsTable.$inferInsert
+export type SelectLeaderboardSnapshot =
+  typeof leaderboardSnapshotsTable.$inferSelect & {
+    user?: SelectUser
+    community?: SelectCommunity
+  }

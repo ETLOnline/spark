@@ -1,30 +1,509 @@
 "use server"
 
-import { InsertReward, InsertUserReward } from "@/src/db/schema"
+import {
+  AddLedgerEntry,
+  AddVerificationEntry,
+  assignUserRewardLevel,
+  GetActivityRule,
+  GetActivityRules,
+  GetRewardLevel,
+  GetRewardLevels,
+  GetUserApprovedVerificationCount,
+  GetUserPointLedger,
+  GetUserRewardBalance,
+  GetUserRewardLevel,
+  HasUserBeenRewardedForResource,
+  InsertUserRewardBalance,
+  updateTrustVerification,
+  UpdateUserRewardBalance,
+  UpdateUserRewardlevel
+} from "@/src/db/data-access/reward/query"
 import { CreateServerAction } from ".."
-import { AddReward } from "@/src/db/data-access/reward/query"
-import { AddRewardForUser } from "@/src/db/data-access/reward/query"
+import {
+  InsertPointLedger,
+  InsertTrustVerification,
+  SelectActivityRules
+} from "@/src/db/schema"
+import { AuthUserAction } from "../User/AuthUserAction"
+import {
+  ActivityTypes,
+  RewardTypes,
+  TrustVerificationStatus
+} from "@/src/types/Rewards/rewards"
+import { triggerPusherEvent } from "@/src/services/trigger"
+import { getFeatureFlagAction } from "../FeatureFlag/FeatureFlag"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
+import { getProjectById } from "@/src/db/data-access/project-management/query"
 
 export const AddRewardAction = CreateServerAction(
   true,
-  async (data: InsertReward[]) => {
+  async (
+    action_type: string,
+    user_id: string,
+    proof_url?: string,
+    metadata?: any,
+    verification_id?: number,
+    idempotency_field?: string,
+    idempotency_value?: string
+  ) => {
     try {
-      const insertedRewards = await AddReward(data)
-      return { success: true, data: insertedRewards }
+      const fetureFlag = await getFeatureFlagAction(["Trust_Engine_Enabled"])
+      if (!fetureFlag?.success || !fetureFlag.data?.is_enabled) {
+        return { success: true, data: null }
+      }
+
+      const activityRule = await GetActivityRule({ action_type })
+
+      if (!activityRule) {
+        return { success: false, error: "Activity rule not found" }
+      }
+
+      const isReputationPoints =
+        activityRule.reward?.internal_name === RewardTypes.Reputation_Points
+
+      if (
+        isReputationPoints &&
+        metadata?.project_id &&
+        !metadata?.community_id
+      ) {
+        const project = await getProjectById(metadata.project_id, true)
+        const resolvedCommunityId = project?.channel?.community_id ?? null
+        metadata = { ...metadata, community_id: resolvedCommunityId }
+      }
+
+      let rewardAlreadyApplied = false
+
+      if (idempotency_field && idempotency_value) {
+        const checkResult = await CheckRewardAlreadyGivenAction(
+          user_id,
+          action_type,
+          idempotency_field,
+          idempotency_value
+        )
+
+        if (checkResult?.data?.alreadyRewarded) {
+          rewardAlreadyApplied = true
+          return { success: true, data: null, skipped: true }
+        }
+      }
+
+      const ledgerData = {
+        user_id: user_id,
+        reward_id: activityRule.reward_id,
+        rule_id: activityRule.rule_id,
+        amount: activityRule.base_points,
+        source_system: "internal_app",
+        external_ref_id: "",
+        trust_verification_id: verification_id || null,
+        metadata: {
+          milestone_id: null,
+          milestone_type: null,
+          milestone_url: null,
+          proof_url: proof_url || null,
+          ...metadata
+        },
+        transection_type: "debit"
+      }
+
+      const ledgerEntry = await AddLedgerEntry(ledgerData as InsertPointLedger)
+
+      const existingBalanceResponse = await GetUserRewardBalanceAction(
+        user_id,
+        activityRule.reward_id
+      )
+
+      let userRewardBalance
+
+      if (existingBalanceResponse?.success && existingBalanceResponse.data) {
+        const existingBalance = existingBalanceResponse.data
+        const newTotal =
+          (existingBalance.current_balance || 0) + activityRule.base_points
+        userRewardBalance = await UpdateUserRewardBalanceAction(
+          user_id,
+          activityRule.reward_id,
+          newTotal
+        )
+      } else {
+        userRewardBalance = await InsertUserRewardBalanceAction(
+          user_id,
+          activityRule.reward_id,
+          activityRule.base_points
+        )
+      }
+
+      if (userRewardBalance?.success && userRewardBalance?.data) {
+        await SyncUserRewardLevelAction(
+          user_id,
+          userRewardBalance.data[0].current_balance,
+          activityRule
+        )
+      }
+
+      if (activityRule.required_verification && !rewardAlreadyApplied) {
+        const activity = await GetActivityRule({
+          action_type: ActivityTypes.MilestoneApproval
+        })
+
+        const verificationData = {
+          user_id: user_id,
+          rule_id: activityRule.rule_id,
+          status: TrustVerificationStatus.Pending,
+          points: activity?.base_points,
+          proof_url: proof_url,
+          metadata: {
+            task_id: metadata?.task_id ?? null,
+            project_id: metadata?.project_id ?? null,
+            proof_url: proof_url ?? null
+          }
+        }
+
+        const verificationEntry = await AddVerificationEntry(
+          verificationData as InsertTrustVerification
+        )
+      }
+      // add pusher for send real time
+      await triggerPusherEvent(user_id, "reward_added", {
+        ledgerEntry,
+        userRewardBalance
+      })
+
+      return { success: true, data: ledgerEntry }
     } catch (error) {
+      console.log(error, "error")
       return { success: false, error: error }
     }
   }
 )
 
-export const AddRewardForUserAction = CreateServerAction(
+export const UpdateTrustVerificationAction = CreateServerAction(
   true,
-  async (data: InsertUserReward[]) => {
+  async (verification_id: number, status: string, feedback: string) => {
     try {
-      const insertedRewards = await AddRewardForUser(data)
-      return { success: true, data: insertedRewards }
+      const user = await AuthUserAction()
+      if (!user) {
+        throw new Error("Unauthorized", { cause: 401 })
+      }
+
+      const data = {
+        status,
+        feedback,
+        approved_by: user.unique_id,
+        verified_at: new Date().toISOString()
+      }
+
+      const trustVerification = await updateTrustVerification(
+        verification_id,
+        data
+      )
+
+      const isApproved =
+        trustVerification?.status === TrustVerificationStatus.Approved
+
+      const taskCompletionRule = await GetActivityRule({
+        action_type: ActivityTypes.TaskCompletion
+      })
+
+      const isTaskCompletion =
+        taskCompletionRule &&
+        trustVerification.rule_id === taskCompletionRule.rule_id
+
+      // Forward project_id + task_id from the verification record. AddRewardAction
+      // resolves community_id from project_id — single source of truth.
+      const verificationMetadata = (trustVerification?.metadata ?? {}) as {
+        project_id?: string
+        task_id?: string
+      }
+      const baseMetadata = {
+        project_id: verificationMetadata.project_id,
+        task_id: verificationMetadata.task_id,
+        verification_id
+      }
+
+      if (isApproved && isTaskCompletion) {
+        const assigneeId = trustVerification.user_id
+
+        // Task completion verified — reward assignee
+        await AddRewardAction(
+          ActivityTypes.TaskCompletionVerification,
+          assigneeId,
+          trustVerification.proof_url,
+          baseMetadata,
+          verification_id,
+          "verification_id",
+          String(verification_id)
+        )
+
+        if (trustVerification?.approved_by) {
+          await AddRewardAction(
+            ActivityTypes.TaskCompletionReview,
+            trustVerification.approved_by,
+            trustVerification.proof_url,
+            baseMetadata,
+            verification_id,
+            "verification_id",
+            String(verification_id)
+          )
+        }
+      }
+
+      return { success: true, data: trustVerification }
     } catch (error) {
-      return { success: false, error: error }
+      return { success: false, error }
     }
   }
 )
+
+/**
+ * Action to fetch the current balance for a specific user and reward type.
+ */
+export const GetUserRewardBalanceAction = CreateServerAction(
+  true,
+  async (user_id: string, reward_id: number) => {
+    try {
+      const balance = await GetUserRewardBalance(user_id, reward_id)
+      return { success: true, data: balance }
+    } catch (error) {
+      return { success: false, error: "Failed to fetch balance" }
+    }
+  }
+)
+
+/**
+ * Action to update an existing reward balance with a new total.
+ */
+export const UpdateUserRewardBalanceAction = CreateServerAction(
+  true,
+  async (user_id: string, reward_id: number, new_balance: number) => {
+    try {
+      const res = await UpdateUserRewardBalance(user_id, reward_id, new_balance)
+      return { success: true, data: res }
+    } catch (error) {
+      return { success: false, error: "Failed to update balance" }
+    }
+  }
+)
+
+/**
+ * Action to create a new reward balance entry for a user.
+ */
+export const InsertUserRewardBalanceAction = CreateServerAction(
+  true,
+  async (user_id: string, reward_id: number, amount: number) => {
+    try {
+      const res = await InsertUserRewardBalance(user_id, reward_id, amount)
+      return { success: true, data: res }
+    } catch (error) {
+      return { success: false, error: "Failed to insert balance" }
+    }
+  }
+)
+export const GetRewardLevelAction = CreateServerAction(
+  true,
+  async (points: number) => {
+    try {
+      const res = await GetRewardLevel(points)
+      return { success: true, data: res }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const GetUSerRewardLevelAction = CreateServerAction(
+  true,
+  async (user_id: string) => {
+    try {
+      const res = await GetUserRewardLevel(user_id)
+      return { success: true, data: res }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const SyncUserRewardLevelAction = CreateServerAction(
+  true,
+  async (
+    user_id: string,
+    currentBalance: number,
+    activity_rule: SelectActivityRules
+  ) => {
+    try {
+      const [currentLevel, levelBasedOnPoints, rewardLevels] =
+        await Promise.all([
+          GetUserRewardLevel(user_id),
+          GetRewardLevel(currentBalance),
+          GetRewardLevels()
+        ])
+
+      if (!levelBasedOnPoints) {
+        return { success: false, error: "Reward level not found" }
+      }
+
+      if (!currentLevel) {
+        const newUserReward = await assignUserRewardLevel(
+          user_id,
+          rewardLevels[0].id
+        )
+        return { success: true, data: newUserReward }
+      }
+
+      if (activity_rule.reward?.internal_name !== RewardTypes.Reputation_Points)
+        return { success: true }
+
+      if (currentLevel.level_id === levelBasedOnPoints.id) {
+        return { success: true }
+      }
+
+      const updatedUserRewardLevel = await UpdateUserRewardlevel(
+        user_id,
+        levelBasedOnPoints.id
+      )
+
+      await triggerPusherEvent(user_id, "level_up", {
+        newLevel: levelBasedOnPoints,
+        currentUserBalance: currentBalance
+      })
+
+      return { success: true, data: updatedUserRewardLevel }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const GetUserTransactionsAction = CreateServerAction(
+  true,
+  async (user_id: string, page: number = 1, pageSize: number = 10) => {
+    try {
+      const result = await GetUserPointLedger(user_id, page, pageSize)
+      return { success: true, data: result.data, total: result.total }
+    } catch (error) {
+      console.error("Error fetching user transactions:", error)
+      return { success: false, error: "Failed to fetch transactions" }
+    }
+  }
+)
+
+export const AddTaskRewardAction = CreateServerAction(
+  true,
+  async (
+    activityType: ActivityTypes,
+    payload: {
+      user_id: string
+      task_id?: string
+      project_id?: string
+      sprint_id?: string
+      comment_id?: number
+      community_id?: string
+    },
+    idempotency_field?: string,
+    idempotency_value?: string
+  ) => {
+    try {
+      const { user_id, task_id, project_id, sprint_id, comment_id } = payload
+
+      if (!user_id) return { success: false, error: "user_id is required" }
+
+      let proof_url: string | undefined
+      let metadata: Record<string, any> = {}
+
+      if (task_id && project_id) {
+        proof_url = createAbsoluteUrl(`/project/${project_id}/task/${task_id}`)
+        metadata = {
+          task_id,
+          project_id,
+          ...(comment_id ? { comment_id } : {})
+        }
+      } else if (sprint_id && project_id) {
+        proof_url = createAbsoluteUrl(`/project/${project_id}/sprint`)
+        metadata = { sprint_id, project_id }
+      } else if (project_id) {
+        proof_url = createAbsoluteUrl(`/project/${project_id}/details`)
+        metadata = { project_id }
+      }
+
+      return await AddRewardAction(
+        activityType,
+        user_id,
+        proof_url,
+        metadata,
+        undefined,
+        idempotency_field,
+        idempotency_value
+      )
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+export const GetUserApprovedVerificationCountAction = CreateServerAction(
+  true,
+  async (user_id: string) => {
+    try {
+      const count = await GetUserApprovedVerificationCount(user_id)
+      return { success: true, data: count }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const getRewardLevelsAction = CreateServerAction(true, async () => {
+  try {
+    const levels = await GetRewardLevels()
+    return { success: true, data: levels }
+  } catch (error) {
+    return { success: false, error }
+  }
+})
+
+/**
+ * Check whether a user has already been rewarded for a specific resource.
+ *
+ * @param user_id     - The user to check
+ * @param action_type - The ActivityTypes key (used to look up the rule_id)
+ * @param field       - The JSONB metadata key to match (e.g. "post_id", "task_id", "sprint_id")
+ * @param value       - The resource ID value to match
+ *
+ * Returns { alreadyRewarded: true } when a matching ledger entry already exists,
+ * so callers can skip AddRewardAction and avoid duplicate points.
+ */
+export const CheckRewardAlreadyGivenAction = CreateServerAction(
+  true,
+  async (
+    user_id: string,
+    action_type: string,
+    field: string,
+    value: string
+  ) => {
+    try {
+      const activityRule = await GetActivityRule({ action_type })
+
+      if (!activityRule) {
+        // Rule doesn't exist — treat as not rewarded so the reward flow can handle it
+        return { success: true, data: { alreadyRewarded: false } }
+      }
+
+      const alreadyRewarded = await HasUserBeenRewardedForResource(
+        user_id,
+        activityRule.rule_id,
+        field,
+        value
+      )
+
+      return { success: true, data: { alreadyRewarded } }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const GetActivityRulesAction = CreateServerAction(true, async () => {
+  try {
+    const rules = await GetActivityRules()
+    return { success: true, data: rules }
+  } catch (error) {
+    return { success: false, error }
+  }
+})

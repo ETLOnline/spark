@@ -133,44 +133,65 @@ export default function SprintCardPage({
     <>
       <Card className="w-full overflow-hidden">
         <CardHeader className="bg-muted/50 rounded-t-lg p-4">
-          <div className="flex items-center justify-between">
-            <div className="">
-              <div className="flex items-center gap-2 mb-1">
-                <CardTitle className="text-lg font-bold">
-                  {sprint.title}
-                </CardTitle>
-                <Badge>{ToUpperCase(sprint.sprint_status || "")}</Badge>
-                <CardDescription>
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+            {/* Left Side: Title & Info */}
+            <div className="flex justify-between items-start xl:items-center gap-4 w-full xl:w-auto">
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <CardTitle className="text-lg font-bold">
+                    {sprint.title}
+                  </CardTitle>
+                  <Badge>{ToUpperCase(sprint.sprint_status || "")}</Badge>
+                </div>
+                <CardDescription className="text-sm">
                   {`${moment(sprint.start_date).format("L")} - ${moment(sprint.end_date).format("L")}`}
                 </CardDescription>
               </div>
+
+              {/* Mobile Context Menu (Visible only on small screens) */}
+              <div className="block xl:hidden shrink-0 mt-1">
+                <SprintContextMenu
+                  sprintTasks={filteredTasks}
+                  sprint={sprint}
+                  isSprintContextMenuOpen={isSprintContextMenuOpen}
+                  setIsSprintContextMenuOpen={setIsSprintContextMenuOpen}
+                  isSprintCompleted={isSprintCompleted}
+                />
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <TaskFilters
-                projectId={projectId}
-                onApplyFilters={HandleTaskFilters}
-              />
 
-              {canCreateTask &&
-                (!isSprintCompleted ? (
-                  <Button
-                    variant={"outline"}
-                    onClick={() => {
-                      setIsTaskModalOpen?.(true)
-                      setSprintId?.(sprint.id ?? "")
-                    }}
-                  >
-                    Add Task
-                  </Button>
-                ) : null)}
+            {/* Right Side: Actions & Filters */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
+              <div className="w-full sm:w-auto flex-1 sm:flex-none">
+                <TaskFilters
+                  projectId={projectId}
+                  onApplyFilters={HandleTaskFilters}
+                />
+              </div>
 
-              <SprintContextMenu
-                sprintTasks={filteredTasks}
-                sprint={sprint}
-                isSprintContextMenuOpen={isSprintContextMenuOpen}
-                setIsSprintContextMenuOpen={setIsSprintContextMenuOpen}
-                isSprintCompleted={isSprintCompleted}
-              />
+              {canCreateTask && !isSprintCompleted && (
+                <Button
+                  variant={"outline"}
+                  className="w-full sm:w-auto shrink-0"
+                  onClick={() => {
+                    setIsTaskModalOpen?.(true)
+                    setSprintId?.(sprint.id ?? "")
+                  }}
+                >
+                  Add Task
+                </Button>
+              )}
+
+              {/* Desktop Context Menu */}
+              <div className="hidden xl:block shrink-0">
+                <SprintContextMenu
+                  sprintTasks={filteredTasks}
+                  sprint={sprint}
+                  isSprintContextMenuOpen={isSprintContextMenuOpen}
+                  setIsSprintContextMenuOpen={setIsSprintContextMenuOpen}
+                  isSprintCompleted={isSprintCompleted}
+                />
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -178,17 +199,35 @@ export default function SprintCardPage({
         <CardContent className="p-0">
           {/* Simple Task List */}
 
-          <div className="grid grid-cols-1 ">
-            <div className="grid grid-cols-12 p-4  border-t text-sm font-medium bg-muted/50">
-              <div className="col-span-1">Type</div>
-              <div className="col-span-1">ID</div>
-              <div className="col-span-3">Title</div>
-              <div className="col-span-1 text-center">Parent</div>
-              <div className="col-span-2 text-center">Status</div>
-              <div className="col-span-1 text-center">Priority</div>
-              <div className="col-span-1 text-center">Points</div>
-              <div className="col-span-1 text-center">Assignee</div>
-              <div className="col-span-1 text-center">Actions</div>
+          <div className="grid grid-cols-1">
+            <div className="hidden md:grid md:grid-cols-12 p-4 border-t text-sm font-medium bg-muted/50">
+              <div className="col-span-1 truncate" title="Type">
+                Type
+              </div>
+              <div className="col-span-1 text-left truncate" title="ID">
+                ID
+              </div>
+              <div className="col-span-3 text-left truncate" title="Title">
+                Title
+              </div>
+              <div className="col-span-1 text-center truncate" title="Parent">
+                Parent
+              </div>
+              <div className="col-span-2 text-center truncate" title="Status">
+                Status
+              </div>
+              <div className="col-span-1 text-center truncate" title="Priority">
+                Priority
+              </div>
+              <div className="col-span-1 text-center truncate" title="Points">
+                Points
+              </div>
+              <div className="col-span-1 text-center truncate" title="Assignee">
+                Assignee
+              </div>
+              <div className="col-span-1 text-center truncate" title="Action">
+                Action
+              </div>
             </div>
             {getTaskLoading || getFilteredTaskLoading ? (
               <div className="flex justify-center h-full w-full my-4">
@@ -208,27 +247,12 @@ export default function SprintCardPage({
               ))
             ) : (
               <div className="flex justify-center h-full w-full my-4">
-                <span className="text-muted-foreground">
+                <span className="text-muted-foreground text-sm">
                   No tasks assigned to this sprint.
                 </span>
               </div>
             )}
           </div>
-
-          {/* Progress Summary */}
-          {/* <div className="mt-3 pt-2 border-t border-gray-200 flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">
-                    Progress: {sprint.tasks.filter((task) => task.completed).length}/{sprint.tasks.length} completed
-                  </span>
-                  <div className="w-32 bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full"
-                      style={{
-                        width: `${(sprint.tasks.filter((task) => task.completed).length / sprint.tasks.length) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </div> */}
         </CardContent>
       </Card>
     </>

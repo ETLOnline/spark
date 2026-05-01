@@ -5,6 +5,8 @@ import { promises as fs } from "fs"
 import * as path from "path"
 import { randomUUID } from "crypto"
 import { AddFile } from "../db/data-access/file/query"
+import { GetSpaceById } from "../db/data-access/spaces/query"
+import { createAbsoluteUrl } from "./clientHelper"
 
 export const uploadFileToBucket = async (
   fileName: string,
@@ -78,4 +80,17 @@ export const addFileToDb = async (
   } finally {
     delFile()
   }
+}
+
+export const getPostUrl = async (postId: string, spaceId?: string) => {
+  const space = spaceId ? await GetSpaceById(spaceId) : null
+  let communityId = null
+  let proof_url = createAbsoluteUrl(`/posts/${postId}`)
+  if (space) {
+    communityId = space?.channel?.community_id
+    proof_url = createAbsoluteUrl(
+      `/channels/${space?.channel?.channel_slug}/spaces/${space?.space_slug}?page-type=posts&post-id=${postId}`
+    )
+  }
+  return { proof_url, communityId }
 }

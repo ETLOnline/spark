@@ -1,13 +1,10 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react" // Added useRef and useState
+import React, { useEffect, useState } from "react"
 import ProfileBio from "@/src/components/Dashboard/profile/profile-bio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   CalendarIcon,
-  LinkIcon,
-  UserIcon,
-  MailIcon,
   Plus,
   PencilIcon,
   GraduationCap,
@@ -18,7 +15,9 @@ import {
   Linkedin,
   Twitter,
   Instagram,
-  Globe
+  Globe,
+  Share2,
+  CopyIcon
 } from "lucide-react"
 import {
   SelectCertificate,
@@ -31,27 +30,17 @@ import { ExtendedRecommendations, Profile } from "./types/profile-types"
 import { Button } from "@/src/components/ui/button"
 import { useToast } from "@/src/hooks/use-toast"
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from "@/src/components/ui/tooltip"
-import {
   Card,
   CardHeader,
   CardTitle,
-  CardContent,
-  CardFooter
+  CardContent
 } from "@/src/components/ui/card"
 import { generateUrl, getPagePath, getUserRole } from "@/src/utils/helpers"
-import EditProfileModal from "./edit-profile-modal"
 import { UpdateUserProfilePictureAction } from "@/src/server-actions/User/User"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import Loader from "../../common/Loader/Loader"
 import { LoaderSizes } from "../../common/types/loader-types"
 import { useUser } from "@clerk/nextjs"
-import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
-import ProfileFollowActions from "./user/ProfileFollowActions"
 import EditEducationModal from "./EditEducationModal"
 import CertificateModal from "./CertificateModal"
 import RecommendationsModal from "./RecommendationsModal"
@@ -63,6 +52,13 @@ import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import EditSocialLinksModal from "./user/SocialLinksModal"
 import { SocialLinkItem } from "./user/SocialLinkItem"
+import UserProfileCard from "./UserProfileCard"
+import TrustEngineCard from "./trust-engine/TrustEngineCard"
+import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
+import { GetUserApprovedVerificationCountAction } from "@/src/server-actions/Reward/Reward"
+import { Input } from "../../ui/input"
+import { Skeleton } from "../../ui/skeleton"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
 type ProfileScreenProps = {
   tab?: string
@@ -76,21 +72,21 @@ export default function ProfileScreen({
   profileData
 }: ProfileScreenProps) {
   const { toast } = useToast()
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [loading, userData, error, updateUserProfile] = useServerAction(
     UpdateUserProfilePictureAction
   )
   const { user: clerkUser } = useUser()
-  const [currentImageUrl, setCurrentImageUrl] = useState(user?.profile_url) // State to manage current profile image URL
-  const [authUser, setAuthUser] = useState<SelectUser | null>(null)
+  const [currentImageUrl, setCurrentImageUrl] = useState(user?.profile_url)
   const [profile, setProfile] = useState(user.profile)
   const [certificates, setCertificates] = useState(user.certificates)
+  const [isFeatureEnable, setIsFeatureEnable] = useState(false)
   const [isQualificationModalOpen, setIsQualificationModalOpen] =
     useState(false)
   const [selectedCertificate, setSelectedCertificate] =
     useState<SelectCertificate | null>(null)
   const [isChangeCoverImageOpen, setIsChangeCoverImageOpen] = useState(false)
+  const [isMyProfile, setIsMyProfile] = useState<boolean | undefined>(undefined)
 
   const [recommendations, setRecommendations] = useState<
     SelectRecommendation[]
@@ -99,27 +95,27 @@ export default function ProfileScreen({
     user.profile?.total_average_rating
   )
   const [coverImage, setCoverImage] = useState(user.cover_image)
+  const [referralLink, setReferralLink] = useState("")
+  const authUser = useAtomValue(userStore.AuthUser)
 
-  // Get the updated user from atom store to handle dynamic name updates
-  const updatedUser = useAtomValue(userStore.AuthUser)
-
-  // Use updated user data if this is the current user's profile, otherwise use prop
-  const displayUser =
-    authUser?.unique_id === user?.unique_id ? updatedUser || user : user
+  const displayUser = isMyProfile && authUser ? authUser : user
 
   const [recommendationLoading, , , GetRecommendations] = useServerAction(
     GetRecommendationAction
   )
+  const [getFeatureFlagLoading, , , GetFeatureFlag] =
+    useServerAction(getFeatureFlagAction)
+
+  const [verifiedTaskCount, setVerifiedTaskCount] = useState<number>(0)
+  const [, , , GetVerifiedTaskCount] = useServerAction(
+    GetUserApprovedVerificationCountAction
+  )
 
   useEffect(() => {
-    const GetAuthUser = async () => {
-      const authUser = await AuthUserAction()
-      if (authUser) {
-        setAuthUser(authUser as SelectUser)
-      }
+    if (authUser && user) {
+      setIsMyProfile(authUser.unique_id === user.unique_id)
     }
-    GetAuthUser()
-  }, [user])
+  }, [authUser, user])
 
   useEffect(() => {
     const GetUserRecommendations = async () => {
@@ -197,16 +193,62 @@ export default function ProfileScreen({
     setIsQualificationModalOpen(true)
   }
 
+  useEffect(() => {
+    const fetchFeatureFlag = async () => {
+      const res = await GetFeatureFlag(["Trust_Engine_Enabled"])
+      if (res?.success && res?.data?.is_enabled) {
+        setIsFeatureEnable(true)
+      }
+    }
+    fetchFeatureFlag()
+  }, [])
+
+  useEffect(() => {
+    const fetchVerifiedCount = async () => {
+      const res = await GetVerifiedTaskCount(user.unique_id)
+      if (res?.success && res.data !== undefined) {
+        setVerifiedTaskCount(res.data)
+      }
+    }
+    fetchVerifiedCount()
+  }, [user.unique_id])
+
+  const CopyReferralLink = async () => {
+    try {
+      await navigator.clipboard.writeText(referralLink)
+      toast({
+        title: "Referral URL copied!",
+        description: "Your referral link has been copied to clipboard.",
+        duration: 3000
+      })
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to copy referral link",
+        duration: 3000
+      })
+    }
+  }
+
+  useEffect(() => {
+    if (isMyProfile) {
+      const encodedId = btoa(user.unique_id)
+      const ReferralURL = createAbsoluteUrl(`/?referral_id=${encodedId}`)
+      setReferralLink(ReferralURL)
+    }
+  }, [isMyProfile])
+
   return (
     <>
-      <div className="container mx-auto md:p-6 p-2 relative">
-        {loading ? (
+      <div className="container mx-auto p-3 sm:p-6 relative">
+        {loading || uploading ? (
           <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-50">
             <Loader size={LoaderSizes.xl} />
           </div>
         ) : null}
-        {/* Banner with Avatar */}
-        <div className="relative sm:h-44 h-36 shadow-sm  rounded-lg">
+        {/* Banner */}
+        <div className="relative h-32 sm:h-44 shadow-sm rounded-lg">
           {coverImage ? (
             <Image
               src={coverImage}
@@ -214,14 +256,14 @@ export default function ProfileScreen({
               width={1000}
               height={1000}
               objectFit="cover"
-              className="w-full h-36 sm:h-44 rounded-lg"
+              className="w-full h-32 sm:h-44 rounded-lg"
             />
           ) : (
-            <div className=" w-full sm:h-44 h-36 rounded-lg shadow-sm shadow-secondary object-cover cover-pattern" />
+            <div className="w-full h-32 sm:h-44 rounded-lg shadow-sm shadow-secondary object-cover cover-pattern" />
           )}
 
           {/* Change Cover Image Button */}
-          {authUser?.unique_id === user?.unique_id && (
+          {isMyProfile && (
             <Button
               variant={"outline"}
               className="absolute top-2 right-2 bg-background"
@@ -230,121 +272,31 @@ export default function ProfileScreen({
               <PencilIcon className="h-4 w-4" />
             </Button>
           )}
-
-          <div className="absolute bottom-0 left-16 transform -translate-x-1/2 translate-y-1/2">
-            <div className="relative">
-              {/* Added relative positioning for the button */}
-              <Avatar className="h-28 w-28 border-4 bg-secondary border-black">
-                <AvatarImage
-                  src={currentImageUrl || "/placeholder.png"} // Use currentImageUrl state
-                  alt="Profile"
-                  className="object-contain"
-                />
-                <AvatarFallback>IMG</AvatarFallback>
-              </Avatar>
-              {/* Edit Profile Picture Button */}
-              {authUser?.unique_id === user?.unique_id ? (
-                <>
-                  <button
-                    className="absolute bottom-0 right-0 bg-background border rounded-full p-1 hover:bg-muted"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={loading || uploading} // Disable while loading or uploading
-                  >
-                    <PencilIcon className="h-4 w-4" />
-                  </button>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                </>
-              ) : null}
-            </div>
-          </div>
         </div>
-
-        {/* Profile */}
-        <div className="mt-16 flex flex-wrap justify-between items-center">
-          <div className="flex flex-col items-start">
-            <div className="flex items-center">
-              <div className="flex flex-col items-center">
-                <h2 className="text-xl sm:text-2xl font-bold inline-flex items-center">
-                  {displayUser.first_name}{" "}
-                  {displayUser.last_name.length > 15
-                    ? `${displayUser.last_name.slice(0, 15)}...`
-                    : displayUser.last_name}
-                </h2>
-                <p className="w-full text-sm text-muted-foreground">
-                  {getUserRole(displayUser)}
-                </p>
-              </div>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="ml-2"
-                      onClick={handleCopyUrl}
-                    >
-                      <LinkIcon className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Copy profile URL</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            {/* <p className="text-base text-muted-foreground">Postion</p>
-          <p className="text-sm text-muted-foreground">Company Name</p> */}
-
-            {/* for future use */}
-            {/* <div className="mt-2 flex flex-wrap sm:gap-6 gap-3 text-sm">
-            <div className="flex items-center gap-1">
-              <UserIcon className="h-4 w-4" />
-              <span className="font-medium">{user.contacts?.filter(c=> c.is_accepted === 1).length}</span>
-              <span className="text-muted-foreground">connections</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="font-medium">000</span>
-              <span className="text-muted-foreground">followers</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="font-medium">000</span>
-              <span className="text-muted-foreground">following</span>
-            </div>
-          </div> */}
-          </div>
-
-          {authUser === null ? null : authUser?.unique_id ===
-            user?.unique_id ? null : (
-            <ProfileFollowActions user={user} />
-          )}
-        </div>
-
         {/* Main Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mx-2 sm:mx-8 lg:mx-16 -mt-12 sm:-mt-16">
           {/* Left */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Bio Section */}
-            <div className="flex items-center justify-between ">
-              <div className="flex items-center gap-2">
-                <UserIcon className="h-4 w-4" />
-                <span>Bio / Basic</span>
-              </div>
-              {authUser?.unique_id === user?.unique_id ? (
-                <EditProfileModal />
-              ) : null}
-            </div>
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+            <UserProfileCard
+              userInfo={displayUser}
+              currentImageUrl={currentImageUrl}
+              handleCopyUrl={handleCopyUrl}
+              onFileChange={handleFileChange}
+              isMyProfile={isMyProfile}
+            />
+            {/* Trust Engine Section  */}
+
+            {isFeatureEnable && <TrustEngineCard user={user} />}
+
             <ProfileBio
               userBio={user?.profile?.bio as string}
               tags={profileData?.tags as SelectTag[]}
+              isMyProfile={isMyProfile}
             />
             {/* Recommendations */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+                <CardTitle className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
                   <div className="flex items-center gap-2">
                     Recommendations
                     <p className="flex items-center gap-1 text-muted-foreground">
@@ -359,7 +311,7 @@ export default function ProfileScreen({
                       ) : null}
                     </p>
                   </div>
-                  {authUser?.unique_id !== user?.unique_id && (
+                  {!isMyProfile && (
                     <RecommendationsModal
                       userId={user?.unique_id}
                       authUserId={authUser?.unique_id}
@@ -375,7 +327,7 @@ export default function ProfileScreen({
                   {recommendations.length > 0 ? (
                     recommendations?.map((recommendation) => (
                       <div
-                        className="flex items-start gap-3"
+                        className="flex flex-col sm:flex-row items-start gap-3"
                         key={recommendation.id}
                       >
                         <Avatar className="h-10 w-10">
@@ -386,8 +338,8 @@ export default function ProfileScreen({
                             {recommendation?.recommender?.first_name || ""}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
+                        <div className="flex-1 w-full">
+                          <div className="flex flex-wrap items-center gap-2">
                             <h4 className="font-medium">
                               {recommendation?.recommender?.first_name}{" "}
                               {recommendation?.recommender?.last_name}
@@ -396,7 +348,7 @@ export default function ProfileScreen({
                               {recommendation.rating}
                               <FlameKindling className="h-4 w-4 text-[#92400e] fill-[#fde68a]" />
                             </span>
-                            <span className="text-sm text-muted-foreground">
+                            <span className="hidden sm:inline text-sm text-muted-foreground">
                               •
                             </span>
                             <span className="text-sm text-muted-foreground">
@@ -423,34 +375,78 @@ export default function ProfileScreen({
             </Card>
           </div>
           {/* Right Column */}
-          <div className="space-y-6">
-            {/* Contact Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <MailIcon className="h-5 w-5 text-gray-500" />
-                  <span className="truncate ">{user?.email}</span>
+          <div className="space-y-4 sm:space-y-6">
+            {/* Your Standing Card */}
+            {isFeatureEnable && (
+              <Card className="p-4 sm:p-6 spark-gradient-panel-bg">
+                <CardTitle className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                  {isMyProfile ? "Your Standing" : "Standing"}
+                </CardTitle>
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">
+                      Verified Task Completions
+                    </div>
+                    <div className="text-lg font-bold text-primary">
+                      {verifiedTaskCount}
+                    </div>
+                  </div>
+                  {/* <div className="border-t">
+                    <div className="text-sm text-muted-foreground pt-3">
+                      Your Percentile Rank
+                    </div>
+                    <div className="text-lg font-bold text-primary">0%</div>
+                  </div> */}
                 </div>
-                {/* for future use */}
-                {/* <div className="flex items-center space-x-2">
-                <PhoneIcon className="h-5 w-5 text-gray-500" />
-                <span>+923001234567</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <MapPinIcon className="h-5 w-5 text-gray-500" />
-                <span>City, Country</span>
-              </div> */}
-              </CardContent>
-            </Card>
+              </Card>
+            )}
+
+            {/* Referral Link */}
+            {isMyProfile && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Referral Link</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Share2 className="h-5 w-5 text-gray-500" />
+                      <h1 className="text-gray-400">Link</h1>
+                    </div>
+                  </div>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <span className="truncate text-sm text-muted-foreground flex-1">
+                      {referralLink ? (
+                        <Input
+                          type="text"
+                          className="w-full"
+                          value={referralLink}
+                          readOnly
+                        />
+                      ) : (
+                        <Skeleton className="h-8 w-full sm:w-32" />
+                      )}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full sm:w-auto mt-2 sm:mt-0"
+                      onClick={CopyReferralLink}
+                      disabled={!referralLink}
+                    >
+                      <CopyIcon className="h-4 w-4 mr-2 sm:mr-0" />
+                      <span className="sm:hidden">Copy Link</span>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             {/* Education */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   Education
-                  {authUser?.unique_id === user?.unique_id && (
+                  {isMyProfile && (
                     <EditEducationModal
                       user={user}
                       profile={profile as SelectProfile}
@@ -462,14 +458,14 @@ export default function ProfileScreen({
               <CardContent>
                 <div className="flex items-start gap-3">
                   <GraduationCap className="h-6 w-6 text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <div className="min-w-0 ">
-                    <h4 className="font-medium truncate">
+                  <div className="min-w-0">
+                    <h4 className="font-medium break-words">
                       {profile?.institute}
                     </h4>
-                    <p className="text-sm text-muted-foreground truncate">
+                    <p className="text-sm text-muted-foreground break-words">
                       {profile?.degree}
                     </p>
-                    <div className="flex items-center gap-1 mt-1">
+                    <div className="flex flex-wrap items-center gap-1 mt-1">
                       <CalendarIcon className="h-3 w-3 text-muted-foreground" />
                       <span className="text-xs text-muted-foreground">
                         {profile?.education_start_date} -{" "}
@@ -485,7 +481,7 @@ export default function ProfileScreen({
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   Social Links
-                  {authUser?.unique_id === user?.unique_id && (
+                  {isMyProfile && (
                     <EditSocialLinksModal
                       user={user}
                       profile={profile as SelectProfile}
@@ -513,7 +509,6 @@ export default function ProfileScreen({
                     url={profile.personal_website_url}
                   />
                 )}
-
                 {profile?.github_url && (
                   <SocialLinkItem
                     icon={<Github className="h-4 w-4" />}
@@ -521,7 +516,6 @@ export default function ProfileScreen({
                     url={profile.github_url}
                   />
                 )}
-
                 {profile?.linkedin_url && (
                   <SocialLinkItem
                     icon={<Linkedin className="h-4 w-4" />}
@@ -529,7 +523,6 @@ export default function ProfileScreen({
                     url={profile.linkedin_url}
                   />
                 )}
-
                 {profile?.twitter_url && (
                   <SocialLinkItem
                     icon={<Twitter className="h-4 w-4" />}
@@ -537,7 +530,6 @@ export default function ProfileScreen({
                     url={profile.twitter_url}
                   />
                 )}
-
                 {profile?.instagram_url && (
                   <SocialLinkItem
                     icon={<Instagram className="h-4 w-4" />}
@@ -551,26 +543,30 @@ export default function ProfileScreen({
             {/* Qualifications & Certifications */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  Qualifications & Certifications
-                  {authUser?.unique_id === user?.unique_id && (
-                    <Button
-                      size={"sm"}
-                      variant={"outline"}
-                      onClick={() => setIsQualificationModalOpen(true)}
-                    >
-                      <Plus className=" h-4 w-4" />
-                    </Button>
-                  )}
-                  <CertificateModal
-                    UserId={user.unique_id}
-                    certificates={certificates}
-                    setCertificates={setCertificates}
-                    isDialogOpen={isQualificationModalOpen}
-                    setIsDialogOpen={setIsQualificationModalOpen}
-                    selectedCertificate={selectedCertificate}
-                    setSelectedCertificate={setSelectedCertificate}
-                  />
+                <CardTitle className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+                  <span className="truncate">
+                    Qualifications & Certifications
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {isMyProfile && (
+                      <Button
+                        size={"sm"}
+                        variant={"outline"}
+                        onClick={() => setIsQualificationModalOpen(true)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <CertificateModal
+                      UserId={user.unique_id}
+                      certificates={certificates}
+                      setCertificates={setCertificates}
+                      isDialogOpen={isQualificationModalOpen}
+                      setIsDialogOpen={setIsQualificationModalOpen}
+                      selectedCertificate={selectedCertificate}
+                      setSelectedCertificate={setSelectedCertificate}
+                    />
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -581,19 +577,22 @@ export default function ProfileScreen({
                     )
                     .map((certificate) => (
                       <div className="space-y-1" key={certificate.id}>
-                        <h4 className="font-medium text-sm flex items-center justify-between">
-                          {certificate.title}
-                          {authUser?.unique_id === user?.unique_id && (
+                        <h4 className="font-medium text-sm flex items-start sm:items-center justify-between gap-2">
+                          <span className="break-words flex-1">
+                            {certificate.title}
+                          </span>
+                          {isMyProfile && (
                             <Button
                               variant="ghost"
                               size="sm"
+                              className="flex-shrink-0"
                               onClick={() => handleEditCertificate(certificate)}
                             >
-                              <SquarePen className="h-2 w-2" />
+                              <SquarePen className="h-4 w-4 sm:h-2 sm:w-2" />
                             </Button>
                           )}
                         </h4>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground break-words">
                           {certificate.institute}
                         </p>
                         <div className="flex items-center gap-1">
@@ -607,7 +606,7 @@ export default function ProfileScreen({
                 ) : (
                   <div className="w-full">
                     <h4 className="font-medium text-sm flex flex-col items-center justify-center text-muted-foreground text-center">
-                      <ListX className="h-10 w-10 " />
+                      <ListX className="h-10 w-10 mb-2" />
                       No Qualifications & Certifications
                     </h4>
                   </div>
@@ -617,7 +616,6 @@ export default function ProfileScreen({
           </div>
         </div>
       </div>
-
       <ChangeCoverImageDialog
         user={user}
         isChangeCoverImageOpen={isChangeCoverImageOpen}

@@ -246,6 +246,62 @@
       "when": 1772811965589,
       "tag": "0034_2026_03_06_234604__add_inviation_table",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1774946973170,
+      "tag": "0035_2026_03_31_134931__Rewards_feature_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1775048953079,
+      "tag": "0036_2026_04_01_180910__add_feature_flags_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1775653131161,
+      "tag": "0037_2026_04_08_175848__create_successfull_referrala_table_and_add_column_in_profile_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1775754157102,
+      "tag": "0038_2026_04_10_010236__add_action_name_in_activitiy_rules_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1775834177814,
+      "tag": "0039_2026_04_10_201609__add_tested_by_column_in_task_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1776097925005,
+      "tag": "0040_2026_04_13_213159__add_defination_of_completion",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1776413682420,
+      "tag": "0041_2026_04_17_161441__add_snapshot_table_for_community_rank",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1776776693811,
+      "tag": "0042_2026_04_21_210452__add_json_into_verificaiton_table",
+      "breakpoints": true
     }
   ]
 }

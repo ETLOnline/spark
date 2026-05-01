@@ -53,7 +53,14 @@ export default function NavMain({
       <SidebarMenu>
         {items && items.length
           ? items.map((item) => {
-              const isActive = pathName.includes(item.url)
+              const isActive =
+                item.url === "#"
+                  ? false
+                  : item.url === "/"
+                    ? pathName === "/"
+                    : pathName === item.url ||
+                      pathName.startsWith(item.url + "/") ||
+                      pathName.startsWith(item.url + "?")
               const itemKey = item.url + item.title
               const isOpen = openItems.has(itemKey)
 

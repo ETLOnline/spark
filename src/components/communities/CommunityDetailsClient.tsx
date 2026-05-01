@@ -31,6 +31,7 @@ import { channelStore } from "@/src/store/channel/channelStore"
 import { SelectChannel, SelectCommunity } from "@/src/db/schema"
 import { GetChannelsAction } from "@/src/server-actions/Channel/Channel"
 import Loader from "@/src/components/common/Loader/Loader"
+import { Skeleton } from "@/src/components/ui/skeleton"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import PaginationComponent from "../common/Pagination"
 import { PaginationType } from "../common/types/pagination.type"
@@ -69,6 +70,12 @@ import PrivatePage from "../common/Overlay/PrivatePage"
 import pusherClient from "@/src/services/realtime/PusherClient"
 import { EntityUpdateBroadCast } from "@/src/utils/constants"
 import { onlineUsersStore } from "@/src/store/onlineUsers/onlineUsersStore"
+import RankingCard from "./RankingCard"
+import { CommunityRankingsData } from "../Dashboard/profile/trust-engine/Constant"
+import {
+  GetCommunityLeaderboardAction,
+  GetCurrentUserRankAction
+} from "@/src/server-actions/Communities/CommunityRanking"
 
 interface CommunityDetailsClientProps {
   community: CommunityDetailData
@@ -109,12 +116,15 @@ export default function CommunityDetailsClient({
   const [isCommunityMember, setIsCommunityMember] = useState<boolean | null>(
     null
   )
+  const [communityHasRanking, setCommunityHasRanking] = useState<
+    boolean | null
+  >(null)
+  const [communityUserRank, setCommunityUserRank] = useState<any>(null)
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "COMMUNITY",
     community?.id
   )
-
   useEffect(() => {
     if (community) {
       const transformedCommunity: SelectCommunity = {
@@ -143,6 +153,26 @@ export default function CommunityDetailsClient({
       setIsCommunityMember(isMember)
     }
   }, [community, currentUserId])
+
+  // Fetch user's ranking for this community
+  const fetchUserRank = async () => {
+    if (!community?.id) return
+    try {
+      const [rankRes, leaderboardRes] = await Promise.all([
+        GetCurrentUserRankAction(community.id),
+        GetCommunityLeaderboardAction(community.id, 1, 1)
+      ])
+      if (rankRes.success && rankRes.data) setCommunityUserRank(rankRes.data)
+      if (leaderboardRes.success && leaderboardRes.data) {
+        setCommunityHasRanking(leaderboardRes.data.total > 0)
+      }
+    } catch (error) {
+      console.error("Error fetching user rank:", error)
+    }
+  }
+  useEffect(() => {
+    fetchUserRank()
+  }, [community?.id])
 
   const showAccessDeniedOverlay =
     community.type === "private" && isCommunityMember === false && !isSuperAdmin
@@ -321,6 +351,7 @@ export default function CommunityDetailsClient({
   if (showAccessDeniedOverlay) {
     return <PrivatePage page="Community" pageHref="/communities" />
   }
+
   return (
     <div className="min-h-screen bg-background relative">
       {/* Added relative for the overlay positioning */}
@@ -704,6 +735,23 @@ export default function CommunityDetailsClient({
                 </div>
               </CardContent>
             </Card>
+            {communityHasRanking === null ? (
+              <Skeleton className="h-32 w-full" />
+            ) : (
+              <RankingCard
+                communityTitle={community.title}
+                currentUserRank={communityUserRank}
+                handleClick={() =>
+                  router.push(`/communities/${encodedCommunitySlug}/ranking`)
+                }
+                grandient={true}
+                noRankMessage={
+                  !communityHasRanking
+                    ? "This community doesn't have any rankings yet."
+                    : "You haven't contributed yet to earn a rank in this community."
+                }
+              />
+            )}
 
             {/* About Section */}
             <Card>
@@ -747,7 +795,7 @@ export default function CommunityDetailsClient({
         open={isInviteDialogOpen}
         onOpenChange={setIsInviteDialogOpen}
         spaceName="Platform"
-        type={["link","email"]}
+        type={["link", "email"]}
         entityType="community"
         entity={community}
       />

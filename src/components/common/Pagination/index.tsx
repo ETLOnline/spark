@@ -1,3 +1,5 @@
+"use client"
+
 import { usePathname, useSearchParams } from "next/navigation"
 import {
   Pagination,
@@ -12,12 +14,15 @@ import { PaginationType } from "../types/pagination.type"
 
 interface props {
   pagination: PaginationType
+  onPageChange?: (page: number) => void
 }
 
-const PaginationComponent = ({ pagination }: props) => {
+const PaginationComponent = ({ pagination, onPageChange }: props) => {
   const pathname = usePathname()
   const query = useSearchParams()
-  const page = query.get("page") ? Number(query.get("page")) : 1
+  const urlPage = query.get("page") ? Number(query.get("page")) : 1
+
+  const page = onPageChange ? pagination.page : urlPage
 
   const restQueryParams = query
     .toString()
@@ -25,6 +30,19 @@ const PaginationComponent = ({ pagination }: props) => {
     .filter((q) => !q.includes("page"))
     .join("&")
   const isRestQuery = restQueryParams.length > 0
+
+  const getHref = (p: number) =>
+    `${pathname}?page=${p}${isRestQuery ? `&${restQueryParams}` : ""}`
+
+  const handleClick = (
+    e: React.MouseEvent,
+    p: number,
+    disabled: boolean
+  ) => {
+    if (!onPageChange) return
+    e.preventDefault()
+    if (!disabled) onPageChange(p)
+  }
 
   const generatePaginationItems = () => {
     const items = []
@@ -45,7 +63,9 @@ const PaginationComponent = ({ pagination }: props) => {
       items.push(
         <PaginationItem key="1">
           <PaginationLink
-            href={`${pathname}?page=1${isRestQuery ? `&${restQueryParams}` : ""}`}
+            href={onPageChange ? "#" : getHref(1)}
+            onClick={(e) => handleClick(e, 1, false)}
+            className="cursor-pointer"
           >
             1
           </PaginationLink>
@@ -64,8 +84,10 @@ const PaginationComponent = ({ pagination }: props) => {
       items.push(
         <PaginationItem key={i} className="cursor-pointer">
           <PaginationLink
-            href={`${pathname}?page=${i}${isRestQuery ? `&${restQueryParams}` : ""}`}
+            href={onPageChange ? "#" : getHref(i)}
             isActive={i === page}
+            onClick={(e) => handleClick(e, i, false)}
+            className="cursor-pointer"
           >
             {i}
           </PaginationLink>
@@ -84,8 +106,10 @@ const PaginationComponent = ({ pagination }: props) => {
       items.push(
         <PaginationItem key={pagination.totalPages}>
           <PaginationLink
-            href={`${pathname}?page=${pagination.totalPages}${isRestQuery ? `&${restQueryParams}` : ""}`}
+            href={onPageChange ? "#" : getHref(pagination.totalPages)}
             isActive={pagination.totalPages === page}
+            onClick={(e) => handleClick(e, pagination.totalPages, false)}
+            className="cursor-pointer"
           >
             {pagination.totalPages}
           </PaginationLink>
@@ -101,7 +125,8 @@ const PaginationComponent = ({ pagination }: props) => {
       <PaginationContent>
         <PaginationItem>
           <PaginationPrevious
-            href={`${pathname}?page=${page - 1}${isRestQuery ? `&${restQueryParams}` : ""}`}
+            href={onPageChange ? "#" : getHref(page - 1)}
+            onClick={(e) => handleClick(e, page - 1, page <= 1)}
             className={
               page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"
             }
@@ -109,9 +134,13 @@ const PaginationComponent = ({ pagination }: props) => {
         </PaginationItem>
 
         {generatePaginationItems()}
+
         <PaginationItem>
           <PaginationNext
-            href={`${pathname}?page=${page + 1}${isRestQuery ? `&${restQueryParams}` : ""}`}
+            href={onPageChange ? "#" : getHref(page + 1)}
+            onClick={(e) =>
+              handleClick(e, page + 1, page >= pagination.totalPages)
+            }
             className={
               page === pagination.totalPages
                 ? "pointer-events-none opacity-50"

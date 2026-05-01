@@ -24,12 +24,19 @@ type Props = {
 const ImagePost: React.FC<Props> = ({ post, spaceId }) => {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
-  const [editingComment, setEditingComment] = useState<SelectComment | null>(null)
+  const [editingComment, setEditingComment] = useState<SelectComment | null>(
+    null
+  )
   const { toast } = useToast()
   const setPosts = useSetAtom(postStore.posts)
+  const [iscCommetsVisible, setIsCommentsVisible] = useState(false)
 
-  const [updateCommentLoading, updatedComment, updateCommentError, updateComment] =
-    useServerAction(UpdateCommentAction)
+  const [
+    updateCommentLoading,
+    updatedComment,
+    updateCommentError,
+    updateComment
+  ] = useServerAction(UpdateCommentAction)
 
   const images = post.files?.length
     ? post.files
@@ -57,11 +64,11 @@ const ImagePost: React.FC<Props> = ({ post, spaceId }) => {
           posts.map((p) =>
             p.id === post.id
               ? {
-                ...p,
-                postComments: (p.postComments as SelectComment[]).map((c) =>
-                  c.id === commentId ? { ...c, content: newContent } : c
-                )
-              }
+                  ...p,
+                  postComments: (p.postComments as SelectComment[]).map((c) =>
+                    c.id === commentId ? { ...c, content: newContent } : c
+                  )
+                }
               : p
           )
         )
@@ -88,7 +95,7 @@ const ImagePost: React.FC<Props> = ({ post, spaceId }) => {
 
   return (
     <>
-      <CardContent>
+      <CardContent className="p-0">
         {post.category && (
           <Badge variant="outline" className="mb-2">
             {post.category}
@@ -99,14 +106,16 @@ const ImagePost: React.FC<Props> = ({ post, spaceId }) => {
         {/* Images */}
         {images.length > 0 && (
           <div
-            className={`mt-4 grid gap-3 ${isSingle ? "grid-cols-1" : "grid-cols-2"
-              }`}
+            className={`mt-4 grid gap-3 ${
+              isSingle ? "grid-cols-1" : "grid-cols-2"
+            }`}
           >
             {images.map((file, idx) => (
               <div
                 key={`${post.id}-file-${idx}`}
-                className={`overflow-hidden rounded-lg bg-gradient-to-r from-accent to-secondary ${isSingle ? "w-full" : "w-full"
-                  } cursor-pointer`}
+                className={`overflow-hidden rounded-lg bg-gradient-to-r from-accent to-secondary ${
+                  isSingle ? "w-full" : "w-full"
+                } cursor-pointer`}
                 onClick={(e) => {
                   e.stopPropagation()
                   setLightboxIndex(idx)
@@ -118,8 +127,9 @@ const ImagePost: React.FC<Props> = ({ post, spaceId }) => {
                   alt={`Post image ${idx + 1}`}
                   width={isSingle ? 1200 : 600}
                   height={isSingle ? 700 : 350}
-                  className={`w-full object-cover transition-transform duration-300 hover:scale-105 ${isSingle ? "max-h-[32rem]" : "h-56"
-                    }`}
+                  className={`w-full object-cover transition-transform duration-300 hover:scale-105 ${
+                    isSingle ? "max-h-[32rem]" : "h-56"
+                  }`}
                   priority={isSingle}
                 />
               </div>
@@ -144,19 +154,25 @@ const ImagePost: React.FC<Props> = ({ post, spaceId }) => {
             ))}
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col items-start space-y-4">
+      <CardFooter className="flex flex-col items-start space-y-4 p-0">
         <PostInteractions
           postId={post.id}
           likes={post.likes}
           comments={post.comments}
           likers={post.postLikes}
           spaceId={spaceId}
+          isCommentsVisible={iscCommetsVisible}
+          setIsCommentsVisible={setIsCommentsVisible}
         />
         <Separator />
-        <PostCommentsSection
-          comments={post.postComments || []}
-          onEditComment={handleEditComment}
-        />
+        {iscCommetsVisible ? (
+          <>
+            <PostCommentsSection
+              comments={post.postComments || []}
+              onEditComment={handleEditComment}
+            />
+          </>
+        ) : null}
         <PostCommentForm
           postId={post.id}
           comments={post.comments}

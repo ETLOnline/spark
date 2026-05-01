@@ -16,10 +16,8 @@ import {
   AlertCircle,
   ArrowRight,
   BarChart2,
-  Boxes,
   CircleAlert,
   Flag,
-  MoreHorizontal,
   Search
 } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
@@ -37,9 +35,7 @@ import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import "@/src/components/common/Tiptap/RichEditorFormat.css"
 import Tiptap from "@/src/components/common/Tiptap/TiptapRichEditor"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import MultiSelect, {
-  MultiSelectOption
-} from "@/src/components/ui/multi-select"
+import { MultiSelectOption } from "@/src/components/ui/multi-select"
 import { useParams } from "next/navigation"
 import { GetProjectUsersAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
@@ -49,6 +45,7 @@ import { TaskComment } from "./task-comment"
 import { Dialog, DialogContent, DialogTitle } from "@/src/components/ui/dialog"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
 import AddSubTask from "./AddSubTask"
+import VerificationPanel from "./VerificationPanel"
 import "./TaskFormStyle.css"
 import Link from "next/link"
 import SubTask from "./SubTask"
@@ -66,7 +63,7 @@ import {
 import { getChildTypes, getParentTypes } from "../utils/helper"
 import { GetLinkedTasksAction } from "@/src/server-actions/Tasks/Task"
 import Loader from "@/src/components/common/Loader/Loader"
-import { SearchableSingleSelect } from "@/src/components/ui/searchable-single-select"
+import UserSelector from "./UserSelector"
 interface Props {
   onSubmit: (task: any) => void
   statuses?: InsertTaskStatus[]
@@ -78,6 +75,12 @@ interface Props {
   isSprintCompleted?: boolean
   refetchComments?: boolean
   setRefetchComments?: Dispatch<SetStateAction<boolean>>
+  verificationStatus?: {
+    status: string
+    verification_id: number
+    feedback: string | null
+  } | null
+  onVerificationStatusChange?: (newStatus: string, newFeedback: string) => void
 }
 
 const projectSchema = z.object({
@@ -103,7 +106,8 @@ const projectSchema = z.object({
   status_id: z.string().optional(),
   assign_to: z.string().optional(),
   assign_by: z.string().optional(),
-  parent_task_id: z.string().optional()
+  parent_task_id: z.string().optional(),
+  tested_by: z.string().optional()
 })
 
 export default function TaskForm({
@@ -116,26 +120,25 @@ export default function TaskForm({
   onSubTaskCreate,
   isSprintCompleted,
   refetchComments,
-  setRefetchComments
+  setRefetchComments,
+  verificationStatus,
+  onVerificationStatusChange
 }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null)
   const [usersList, setUsersList] = useState<(SelectUser | null)[]>([])
-  const [selectedAssignee, setSelectedAssignee] = useState<MultiSelectOption[]>(
-    []
-  )
-  const [selectedAssignor, setSelectedAssignor] = useState<MultiSelectOption[]>(
-    []
-  )
   const [assignee, setAssignee] = useState<SelectUser | null>(null)
   const [assignor, setAssignor] = useState<SelectUser | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false)
-  const [subTasks, setSubTasks] = useState<SelectTask[]>([])
+  const [subTasks, setSubTasks] = useState<SelectTask[]>(
+    (selectedTask?.subTasks as SelectTask[]) ?? []
+  )
   const [searchParentTask, setSearchParentTask] = useState("")
   const [parentTasks, setParentTasks] = useState<SelectTask[]>([])
   const [getSubTaskTaskLoading, setGetSubTaskTaskLoading] = useState(false)
   const [popoverOpen, setPopoverOpen] = useState(false)
   const authUser = useAtomValue(userStore.AuthUser)
+  const [tester, setTester] = useState<SelectUser | null>(null)
   const form = useForm({
     resolver: zodResolver(projectSchema)
   })
@@ -145,7 +148,7 @@ export default function TaskForm({
   const params = useParams<{ id: string }>()
   const projectId = params?.id
 
-  const assigneeOptions: MultiSelectOption[] = [
+  const userOptions: MultiSelectOption[] = [
     { label: "Unassigned", value: "" },
     ...usersList
       .filter((user) => user !== null)
@@ -154,11 +157,6 @@ export default function TaskForm({
         value: user?.unique_id ?? ""
       }))
   ]
-
-  const assignorOptions: MultiSelectOption[] = usersList.map((user) => ({
-    label: (user?.first_name ?? "") + " " + (user?.last_name ?? ""),
-    value: user?.unique_id ?? ""
-  }))
 
   useEffect(() => {
     if (setIsChanged) setIsChanged(form.formState.isDirty)
@@ -206,35 +204,6 @@ export default function TaskForm({
   }, [selectedTask])
 
   useEffect(() => {
-    const getSelectedUsers = async () => {
-      const assign_to = usersList.find(
-        (u) => u?.unique_id === selectedAssignee?.[0]?.value
-      )
-      const assign_by = usersList.find(
-        (u) => u?.unique_id === selectedAssignor?.[0]?.value
-      )
-
-      if (selectedAssignee?.[0]?.value === "") {
-        setAssignee(null)
-        form.setValue("assign_to", "")
-      } else if (assign_to) {
-        setAssignee(assign_to)
-        form.setValue("assign_to", assign_to.unique_id)
-      }
-
-      if (selectedAssignor?.[0]?.value === "") {
-        setAssignor(null)
-        form.setValue("assign_by", "")
-      } else if (assign_by) {
-        setAssignor(assign_by)
-        form.setValue("assign_by", assign_by.unique_id)
-      }
-    }
-
-    getSelectedUsers()
-  }, [selectedAssignee, selectedAssignor])
-
-  useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement
 
@@ -280,34 +249,20 @@ export default function TaskForm({
         ? selectedTask?.assignor
         : usersList.find((u) => u?.unique_id === selectedTask?.assign_by)
 
+      const testedBy = selectedTask?.testedBy
+        ? selectedTask?.testedBy
+        : usersList.find((u) => u?.unique_id === selectedTask?.tested_by)
+
       if (taskAssignee) {
         setAssignee(taskAssignee)
-        setSelectedAssignee([
-          {
-            label: `${taskAssignee.first_name} ${taskAssignee.last_name}`,
-            value: taskAssignee.unique_id
-          }
-        ])
         form.setValue("assign_to", taskAssignee.unique_id)
       } else {
         setAssignee(null)
-        setSelectedAssignee([
-          {
-            label: "Select Assignee",
-            value: ""
-          }
-        ])
         form.setValue("assign_to", "")
       }
 
       if (taskAssignor) {
         setAssignor(taskAssignor)
-        setSelectedAssignor([
-          {
-            label: `${taskAssignor.first_name} ${taskAssignor.last_name}`,
-            value: taskAssignor.unique_id
-          }
-        ])
         form.setValue("assign_by", taskAssignor.unique_id)
       } else {
         // If no assignor, default to current user
@@ -316,19 +271,18 @@ export default function TaskForm({
         )
         if (currentUser) {
           setAssignor(currentUser)
-          setSelectedAssignor([
-            {
-              label: `${currentUser.first_name} ${currentUser.last_name}`,
-              value: currentUser.unique_id
-            }
-          ])
           form.setValue("assign_by", currentUser.unique_id)
         }
+      }
+
+      if (testedBy) {
+        setTester(testedBy)
+        form.setValue("tested_by", testedBy.unique_id)
       }
     }
 
     LoadUsersFromTask()
-  }, [selectedTask])
+  }, [selectedTask, usersList])
 
   function IssueTypeIcon({ type }: { type: string }) {
     const typeMap = projectTaskTypes.find((t) => t.key === type)
@@ -423,7 +377,6 @@ export default function TaskForm({
     setGetSubTaskTaskLoading(true)
     const res = await GetLinkedTasksAction({
       project_id: projectId,
-      sprint_id: selectedTask.sprint_id || undefined,
       parent_id: selectedTask?.id
     })
     if (res.success && res.data) {
@@ -433,10 +386,10 @@ export default function TaskForm({
   }
 
   useEffect(() => {
-    if (!selectedTask) return
-
-    getSubTasks()
-  }, [selectedTask])
+    if (selectedTask?.subTasks) {
+      setSubTasks(selectedTask.subTasks as SelectTask[])
+    }
+  }, [selectedTask?.id])
 
   const handleAssigneeChange = (val: string, field: any) => {
     field.onChange(val)
@@ -454,14 +407,21 @@ export default function TaskForm({
     setActiveField(null)
   }
 
+  const handleTesterChange = (val: string, field: any) => {
+    field.onChange(val)
+    const user = usersList.find((u) => u?.unique_id === val)
+    setTester(user || null)
+    setActiveField(null)
+  }
+
   const isEditable = isAllowedAction && !isSprintCompleted
 
   return (
     <>
-      <div className="grid grid-cols-12 gap-2 ">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
         {/* Main content area (left side) */}
-        <ScrollArea className="h-[80vh] col-span-12 md:col-span-9">
-          <div className=" px-4">
+        <ScrollArea className="h-auto lg:h-[80vh] col-span-1 lg:col-span-9 w-full">
+          <div className="px-2 sm:px-4">
             <div className="space-y-6">
               {/* Task title */}
               <div className="space-y-2">
@@ -486,7 +446,7 @@ export default function TaskForm({
                         />
                       ) : (
                         <div
-                          className="border-b border-dashed border-gray-300 py-2 text-xl cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2"
+                          className="border-b border-dashed border-gray-300 py-2 text-lg sm:text-xl cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2 break-words"
                           onClick={() => setActiveField("title")}
                         >
                           <div>
@@ -514,7 +474,7 @@ export default function TaskForm({
 
               {/* Task description */}
               <div className="space-y-2">
-                <Label className="pl-2 text-xl font-semibold">
+                <Label className="pl-2 text-lg sm:text-xl font-semibold">
                   Description
                 </Label>
 
@@ -552,9 +512,27 @@ export default function TaskForm({
                 />
               </div>
 
+              {/* Mobile/Tablet submit button — shown when sidebar stacks below */}
+              {isEditable && (
+                <div className="lg:hidden pl-2">
+                  <Button
+                    type="submit"
+                    form="task-form"
+                    loading={loading}
+                    variant={"outline"}
+                    className="w-full bg-primary text-black"
+                    disabled={loading}
+                  >
+                    {selectedTask ? "Update Task" : "Create Task"}
+                  </Button>
+                </div>
+              )}
+
               {/* Subtasks */}
               <div className="space-y-2 flex flex-col pl-2">
-                <Label className="text-xl font-semibold">Subtasks</Label>
+                <Label className="text-lg sm:text-xl font-semibold">
+                  Subtasks
+                </Label>
 
                 {/* Subtask list */}
                 <div className="space-y-2 border rounded-md p-2">
@@ -592,10 +570,24 @@ export default function TaskForm({
                 />
               </div>
 
+              {/* Verification Panel — board only */}
+              {verificationStatus && (
+                <VerificationPanel
+                  verificationStatus={verificationStatus}
+                  onStatusChange={onVerificationStatusChange}
+                  isAssignee={
+                    !!selectedTask?.assign_to &&
+                    selectedTask.assign_to === authUser?.unique_id
+                  }
+                />
+              )}
+
               {/* Comments */}
               {selectedTask && (
-                <div className="space-y-4 pl-2">
-                  <h2 className="text-lg  font-semibold">Comments</h2>
+                <div className="space-y-4 pl-2 pb-4">
+                  <h2 className="text-base sm:text-lg font-semibold">
+                    Comments
+                  </h2>
                   <TaskComment
                     taskId={selectedTask.id}
                     isSprintCompleted={isSprintCompleted}
@@ -611,14 +603,15 @@ export default function TaskForm({
 
         {/* Sidebar (right side) */}
         <form
+          id="task-form"
           onSubmit={form.handleSubmit(onSubmit)}
           onKeyDown={(e) => {
             if (e.key === "Enter") e.preventDefault()
           }}
-          className="col-span-12 md:col-span-3"
+          className="col-span-1 lg:col-span-3 w-full"
         >
-          <ScrollArea className="h-[80vh] ">
-            <div className="w-full md:w-56">
+          <ScrollArea className="h-[80vh] max-h-[60vh] lg:max-h-none w-full">
+            <div className="w-full lg:w-56">
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-end gap-4 mb-2">
@@ -675,9 +668,6 @@ export default function TaskForm({
                               className=" py-2 cursor-pointer flex items-center gap-2"
                               onClick={() => {
                                 setActiveField("status")
-                                requestAnimationFrame(() => {
-                                  document.getElementById("status_id")?.click()
-                                })
                               }}
                             >
                               <div>
@@ -698,118 +688,64 @@ export default function TaskForm({
                     </div>
 
                     {/* Assign To */}
-                    <div className="space-y-2">
-                      <Label>Select Assignee</Label>
-                      <Controller
-                        name="assign_to"
-                        control={form.control}
-                        render={({ field }) =>
-                          activeField === "assignTo" ? (
-                            <SearchableSingleSelect
-                              id="assign_to_input"
-                              options={assigneeOptions}
-                              value={field.value}
-                              disabled={!isEditable}
-                              onChange={(val) =>
-                                handleAssigneeChange(val, field)
-                              }
-                              placeholder="Select Option"
-                            />
-                          ) : (
-                            <div
-                              className=" py-2 cursor-pointer flex items-center gap-2"
-                              onClick={() => {
-                                setActiveField("assignTo")
-                                requestAnimationFrame(() => {
-                                  document.getElementById("assign_to")?.click()
-                                })
-                              }}
-                            >
-                              <Avatar className="h-5 w-5">
-                                <AvatarImage
-                                  src={
-                                    assignee?.profile_url || "/placeholder.svg"
-                                  }
-                                  alt={assignee?.first_name}
-                                />
-                                <AvatarFallback className="text-xs">
-                                  {assignee?.first_name?.[0]}
-                                  {assignee?.last_name?.[0]}
-                                </AvatarFallback>
-                              </Avatar>
-
-                              <span
-                                className={
-                                  !assignee ? "text-muted-foreground" : ""
-                                }
-                              >
-                                {assignee
-                                  ? assignee.first_name +
-                                    " " +
-                                    assignee.last_name
-                                  : "Unassigned"}
-                              </span>
-                            </div>
-                          )
-                        }
-                      />
-                    </div>
+                    <Controller
+                      name="assign_to"
+                      control={form.control}
+                      render={({ field }) => (
+                        <UserSelector
+                          label="Select Assignee"
+                          value={field.value}
+                          user={assignee}
+                          options={userOptions}
+                          activeField={activeField}
+                          fieldKey="assignTo"
+                          setActiveField={setActiveField}
+                          disabled={!isEditable}
+                          placeholder="Unassigned"
+                          onChange={(val) => handleAssigneeChange(val, field)}
+                        />
+                      )}
+                    />
 
                     {/* Assign By */}
-                    <div className="space-y-2">
-                      <Label>Assigned By</Label>
-                      <Controller
-                        name="assign_by"
-                        control={form.control}
-                        render={({ field }) =>
-                          activeField === "assignBy" ? (
-                            <SearchableSingleSelect
-                              id="assign_by_input"
-                              options={assignorOptions.filter(
-                                (opt) => opt.value !== ""
-                              )}
-                              value={field.value}
-                              disabled={!isEditable}
-                              onChange={(val) =>
-                                handleAssignorChange(val, field)
-                              }
-                              placeholder="Select Option"
-                            />
-                          ) : (
-                            <div
-                              className=" py-2 cursor-pointer flex items-center gap-2"
-                              onClick={() => {
-                                setActiveField("assignBy")
-                                requestAnimationFrame(() => {
-                                  document.getElementById("assign_to")?.click()
-                                })
-                              }}
-                            >
-                              <Avatar className="h-5 w-5">
-                                <AvatarImage
-                                  src={
-                                    assignor?.profile_url || "/placeholder.svg"
-                                  }
-                                  alt={assignor?.first_name}
-                                />
-                                <AvatarFallback className="text-xs">
-                                  {assignor?.first_name[0]}
-                                  {assignor?.last_name[0]}
-                                </AvatarFallback>
-                              </Avatar>
-
-                              <span>
-                                {assignor
-                                  ? assignor.first_name +
-                                    " " +
-                                    assignor.last_name
-                                  : "Select Option"}
-                              </span>
-                            </div>
-                          )
-                        }
-                      />
-                    </div>
+                    <Controller
+                      name="assign_by"
+                      control={form.control}
+                      render={({ field }) => (
+                        <UserSelector
+                          label="Assigned By"
+                          value={field.value}
+                          user={assignor}
+                          options={userOptions.filter(
+                            (opt) => opt.value !== ""
+                          )}
+                          activeField={activeField}
+                          fieldKey="assignBy"
+                          setActiveField={setActiveField}
+                          disabled={!isEditable}
+                          onChange={(val) => handleAssignorChange(val, field)}
+                        />
+                      )}
+                    />
+                    {/* Tested By */}
+                    <Controller
+                      name="tested_by"
+                      control={form.control}
+                      render={({ field }) => (
+                        <UserSelector
+                          label="Tested By"
+                          value={field.value}
+                          user={tester}
+                          options={userOptions}
+                          activeField={activeField}
+                          fieldKey="testedBy"
+                          setActiveField={setActiveField}
+                          disabled={!isEditable}
+                          placeholder="Select Tester"
+                          onChange={(val) => handleTesterChange(val, field)}
+                        />
+                      )}
+                    />
 
                     {/* Priority */}
                     <div className="space-y-2">
@@ -855,11 +791,6 @@ export default function TaskForm({
                                 className=" py-2 cursor-pointer flex items-center gap-2"
                                 onClick={() => {
                                   setActiveField("priority")
-                                  requestAnimationFrame(() => {
-                                    document
-                                      .getElementById("task_priority")
-                                      ?.click()
-                                  })
                                 }}
                               >
                                 <PriorityIcon priority={field.value} />
@@ -930,11 +861,6 @@ export default function TaskForm({
                                 className=" py-2 cursor-pointer flex items-center gap-2"
                                 onClick={() => {
                                   setActiveField("issueType")
-                                  requestAnimationFrame(() => {
-                                    document
-                                      .getElementById("task_type")
-                                      ?.click()
-                                  })
                                 }}
                               >
                                 <IssueTypeIcon type={field.value} />
@@ -1053,9 +979,9 @@ export default function TaskForm({
                           return (
                             <>
                               {shownParent ? (
-                                <div className="flex flex-col items-center gap-2">
+                                <div className="flex flex-col items-center gap-2 w-full">
                                   <div
-                                    className="flex items-center gap-2 rounded-md border p-2 cursor-pointer"
+                                    className="flex items-center gap-2 rounded-md border p-2 cursor-pointer w-full overflow-hidden"
                                     onClick={() => {
                                       if (!isEditable || isTaskEpic) return
                                       setActiveField("parent")
@@ -1066,7 +992,7 @@ export default function TaskForm({
                                       type={shownParent.task_type}
                                     />
 
-                                    <div className="flex-1 min-w-0">
+                                    <div className="flex-1 min-w-0 overflow-hidden">
                                       <span
                                         className="block text-sm font-medium truncate"
                                         title={`${shownParent.task_num} - ${shownParent.task_title}`}

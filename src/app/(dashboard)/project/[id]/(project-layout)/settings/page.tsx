@@ -17,7 +17,7 @@ async function page({ params }: Props) {
     return <NotFound />
   }
   return (
-    <ScrollArea className="min-h-full px-4">
+    <ScrollArea className="min-h-full px-3">
       <ProjectSettings currProject={currProject.data} />
     </ScrollArea>
   )

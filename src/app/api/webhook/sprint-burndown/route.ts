@@ -1,5 +1,5 @@
 import { ProjectStatus } from "@/src/components/Dashboard/ProjectManagement/types/projectStatus.type"
-import { db } from "@/src/db"
+import { TaskType } from "@/src/components/Dashboard/ProjectManagement/constants/projectManagment"
 import {
   addSprintBurnDown,
   getLatestBurnDown,
@@ -15,7 +15,8 @@ export async function POST(req: Request) {
 
     for (const sprint of sprintsWithRecentUpdates) {
       const Tasks = await GetTasks({
-        sprint_id: String(sprint.id)
+        sprint_id: String(sprint.id),
+        excludedTypes: [TaskType.SUBTASK]
       })
 
       const sprintTasks = Tasks.tasks
