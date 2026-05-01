@@ -127,7 +127,7 @@ function TaskFilters({ projectId, onApplyFilters }: Props) {
   return (
     <Drawer>
       <DrawerTrigger asChild>
-        <Button variant="outline" className="gap-2 bg-transparent">
+        <Button variant="outline" className="gap-2 bg-transparent w-full">
           <Filter className="h-4 w-4" />
           Filters
         </Button>

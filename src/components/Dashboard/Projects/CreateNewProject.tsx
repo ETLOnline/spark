@@ -29,12 +29,12 @@ import { projectStore } from "@/src/store/project/projectStore"
 import moment from "moment"
 import { AttachProjectUserAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
-import { useAuthUser } from "@/src/hooks/useAuthUser"
 import Tiptap from "@/src/components/common/Tiptap/TiptapRichEditor"
 import { projectSchema } from "./utils/projectSchema"
 import { useConfirmClose } from "@/src/hooks/useConfirmClose"
 import { UnsavedChangesDialog } from "../../common/unsavedChangesDialog"
 import { ScrollArea } from "../../ui/scroll-area"
+import useAuthUserRefresh from "@/src/hooks/useAuthUserRefresh"
 
 type ProjectFormData = z.infer<typeof projectSchema>
 
@@ -52,7 +52,7 @@ function ProjectFormModal({
   setIsOpen?: React.Dispatch<SetStateAction<boolean>>
 }) {
   const [space, setSpace] = useState<SelectSpace>()
-  const { refreshAuthUser, isReloadingPermissions } = useAuthUser()
+  const { refreshAuthUser, isReloadingPermissions } = useAuthUserRefresh()
   const [projects, setProjects] = useAtom(projectStore.projects)
   const [updateLoading, , , updateProject] =
     useServerAction(UpdateProjectAction)
@@ -260,7 +260,7 @@ function ProjectFormModal({
           </DialogTrigger>
         )}
         <DialogContent
-          className=""
+          className="max-w-xs sm:max-w-lg"
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>

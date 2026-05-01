@@ -32,12 +32,14 @@ import {
 } from "@/src/services/notifications/Chat/utils"
 import { createChatEmailNotification } from "@/src/services/notify/chat/chat"
 import { NotificationEvent } from "@/src/services/notify/types/events"
-import { slugify } from "@/src/utils/helpers"
+import { GetSpaceURL, slugify } from "@/src/utils/helpers"
 import { extractMentionsFromMessage } from "@/src/services/realtime/utils/helper"
 import {
   base64ToBuffer,
   uploadFileAndSaveMetadata
 } from "@/src/services/storage/utils/fileUtils"
+import { AddRewardAction } from "../Reward/Reward"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
 
 export const CreatePrivateChatAction = CreateServerAction(
   true,
@@ -116,6 +118,18 @@ export const CreateGroupChatAction = CreateServerAction(
       const space = await GetSpaceById(space_id || "")
 
       const chat = await CreateGroupChat(userIds, chatName, space_id)
+
+      const spaceURL = GetSpaceURL(
+        space?.channel.channel_slug || "",
+        space?.space_slug || "",
+        "chat"
+      )
+
+      await AddRewardAction(
+        ActivityTypes.SpaceGroupChatCreation,
+        authUser?.unique_id || "",
+        spaceURL
+      )
 
       if (!chat) {
         return { success: false, data: null }

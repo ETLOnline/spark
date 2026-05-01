@@ -172,7 +172,8 @@ export async function GetTasks(filters?: taskQueryFilters) {
         status: true,
         parentTask: true,
         subTasks: true,
-        creator: true
+        creator: true,
+        testedBy: true
       }
     })
 
@@ -220,8 +221,15 @@ export async function GetTaskById(taskId: string) {
         assignor: true,
         status: true,
         parentTask: true,
-        subTasks: true,
-        creator: true
+        subTasks: {
+          with: {
+            assignee: true,
+            status: true,
+            creator: true
+          }
+        },
+        creator: true,
+        testedBy: true
       }
     })
 
@@ -241,7 +249,8 @@ export async function GetTaskByIds(taskId: string[]) {
         status: true,
         parentTask: true,
         subTasks: true,
-        creator: true
+        creator: true,
+        testedBy: true
       }
     })
 

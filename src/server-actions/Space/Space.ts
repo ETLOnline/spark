@@ -24,7 +24,7 @@ import {
 } from "@/src/db/schema"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import { AuthUserAction } from "../User/AuthUserAction"
-import { isSuperAdmin } from "@/src/utils/helpers"
+import { GetSpaceURL, isSuperAdmin } from "@/src/utils/helpers"
 import {
   attachChannelUser,
   GetChannelById,
@@ -48,6 +48,9 @@ import {
 } from "@/src/db/data-access/communities/query"
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { EntityUpdateBroadCast } from "@/src/utils/constants"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
+import { AddRewardAction } from "../Reward/Reward"
 
 // Define the broadcast channel name constant for cleaner code
 const BROADCAST_CHANNEL = EntityUpdateBroadCast
@@ -78,6 +81,25 @@ export const CreateSpaceAction = CreateServerAction(
         channel_user_id as number,
         result.adminRole?.name
       )
+
+      const spaceWithRelations = await GetSpaceById(newSpace.id, true)
+
+      const spaceURL = GetSpaceURL(
+        spaceWithRelations?.channel?.channel_slug || "",
+        spaceWithRelations?.space_slug || ""
+      )
+
+      await AddRewardAction(
+        ActivityTypes.SpaceCreation,
+        newSpace.created_by,
+        spaceURL,
+        {
+          community_id: spaceWithRelations?.channel?.community_id,
+          channel_id: spaceWithRelations?.channel?.id,
+          space_id: newSpace.id
+        }
+      )
+
       return { success: true, data: newSpace }
     } catch (error: any) {
       return {

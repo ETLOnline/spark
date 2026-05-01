@@ -15,17 +15,29 @@ import NoDataCard from "../../../Channels/ChannelDetails/NoDataCard"
 import { Kanban } from "lucide-react"
 import { TaskModal } from "../../Task/components/TaskModal"
 import { SelectSprint, SelectTask } from "@/src/db/schema"
-import { GetSprintTasksAction } from "@/src/server-actions/Tasks/Task"
+import {
+  GetSprintTasksAction,
+  GetTaskVerificationStatusAction
+} from "@/src/server-actions/Tasks/Task"
 import pusherClient from "@/src/services/realtime/PusherClient"
 import { userStore } from "@/src/store/user/userStore"
 import { taskStore } from "@/src/store/tasks/taskStore"
 import { SprintStatus, TaskType } from "../../constants/projectManagment"
+
+type VerificationEntry = {
+  status: string
+  verification_id: number
+  feedback: string | null
+}
 
 function SprintBoard() {
   const [sprintList, setSprintList] = useAtom(sprintStore.sprints)
   const [getSprintLoading, , , GetSprints] = useServerAction(GetSprintAction)
 
   const [tasks, setTasks] = useState<SelectTask[]>([])
+  const [verificationMap, setVerificationMap] = useState<
+    Record<string, VerificationEntry>
+  >({})
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useAtom(taskStore.selectedTask)
 
@@ -144,14 +156,47 @@ function SprintBoard() {
   }, [projectId])
 
   const getTasks = async () => {
-    const tasks = await GetSPrintTask({
+    const res = await GetSPrintTask({
       project_id: projectId,
       sprint_ids: sprintList.map((s) => s.id),
       excludedTypes: [TaskType.EPIC]
     })
-    if (tasks?.success && tasks.data) {
-      setTasks(tasks.data.tasks)
+    if (res?.success && res.data) {
+      setTasks(res.data.tasks)
+      setVerificationMap(res.data.verificationMap ?? {})
     }
+  }
+
+  const refreshTaskVerification = async (taskId: string) => {
+    const res = await GetTaskVerificationStatusAction(taskId)
+    if (!res?.success) return
+    setVerificationMap((prev) => {
+      if (res.data) return { ...prev, [taskId]: res.data }
+      const next = { ...prev }
+      delete next[taskId]
+      return next
+    })
+  }
+
+  const handleTaskUpdate = (task: SelectTask) => {
+    setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
+    setSelectedTask(task)
+    refreshTaskVerification(task.id)
+  }
+
+  const handleVerificationStatusChange = (
+    newStatus: string,
+    newFeedback: string
+  ) => {
+    if (!selectedTask?.id) return
+    setVerificationMap((prev) => ({
+      ...prev,
+      [selectedTask.id]: {
+        ...prev[selectedTask.id],
+        status: newStatus,
+        feedback: newFeedback
+      }
+    }))
   }
 
   useEffect(() => {
@@ -191,11 +236,13 @@ function SprintBoard() {
               sprint={sprint}
               key={sprint.id}
               tasks={SprintTasks}
+              verificationMap={verificationMap}
               isTaskModalOpen={isTaskModalOpen}
               setIsTaskModalOpen={setIsTaskModalOpen}
               selectedTask={selectedTask}
               setSelectedTask={setSelectedTask}
               setTasks={setTasks}
+              onTaskVerificationRefresh={refreshTaskVerification}
             />
           )
         })}
@@ -205,11 +252,12 @@ function SprintBoard() {
         isTaskModelOpen={isTaskModalOpen}
         setIsTaskModelOpen={setIsTaskModalOpen}
         selectedTask={selectedTask || undefined}
-        onUpdateComplete={(task: SelectTask) => {
-          setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
-          setSelectedTask(task)
-        }}
-        onSubTaskCreate={(task: SelectTask) => getTasks()}
+        onUpdateComplete={handleTaskUpdate}
+        onSubTaskCreate={() => getTasks()}
+        verificationStatus={
+          selectedTask?.id ? (verificationMap[selectedTask.id] ?? null) : null
+        }
+        onVerificationStatusChange={handleVerificationStatusChange}
       />
     </div>
   )

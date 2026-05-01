@@ -9,11 +9,22 @@ interface Props {
   sprint?: SelectSprint
   status?: InsertTaskStatus
   tasks: SelectTask[]
+  verificationMap: Record<
+    string,
+    { status: string; verification_id: number; feedback: string | null }
+  >
   onTaskClick: (task: SelectTask) => void
   setTasks: Dispatch<SetStateAction<SelectTask[]>>
 }
 
-function BoardColumn({ sprint, status, tasks, onTaskClick, setTasks }: Props) {
+function BoardColumn({
+  sprint,
+  status,
+  tasks,
+  verificationMap,
+  onTaskClick,
+  setTasks
+}: Props) {
   const { setNodeRef } = useDroppable({
     id: status?.id || "",
     data: { statusId: status?.id }
@@ -32,12 +43,12 @@ function BoardColumn({ sprint, status, tasks, onTaskClick, setTasks }: Props) {
   return (
     <div
       ref={setNodeRef}
-      className="w-[33%] bg-muted/50 p-2 pb-4 rounded-xl flex-shrink-0 space-y-2"
+      className="w-[85vw] sm:w-[320px] shrink-0 snap-center bg-muted/50 p-2 pb-4 rounded-xl space-y-2"
     >
       <div className="flex flex-row gap-2 items-center p-2">
-        <div className="font-medium text- text-center">{status?.name}</div>
+        <div className="font-medium text-center">{status?.name}</div>
         {taskCount === 0 ? null : (
-          <div className="text-xs text-center bg-primary rounded  px-2 py-0.5 text-black">
+          <div className="text-xs text-center bg-primary rounded px-2 py-0.5 text-black">
             {taskCount}
           </div>
         )}
@@ -49,6 +60,7 @@ function BoardColumn({ sprint, status, tasks, onTaskClick, setTasks }: Props) {
           onClick={onTaskClick}
           setTasks={setTasks}
           taskList={tasks}
+          verificationStatus={verificationMap[task.id] ?? null}
         />
       ))}
 

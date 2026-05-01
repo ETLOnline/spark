@@ -1,0 +1,1 @@
+ALTER TABLE "tasks_status" ADD COLUMN "defination_of_completion" boolean DEFAULT false NOT NULL;

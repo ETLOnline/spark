@@ -27,7 +27,7 @@ import {
   SelectTask
 } from "@/src/db/schema"
 import { getProjectById } from "@/src/db/data-access/project-management/query"
-import { formatContent, getInitials } from "@/src/utils/helpers"
+import { getInitials } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { createTaskNotification } from "@/src/services/notify/task/task"
@@ -35,7 +35,14 @@ import { SendTaskNotifications } from "@/src/services/notifications/Tasks/utils"
 import { NotificationEvent } from "@/src/services/notify/types/events"
 import { addProjectRecentActivity } from "@/src/utils/taskHelpr"
 import { AddTaskHistoryAction } from "./TaskHistory"
-import { extractMentionsFromMessage } from "@/src/services/realtime/utils/helper"
+import { AddTaskRewardAction } from "../Reward/Reward"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
+import { ProjectStatus } from "@/src/components/Dashboard/ProjectManagement/types/projectStatus.type"
+import {
+  getTaskCompletionRecipients,
+  meetsCompletionCriteria
+} from "@/src/utils/taskRewards"
+import { GetTaskVerificationStatuses } from "@/src/db/data-access/reward/query"
 
 export const CreateTaskAction = CreateServerAction(
   true,
@@ -63,6 +70,11 @@ export const CreateTaskAction = CreateServerAction(
       if (task) {
         await SendTaskNotifications("task_assigned", task, project)
         await addProjectRecentActivity("task_created", task)
+        await AddTaskRewardAction(ActivityTypes.TaskCreation, {
+          user_id: task.created_by,
+          task_id: task.id,
+          project_id: task.project_id
+        })
       }
 
       return { success: true, data: task }
@@ -90,13 +102,55 @@ export const GetBacklogTasksAction = CreateServerAction(
   }
 )
 
+const buildVerificationMap = (
+  rows: {
+    task_id: string
+    status: string
+    verification_id: number
+    feedback: string | null
+  }[]
+): Record<
+  string,
+  { status: string; verification_id: number; feedback: string | null }
+> =>
+  rows.reduce(
+    (map, row) => {
+      if (row.task_id)
+        map[row.task_id] = {
+          status: row.status,
+          verification_id: row.verification_id,
+          feedback: row.feedback ?? null
+        }
+      return map
+    },
+    {} as Record<
+      string,
+      { status: string; verification_id: number; feedback: string | null }
+    >
+  )
+
 export const GetSprintTasksAction = CreateServerAction(
   true,
   async (filters?: taskQueryFilters) => {
     try {
       const tasks: GetTaskResponseType = await GetTasks({ ...filters })
 
-      return { success: true, data: tasks }
+      let verificationMap: Record<
+        string,
+        { status: string; verification_id: number; feedback: string | null }
+      > = {}
+      try {
+        const taskIds = tasks.tasks.map((t) => t.id)
+        const rows = await GetTaskVerificationStatuses(taskIds)
+        verificationMap = buildVerificationMap(rows)
+      } catch (verificationError) {
+        console.error(
+          "GetSprintTasksAction: failed to fetch verification statuses",
+          verificationError
+        )
+      }
+
+      return { success: true, data: { ...tasks, verificationMap } }
     } catch (error) {
       return { error: error }
     }
@@ -125,6 +179,19 @@ export const GetTaskByIdAction = CreateServerAction(
       return { success: true, data: task }
     } catch (error) {
       return { error: error }
+    }
+  }
+)
+
+export const GetTaskVerificationStatusAction = CreateServerAction(
+  true,
+  async (task_id: string) => {
+    try {
+      const rows = await GetTaskVerificationStatuses([task_id])
+      const map = buildVerificationMap(rows)
+      return { success: true, data: map[task_id] ?? null }
+    } catch (error) {
+      return { error }
     }
   }
 )
@@ -179,13 +246,69 @@ export const UpdateTaskAction = CreateServerAction(
           UpdatedTask,
           oldTask
         )
-
         await AddTaskHistoryAction(oldTask, UpdatedTask)
+
+        const oldStatusSlug = oldTask.status?.status_slug
+        const newStatusSlug = UpdatedTask.status?.status_slug
+        const assigneeId = UpdatedTask.assign_to
+
+        const taskIsComplete = meetsCompletionCriteria(UpdatedTask)
+        const wasComplete = meetsCompletionCriteria(oldTask)
+
+        const reachedInProgress =
+          oldStatusSlug !== ProjectStatus.InProgress &&
+          newStatusSlug === ProjectStatus.InProgress
+        const skippedToComplete = !wasComplete && taskIsComplete
+
+        if (assigneeId && (reachedInProgress || skippedToComplete)) {
+          await AddTaskRewardAction(
+            ActivityTypes.TaskInprogress,
+            {
+              user_id: assigneeId,
+              task_id: UpdatedTask.id,
+              project_id: UpdatedTask.project_id
+            },
+            "task_id",
+            UpdatedTask.id
+          )
+        }
+
+        const justCompleted =
+          !meetsCompletionCriteria(oldTask) && taskIsComplete
+
+        if (justCompleted) {
+          const recipients = getTaskCompletionRecipients(UpdatedTask)
+          await Promise.all(
+            recipients.map(async (user_id) => {
+              await AddTaskRewardAction(
+                ActivityTypes.TaskCompletion,
+                {
+                  user_id,
+                  task_id: UpdatedTask.id,
+                  project_id: UpdatedTask.project_id
+                },
+                "task_id",
+                UpdatedTask.id
+              )
+            })
+          )
+
+          if (UpdatedTask.tested_by) {
+            await AddTaskRewardAction(
+              ActivityTypes.TaskTestCompletion,
+              {
+                user_id: UpdatedTask.tested_by,
+                task_id: UpdatedTask.id,
+                project_id: UpdatedTask.project_id
+              },
+              "task_id",
+              UpdatedTask.id
+            )
+          }
+        }
 
         return { success: true, data: UpdatedTask }
       }
-
-      return { success: true, data: UpdatedTask }
     } catch (error) {
       return { error: error }
     }

@@ -120,7 +120,10 @@ const permissionSeedList = [
   { namespace: "project", action: permissions.project.teamsUpdate },
   { namespace: "project", action: permissions.project.teamsDelete },
 
-  { namespace: "project", action: permissions.project.settingsView }
+  { namespace: "project", action: permissions.project.settingsView },
+
+  { namespace: "project", action: permissions.project.DetailView },
+  { namespace: "project", action: permissions.project.ChatView }
 ]
 
 export const PermissionsSeed = async () => {

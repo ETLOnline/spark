@@ -19,6 +19,7 @@ import {
   getProjectRecentActivities,
   getProjectusersProfileUrl
 } from "@/src/db/data-access/project-management/query"
+import { AddRewardAction } from "../Reward/Reward"
 import {
   createScopedProjectRolesAndAssignAdmin,
   deleteUserRole,
@@ -29,6 +30,9 @@ import { SendProjectNotifications } from "@/src/services/notifications/Project/u
 import { createProjectInviteNotification } from "@/src/services/notify/project/project"
 import { NotificationEvent } from "@/src/services/notify/types/events"
 import { getSpaceUsers } from "@/src/db/data-access/spaces/query"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
+import { ActivityTypes } from "@/src/types/Rewards/rewards"
+import { AuthUserAction } from "../User/AuthUserAction"
 
 export const CreateProjectAction = CreateServerAction(
   true,
@@ -50,6 +54,18 @@ export const CreateProjectAction = CreateServerAction(
         `space-${newProject.space_id}-project`,
         "project-add",
         newProject
+      )
+
+      const projectURL = createAbsoluteUrl(`/project/${newProject.id}/Board`)
+
+      await AddRewardAction(
+        ActivityTypes.ProjectCreation,
+        newProject.created_by,
+        projectURL,
+        {
+          project_id: newProject.id,
+          space_id: newProject.space_id
+        }
       )
 
       return { success: true, data: newProject }
@@ -76,6 +92,32 @@ export const UpdateProjectAction = CreateServerAction(
         "project-edit",
         updatedProject
       )
+      const projectUrl = createAbsoluteUrl(
+        `/project/${updatedProject.id}/details`
+      )
+
+      if ("description" in project_data && updatedProject.created_by) {
+        const user = await AuthUserAction()
+        if (user?.unique_id) {
+          const projectWithChannel = await getProjectById(
+            updatedProject.id,
+            true
+          )
+          await AddRewardAction(
+            ActivityTypes.ProjectOverviewUpdate,
+            user.unique_id,
+            projectUrl,
+            {
+              project_id: updatedProject.id,
+              space_id: updatedProject.space_id,
+              community_id: projectWithChannel?.channel?.community_id
+            },
+            undefined,
+            "project_id",
+            updatedProject.id
+          )
+        }
+      }
 
       return { success: true, data: updatedProject }
     } catch (error) {

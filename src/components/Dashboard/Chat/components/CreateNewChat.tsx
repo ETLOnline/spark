@@ -19,7 +19,6 @@ import {
   AddUserToGroupChatAction,
   RemoveUserFromGroupChatAction
 } from "@/src/server-actions/Chat/Chat"
-import { useParams } from "next/navigation"
 import { useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import { useDebouncedCallback } from "use-debounce"
@@ -70,11 +69,10 @@ const CreateNewChat = ({
   const [groupName, setGroupName] = useState<string>("")
   const [groupNameError, setGroupNameError] = useState<string>("")
   const [options, setOptions] = useState<MultiSelectOption[]>([])
-  const { space_slug } = useParams()
   const currentSpace = useAtomValue(spaceStore.currentSpace)
   const [contactFilter, setContactFilter] = useState<ChatContactFilters>()
 
-  const isSpacePage = space_slug ? true : false
+  const isSpacePage = currentSpace ? true : false
   const isManageMode = mode === "manage" && currentChat?.is_group
   const existingMemberIds = new Set(
     currentChat?.users?.map((u) => u.user_id) || []
@@ -208,6 +206,10 @@ const CreateNewChat = ({
         if (contactFilter) await getUserList(contactFilter)
         onSuccess?.()
       } else if (isGroupChat) {
+        if (!groupName.trim()) {
+          setGroupNameError("Group name is required")
+          return
+        }
         // Create Group Logic
         const response = await CreateGroupChatAction(
           [...userIds, authUser?.unique_id],
@@ -343,11 +345,18 @@ const CreateNewChat = ({
             )}
 
             {!isManageMode && isGroupChat && (
-              <Input
-                placeholder="Group Name"
-                value={groupName}
-                onChange={(e) => setGroupName(e.target.value)}
-              />
+              <div className="space-y-2">
+                <Input
+                  placeholder="Group Name"
+                  value={groupName}
+                  onChange={(e) => {
+                    setGroupName(e.target.value)
+                  }}
+                />
+                {groupNameError && (
+                  <p className="text-red-500 text-sm">{groupNameError}</p>
+                )}
+              </div>
             )}
           </div>
 

@@ -9,6 +9,8 @@ import AuthInitializer from "../services/auth/AuthInitializer"
 import { ScreenOverlayProvider } from "../hooks/useScreenOverlay"
 import NotificationProvider from "../services/notifications/NotificationProvider"
 import { Suspense } from "react"
+import ReferralHandler from "../components/common/GetReferral"
+import RewardNotification from "../components/common/rewards/RewardNotification"
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -33,6 +35,9 @@ export default function RootLayout({
   return (
     <ClerkProvider appearance={{ baseTheme: dark }}>
       <AuthInitializer />
+      <Suspense>
+        <ReferralHandler />
+      </Suspense>
       <html lang="en" suppressHydrationWarning>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -44,6 +49,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <Toaster />
+            <RewardNotification />
             <Suspense>
               <NotificationProvider />
             </Suspense>
