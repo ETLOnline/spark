@@ -10,6 +10,7 @@ import {
   GetRewardLevels,
   GetUserApprovedVerificationCount,
   GetUserPointLedger,
+  GetUserReviewedVerificationCount,
   GetUserRewardBalance,
   GetUserRewardLevel,
   HasUserBeenRewardedForResource,
@@ -442,6 +443,18 @@ export const GetUserApprovedVerificationCountAction = CreateServerAction(
   async (user_id: string) => {
     try {
       const count = await GetUserApprovedVerificationCount(user_id)
+      return { success: true, data: count }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+)
+
+export const GetUserReviewedVerificationCountAction = CreateServerAction(
+  true,
+  async (user_id: string) => {
+    try {
+      const count = await GetUserReviewedVerificationCount(user_id)
       return { success: true, data: count }
     } catch (error) {
       return { success: false, error }
