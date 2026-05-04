@@ -97,9 +97,9 @@ export default function TrustEngineScreen({
   }, [fetchAllData])
 
   useEffect(() => {
-    if (!targetUserId) return
+    if (!authUser?.unique_id) return
 
-    const channelName = `user-${targetUserId}`
+    const channelName = `user-${authUser.unique_id}`
     const channel = pusherClient.subscribe(channelName)
 
     const handleRewardAdded = () => {
@@ -111,7 +111,7 @@ export default function TrustEngineScreen({
     return () => {
       channel.unbind("reward_added", handleRewardAdded)
     }
-  }, [targetUserId])
+  }, [authUser?.unique_id])
 
   const handlePageChange = async (newPage: number) => {
     setCurrentPage(newPage)

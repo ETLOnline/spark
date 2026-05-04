@@ -71,13 +71,9 @@ export default function TrustEngineCard({
     maxPoints
   )
 
-  const handleRedirect = () => {
-    if (isMyProfile) {
-      return "/profile/trust-engine"
-    } else {
-      return `/profile/${user.unique_id}/trust-engine`
-    }
-  }
+  const dashboardHref = isMyProfile
+    ? "/profile/trust-engine"
+    : `/profile/${user.unique_id}/trust-engine`
 
   return (
     <Card className="rounded-xl border p-6 shadow-sm spark-gradient-panel-bg">
@@ -91,7 +87,7 @@ export default function TrustEngineCard({
         </div>
 
         <Button className="w-full sm:w-auto">
-          <Link href={handleRedirect()}>View Dashboard</Link>
+          <Link href={dashboardHref}>View Dashboard</Link>
         </Button>
       </div>
 
