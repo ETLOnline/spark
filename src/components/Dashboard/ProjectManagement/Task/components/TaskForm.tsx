@@ -418,10 +418,10 @@ export default function TaskForm({
 
   return (
     <>
-      <div className="grid grid-cols-12 gap-2 ">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
         {/* Main content area (left side) */}
-        <ScrollArea className="h-[80vh] col-span-12 md:col-span-9">
-          <div className=" px-4">
+        <ScrollArea className="h-auto lg:h-[80vh] col-span-1 lg:col-span-9 w-full">
+          <div className="px-2 sm:px-4">
             <div className="space-y-6">
               {/* Task title */}
               <div className="space-y-2">
@@ -446,7 +446,7 @@ export default function TaskForm({
                         />
                       ) : (
                         <div
-                          className="border-b border-dashed border-gray-300 py-2 text-xl cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2"
+                          className="border-b border-dashed border-gray-300 py-2 text-lg sm:text-xl cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2 break-words"
                           onClick={() => setActiveField("title")}
                         >
                           <div>
@@ -474,7 +474,7 @@ export default function TaskForm({
 
               {/* Task description */}
               <div className="space-y-2">
-                <Label className="pl-2 text-xl font-semibold">
+                <Label className="pl-2 text-lg sm:text-xl font-semibold">
                   Description
                 </Label>
 
@@ -512,9 +512,27 @@ export default function TaskForm({
                 />
               </div>
 
+              {/* Mobile/Tablet submit button — shown when sidebar stacks below */}
+              {isEditable && (
+                <div className="lg:hidden pl-2">
+                  <Button
+                    type="submit"
+                    form="task-form"
+                    loading={loading}
+                    variant={"outline"}
+                    className="w-full bg-primary text-black"
+                    disabled={loading}
+                  >
+                    {selectedTask ? "Update Task" : "Create Task"}
+                  </Button>
+                </div>
+              )}
+
               {/* Subtasks */}
               <div className="space-y-2 flex flex-col pl-2">
-                <Label className="text-xl font-semibold">Subtasks</Label>
+                <Label className="text-lg sm:text-xl font-semibold">
+                  Subtasks
+                </Label>
 
                 {/* Subtask list */}
                 <div className="space-y-2 border rounded-md p-2">
@@ -557,13 +575,19 @@ export default function TaskForm({
                 <VerificationPanel
                   verificationStatus={verificationStatus}
                   onStatusChange={onVerificationStatusChange}
+                  isAssignee={
+                    !!selectedTask?.assign_to &&
+                    selectedTask.assign_to === authUser?.unique_id
+                  }
                 />
               )}
 
               {/* Comments */}
               {selectedTask && (
-                <div className="space-y-4 pl-2">
-                  <h2 className="text-lg  font-semibold">Comments</h2>
+                <div className="space-y-4 pl-2 pb-4">
+                  <h2 className="text-base sm:text-lg font-semibold">
+                    Comments
+                  </h2>
                   <TaskComment
                     taskId={selectedTask.id}
                     isSprintCompleted={isSprintCompleted}
@@ -579,14 +603,15 @@ export default function TaskForm({
 
         {/* Sidebar (right side) */}
         <form
+          id="task-form"
           onSubmit={form.handleSubmit(onSubmit)}
           onKeyDown={(e) => {
             if (e.key === "Enter") e.preventDefault()
           }}
-          className="col-span-12 md:col-span-3"
+          className="col-span-1 lg:col-span-3 w-full"
         >
-          <ScrollArea className="h-[80vh] ">
-            <div className="w-full md:w-56">
+          <ScrollArea className="h-[80vh] max-h-[60vh] lg:max-h-none w-full">
+            <div className="w-full lg:w-56">
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-end gap-4 mb-2">

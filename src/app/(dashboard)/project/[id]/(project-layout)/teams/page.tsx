@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 import ProjectTeamList, {
   ProjectUser
 } from "@/src/components/Dashboard/ProjectManagement/ProjectTeamList/ProjectTeamList"
@@ -103,7 +103,7 @@ const TeamPage: React.FC = () => {
 
               return {
                 ...pu,
-                user: matchedUser.user as ProjectUser["user"] // explicit cast
+                user: matchedUser.user as ProjectUser["user"]
               }
             })
             .filter((pu): pu is ProjectUser => pu !== null)
@@ -127,7 +127,7 @@ const TeamPage: React.FC = () => {
 
   if (isLoading)
     return (
-      <div className="p-6 flex justify-center items-center h-64">
+      <div className="p-4 md:p-6 flex justify-center items-center h-64">
         <Loader size={LoaderSizes.xl} />
       </div>
     )
@@ -139,8 +139,8 @@ const TeamPage: React.FC = () => {
   }
 
   return (
-    <ScrollArea className="min-h-full px-2">
-      <div className="p-6">
+    <ScrollArea className="min-h-full px-0 md:px-2">
+      <div className="p-4 md:p-6">
         <ProjectTeamList
           projectId={currProject.id}
           spaceId={currSpace.id}

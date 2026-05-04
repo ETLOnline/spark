@@ -1,7 +1,7 @@
 import { ReactNode } from "react"
 import { redirect } from "next/navigation"
 import AppSidebar from "@/src/components/Dashboard/Sidebar.tsx/app-sidebar"
-import Header from "@/src/components/Dashboard/header"
+import Header from "@/src/components/Dashboard/Header/header"
 import { SidebarInset, SidebarProvider } from "@/src/components/ui/sidebar"
 import { checkUserPersonaCompletion, isSuperAdmin } from "@/src/utils/helpers"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"

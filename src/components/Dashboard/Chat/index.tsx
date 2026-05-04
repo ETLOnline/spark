@@ -12,7 +12,12 @@ import {
 } from "@/src/components/ui/card"
 import { Input } from "@/src/components/ui/input"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
-import { Sheet, SheetContent, SheetTrigger } from "@/src/components/ui/sheet"
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger
+} from "@/src/components/ui/sheet"
 import {
   Menu,
   Send,
@@ -809,6 +814,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       <span className="sr-only">Toggle contacts</span>
                     </Button>
                   </SheetTrigger>
+                  <SheetTitle className="hidden">Chats</SheetTitle>
                   <SheetContent
                     side="left"
                     className="w-[80%] sm:w-[385px] p-0"

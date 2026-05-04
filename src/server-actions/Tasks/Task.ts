@@ -27,7 +27,7 @@ import {
   SelectTask
 } from "@/src/db/schema"
 import { getProjectById } from "@/src/db/data-access/project-management/query"
-import { formatContent, getInitials } from "@/src/utils/helpers"
+import { getInitials } from "@/src/utils/helpers"
 import { PaginationType } from "@/src/components/common/types/pagination.type"
 import pusherServer from "@/src/services/realtime/pusherServer"
 import { createTaskNotification } from "@/src/services/notify/task/task"
@@ -35,11 +35,9 @@ import { SendTaskNotifications } from "@/src/services/notifications/Tasks/utils"
 import { NotificationEvent } from "@/src/services/notify/types/events"
 import { addProjectRecentActivity } from "@/src/utils/taskHelpr"
 import { AddTaskHistoryAction } from "./TaskHistory"
-import { extractMentionsFromMessage } from "@/src/services/realtime/utils/helper"
-import { AddRewardAction, AddTaskRewardAction } from "../Reward/Reward"
+import { AddTaskRewardAction } from "../Reward/Reward"
 import { ActivityTypes } from "@/src/types/Rewards/rewards"
 import { ProjectStatus } from "@/src/components/Dashboard/ProjectManagement/types/projectStatus.type"
-import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 import {
   getTaskCompletionRecipients,
   meetsCompletionCriteria
@@ -250,33 +248,31 @@ export const UpdateTaskAction = CreateServerAction(
         )
         await AddTaskHistoryAction(oldTask, UpdatedTask)
 
-        const project = await getProjectById(UpdatedTask.project_id, true)
-        const communityId = project?.channel?.community_id
-
         const oldStatusSlug = oldTask.status?.status_slug
         const newStatusSlug = UpdatedTask.status?.status_slug
         const assigneeId = UpdatedTask.assign_to
 
-        const shouldCheckInProgress =
-          assigneeId &&
+        const taskIsComplete = meetsCompletionCriteria(UpdatedTask)
+        const wasComplete = meetsCompletionCriteria(oldTask)
+
+        const reachedInProgress =
           oldStatusSlug !== ProjectStatus.InProgress &&
           newStatusSlug === ProjectStatus.InProgress
+        const skippedToComplete = !wasComplete && taskIsComplete
 
-        if (shouldCheckInProgress && assigneeId) {
+        if (assigneeId && (reachedInProgress || skippedToComplete)) {
           await AddTaskRewardAction(
             ActivityTypes.TaskInprogress,
             {
               user_id: assigneeId,
               task_id: UpdatedTask.id,
-              project_id: UpdatedTask.project_id,
-              community_id: communityId
+              project_id: UpdatedTask.project_id
             },
             "task_id",
             UpdatedTask.id
           )
         }
 
-        const taskIsComplete = meetsCompletionCriteria(UpdatedTask)
         const justCompleted =
           !meetsCompletionCriteria(oldTask) && taskIsComplete
 
@@ -289,8 +285,7 @@ export const UpdateTaskAction = CreateServerAction(
                 {
                   user_id,
                   task_id: UpdatedTask.id,
-                  project_id: UpdatedTask.project_id,
-                  community_id: communityId
+                  project_id: UpdatedTask.project_id
                 },
                 "task_id",
                 UpdatedTask.id
@@ -304,8 +299,7 @@ export const UpdateTaskAction = CreateServerAction(
               {
                 user_id: UpdatedTask.tested_by,
                 task_id: UpdatedTask.id,
-                project_id: UpdatedTask.project_id,
-                community_id: communityId
+                project_id: UpdatedTask.project_id
               },
               "task_id",
               UpdatedTask.id
