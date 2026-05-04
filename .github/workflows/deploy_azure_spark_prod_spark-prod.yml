@@ -45,12 +45,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Node.js version
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "22.x" # Ensure this matches your local and Azure App Service Node.js version
-
-      - name: Get the Latest npm to avoid any caching issues
-        run: npm install -g npm@latest
 
       - name: Install dependencies
         run: npm ci --include=optional # Use 'npm ci' for CI/CD for consistent installs
