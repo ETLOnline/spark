@@ -10,6 +10,7 @@ import {
   PaginationNext,
   PaginationPrevious
 } from "../../ui/pagination"
+import { useDetectBreakpoint } from "@/src/hooks/useBreakpoint"
 import { PaginationType } from "../types/pagination.type"
 
 interface props {
@@ -25,6 +26,8 @@ const PaginationComponent = ({
 }: props) => {
   const pathname = usePathname()
   const query = useSearchParams()
+  const isMobile = useDetectBreakpoint()
+  const compactOnMobileActive = compactOnMobile && isMobile
   const urlPage = query.get("page") ? Number(query.get("page")) : 1
 
   const page = onPageChange ? pagination.page : urlPage
@@ -47,7 +50,7 @@ const PaginationComponent = ({
 
   const generatePaginationItems = () => {
     const items = []
-    const maxVisiblePages = compactOnMobile ? 3 : 5
+    const maxVisiblePages = compactOnMobileActive ? 3 : 5
     const halfVisible = Math.floor(maxVisiblePages / 2)
 
     let startPage = Math.max(1, page - halfVisible)
@@ -89,7 +92,7 @@ const PaginationComponent = ({
             isActive={i === page}
             onClick={(e) => handleClick(e, i, false)}
             className={
-              compactOnMobile
+              compactOnMobileActive
                 ? "h-8 w-8 cursor-pointer p-0 text-xs sm:h-9 sm:w-9 sm:text-sm"
                 : "cursor-pointer"
             }
@@ -115,7 +118,7 @@ const PaginationComponent = ({
             isActive={pagination.totalPages === page}
             onClick={(e) => handleClick(e, pagination.totalPages, false)}
             className={
-              compactOnMobile
+              compactOnMobileActive
                 ? "h-8 w-8 cursor-pointer p-0 text-xs sm:h-9 sm:w-9 sm:text-sm"
                 : "cursor-pointer"
             }
@@ -129,15 +132,15 @@ const PaginationComponent = ({
     return items
   }
 
-  const mobilePreviousNextClass = compactOnMobile
+  const mobilePreviousNextClass = compactOnMobileActive
     ? "h-8 w-8 p-0 sm:h-9 sm:w-9 sm:p-0 lg:h-10 lg:w-auto lg:px-3 [&>span]:hidden lg:[&>span]:inline"
     : ""
 
   return (
-    <Pagination className={compactOnMobile ? "w-full" : undefined}>
+    <Pagination className={compactOnMobileActive ? "w-full" : undefined}>
       <PaginationContent
         className={
-          compactOnMobile
+          compactOnMobileActive
             ? "flex-wrap justify-center gap-1 sm:gap-2"
             : undefined
         }

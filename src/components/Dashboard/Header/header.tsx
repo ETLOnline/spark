@@ -14,7 +14,7 @@ const Header = () => {
   const breadcrumbs = useBreadcrumbs()
 
   return (
-    <div>
+    <>
       <header className="flex h-16 shrink-0 items-center gap-2 sticky top-0 bg-background z-20 rounded-xl border-b ">
         <div className="flex items-center justify-between w-full gap-2 px-4">
           <div className="flex items-center ">
@@ -44,7 +44,7 @@ const Header = () => {
           <HeaderBreadcrumbs breadcrumbs={breadcrumbs} />
         </div>
       )}
-    </div>
+    </>
   )
 }
 

@@ -38,12 +38,12 @@ export function TransactionLedger({
   const data = Array.isArray(TransactionsData) ? TransactionsData : []
 
   return (
-    <Card className="flex flex-col p-4 sm:p-6 ">
-      <h3 className="font-semibold text-foreground mb-4">
+    <Card className="flex w-full flex-col overflow-hidden p-2 sm:p-6">
+      <h3 className="font-semibold text-foreground mb-4 shrink-0">
         Transaction History
       </h3>
 
-      <div className="space-y-2 overflow-y-auto pr-1 max-h-[42svh] sm:space-y-3 sm:max-h-[57svh] md:max-h-[39svh] lg:max-h-none lg:overflow-visible ">
+      <div className="overflow-y-auto   space-y-2 sm:space-y-3 pr-1">
         {data.map((transaction) => (
           <TransactionRow
             key={transaction.transection_id}
@@ -58,9 +58,14 @@ export function TransactionLedger({
       </div>
 
       {totalPages > 1 && (
-        <div className="mt-4 shrink-0 border-t pt-4 sm:mt-6">
+        <div className="overflow-x-auto border-t pt-4 mt-3 shrink-0">
           <PaginationComponent
-            pagination={{ page: currentPage, totalPages, total: 0, limit: 10 }}
+            pagination={{
+              page: currentPage,
+              totalPages,
+              total: 0,
+              limit: 10
+            }}
             onPageChange={onPageChange}
             compactOnMobile={true}
           />
@@ -74,8 +79,8 @@ function TransactionRow({ transaction }: { transaction: TransactionProps }) {
   const proofUrl = transaction.metadata?.proof_url ?? null
   const isVerifiedTask = transaction.trust_verification_id != null && !!proofUrl
   return (
-    <div className="flex flex-col gap-2 rounded-lg bg-muted/30 p-3 transition-colors hover:bg-muted/50 sm:flex-row sm:items-start sm:gap-4 sm:p-4">
-      <div className="p-2 rounded-lg flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 border shrink-0">
+    <div className="flex min-w-0 items-start gap-2 rounded-lg bg-muted/30 p-3 transition-colors hover:bg-muted/50 sm:gap-4 sm:p-4">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border p-2 sm:h-10 sm:w-10">
         <ArrowUpRight className="w-4 h-4" />
       </div>
 
@@ -111,7 +116,7 @@ function TransactionRow({ transaction }: { transaction: TransactionProps }) {
         </div>
       </div>
 
-      <div className="flex flex-col items-start gap-1 sm:items-end">
+      <div className="flex shrink-0 flex-col items-end gap-1">
         {transaction.reward_id === 1 && (
           <div className="flex items-center gap-1 text-sm font-medium text-primary sm:text-base">
             <ArrowUpRight className="h-4 w-4" />+{transaction.amount} RP

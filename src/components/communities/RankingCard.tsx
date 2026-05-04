@@ -30,7 +30,7 @@ const RankingCard: React.FC<RankingCardProps> = ({
   if (!currentUserRank) {
     return (
       <Card
-        className={`p-4 border-primary/20 ${grandient ? "spark-gradient-panel-bg" : ""}`}
+        className={`w-full overflow-hidden p-4 border-primary/20 ${grandient ? "spark-gradient-panel-bg" : ""}`}
       >
         <p className="text-sm text-muted-foreground mb-1">Your Ranking</p>
         <p className="text-sm font-medium text-muted-foreground">
@@ -57,7 +57,7 @@ const RankingCard: React.FC<RankingCardProps> = ({
 
   return (
     <Card
-      className={`p-4 sm:p-6 border-primary/20 ${grandient ? "spark-gradient-panel-bg" : ""} ${handleClick ? "hover:cursor-pointer" : ""}`}
+      className={`w-full overflow-hidden p-4 sm:p-6 border-primary/20 ${grandient ? "spark-gradient-panel-bg" : ""} ${handleClick ? "hover:cursor-pointer" : ""}`}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
