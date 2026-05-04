@@ -227,7 +227,6 @@ export function CommunityRanking() {
                   limit: PAGE_SIZE
                 }}
                 onPageChange={handlePageChange}
-                compactOnMobile={true}
               />
             </div>
           )}

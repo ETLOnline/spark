@@ -67,7 +67,6 @@ export function TransactionLedger({
               limit: 10
             }}
             onPageChange={onPageChange}
-            compactOnMobile={true}
           />
         </div>
       )}
