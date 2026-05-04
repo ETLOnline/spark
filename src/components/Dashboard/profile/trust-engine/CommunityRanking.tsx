@@ -250,7 +250,8 @@ export function CommunityRanking() {
                   : "You're at the top!"}
               </p>
             </div>
-            <div className="p-4 bg-muted/50 rounded-lg">
+            {/* commenting becuase we will do in the future */}
+            {/* <div className="p-4 bg-muted/50 rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">
                 Latest Points Gained
               </p>
@@ -263,7 +264,7 @@ export function CommunityRanking() {
               <p className="text-xs text-muted-foreground mt-1">
                 {rankGrowth > 0 ? "Keep up the momentum!" : "No points yet"}
               </p>
-            </div>
+            </div> */}
           </div>
         </Card>
       )}

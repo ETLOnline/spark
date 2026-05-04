@@ -1,6 +1,6 @@
 "use client"
 import AppSidebar from "@/src/components/Dashboard/Sidebar.tsx/app-sidebar"
-import Header from "@/src/components/Dashboard/header"
+import Header from "@/src/components/Dashboard/Header/header"
 import { SidebarInset, SidebarProvider } from "@/src/components/ui/sidebar"
 import { ReactNode, Suspense } from "react"
 import UnauthorizedScreen from "./components/AdminLayout/Unauthorized"

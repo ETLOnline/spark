@@ -33,6 +33,7 @@ import {
 import { triggerPusherEvent } from "@/src/services/trigger"
 import { getFeatureFlagAction } from "../FeatureFlag/FeatureFlag"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
+import { getProjectById } from "@/src/db/data-access/project-management/query"
 
 export const AddRewardAction = CreateServerAction(
   true,
@@ -57,6 +58,21 @@ export const AddRewardAction = CreateServerAction(
         return { success: false, error: "Activity rule not found" }
       }
 
+      const isReputationPoints =
+        activityRule.reward?.internal_name === RewardTypes.Reputation_Points
+
+      if (
+        isReputationPoints &&
+        metadata?.project_id &&
+        !metadata?.community_id
+      ) {
+        const project = await getProjectById(metadata.project_id, true)
+        const resolvedCommunityId = project?.channel?.community_id ?? null
+        metadata = { ...metadata, community_id: resolvedCommunityId }
+      }
+
+      let rewardAlreadyApplied = false
+
       if (idempotency_field && idempotency_value) {
         const checkResult = await CheckRewardAlreadyGivenAction(
           user_id,
@@ -66,6 +82,7 @@ export const AddRewardAction = CreateServerAction(
         )
 
         if (checkResult?.data?.alreadyRewarded) {
+          rewardAlreadyApplied = true
           return { success: true, data: null, skipped: true }
         }
       }
@@ -113,6 +130,7 @@ export const AddRewardAction = CreateServerAction(
           activityRule.base_points
         )
       }
+
       if (userRewardBalance?.success && userRewardBalance?.data) {
         await SyncUserRewardLevelAction(
           user_id,
@@ -121,7 +139,7 @@ export const AddRewardAction = CreateServerAction(
         )
       }
 
-      if (activityRule.required_verification) {
+      if (activityRule.required_verification && !rewardAlreadyApplied) {
         const activity = await GetActivityRule({
           action_type: ActivityTypes.MilestoneApproval
         })
@@ -173,49 +191,54 @@ export const UpdateTrustVerificationAction = CreateServerAction(
         verified_at: new Date().toISOString()
       }
 
-      const res = await updateTrustVerification(verification_id, data)
+      const trustVerification = await updateTrustVerification(
+        verification_id,
+        data
+      )
 
-      const isApproved = res?.status === TrustVerificationStatus.Approved
-      const isRejected = res?.status === TrustVerificationStatus.Rejected
+      const isApproved =
+        trustVerification?.status === TrustVerificationStatus.Approved
 
       const taskCompletionRule = await GetActivityRule({
         action_type: ActivityTypes.TaskCompletion
       })
 
       const isTaskCompletion =
-        taskCompletionRule && res.rule_id === taskCompletionRule.rule_id
+        taskCompletionRule &&
+        trustVerification.rule_id === taskCompletionRule.rule_id
 
-      if (isApproved) {
-        if (isTaskCompletion) {
-          // Task completion verified — reward assignee
-          await AddRewardAction(
-            ActivityTypes.TaskCompletionVerification,
-            res.user_id,
-            res.proof_url,
-            { verification_id },
-            verification_id,
-            "verification_id",
-            String(verification_id)
-          )
+      // Forward project_id + task_id from the verification record. AddRewardAction
+      // resolves community_id from project_id — single source of truth.
+      const verificationMetadata = (trustVerification?.metadata ?? {}) as {
+        project_id?: string
+        task_id?: string
+      }
+      const baseMetadata = {
+        project_id: verificationMetadata.project_id,
+        task_id: verificationMetadata.task_id,
+        verification_id
+      }
 
-          if (res.approved_by) {
-            await AddRewardAction(
-              ActivityTypes.TaskCompletionReview,
-              res.approved_by,
-              res.proof_url,
-              { verification_id },
-              verification_id,
-              "verification_id",
-              String(verification_id)
-            )
-          }
-        } else {
-          // Milestone approval flow
+      if (isApproved && isTaskCompletion) {
+        const assigneeId = trustVerification.user_id
+
+        // Task completion verified — reward assignee
+        await AddRewardAction(
+          ActivityTypes.TaskCompletionVerification,
+          assigneeId,
+          trustVerification.proof_url,
+          baseMetadata,
+          verification_id,
+          "verification_id",
+          String(verification_id)
+        )
+
+        if (trustVerification?.approved_by) {
           await AddRewardAction(
-            ActivityTypes.MilestoneApproval,
-            res.user_id,
-            res.proof_url,
-            { verification_id },
+            ActivityTypes.TaskCompletionReview,
+            trustVerification.approved_by,
+            trustVerification.proof_url,
+            baseMetadata,
             verification_id,
             "verification_id",
             String(verification_id)
@@ -223,19 +246,7 @@ export const UpdateTrustVerificationAction = CreateServerAction(
         }
       }
 
-      if (isApproved && !isTaskCompletion) {
-        await AddRewardAction(
-          ActivityTypes.MilestoneVerified,
-          res.approved_by || "",
-          res.proof_url,
-          { verification_id },
-          verification_id,
-          "verification_id",
-          String(verification_id)
-        )
-      }
-
-      return { success: true, data: res }
+      return { success: true, data: trustVerification }
     } catch (error) {
       return { success: false, error }
     }
@@ -384,20 +395,13 @@ export const AddTaskRewardAction = CreateServerAction(
       project_id?: string
       sprint_id?: string
       comment_id?: number
-      community_id?: string | null
+      community_id?: string
     },
     idempotency_field?: string,
     idempotency_value?: string
   ) => {
     try {
-      const {
-        user_id,
-        task_id,
-        project_id,
-        sprint_id,
-        comment_id,
-        community_id
-      } = payload
+      const { user_id, task_id, project_id, sprint_id, comment_id } = payload
 
       if (!user_id) return { success: false, error: "user_id is required" }
 
@@ -409,19 +413,14 @@ export const AddTaskRewardAction = CreateServerAction(
         metadata = {
           task_id,
           project_id,
-          ...(comment_id ? { comment_id } : {}),
-          ...(community_id ? { community_id } : {})
+          ...(comment_id ? { comment_id } : {})
         }
       } else if (sprint_id && project_id) {
         proof_url = createAbsoluteUrl(`/project/${project_id}/sprint`)
-        metadata = {
-          sprint_id,
-          project_id,
-          ...(community_id ? { community_id } : {})
-        }
+        metadata = { sprint_id, project_id }
       } else if (project_id) {
         proof_url = createAbsoluteUrl(`/project/${project_id}/details`)
-        metadata = { project_id, ...(community_id ? { community_id } : {}) }
+        metadata = { project_id }
       }
 
       return await AddRewardAction(
