@@ -7,6 +7,55 @@ import { randomUUID } from "crypto"
 import { AddFile } from "../db/data-access/file/query"
 import { GetSpaceById } from "../db/data-access/spaces/query"
 import { createAbsoluteUrl } from "./clientHelper"
+import { getEmailTemplateByName } from "../db/data-access/emails/query"
+import Handlebars from "handlebars"
+import { MailService } from "../services/mail/sendMail"
+
+const mailer = new MailService()
+
+async function sendEmailToRecipient({
+  to,
+  subject,
+  body
+}: {
+  to: string
+  subject: string
+  body: string
+}) {
+  await mailer.sendEmail({
+    to,
+    from: process.env.EMAIL_FROM_ADDRESS!,
+    subject,
+    body
+  })
+}
+
+export async function sendEmailFromTemplate({
+  templateName,
+  payload,
+  sendingTo
+}: {
+  templateName: string
+  payload: any
+  sendingTo: string[]
+}) {
+  const template = await getEmailTemplateByName(templateName)
+  if (!template) throw new Error(`Template not found: ${templateName}`)
+
+  const compiledBody = Handlebars.compile(template.body)
+  const renderedBody = compiledBody(payload)
+
+  const compiledSubject = Handlebars.compile(template.subject)
+  const renderedSubject = compiledSubject(payload)
+
+  for (const to of sendingTo) {
+    await sendEmailToRecipient({
+      to,
+      subject: renderedSubject,
+      body: renderedBody
+    })
+  }
+}
 
 export const uploadFileToBucket = async (
   fileName: string,
