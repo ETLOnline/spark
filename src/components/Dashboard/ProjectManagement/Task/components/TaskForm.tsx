@@ -60,7 +60,7 @@ import {
   CommandInput,
   CommandItem
 } from "@/src/components/ui/command"
-import { getChildTypes, getParentTypes } from "../utils/helper"
+import { getChildTypes, getParentTypes } from "../../utils/helper"
 import { GetLinkedTasksAction } from "@/src/server-actions/Tasks/Task"
 import Loader from "@/src/components/common/Loader/Loader"
 import UserSelector from "./UserSelector"

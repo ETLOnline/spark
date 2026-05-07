@@ -34,6 +34,7 @@ import { createPortal } from "react-dom"
 import { toast } from "@/src/hooks/use-toast"
 import { Skeleton } from "@/src/components/ui/skeleton"
 import { TaskType } from "../../constants/projectManagment"
+import { filterTasks } from "../../utils/helper"
 
 interface Props {
   sprint: SelectSprint
@@ -71,23 +72,10 @@ function SprintBoardCard({
   useEffect(() => {
     if (!sprint.id || !filters) return
 
-    setTasks((prev) =>
-      prev.filter((t) => {
-        return (
-          t.sprint_id === sprint.id &&
-          (!filters.priority?.length ||
-            filters.priority.includes(t.task_priority)) &&
-          (!filters.type?.length || filters.type.includes(t.task_type)) &&
-          (!filters.status?.length ||
-            filters.status.includes(t.status_id || "")) &&
-          (!filters.assignee?.length ||
-            filters.assignee.includes(t.assign_to || "")) &&
-          (!filters.creator?.length ||
-            filters.creator.includes(t.created_by || ""))
-        )
-      })
-    )
+    const filtered = filterTasks(tasks, sprint.id, filters)
+    setTasks(filtered)
   }, [sprint.id, filters])
+
   useEffect(() => {
     const getTask = async () => {
       if (sprint) {
