@@ -71,23 +71,23 @@ function SprintBoardCard({
   useEffect(() => {
     if (!sprint.id || !filters) return
 
-    const filtered = tasks.filter((t) => {
-      return (
-        t.sprint_id === sprint.id &&
-        (!filters.priority?.length ||
-          filters.priority.includes(t.task_priority)) &&
-        (!filters.type?.length || filters.type.includes(t.task_type)) &&
-        (!filters.status?.length ||
-          filters.status.includes(t.status_id || "")) &&
-        (!filters.assignee?.length ||
-          filters.assignee.includes(t.assign_to || "")) &&
-        (!filters.creator?.length ||
-          filters.creator.includes(t.created_by || ""))
-      )
-    })
-
-    setTasks(filtered)
-  }, [tasks, sprint.id, filters])
+    setTasks((prev) =>
+      prev.filter((t) => {
+        return (
+          t.sprint_id === sprint.id &&
+          (!filters.priority?.length ||
+            filters.priority.includes(t.task_priority)) &&
+          (!filters.type?.length || filters.type.includes(t.task_type)) &&
+          (!filters.status?.length ||
+            filters.status.includes(t.status_id || "")) &&
+          (!filters.assignee?.length ||
+            filters.assignee.includes(t.assign_to || "")) &&
+          (!filters.creator?.length ||
+            filters.creator.includes(t.created_by || ""))
+        )
+      })
+    )
+  }, [sprint.id, filters])
   useEffect(() => {
     const getTask = async () => {
       if (sprint) {
