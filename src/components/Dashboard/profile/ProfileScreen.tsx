@@ -55,7 +55,10 @@ import { SocialLinkItem } from "./user/SocialLinkItem"
 import UserProfileCard from "./UserProfileCard"
 import TrustEngineCard from "./trust-engine/TrustEngineCard"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
-import { GetUserApprovedVerificationCountAction } from "@/src/server-actions/Reward/Reward"
+import {
+  GetUserApprovedVerificationCountAction,
+  GetUserReviewedVerificationCountAction
+} from "@/src/server-actions/Reward/Reward"
 import { Input } from "../../ui/input"
 import { Skeleton } from "../../ui/skeleton"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
@@ -107,6 +110,11 @@ export default function ProfileScreen({
     useServerAction(getFeatureFlagAction)
 
   const [verifiedTaskCount, setVerifiedTaskCount] = useState<number>(0)
+  const [reviewedTaskCount, setReviewedTaskCount] = useState<number>(0)
+
+  const [, , , GetReviewedTaskCount] = useServerAction(
+    GetUserReviewedVerificationCountAction
+  )
   const [, , , GetVerifiedTaskCount] = useServerAction(
     GetUserApprovedVerificationCountAction
   )
@@ -209,6 +217,11 @@ export default function ProfileScreen({
       if (res?.success && res.data !== undefined) {
         setVerifiedTaskCount(res.data)
       }
+
+      const reviewRes = await GetReviewedTaskCount(user.unique_id)
+      if (reviewRes?.success && reviewRes.data !== undefined) {
+        setReviewedTaskCount(reviewRes.data)
+      }
     }
     fetchVerifiedCount()
   }, [user.unique_id])
@@ -286,7 +299,9 @@ export default function ProfileScreen({
             />
             {/* Trust Engine Section  */}
 
-            {isFeatureEnable && <TrustEngineCard user={user} />}
+            {isFeatureEnable && (
+              <TrustEngineCard user={user} isMyProfile={isMyProfile} />
+            )}
 
             <ProfileBio
               userBio={user?.profile?.bio as string}
@@ -391,12 +406,14 @@ export default function ProfileScreen({
                       {verifiedTaskCount}
                     </div>
                   </div>
-                  {/* <div className="border-t">
+                  <div className="border-t">
                     <div className="text-sm text-muted-foreground pt-3">
-                      Your Percentile Rank
+                      Task review verification
                     </div>
-                    <div className="text-lg font-bold text-primary">0%</div>
-                  </div> */}
+                    <div className="text-lg font-bold text-primary">
+                      {reviewedTaskCount}
+                    </div>
+                  </div>
                 </div>
               </Card>
             )}
