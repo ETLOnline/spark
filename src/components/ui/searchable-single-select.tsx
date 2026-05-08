@@ -114,10 +114,10 @@ export const SearchableSingleSelect = React.forwardRef<
                     Loading...
                   </div>
                 ) : (
-                  options.map((option) => (
+                  options.map((option, index) => (
                     <CommandItem
                       key={option.value}
-                      value={isServerSearch ? option.value : option.label}
+                      value={option.label}
                       onSelect={() => {
                         onChange(option.value)
                         setOpen(false)

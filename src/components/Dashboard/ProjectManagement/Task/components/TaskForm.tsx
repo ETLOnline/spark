@@ -146,7 +146,9 @@ export default function TaskForm({
   })
   const errors = form.formState.errors
   const toDoStatus = statuses?.find((s) => s.name === "To Do")
-  const [getUserLoading, , , GetProjectUsers] = useServerAction(GetProjectUsersAction)
+  const [getUserLoading, , , GetProjectUsers] = useServerAction(
+    GetProjectUsersAction
+  )
 
   const params = useParams<{ id: string }>()
   const projectId = params?.id
@@ -166,21 +168,24 @@ export default function TaskForm({
   }, [form.formState.isDirty])
 
   useEffect(() => {
-    if (!projectId) return
+    if (!projectId || !isTaskModelOpen) return
 
-    const handle = setTimeout(async () => {
-      const res = await GetProjectUsers(
-        projectId,
-        10,
-        userSearch
-      )
-      if (res?.success && res?.data) {
-        setUsersList(res.data.map((u) => u.user) ?? [])
-      }
-    }, userSearch ? 250 : 0)
+    const handle = setTimeout(
+      async () => {
+        try {
+          const res = await GetProjectUsers(projectId, 10, userSearch)
+          if (res?.success && res?.data) {
+            setUsersList(res.data.map((u) => u.user) ?? [])
+          }
+        } catch (error) {
+          console.error("Error fetching project users:", error)
+        }
+      },
+      userSearch ? 250 : 0
+    )
 
     return () => clearTimeout(handle)
-  }, [projectId, userSearch])
+  }, [projectId, userSearch, isTaskModelOpen, selectedTask])
 
   useEffect(() => {
     if (!isTaskModelOpen) {
@@ -837,8 +842,8 @@ export default function TaskForm({
                             : childTasks?.[0]?.task_type
                               ? getParentTypes(childTasks[0].task_type)
                               : projectTaskTypes.filter(
-                                (t) => t.key !== TaskType.SUBTASK
-                              )
+                                  (t) => t.key !== TaskType.SUBTASK
+                                )
 
                           return activeField === "issueType" ? (
                             <Select
