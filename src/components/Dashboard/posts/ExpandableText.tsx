@@ -32,7 +32,9 @@ const ExpandableText: React.FC<Props> = ({
 
   return (
     <>
-      <MessageContent content={content} />
+      <div ref={contentRef} className={className} style={clampStyle}>
+        <MessageContent content={content} />
+      </div>
 
       {showToggle && (
         <Button
