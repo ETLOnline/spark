@@ -770,9 +770,9 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
 
   return (
     <>
-      <div className="flex h-[calc(100vh-7rem)] gap-4">
+      <div className="flex h-[calc(100dvh-7rem)] gap-4">
         {/* Contacts list - visible on desktop, hidden on mobile */}
-        <Card className="w-80 flex-shrink-0 border-r hidden md:flex md:flex-col h-full">
+        <Card className="w-80 flex-shrink-0 border-r hidden lg:flex lg:flex-col h-full">
           <CardHeader className="px-3">
             <CardTitle className="flex items-center justify-between">
               Chats
@@ -808,7 +808,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="md:hidden mr-2"
+                      className="lg:hidden mr-2"
                     >
                       <Menu />
                       <span className="sr-only">Toggle contacts</span>
@@ -1155,56 +1155,56 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                   )}
                 </CardContent>
                 <CardFooter className="p-4 relative">
+                  {/* Floating attachment picker — sits above the footer, never expands it */}
+                  {openAttachment && (
+                    <div className="absolute bottom-full left-0 right-0 mb-1 z-50 bg-background border border-border rounded-t-xl shadow-lg max-h-[260px] overflow-y-auto">
+                      <FileUpload
+                        accept="image/*,application/*"
+                        onChange={handleFileUpload}
+                        showClose={true}
+                        onClose={handleCloseAttachment}
+                      />
+                    </div>
+                  )}
                   <form
                     onSubmit={(e) => {
                       e.preventDefault()
                       handleSendMessage()
                     }}
-                    className="flex flex-col sm:flex-row w-full sm:items-end gap-2"
+                    className="flex w-full items-end gap-2"
                   >
-                    {/* Row 1 (mobile) / left side (desktop): message / attachment input */}
+                    {/* Message input — always visible */}
                     <div
                       className="flex-1 min-w-0"
                       key={currentChat?.id || "no-chat"}
                     >
-                      {openAttachment ? (
-                        <div className="flex flex-col">
-                          <FileUpload
-                            accept="image/*,application/*"
-                            onChange={handleFileUpload}
-                            showClose={true}
-                            onClose={handleCloseAttachment}
-                          />
-                        </div>
-                      ) : (
-                        <RichTextEditor
-                          value={richMessageContent}
-                          onChange={(val) => {
-                            setRichMessageContent(val)
-                            handleTyping()
-                          }}
-                          image_uploading={true}
-                          entity="chats"
-                          showMentions={
-                            currentChat?.is_group === 1 &&
-                            availableUsers.length > 0
-                          }
-                          mentionUsers={availableUsers}
-                          showToolbar={showRichEditorToolbar}
-                          minHeight={`${showRichEditorToolbar ? "100px" : "30px"}`}
-                          limit={5000}
-                          editable={!newMessageLoading}
-                          onEnterPress={handleSendMessage}
-                          onMentionStateChange={setIsMentionActive}
-                          showFooter={false}
-                          isScrollAble={true}
-                          placeholder="Type a message"
-                        />
-                      )}
+                      <RichTextEditor
+                        value={richMessageContent}
+                        onChange={(val) => {
+                          setRichMessageContent(val)
+                          handleTyping()
+                        }}
+                        image_uploading={true}
+                        entity="chats"
+                        showMentions={
+                          currentChat?.is_group === 1 &&
+                          availableUsers.length > 0
+                        }
+                        mentionUsers={availableUsers}
+                        showToolbar={showRichEditorToolbar}
+                        minHeight={`${showRichEditorToolbar ? "100px" : "30px"}`}
+                        limit={5000}
+                        editable={!newMessageLoading}
+                        onEnterPress={handleSendMessage}
+                        onMentionStateChange={setIsMentionActive}
+                        showFooter={false}
+                        isScrollAble={true}
+                        placeholder="Type a message"
+                      />
                     </div>
 
-                    {/* Row 2 (mobile) / right side (desktop): action icons */}
-                    <div className="flex items-center justify-end gap-1 shrink-0">
+                    {/* Action icons */}
+                    <div className="flex items-center gap-1 shrink-0">
                       <Button
                         type="button"
                         variant="ghost"
@@ -1267,7 +1267,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                         size="icon"
                         disabled={
                           newMessageLoading ||
-                          currentMessageContent.trim() === ""
+                          (currentMessageContent.trim() === "" && !fileString)
                         }
                       >
                         {newMessageLoading ? (

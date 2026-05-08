@@ -572,7 +572,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
             </Button>
           </CardHeader>
           <form onSubmit={handleCreatePost}>
-            <CardContent>
+            <CardContent className="max-h-[60dvh] overflow-y-auto">
               <Tabs
                 value={activeTab}
                 className="w-full"

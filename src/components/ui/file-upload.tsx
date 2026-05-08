@@ -149,7 +149,7 @@ export const FileUpload: React.FC<{
       <motion.div
         onClick={handleClick}
         whileHover="animate"
-        className="p-4 sm:p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
+        className="p-3 lg:p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
       >
         {showClose && (
           <Button
@@ -191,7 +191,7 @@ export const FileUpload: React.FC<{
           </p>
 
           <div
-            className="relative w-full  mt-10 max-w-sm mx-auto"
+            className="relative w-full mt-4 sm:mt-10 max-w-sm mx-auto"
             onClick={(e) => {
               e.stopPropagation()
               // if no items, trigger file picker
