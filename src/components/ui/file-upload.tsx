@@ -149,7 +149,7 @@ export const FileUpload: React.FC<{
       <motion.div
         onClick={handleClick}
         whileHover="animate"
-        className="p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
+        className="p-4 sm:p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
       >
         {showClose && (
           <Button

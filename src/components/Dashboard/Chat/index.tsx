@@ -933,7 +933,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
               <>
                 <CardContent className="flex-1 min-h-0 p-4 flex flex-col">
                   {authUser && currentChat && !fetchingChatMessages ? (
-                    <ScrollArea className="flex-1 pr-4 mt-2">
+                    <ScrollArea className="flex-1 min-h-0 pr-4 mt-2">
                       {messages
                         .filter((msg) => msg.chat_id === currentChat?.id)
                         .map((message) => (
@@ -1048,18 +1048,18 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                                   target="_blank"
                                                 >
                                                   <div
-                                                    className={`flex items-center ${
+                                                    className={`flex items-center overflow-hidden ${
                                                       message.sender_id ===
                                                       authUser?.unique_id
                                                         ? "bg-primary text-primary-foreground"
                                                         : "bg-muted text-white"
                                                     } space-x-2 p-2 rounded-lg`}
                                                   >
-                                                    <FileIcon className="h-8 w-8" />
-                                                    <span className="font-medium">
+                                                    <FileIcon className="h-8 w-8 shrink-0" />
+                                                    <span className="font-medium min-w-0 truncate">
                                                       {fileName}
                                                     </span>
-                                                    <span className="text-xs">
+                                                    <span className="text-xs shrink-0">
                                                       {formatFileSize(
                                                         Number(fileSize)
                                                       )}
@@ -1160,11 +1160,15 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       e.preventDefault()
                       handleSendMessage()
                     }}
-                    className="flex w-full space-x-2 items-end"
+                    className="flex flex-col sm:flex-row w-full sm:items-end gap-2"
                   >
-                    <div className="flex-1" key={currentChat?.id || "no-chat"}>
+                    {/* Row 1 (mobile) / left side (desktop): message / attachment input */}
+                    <div
+                      className="flex-1 min-w-0"
+                      key={currentChat?.id || "no-chat"}
+                    >
                       {openAttachment ? (
-                        <div className=" flex flex-col">
+                        <div className="flex flex-col">
                           <FileUpload
                             accept="image/*,application/*"
                             onChange={handleFileUpload}
@@ -1199,75 +1203,80 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       )}
                     </div>
 
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      title={
-                        showRichEditorToolbar
-                          ? "Hide Formatting Menu (Enter sends)"
-                          : "Show Formatting Menu (Enter adds line)"
-                      }
-                      onClick={handleRichEditor}
-                      className={`p-1 ${
-                        showRichEditorToolbar
-                          ? "bg-secondary"
-                          : "hover:bg-secondary/50"
-                      }`}
-                    >
-                      <PencilLine className="h-5 w-5" />
-                      <span className="sr-only">Toggle Formatting Menu</span>
-                    </Button>
+                    {/* Row 2 (mobile) / right side (desktop): action icons */}
+                    <div className="flex items-center justify-end gap-1 shrink-0">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        title={
+                          showRichEditorToolbar
+                            ? "Hide Formatting Menu (Enter sends)"
+                            : "Show Formatting Menu (Enter adds line)"
+                        }
+                        onClick={handleRichEditor}
+                        className={`p-1 ${
+                          showRichEditorToolbar
+                            ? "bg-secondary"
+                            : "hover:bg-secondary/50"
+                        }`}
+                      >
+                        <PencilLine className="h-5 w-5" />
+                        <span className="sr-only">Toggle Formatting Menu</span>
+                      </Button>
 
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      disabled={openAttachment}
-                      onClick={() => setOpenAttachment(true)}
-                      title="Attach file"
-                    >
-                      <Paperclip className="h-4 w-4" />
-                    </Button>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          title="Insert Emoji"
-                          className="p-1"
-                        >
-                          <SmileIcon className="h-5 w-5" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent side="top" align="end" className="p-0">
-                        <EmojiPicker
-                          className="h-[342px]"
-                          onEmojiSelect={({ emoji }: any) =>
-                            handleEmojiSelect(emoji)
-                          }
-                        >
-                          <EmojiPickerSearch />
-                          <EmojiPickerContent />
-                          <EmojiPickerFooter />
-                        </EmojiPicker>
-                      </PopoverContent>
-                    </Popover>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        disabled={openAttachment}
+                        onClick={() => setOpenAttachment(true)}
+                        title="Attach file"
+                      >
+                        <Paperclip className="h-4 w-4" />
+                      </Button>
 
-                    <Button
-                      type="submit"
-                      size="icon"
-                      disabled={
-                        newMessageLoading || currentMessageContent.trim() === ""
-                      }
-                    >
-                      {newMessageLoading ? (
-                        <Loader />
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
-                    </Button>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            title="Insert Emoji"
+                            className="p-1"
+                          >
+                            <SmileIcon className="h-5 w-5" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent side="top" align="end" className="p-0">
+                          <EmojiPicker
+                            className="h-[342px]"
+                            onEmojiSelect={({ emoji }: any) =>
+                              handleEmojiSelect(emoji)
+                            }
+                          >
+                            <EmojiPickerSearch />
+                            <EmojiPickerContent />
+                            <EmojiPickerFooter />
+                          </EmojiPicker>
+                        </PopoverContent>
+                      </Popover>
+
+                      <Button
+                        type="submit"
+                        size="icon"
+                        disabled={
+                          newMessageLoading ||
+                          currentMessageContent.trim() === ""
+                        }
+                      >
+                        {newMessageLoading ? (
+                          <Loader />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </form>
                 </CardFooter>
               </>
