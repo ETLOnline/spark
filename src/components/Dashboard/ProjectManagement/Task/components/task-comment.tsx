@@ -285,6 +285,7 @@ export function TaskComment({
                 entity="task-comments"
                 showMentions={true}
                 mentionUsers={availableUsers}
+                limit={3000}
               />
               <div className="flex gap-2 justify-end">
                 <Button
@@ -333,8 +334,8 @@ export function TaskComment({
               className="bg-card text-foreground border border-border"
             >
               <CardContent className="p-4 flex items-start gap-3">
-                <div className="flex flex-row items-center gap-2">
-                  <Avatar className="h-8 w-8">
+                <div className="flex flex-row items-start gap-2">
+                  <Avatar className="h-8 w-8 flex-shrink-0">
                     <AvatarImage
                       src={
                         comment?.user?.profile_url || "/placeholder-user.jpg"

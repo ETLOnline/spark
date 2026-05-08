@@ -490,7 +490,7 @@ export default function TaskForm({
                         image_uploading={true}
                         entity="tasks"
                         editable={isEditable}
-                        limit={2000}
+                        limit={3000}
                       />
                     ) : (
                       <div
