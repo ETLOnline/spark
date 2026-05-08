@@ -34,6 +34,7 @@ import {
   AlertDialogTitle
 } from "@/src/components/ui/alert-dialog"
 import ImageLightbox from "@/src/components/common/LightBox"
+import { TASK_RICH_TEXT_CHAR_LIMIT } from "../../constants/projectManagment"
 
 interface TaskCommentFormProps {
   taskId: string
@@ -285,7 +286,7 @@ export function TaskComment({
                 entity="task-comments"
                 showMentions={true}
                 mentionUsers={availableUsers}
-                limit={3000}
+                limit={TASK_RICH_TEXT_CHAR_LIMIT}
               />
               <div className="flex gap-2 justify-end">
                 <Button

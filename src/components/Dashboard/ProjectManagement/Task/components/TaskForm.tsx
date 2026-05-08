@@ -29,7 +29,8 @@ import {
   projectDefaultStatuses,
   projectTaskPriority,
   projectTaskTypes,
-  TaskType
+  TaskType,
+  TASK_RICH_TEXT_CHAR_LIMIT
 } from "../../constants/projectManagment"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import "@/src/components/common/Tiptap/RichEditorFormat.css"
@@ -490,7 +491,7 @@ export default function TaskForm({
                         image_uploading={true}
                         entity="tasks"
                         editable={isEditable}
-                        limit={3000}
+                        limit={TASK_RICH_TEXT_CHAR_LIMIT}
                       />
                     ) : (
                       <div
