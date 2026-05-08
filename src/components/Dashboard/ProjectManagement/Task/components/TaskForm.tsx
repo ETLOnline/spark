@@ -64,6 +64,7 @@ import { getChildTypes, getParentTypes } from "../utils/helper"
 import { GetLinkedTasksAction } from "@/src/server-actions/Tasks/Task"
 import Loader from "@/src/components/common/Loader/Loader"
 import UserSelector from "./UserSelector"
+import { useServerAction } from "@/src/hooks/useServerAction"
 interface Props {
   onSubmit: (task: any) => void
   statuses?: InsertTaskStatus[]
@@ -126,6 +127,7 @@ export default function TaskForm({
 }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null)
   const [usersList, setUsersList] = useState<(SelectUser | null)[]>([])
+  const [userSearch, setUserSearch] = useState("")
   const [assignee, setAssignee] = useState<SelectUser | null>(null)
   const [assignor, setAssignor] = useState<SelectUser | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
@@ -144,6 +146,7 @@ export default function TaskForm({
   })
   const errors = form.formState.errors
   const toDoStatus = statuses?.find((s) => s.name === "To Do")
+  const [getUserLoading, , , GetProjectUsers] = useServerAction(GetProjectUsersAction)
 
   const params = useParams<{ id: string }>()
   const projectId = params?.id
@@ -163,16 +166,21 @@ export default function TaskForm({
   }, [form.formState.isDirty])
 
   useEffect(() => {
-    const fetchProjectUsers = async () => {
-      const projectUsersResult = await GetProjectUsersAction(projectId)
+    if (!projectId) return
 
-      if (projectUsersResult.success && projectUsersResult.data) {
-        setUsersList(projectUsersResult.data.map((u) => u.user) ?? [])
+    const handle = setTimeout(async () => {
+      const res = await GetProjectUsers(
+        projectId,
+        10,
+        userSearch
+      )
+      if (res?.success && res?.data) {
+        setUsersList(res.data.map((u) => u.user) ?? [])
       }
-    }
+    }, userSearch ? 250 : 0)
 
-    fetchProjectUsers()
-  }, [])
+    return () => clearTimeout(handle)
+  }, [projectId, userSearch])
 
   useEffect(() => {
     if (!isTaskModelOpen) {
@@ -703,6 +711,8 @@ export default function TaskForm({
                           disabled={!isEditable}
                           placeholder="Unassigned"
                           onChange={(val) => handleAssigneeChange(val, field)}
+                          onQueryChange={setUserSearch}
+                          loading={getUserLoading}
                         />
                       )}
                     />
@@ -724,6 +734,8 @@ export default function TaskForm({
                           setActiveField={setActiveField}
                           disabled={!isEditable}
                           onChange={(val) => handleAssignorChange(val, field)}
+                          onQueryChange={setUserSearch}
+                          loading={getUserLoading}
                         />
                       )}
                     />
@@ -743,6 +755,8 @@ export default function TaskForm({
                           disabled={!isEditable}
                           placeholder="Select Tester"
                           onChange={(val) => handleTesterChange(val, field)}
+                          onQueryChange={setUserSearch}
+                          loading={getUserLoading}
                         />
                       )}
                     />
@@ -823,8 +837,8 @@ export default function TaskForm({
                             : childTasks?.[0]?.task_type
                               ? getParentTypes(childTasks[0].task_type)
                               : projectTaskTypes.filter(
-                                  (t) => t.key !== TaskType.SUBTASK
-                                )
+                                (t) => t.key !== TaskType.SUBTASK
+                              )
 
                           return activeField === "issueType" ? (
                             <Select

@@ -237,9 +237,9 @@ export const AttachProjectUserAction = CreateServerAction(
 
 export const GetProjectUsersAction = CreateServerAction(
   true,
-  async (projectId: string) => {
+  async (projectId: string, limit?: number, search?: string) => {
     try {
-      const projectUsers = await getProjectUsers(projectId)
+      const projectUsers = await getProjectUsers({ projectId, limit, search })
       return { success: true, data: projectUsers }
     } catch (error) {
       console.error("Error fetching project users:", error)
@@ -260,7 +260,9 @@ export const getProjectUserCountAndProfileUrlAction = CreateServerAction(
       const spaceId = project?.space_id || ""
 
       const spaceUsers = await getSpaceUsers(spaceId)
-      const projectUsers = await getProjectUsers(projectId)
+      const projectUsers = await getProjectUsers({
+        projectId
+      })
 
       // Count only those project users who are also part of the space and have a non-null user object
       const totalMembersCount = projectUsers.filter((pu) =>
