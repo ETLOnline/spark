@@ -25,7 +25,21 @@ import {
 
 const PAGE_SIZE = 5
 
-export function CommunityRanking() {
+interface CommunityRankingProps {
+  userId?: string
+  displayName?: string
+}
+
+export function CommunityRanking({
+  userId,
+  displayName
+}: CommunityRankingProps = {}) {
+  const possessive = displayName ? `${displayName}'s` : "Your"
+  const subject = displayName ? displayName : "You"
+  const subjectVerbAux = displayName ? "hasn't" : "haven't"
+  const subjectAtTopMessage = displayName
+    ? `${displayName} is at the top!`
+    : "You're at the top!"
   const [selectedCommunityId, setSelectedCommunityId] = useState<string | null>(
     null
   )
@@ -42,7 +56,7 @@ export function CommunityRanking() {
     const fetchCommunities = async () => {
       try {
         setCommunitiesLoading(true)
-        const res = await GetUserCommunitiesAction()
+        const res = await GetUserCommunitiesAction(userId)
         if (res.success && res.data) {
           setUserCommunities(res.data)
           if (res.data.length > 0) {
@@ -56,14 +70,14 @@ export function CommunityRanking() {
       }
     }
     fetchCommunities()
-  }, [])
+  }, [userId])
 
   const fetchLeaderboard = async (communityId: string, page: number) => {
     setLoading(true)
     try {
       const [leaderboardRes, rankRes] = await Promise.all([
-        GetCommunityLeaderboardAction(communityId, page, PAGE_SIZE),
-        GetCurrentUserRankAction(communityId)
+        GetCommunityLeaderboardAction(communityId, page, PAGE_SIZE, userId),
+        GetCurrentUserRankAction(communityId, userId)
       ])
 
       if (leaderboardRes.success && leaderboardRes.data) {
@@ -92,7 +106,7 @@ export function CommunityRanking() {
     if (!selectedCommunityId) return
     setCurrentPage(1)
     fetchLeaderboard(selectedCommunityId, 1)
-  }, [selectedCommunityId])
+  }, [selectedCommunityId, userId])
 
   const handlePageChange = (page: number) => {
     if (!selectedCommunityId) return
@@ -187,8 +201,8 @@ export function CommunityRanking() {
           )}
           <p className="text-xs text-muted-foreground mt-2">
             {userCommunities.length > 0
-              ? "Select a community to view your ranking"
-              : "You haven't joined any communities yet"}
+              ? `Select a community to view ${possessive.toLowerCase()} ranking`
+              : `${subject} ${subjectVerbAux} joined any communities yet`}
           </p>
         </CardContent>
       </Card>
@@ -200,7 +214,8 @@ export function CommunityRanking() {
         <RankingCard
           currentUserRank={userRank}
           communityTitle={selectedCommunity?.title}
-          noRankMessage="You haven't contributed yet to earn a rank in this community."
+          noRankMessage={`${subject} ${subjectVerbAux} contributed yet to earn a rank in this community.`}
+          displayName={displayName}
         />
       ) : null}
 
@@ -216,7 +231,7 @@ export function CommunityRanking() {
         </Card>
       ) : leaderboardData && leaderboardData.length > 0 ? (
         <Card className="space-y-3 overflow-hidden">
-          <LeaderboardCard data={leaderboardData} />
+          <LeaderboardCard data={leaderboardData} displayName={displayName} />
           {totalPages > 1 && (
             <div className="overflow-x-auto">
               <PaginationComponent
@@ -237,7 +252,7 @@ export function CommunityRanking() {
       {userRank && selectedCommunityId && (
         <Card className="overflow-hidden p-4 sm:p-6">
           <h4 className="font-semibold text-foreground mb-4">
-            Your Ranking Insights
+            {possessive} Ranking Insights
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 bg-muted/50 rounded-lg">
@@ -250,7 +265,7 @@ export function CommunityRanking() {
               <p className="text-xs text-muted-foreground mt-1">
                 {userRank.rank > 1
                   ? `Until rank ${userRank.rank - 1}`
-                  : "You're at the top!"}
+                  : subjectAtTopMessage}
               </p>
             </div>
             {/* commenting becuase we will do in the future */}

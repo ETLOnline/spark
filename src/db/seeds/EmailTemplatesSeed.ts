@@ -46,7 +46,6 @@ const templatesToSeed: NewEmailTemplate[] = [
     body: loadTemplate("submit_community_request.html")
   },
   {
-   
     name: NotificationEvent.ADMIN_NEW_COMMUNITY_REQUEST,
     subject: "New Community Request Submitted",
     body: loadTemplate("admin-community-request-notification.html")
@@ -65,6 +64,16 @@ const templatesToSeed: NewEmailTemplate[] = [
     name: NotificationEvent.JOIN_INVITE_EMAIL,
     subject: `You've Been Invited to join spark {{entityType}}!`,
     body: loadTemplate("join_invite_email.html")
+  },
+  {
+    name: NotificationEvent.FEEDBACK_SUBMITTED,
+    subject: "We Received Your Feedback - {{userName}}",
+    body: loadTemplate("feedback_submitted.html")
+  },
+  {
+    name: NotificationEvent.NEW_FEEDBACK_ADMIN,
+    subject: "New Feedback Received: {{subject}}",
+    body: loadTemplate("new_feedback_admin.html")
   }
 ]
 

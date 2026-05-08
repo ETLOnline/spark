@@ -18,9 +18,14 @@ export type Ranking = {
 
 interface LeaderboardCardProps {
   data: Ranking[]
+  displayName?: string
 }
 
-const LeaderboardCard: React.FC<LeaderboardCardProps> = ({ data }) => {
+const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
+  data,
+  displayName
+}) => {
+  const currentUserBadgeLabel = displayName || "You"
   const maxRP = Math.max(...data.map((r) => r.rpPoints))
 
   return (
@@ -74,7 +79,7 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({ data }) => {
 
                     {ranking.isCurrentUser && (
                       <Badge variant="secondary" className="text-xs">
-                        You
+                        {currentUserBadgeLabel}
                       </Badge>
                     )}
                   </div>

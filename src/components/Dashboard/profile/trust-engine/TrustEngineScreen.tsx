@@ -23,8 +23,19 @@ import Loader from "@/src/components/common/Loader/Loader"
 import { LoaderSizes } from "@/src/components/common/types/loader-types"
 import { progressPercentHelper } from "@/src/utils/clientHelper"
 
-export default function TrustEngineScreen() {
+interface TrustEngineScreenProps {
+  userId?: string
+  userName?: string
+}
+
+export default function TrustEngineScreen({
+  userId,
+  userName
+}: TrustEngineScreenProps) {
   const authUser = useAtomValue(userStore.AuthUser)
+  const targetUserId = userId ?? authUser?.unique_id
+  const isViewingOther = targetUserId !== authUser?.unique_id
+  const displayName = isViewingOther ? userName : ""
 
   const PAGE_SIZE = 10
 
@@ -52,9 +63,9 @@ export default function TrustEngineScreen() {
 
   const fetchTransactions = useCallback(
     async (page: number) => {
-      if (!authUser?.unique_id) return
+      if (!targetUserId) return
       const txRes = await GetUserTransactionsAction(
-        authUser.unique_id,
+        targetUserId,
         page,
         PAGE_SIZE
       )
@@ -63,16 +74,16 @@ export default function TrustEngineScreen() {
         setTotalTransactions(txRes.total ?? 0)
       }
     },
-    [authUser?.unique_id]
+    [targetUserId]
   )
 
   const fetchAllData = useCallback(async () => {
-    if (!authUser?.unique_id) return
+    if (!targetUserId) return
 
     const [rpRes, scRes, levelRes] = await Promise.all([
-      GetUserRewardBalanceAction(authUser.unique_id, 1),
-      GetUserRewardBalanceAction(authUser.unique_id, 2),
-      GetUSerRewardLevelAction(authUser.unique_id)
+      GetUserRewardBalanceAction(targetUserId, 1),
+      GetUserRewardBalanceAction(targetUserId, 2),
+      GetUSerRewardLevelAction(targetUserId)
     ])
 
     if (rpRes?.success && rpRes.data) setRpPoints(rpRes.data.current_balance)
@@ -80,7 +91,7 @@ export default function TrustEngineScreen() {
     if (levelRes?.success && levelRes.data) setUserLevel(levelRes.data)
 
     await fetchTransactions(1)
-  }, [authUser?.unique_id, fetchTransactions])
+  }, [targetUserId, fetchTransactions])
 
   useEffect(() => {
     fetchAllData()
@@ -123,7 +134,7 @@ export default function TrustEngineScreen() {
     )
   }
 
-  if (!isTrustEngineEnabled) {
+  if (isTrustEngineEnabled) {
     return (
       <main className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-16">
@@ -141,10 +152,12 @@ export default function TrustEngineScreen() {
     <main className="h-[calc(100svh-8rem)] flex flex-col bg-background pt-6 overflow-hidden">
       <div className="mb-6 shrink-0">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-          Trust Dashboard
+          {displayName ? `${displayName}'s Trust Dashboard` : "Trust Dashboard"}
         </h1>
         <p className="text-muted-foreground text-sm sm:text-base">
-          Track your reputation, achievements, and growth
+          {displayName
+            ? `Track ${displayName}'s reputation, achievements, and growth`
+            : "Track your reputation, achievements, and growth"}
         </p>
       </div>
 
@@ -180,7 +193,7 @@ export default function TrustEngineScreen() {
           value="overview"
           className="flex-1 overflow-hidden min-h-0"
         >
-          <ScrollArea className="h-full">
+          <ScrollArea className="h-full sm:pr-3">
             <div className="pb-6 space-y-6">
               <TrustOverView
                 rpPoints={rpPoints}
@@ -198,7 +211,7 @@ export default function TrustEngineScreen() {
           value="transactions"
           className="flex-1 overflow-hidden min-h-0"
         >
-          <ScrollArea className="h-full">
+          <ScrollArea className="h-full sm:pr-2">
             <div className="pb-6">
               <TransactionLedger
                 TransactionsData={transactions}
@@ -211,9 +224,12 @@ export default function TrustEngineScreen() {
         </TabsContent>
 
         <TabsContent value="ranking" className="flex-1 overflow-hidden min-h-0">
-          <ScrollArea className="h-full">
+          <ScrollArea className="h-full sm:pr-2">
             <div className="pb-6 w-[calc(100vw-2rem)] sm:w-full">
-              <CommunityRanking />
+              <CommunityRanking
+                userId={targetUserId}
+                displayName={displayName}
+              />
             </div>
           </ScrollArea>
         </TabsContent>

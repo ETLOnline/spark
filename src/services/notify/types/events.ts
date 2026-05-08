@@ -13,5 +13,7 @@ export enum NotificationEvent {
   JOIN_INVITE_EMAIL = "join_invite_email",
   ADMIN_NEW_COMMUNITY_REQUEST = "admin_new_community_request",
   COMMUNITY_REQUEST_ACCEPTED = "community_request_accepted",
-  COMMUNITY_REQUEST_REJECTED = "community_request_rejected"
+  COMMUNITY_REQUEST_REJECTED = "community_request_rejected",
+  FEEDBACK_SUBMITTED = "feedback_submitted",
+  NEW_FEEDBACK_ADMIN = "new_feedback_admin"
 }

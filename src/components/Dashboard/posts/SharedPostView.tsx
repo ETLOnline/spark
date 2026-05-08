@@ -29,7 +29,7 @@ const SharedPostView: React.FC<SharedPostViewProps> = ({
 
   const post = posts.find((p) => p.id === initialPost.id) || initialPost
   const name = `${post.author.first_name} ${post.author.last_name}`
-  const effectiveSpaceId = spaceId || "shared"
+  const effectiveSpaceId = spaceId
 
   return (
     <Card className="bg-background shadow-lg max-w-2xl mx-auto">
