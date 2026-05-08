@@ -217,7 +217,7 @@ function SprintBoardCard({
 
   return (
     <div className="px-0 sm:px-2">
-      <Card key={sprint.id} className="mb-6 overflow-hidden">
+      <Card key={sprint.id} className="mb-6">
         <CardHeader className="pb-4">
           <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
             <div className="w-full xl:w-auto">
@@ -248,7 +248,7 @@ function SprintBoardCard({
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="flex overflow-x-auto pb-4 snap-x snap-mandatory hide-scrollbar">
+            <div className="flex overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar">
               <div className="flex gap-4 min-w-full px-2 sm:px-0">
                 {projectStatusList.map((status) => (
                   <BoardColumn
