@@ -468,6 +468,7 @@ export default function ProfileScreen({
                       user={user}
                       profile={profile as SelectProfile}
                       setprofile={setProfile}
+                      hasData={!!(profile?.institute || profile?.degree)}
                     />
                   )}
                 </CardTitle>
@@ -493,7 +494,7 @@ export default function ProfileScreen({
                 </div>
               </CardContent>
             </Card>
-            {/* Socail Links */}
+            {/* Social Links */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
@@ -503,6 +504,15 @@ export default function ProfileScreen({
                       user={user}
                       profile={profile as SelectProfile}
                       setprofile={setProfile}
+                      hasData={
+                        !!(
+                          profile?.github_url ||
+                          profile?.linkedin_url ||
+                          profile?.instagram_url ||
+                          profile?.twitter_url ||
+                          profile?.personal_website_url
+                        )
+                      }
                     />
                   )}
                 </CardTitle>
@@ -568,10 +578,14 @@ export default function ProfileScreen({
                     {isMyProfile && (
                       <Button
                         size={"sm"}
-                        variant={"outline"}
+                        variant={certificates?.length ? "edit" : "outline"}
                         onClick={() => setIsQualificationModalOpen(true)}
                       >
-                        <Plus className="h-4 w-4" />
+                        {certificates?.length ? (
+                          "Edit"
+                        ) : (
+                          <Plus className="h-4 w-4" />
+                        )}
                       </Button>
                     )}
                     <CertificateModal
