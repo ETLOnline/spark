@@ -191,7 +191,7 @@ export const FileUpload: React.FC<{
           </p>
 
           <div
-            className="relative w-full mt-4 sm:mt-10 max-w-sm mx-auto"
+            className="relative w-full mt-3 max-w-full mx-auto"
             onClick={(e) => {
               e.stopPropagation()
               // if no items, trigger file picker

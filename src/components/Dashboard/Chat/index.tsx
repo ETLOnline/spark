@@ -709,6 +709,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           setRichMessageContent(fileRecord.file_name)
           const fileString = `${fileRecord.file_path},${fileRecord.file_name},${fileRecord.file_size},${fileRecord.file_type}`
           setFileString(fileString)
+          setOpenAttachment(false)
         }
       } catch (error) {
         toast({
@@ -1155,9 +1156,10 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                   )}
                 </CardContent>
                 <CardFooter className="p-4 relative">
-                  {/* Floating attachment picker — sits above the footer, never expands it */}
+                  {/* Attachment panel floats above the footer bar. overflow-hidden prevents
+                      the internal grid pattern from creating a scrollbar. */}
                   {openAttachment && (
-                    <div className="absolute bottom-full left-0 right-0 mb-1 z-50 bg-background border border-border rounded-t-xl shadow-lg max-h-[260px] overflow-y-auto">
+                    <div className="absolute bottom-full left-0 right-0 mb-1 z-50 bg-background border border-border rounded-t-xl shadow-lg max-h-[50dvh] overflow-y-auto md:max-h-none md:overflow-hidden">
                       <FileUpload
                         accept="image/*,application/*"
                         onChange={handleFileUpload}
@@ -1166,45 +1168,52 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       />
                     </div>
                   )}
+
                   <form
                     onSubmit={(e) => {
                       e.preventDefault()
                       handleSendMessage()
                     }}
-                    className="flex w-full items-end gap-2"
+                    className="flex flex-col md:flex-row md:items-end gap-2 w-full"
                   >
-                    {/* Message input — always visible */}
                     <div
-                      className="flex-1 min-w-0"
+                      className="w-full min-w-0 overflow-x-hidden md:flex-1"
                       key={currentChat?.id || "no-chat"}
                     >
-                      <RichTextEditor
-                        value={richMessageContent}
-                        onChange={(val) => {
-                          setRichMessageContent(val)
-                          handleTyping()
-                        }}
-                        image_uploading={true}
-                        entity="chats"
-                        showMentions={
-                          currentChat?.is_group === 1 &&
-                          availableUsers.length > 0
-                        }
-                        mentionUsers={availableUsers}
-                        showToolbar={showRichEditorToolbar}
-                        minHeight={`${showRichEditorToolbar ? "100px" : "30px"}`}
-                        limit={5000}
-                        editable={!newMessageLoading}
-                        onEnterPress={handleSendMessage}
-                        onMentionStateChange={setIsMentionActive}
-                        showFooter={false}
-                        isScrollAble={true}
-                        placeholder="Type a message"
-                      />
+                      {openAttachment ? (
+                        <p className="text-sm text-muted-foreground px-1 py-1.5 italic truncate">
+                          {fileString
+                            ? "File ready — click Send to upload"
+                            : "Select a file above…"}
+                        </p>
+                      ) : (
+                        <RichTextEditor
+                          value={richMessageContent}
+                          onChange={(val) => {
+                            setRichMessageContent(val)
+                            handleTyping()
+                          }}
+                          image_uploading={true}
+                          entity="chats"
+                          showMentions={
+                            currentChat?.is_group === 1 &&
+                            availableUsers.length > 0
+                          }
+                          mentionUsers={availableUsers}
+                          showToolbar={showRichEditorToolbar}
+                          minHeight={`${showRichEditorToolbar ? "100px" : "30px"}`}
+                          limit={5000}
+                          editable={!newMessageLoading}
+                          onEnterPress={handleSendMessage}
+                          onMentionStateChange={setIsMentionActive}
+                          showFooter={false}
+                          isScrollAble={true}
+                          placeholder="Type a message"
+                        />
+                      )}
                     </div>
 
-                    {/* Action icons */}
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center justify-end md:justify-start gap-1 shrink-0">
                       <Button
                         type="button"
                         variant="ghost"

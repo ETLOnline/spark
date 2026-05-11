@@ -22,6 +22,12 @@ body {
     text-wrap: balance;
   }
 
+  .ProseMirror {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    overflow-x: hidden;
+  }
+
   .hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;

@@ -565,7 +565,7 @@ export default function RichTextEditor({
   }
 
   return (
-    <div className="w-full mx-auto border rounded-lg shadow-sm">
+    <div className="w-full max-w-full overflow-x-hidden mx-auto border rounded-lg shadow-sm">
       {showToolbar && (
         <>
           <div className="border-b p-2 flex flex-wrap items-center gap-1">
@@ -859,7 +859,10 @@ export default function RichTextEditor({
             style={{
               minHeight: minHeight,
               maxHeight: isScrollAble ? (maxHeight ?? "250px") : "",
-              overflowY: isScrollAble ? "auto" : "visible"
+              overflowY: isScrollAble ? "auto" : "visible",
+              overflowX: "hidden",
+              wordBreak: "break-word",
+              overflowWrap: "anywhere"
             }}
           />
         </div>
