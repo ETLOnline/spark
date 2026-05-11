@@ -306,8 +306,8 @@
     {
       "idx": 43,
       "version": "7",
-      "when": 1778507426374,
-      "tag": "0043_2026_05_11_185022__add_feedback_table",
+      "when": 1778510983109,
+      "tag": "0043_2026_05_11_194938__create_feedbacks_table",
       "breakpoints": true
     }
   ]
