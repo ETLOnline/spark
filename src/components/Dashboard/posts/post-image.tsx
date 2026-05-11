@@ -15,6 +15,7 @@ import { UpdateCommentAction } from "@/src/server-actions/Post/Post"
 import { useToast } from "@/src/hooks/use-toast"
 import { useSetAtom } from "jotai"
 import { postStore } from "@/src/store/post/postStore"
+import ExpandableText from "./ExpandableText"
 
 type Props = {
   post: SelectFilePost
@@ -101,7 +102,7 @@ const ImagePost: React.FC<Props> = ({ post, spaceId }) => {
             {post.category}
           </Badge>
         )}
-        <p className="text-lg pb-5">{post.content}</p>
+        {post.content && <ExpandableText content={post?.content} lines={6} />}
 
         {/* Images */}
         {images.length > 0 && (
