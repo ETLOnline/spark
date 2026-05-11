@@ -1,6 +1,6 @@
 {
-  "id": "5acbfa72-cdc2-49ea-9342-48a73815fdb3",
-  "prevId": "4319a951-726b-4f80-9bc2-a6d639c317ce",
+  "id": "6f09d4a4-890d-4161-869c-058293a767f1",
+  "prevId": "3332beac-b45f-4f68-afd7-d973c726e846",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -4342,6 +4342,12 @@
         "verified_at": {
           "name": "verified_at",
           "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         },
