@@ -181,10 +181,10 @@ export const FileUpload: React.FC<{
           <GridPattern />
         </div>
         <div className="flex flex-col items-center justify-center">
-          <p className="relative font-sans font-bold text-neutral-700 dark:text-neutral-300 text-base w-auto truncate max-w-xs">
+          <p className="relative font-sans font-bold text-neutral-700 dark:text-neutral-300 text-sm w-full max-w-full truncate text-center">
             {files.length > 0 ? files[0].name : "Upload file"}
           </p>
-          <p className="relative font-sans font-normal text-neutral-400 dark:text-neutral-400 text-base mt-2">
+          <p className="relative font-sans font-normal text-neutral-400 dark:text-neutral-400 text-xs mt-2 w-full max-w-full break-words text-center">
             {files.length > 0
               ? "Click the X to remove or upload a new file"
               : "Drag or drop your files here or click to upload"}

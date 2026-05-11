@@ -249,7 +249,7 @@ function SprintBoardCard({
             onDragEnd={handleDragEnd}
           >
             <div className="flex overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar">
-              <div className="flex gap-4 min-w-full px-2 sm:px-0">
+              <div className="flex gap-4 px-2 sm:px-0">
                 {projectStatusList.map((status) => (
                   <BoardColumn
                     key={status.id}

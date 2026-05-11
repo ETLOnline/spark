@@ -579,10 +579,30 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
                 onValueChange={handleTabChange}
               >
                 <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="text">Text</TabsTrigger>
-                  <TabsTrigger value="image">Image</TabsTrigger>
-                  <TabsTrigger value="poll">Poll</TabsTrigger>
-                  <TabsTrigger value="file">File</TabsTrigger>
+                  <TabsTrigger
+                    value="text"
+                    className="px-1.5 sm:px-3 text-xs sm:text-sm"
+                  >
+                    Text
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="image"
+                    className="px-1.5 sm:px-3 text-xs sm:text-sm"
+                  >
+                    Image
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="poll"
+                    className="px-1.5 sm:px-3 text-xs sm:text-sm"
+                  >
+                    Poll
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="file"
+                    className="px-1.5 sm:px-3 text-xs sm:text-sm"
+                  >
+                    File
+                  </TabsTrigger>
                 </TabsList>
                 {variant === "spaces" ? (
                   <div className="space-y-4 mt-4">

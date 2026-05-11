@@ -939,7 +939,7 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                         .map((message) => (
                           <div
                             key={message.id}
-                            className={`mb-4 flex items-start ${
+                            className={`mb-4 flex items-start w-full overflow-x-hidden ${
                               message.sender_id === authUser?.unique_id
                                 ? "justify-end"
                                 : "justify-start"
@@ -956,11 +956,11 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                 <p className="text-4xl">{message.message}</p>
                               </div>
                             ) : (
-                              <div className="flex group gap-2">
-                                <div className=" group flex flex-col">
+                              <div className="flex group gap-2 min-w-0 max-w-[85%]">
+                                <div className="group flex flex-col min-w-0">
                                   {/* MESSAGE BUBBLE */}
                                   <div
-                                    className={`relative rounded-lg py-2 pl-2 pr-2  flex flex-row gap-2  rich-editor ${
+                                    className={`relative rounded-lg py-2 pl-2 pr-2 flex flex-row gap-2 rich-editor break-words overflow-hidden ${
                                       message.sender_id === authUser?.unique_id
                                         ? "bg-primary text-primary-foreground group-hover:pr-6"
                                         : "bg-muted"
@@ -1048,12 +1048,12 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                                   target="_blank"
                                                 >
                                                   <div
-                                                    className={`flex items-center overflow-hidden ${
+                                                    className={`flex items-center gap-2 overflow-hidden w-full max-w-full ${
                                                       message.sender_id ===
                                                       authUser?.unique_id
                                                         ? "bg-primary text-primary-foreground"
                                                         : "bg-muted text-white"
-                                                    } space-x-2 p-2 rounded-lg`}
+                                                    } p-2 rounded-lg`}
                                                   >
                                                     <FileIcon className="h-8 w-8 shrink-0" />
                                                     <span className="font-medium min-w-0 truncate">
