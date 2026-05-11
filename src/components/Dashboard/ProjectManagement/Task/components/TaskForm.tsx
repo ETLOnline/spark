@@ -210,10 +210,6 @@ export default function TaskForm({
   }, [userSearch])
 
   useEffect(() => {
-    setUserSearch("")
-  }, [activeField])
-
-  useEffect(() => {
     if (!isTaskModelOpen) {
       form.reset({
         task_title: "",
@@ -454,6 +450,10 @@ export default function TaskForm({
   }
 
   const isEditable = isAllowedAction && !isSprintCompleted
+
+  const handleOnBlur = () => {
+    setUserSearch("")
+  }
 
   return (
     <>
@@ -745,6 +745,7 @@ export default function TaskForm({
                           onChange={(val) => handleAssigneeChange(val, field)}
                           onQueryChange={setUserSearch}
                           loading={getUserLoading}
+                          handleOnBlur={handleOnBlur}
                         />
                       )}
                     />
@@ -768,6 +769,7 @@ export default function TaskForm({
                           onChange={(val) => handleAssignorChange(val, field)}
                           onQueryChange={setUserSearch}
                           loading={getUserLoading}
+                          handleOnBlur={handleOnBlur}
                         />
                       )}
                     />
@@ -789,6 +791,7 @@ export default function TaskForm({
                           onChange={(val) => handleTesterChange(val, field)}
                           onQueryChange={setUserSearch}
                           loading={getUserLoading}
+                          handleOnBlur={handleOnBlur}
                         />
                       )}
                     />

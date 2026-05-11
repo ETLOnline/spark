@@ -32,6 +32,7 @@ interface SearchableSingleSelectProps {
   id?: string
   onQueryChange?: (query: string) => void
   loading?: boolean
+  handleOnBlur: () => void
 }
 
 export const SearchableSingleSelect = React.forwardRef<
@@ -48,7 +49,8 @@ export const SearchableSingleSelect = React.forwardRef<
       className,
       id,
       onQueryChange,
-      loading = false
+      loading = false,
+      handleOnBlur
     },
     ref
   ) => {
@@ -68,7 +70,16 @@ export const SearchableSingleSelect = React.forwardRef<
     }
 
     return (
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={open}
+        onOpenChange={(val) => {
+          setOpen(val)
+
+          if (!val) {
+            handleOnBlur()
+          }
+        }}
+      >
         <PopoverTrigger asChild>
           <Button
             id={id}
@@ -121,6 +132,7 @@ export const SearchableSingleSelect = React.forwardRef<
                       onSelect={() => {
                         onChange(option.value)
                         setOpen(false)
+                        handleOnBlur()
                       }}
                     >
                       <Check

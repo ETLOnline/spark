@@ -19,6 +19,7 @@ interface Props {
   onChange: (val: string) => void
   onQueryChange?: (query: string) => void
   loading?: boolean
+  handleOnBlur: () => void
 }
 
 export default function UserSelector({
@@ -33,7 +34,8 @@ export default function UserSelector({
   placeholder = "Select Option",
   onChange,
   onQueryChange,
-  loading
+  loading,
+  handleOnBlur
 }: Props) {
   const isActive = activeField === fieldKey
 
@@ -54,6 +56,7 @@ export default function UserSelector({
           placeholder={placeholder}
           onQueryChange={onQueryChange}
           loading={loading}
+          handleOnBlur={handleOnBlur}
         />
       ) : (
         <div
