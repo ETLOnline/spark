@@ -133,13 +133,14 @@ export async function createProjectUsers(
     throw new Error(`Failed to create project users: ${e.message}`)
   }
 }
-export async function getProjectUsers(filters?: {
-  projectId: string
-  limit?: number
-  search?: string
-}) {
+export async function getProjectUsers(
+  projectId: string,
+  filters?: {
+    limit?: number
+    search?: string
+  }
+) {
   try {
-    const projectId = filters?.projectId
     const limit = filters?.limit
     const search = filters?.search
 
@@ -154,11 +155,9 @@ export async function getProjectUsers(filters?: {
         .select({ id: usersTable.unique_id })
         .from(usersTable)
         .where(
-          or(
-            ilike(
-              sql`${usersTable.first_name} || ' ' || ${usersTable.last_name}`,
-              `%${search}%`
-            )
+          ilike(
+            sql`${usersTable.first_name} || ' ' || ${usersTable.last_name}`,
+            `%${search}%`
           )
         )
 

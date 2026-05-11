@@ -41,7 +41,7 @@ interface TaskCommentFormProps {
   refetchComments?: boolean
   setRefetchComments?: Dispatch<SetStateAction<boolean>>
   projectUsers: SelectUser[]
-  isOpen?: boolean
+  isOpen: boolean | undefined
 }
 const COMMENTS_PER_LOAD = 4
 

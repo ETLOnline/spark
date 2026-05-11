@@ -65,6 +65,7 @@ import { GetLinkedTasksAction } from "@/src/server-actions/Tasks/Task"
 import Loader from "@/src/components/common/Loader/Loader"
 import UserSelector from "./UserSelector"
 import { useServerAction } from "@/src/hooks/useServerAction"
+import { useDebouncedCallback } from "use-debounce"
 interface Props {
   onSubmit: (task: any) => void
   statuses?: InsertTaskStatus[]
@@ -126,8 +127,11 @@ export default function TaskForm({
   onVerificationStatusChange
 }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null)
-  const [usersList, setUsersList] = useState<(SelectUser | null)[]>([])
+
+  const [defaultUsers, setDefaultUsers] = useState<(SelectUser | null)[]>([])
+  const [searchedUsers, setSearchedUsers] = useState<(SelectUser | null)[]>([])
   const [userSearch, setUserSearch] = useState("")
+  const usersList = userSearch ? searchedUsers : defaultUsers
   const [assignee, setAssignee] = useState<SelectUser | null>(null)
   const [assignor, setAssignor] = useState<SelectUser | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
@@ -170,22 +174,44 @@ export default function TaskForm({
   useEffect(() => {
     if (!projectId || !isTaskModelOpen) return
 
-    const handle = setTimeout(
-      async () => {
-        try {
-          const res = await GetProjectUsers(projectId, 10, userSearch)
-          if (res?.success && res?.data) {
-            setUsersList(res.data.map((u) => u.user) ?? [])
-          }
-        } catch (error) {
-          console.error("Error fetching project users:", error)
+    const res = async () => {
+      try {
+        const res = await GetProjectUsers(projectId, 10, "")
+        if (res?.success && res?.data) {
+          setDefaultUsers(res.data.map((u) => u.user) ?? [])
         }
-      },
-      userSearch ? 250 : 0
-    )
+      } catch (error) {
+        console.error("Error fetching project users:", error)
+      }
+    }
 
-    return () => clearTimeout(handle)
-  }, [projectId, userSearch, isTaskModelOpen, selectedTask])
+    res()
+  }, [projectId, isTaskModelOpen, selectedTask?.id])
+
+  const fetchSearchedUsers = useDebouncedCallback(async (search: string) => {
+    if (!projectId || !search) return
+    try {
+      const res = await GetProjectUsers(projectId, 10, search)
+      if (res?.success && res?.data) {
+        setSearchedUsers(res.data.map((u) => u.user) ?? [])
+      }
+    } catch (error) {
+      console.error("Error fetching searched users:", error)
+    }
+  }, 250)
+
+  useEffect(() => {
+    if (!userSearch) {
+      fetchSearchedUsers.cancel()
+      setSearchedUsers([])
+      return
+    }
+    fetchSearchedUsers(userSearch)
+  }, [userSearch])
+
+  useEffect(() => {
+    setUserSearch("")
+  }, [activeField])
 
   useEffect(() => {
     if (!isTaskModelOpen) {
@@ -257,14 +283,14 @@ export default function TaskForm({
     const LoadUsersFromTask = async () => {
       const taskAssignee = selectedTask?.assignee
         ? selectedTask?.assignee
-        : usersList.find((u) => u?.unique_id === selectedTask?.assign_to)
+        : defaultUsers.find((u) => u?.unique_id === selectedTask?.assign_to)
       const taskAssignor = selectedTask?.assignor
         ? selectedTask?.assignor
-        : usersList.find((u) => u?.unique_id === selectedTask?.assign_by)
+        : defaultUsers.find((u) => u?.unique_id === selectedTask?.assign_by)
 
       const testedBy = selectedTask?.testedBy
         ? selectedTask?.testedBy
-        : usersList.find((u) => u?.unique_id === selectedTask?.tested_by)
+        : defaultUsers.find((u) => u?.unique_id === selectedTask?.tested_by)
 
       if (taskAssignee) {
         setAssignee(taskAssignee)
@@ -279,7 +305,7 @@ export default function TaskForm({
         form.setValue("assign_by", taskAssignor.unique_id)
       } else {
         // If no assignor, default to current user
-        const currentUser = usersList.find(
+        const currentUser = defaultUsers.find(
           (u) => u?.unique_id === authUser?.unique_id
         )
         if (currentUser) {
@@ -295,7 +321,7 @@ export default function TaskForm({
     }
 
     LoadUsersFromTask()
-  }, [selectedTask, usersList])
+  }, [selectedTask, defaultUsers])
 
   function IssueTypeIcon({ type }: { type: string }) {
     const typeMap = projectTaskTypes.find((t) => t.key === type)
@@ -404,26 +430,26 @@ export default function TaskForm({
     }
   }, [selectedTask?.id])
 
+  const findUser = (val: string) =>
+    defaultUsers.find((u) => u?.unique_id === val) ||
+    searchedUsers.find((u) => u?.unique_id === val) ||
+    null
+
   const handleAssigneeChange = (val: string, field: any) => {
     field.onChange(val)
-
-    const user = usersList.find((u) => u?.unique_id === val)
-    setAssignee(user || null)
-
+    setAssignee(findUser(val))
     setActiveField(null)
   }
 
   const handleAssignorChange = (val: string, field: any) => {
     field.onChange(val)
-    const user = usersList.find((u) => u?.unique_id === val)
-    setAssignor(user || null)
+    setAssignor(findUser(val))
     setActiveField(null)
   }
 
   const handleTesterChange = (val: string, field: any) => {
     field.onChange(val)
-    const user = usersList.find((u) => u?.unique_id === val)
-    setTester(user || null)
+    setTester(findUser(val))
     setActiveField(null)
   }
 
@@ -606,7 +632,8 @@ export default function TaskForm({
                     isSprintCompleted={isSprintCompleted}
                     refetchComments={refetchComments}
                     setRefetchComments={setRefetchComments}
-                    projectUsers={usersList.filter((user) => user !== null)}
+                    projectUsers={defaultUsers.filter((user) => user !== null)}
+                    isOpen={isTaskModelOpen}
                   />
                 </div>
               )}

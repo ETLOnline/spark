@@ -36,7 +36,7 @@ async function layout({ children, params }: Props) {
 
   const projectStatusList = await GetTaskStatusAction(projectId)
 
-  const projectUser = await getProjectUsers({ projectId })
+  const projectUser = await getProjectUsers(projectId)
 
   const authUser = await AuthUserAction()
   const isAdmin = await isSuperAdmin(authUser)

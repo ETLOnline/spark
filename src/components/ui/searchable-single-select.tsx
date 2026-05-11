@@ -114,7 +114,7 @@ export const SearchableSingleSelect = React.forwardRef<
                     Loading...
                   </div>
                 ) : (
-                  options.map((option, index) => (
+                  options.map((option) => (
                     <CommandItem
                       key={option.value}
                       value={option.label}
