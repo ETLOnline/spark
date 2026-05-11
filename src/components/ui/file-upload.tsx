@@ -180,8 +180,8 @@ export const FileUpload: React.FC<{
         <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,white,transparent)]">
           <GridPattern />
         </div>
-        <div className="flex flex-col items-center justify-center">
-          <p className="relative font-sans font-bold text-neutral-700 dark:text-neutral-300 text-sm w-full max-w-full truncate text-center">
+        <div className="flex flex-col items-center justify-center min-w-0 w-full">
+          <p className="relative font-sans font-bold text-neutral-700 dark:text-neutral-300 text-sm w-full min-w-0 truncate text-center pr-8">
             {files.length > 0 ? files[0].name : "Upload file"}
           </p>
           <p className="relative font-sans font-normal text-neutral-400 dark:text-neutral-400 text-xs mt-2 w-full max-w-full break-words text-center">
