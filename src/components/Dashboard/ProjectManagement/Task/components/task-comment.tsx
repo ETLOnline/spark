@@ -99,8 +99,7 @@ export function TaskComment({
   }
 
   useEffect(() => {
-    if (!taskId) return
-    if (isOpen === false) return
+    if (!taskId || !isOpen) return
 
     GetComments(true)
   }, [taskId, isOpen])
