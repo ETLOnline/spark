@@ -110,11 +110,12 @@ const PostInteractions: React.FC<Props> = ({
         variant="ghost"
         size="sm"
         onClick={() => setIsCommentsVisible(!isCommentsVisible)}
+        className="group"
       >
         <MessageCircle
           className={`mr-2 h-4 w-4 ${
             isCommentsVisible
-              ? "text-primary dark:text-primary fill-primary dark:fill-white"
+              ? "text-primary fill-primary group-hover:text-primary-foreground group-hover:fill-primary-foreground dark:text-primary dark:fill-white dark:group-hover:fill-white"
               : ""
           }`}
         />
