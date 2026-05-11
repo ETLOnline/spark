@@ -709,7 +709,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
           setRichMessageContent(fileRecord.file_name)
           const fileString = `${fileRecord.file_path},${fileRecord.file_name},${fileRecord.file_size},${fileRecord.file_type}`
           setFileString(fileString)
-          setOpenAttachment(false)
         }
       } catch (error) {
         toast({
@@ -1160,6 +1159,14 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       the internal grid pattern from creating a scrollbar. */}
                   {openAttachment && (
                     <div className="absolute bottom-full left-0 right-0 mb-1 z-50 bg-background border border-border rounded-t-xl shadow-lg max-h-[50dvh] overflow-y-auto md:max-h-none md:overflow-hidden">
+                      {uploadLoding && (
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-t-xl bg-background/80 backdrop-blur-sm">
+                          <Loader />
+                          <p className="text-sm text-muted-foreground">
+                            Uploading file…
+                          </p>
+                        </div>
+                      )}
                       <FileUpload
                         accept="image/*,application/*"
                         onChange={handleFileUpload}
