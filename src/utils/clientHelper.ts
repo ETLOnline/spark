@@ -331,10 +331,14 @@ export function normalizeUrl(val: string): string {
 
 export function isValidUrl(val: string): boolean {
   if (!val || val.trim() === "") return true
-  try {
-    new URL(normalizeUrl(val))
-    return true
-  } catch {
-    return false
-  }
+  const pattern = new RegExp(
+    "^(https?:\\/\\/)?" + // protocol (optional)
+      "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name
+      "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR IPv4
+      "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
+      "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
+      "(\\#[-a-z\\d_]*)?$", // fragment
+    "i"
+  )
+  return pattern.test(val.trim())
 }
