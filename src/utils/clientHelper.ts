@@ -321,3 +321,11 @@ export const formatActivityName = (text: string) => {
 
   return text.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
 }
+
+export function isValidUrl(val: string): boolean {
+  if (!val || val.trim() === "") return true
+  const normalized = val.trim().startsWith("www.")
+    ? `https://${val.trim()}`
+    : val.trim()
+  return URL.canParse(normalized)
+}
