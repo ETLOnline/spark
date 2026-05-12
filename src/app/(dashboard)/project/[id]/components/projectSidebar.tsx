@@ -131,8 +131,11 @@ function ProjectSidebar({ statusList, currProject, currSpace }: Props) {
                 className={`flex flex-row items-center gap-2 p-2 rounded transition-colors
                 ${pathName.includes(page.key) ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}`}
               >
-                <DynamicIcon name={page.icon as IconName} className="h-4 w-4" />
-                {page.title}
+                <DynamicIcon
+                  name={page.icon as IconName}
+                  className="h-4 w-4 shrink-0"
+                />
+                <span className="truncate min-w-0">{page.title}</span>
               </SidebarMenuItem>
             </Link>
           )

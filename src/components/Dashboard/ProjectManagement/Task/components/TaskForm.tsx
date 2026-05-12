@@ -655,7 +655,7 @@ export default function TaskForm({
             <div className="w-full lg:w-56">
               <Card>
                 <CardContent className="pt-6">
-                  <div className="flex items-center justify-end gap-4 mb-2">
+                  <div className="hidden lg:flex items-center justify-end gap-4 mb-2">
                     {isEditable && (
                       <Button
                         loading={loading}
