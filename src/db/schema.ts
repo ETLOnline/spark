@@ -1914,7 +1914,7 @@ export type InsertSuccessfulReferral =
 export type SelectSuccessfulReferral =
   typeof successfullReferralsTable.$inferSelect
 
-export const feedbackTable = pgTable("feedback", {
+export const feedbackTable = pgTable("feedbacks", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   name: varchar().notNull(),
   email: varchar().notNull(),

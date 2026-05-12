@@ -29,7 +29,8 @@ import {
   projectDefaultStatuses,
   projectTaskPriority,
   projectTaskTypes,
-  TaskType
+  TaskType,
+  TASK_RICH_TEXT_CHAR_LIMIT
 } from "../../constants/projectManagment"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import "@/src/components/common/Tiptap/RichEditorFormat.css"
@@ -60,7 +61,7 @@ import {
   CommandInput,
   CommandItem
 } from "@/src/components/ui/command"
-import { getChildTypes, getParentTypes } from "../utils/helper"
+import { getChildTypes, getParentTypes } from "../../utils/helper"
 import { GetLinkedTasksAction } from "@/src/server-actions/Tasks/Task"
 import Loader from "@/src/components/common/Loader/Loader"
 import UserSelector from "./UserSelector"
@@ -490,7 +491,7 @@ export default function TaskForm({
                         image_uploading={true}
                         entity="tasks"
                         editable={isEditable}
-                        limit={2000}
+                        limit={TASK_RICH_TEXT_CHAR_LIMIT}
                       />
                     ) : (
                       <div

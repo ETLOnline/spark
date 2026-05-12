@@ -140,9 +140,9 @@ export function CommunityRanking({
   const rankGrowth = userRank?.pointsGained || 0
 
   return (
-    <div className="space-y-6">
+    <div className="w-full min-w-0 space-y-6">
       {/* Community Selector */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle className="text-sm">Select Community</CardTitle>
         </CardHeader>
@@ -151,15 +151,18 @@ export function CommunityRanking({
             <Skeleton className="h-10 w-full" />
           ) : (
             <div className="flex gap-2">
-              <div className="flex-1">
+              <div className="flex-1 w-28 sm:w-full">
                 <Select
                   value={selectedCommunityId || ""}
                   onValueChange={handleCommunityChange}
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Choose a community..." />
+                  <SelectTrigger className="w-full overflow-hidden gap-2 [&>span:first-child]:min-w-0 [&>span:first-child]:max-w-full [&>span:first-child]:truncate [&>span:last-child]:shrink-0 [&>svg:last-child]:flex-shrink-0">
+                    <SelectValue
+                      placeholder="Choose a community..."
+                      className="block w-full max-w-full truncate"
+                    />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-w-[calc(100vw-4rem)]">
                     {userCommunities.length > 0 ? (
                       userCommunities.map((community: any) => (
                         <SelectItem key={community.id} value={community.id}>
@@ -220,17 +223,17 @@ export function CommunityRanking({
       {loading ? (
         <Skeleton className="h-96 w-full" />
       ) : !communityHasRanking ? (
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <p className="text-sm font-medium text-muted-foreground text-center">
             This community doesn't have any rankings yet. Be the first to earn
             points!
           </p>
         </Card>
       ) : leaderboardData && leaderboardData.length > 0 ? (
-        <Card className="p-6">
+        <Card className="space-y-3 overflow-hidden">
           <LeaderboardCard data={leaderboardData} displayName={displayName} />
           {totalPages > 1 && (
-            <div className="mt-6 pt-4 border-t">
+            <div className="overflow-x-auto">
               <PaginationComponent
                 pagination={{
                   page: currentPage,
@@ -247,11 +250,11 @@ export function CommunityRanking({
 
       {/* Insights */}
       {userRank && selectedCommunityId && (
-        <Card className="p-6">
+        <Card className="overflow-hidden p-4 sm:p-6">
           <h4 className="font-semibold text-foreground mb-4">
             {possessive} Ranking Insights
           </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 bg-muted/50 rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">
                 Points to Next Rank
