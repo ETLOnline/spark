@@ -146,9 +146,7 @@ export async function getProjectUsers(
 
     const whereClauses: (SQLWrapper | undefined)[] = []
 
-    if (projectId) {
-      whereClauses.push(eq(ProjectUsersTable.project_id, projectId))
-    }
+    whereClauses.push(eq(ProjectUsersTable.project_id, projectId))
 
     if (search) {
       const searchedUsers = db
