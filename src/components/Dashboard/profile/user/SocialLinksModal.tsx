@@ -26,7 +26,7 @@ import { Input } from "@/src/components/ui/input"
 import { socialPlatforms } from "@/src/components/ProfileCompletion/constants"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
 import { Plus } from "lucide-react"
-import { isValidUrl } from "@/src/utils/clientHelper"
+import { isValidUrl, normalizeUrl } from "@/src/utils/clientHelper"
 
 const urlField = z
   .string()
@@ -95,10 +95,17 @@ export default function EditSocialLinksModal({
 
   async function handleSubmit(data: any) {
     try {
-      const res = await submitUserProfile(user.unique_id, data)
+      // Normalize www. URLs so they're stored with https:// prefix
+      const normalized = Object.fromEntries(
+        Object.entries(data).map(([key, val]) => [
+          key,
+          typeof val === "string" ? normalizeUrl(val) : val
+        ])
+      )
+      const res = await submitUserProfile(user.unique_id, normalized)
 
       if (res?.success) {
-        setprofile((prev) => ({ ...prev!, ...data }))
+        setprofile((prev) => ({ ...prev!, ...normalized }))
 
         toast({ title: "Social links updated", duration: 2000 })
         setIsDialogOpen(false)
