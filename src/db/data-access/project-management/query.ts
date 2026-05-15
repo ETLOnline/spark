@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm"
+import { and, desc, eq, ilike, inArray, or, sql, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
 import {
   channelsTable,
@@ -133,18 +133,46 @@ export async function createProjectUsers(
     throw new Error(`Failed to create project users: ${e.message}`)
   }
 }
-export async function getProjectUsers(projectId: string) {
+export async function getProjectUsers(
+  projectId: string,
+  filters?: {
+    limit?: number
+    search?: string
+  }
+) {
   try {
+    const limit = filters?.limit
+    const search = filters?.search
+
+    const whereClauses: (SQLWrapper | undefined)[] = []
+
+    whereClauses.push(eq(ProjectUsersTable.project_id, projectId))
+
+    if (search) {
+      const searchedUsers = db
+        .select({ id: usersTable.unique_id })
+        .from(usersTable)
+        .where(
+          ilike(
+            sql`${usersTable.first_name} || ' ' || ${usersTable.last_name}`,
+            `%${search}%`
+          )
+        )
+
+      whereClauses.push(inArray(ProjectUsersTable.user_id, searchedUsers))
+    }
+
     const projectUsers = await db.query.ProjectUsersTable.findMany({
+      limit,
+      where: whereClauses.length ? and(...whereClauses) : undefined,
       with: {
         user: true
-      },
-      where: eq(ProjectUsersTable.project_id, projectId)
+      }
     })
 
     return projectUsers
-  } catch (error: any) {
-    throw new Error(error.message)
+  } catch (e: any) {
+    throw new Error(e.message)
   }
 }
 

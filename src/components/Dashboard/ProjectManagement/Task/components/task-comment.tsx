@@ -42,6 +42,7 @@ interface TaskCommentFormProps {
   refetchComments?: boolean
   setRefetchComments?: Dispatch<SetStateAction<boolean>>
   projectUsers: SelectUser[]
+  isOpen: boolean | undefined
 }
 const COMMENTS_PER_LOAD = 4
 
@@ -50,7 +51,8 @@ export function TaskComment({
   isSprintCompleted,
   refetchComments,
   setRefetchComments,
-  projectUsers
+  projectUsers,
+  isOpen
 }: TaskCommentFormProps) {
   const authUser = useAtomValue(userStore.AuthUser)
   const userId = authUser?.unique_id
@@ -89,6 +91,7 @@ export function TaskComment({
   )
 
   const GetComments = (reset = false) => {
+    if (!taskId) return
     triggerGetComments({
       taskId,
       limit: COMMENTS_PER_LOAD,
@@ -97,8 +100,10 @@ export function TaskComment({
   }
 
   useEffect(() => {
-    GetComments()
-  }, [taskId])
+    if (!taskId || !isOpen) return
+
+    GetComments(true)
+  }, [taskId, isOpen])
 
   useEffect(() => {
     if (offset > 0) GetComments()

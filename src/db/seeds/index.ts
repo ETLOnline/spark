@@ -19,6 +19,7 @@ import { JoinInviteEmailSeed } from "./JoinInviteEmail"
 import { FeatureFlagsSeed } from "./FeatureFlagsSeed"
 import { RewardsSeed } from "./RewardsSeed"
 import { RewardLevelsSeed } from "./RewardLevelsSeed"
+import { BackfillLedgerCommunityIdSeed } from "./BackfillLedgerCommunityIdSeed"
 
 const SEEDERS: Record<string, () => Promise<void>> = {
   FeatureSeed,
@@ -41,7 +42,8 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   JoinInviteEmailSeed,
   FeatureFlagsSeed,
   RewardsSeed,
-  RewardLevelsSeed
+  RewardLevelsSeed,
+  BackfillLedgerCommunityIdSeed
 }
 
 async function runSeeders() {
@@ -59,7 +61,8 @@ async function runSeeders() {
       "ChatSlugCorrectionSyncSeed",
       "ShortcutEntityIdSyncSeed",
       "EmailTemplatesForCommunityRequestSeed",
-      "JoinInviteEmailSeed"
+      "JoinInviteEmailSeed",
+      "BackfillLedgerCommunityIdSeed"
     ]
 
     const seederNames =

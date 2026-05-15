@@ -14,6 +14,7 @@ import {
   userProfileCompletionAction
 } from "@/src/server-actions/profile/profile"
 import { socialPlatforms } from "./constants"
+import { normalizeUrl } from "@/src/utils/clientHelper"
 import { useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 interface StepThreeProps {
@@ -42,11 +43,11 @@ export function StepThree({ step, setStep, user, setUser }: StepThreeProps) {
     setIsTransitioning(true)
     try {
       const socialPlatforms = {
-        linkedin_url: data.linkedin,
-        github_url: data.github,
-        instagram_url: data.instagram,
-        twitter_url: data.twitter,
-        personal_website_url: data.website
+        linkedin_url: normalizeUrl(data.linkedin || ""),
+        github_url: normalizeUrl(data.github || ""),
+        instagram_url: normalizeUrl(data.instagram || ""),
+        twitter_url: normalizeUrl(data.twitter || ""),
+        personal_website_url: normalizeUrl(data.website || "")
       }
       const hasAnyLink = Object.values(socialPlatforms).some(
         (val) => val && val.trim() !== ""

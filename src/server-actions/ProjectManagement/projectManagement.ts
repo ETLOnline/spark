@@ -237,9 +237,9 @@ export const AttachProjectUserAction = CreateServerAction(
 
 export const GetProjectUsersAction = CreateServerAction(
   true,
-  async (projectId: string) => {
+  async (projectId: string, limit?: number, search?: string) => {
     try {
-      const projectUsers = await getProjectUsers(projectId)
+      const projectUsers = await getProjectUsers(projectId, { limit, search })
       return { success: true, data: projectUsers }
     } catch (error) {
       console.error("Error fetching project users:", error)
