@@ -15,32 +15,30 @@ import {
 } from "@/src/components/Dashboard/Feedback/FeedbackForm"
 import { SubmitContactUsAction } from "@/src/server-actions/ContactUs/ContactUs"
 import { useToast } from "@/src/hooks/use-toast"
+import { useServerAction } from "@/src/hooks/useServerAction"
 
 export function ContactUsDialog() {
   const { toast } = useToast()
   const [isOpen, setIsOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
 
   const [isSubmitContactUsLoading, , , SubmitContactUs] = useServerAction(
     SubmitContactUsAction
   )
 
   const handleSubmit = async (data: FeedbackFormData) => {
-    setIsLoading(true)
     try {
-      const result = await SubmitContactUsAction({
+      const result = await SubmitContactUs({
         name: data.name,
         email: data.email,
         subject: data.subject,
         description: data.description
       })
 
-      if (result.success) {
+      if (result?.success) {
         toast({
           title: "Message Sent",
           description: "Thanks for reaching out. We'll get back to you shortly."
         })
-        setIsOpen(false)
       }
     } catch (error: any) {
       toast({
@@ -48,8 +46,6 @@ export function ContactUsDialog() {
         description: error.message || "Failed to send message",
         variant: "destructive"
       })
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -69,7 +65,7 @@ export function ContactUsDialog() {
         </DialogHeader>
         <FeedbackForm
           onSubmit={handleSubmit}
-          isLoading={isLoading}
+          isLoading={isSubmitContactUsLoading}
           pageType="contact"
         />
       </DialogContent>

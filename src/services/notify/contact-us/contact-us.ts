@@ -52,7 +52,6 @@ export const notifyAdminNewContactUs = async (
     subject: string
     description: string
     submittedAt: string
-    contactId: number
   }
 ) => {
   const superAdmins = await GetAllSuperAdmins()

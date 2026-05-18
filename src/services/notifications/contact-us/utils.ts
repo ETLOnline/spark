@@ -21,8 +21,7 @@ export const SendContactUsNotification = async (data: any) => {
       email: data.email,
       subject: data.subject,
       description: data.description,
-      submittedAt,
-      contactId: contact.id
+      submittedAt
     })
   } catch (error) {
     console.error("Error sending contact us notification:", error)
