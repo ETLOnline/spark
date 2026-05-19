@@ -1,8 +1,7 @@
-import { MailService } from "@/src/services/mail/sendMail"
+import { mailer } from "@/src/services/mail/sendMail"
 import { getEmailTemplateByName } from "@/src/db/data-access/emails/query"
 import Handlebars from "handlebars"
 
-const mailer = new MailService()
 export async function processSubmitCommunityRequestNotification(job: {
   sendingTo: string[]
   event: string

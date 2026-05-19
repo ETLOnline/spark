@@ -1,8 +1,7 @@
-import { MailService } from "@/src/services/mail/sendMail"
+import { mailer } from "@/src/services/mail/sendMail"
 import { getEmailTemplateByName } from "@/src/db/data-access/emails/query"
 import Handlebars from "handlebars"
 
-const mailer = new MailService()
 export async function processProjectInviteNotification(job: {
   sendingTo: string[]
   event: string
@@ -13,7 +12,7 @@ export async function processProjectInviteNotification(job: {
 
   const compiled = Handlebars.compile(template.body)
   const renderedBody = compiled(job.payload)
-  
+
   const compiledSubject = Handlebars.compile(template.subject)
   const renderedSubject = compiledSubject(job.payload)
   await Promise.all(

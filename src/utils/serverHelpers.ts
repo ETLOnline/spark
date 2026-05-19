@@ -9,9 +9,7 @@ import { GetSpaceById } from "../db/data-access/spaces/query"
 import { createAbsoluteUrl } from "./clientHelper"
 import { getEmailTemplateByName } from "../db/data-access/emails/query"
 import Handlebars from "handlebars"
-import { MailService } from "../services/mail/sendMail"
-
-const mailer = new MailService()
+import { mailer } from "../services/mail/sendMail"
 
 async function sendEmailToRecipient({
   to,

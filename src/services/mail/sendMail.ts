@@ -1,14 +1,21 @@
 import { MailAdapter, MailPayload } from "./types/interface"
 import { getMailClient } from "./client/mail.client"
 
-export class MailService {
-  private adapter: MailAdapter
+let adapter: MailAdapter | null = null
 
-  constructor() {
-    this.adapter = getMailClient()
+const getAdapter = (): MailAdapter => {
+  if (!adapter) {
+    adapter = getMailClient()
   }
+  return adapter
+}
 
-  async sendEmail(payload: MailPayload): Promise<void> {
-    await this.adapter.sendMail(payload)
+export const mailer = {
+  sendEmail: async (payload: MailPayload): Promise<void> => {
+    try {
+      await getAdapter().sendMail(payload)
+    } catch (error) {
+      throw new Error(`Failed to send email: ${error}`)
+    }
   }
 }

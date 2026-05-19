@@ -1,4 +1,4 @@
-import { MailService } from "@/src/services/mail/sendMail"
+import { mailer } from "@/src/services/mail/sendMail"
 import { getEmailTemplateByName } from "@/src/db/data-access/emails/query"
 import Handlebars from "handlebars"
 import { TaskEmailData } from "../../notify/task/interfaces"
@@ -8,7 +8,6 @@ export async function processTaskUpdateNotification(job: {
   event: string
   payload: any
 }) {
-  const mailer = new MailService()
   const template = await getEmailTemplateByName(job.event)
   if (!template) throw new Error(`Template not found: ${job.event}`)
 
