@@ -458,9 +458,9 @@ export default function TaskForm({
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 min-w-0 w-full">
         {/* Main content area (left side) */}
-        <ScrollArea className="h-auto lg:h-[80vh] col-span-1 lg:col-span-9 w-full">
+        <ScrollArea className="h-auto lg:h-[80vh] col-span-1 lg:col-span-9 w-full min-w-0">
           <div className="px-2 sm:px-4">
             <div className="space-y-6">
               {/* Task title */}
@@ -486,7 +486,7 @@ export default function TaskForm({
                         />
                       ) : (
                         <div
-                          className="border-b border-dashed border-gray-300 py-2 text-lg sm:text-xl cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2 break-words"
+                          className="border-b border-dashed border-gray-300 py-2 text-lg sm:text-xl cursor-pointer w-full min-w-0 hover:bg-secondary transition delay-150 duration-300 p-2 [overflow-wrap:anywhere]"
                           onClick={() => setActiveField("title")}
                         >
                           <div>
@@ -498,9 +498,7 @@ export default function TaskForm({
                             )}
                           </div>
 
-                          <span
-                            className={`${isContainSpace ? "break-words" : "break-all"}`}
-                          >
+                          <span className="[overflow-wrap:anywhere]">
                             {field.value
                               ? field.value
                               : " Click to add title..."}
@@ -649,10 +647,10 @@ export default function TaskForm({
           onKeyDown={(e) => {
             if (e.key === "Enter") e.preventDefault()
           }}
-          className="col-span-1 lg:col-span-3 w-full"
+          className="col-span-1 lg:col-span-3 w-full min-w-0"
         >
-          <ScrollArea className="h-[80vh] max-h-[60vh] lg:max-h-none w-full">
-            <div className="w-full lg:w-56">
+          <ScrollArea className="h-auto lg:h-[80vh] w-full">
+            <div className="w-full">
               <Card>
                 <CardContent className="pt-6">
                   <div className="hidden lg:flex items-center justify-end gap-4 mb-2">
