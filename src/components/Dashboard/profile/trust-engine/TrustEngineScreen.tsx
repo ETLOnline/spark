@@ -149,7 +149,7 @@ export default function TrustEngineScreen({
   }
 
   return (
-    <main className="h-[calc(100svh-8rem)] flex flex-col bg-background pt-6 overflow-hidden">
+    <main className="h-[calc(100svh-8rem)] flex flex-col bg-background pt-6 overflow-hidden px-2">
       <div className="mb-6 shrink-0">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
           {displayName ? `${displayName}'s Trust Dashboard` : "Trust Dashboard"}
@@ -225,7 +225,7 @@ export default function TrustEngineScreen({
 
         <TabsContent value="ranking" className="flex-1 overflow-hidden min-h-0">
           <ScrollArea className="h-full sm:pr-2">
-            <div className="pb-6 w-[calc(100vw-2rem)] sm:w-full">
+            <div className="pb-6  w-full">
               <CommunityRanking
                 userId={targetUserId}
                 displayName={displayName}
