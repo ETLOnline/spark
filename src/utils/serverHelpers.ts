@@ -11,8 +11,6 @@ import { getEmailTemplateByName } from "../db/data-access/emails/query"
 import Handlebars from "handlebars"
 import { MailService } from "../services/mail/sendMail"
 
-const mailer = new MailService()
-
 async function sendEmailToRecipient({
   to,
   subject,
@@ -22,6 +20,7 @@ async function sendEmailToRecipient({
   subject: string
   body: string
 }) {
+  const mailer = new MailService()
   await mailer.sendEmail({
     to,
     from: process.env.EMAIL_FROM_ADDRESS!,

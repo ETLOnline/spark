@@ -68,12 +68,22 @@ const templatesToSeed: NewEmailTemplate[] = [
   {
     name: NotificationEvent.FEEDBACK_SUBMITTED,
     subject: "We Received Your Feedback - {{userName}}",
-    body: loadTemplate("feedback_submitted.html")
+    body: loadTemplate("user_message_received.html")
   },
   {
     name: NotificationEvent.NEW_FEEDBACK_ADMIN,
     subject: "New Feedback Received: {{subject}}",
-    body: loadTemplate("new_feedback_admin.html")
+    body: loadTemplate("admin_message_received.html")
+  },
+  {
+    name: NotificationEvent.CONTACT_US_SUBMITTED,
+    subject: "We Received Your Message - {{userName}}",
+    body: loadTemplate("user_message_received.html")
+  },
+  {
+    name: NotificationEvent.NEW_CONTACT_US_ADMIN,
+    subject: "New Contact Us Message: {{subject}}",
+    body: loadTemplate("admin_message_received.html")
   }
 ]
 

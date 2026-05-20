@@ -2,17 +2,15 @@ import { getSiteLogoUrl } from "@/src/utils/clientHelper"
 import { AddToQueue } from "../../queue/addToQueue"
 import { GetAllSuperAdmins } from "@/src/db/data-access/feedback/query"
 
-type FeedbackPayloadInput = {
+type ContactUsPayloadInput = {
   name: string
   email: string
   subject: string
   description: string
   submittedAt: string
-  feedbackId?: number
-  fileUrl?: string | null
 }
 
-function buildFeedbackPayload(data: FeedbackPayloadInput) {
+function buildContactUsPayload(data: ContactUsPayloadInput) {
   const siteLogo = getSiteLogoUrl()
   const payload: any = {
     logoUrl: siteLogo,
@@ -21,14 +19,12 @@ function buildFeedbackPayload(data: FeedbackPayloadInput) {
     subject: data.subject,
     description: data.description,
     submittedAt: data.submittedAt,
-    messageType: "Feedback"
+    messageType: "Contact Us"
   }
-  if (data.feedbackId !== undefined) payload.feedbackId = data.feedbackId
-  if (data.fileUrl) payload.fileUrl = data.fileUrl
   return payload
 }
 
-export const notifyUserFeedbackSubmitted = async (
+export const notifyUserContactUsSubmitted = async (
   event: string,
   userData: {
     name: string
@@ -36,10 +32,9 @@ export const notifyUserFeedbackSubmitted = async (
     subject: string
     description: string
     submittedAt: string
-    fileUrl?: string | null
   }
 ) => {
-  const payload = buildFeedbackPayload(userData)
+  const payload = buildContactUsPayload(userData)
   await AddToQueue({
     sendingTo: [userData.email],
     event,
@@ -48,22 +43,20 @@ export const notifyUserFeedbackSubmitted = async (
   })
 }
 
-export const notifyAdminNewFeedback = async (
+export const notifyAdminNewContactUs = async (
   event: string,
-  feedbackData: {
+  contactData: {
     name: string
     email: string
     subject: string
     description: string
     submittedAt: string
-    feedbackId: number
-    fileUrl?: string | null
   }
 ) => {
   const superAdmins = await GetAllSuperAdmins()
   if (superAdmins.length === 0) return
   const superAdminEmails = superAdmins.map((admin) => admin.email)
-  const payload = buildFeedbackPayload(feedbackData)
+  const payload = buildContactUsPayload(contactData)
   await AddToQueue({
     sendingTo: superAdminEmails,
     event,
