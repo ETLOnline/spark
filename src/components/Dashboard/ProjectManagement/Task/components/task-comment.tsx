@@ -339,8 +339,8 @@ export function TaskComment({
               key={`${comment.id}-${comment.created_at}`}
               className="bg-card text-foreground border border-border"
             >
-              <CardContent className="p-4 flex items-start gap-3">
-                <div className="flex flex-row items-start gap-2">
+              <CardContent className="p-3 sm:p-4 flex items-start gap-2 sm:gap-3 min-w-0">
+                <div className="flex flex-row items-start gap-2 flex-1 min-w-0">
                   <Avatar className="h-8 w-8 flex-shrink-0">
                     <AvatarImage
                       src={
@@ -352,35 +352,35 @@ export function TaskComment({
                       {comment?.user?.last_name[0]}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="grid gap-1 flex-1">
-                    <div className="flex items-center gap-2">
-                      <div className="font-semibold">
+                  <div className="grid gap-1 min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 min-w-0">
+                      <div className="font-semibold truncate min-w-0">
                         {comment?.user?.first_name} {comment?.user?.last_name}
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-muted-foreground flex-shrink-0">
                         {comment?.created_at
                           ? formatRelativeTime(comment?.created_at)
                           : ""}
                       </div>
                     </div>
                     {comment.type === "history" ? (
-                      <div className="text-sm space-y-3">
+                      <div className="text-sm space-y-3 min-w-0">
                         {Array.isArray(comment.task_history)
                           ? comment.task_history.map((item: any, i: number) => (
                               <div
                                 key={i}
-                                className="border-l-2 border-muted pl-3"
+                                className="border-l-2 border-muted pl-3 min-w-0"
                               >
-                                <div className="font-semibold text-foreground">
+                                <div className="font-semibold text-foreground [overflow-wrap:anywhere]">
                                   {item.key}:
                                 </div>
 
-                                <div className="text-muted-foreground flex items-center gap-2 mt-0.5">
-                                  <span className="line-through opacity-70">
+                                <div className="text-muted-foreground flex flex-wrap items-center gap-2 mt-0.5 min-w-0">
+                                  <span className="line-through opacity-70 [overflow-wrap:anywhere]">
                                     {item.old === " " ? "N/A" : item.old}
                                   </span>
-                                  <span>→</span>
-                                  <span className="s text-foreground">
+                                  <span className="flex-shrink-0">→</span>
+                                  <span className="text-foreground [overflow-wrap:anywhere]">
                                     {item.new}
                                   </span>
                                 </div>
@@ -390,7 +390,7 @@ export function TaskComment({
                       </div>
                     ) : (
                       <div
-                        className="text-sm rich-editor"
+                        className="text-sm rich-editor min-w-0 [overflow-wrap:anywhere]"
                         onClick={
                           lightboxOpen ? undefined : handleCommentImageClick
                         }

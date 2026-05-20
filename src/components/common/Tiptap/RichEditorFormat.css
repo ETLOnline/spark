@@ -84,14 +84,14 @@
 .rich-editor img {
   display: inline-block;
   margin: 5px;
-  max-width: auto;
+  max-width: 100%;
   height: auto;
 }
 
 .tiptap-image-wrapper {
   display: inline-block !important;
   width: auto;
-  max-width: 250px;
+  max-width: min(250px, 100%);
   margin: 5px;
   vertical-align: top;
 }
@@ -109,8 +109,8 @@
 
 .rich-editor img:not(.tiptap-image-wrapper img) {
   display: inline-block;
-  max-width: 250px;
-  height: 200px;
+  max-width: min(250px, 100%);
+  height: auto;
   object-fit: cover;
 }
 .tiptap-image-wrapper img:hover {

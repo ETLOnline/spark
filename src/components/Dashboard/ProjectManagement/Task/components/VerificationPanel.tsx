@@ -73,14 +73,14 @@ export default function VerificationPanel({
   }
 
   return (
-    <div className="space-y-2 pl-2">
-      <Label className="text-xl font-semibold flex items-center gap-2">
+    <div className="space-y-2 pl-2 min-w-0 w-full">
+      <Label className="text-lg sm:text-xl font-semibold flex items-center gap-2">
         <ShieldCheck className="h-5 w-5 text-primary" />
         Verification
       </Label>
 
       <div
-        className="rounded-xl p-5 space-y-4"
+        className="rounded-xl p-3 sm:p-5 space-y-4 min-w-0 [overflow-wrap:anywhere]"
         style={{
           background:
             "linear-gradient(135deg, rgba(15,118,110,0.25) 0%, rgba(67,56,202,0.25) 100%)",
@@ -179,12 +179,12 @@ export default function VerificationPanel({
         )}
 
         {!isLocked && !isAssignee && (
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full">
             {!isRejected && (
               <Button
                 type="button"
                 variant="outline"
-                className="flex-1 border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-400"
+                className="flex-1 min-w-0 border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-400"
                 onClick={() => handleAction(TrustVerificationStatus.Rejected)}
                 loading={loading}
                 disabled={loading}
@@ -195,7 +195,7 @@ export default function VerificationPanel({
             )}
             <Button
               type="button"
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              className="flex-1 min-w-0 bg-green-600 hover:bg-green-700 text-white"
               onClick={() => handleAction(TrustVerificationStatus.Approved)}
               loading={loading}
               disabled={loading}
