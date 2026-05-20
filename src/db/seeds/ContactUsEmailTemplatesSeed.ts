@@ -18,12 +18,12 @@ const templatesToSeed: NewEmailTemplate[] = [
   {
     name: NotificationEvent.CONTACT_US_SUBMITTED,
     subject: "We Received Your Message - {{userName}}",
-    body: loadTemplate("contact_us_submitted.html")
+    body: loadTemplate("user_message_received.html")
   },
   {
     name: NotificationEvent.NEW_CONTACT_US_ADMIN,
     subject: "New Contact Us Message: {{subject}}",
-    body: loadTemplate("new_contact_us_admin.html")
+    body: loadTemplate("admin_message_received.html")
   }
 ]
 
@@ -48,7 +48,7 @@ export const ContactUsEmailTemplatesSeed = async () => {
       console.log("✅ Contact us email template seeding complete.")
     } catch (error) {
       console.error("❌ Error seeding contact us email templates:", error)
-      throw error // Let transaction auto-rollback
+      throw error
     }
   })
 }

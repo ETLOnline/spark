@@ -20,7 +20,8 @@ function buildFeedbackPayload(data: FeedbackPayloadInput) {
     userEmail: data.email,
     subject: data.subject,
     description: data.description,
-    submittedAt: data.submittedAt
+    submittedAt: data.submittedAt,
+    messageType: "Feedback"
   }
   if (data.feedbackId !== undefined) payload.feedbackId = data.feedbackId
   if (data.fileUrl) payload.fileUrl = data.fileUrl

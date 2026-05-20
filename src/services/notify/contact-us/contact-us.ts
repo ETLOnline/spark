@@ -8,7 +8,6 @@ type ContactUsPayloadInput = {
   subject: string
   description: string
   submittedAt: string
-  contactId?: number
 }
 
 function buildContactUsPayload(data: ContactUsPayloadInput) {
@@ -19,9 +18,9 @@ function buildContactUsPayload(data: ContactUsPayloadInput) {
     userEmail: data.email,
     subject: data.subject,
     description: data.description,
-    submittedAt: data.submittedAt
+    submittedAt: data.submittedAt,
+    messageType: "Contact Us"
   }
-  if (data.contactId !== undefined) payload.contactId = data.contactId
   return payload
 }
 
