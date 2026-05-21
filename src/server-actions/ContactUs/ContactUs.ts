@@ -1,6 +1,7 @@
 "use server"
 
 import { CreateContactUs } from "@/src/db/data-access/contact-us/query"
+import { SendContactUsNotification } from "@/src/services/notifications/contact-us/utils"
 
 export async function SubmitContactUsAction(data: {
   name: string
@@ -15,6 +16,8 @@ export async function SubmitContactUsAction(data: {
       subject: data.subject,
       description: data.description
     })
+
+    await SendContactUsNotification(data)
 
     return { success: true, contact }
   } catch (error: any) {
