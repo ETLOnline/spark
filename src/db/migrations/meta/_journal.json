@@ -302,20 +302,6 @@
       "when": 1776776693811,
       "tag": "0042_2026_04_21_210452__add_json_into_verificaiton_table",
       "breakpoints": true
-    },
-    {
-      "idx": 43,
-      "version": "7",
-      "when": 1778510983109,
-      "tag": "0043_2026_05_11_194938__create_feedbacks_table",
-      "breakpoints": true
-    },
-    {
-      "idx": 44,
-      "version": "7",
-      "when": 1779116292296,
-      "tag": "0044_2026_05_18_195808__create_contact_us_table",
-      "breakpoints": true
     }
   ]
 }

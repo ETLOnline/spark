@@ -18,7 +18,6 @@ interface RankingCardProps {
   handleClick?: () => void
   grandient?: boolean
   noRankMessage?: string
-  displayName?: string
 }
 
 const RankingCard: React.FC<RankingCardProps> = ({
@@ -26,24 +25,17 @@ const RankingCard: React.FC<RankingCardProps> = ({
   communityTitle,
   handleClick,
   grandient,
-  noRankMessage,
-  displayName
+  noRankMessage
 }) => {
-  const possessive = displayName ? `${displayName}'s` : "Your"
-  const subject = displayName ?? "You"
-  const subjectAux = displayName ? "doesn't" : "don't"
-
   if (!currentUserRank) {
     return (
       <Card
-        className={`w-full overflow-hidden p-4 border-primary/20 ${grandient ? "spark-gradient-panel-bg" : ""}`}
+        className={`p-4 border-primary/20 ${grandient ? "spark-gradient-panel-bg" : ""}`}
       >
-        <p className="text-sm text-muted-foreground mb-1">
-          {possessive} Ranking
-        </p>
+        <p className="text-sm text-muted-foreground mb-1">Your Ranking</p>
         <p className="text-sm font-medium text-muted-foreground">
           {noRankMessage ??
-            `${subject} ${subjectAux} have a rank yet. Start contributing to earn points!`}
+            "You don't have a rank yet. Start contributing to earn points!"}
         </p>
         {handleClick && (
           <Button
@@ -65,13 +57,11 @@ const RankingCard: React.FC<RankingCardProps> = ({
 
   return (
     <Card
-      className={`w-full overflow-hidden p-4 sm:p-6 border-primary/20 ${grandient ? "spark-gradient-panel-bg" : ""} ${handleClick ? "hover:cursor-pointer" : ""}`}
+      className={`p-4 sm:p-6 border-primary/20 ${grandient ? "spark-gradient-panel-bg" : ""} ${handleClick ? "hover:cursor-pointer" : ""}`}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <p className="text-sm text-muted-foreground mb-2">
-            {possessive} Ranking
-          </p>
+          <p className="text-sm text-muted-foreground mb-2">Your Ranking</p>
           <div className="flex items-center gap-3">
             <div className="text-3xl sm:text-4xl font-bold text-green-600 shrink-0">
               #{currentUserRank.rank}

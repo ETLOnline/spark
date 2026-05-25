@@ -149,7 +149,7 @@ export const FileUpload: React.FC<{
       <motion.div
         onClick={handleClick}
         whileHover="animate"
-        className="p-3 lg:p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
+        className="p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
       >
         {showClose && (
           <Button
@@ -180,18 +180,18 @@ export const FileUpload: React.FC<{
         <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,white,transparent)]">
           <GridPattern />
         </div>
-        <div className="flex flex-col items-center justify-center min-w-0 w-full">
-          <p className="relative font-sans font-bold text-neutral-700 dark:text-neutral-300 text-sm w-full min-w-0 truncate text-center pr-8">
+        <div className="flex flex-col items-center justify-center">
+          <p className="relative font-sans font-bold text-neutral-700 dark:text-neutral-300 text-base w-auto truncate max-w-xs">
             {files.length > 0 ? files[0].name : "Upload file"}
           </p>
-          <p className="relative font-sans font-normal text-neutral-400 dark:text-neutral-400 text-xs mt-2 w-full max-w-full break-words text-center">
+          <p className="relative font-sans font-normal text-neutral-400 dark:text-neutral-400 text-base mt-2">
             {files.length > 0
               ? "Click the X to remove or upload a new file"
               : "Drag or drop your files here or click to upload"}
           </p>
 
           <div
-            className="relative w-full mt-3 max-w-full mx-auto"
+            className="relative w-full  mt-10 max-w-sm mx-auto"
             onClick={(e) => {
               e.stopPropagation()
               // if no items, trigger file picker

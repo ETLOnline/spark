@@ -24,14 +24,14 @@ export function TrustOverView({
   pointsNeeded
 }: TrustOverViewProps) {
   return (
-    <div className="w-full min-w-0 space-y-6">
+    <div className="space-y-6">
       {rpPoints === 0 && (
-        <div className="rounded-lg border-2 border-dashed p-6 sm:p-8 text-center">
-          <Users className="h-12 w-12 sm:h-16 sm:w-16 text-teal-600 dark:text-teal-400 mx-auto mb-4" />
-          <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+        <div className="rounded-lg border-2 border-dashed p-8 text-center">
+          <Users className="h-16 w-16 text-teal-600 dark:text-teal-400 mx-auto mb-4" />
+          <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
             Join a Community to Start Earning RP
           </h3>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+          <p className="text-base text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
             Get involved in communities, contribute to projects, and build your
             reputation to earn Reputation Points (RP).
           </p>
@@ -41,32 +41,32 @@ export function TrustOverView({
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card className="border p-4 sm:p-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="border p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
                 Reputation Points
               </p>
-              <h3 className="text-2xl sm:text-3xl font-bold text-primary mt-2">
+              <h3 className="text-3xl font-bold text-primary mt-2">
                 {rpPoints.toLocaleString()}
               </h3>
             </div>
-            <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-primary/60 shrink-0" />
+            <TrendingUp className="w-8 h-8 text-primary/60" />
           </div>
         </Card>
 
-        <Card className="p-4 sm:p-6">
+        <Card className="p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
                 Spark Credits
               </p>
-              <h3 className="text-2xl sm:text-3xl font-bold text-purple-600 mt-2">
+              <h3 className="text-3xl font-bold text-purple-600 mt-2">
                 {scPoints.toLocaleString()}
               </h3>
             </div>
-            <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600/60 shrink-0" />
+            <Zap className="w-8 h-8 text-purple-600/60" />
           </div>
           <p className="text-xs text-muted-foreground">
             Earnable through contributions
@@ -74,18 +74,18 @@ export function TrustOverView({
         </Card>
       </div>
 
-      <Card className="p-4 sm:p-6">
-        <div className="mb-4 sm:mb-6">
+      <Card className="p-6">
+        <div className="mb-6">
           <p className="text-sm font-medium text-muted-foreground">
             Current Level
           </p>
           <div className="flex flex-row items-center gap-2">
-            <h3 className="text-xl sm:text-2xl font-bold text-foreground mt-1">
+            <h3 className="text-2xl font-bold text-foreground mt-1">
               {levelName}
             </h3>
             <img
               src={`/images/rewards/levels/compressed/level-${levelId ?? 1}.png`}
-              className="w-10 h-10 sm:w-12 sm:h-12"
+              className=" w-12 h-12"
               alt=""
             />
           </div>

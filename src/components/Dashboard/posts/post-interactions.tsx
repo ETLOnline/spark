@@ -90,32 +90,43 @@ const PostInteractions: React.FC<Props> = ({
 
   return (
     <div className="flex justify-between w-full">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleLike}
-        disabled={toggleLikeLoading}
-        className="group"
-      >
-        <ThumbsUp
-          className={`mr-2 h-4 w-4 ${
-            isLiked
-              ? "text-primary fill-primary group-hover:text-primary-foreground group-hover:fill-primary-foreground dark:text-primary dark:fill-white dark:group-hover:fill-white"
-              : ""
-          }`}
-        />
-        {likes}
-      </Button>
+      {spaceId !== "shared" ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleLike}
+          disabled={toggleLikeLoading}
+        >
+          <ThumbsUp
+            className={`mr-2 h-4 w-4 ${
+              isLiked
+                ? "text-primary dark:text-primary fill-primary dark:fill-white"
+                : ""
+            }`}
+          />
+          {likes}
+        </Button>
+      ) : (
+        <Button variant="ghost" size="sm">
+          <ThumbsUp
+            className={`mr-2 h-4 w-4 ${
+              isLiked
+                ? "text-primary dark:text-primary fill-primary dark:fill-white"
+                : ""
+            }`}
+          />
+          {likes}
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="sm"
         onClick={() => setIsCommentsVisible(!isCommentsVisible)}
-        className="group"
       >
         <MessageCircle
           className={`mr-2 h-4 w-4 ${
             isCommentsVisible
-              ? "text-primary fill-primary group-hover:text-primary-foreground group-hover:fill-primary-foreground dark:text-primary dark:fill-white dark:group-hover:fill-white"
+              ? "text-primary dark:text-primary fill-primary dark:fill-white"
               : ""
           }`}
         />

@@ -33,7 +33,7 @@ export default async function DashboardLayout({
         <AppSidebar collapsible="icon" />
         <SidebarInset>
           <Header />
-          <div className="flex flex-1 flex-col gap-4 sm:px-4  !w-full h-full">
+          <div className="flex flex-1 flex-col gap-4 px-4  !w-full h-full">
             {children}
           </div>
         </SidebarInset>

@@ -16,10 +16,10 @@ import {
 import { CreateTaskAction } from "@/src/server-actions/Tasks/Task"
 import { toast } from "@/src/hooks/use-toast"
 import { useServerAction } from "@/src/hooks/useServerAction"
+import { getChildTypes } from "../utils/helper"
 import { TaskPriority } from "../../constants/projectManagment"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
-import { getChildTypes } from "../../utils/helper"
 
 interface Props {
   selectedTask?: SelectTask
@@ -106,7 +106,7 @@ function AddSubTask({
         {isAddingSubtask ? (
           <div>
             <div className="space-y-2">
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="relative flex items-center">
                 <Controller
                   name="task_title"
                   defaultValue=""
@@ -117,37 +117,42 @@ function AddSubTask({
                       {...field}
                       type="text"
                       placeholder="Enter subtask title"
-                      className="flex-1 min-w-0"
+                      className="pr-24"
                     />
                   )}
                 />
 
-                <Controller
-                  name="task_type"
-                  defaultValue=""
-                  control={subTaskForm.control}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="h-9 w-full sm:w-28 flex-shrink-0">
-                        <SelectValue placeholder="Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {subTaskType?.map((t) => (
-                          <SelectItem key={t.key} value={t.key}>
-                            <div className="flex items-center">
-                              <DynamicIcon
-                                name={t.icon as IconName}
-                                className="mr-2 h-4 w-4"
-                                style={{ color: t.iconColor }}
-                              />
-                              {t.title}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
+                <div className="absolute right-1">
+                  <Controller
+                    name="task_type"
+                    defaultValue=""
+                    control={subTaskForm.control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className="h-8 w-15 border-none shadow-none focus:ring-0">
+                          <SelectValue placeholder="Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {subTaskType?.map((t) => (
+                            <SelectItem key={t.key} value={t.key}>
+                              <div className="flex items-center">
+                                <DynamicIcon
+                                  name={t.icon as IconName}
+                                  className="mr-2 h-4 w-4"
+                                  style={{ color: t.iconColor }}
+                                />
+                                {t.title}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
               </div>
               <div className="flex justify-between items-center gap-2">
                 <div className="text-red-500 text-sm text-left flex flex-col gap-1">

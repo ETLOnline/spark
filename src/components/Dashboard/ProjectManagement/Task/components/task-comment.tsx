@@ -34,7 +34,6 @@ import {
   AlertDialogTitle
 } from "@/src/components/ui/alert-dialog"
 import ImageLightbox from "@/src/components/common/LightBox"
-import { TASK_RICH_TEXT_CHAR_LIMIT } from "../../constants/projectManagment"
 
 interface TaskCommentFormProps {
   taskId: string
@@ -42,7 +41,6 @@ interface TaskCommentFormProps {
   refetchComments?: boolean
   setRefetchComments?: Dispatch<SetStateAction<boolean>>
   projectUsers: SelectUser[]
-  isOpen: boolean | undefined
 }
 const COMMENTS_PER_LOAD = 4
 
@@ -51,8 +49,7 @@ export function TaskComment({
   isSprintCompleted,
   refetchComments,
   setRefetchComments,
-  projectUsers,
-  isOpen
+  projectUsers
 }: TaskCommentFormProps) {
   const authUser = useAtomValue(userStore.AuthUser)
   const userId = authUser?.unique_id
@@ -91,7 +88,6 @@ export function TaskComment({
   )
 
   const GetComments = (reset = false) => {
-    if (!taskId) return
     triggerGetComments({
       taskId,
       limit: COMMENTS_PER_LOAD,
@@ -100,10 +96,8 @@ export function TaskComment({
   }
 
   useEffect(() => {
-    if (!taskId || !isOpen) return
-
-    GetComments(true)
-  }, [taskId, isOpen])
+    GetComments()
+  }, [taskId])
 
   useEffect(() => {
     if (offset > 0) GetComments()
@@ -291,7 +285,6 @@ export function TaskComment({
                 entity="task-comments"
                 showMentions={true}
                 mentionUsers={availableUsers}
-                limit={TASK_RICH_TEXT_CHAR_LIMIT}
               />
               <div className="flex gap-2 justify-end">
                 <Button
@@ -339,9 +332,9 @@ export function TaskComment({
               key={`${comment.id}-${comment.created_at}`}
               className="bg-card text-foreground border border-border"
             >
-              <CardContent className="p-3 sm:p-4 flex items-start gap-2 sm:gap-3 min-w-0">
-                <div className="flex flex-row items-start gap-2 flex-1 min-w-0">
-                  <Avatar className="h-8 w-8 flex-shrink-0">
+              <CardContent className="p-4 flex items-start gap-3">
+                <div className="flex flex-row items-center gap-2">
+                  <Avatar className="h-8 w-8">
                     <AvatarImage
                       src={
                         comment?.user?.profile_url || "/placeholder-user.jpg"
@@ -352,35 +345,35 @@ export function TaskComment({
                       {comment?.user?.last_name[0]}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="grid gap-1 min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 min-w-0">
-                      <div className="font-semibold truncate min-w-0">
+                  <div className="grid gap-1 flex-1">
+                    <div className="flex items-center gap-2">
+                      <div className="font-semibold">
                         {comment?.user?.first_name} {comment?.user?.last_name}
                       </div>
-                      <div className="text-xs text-muted-foreground flex-shrink-0">
+                      <div className="text-xs text-muted-foreground">
                         {comment?.created_at
                           ? formatRelativeTime(comment?.created_at)
                           : ""}
                       </div>
                     </div>
                     {comment.type === "history" ? (
-                      <div className="text-sm space-y-3 min-w-0">
+                      <div className="text-sm space-y-3">
                         {Array.isArray(comment.task_history)
                           ? comment.task_history.map((item: any, i: number) => (
                               <div
                                 key={i}
-                                className="border-l-2 border-muted pl-3 min-w-0"
+                                className="border-l-2 border-muted pl-3"
                               >
-                                <div className="font-semibold text-foreground [overflow-wrap:anywhere]">
+                                <div className="font-semibold text-foreground">
                                   {item.key}:
                                 </div>
 
-                                <div className="text-muted-foreground flex flex-wrap items-center gap-2 mt-0.5 min-w-0">
-                                  <span className="line-through opacity-70 [overflow-wrap:anywhere]">
+                                <div className="text-muted-foreground flex items-center gap-2 mt-0.5">
+                                  <span className="line-through opacity-70">
                                     {item.old === " " ? "N/A" : item.old}
                                   </span>
-                                  <span className="flex-shrink-0">→</span>
-                                  <span className="text-foreground [overflow-wrap:anywhere]">
+                                  <span>→</span>
+                                  <span className="s text-foreground">
                                     {item.new}
                                   </span>
                                 </div>
@@ -390,7 +383,7 @@ export function TaskComment({
                       </div>
                     ) : (
                       <div
-                        className="text-sm rich-editor min-w-0 [overflow-wrap:anywhere]"
+                        className="text-sm rich-editor"
                         onClick={
                           lightboxOpen ? undefined : handleCommentImageClick
                         }

@@ -17,9 +17,6 @@ interface Props {
   disabled?: boolean
   placeholder?: string
   onChange: (val: string) => void
-  onQueryChange?: (query: string) => void
-  loading?: boolean
-  handleOnBlur: () => void
 }
 
 export default function UserSelector({
@@ -32,10 +29,7 @@ export default function UserSelector({
   setActiveField,
   disabled,
   placeholder = "Select Option",
-  onChange,
-  onQueryChange,
-  loading,
-  handleOnBlur
+  onChange
 }: Props) {
   const isActive = activeField === fieldKey
 
@@ -54,9 +48,6 @@ export default function UserSelector({
             setActiveField(null)
           }}
           placeholder={placeholder}
-          onQueryChange={onQueryChange}
-          loading={loading}
-          handleOnBlur={handleOnBlur}
         />
       ) : (
         <div

@@ -1,3 +1,3 @@
 .subtask-row {
-  @apply flex items-center justify-between rounded-md p-2 text-sm border bg-muted/30 hover:bg-muted/70 transition delay-150 duration-300 w-full min-w-0 gap-2 overflow-hidden;
+  @apply flex items-center justify-between rounded-md p-2 text-sm border bg-muted/30 hover:bg-muted/70 transition delay-150 duration-300;
 }

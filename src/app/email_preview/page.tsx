@@ -44,16 +44,6 @@ const emailTemplates = [
     value: "chat_invite",
     label: "Chat Invite Email",
     file: "chat_invite.html"
-  },
-  {
-    value: "feedback_submitted",
-    label: "Feedback Submitted (User)",
-    file: "feedback_submitted.html"
-  },
-  {
-    value: "new_feedback_admin",
-    label: "New Feedback (Admin)",
-    file: "new_feedback_admin.html"
   }
 ]
 

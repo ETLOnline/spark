@@ -50,15 +50,14 @@ export const CreateTaskCommentAction = CreateServerAction(
         )
         await addProjectRecentActivity("task_commented", task)
       }
-      const taskUrl = createAbsoluteUrl(
-        `/project/${task?.project_id}/task/${task_id}`
-      )
+      const taskUrl = createAbsoluteUrl(`/project/${task?.project_id}/task/${task_id}`)
       if (newComment) {
-        await AddRewardAction(ActivityTypes.TaskComment, user_id, taskUrl, {
-          task_id,
-          comment_id: newComment.id,
-          project_id: task?.project_id
-        })
+        await AddRewardAction(
+          ActivityTypes.TaskComment,
+          user_id,
+          taskUrl,
+          { task_id, comment_id: newComment.id }
+        )
 
         return { success: true, data: newComment }
       } else {

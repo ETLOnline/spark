@@ -69,10 +69,9 @@ const CreateShortcut = ({
               variant={"outline"}
               loading={loadingShortcuts}
               onClick={handleCreateShortcut}
-              className="w-full min-w-0 text-xs"
             >
-              <Layers2 className="shrink-0" />{" "}
-              <span className="truncate">Create Shortcut</span>
+              {" "}
+              <Layers2 /> Create Shortcut
             </Button>
           ) : (
             <DropdownMenuItem onClick={handleCreateShortcut}>
@@ -87,10 +86,9 @@ const CreateShortcut = ({
               variant={"outline"}
               loading={loadingShortcuts}
               onClick={handleDeleteShortcut}
-              className="w-full min-w-0 text-xs"
             >
-              <Layers2 className="shrink-0" />{" "}
-              <span className="truncate">Delete Shortcut</span>
+              {" "}
+              <Layers2 /> Delete Shortcut
             </Button>
           ) : (
             <DropdownMenuItem

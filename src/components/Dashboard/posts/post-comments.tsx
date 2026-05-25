@@ -33,7 +33,7 @@ const PostComments: React.FC<Props> = ({ comment, onEdit }) => {
     <div className="rounded-2xl bg-card border border-border/50 p-2 flex flex-col w-full gap-3 transition-colors hover:bg-accent/30">
       <div className="flex items-start gap-3 justify-between">
         <div className="flex items-center gap-3">
-          <Avatar className="h-9 w-9 ring-2 ring-border/50 shrink-0">
+          <Avatar className="h-9 w-9 ring-2 ring-border/50">
             <AvatarImage
               src={
                 (comment.commentor.profile_url as string) || "/placeholder.svg"
@@ -45,9 +45,9 @@ const PostComments: React.FC<Props> = ({ comment, onEdit }) => {
             </AvatarFallback>
           </Avatar>
 
-          <div className="min-w-0">
-            <div className="flex flex-row gap-2 items-center min-w-0">
-              <p className="font-semibold text-sm leading-tight text-foreground truncate">
+          <div>
+            <div className="flex flex-row gap-2 items-center">
+              <p className="font-semibold text-sm leading-tight text-foreground">
                 {name}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">

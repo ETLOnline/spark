@@ -321,24 +321,3 @@ export const formatActivityName = (text: string) => {
 
   return text.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
 }
-
-export function normalizeUrl(val: string): string {
-  if (!val || val.trim() === "") return val
-  const trimmed = val.trim()
-  if (/^https?:\/\//i.test(trimmed)) return trimmed
-  return `https://${trimmed}`
-}
-
-export function isValidUrl(val: string): boolean {
-  if (!val || val.trim() === "") return true
-  const pattern = new RegExp(
-    "^(https?:\\/\\/)?" + // protocol (optional)
-      "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name
-      "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR IPv4
-      "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
-      "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
-      "(\\#[-a-z\\d_]*)?$", // fragment
-    "i"
-  )
-  return pattern.test(val.trim())
-}

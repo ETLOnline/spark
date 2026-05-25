@@ -21,13 +21,11 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import moment from "moment"
 import { UnsavedChangesDialog } from "../../common/unsavedChangesDialog"
 import { useConfirmClose } from "@/src/hooks/useConfirmClose"
-import { Plus } from "lucide-react"
 
 interface Props {
   user: SelectUser
   profile: SelectProfile
   setprofile: Dispatch<SetStateAction<SelectProfile | null | undefined>>
-  hasData?: boolean
 }
 
 const userQualificationSchema = z
@@ -94,12 +92,7 @@ const userQualificationSchema = z
     }
   )
 
-function EditEducationModal({
-  user,
-  profile,
-  setprofile,
-  hasData = false
-}: Props) {
+function EditEducationModal({ user, profile, setprofile }: Props) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   const [submitDataLoading, , , submitUserProfileData] = useServerAction(
@@ -194,8 +187,8 @@ function EditEducationModal({
     <>
       <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
         <DialogTrigger asChild>
-          <Button variant={hasData ? "edit" : "outline"} size={"sm"}>
-            {hasData ? "Edit" : <Plus className="h-4 w-4" />}
+          <Button variant="edit" size={"sm"}>
+            Edit
           </Button>
         </DialogTrigger>
         <DialogContent

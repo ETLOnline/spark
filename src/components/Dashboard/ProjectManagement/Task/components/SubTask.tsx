@@ -102,54 +102,46 @@ function SubTask({
   }
   return (
     <div key={subtask.id} className="subtask-row">
-      {/* Left: type icon + task number + truncated title */}
-      <div className="flex items-center gap-2 min-w-0 flex-1">
+      <div className="flex items-center gap-4">
         <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger className="flex-shrink-0">
+            <TooltipTrigger className="">
               <IssueTypeIcon type={subtask.task_type} />
             </TooltipTrigger>
             <TooltipContent>{ToUpperCase(subtask.task_type)}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <Link href={href} className="flex items-center gap-1 sm:gap-2 min-w-0">
-          <span className="flex-shrink-0 hover:underline hover:text-blue-600">
+        <Link href={href} className="flex gap-4">
+          <span className="hover:underline hover:text-blue-600">
             {subtask.task_num}
           </span>
-          <span className="truncate hover:underline hover:text-blue-600">
+          <span className="hover:underline hover:text-blue-600">
             {subtask.task_title}
           </span>
         </Link>
       </div>
+      <div className="flex flex-row items-center gap-4">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger>
+              <PriorityIcon priority={subtask.task_priority} />
+            </TooltipTrigger>
+            <TooltipContent>
+              {ToUpperCase(subtask.task_priority)}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
-      {/* Right: priority + points (hidden on mobile) + status badge + menu */}
-      <div className="flex flex-row items-center gap-1 sm:gap-2 flex-shrink-0 ml-2">
-        <div className="hidden sm:block">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <PriorityIcon priority={subtask.task_priority} />
-              </TooltipTrigger>
-              <TooltipContent>
-                {ToUpperCase(subtask.task_priority)}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-
-        <span className="hidden sm:inline px-2 bg-muted/30 rounded-sm">
+        <span className="px-2 bg-muted/30 rounded-sm">
+          {" "}
           {subtask.story_points && subtask.story_points !== "0"
             ? subtask.story_points
             : "-"}
         </span>
 
-        <Badge
-          variant={"outline"}
-          className="flex-shrink-0 text-xs px-1 sm:px-2"
-        >
+        <Badge variant={"outline"}>
           {statuses?.find((s) => s.id === subtask.status_id)?.name}
         </Badge>
-
         {isAllowedAction ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
