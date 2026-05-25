@@ -331,11 +331,7 @@ export const formatRelativeTime = (
 
 export const getUserRole = (user: SelectUser, entity_id?: string) => {
   if (user.roles && user.roles.length > 0) {
-    if (user.roles.some((ur) => ur.role?.role_type === "SYSTEM")) {
-      return user.roles.flatMap((ur) =>
-        ur.role && ur.role?.role_type === "SYSTEM" ? ur.role?.name : ""
-      )
-    } else if (entity_id) {
+    if (entity_id) {
       return user.roles.flatMap((ur) =>
         ur.role &&
         ur.role.entity_id === entity_id &&
@@ -345,7 +341,10 @@ export const getUserRole = (user: SelectUser, entity_id?: string) => {
       )
     } else {
       return user.roles.flatMap((ur) =>
-        ur.role && ur.role.role_type === "GLOBAL" ? ur.role.name : ""
+        ur.role &&
+        (ur.role.role_type === "GLOBAL" || ur.role.role_type === "SYSTEM")
+          ? ur.role.name
+          : ""
       )
     }
   }

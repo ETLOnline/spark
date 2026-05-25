@@ -260,4 +260,3 @@ export const TaskHistory = (oldTask: SelectTask, newTask: SelectTask) => {
 
   return changes
 }
-export const TASK_RICH_TEXT_CHAR_LIMIT = 3000

@@ -1914,31 +1914,6 @@ export type InsertSuccessfulReferral =
 export type SelectSuccessfulReferral =
   typeof successfullReferralsTable.$inferSelect
 
-export const feedbackTable = pgTable("feedbacks", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  name: varchar().notNull(),
-  email: varchar().notNull(),
-  subject: varchar().notNull(),
-  description: varchar().notNull(),
-  file_url: varchar(),
-  ...timestamps
-})
-
-export type InsertFeedback = typeof feedbackTable.$inferInsert
-export type SelectFeedback = typeof feedbackTable.$inferSelect
-
-export const contactUsTable = pgTable("contact_us", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  name: varchar().notNull(),
-  email: varchar().notNull(),
-  subject: varchar().notNull(),
-  description: varchar().notNull(),
-  ...timestamps
-})
-
-export type InsertContactUs = typeof contactUsTable.$inferInsert
-export type SelectContactUs = typeof contactUsTable.$inferSelect
-
 export const leaderboardSnapshotsTable = pgTable("leaderboard_snapshots", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   community_id: varchar("community_id", { length: 36 })

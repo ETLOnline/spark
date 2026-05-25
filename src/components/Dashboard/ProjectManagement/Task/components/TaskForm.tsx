@@ -29,8 +29,7 @@ import {
   projectDefaultStatuses,
   projectTaskPriority,
   projectTaskTypes,
-  TaskType,
-  TASK_RICH_TEXT_CHAR_LIMIT
+  TaskType
 } from "../../constants/projectManagment"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import "@/src/components/common/Tiptap/RichEditorFormat.css"
@@ -61,12 +60,10 @@ import {
   CommandInput,
   CommandItem
 } from "@/src/components/ui/command"
-import { getChildTypes, getParentTypes } from "../../utils/helper"
+import { getChildTypes, getParentTypes } from "../utils/helper"
 import { GetLinkedTasksAction } from "@/src/server-actions/Tasks/Task"
 import Loader from "@/src/components/common/Loader/Loader"
 import UserSelector from "./UserSelector"
-import { useServerAction } from "@/src/hooks/useServerAction"
-import { useDebouncedCallback } from "use-debounce"
 interface Props {
   onSubmit: (task: any) => void
   statuses?: InsertTaskStatus[]
@@ -128,11 +125,7 @@ export default function TaskForm({
   onVerificationStatusChange
 }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null)
-
-  const [defaultUsers, setDefaultUsers] = useState<(SelectUser | null)[]>([])
-  const [searchedUsers, setSearchedUsers] = useState<(SelectUser | null)[]>([])
-  const [userSearch, setUserSearch] = useState("")
-  const usersList = userSearch ? searchedUsers : defaultUsers
+  const [usersList, setUsersList] = useState<(SelectUser | null)[]>([])
   const [assignee, setAssignee] = useState<SelectUser | null>(null)
   const [assignor, setAssignor] = useState<SelectUser | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
@@ -151,9 +144,6 @@ export default function TaskForm({
   })
   const errors = form.formState.errors
   const toDoStatus = statuses?.find((s) => s.name === "To Do")
-  const [getUserLoading, , , GetProjectUsers] = useServerAction(
-    GetProjectUsersAction
-  )
 
   const params = useParams<{ id: string }>()
   const projectId = params?.id
@@ -173,42 +163,16 @@ export default function TaskForm({
   }, [form.formState.isDirty])
 
   useEffect(() => {
-    if (!projectId || !isTaskModelOpen) return
+    const fetchProjectUsers = async () => {
+      const projectUsersResult = await GetProjectUsersAction(projectId)
 
-    const res = async () => {
-      try {
-        const res = await GetProjectUsers(projectId, 10, "")
-        if (res?.success && res?.data) {
-          setDefaultUsers(res.data.map((u) => u.user) ?? [])
-        }
-      } catch (error) {
-        console.error("Error fetching project users:", error)
+      if (projectUsersResult.success && projectUsersResult.data) {
+        setUsersList(projectUsersResult.data.map((u) => u.user) ?? [])
       }
     }
 
-    res()
-  }, [projectId, isTaskModelOpen, selectedTask?.id])
-
-  const fetchSearchedUsers = useDebouncedCallback(async (search: string) => {
-    if (!projectId || !search) return
-    try {
-      const res = await GetProjectUsers(projectId, 10, search)
-      if (res?.success && res?.data) {
-        setSearchedUsers(res.data.map((u) => u.user) ?? [])
-      }
-    } catch (error) {
-      console.error("Error fetching searched users:", error)
-    }
-  }, 250)
-
-  useEffect(() => {
-    if (!userSearch) {
-      fetchSearchedUsers.cancel()
-      setSearchedUsers([])
-      return
-    }
-    fetchSearchedUsers(userSearch)
-  }, [userSearch])
+    fetchProjectUsers()
+  }, [])
 
   useEffect(() => {
     if (!isTaskModelOpen) {
@@ -280,14 +244,14 @@ export default function TaskForm({
     const LoadUsersFromTask = async () => {
       const taskAssignee = selectedTask?.assignee
         ? selectedTask?.assignee
-        : defaultUsers.find((u) => u?.unique_id === selectedTask?.assign_to)
+        : usersList.find((u) => u?.unique_id === selectedTask?.assign_to)
       const taskAssignor = selectedTask?.assignor
         ? selectedTask?.assignor
-        : defaultUsers.find((u) => u?.unique_id === selectedTask?.assign_by)
+        : usersList.find((u) => u?.unique_id === selectedTask?.assign_by)
 
       const testedBy = selectedTask?.testedBy
         ? selectedTask?.testedBy
-        : defaultUsers.find((u) => u?.unique_id === selectedTask?.tested_by)
+        : usersList.find((u) => u?.unique_id === selectedTask?.tested_by)
 
       if (taskAssignee) {
         setAssignee(taskAssignee)
@@ -302,7 +266,7 @@ export default function TaskForm({
         form.setValue("assign_by", taskAssignor.unique_id)
       } else {
         // If no assignor, default to current user
-        const currentUser = defaultUsers.find(
+        const currentUser = usersList.find(
           (u) => u?.unique_id === authUser?.unique_id
         )
         if (currentUser) {
@@ -318,7 +282,7 @@ export default function TaskForm({
     }
 
     LoadUsersFromTask()
-  }, [selectedTask, defaultUsers])
+  }, [selectedTask, usersList])
 
   function IssueTypeIcon({ type }: { type: string }) {
     const typeMap = projectTaskTypes.find((t) => t.key === type)
@@ -427,40 +391,36 @@ export default function TaskForm({
     }
   }, [selectedTask?.id])
 
-  const findUser = (val: string) =>
-    defaultUsers.find((u) => u?.unique_id === val) ||
-    searchedUsers.find((u) => u?.unique_id === val) ||
-    null
-
   const handleAssigneeChange = (val: string, field: any) => {
     field.onChange(val)
-    setAssignee(findUser(val))
+
+    const user = usersList.find((u) => u?.unique_id === val)
+    setAssignee(user || null)
+
     setActiveField(null)
   }
 
   const handleAssignorChange = (val: string, field: any) => {
     field.onChange(val)
-    setAssignor(findUser(val))
+    const user = usersList.find((u) => u?.unique_id === val)
+    setAssignor(user || null)
     setActiveField(null)
   }
 
   const handleTesterChange = (val: string, field: any) => {
     field.onChange(val)
-    setTester(findUser(val))
+    const user = usersList.find((u) => u?.unique_id === val)
+    setTester(user || null)
     setActiveField(null)
   }
 
   const isEditable = isAllowedAction && !isSprintCompleted
 
-  const handleOnBlur = () => {
-    setUserSearch("")
-  }
-
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 min-w-0 w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
         {/* Main content area (left side) */}
-        <ScrollArea className="h-auto lg:h-[80vh] col-span-1 lg:col-span-9 w-full min-w-0">
+        <ScrollArea className="h-auto lg:h-[80vh] col-span-1 lg:col-span-9 w-full">
           <div className="px-2 sm:px-4">
             <div className="space-y-6">
               {/* Task title */}
@@ -486,7 +446,7 @@ export default function TaskForm({
                         />
                       ) : (
                         <div
-                          className="border-b border-dashed border-gray-300 py-2 text-lg sm:text-xl cursor-pointer w-full min-w-0 hover:bg-secondary transition delay-150 duration-300 p-2 [overflow-wrap:anywhere]"
+                          className="border-b border-dashed border-gray-300 py-2 text-lg sm:text-xl cursor-pointer w-full hover:bg-secondary transition delay-150 duration-300 p-2 break-words"
                           onClick={() => setActiveField("title")}
                         >
                           <div>
@@ -498,7 +458,9 @@ export default function TaskForm({
                             )}
                           </div>
 
-                          <span className="[overflow-wrap:anywhere]">
+                          <span
+                            className={`${isContainSpace ? "break-words" : "break-all"}`}
+                          >
                             {field.value
                               ? field.value
                               : " Click to add title..."}
@@ -528,7 +490,7 @@ export default function TaskForm({
                         image_uploading={true}
                         entity="tasks"
                         editable={isEditable}
-                        limit={TASK_RICH_TEXT_CHAR_LIMIT}
+                        limit={2000}
                       />
                     ) : (
                       <div
@@ -631,8 +593,7 @@ export default function TaskForm({
                     isSprintCompleted={isSprintCompleted}
                     refetchComments={refetchComments}
                     setRefetchComments={setRefetchComments}
-                    projectUsers={defaultUsers.filter((user) => user !== null)}
-                    isOpen={isTaskModelOpen}
+                    projectUsers={usersList.filter((user) => user !== null)}
                   />
                 </div>
               )}
@@ -647,13 +608,13 @@ export default function TaskForm({
           onKeyDown={(e) => {
             if (e.key === "Enter") e.preventDefault()
           }}
-          className="col-span-1 lg:col-span-3 w-full min-w-0"
+          className="col-span-1 lg:col-span-3 w-full"
         >
-          <ScrollArea className="h-auto lg:h-[80vh] w-full">
-            <div className="w-full">
+          <ScrollArea className="h-[80vh] max-h-[60vh] lg:max-h-none w-full">
+            <div className="w-full lg:w-56">
               <Card>
                 <CardContent className="pt-6">
-                  <div className="hidden lg:flex items-center justify-end gap-4 mb-2">
+                  <div className="flex items-center justify-end gap-4 mb-2">
                     {isEditable && (
                       <Button
                         loading={loading}
@@ -742,9 +703,6 @@ export default function TaskForm({
                           disabled={!isEditable}
                           placeholder="Unassigned"
                           onChange={(val) => handleAssigneeChange(val, field)}
-                          onQueryChange={setUserSearch}
-                          loading={getUserLoading}
-                          handleOnBlur={handleOnBlur}
                         />
                       )}
                     />
@@ -766,9 +724,6 @@ export default function TaskForm({
                           setActiveField={setActiveField}
                           disabled={!isEditable}
                           onChange={(val) => handleAssignorChange(val, field)}
-                          onQueryChange={setUserSearch}
-                          loading={getUserLoading}
-                          handleOnBlur={handleOnBlur}
                         />
                       )}
                     />
@@ -788,9 +743,6 @@ export default function TaskForm({
                           disabled={!isEditable}
                           placeholder="Select Tester"
                           onChange={(val) => handleTesterChange(val, field)}
-                          onQueryChange={setUserSearch}
-                          loading={getUserLoading}
-                          handleOnBlur={handleOnBlur}
                         />
                       )}
                     />

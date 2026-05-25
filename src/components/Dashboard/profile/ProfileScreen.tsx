@@ -55,10 +55,7 @@ import { SocialLinkItem } from "./user/SocialLinkItem"
 import UserProfileCard from "./UserProfileCard"
 import TrustEngineCard from "./trust-engine/TrustEngineCard"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
-import {
-  GetUserApprovedVerificationCountAction,
-  GetUserReviewedVerificationCountAction
-} from "@/src/server-actions/Reward/Reward"
+import { GetUserApprovedVerificationCountAction } from "@/src/server-actions/Reward/Reward"
 import { Input } from "../../ui/input"
 import { Skeleton } from "../../ui/skeleton"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
@@ -110,11 +107,6 @@ export default function ProfileScreen({
     useServerAction(getFeatureFlagAction)
 
   const [verifiedTaskCount, setVerifiedTaskCount] = useState<number>(0)
-  const [reviewedTaskCount, setReviewedTaskCount] = useState<number>(0)
-
-  const [, , , GetReviewedTaskCount] = useServerAction(
-    GetUserReviewedVerificationCountAction
-  )
   const [, , , GetVerifiedTaskCount] = useServerAction(
     GetUserApprovedVerificationCountAction
   )
@@ -217,11 +209,6 @@ export default function ProfileScreen({
       if (res?.success && res.data !== undefined) {
         setVerifiedTaskCount(res.data)
       }
-
-      const reviewRes = await GetReviewedTaskCount(user.unique_id)
-      if (reviewRes?.success && reviewRes.data !== undefined) {
-        setReviewedTaskCount(reviewRes.data)
-      }
     }
     fetchVerifiedCount()
   }, [user.unique_id])
@@ -299,9 +286,7 @@ export default function ProfileScreen({
             />
             {/* Trust Engine Section  */}
 
-            {isFeatureEnable && (
-              <TrustEngineCard user={user} isMyProfile={isMyProfile} />
-            )}
+            {isFeatureEnable && <TrustEngineCard user={user} />}
 
             <ProfileBio
               userBio={user?.profile?.bio as string}
@@ -406,14 +391,12 @@ export default function ProfileScreen({
                       {verifiedTaskCount}
                     </div>
                   </div>
-                  <div className="border-t">
+                  {/* <div className="border-t">
                     <div className="text-sm text-muted-foreground pt-3">
-                      Task review verification
+                      Your Percentile Rank
                     </div>
-                    <div className="text-lg font-bold text-primary">
-                      {reviewedTaskCount}
-                    </div>
-                  </div>
+                    <div className="text-lg font-bold text-primary">0%</div>
+                  </div> */}
                 </div>
               </Card>
             )}
@@ -468,7 +451,6 @@ export default function ProfileScreen({
                       user={user}
                       profile={profile as SelectProfile}
                       setprofile={setProfile}
-                      hasData={!!(profile?.institute || profile?.degree)}
                     />
                   )}
                 </CardTitle>
@@ -494,7 +476,7 @@ export default function ProfileScreen({
                 </div>
               </CardContent>
             </Card>
-            {/* Social Links */}
+            {/* Socail Links */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
@@ -504,15 +486,6 @@ export default function ProfileScreen({
                       user={user}
                       profile={profile as SelectProfile}
                       setprofile={setProfile}
-                      hasData={
-                        !!(
-                          profile?.github_url ||
-                          profile?.linkedin_url ||
-                          profile?.instagram_url ||
-                          profile?.twitter_url ||
-                          profile?.personal_website_url
-                        )
-                      }
                     />
                   )}
                 </CardTitle>
@@ -578,14 +551,10 @@ export default function ProfileScreen({
                     {isMyProfile && (
                       <Button
                         size={"sm"}
-                        variant={certificates?.length ? "edit" : "outline"}
+                        variant={"outline"}
                         onClick={() => setIsQualificationModalOpen(true)}
                       >
-                        {certificates?.length ? (
-                          "Edit"
-                        ) : (
-                          <Plus className="h-4 w-4" />
-                        )}
+                        <Plus className="h-4 w-4" />
                       </Button>
                     )}
                     <CertificateModal

@@ -6,14 +6,6 @@ import {
   processUserCommunityRequestRejectedNotification
 } from "./processors/community"
 import { processContactNotification } from "./processors/contact"
-import {
-  processFeedbackSubmittedNotification,
-  processNewFeedbackAdminNotification
-} from "./processors/feedback"
-import {
-  processContactUsSubmittedNotification,
-  processNewContactUsAdminNotification
-} from "./processors/contact-us"
 import { processJoinInviteEmailNotification } from "./processors/join_invite"
 import { processProjectInviteNotification } from "./processors/project"
 import { processTaskUpdateNotification } from "./processors/task"
@@ -36,9 +28,5 @@ export const eventsList: Record<string, EventProcessor> = {
   join_invite_email: processJoinInviteEmailNotification,
   admin_new_community_request: processAdminNewCommunityRequestNotification,
   community_request_accepted: processUserCommunityRequestAcceptedNotification,
-  community_request_rejected: processUserCommunityRequestRejectedNotification,
-  feedback_submitted: processFeedbackSubmittedNotification,
-  new_feedback_admin: processNewFeedbackAdminNotification,
-  contact_us_submitted: processContactUsSubmittedNotification,
-  new_contact_us_admin: processNewContactUsAdminNotification
+  community_request_rejected: processUserCommunityRequestRejectedNotification
 }

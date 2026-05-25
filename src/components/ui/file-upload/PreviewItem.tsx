@@ -53,7 +53,7 @@ const PreviewItem: React.FC<Props> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       className={cn(
-        "relative overflow-hidden bg-white dark:bg-neutral-900 flex items-center justify-between gap-2 sm:gap-4 p-3 sm:p-4 mt-4 w-full max-w-full mx-auto rounded-md",
+        "relative overflow-hidden bg-white dark:bg-neutral-900 flex items-center justify-between gap-4 p-4 mt-4 w-full mx-auto rounded-md",
         "shadow-sm hover:shadow-md transition-shadow"
       )}
     >
@@ -85,12 +85,12 @@ const PreviewItem: React.FC<Props> = ({
           >
             {file.name}
           </motion.p>
-          <div className="flex gap-1 flex-wrap w-full overflow-hidden">
+          <div className="flex gap-2 flex-wrap">
             <motion.span
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               layout
-              className="px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-neutral-800 text-xs text-neutral-600 dark:text-neutral-400 truncate max-w-[8rem]"
+              className="px-2 py-1 rounded-md bg-gray-100 dark:bg-neutral-800 text-xs text-neutral-600 dark:text-neutral-400"
             >
               {file.type}
             </motion.span>
@@ -98,7 +98,7 @@ const PreviewItem: React.FC<Props> = ({
         </div>
       </motion.div>
       {/* file date and size */}
-      <motion.div className="flex flex-col items-end gap-2 shrink-0">
+      <motion.div className="flex flex-col items-end gap-2">
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

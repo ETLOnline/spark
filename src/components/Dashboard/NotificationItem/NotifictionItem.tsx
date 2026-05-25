@@ -13,7 +13,6 @@ type NotificationItemProps = {
   activity: SelectNotification
   children?: React.ReactNode
   size?: "sm" | "lg"
-  onClose?: () => void
 }
 
 const formatTime = (timestamp: string | Date | null | undefined) => {
@@ -26,8 +25,7 @@ const formatTime = (timestamp: string | Date | null | undefined) => {
 const NotificationItem: React.FC<NotificationItemProps> = ({
   activity,
   children,
-  size = "lg",
-  onClose
+  size = "lg"
 }) => {
   const [, , , markAsRead] = useServerAction(MarkNotificationAsReadAction)
   const setNotifications = useSetAtom(notificationStore.notifications)
@@ -64,10 +62,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
         {/* Text column (takes rest of the space) */}
         <Link
           href={activity.deep_link || "#"}
-          onClick={() => {
-            markNotificationAsRead()
-            onClose?.()
-          }}
+          onClick={markNotificationAsRead}
           className="min-w-0"
         >
           <p className="text-xs text-muted-foreground">

@@ -38,12 +38,12 @@ export function TransactionLedger({
   const data = Array.isArray(TransactionsData) ? TransactionsData : []
 
   return (
-    <Card className="flex w-full flex-col overflow-hidden p-2 sm:p-6">
-      <h3 className="font-semibold text-foreground mb-4 shrink-0">
+    <Card className="p-6">
+      <h3 className="font-semibold text-foreground mb-4">
         Transaction History
       </h3>
 
-      <div className="overflow-y-auto   space-y-2 sm:space-y-3 pr-1">
+      <div className="space-y-3">
         {data.map((transaction) => (
           <TransactionRow
             key={transaction.transection_id}
@@ -58,14 +58,9 @@ export function TransactionLedger({
       </div>
 
       {totalPages > 1 && (
-        <div className="overflow-x-auto border-t pt-4 mt-3 shrink-0">
+        <div className="mt-6 pt-4 border-t">
           <PaginationComponent
-            pagination={{
-              page: currentPage,
-              totalPages,
-              total: 0,
-              limit: 10
-            }}
+            pagination={{ page: currentPage, totalPages, total: 0, limit: 10 }}
             onPageChange={onPageChange}
           />
         </div>
@@ -78,27 +73,25 @@ function TransactionRow({ transaction }: { transaction: TransactionProps }) {
   const proofUrl = transaction.metadata?.proof_url ?? null
   const isVerifiedTask = transaction.trust_verification_id != null && !!proofUrl
   return (
-    <div className="flex min-w-0 items-start gap-2 rounded-lg bg-muted/30 p-3 transition-colors hover:bg-muted/50 sm:gap-4 sm:p-4">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border p-2 sm:h-10 sm:w-10">
+    <div className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+      <div className="p-2 rounded-lg flex items-center justify-center w-10 h-10 border">
         <ArrowUpRight className="w-4 h-4" />
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="mb-1 flex flex-wrap items-center gap-2">
-          <h4 className="break-words text-sm font-medium text-foreground">
+        <div className="flex items-center gap-2 mb-1">
+          <h4 className="text-sm font-medium text-foreground">
             {transaction.rule?.action_display_name ?? "Reward"}
           </h4>
-          <Badge variant="outline" className="text-xs max-w-full">
+          <Badge variant="outline" className="text-xs">
             {formatActivityName(transaction.rule?.category_group ?? "General")}
           </Badge>
         </div>
-        <p className="mb-2 break-words text-xs text-muted-foreground">
+        <p className="text-xs text-muted-foreground mb-2">
           {transaction.rule?.description}
         </p>
-        <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-          <p className="text-xs text-muted-foreground">
-            {new Date(transaction.created_at).toLocaleDateString()}
-          </p>
+        <p className="text-xs text-muted-foreground">
+          {new Date(transaction.created_at).toLocaleDateString()}
           {isVerifiedTask && (
             <LinkAsButton
               href={proofUrl!}
@@ -106,24 +99,24 @@ function TransactionRow({ transaction }: { transaction: TransactionProps }) {
               rel="noopener noreferrer"
               variant="link"
               size="sm"
-              className="h-auto px-0 text-xs sm:px-2"
+              className="h-auto px-2 mt-2"
             >
               View task
-              <ExternalLink className="h-3 w-3" />
+              <ExternalLink className="w-3 h-3" />
             </LinkAsButton>
           )}
-        </div>
+        </p>
       </div>
 
-      <div className="flex shrink-0 flex-col items-end gap-1">
+      <div className="flex flex-col items-end gap-1">
         {transaction.reward_id === 1 && (
-          <div className="flex items-center gap-1 text-sm font-medium text-primary sm:text-base">
-            <ArrowUpRight className="h-4 w-4" />+{transaction.amount} RP
+          <div className="flex items-center gap-1 text-sm font-medium text-primary">
+            <ArrowUpRight className="w-4 h-4" />+{transaction.amount} RP
           </div>
         )}
         {transaction.reward_id === 2 && (
-          <div className="flex items-center gap-1 text-sm font-medium text-purple-600 sm:text-base">
-            <ArrowUpRight className="h-4 w-4" />+{transaction.amount} SC
+          <div className="flex items-center gap-1 text-sm font-medium text-purple-600">
+            <ArrowUpRight className="w-4 h-4" />+{transaction.amount} SC
           </div>
         )}
       </div>

@@ -25,23 +25,13 @@ import { Label } from "@/src/components/ui/label"
 import { Input } from "@/src/components/ui/input"
 import { socialPlatforms } from "@/src/components/ProfileCompletion/constants"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
-import { Plus } from "lucide-react"
-import { isValidUrl, normalizeUrl } from "@/src/utils/clientHelper"
-
-const urlField = z
-  .string()
-  .refine((val) => !val || isValidUrl(val), {
-    message: "Please enter a valid URL"
-  })
-  .optional()
-  .or(z.literal(""))
 
 const socialLinksSchema = z.object({
-  personal_website_url: urlField,
-  github_url: urlField,
-  linkedin_url: urlField,
-  twitter_url: urlField,
-  instagram_url: urlField
+  personal_website_url: z.string().url().optional().or(z.literal("")),
+  github_url: z.string().url().optional().or(z.literal("")),
+  linkedin_url: z.string().url().optional().or(z.literal("")),
+  twitter_url: z.string().url().optional().or(z.literal("")),
+  instagram_url: z.string().url().optional().or(z.literal(""))
 })
 
 const platformToFieldMap: Record<
@@ -59,14 +49,12 @@ interface Props {
   user: SelectUser
   profile: SelectProfile
   setprofile: Dispatch<SetStateAction<SelectProfile | null | undefined>>
-  hasData?: boolean
 }
 
 export default function EditSocialLinksModal({
   user,
   profile,
-  setprofile,
-  hasData = false
+  setprofile
 }: Props) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
@@ -95,17 +83,10 @@ export default function EditSocialLinksModal({
 
   async function handleSubmit(data: any) {
     try {
-      // Normalize www. URLs so they're stored with https:// prefix
-      const normalized = Object.fromEntries(
-        Object.entries(data).map(([key, val]) => [
-          key,
-          typeof val === "string" ? normalizeUrl(val) : val
-        ])
-      )
-      const res = await submitUserProfile(user.unique_id, normalized)
+      const res = await submitUserProfile(user.unique_id, data)
 
       if (res?.success) {
-        setprofile((prev) => ({ ...prev!, ...normalized }))
+        setprofile((prev) => ({ ...prev!, ...data }))
 
         toast({ title: "Social links updated", duration: 2000 })
         setIsDialogOpen(false)
@@ -134,8 +115,8 @@ export default function EditSocialLinksModal({
         }
       >
         <DialogTrigger asChild>
-          <Button variant={hasData ? "edit" : "outline"} size="sm">
-            {hasData ? "Edit" : <Plus className="h-4 w-4" />}
+          <Button variant="edit" size="sm">
+            Edit
           </Button>
         </DialogTrigger>
 
@@ -171,7 +152,7 @@ export default function EditSocialLinksModal({
                         <Input
                           {...field}
                           placeholder={platform.placeholder}
-                          className="border-gray-600 dark:text-white dark:placeholder-gray-400"
+                          className="border-gray-600 text-white placeholder-gray-400"
                         />
                       )}
                     />

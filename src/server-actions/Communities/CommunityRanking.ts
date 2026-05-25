@@ -13,15 +13,9 @@ import { AuthUserAction } from "../User/AuthUserAction"
 
 export const GetCommunityLeaderboardAction = CreateServerAction(
   true,
-  async (
-    communityId: string,
-    page: number = 1,
-    limit: number = 5,
-    targetUserId?: string
-  ) => {
+  async (communityId: string, page: number = 1, limit: number = 5) => {
     try {
-      const authUser = await AuthUserAction()
-      const highlightUserId = targetUserId ? targetUserId : authUser?.unique_id
+      const user = await AuthUserAction()
       if (!communityId) {
         return { success: false, error: "Community ID is required" }
       }
@@ -47,7 +41,7 @@ export const GetCommunityLeaderboardAction = CreateServerAction(
         rpPoints: entry.points,
         growth: entry.rank_change || 0,
         pointsGained: entry.points_gained || 0,
-        isCurrentUser: highlightUserId === entry.user_id,
+        isCurrentUser: user?.unique_id === entry.user_id,
         trend: (entry.trend || "neutral") as "up" | "down" | "neutral"
       }))
 
@@ -72,11 +66,10 @@ export const GetCommunityLeaderboardAction = CreateServerAction(
 )
 export const GetCurrentUserRankAction = CreateServerAction(
   true,
-  async (communityId: string, targetUserId?: string) => {
+  async (communityId: string) => {
     try {
-      const authUser = await AuthUserAction()
-      const userId = targetUserId ? targetUserId : authUser?.unique_id
-      if (!userId) {
+      const user = await AuthUserAction()
+      if (!user) {
         return { success: false, error: "User not authenticated" }
       }
 
@@ -85,7 +78,7 @@ export const GetCurrentUserRankAction = CreateServerAction(
       }
 
       // Get user's current rank
-      const rankData = await getCurrentUserRank(userId, communityId)
+      const rankData = await getCurrentUserRank(user.unique_id, communityId)
 
       if (!rankData) {
         return {
@@ -116,32 +109,28 @@ export const GetCurrentUserRankAction = CreateServerAction(
   }
 )
 
-export const GetUserCommunitiesAction = CreateServerAction(
-  true,
-  async (targetUserId?: string) => {
-    try {
-      const authUser = await AuthUserAction()
-      const userId = targetUserId ? targetUserId : authUser?.unique_id
-      if (!userId) {
-        return { success: false, error: "User not authenticated" }
-      }
+export const GetUserCommunitiesAction = CreateServerAction(true, async () => {
+  try {
+    const user = await AuthUserAction()
+    if (!user) {
+      return { success: false, error: "User not authenticated" }
+    }
 
-      // Fetch communities the user is part of
-      const communities = await getUserCommunitiesWithRanking(userId)
+    // Fetch communities the user is part of
+    const communities = await getUserCommunitiesWithRanking(user.unique_id)
 
-      return {
-        success: true,
-        data: communities || []
-      }
-    } catch (error) {
-      console.error("Error fetching user communities:", error)
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error"
-      }
+    return {
+      success: true,
+      data: communities || []
+    }
+  } catch (error) {
+    console.error("Error fetching user communities:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error"
     }
   }
-)
+})
 
 export const GetCommunityIdBySlugAction = CreateServerAction(
   false,

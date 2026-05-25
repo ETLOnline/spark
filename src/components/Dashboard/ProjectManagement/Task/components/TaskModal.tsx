@@ -160,7 +160,7 @@ export const TaskModal = ({
     <>
       <Dialog open={isTaskModelOpen} onOpenChange={handleClose}>
         <DialogContent
-          className="w-[95vw] max-w-[95vw] sm:max-w-5xl max-h-[95vh] overflow-y-auto overflow-x-hidden lg:overflow-y-hidden p-2 sm:p-6 gap-2 sm:gap-4 [&>button]:w-5 [&>button]:h-5 sm:[&>button]:w-6 sm:[&>button]:h-6 [&>button>svg]:w-5 [&>button>svg]:h-5 sm:[&>button>svg]:w-6 sm:[&>button>svg]:h-6"
+          className="w-[95vw] max-w-[95vw] sm:max-w-5xl max-h-[95vh]  overflow-y-auto lg:overflow-y-hidden p-3 sm:p-6 [&>button]:w-5 [&>button]:h-5 sm:[&>button]:w-6 sm:[&>button]:h-6 [&>button>svg]:w-5 [&>button>svg]:h-5 sm:[&>button>svg]:w-6 sm:[&>button>svg]:h-6"
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>

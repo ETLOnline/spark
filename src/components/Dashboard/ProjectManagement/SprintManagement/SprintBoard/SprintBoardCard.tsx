@@ -34,7 +34,6 @@ import { createPortal } from "react-dom"
 import { toast } from "@/src/hooks/use-toast"
 import { Skeleton } from "@/src/components/ui/skeleton"
 import { TaskType } from "../../constants/projectManagment"
-import { filterTasks } from "../../utils/helper"
 
 interface Props {
   sprint: SelectSprint
@@ -72,10 +71,23 @@ function SprintBoardCard({
   useEffect(() => {
     if (!sprint.id || !filters) return
 
-    const filtered = filterTasks(tasks, sprint.id, filters)
-    setTasks(filtered)
-  }, [sprint.id, filters])
+    const filtered = tasks.filter((t) => {
+      return (
+        t.sprint_id === sprint.id &&
+        (!filters.priority?.length ||
+          filters.priority.includes(t.task_priority)) &&
+        (!filters.type?.length || filters.type.includes(t.task_type)) &&
+        (!filters.status?.length ||
+          filters.status.includes(t.status_id || "")) &&
+        (!filters.assignee?.length ||
+          filters.assignee.includes(t.assign_to || "")) &&
+        (!filters.creator?.length ||
+          filters.creator.includes(t.created_by || ""))
+      )
+    })
 
+    setTasks(filtered)
+  }, [tasks, sprint.id, filters])
   useEffect(() => {
     const getTask = async () => {
       if (sprint) {
@@ -205,7 +217,7 @@ function SprintBoardCard({
 
   return (
     <div className="px-0 sm:px-2">
-      <Card key={sprint.id} className="mb-6">
+      <Card key={sprint.id} className="mb-6 overflow-hidden">
         <CardHeader className="pb-4">
           <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
             <div className="w-full xl:w-auto">
@@ -236,8 +248,8 @@ function SprintBoardCard({
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="flex overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar">
-              <div className="flex gap-4 px-2 sm:px-0">
+            <div className="flex overflow-x-auto pb-4 snap-x snap-mandatory hide-scrollbar">
+              <div className="flex gap-4 min-w-full px-2 sm:px-0">
                 {projectStatusList.map((status) => (
                   <BoardColumn
                     key={status.id}

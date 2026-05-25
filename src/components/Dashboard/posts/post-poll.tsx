@@ -230,8 +230,7 @@ const PollPost: React.FC<Props> = ({ post, spaceId }) => {
                   {option.option_text}
                   {option.vote_count > 0 && (
                     <span className="ml-2 text-sm text-gray-500">
-                      ({option.vote_count}{" "}
-                      {option.vote_count === 1 ? "vote" : "votes"})
+                      ({option.vote_count} votes)
                     </span>
                   )}
                 </Label>

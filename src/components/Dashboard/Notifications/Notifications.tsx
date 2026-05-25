@@ -108,11 +108,7 @@ const Notifications: React.FC = () => {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent
-        className="w-[min(320px,calc(100vw-1rem))] p-0"
-        align="end"
-        sideOffset={5}
-      >
+      <PopoverContent className="w-80 p-0" align="end" sideOffset={5}>
         <Card>
           <CardHeader className="pb-3 flex flex-row items-center justify-between">
             <CardTitle>Notifications</CardTitle>
@@ -132,7 +128,6 @@ const Notifications: React.FC = () => {
                   key={index}
                   activity={notification}
                   size="sm"
-                  onClose={() => setIsOpen(false)}
                 />
               ))}
           </CardContent>

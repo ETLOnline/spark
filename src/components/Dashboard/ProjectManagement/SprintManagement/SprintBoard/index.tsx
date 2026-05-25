@@ -212,7 +212,8 @@ function SprintBoard() {
   return (
     <div
       ref={scrollRef}
-      className="space-y-4 print:space-y-3 md:overflow-y-auto md:h-full"
+      className="space-y-4 print:space-y-3 overflow-y-auto"
+      style={{ height: "calc(100vh - 100px)" }}
     >
       {getSprintLoading ? (
         <div className="flex items-center justify-center">

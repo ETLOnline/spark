@@ -23,7 +23,6 @@ import { ToUpperCase } from "@/src/utils/helpers"
 import { TaskFiltersType } from "../types/taskFilters.type"
 import TaskFilters from "../TaskFilter/TaskFilters"
 import { TaskType } from "../constants/projectManagment"
-import { filterTasks } from "../utils/helper"
 
 interface Props {
   sprint: SelectSprint
@@ -89,11 +88,28 @@ export default function SprintCardPage({
   ])
 
   useEffect(() => {
-    if (!sprint.id || !tasks?.length) return
+    if (!sprint.id) return
 
-    const filtered = filterTasks(tasks, sprint.id, filters)
+    if (filters && tasks?.length > 0) {
+      const filtered = tasks.filter((t) => {
+        return (
+          t?.sprint_id === sprint.id &&
+          (!filters.priority?.length ||
+            filters.priority.includes(t.task_priority)) &&
+          (!filters.type?.length || filters.type.includes(t.task_type)) &&
+          (!filters.status?.length ||
+            filters.status.includes(t.status_id || "")) &&
+          (!filters.assignee?.length ||
+            filters.assignee.includes(t.assign_to || "")) &&
+          (!filters.creator?.length ||
+            filters.creator.includes(t.created_by || ""))
+        )
+      })
 
-    setFilteredTasks(filtered)
+      setFilteredTasks(filtered)
+    } else if (tasks?.length > 0) {
+      setFilteredTasks(tasks.filter((t) => t?.sprint_id === sprint.id))
+    }
   }, [tasks, sprint.id, filters])
 
   // PERMISSIONS INITATE
