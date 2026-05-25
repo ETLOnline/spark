@@ -23,8 +23,12 @@
 
 .rich-editor p {
   font-size: 16px;
-  word-break: normal;
-  overflow-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.rich-editor p:empty::before {
+  content: "\00a0";
 }
 
 .rich-editor ul {
@@ -57,8 +61,8 @@
 
 .rich-editor li {
   line-height: 1.6;
-  word-break: normal;
-  overflow-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .rich-editor a {
@@ -80,14 +84,14 @@
 .rich-editor img {
   display: inline-block;
   margin: 5px;
-  max-width: auto;
+  max-width: 100%;
   height: auto;
 }
 
 .tiptap-image-wrapper {
   display: inline-block !important;
   width: auto;
-  max-width: 250px;
+  max-width: min(250px, 100%);
   margin: 5px;
   vertical-align: top;
 }
@@ -105,8 +109,8 @@
 
 .rich-editor img:not(.tiptap-image-wrapper img) {
   display: inline-block;
-  max-width: 250px;
-  height: 200px;
+  max-width: min(250px, 100%);
+  height: auto;
   object-fit: cover;
 }
 .tiptap-image-wrapper img:hover {
