@@ -96,6 +96,21 @@ export async function GetUserApprovedVerificationCount(user_id: string) {
   }
 }
 
+export async function GetUserReviewedVerificationCount(user_id: string) {
+  try {
+    return await db.$count(
+      trustVerificationTable,
+      and(
+        eq(trustVerificationTable.approved_by, user_id),
+        eq(trustVerificationTable.status, "approved"),
+        sql`${trustVerificationTable.metadata}->>'task_id' IS NOT NULL`
+      )
+    )
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
 export async function AddVerificationEntry(data: InsertTrustVerification) {
   try {
     const res = await db.insert(trustVerificationTable).values(data).returning()

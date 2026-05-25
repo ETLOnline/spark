@@ -25,7 +25,21 @@ import {
 
 const PAGE_SIZE = 5
 
-export function CommunityRanking() {
+interface CommunityRankingProps {
+  userId?: string
+  displayName?: string
+}
+
+export function CommunityRanking({
+  userId,
+  displayName
+}: CommunityRankingProps = {}) {
+  const possessive = displayName ? `${displayName}'s` : "Your"
+  const subject = displayName ? displayName : "You"
+  const subjectVerbAux = displayName ? "hasn't" : "haven't"
+  const subjectAtTopMessage = displayName
+    ? `${displayName} is at the top!`
+    : "You're at the top!"
   const [selectedCommunityId, setSelectedCommunityId] = useState<string | null>(
     null
   )
@@ -42,7 +56,7 @@ export function CommunityRanking() {
     const fetchCommunities = async () => {
       try {
         setCommunitiesLoading(true)
-        const res = await GetUserCommunitiesAction()
+        const res = await GetUserCommunitiesAction(userId)
         if (res.success && res.data) {
           setUserCommunities(res.data)
           if (res.data.length > 0) {
@@ -56,14 +70,14 @@ export function CommunityRanking() {
       }
     }
     fetchCommunities()
-  }, [])
+  }, [userId])
 
   const fetchLeaderboard = async (communityId: string, page: number) => {
     setLoading(true)
     try {
       const [leaderboardRes, rankRes] = await Promise.all([
-        GetCommunityLeaderboardAction(communityId, page, PAGE_SIZE),
-        GetCurrentUserRankAction(communityId)
+        GetCommunityLeaderboardAction(communityId, page, PAGE_SIZE, userId),
+        GetCurrentUserRankAction(communityId, userId)
       ])
 
       if (leaderboardRes.success && leaderboardRes.data) {
@@ -92,7 +106,7 @@ export function CommunityRanking() {
     if (!selectedCommunityId) return
     setCurrentPage(1)
     fetchLeaderboard(selectedCommunityId, 1)
-  }, [selectedCommunityId])
+  }, [selectedCommunityId, userId])
 
   const handlePageChange = (page: number) => {
     if (!selectedCommunityId) return
@@ -126,9 +140,9 @@ export function CommunityRanking() {
   const rankGrowth = userRank?.pointsGained || 0
 
   return (
-    <div className="space-y-6">
+    <div className="w-full min-w-0 space-y-6">
       {/* Community Selector */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle className="text-sm">Select Community</CardTitle>
         </CardHeader>
@@ -137,15 +151,18 @@ export function CommunityRanking() {
             <Skeleton className="h-10 w-full" />
           ) : (
             <div className="flex gap-2">
-              <div className="flex-1">
+              <div className="flex-1 w-28 sm:w-full">
                 <Select
                   value={selectedCommunityId || ""}
                   onValueChange={handleCommunityChange}
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Choose a community..." />
+                  <SelectTrigger className="w-full overflow-hidden gap-2 [&>span:first-child]:min-w-0 [&>span:first-child]:max-w-full [&>span:first-child]:truncate [&>span:last-child]:shrink-0 [&>svg:last-child]:flex-shrink-0">
+                    <SelectValue
+                      placeholder="Choose a community..."
+                      className="block w-full max-w-full truncate"
+                    />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-w-[calc(100vw-4rem)]">
                     {userCommunities.length > 0 ? (
                       userCommunities.map((community: any) => (
                         <SelectItem key={community.id} value={community.id}>
@@ -184,8 +201,8 @@ export function CommunityRanking() {
           )}
           <p className="text-xs text-muted-foreground mt-2">
             {userCommunities.length > 0
-              ? "Select a community to view your ranking"
-              : "You haven't joined any communities yet"}
+              ? `Select a community to view ${possessive.toLowerCase()} ranking`
+              : `${subject} ${subjectVerbAux} joined any communities yet`}
           </p>
         </CardContent>
       </Card>
@@ -197,7 +214,8 @@ export function CommunityRanking() {
         <RankingCard
           currentUserRank={userRank}
           communityTitle={selectedCommunity?.title}
-          noRankMessage="You haven't contributed yet to earn a rank in this community."
+          noRankMessage={`${subject} ${subjectVerbAux} contributed yet to earn a rank in this community.`}
+          displayName={displayName}
         />
       ) : null}
 
@@ -205,17 +223,17 @@ export function CommunityRanking() {
       {loading ? (
         <Skeleton className="h-96 w-full" />
       ) : !communityHasRanking ? (
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <p className="text-sm font-medium text-muted-foreground text-center">
             This community doesn't have any rankings yet. Be the first to earn
             points!
           </p>
         </Card>
       ) : leaderboardData && leaderboardData.length > 0 ? (
-        <Card className="p-6">
-          <LeaderboardCard data={leaderboardData} />
+        <Card className="space-y-3 overflow-hidden">
+          <LeaderboardCard data={leaderboardData} displayName={displayName} />
           {totalPages > 1 && (
-            <div className="mt-6 pt-4 border-t">
+            <div className="overflow-x-auto">
               <PaginationComponent
                 pagination={{
                   page: currentPage,
@@ -232,11 +250,11 @@ export function CommunityRanking() {
 
       {/* Insights */}
       {userRank && selectedCommunityId && (
-        <Card className="p-6">
+        <Card className="overflow-hidden p-4 sm:p-6">
           <h4 className="font-semibold text-foreground mb-4">
-            Your Ranking Insights
+            {possessive} Ranking Insights
           </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 bg-muted/50 rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">
                 Points to Next Rank
@@ -247,7 +265,7 @@ export function CommunityRanking() {
               <p className="text-xs text-muted-foreground mt-1">
                 {userRank.rank > 1
                   ? `Until rank ${userRank.rank - 1}`
-                  : "You're at the top!"}
+                  : subjectAtTopMessage}
               </p>
             </div>
             {/* commenting becuase we will do in the future */}
