@@ -133,7 +133,7 @@ function TaskFilters({ projectId, onApplyFilters }: Props) {
         </Button>
       </DrawerTrigger>
       <DrawerContent>
-        <ScrollArea className="h-screen">
+        <ScrollArea className="max-h-[80dvh] overflow-y-auto">
           <div className="mx-auto w-full max-w-sm">
             <DrawerHeader>
               <DrawerTitle>Filter Tasks</DrawerTitle>

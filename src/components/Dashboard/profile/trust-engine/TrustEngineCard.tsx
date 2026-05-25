@@ -17,9 +17,13 @@ import { GetUserTopCommunityRankAction } from "@/src/server-actions/Communities/
 
 interface TrustEngineCardProps {
   user: SelectUser
+  isMyProfile?: boolean
 }
 
-export default function TrustEngineCard({ user }: TrustEngineCardProps) {
+export default function TrustEngineCard({
+  user,
+  isMyProfile
+}: TrustEngineCardProps) {
   const [userSCPoints, setUserSCPoints] = useState(0)
   const [userRPPoints, setUserRPPoints] = useState(0)
   const [userLevel, setUserLevel] = useState<SelectUserRewardsLevel | null>(
@@ -67,24 +71,28 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
     maxPoints
   )
 
+  const dashboardHref = isMyProfile
+    ? "/profile/trust-engine"
+    : `/profile/${user.unique_id}/trust-engine`
+
   return (
-    <Card className="rounded-xl border p-6 shadow-sm spark-gradient-panel-bg">
+    <Card className="rounded-xl border p-4 sm:p-6 shadow-sm spark-gradient-panel-bg">
       {/* Header */}
       <div className="mb-6 flex flex-col sm:flex-row justify-between  gap-2">
         <div className="flex items-center gap-2">
-          <Zap className="h-6 w-6 text-teal-600 dark:text-teal-400" />
-          <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+          <Zap className="h-5 w-5 sm:h-6 sm:w-6 text-teal-600 dark:text-teal-400" />
+          <CardTitle className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
             Trust Engine
           </CardTitle>
         </div>
 
         <Button className="w-full sm:w-auto">
-          <Link href="/profile/trust-engine">View Dashboard</Link>
+          <Link href={dashboardHref}>View Dashboard</Link>
         </Button>
       </div>
 
       {/* Stats Grid */}
-      <div className="mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="mb-6 sm:mb-8 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="rounded-lg border p-4 bg-card flex flex-col justify-between h-full">
           <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
             Reputation Points
@@ -147,7 +155,7 @@ export default function TrustEngineCard({ user }: TrustEngineCardProps) {
 
       {/* Progress Bar */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-1 text-sm">
           <span className="font-medium text-gray-700 dark:text-gray-300">
             Progress to Next Level
           </span>
