@@ -122,14 +122,21 @@ const Notifications: React.FC = () => {
             </Button>
           </CardHeader>
           <CardContent className="max-h-[300px] overflow-auto">
-            {notifications &&
+            {notifications && notifications.length > 0 ? (
               notifications.map((notification, index) => (
                 <NotificationItem
                   key={index}
                   activity={notification}
                   size="sm"
                 />
-              ))}
+              ))
+            ) : (
+              <div className="flex items-center justify-center h-27">
+                <p className="text-sm text-muted-foreground">
+                  No notifications
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </PopoverContent>
