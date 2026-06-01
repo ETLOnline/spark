@@ -168,8 +168,8 @@ function BacklogItemsCard({ searchedItem, orderList, limit, filters }: Props) {
             <div className="col-span-1 text-center truncate" title="Assignee">
               Assignee
             </div>
-            <div className="col-span-1 text-center truncate" title="Action">
-              Action
+            <div className="col-span-1 text-center truncate" title="Actions">
+              Actions
             </div>
           </div>
           {tasksLoading ? (
