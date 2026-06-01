@@ -40,7 +40,7 @@ const PostsPage = () => {
   }, [])
 
   return (
-    <div className="container mx-auto p-4 space-y-8 max-w-3xl">
+    <div className="container mx-auto px-0 sm:px-4 py-4 space-y-8 max-w-3xl">
       <CreatePostForm />
       {loading ? (
         <div className="flex justify-center h-full w-full">
