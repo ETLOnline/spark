@@ -522,10 +522,16 @@ export default function CommunityDetailsClient({
               <UserPlus className="h-4 w-4 mr-2" />
               Invite
             </Button>
-            <Button variant="outline" size="sm" className="flex-1">
-              <Settings className="h-4 w-4 mr-2" />
-              Options
-            </Button>
+            <div className="flex-1 [&>button]:w-full [&>button]:h-9 [&>button]:text-sm">
+              <CreateShortcut
+                type="community"
+                entity={{
+                  slug: community?.slug ?? "",
+                  title: community?.title ?? "",
+                  entity_id: community?.id ?? ""
+                }}
+              />
+            </div>
           </div>
         </div>
         {/* Main Content */}
