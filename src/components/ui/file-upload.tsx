@@ -228,12 +228,7 @@ export const FileUpload: React.FC<{
 
             {/* file preview (single) */}
             {items.length > 0 && !multiple && (
-              <PreviewItem
-                file={firstItem}
-                index={0}
-                onRemove={removeFile}
-                isSingle
-              />
+              <PreviewItem file={firstItem} index={0} onRemove={removeFile} />
             )}
 
             {/* Add more button */}
