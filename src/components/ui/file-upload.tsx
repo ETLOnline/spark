@@ -59,7 +59,6 @@ export const FileUpload: React.FC<{
     const acceptIncludesImage = (resolvedAccept || "").includes("image/*")
 
     if (fileType === "image") {
-      // Only allow images
       filtered = newFiles.filter((f) => f.type.startsWith("image/"))
       if (filtered.length === 0) {
         if (fileInputRef.current) fileInputRef.current.value = ""
@@ -70,7 +69,6 @@ export const FileUpload: React.FC<{
         return
       }
     } else if (fileType === "file") {
-      // If the accept string explicitly allows images, let images through too.
       if (acceptIncludesImage) {
         filtered = newFiles
       } else {
@@ -90,7 +88,6 @@ export const FileUpload: React.FC<{
       filtered = filtered.slice(0, 1)
     }
 
-    // Update states
     if (
       multiple &&
       (fileType === "image" || (fileType === "file" && acceptIncludesImage))
@@ -144,12 +141,13 @@ export const FileUpload: React.FC<{
       )
     }
   })
+
   return (
-    <div className="w-full " {...getRootProps()}>
+    <div className="w-full" {...getRootProps()}>
       <motion.div
         onClick={handleClick}
         whileHover="animate"
-        className="p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
+        className="p-4 sm:p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
       >
         {showClose && (
           <Button
@@ -161,7 +159,7 @@ export const FileUpload: React.FC<{
               e.preventDefault()
               onClose?.()
             }}
-            className="absolute top-2 right-2 z-10 "
+            className="absolute top-2 right-2 z-10"
             aria-label="Close"
           >
             <X className="w-6 h-6 text-red-500" />
@@ -180,25 +178,26 @@ export const FileUpload: React.FC<{
         <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,white,transparent)]">
           <GridPattern />
         </div>
-        <div className="flex flex-col items-center justify-center">
-          <p className="relative font-sans font-bold text-neutral-700 dark:text-neutral-300 text-base w-auto truncate max-w-xs">
-            {files.length > 0 ? files[0].name : "Upload file"}
+        <div className="flex flex-col w-full overflow-hidden">
+          <p className="relative font-sans font-bold text-neutral-700 dark:text-neutral-300 text-base w-full text-center">
+            {files.length > 0
+              ? `${files.length} file${files.length > 1 ? "s" : ""} selected`
+              : "Upload file"}
           </p>
-          <p className="relative font-sans font-normal text-neutral-400 dark:text-neutral-400 text-base mt-2">
+          <p className="relative font-sans font-normal text-neutral-400 dark:text-neutral-400 text-sm mt-2 w-full text-center">
             {files.length > 0
               ? "Click the X to remove or upload a new file"
               : "Drag or drop your files here or click to upload"}
           </p>
 
           <div
-            className="relative w-full  mt-10 max-w-sm mx-auto"
+            className="relative w-full mt-6 max-w-sm mx-auto overflow-hidden"
             onClick={(e) => {
               e.stopPropagation()
-              // if no items, trigger file picker
               if (items.length === 0) handleClick()
             }}
           >
-            {/* image preview  */}
+            {/* image preview */}
             {items.length > 0 && multiple && fileType === "image" && (
               <Reorder.Group
                 axis="y"
@@ -213,7 +212,7 @@ export const FileUpload: React.FC<{
                         file.lastModified + "-" + file.size + "-" + file.name
                       }
                       value={file}
-                      className="cursor-move "
+                      className="cursor-move w-full min-w-0 overflow-hidden"
                     >
                       <PreviewItem
                         file={file}
@@ -294,7 +293,7 @@ export function GridPattern() {
   const columns = 41
   const rows = 11
   return (
-    <div className="flex bg-gray-100 dark:bg-neutral-900 flex-shrink-0 flex-wrap justify-center items-center gap-x-px gap-y-px  scale-105">
+    <div className="flex bg-gray-100 dark:bg-neutral-900 flex-shrink-0 flex-wrap justify-center items-center gap-x-px gap-y-px scale-105">
       {Array.from({ length: rows }).map((_, row) =>
         Array.from({ length: columns }).map((_, col) => {
           const index = row * columns + col
