@@ -512,17 +512,17 @@ export default function CommunityDetailsClient({
           <Badge variant="outline" className="text-xs">
             {community?.category}
           </Badge>
-          <div className="flex gap-2">
+          <div className="flex flex-row items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              className="flex-1"
+              className="h-9 text-sm"
               onClick={() => setIsInviteDialogOpen(true)}
             >
               <UserPlus className="h-4 w-4 mr-2" />
               Invite
             </Button>
-            <div className="flex-1 [&>button]:w-full [&>button]:h-9 [&>button]:text-sm">
+            <div className="[&>button]:h-9 [&>button]:text-sm [&>button]:w-auto">
               <CreateShortcut
                 type="community"
                 entity={{
@@ -537,19 +537,21 @@ export default function CommunityDetailsClient({
         {/* Main Content */}
         <div className="flex border-t">
           {/* Left Main Content Area */}
-          <div className="flex-1 overflow-auto p-4 md:p-6">
+          <div className="flex-1 overflow-auto md:p-6">
             <div className="max-w-4xl mx-auto space-y-6">
               {/* Text Channels */}
               <div className="bg-background rounded-lg border sm:p-6 p-3">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
                   <h3 className="sm:text-lg text-base font-semibold flex items-center gap-2">
                     <Hash className="h-5 w-5" />
                     Channels
                   </h3>
-                  <CreateChannels
-                    community={community}
-                    onActionComplete={onActionComplete}
-                  />
+                  <div className="[&>button]:h-9 [&>button]:text-sm [&>button]:w-auto">
+                    <CreateChannels
+                      community={community}
+                      onActionComplete={onActionComplete}
+                    />
+                  </div>
                 </div>
                 {loadingChannels ? (
                   <div className="flex justify-center py-8">

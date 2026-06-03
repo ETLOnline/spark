@@ -44,21 +44,24 @@ function ChannelCardItem({
     >
       {/* Main Content Area */}
       <Link
-        className="flex items-center gap-3 flex-grow min-w-0"
+        className="flex-1 min-w-0"
         href={`/channels/${encodedChannelSlug}/spaces`}
       >
-        <div className="flex items-center gap-3 flex-grow min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
           <Hash className="h-5 w-5 text-muted-foreground shrink-0" />
-          <div className="flex flex-col min-w-0 flex-grow">
+          <div className="flex flex-col min-w-0 flex-1">
+            {/* Name + icons row */}
             <span className="flex items-center gap-2 font-medium min-w-0">
               <span className="truncate">{channel.channel_name}</span>
-              {/* for not publish or published */}
               {canUpdateChannel &&
                 (channel.publish_channel ? (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Check className="text-muted-foreground" height={14} />
+                        <Check
+                          className="text-muted-foreground shrink-0"
+                          height={14}
+                        />
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>Published</p>
@@ -70,12 +73,12 @@ function ChannelCardItem({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <PencilRuler
-                          className="text-muted-foreground"
+                          className="text-muted-foreground shrink-0"
                           height={14}
                         />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Darft</p>
+                        <p>Draft</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -86,29 +89,30 @@ function ChannelCardItem({
                 <Lock className="h-4 w-4 text-yellow-500 shrink-0" />
               ) : null}
             </span>
-            <span className="text-xs text-muted-foreground mt-0.5">
+            {/* Description */}
+            <span className="text-xs text-muted-foreground mt-0.5 truncate">
               {channel.description || "No description available"}
             </span>
-          </div>
-          {/* Channel Stats (still part of the content, but aligned to the right within this section) */}
-          <div className="flex flex-col items-end whitespace-nowrap text-right text-sm text-muted-foreground ml-4">
-            <div className="text-xs">
-              {channel.created_at
-                ? new Date(channel.created_at).toLocaleString("default", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric"
-                  })
-                : "N/A"}
-            </div>
-            <div className="text-xs mt-0.5">
-              {(channel.users as Array<any>)?.length ?? 0} members
+            {/* Stats below on mobile */}
+            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+              <span>
+                {channel.created_at
+                  ? new Date(channel.created_at).toLocaleString("default", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric"
+                    })
+                  : "N/A"}
+              </span>
+              <span>·</span>
+              <span>{(channel.users as Array<any>)?.length ?? 0} members</span>
             </div>
           </div>
         </div>
       </Link>
-      {/* Action Menu Area */}
-      <div className="flex items-center ml-4 w-8 justify-end">
+
+      {/* Action Menu */}
+      <div className="flex items-center ml-2 shrink-0">
         <ChannelsContextMenu
           channel={channel}
           onActionComplete={onActionComplete}
