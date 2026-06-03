@@ -51,6 +51,8 @@ export default function SprintCardPage({
 }: Props) {
   const [filteredTasks, setFilteredTasks] = useState<SelectTask[]>([])
   const [isSprintContextMenuOpen, setIsSprintContextMenuOpen] = useState(false)
+  const [isMobileSprintContextMenuOpen, setIsMobileSprintContextMenuOpen] =
+    useState(false)
   const [getFilteredTaskLoading, , , GetTasks] =
     useServerAction(GetSprintTasksAction)
   const [filters, setFilters] = useState<TaskFiltersType | null>(null)
@@ -153,8 +155,8 @@ export default function SprintCardPage({
                 <SprintContextMenu
                   sprintTasks={filteredTasks}
                   sprint={sprint}
-                  isSprintContextMenuOpen={isSprintContextMenuOpen}
-                  setIsSprintContextMenuOpen={setIsSprintContextMenuOpen}
+                  isSprintContextMenuOpen={isMobileSprintContextMenuOpen}
+                  setIsSprintContextMenuOpen={setIsMobileSprintContextMenuOpen}
                   isSprintCompleted={isSprintCompleted}
                 />
               </div>
