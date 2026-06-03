@@ -52,7 +52,7 @@ function ChannelCardItem({
           <div className="flex flex-col min-w-0 flex-1">
             {/* Name + icons row */}
             <span className="flex items-center gap-2 font-medium min-w-0">
-              <span className="truncate">{channel.channel_name}</span>
+              <span className="text-ellipsis">{channel.channel_name}</span>
               {canUpdateChannel &&
                 (channel.publish_channel ? (
                   <TooltipProvider>
