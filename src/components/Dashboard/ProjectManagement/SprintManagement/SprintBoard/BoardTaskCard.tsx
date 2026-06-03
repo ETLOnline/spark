@@ -305,7 +305,7 @@ function BoardTaskCard({
             )}
           </div>
 
-          {task.parentTask ? (
+          {task.parentTask && task.parentTask.status_id !== task.status_id ? (
             <div className="p-1 border rounded-md mt-2 flex items-center gap-2">
               <div className="shrink-0">
                 <IssueTypeIcon type={task.parentTask?.task_type} />
