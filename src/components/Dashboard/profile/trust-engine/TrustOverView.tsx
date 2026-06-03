@@ -46,7 +46,7 @@ export function TrustOverView({
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Reputation Points
+                Reputation Points 2
               </p>
               <h3 className="text-3xl font-bold text-primary mt-2">
                 {rpPoints.toLocaleString()}
@@ -54,6 +54,9 @@ export function TrustOverView({
             </div>
             <TrendingUp className="w-8 h-8 text-primary/60" />
           </div>
+          <p className="text-xs text-muted-foreground">
+            Earned through verified contributions
+          </p>
         </Card>
 
         <Card className="p-6">
@@ -69,7 +72,7 @@ export function TrustOverView({
             <Zap className="w-8 h-8 text-purple-600/60" />
           </div>
           <p className="text-xs text-muted-foreground">
-            Earnable through contributions
+            Earned through engagement activities
           </p>
         </Card>
       </div>
