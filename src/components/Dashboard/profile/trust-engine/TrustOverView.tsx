@@ -46,7 +46,7 @@ export function TrustOverView({
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Reputation Points 2
+                Reputation Points
               </p>
               <h3 className="text-3xl font-bold text-primary mt-2">
                 {rpPoints.toLocaleString()}
