@@ -23,7 +23,7 @@ export const getAllGlobalRoles = async () => {
   }
 }
 
-// this is saving the perason after the sign up
+// this is saving the persona after the sign up
 export const saveUserGlobalRole = async (personaID: number, userId: string) => {
   try {
     const result = await db
@@ -34,17 +34,35 @@ export const saveUserGlobalRole = async (personaID: number, userId: string) => {
       .where(eq(usersTable.unique_id, userId))
       .returning()
 
-    const userRolesTableResult = await db
-      .insert(userRolesTable)
-      .values({
-        user_id: userId,
-        role_id: personaID
-      })
-      .returning()
+    await db.insert(userRolesTable).values({
+      user_id: userId,
+      role_id: personaID
+    })
 
     return result[0]
   } catch (error: any) {
     console.error("Error fetching persona by key:", error)
+    throw new Error(error.message)
+  }
+}
+
+export const getUserRoleByUserAndRole = async (
+  userId: string,
+  roleId: number
+) => {
+  try {
+    const existing = await db
+      .select()
+      .from(userRolesTable)
+      .where(
+        and(
+          eq(userRolesTable.user_id, userId),
+          eq(userRolesTable.role_id, roleId)
+        )
+      )
+      .limit(1)
+    return existing[0] ?? null
+  } catch (error: any) {
     throw new Error(error.message)
   }
 }
@@ -546,10 +564,7 @@ export async function createScopedProjectRolesAndAssignAdmin(
  * @param entityId The ID of the specific channel or space.
  * @returns The viewer role or null if not found.
  */
-async function fetchViewerRole(
-  roleSlug: EntityType,
-  entityId: string
-) {
+async function fetchViewerRole(roleSlug: EntityType, entityId: string) {
   try {
     // Determine the actual entity type (CHANNEL or SPACE) based on the ro    let entityType: "CHANNEL" | "SPACE" | "PROJECT";
     let entityType: "CHANNEL" | "SPACE" | "PROJECT" | "COMMUNITY"
@@ -594,7 +609,8 @@ async function fetchViewerRole(
  * @returns A success status and a list of assigned role IDs.
  */
 
-export type EntityType = "channel_viewer"
+export type EntityType =
+  | "channel_viewer"
   | "space_viewer"
   | "project_viewer"
   | "community_viewer"
