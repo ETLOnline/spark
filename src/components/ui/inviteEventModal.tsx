@@ -1,11 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { X, Mail, Copy, Check } from "lucide-react"
+import { Mail, Copy, Check } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./dialog"
 import { Input } from "./input"
 import { Button } from "./button"
-import { cn } from "@/src/lib/utils"
 
 interface InviteModalProps {
   open: boolean
@@ -32,39 +31,33 @@ export function InviteEventModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-slate-900 border-slate-700 text-white">
-        <DialogHeader className="relative">
-          <DialogTitle className="text-xl font-semibold text-white">
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold">
             Invite Users to event
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 pt-2">
-          <p className="text-slate-300 text-sm">
+          <p className="text-muted-foreground text-sm">
             Invite users to join your event via link.
           </p>
 
           <div className="flex flex-col items-center space-y-4">
-            <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center">
-              <Mail className="w-6 h-6 text-cyan-400" />
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+              <Mail className="w-6 h-6 text-cyan-500" />
             </div>
 
             <div className="text-center space-y-2">
-              <h3 className="text-lg font-medium text-white">
-                Share Invite Link
-              </h3>
-              <p className="text-slate-300 text-sm">
+              <h3 className="text-lg font-medium">Share Invite Link</h3>
+              <p className="text-muted-foreground text-sm">
                 Anyone with this link can join your event.
               </p>
             </div>
           </div>
 
           <div className="flex space-x-2">
-            <Input
-              value={inviteLink}
-              readOnly
-              className="flex-1 bg-slate-800 border-slate-600 text-slate-200 focus:border-slate-500"
-            />
+            <Input value={inviteLink} readOnly className="flex-1" />
             <Button onClick={handleCopy} variant="outline">
               {copied ? (
                 <>

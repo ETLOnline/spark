@@ -3,6 +3,7 @@ import { GetChannelBySlugAction } from "@/src/server-actions/Channel/Channel"
 import { GetSpaceBySlugAction } from "@/src/server-actions/Space/Space"
 import { GetProjectByIdAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { GetRoleWithPermissionsAction } from "@/src/server-actions/UserRoles/UserRole"
+import { GetEventByIdAction } from "@/src/server-actions/events/event"
 
 /**
  * Defines the structure for a single breadcrumb configuration item.
@@ -36,7 +37,23 @@ export const breadcrumbConfig: BreadcrumbConfigItem[] = [
   { path: "/connections", label: "Connections" },
   { path: "/posts", label: "Posts" },
   { path: "/chat", label: "Chat" },
-  { path: "/events", label: "Events" },
+  {
+    path: "/events",
+    label: "Events",
+    children: [
+      {
+        path: "/[event_id]",
+        dynamicLabelFetcher: async (eventId: string) => {
+          try {
+            const res = await GetEventByIdAction(Number(eventId))
+            return res?.data?.[0]?.title || eventId
+          } catch {
+            return eventId
+          }
+        }
+      }
+    ]
+  },
 
   {
     path: "/communities",

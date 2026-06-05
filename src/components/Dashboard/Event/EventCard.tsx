@@ -5,7 +5,8 @@ import {
   Users,
   Clock,
   Video,
-  MoreHorizontal
+  MoreHorizontal,
+  ArrowRight
 } from "lucide-react"
 import { Button } from "../../ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
@@ -278,14 +279,8 @@ const EventCard = ({ event, setRefreshTrigger }: EventCardProps) => {
           </span>
         </div>
         <Link href={`/events/${event?.id}`} className="w-full">
-          <Button
-            size="sm"
-            className={clsx(
-              "w-full",
-              theme === "light" && "bg-black text-white hover:bg-gray-900"
-            )}
-          >
-            View Details
+          <Button variant="outline" size="sm" className="w-full">
+            View Details <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </Link>
       </CardFooter>

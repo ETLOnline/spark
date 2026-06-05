@@ -86,13 +86,13 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
               posts.map((post) =>
                 post.id === postId
                   ? {
-                    ...post,
-                    comments: (post.comments || 0) + 1,
-                    postComments: [
-                      addedComment,
-                      ...(post.postComments as SelectComment[])
-                    ]
-                  }
+                      ...post,
+                      comments: (post.comments || 0) + 1,
+                      postComments: [
+                        addedComment,
+                        ...(post.postComments as SelectComment[])
+                      ]
+                    }
                   : post
               )
             )
@@ -126,41 +126,40 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
 
   return (
     <form
-      className="flex items-center w-full space-x-2"
+      className="flex flex-col sm:flex-row sm:items-center w-full gap-2 mt-4"
       onSubmit={handleAddComment}
     >
-      <Avatar className="h-8 w-8 mt-4">
-        <AvatarImage src={user?.profile_url as string} alt="Current User" />
-        <AvatarFallback>{name}</AvatarFallback>
-      </Avatar>
-      <Input
-        placeholder={
-          isEditMode ? "Edit your comment..." : "Add a comment..."
-        }
-        onChange={(e) => (commentText.current = e.target.value)}
-        className="flex-1 mt-4"
-        ref={commentInput}
-      />
-      {isEditMode && onCancelEdit && (
-        <Button
-          size="sm"
-          variant="ghost"
-          className="mt-4"
-          type="button"
-          onClick={() => {
-            onCancelEdit()
-            commentText.current = ""
-            if (commentInput.current) {
-              commentInput.current.value = ""
-            }
-          }}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      )}
+      <div className="flex items-center gap-2 w-full">
+        <Avatar className="h-8 w-8 shrink-0">
+          <AvatarImage src={user?.profile_url as string} alt="Current User" />
+          <AvatarFallback>{name}</AvatarFallback>
+        </Avatar>
+        <Input
+          placeholder={isEditMode ? "Edit your comment..." : "Add a comment..."}
+          onChange={(e) => (commentText.current = e.target.value)}
+          className="flex-1"
+          ref={commentInput}
+        />
+        {isEditMode && onCancelEdit && (
+          <Button
+            size="sm"
+            variant="ghost"
+            type="button"
+            onClick={() => {
+              onCancelEdit()
+              commentText.current = ""
+              if (commentInput.current) {
+                commentInput.current.value = ""
+              }
+            }}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
       <Button
         size="sm"
-        className="mt-4"
+        className="w-full sm:w-auto shrink-0"
         type="submit"
         loading={createCommentLoading}
         disabled={createCommentLoading}

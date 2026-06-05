@@ -356,85 +356,85 @@ export default function CommunitiesPage() {
   const isUserLoading = Boolean(useAtomValue(userStore.LoadingUser))
 
   return (
-    <div className="flex-1 space-y-6 p-6">
-      {/* Communities Header: Includes the "Create Community" button */}
+    <>
       <CommunitiesHeader onCreateCommunityClick={handleCreateCommunityClick} />
+      <div className="container mx-auto px-0 sm:px-6 pb-4 space-y-6">
+        {/* Communities Filter Bar: Handles search, category, and sort */}
+        <CommunitiesFilterBar
+          searchTerm={searchTerm}
+          selectedCategory={selectedCategory}
+          sortBy={sortBy}
+          onSearchChange={handleSearchChange}
+          onCategoryChange={handleCategoryChange}
+          onSortByChange={handleSortByChange}
+          availableCategories={communityCategories}
+        />
 
-      {/* Communities Filter Bar: Handles search, category, and sort */}
-      <CommunitiesFilterBar
-        searchTerm={searchTerm}
-        selectedCategory={selectedCategory}
-        sortBy={sortBy}
-        onSearchChange={handleSearchChange}
-        onCategoryChange={handleCategoryChange}
-        onSortByChange={handleSortByChange}
-        availableCategories={communityCategories}
-      />
+        {/* Community Request Banner */}
+        {!isUserLoading && isSuperAdmin === false ? (
+          <CommunityRequestBanner />
+        ) : null}
 
-      {/* Community Request Banner */}
-      {!isUserLoading && isSuperAdmin === false ? (
-        <CommunityRequestBanner />
-      ) : null}
+        {/* Community List Tabs: ALWAYS RENDER THIS COMPONENT */}
+        <CommunityListTabs
+          loading={isPaginating || loading}
+          error={error}
+          communitiesList={communitiesList}
+          onEditCommunity={handleEditCommunity}
+          onDeleteCommunity={handleDeleteCommunity}
+          onJoinCommunity={handleJoinCommunity}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
 
-      {/* Community List Tabs: ALWAYS RENDER THIS COMPONENT */}
-      <CommunityListTabs
-        loading={isPaginating || loading}
-        error={error}
-        communitiesList={communitiesList}
-        onEditCommunity={handleEditCommunity}
-        onDeleteCommunity={handleDeleteCommunity}
-        onJoinCommunity={handleJoinCommunity}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-      />
-
-      {/* Pagination UI - Only show if not loading, no error, and there's more than one page */}
-      {!loading &&
-        !error &&
-        paginationData &&
-        paginationData.total > 0 && // Check total communities for pagination visibility
-        totalPages > 1 && (
-          <Pagination className="mt-8">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  href="#"
-                  onClick={() => handlePageChange(currentPageFromData - 1)}
-                  className={
-                    currentPageFromData === 1
-                      ? "pointer-events-none opacity-50"
-                      : undefined
-                  }
-                />
-              </PaginationItem>
-              {getPageNumbers().map((pageNumber) => (
-                <PaginationItem key={pageNumber}>
-                  <PaginationLink
+        {/* Pagination UI - Only show if not loading, no error, and there's more than one page */}
+        {!loading &&
+          !error &&
+          paginationData &&
+          paginationData.total > 0 && // Check total communities for pagination visibility
+          totalPages > 1 && (
+            <Pagination className="mt-8">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
                     href="#"
-                    isActive={pageNumber === currentPageFromData}
-                    onClick={() => handlePageChange(pageNumber)}
-                  >
-                    {pageNumber}
-                  </PaginationLink>
+                    onClick={() => handlePageChange(currentPageFromData - 1)}
+                    className={
+                      currentPageFromData === 1
+                        ? "pointer-events-none opacity-50"
+                        : undefined
+                    }
+                  />
                 </PaginationItem>
-              ))}
-              <PaginationItem>
-                <PaginationNext
-                  href="#"
-                  onClick={() => handlePageChange(currentPageFromData + 1)}
-                  className={
-                    currentPageFromData === totalPages
-                      ? "pointer-events-none opacity-50"
-                      : undefined
-                  }
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        )}
+                {getPageNumbers().map((pageNumber) => (
+                  <PaginationItem key={pageNumber}>
+                    <PaginationLink
+                      href="#"
+                      isActive={pageNumber === currentPageFromData}
+                      onClick={() => handlePageChange(pageNumber)}
+                    >
+                      {pageNumber}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={() => handlePageChange(currentPageFromData + 1)}
+                    className={
+                      currentPageFromData === totalPages
+                        ? "pointer-events-none opacity-50"
+                        : undefined
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
 
-      {/* Create/Edit Community Modal: Hidden by default, shown when triggered */}
-      <CreateCommunityModal availableCategories={communityCategories} />
-    </div>
+        {/* Create/Edit Community Modal: Hidden by default, shown when triggered */}
+        <CreateCommunityModal availableCategories={communityCategories} />
+      </div>
+    </>
   )
 }
