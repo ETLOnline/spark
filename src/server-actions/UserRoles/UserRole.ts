@@ -12,6 +12,7 @@ import {
   getUserPermissionRows,
   getUsersByRoleID,
   saveUserGlobalRole,
+  getUserRoleByUserAndRole,
   updateRoleWithPermissions,
   updateUserRoleForEntity
 } from "@/src/db/data-access/roles/query"
@@ -68,6 +69,11 @@ export const savePersonaAction = CreateServerAction(
   true,
   async (personaID: number, userId: string, externalAuthId) => {
     try {
+      const existingRole = await getUserRoleByUserAndRole(userId, personaID)
+      if (existingRole) {
+        return { success: true, data: existingRole }
+      }
+
       const attachPersona = await saveUserGlobalRole(personaID, userId)
       return { success: true, data: attachPersona }
     } catch (error) {

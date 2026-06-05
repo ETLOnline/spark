@@ -21,6 +21,7 @@ import { FeatureFlagsSeed } from "./FeatureFlagsSeed"
 import { RewardsSeed } from "./RewardsSeed"
 import { RewardLevelsSeed } from "./RewardLevelsSeed"
 import { BackfillLedgerCommunityIdSeed } from "./BackfillLedgerCommunityIdSeed"
+import { DeduplicateUserRolesSeed } from "./DeduplicateUserRolesSeed"
 
 const SEEDERS: Record<string, () => Promise<void>> = {
   FeatureSeed,
@@ -45,7 +46,8 @@ const SEEDERS: Record<string, () => Promise<void>> = {
   FeatureFlagsSeed,
   RewardsSeed,
   RewardLevelsSeed,
-  BackfillLedgerCommunityIdSeed
+  BackfillLedgerCommunityIdSeed,
+  DeduplicateUserRolesSeed
 }
 
 async function runSeeders() {

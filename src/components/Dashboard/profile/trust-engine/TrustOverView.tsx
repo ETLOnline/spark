@@ -54,6 +54,9 @@ export function TrustOverView({
             </div>
             <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-primary/60 shrink-0" />
           </div>
+          <p className="text-xs text-muted-foreground">
+            Earned through verified contributions
+          </p>
         </Card>
 
         <Card className="p-4 sm:p-6">
@@ -69,7 +72,7 @@ export function TrustOverView({
             <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600/60 shrink-0" />
           </div>
           <p className="text-xs text-muted-foreground">
-            Earnable through contributions
+            Earned through engagement activities
           </p>
         </Card>
       </div>
