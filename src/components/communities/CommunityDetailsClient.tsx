@@ -372,8 +372,8 @@ export default function CommunityDetailsClient({
           )}
           <div className="absolute inset-0 bg-black/50"></div>
           <div className="absolute inset-0 px-4 py-4 sm:py-6 sm:px-6 flex flex-col gap-4 justify-center h-full">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 h-full">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full">
+            <div className="flex items-center justify-between gap-4 h-full">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
                 {/* Community Avatar */}
                 <div className="relative">
                   <Avatar className="h-16 w-16 md:h-20 md:w-20 border-4 border-white">
@@ -389,17 +389,15 @@ export default function CommunityDetailsClient({
 
                 {/* Community Info */}
                 <div className="text-white flex-1 min-w-0">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2 w-full">
-                    <div className="flex items-center w-full min-w-0">
-                      <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate">
-                        {community?.title}
-                      </h1>
-                      <div className="flex items-center gap-2 ml-2">
-                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                        <Badge variant="secondary" className="text-xs">
-                          {community?.type === "public" ? "Public" : "Private"}
-                        </Badge>
-                      </div>
+                  <div className="flex flex-col gap-1 mb-1 min-w-0">
+                    <h1 className="text-base sm:text-xl md:text-2xl font-bold leading-tight line-clamp-2">
+                      {community?.title}
+                    </h1>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 bg-green-500 rounded-full shrink-0"></div>
+                      <Badge variant="secondary" className="text-xs">
+                        {community?.type === "public" ? "Public" : "Private"}
+                      </Badge>
                     </div>
                   </div>
                   {/* Description & stats - hidden on mobile */}
