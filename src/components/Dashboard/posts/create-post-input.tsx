@@ -125,7 +125,7 @@ const CreatePostInput: React.FC<Props> = ({
     />
   ) : type === PostType.image ? (
     <div className="flex flex-col space-y-4">
-      <div className="flex flex-col justify-center items-center pt-4">
+      <div className="flex flex-col w-full pt-4">
         <FileUpload
           onChange={(files: File[]) => handleFiles(files)}
           onRemove={handleRemoveFile}
@@ -148,7 +148,7 @@ const CreatePostInput: React.FC<Props> = ({
     </div>
   ) : type === PostType.poll ? (
     <div className="flex flex-col space-y-4">
-      <div className="flex flex-col justify-center items-center pt-4">
+      <div className="flex flex-col w-full pt-4">
         <FileUpload
           onChange={(files: File[]) => handleFiles(files)}
           onRemove={handleRemoveFile}

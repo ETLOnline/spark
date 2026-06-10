@@ -1,8 +1,8 @@
 import React from "react"
 import "./footer.css"
-import { Sparkles } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { ContactUsDialog } from "./ContactUsDialog"
 
 function Footer() {
   return (
@@ -34,12 +34,7 @@ function Footer() {
             <h3 className="font-bold mb-6 text-lg">Connect</h3>
             <ul className="space-y-3 text-gray-400">
               <li>
-                <Link
-                  href="mailto:info@etlonline.org"
-                  className="hover:text-white transition-colors"
-                >
-                  Contact Us
-                </Link>
+                <ContactUsDialog />
               </li>
               <li>
                 <Link

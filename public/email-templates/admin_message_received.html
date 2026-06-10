@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New {{messageType}} Submission</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #ffffff;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #1a1a1a;
+    "
+  >
+    <table
+      role="presentation"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      width="100%"
+      style="background-color: #f8fafc; padding: 20px 0"
+    >
+      <tr>
+        <td align="center">
+          <table
+            role="presentation"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            width="600"
+            style="
+              background-color: #ffffff;
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            "
+          >
+            <!-- Logo -->
+            <tr>
+              <td align="center" style="padding: 24px 0 16px 0">
+                <img
+                  src="{{logoUrl}}"
+                  alt="YourPlatform Logo"
+                  width="120"
+                  style="display: block; max-width: 120px; height: auto"
+                />
+              </td>
+            </tr>
+
+            <!-- Header -->
+            <tr>
+              <td
+                align="center"
+                style="
+                  background-color: #51ecdc;
+                  padding: 20px;
+                  color: #0f172a;
+                  font-size: 20px;
+                  font-weight: bold;
+                "
+              >
+                New {{messageType}} Submission
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td
+                style="
+                  padding: 32px;
+                  font-size: 16px;
+                  line-height: 1.5;
+                  color: #1a1a1a;
+                "
+              >
+                <p style="margin: 0 0 16px">Hello Admin,</p>
+                <p style="margin: 0 0 16px">
+                  A new {{messageType}} message has been submitted and requires
+                  your attention.
+                </p>
+
+                <!-- Message Details -->
+                <table
+                  role="presentation"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  width="100%"
+                  style="
+                    background-color: #f8fafc;
+                    border-radius: 8px;
+                    margin: 16px 0;
+                  "
+                >
+                  <tr>
+                    <td style="padding: 16px">
+                      <p
+                        style="
+                          margin: 0 0 8px 0;
+                          font-size: 14px;
+                          color: #64748b;
+                        "
+                      >
+                        <strong>Name:</strong> {{userName}}
+                      </p>
+                      <p
+                        style="
+                          margin: 0 0 8px 0;
+                          font-size: 14px;
+                          color: #64748b;
+                        "
+                      >
+                        <strong>Email:</strong> {{userEmail}}
+                      </p>
+                      <p
+                        style="
+                          margin: 0 0 8px 0;
+                          font-size: 14px;
+                          color: #64748b;
+                        "
+                      >
+                        <strong>Subject:</strong> {{subject}}
+                      </p>
+                      <p style="margin: 0; font-size: 14px; color: #64748b">
+                        <strong>Message:</strong>
+                      </p>
+                      <p
+                        style="
+                          margin: 8px 0 0 0;
+                          font-size: 14px;
+                          line-height: 1.5;
+                        "
+                      >
+                        {{description}}
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="margin: 0; font-size: 16px; line-height: 1.5">
+                  Please review this message and respond accordingly.
+                </p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td
+                style="
+                  padding: 24px 40px;
+                  background-color: #f8fafc;
+                  text-align: center;
+                "
+              >
+                <p style="margin: 0; font-size: 14px; color: #64748b">
+                  © 2026 Your Platform. All rights reserved.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
