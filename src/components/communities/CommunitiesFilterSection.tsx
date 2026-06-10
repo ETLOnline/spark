@@ -32,40 +32,42 @@ export default function CommunitiesFilterBar({
   availableCategories
 }: CommunitiesFilterBarProps) {
   return (
-    <div className="flex items-center gap-4">
-      <div className="relative flex-1 max-w-md">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+      <div className="relative w-full sm:flex-1 sm:max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Search communities..."
-          className="pl-10"
+          className="pl-10 w-full"
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
         />
       </div>
-      <Select value={selectedCategory} onValueChange={onCategoryChange}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="All Categories" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Categories</SelectItem>
-          {availableCategories &&
-            availableCategories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
-            ))}
-        </SelectContent>
-      </Select>
-      <Select value={sortBy} onValueChange={onSortByChange}>
-        <SelectTrigger className="w-[140px]">
-          <SelectValue placeholder="Sort By" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="newest">Newest</SelectItem>
-          <SelectItem value="titleAsc">Title (A-Z)</SelectItem>
-          <SelectItem value="titleDesc">Title (Z-A)</SelectItem>
-        </SelectContent>
-      </Select>
+      <div className="flex gap-3">
+        <Select value={selectedCategory} onValueChange={onCategoryChange}>
+          <SelectTrigger className="flex-1 sm:w-[180px]">
+            <SelectValue placeholder="All Categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {availableCategories &&
+              availableCategories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+        <Select value={sortBy} onValueChange={onSortByChange}>
+          <SelectTrigger className="flex-1 sm:w-[140px]">
+            <SelectValue placeholder="Sort By" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest</SelectItem>
+            <SelectItem value="titleAsc">Title (A-Z)</SelectItem>
+            <SelectItem value="titleDesc">Title (Z-A)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   )
 }

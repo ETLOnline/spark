@@ -125,37 +125,41 @@ const PostCommentForm: React.FC<PostCommentFormProps> = ({
   }
 
   return (
-    <form className="flex items-start w-full gap-2" onSubmit={handleAddComment}>
-      <Avatar className="h-8 w-8 mt-4 shrink-0">
-        <AvatarImage src={user?.profile_url as string} alt="Current User" />
-        <AvatarFallback>{name}</AvatarFallback>
-      </Avatar>
-      <Input
-        placeholder={isEditMode ? "Edit your comment..." : "Add a comment..."}
-        onChange={(e) => (commentText.current = e.target.value)}
-        className="flex-1 mt-4"
-        ref={commentInput}
-      />
-      {isEditMode && onCancelEdit && (
-        <Button
-          size="sm"
-          variant="ghost"
-          className="mt-4 shrink-0"
-          type="button"
-          onClick={() => {
-            onCancelEdit()
-            commentText.current = ""
-            if (commentInput.current) {
-              commentInput.current.value = ""
-            }
-          }}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      )}
+    <form
+      className="flex flex-col sm:flex-row sm:items-center w-full gap-2 mt-4"
+      onSubmit={handleAddComment}
+    >
+      <div className="flex items-center gap-2 w-full">
+        <Avatar className="h-8 w-8 shrink-0">
+          <AvatarImage src={user?.profile_url as string} alt="Current User" />
+          <AvatarFallback>{name}</AvatarFallback>
+        </Avatar>
+        <Input
+          placeholder={isEditMode ? "Edit your comment..." : "Add a comment..."}
+          onChange={(e) => (commentText.current = e.target.value)}
+          className="flex-1"
+          ref={commentInput}
+        />
+        {isEditMode && onCancelEdit && (
+          <Button
+            size="sm"
+            variant="ghost"
+            type="button"
+            onClick={() => {
+              onCancelEdit()
+              commentText.current = ""
+              if (commentInput.current) {
+                commentInput.current.value = ""
+              }
+            }}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
       <Button
         size="sm"
-        className="mt-4 shrink-0"
+        className="w-full sm:w-auto shrink-0"
         type="submit"
         loading={createCommentLoading}
         disabled={createCommentLoading}

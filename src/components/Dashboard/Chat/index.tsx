@@ -825,7 +825,12 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                       </CardTitle>
                       <div className="relative">
                         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Search chats..." className="pl-8" />
+                        <Input
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Search chats..."
+                          className="pl-8"
+                        />
                       </div>
                     </CardHeader>
                     <ChatsList

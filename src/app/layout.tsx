@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import localFont from "next/font/local"
 import "./globals.css"
 import { ClerkProvider } from "@clerk/nextjs"
@@ -25,6 +25,11 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Spark",
   description: "Community Platform"
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1
 }
 
 export default function RootLayout({

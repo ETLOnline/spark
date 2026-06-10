@@ -564,7 +564,7 @@ const CreatePostForm: React.FC<Props> = ({ variant = "posts" }) => {
           </Button>
         ) : null
       ) : (
-        <Card className="bg-background shadow-lg">
+        <Card className="bg-background shadow-lg w-full overflow-hidden">
           <CardHeader className="flex flex-row justify-between items-center">
             <h2 className="text-2xl font-bold">Create a Post</h2>
             <Button variant="outline" size="icon" onClick={handleCloseModal}>
