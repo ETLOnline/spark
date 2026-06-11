@@ -46,6 +46,52 @@ export const saveUserGlobalRole = async (personaID: number, userId: string) => {
   }
 }
 
+// Replaces all existing GLOBAL roles for a user with the new one (used during onboarding)
+export const replaceUserGlobalRole = async (
+  personaID: number,
+  userId: string
+) => {
+  try {
+    return await db.transaction(async (tx) => {
+      // Delete all existing GLOBAL role assignments for this user
+      await tx
+        .delete(userRolesTable)
+        .where(
+          and(
+            eq(userRolesTable.user_id, userId),
+            inArray(
+              userRolesTable.role_id,
+              tx
+                .select({ id: rolesTable.id })
+                .from(rolesTable)
+                .where(eq(rolesTable.role_type, "GLOBAL"))
+            )
+          )
+        )
+
+      // Insert the new role
+      await tx.insert(userRolesTable).values({
+        user_id: userId,
+        role_id: personaID
+      })
+
+      // Mark persona as selected
+      const result = await tx
+        .update(usersTable)
+        .set({
+          meta_profile: sql`jsonb_set("meta_profile"::jsonb, '{persona_selected}', 'true', true)`
+        })
+        .where(eq(usersTable.unique_id, userId))
+        .returning()
+
+      return result[0]
+    })
+  } catch (error: any) {
+    console.error("Error replacing user global role:", error)
+    throw new Error(error.message)
+  }
+}
+
 export const getUserRoleByUserAndRole = async (
   userId: string,
   roleId: number

@@ -25,7 +25,14 @@ export default function SelectPersonaPage({
   userAuth
 }: SelectPersonaPageProps) {
   const { refreshAuthUser, isReloadingPermissions } = useAuthUserRefresh()
-  const [selectedPersona, setSelectedPersona] = useState<number | null>(null)
+
+  const existingGlobalRoleId =
+    (userAuth as any)?.roles?.find((ur: any) => ur.role?.role_type === "GLOBAL")
+      ?.role_id ?? null
+
+  const [selectedPersona, setSelectedPersona] = useState<number | null>(
+    existingGlobalRoleId
+  )
   const [isPersonaSaved, setIsPersonaSaved] = useState<boolean>(false)
 
   const router = useRouter()
