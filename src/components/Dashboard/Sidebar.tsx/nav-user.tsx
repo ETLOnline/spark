@@ -24,7 +24,7 @@ import { useOnLogout } from "@/src/hooks/useSignOut"
 import { useEffect, useState } from "react"
 
 export default function NavUser() {
-  const { isMobile } = useSidebar()
+  const { isMobile, setOpenMobile } = useSidebar()
   const router = useRouter()
   const { user } = useUser()
 
@@ -90,6 +90,7 @@ export default function NavUser() {
               <DropdownMenuItem
                 onClick={() => {
                   router.push("/profile")
+                  setOpenMobile(false)
                 }}
               >
                 <BadgeCheck />
