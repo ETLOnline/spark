@@ -551,7 +551,7 @@ export default function CommunityDetailsClient({
                     variant="outline"
                     size="sm"
                     className={clsx(
-                      "h-9 text-sm text-red-500 hover:bg-red-500 hover:text-white border-none dark:hover:bg-muted dark:hover:text-red-500"
+                      "h-9 text-sm text-red-500 hover:bg-red-500 hover:text-white dark:hover:bg-muted dark:hover:text-red-500"
                     )}
                     onClick={() => setLeaveDialogOpen(true)}
                     disabled={leaveLoading}

@@ -8,7 +8,7 @@ import { Check } from "lucide-react"
 import { cn } from "@/src/lib/utils"
 import { savePersonaAction } from "@/src/server-actions/UserRoles/UserRole"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { SelectRole, SelectUser } from "@/src/db/schema"
+import { SelectRole, SelectUser, SelectUserRole } from "@/src/db/schema"
 import { useRouter } from "next/navigation"
 import { toast } from "@/src/hooks/use-toast"
 import { useSetAtom } from "jotai"
@@ -27,8 +27,9 @@ export default function SelectPersonaPage({
   const { refreshAuthUser, isReloadingPermissions } = useAuthUserRefresh()
 
   const existingGlobalRoleId =
-    (userAuth as any)?.roles?.find((ur: any) => ur.role?.role_type === "GLOBAL")
-      ?.role_id ?? null
+    userAuth?.roles?.find(
+      (ur: SelectUserRole) => ur.role?.role_type === "GLOBAL"
+    )?.role_id ?? null
 
   const [selectedPersona, setSelectedPersona] = useState<number | null>(
     existingGlobalRoleId
