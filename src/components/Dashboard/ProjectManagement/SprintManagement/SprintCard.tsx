@@ -212,7 +212,7 @@ export default function SprintCardPage({
                 Assignee
               </div>
               <div className="col-span-1 text-center truncate" title="Action">
-                Action
+                Actions
               </div>
             </div>
             {getTaskLoading || getFilteredTaskLoading ? (

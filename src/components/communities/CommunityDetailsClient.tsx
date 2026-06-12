@@ -511,15 +511,58 @@ export default function CommunityDetailsClient({
             {community?.category}
           </Badge>
           <div className="flex flex-row items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 text-sm"
-              onClick={() => setIsInviteDialogOpen(true)}
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Invite
-            </Button>
+            {canInviteUser && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 text-sm"
+                onClick={() => setIsInviteDialogOpen(true)}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Invite
+              </Button>
+            )}
+            {!isSuperAdmin && (
+              <>
+                {isCommunityMember === null ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled
+                    className="h-9 text-sm"
+                  >
+                    <Loader size={LoaderSizes.sm} />
+                    <span className="ml-2">Loading...</span>
+                  </Button>
+                ) : !isCommunityMember ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 text-sm"
+                    onClick={handleJoinCommunity}
+                    disabled={joinLoading}
+                    loading={joinLoading}
+                  >
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    {joinLoading ? "Joining..." : "Join"}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={clsx(
+                      "h-9 text-sm text-red-500 hover:bg-red-500 hover:text-white dark:hover:bg-muted dark:hover:text-red-500"
+                    )}
+                    onClick={() => setLeaveDialogOpen(true)}
+                    disabled={leaveLoading}
+                    loading={leaveLoading}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    {leaveLoading ? "Leaving..." : "Leave"}
+                  </Button>
+                )}
+              </>
+            )}
             <div className="[&>button]:h-9 [&>button]:text-sm [&>button]:w-auto">
               <CreateShortcut
                 type="community"

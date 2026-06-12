@@ -22,9 +22,7 @@ export function EventOrganizer({
             </AvatarFallback>
           </Avatar>
           <div>
-            <div className="font-medium">
-              Organizer: {hostName || "Loading..."}
-            </div>
+            <div className="font-medium">{hostName || "Loading..."}</div>
           </div>
         </div>
       </CardContent>
