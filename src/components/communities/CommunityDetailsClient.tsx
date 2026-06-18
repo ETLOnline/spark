@@ -372,8 +372,8 @@ export default function CommunityDetailsClient({
           )}
           <div className="absolute inset-0 bg-black/50"></div>
           <div className="absolute inset-0 px-4 py-4 sm:py-6 sm:px-6 flex flex-col gap-4 justify-center h-full">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 h-full">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full">
+            <div className="flex items-center justify-between gap-4 h-full">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
                 {/* Community Avatar */}
                 <div className="relative">
                   <Avatar className="h-16 w-16 md:h-20 md:w-20 border-4 border-white">
@@ -389,17 +389,15 @@ export default function CommunityDetailsClient({
 
                 {/* Community Info */}
                 <div className="text-white flex-1 min-w-0">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2 w-full">
-                    <div className="flex items-center w-full min-w-0">
-                      <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate">
-                        {community?.title}
-                      </h1>
-                      <div className="flex items-center gap-2 ml-2">
-                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                        <Badge variant="secondary" className="text-xs">
-                          {community?.type === "public" ? "Public" : "Private"}
-                        </Badge>
-                      </div>
+                  <div className="flex flex-col gap-1 mb-1 min-w-0">
+                    <h1 className="text-base sm:text-xl md:text-2xl font-bold leading-tight line-clamp-2">
+                      {community?.title}
+                    </h1>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 bg-green-500 rounded-full shrink-0"></div>
+                      <Badge variant="secondary" className="text-xs">
+                        {community?.type === "public" ? "Public" : "Private"}
+                      </Badge>
                     </div>
                   </div>
                   {/* Description & stats - hidden on mobile */}
@@ -512,38 +510,89 @@ export default function CommunityDetailsClient({
           <Badge variant="outline" className="text-xs">
             {community?.category}
           </Badge>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              onClick={() => setIsInviteDialogOpen(true)}
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Invite
-            </Button>
-            <Button variant="outline" size="sm" className="flex-1">
-              <Settings className="h-4 w-4 mr-2" />
-              Options
-            </Button>
+          <div className="flex flex-row items-center gap-2">
+            {canInviteUser && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 text-sm"
+                onClick={() => setIsInviteDialogOpen(true)}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Invite
+              </Button>
+            )}
+            {!isSuperAdmin && (
+              <>
+                {isCommunityMember === null ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled
+                    className="h-9 text-sm"
+                  >
+                    <Loader size={LoaderSizes.sm} />
+                    <span className="ml-2">Loading...</span>
+                  </Button>
+                ) : !isCommunityMember ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 text-sm"
+                    onClick={handleJoinCommunity}
+                    disabled={joinLoading}
+                    loading={joinLoading}
+                  >
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    {joinLoading ? "Joining..." : "Join"}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={clsx(
+                      "h-9 text-sm text-red-500 hover:bg-red-500 hover:text-white dark:hover:bg-muted dark:hover:text-red-500"
+                    )}
+                    onClick={() => setLeaveDialogOpen(true)}
+                    disabled={leaveLoading}
+                    loading={leaveLoading}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    {leaveLoading ? "Leaving..." : "Leave"}
+                  </Button>
+                )}
+              </>
+            )}
+            <div className="[&>button]:h-9 [&>button]:text-sm [&>button]:w-auto">
+              <CreateShortcut
+                type="community"
+                entity={{
+                  slug: community?.slug ?? "",
+                  title: community?.title ?? "",
+                  entity_id: community?.id ?? ""
+                }}
+              />
+            </div>
           </div>
         </div>
         {/* Main Content */}
         <div className="flex border-t">
           {/* Left Main Content Area */}
-          <div className="flex-1 overflow-auto p-4 md:p-6">
+          <div className="flex-1 overflow-auto md:p-6">
             <div className="max-w-4xl mx-auto space-y-6">
               {/* Text Channels */}
               <div className="bg-background rounded-lg border sm:p-6 p-3">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
                   <h3 className="sm:text-lg text-base font-semibold flex items-center gap-2">
                     <Hash className="h-5 w-5" />
                     Channels
                   </h3>
-                  <CreateChannels
-                    community={community}
-                    onActionComplete={onActionComplete}
-                  />
+                  <div className="[&>button]:h-9 [&>button]:text-sm [&>button]:w-auto">
+                    <CreateChannels
+                      community={community}
+                      onActionComplete={onActionComplete}
+                    />
+                  </div>
                 </div>
                 {loadingChannels ? (
                   <div className="flex justify-center py-8">

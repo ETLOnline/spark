@@ -18,22 +18,29 @@ export default function CommunitiesHeader({
   const route = useRouter()
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 sm:px-6 py-3 gap-2">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Communities</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-xl font-bold tracking-tight">Communities</h1>
+        <p className="text-muted-foreground text-xs">
           Discover and join communities that match your interests
         </p>
       </div>
-      {/* Attach the onCreateCommunityClick prop to the Button's onClick event */}
       {!permissionChecker ? null : canCreateCommunity ? (
-        <Button onClick={onCreateCommunityClick}>
+        <Button
+          onClick={onCreateCommunityClick}
+          size="sm"
+          className="w-full sm:w-auto"
+        >
           <CirclePlus className="h-4 w-4 mr-2" />
           Create Community
         </Button>
       ) : (
-        <Button onClick={() => route.push("/communities/request")}>
-          Request to Create Community
+        <Button
+          onClick={() => route.push("/communities/request")}
+          size="sm"
+          className="w-full sm:w-auto"
+        >
+          Request Community
         </Button>
       )}
     </div>
