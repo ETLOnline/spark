@@ -36,10 +36,12 @@ export async function GetEvents(startDate: string, endDate: string) {
 }
 export async function GetEventById(eventId: number) {
   try {
-    const event = await db
-      .select()
-      .from(eventsTable)
-      .where(and(eq(eventsTable.id, eventId)))
+    const event = await db.query.eventsTable.findMany({
+      with: {
+        host: true
+      },
+      where: eq(eventsTable.id, eventId)
+    })
     return event
   } catch (e: any) {
     throw new Error(e.message)

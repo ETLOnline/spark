@@ -343,8 +343,8 @@ function CreateChannels({
       >
         <DialogTrigger asChild>
           {canCreteChannel && (
-            <Button>
-              <CirclePlus className=" h-4 w-4" />
+            <Button size="sm" className="h-9 text-sm">
+              <CirclePlus className="h-4 w-4" />
               Create Channel
             </Button>
           )}

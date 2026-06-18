@@ -10,8 +10,6 @@ import { EventPricing } from "@/src/components/Dashboard/Event/EventDetails/Even
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetEventByIdAction } from "@/src/server-actions/events/event"
 import { SelectEvent, SelectUser } from "@/src/db/schema"
-import { hostStore } from "@/src/store/host/hostStore"
-import { useAtomValue } from "jotai"
 
 interface Props {
   event_id: string
@@ -20,7 +18,6 @@ interface Props {
 export default function EventsDetailsClient({ event_id }: Props) {
   const [isEventData, setIsEventData] = useState<SelectEvent | null>(null)
   const [hostInfoData, setHostInfoData] = useState<SelectUser | null>(null)
-  const hosts = useAtomValue(hostStore.hosts)
   const [loading, eventData, error, getEvent] =
     useServerAction(GetEventByIdAction)
   useEffect(() => {
@@ -28,22 +25,17 @@ export default function EventsDetailsClient({ event_id }: Props) {
       const eventId = Number(event_id)
       const res = await getEvent(eventId)
 
-      if (res?.data) {
-        setIsEventData(res?.data[0])
+      if (res?.data?.[0]) {
+        const record = res.data[0] as SelectEvent & { host?: SelectUser }
+        setIsEventData(record)
+        if (record.host) {
+          setHostInfoData(record.host)
+        }
       }
     }
 
     getEventData()
   }, [event_id])
-
-  useEffect(() => {
-    if (isEventData?.host_id) {
-      const hostData = hosts[isEventData.host_id]
-      if (hostData) {
-        setHostInfoData(hostData)
-      }
-    }
-  }, [isEventData, hosts])
   const { location, meeting_link } = isEventData?.metadata
     ? JSON.parse(isEventData.metadata)
     : { location: "", meeting_link: "" }

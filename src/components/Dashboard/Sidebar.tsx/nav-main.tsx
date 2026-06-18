@@ -41,6 +41,12 @@ export default function NavMain({
   const sidebar = useSidebar()
   const [openItems, setOpenItems] = useState<Set<string>>(new Set())
 
+  const closeMobileIfNeeded = () => {
+    if (sidebar?.isMobile) {
+      sidebar.setOpenMobile(false)
+    }
+  }
+
   // Close all dropdowns when sidebar is collapsed
   useEffect(() => {
     if (sidebar?.state === "collapsed") {
@@ -124,6 +130,7 @@ export default function NavMain({
                           onClick={() => {
                             if (sidebar?.state === "collapsed")
                               sidebar.toggleSidebar()
+                            closeMobileIfNeeded()
                           }}
                         >
                           {item.icon ? <item.icon /> : null}
@@ -157,6 +164,7 @@ export default function NavMain({
                                           onClick={() => {
                                             if (sidebar?.state === "collapsed")
                                               sidebar.toggleSidebar()
+                                            closeMobileIfNeeded()
                                           }}
                                         >
                                           {subItem.icon ? (
