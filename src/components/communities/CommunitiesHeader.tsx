@@ -34,15 +34,7 @@ export default function CommunitiesHeader({
           <CirclePlus className="h-4 w-4 mr-2" />
           Create Community
         </Button>
-      ) : (
-        <Button
-          onClick={() => route.push("/communities/request")}
-          size="sm"
-          className="w-full sm:w-auto"
-        >
-          Request Community
-        </Button>
-      )}
+      ) : null}
     </div>
   )
 }
