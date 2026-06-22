@@ -231,7 +231,16 @@ const CreateNewChat = ({
           userIds[0],
           spaceId
         )
-        if (response.success && response.data) {
+        if (response.existingChat && response.data) {
+          toast({
+            title: "Chat already exists",
+            description: "You already have a conversation with this person.",
+            duration: 3000
+          })
+          switchChat(response.data)
+          setIsMobileMenuOpen(false)
+          resetAndClose()
+        } else if (response.success && response.data) {
           setMyChats((pre) => [...pre, response.data])
           switchChat(response.data)
           setIsMobileMenuOpen(false)
