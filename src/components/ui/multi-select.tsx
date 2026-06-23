@@ -78,13 +78,19 @@ export default function MultiSelect({
       {selected.length > 0 ? (
         <div className="flex flex-wrap items-center gap-2 py-2">
           {selected.map((o) => (
-            <Badge key={o.value} variant="default">
-              {o.label}{" "}
+            <Badge
+              key={o.value}
+              variant="default"
+              className="max-w-[180px] flex items-center gap-1 overflow-hidden"
+            >
+              <span className="truncate min-w-0 flex-1" title={o.label}>
+                {o.label}
+              </span>
               <CircleMinus
-                className="cursor-pointer"
+                className="cursor-pointer shrink-0"
                 height={11}
                 onClick={() => toggleOption(o)}
-              />{" "}
+              />
             </Badge>
           ))}
         </div>
@@ -150,13 +156,19 @@ export default function MultiSelect({
                       key={option.value}
                       value={`${option.value} ${option.label}`}
                       onSelect={() => toggleOption(option)}
+                      className="overflow-hidden"
                     >
                       <Checkbox
                         checked={selectedValues.includes(option.value)}
                         onCheckedChange={() => toggleOption(option)}
-                        className="mr-2"
+                        className="mr-2 shrink-0"
                       />
-                      {option.label}
+                      <span
+                        className="truncate flex-1 min-w-0"
+                        title={option.label}
+                      >
+                        {option.label}
+                      </span>
                     </CommandItem>
                   ))}
                 </CommandGroup>
