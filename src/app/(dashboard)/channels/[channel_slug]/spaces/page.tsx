@@ -21,8 +21,9 @@ import PrivatePage from "@/src/components/common/Overlay/PrivatePage"
 import { communityStore } from "@/src/store/community/communityStore"
 import {
   AttachChannelUserAction,
-  LeaveChannelAction
+  DettachChannelUserAction
 } from "@/src/server-actions/Channel/Channel"
+import { getRoleByEntityTypeAndIdAction } from "@/src/server-actions/UserRoles/UserRole"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import CreateShortcut from "@/src/components/common/Shortcut/components/CreateShortcut"
 import { useToast } from "@/src/hooks/use-toast"
@@ -67,8 +68,9 @@ export default function ChannelPage() {
   const [joinLoading, joinResult, joinError, joinChannel] = useServerAction(
     AttachChannelUserAction
   )
-  const [leaveLoading, leaveResult, leaveError, leaveChannel] =
-    useServerAction(LeaveChannelAction)
+  const [leaveLoading, leaveResult, leaveError, leaveChannel] = useServerAction(
+    DettachChannelUserAction
+  )
 
   useEffect(() => {
     const channel = pusherClient.subscribe(EntityUpdateBroadCast)
@@ -158,7 +160,34 @@ export default function ChannelPage() {
   const handleLeaveChannel = async () => {
     if (selectedChannel?.id && isChannelMember && currentUserId) {
       try {
-        const res = await leaveChannel(selectedChannel.id, currentUserId)
+        const currentMember = selectedChannel.users?.find(
+          (member) => member.user_id === currentUserId
+        )
+
+        const rolesRes = await getRoleByEntityTypeAndIdAction(
+          "CHANNEL",
+          selectedChannel.id
+        )
+        const scopedRoles = rolesRes?.data ?? []
+
+        const memberRole = scopedRoles.find(
+          (role) => role.name === currentMember?.role
+        )
+
+        if (!memberRole) {
+          toast({
+            title: "Error",
+            description: "Could not find your role in this channel.",
+            variant: "destructive"
+          })
+          return
+        }
+
+        const res = await leaveChannel(
+          selectedChannel.id,
+          currentUserId,
+          memberRole.id
+        )
         if (res?.success) {
           setIsChannelMember(false)
           toast({

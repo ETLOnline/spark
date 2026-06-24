@@ -39,10 +39,11 @@ import { useAtomValue, useSetAtom } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import {
   AttachCommunityUserAction,
-  LeaveCommunityAction
+  DetachCommunityUserAction
 } from "@/src/server-actions/Community/Community"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
+import { getRoleByEntityTypeAndIdAction } from "@/src/server-actions/UserRoles/UserRole"
 import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
 import clsx from "clsx"
 import { communityStore } from "@/src/store/community/communityStore"
@@ -93,7 +94,7 @@ export default function CommunityCard({
   const [joinLoading, joinResult, joinError, attachCommunityUser] =
     useServerAction(AttachCommunityUserAction)
   const [leaveLoading, leaveResult, leaveError, leaveCommunity] =
-    useServerAction(LeaveCommunityAction)
+    useServerAction(DetachCommunityUserAction)
 
   const allowAction = permissionChecker
     ? permissionChecker?.canAccess("community.allow.action")
@@ -135,7 +136,34 @@ export default function CommunityCard({
     if (!community.id || !currentUserId) return
 
     try {
-      const res = await leaveCommunity(community.id, currentUserId)
+      const currentMember = community?.communityMembers?.find(
+        (member) => member.user_id === currentUserId
+      )
+
+      const rolesRes = await getRoleByEntityTypeAndIdAction(
+        "COMMUNITY",
+        community.id
+      )
+      const scopedRoles = rolesRes?.data ?? []
+
+      const memberRole = scopedRoles.find(
+        (role) => role.name === currentMember?.role
+      )
+
+      if (!memberRole) {
+        toast({
+          title: "Error",
+          description: "Could not find your role in this community.",
+          variant: "destructive"
+        })
+        return
+      }
+
+      const res = await leaveCommunity(
+        community.id,
+        currentUserId,
+        memberRole.id
+      )
 
       if (res?.success) {
         setRefreshCommunity((pre) => !pre)

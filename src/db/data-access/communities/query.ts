@@ -312,6 +312,7 @@ export type CommunityDetailData = {
     id: string
     community_id: string
     user_id: string
+    role: string | null
   }[]
 }
 
