@@ -24,6 +24,7 @@ export interface FeedbackFormProps {
   enableFileUpload?: boolean
   isLoading?: boolean
   pageType?: FeedbackFormPageType
+  onDirtyChange?: (isDirty: boolean) => void
 }
 
 const INITIAL_VALUES: Omit<FeedbackFormData, "file"> = {
@@ -37,7 +38,8 @@ export function FeedbackForm({
   onSubmit,
   enableFileUpload = false,
   isLoading = false,
-  pageType = "feedback"
+  pageType = "feedback",
+  onDirtyChange
 }: FeedbackFormProps) {
   const [formData, setFormData] =
     useState<Omit<FeedbackFormData, "file">>(INITIAL_VALUES)
@@ -48,7 +50,12 @@ export function FeedbackForm({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value }
+      const isDirty = Object.values(updated).some((v) => v !== "")
+      onDirtyChange?.(isDirty)
+      return updated
+    })
   }
 
   const handleFileChange = (files: File[]) => {
@@ -66,6 +73,7 @@ export function FeedbackForm({
     setFormData(INITIAL_VALUES)
     setSelectedFile(null)
     setFileUploadResetKey((prev) => prev + 1)
+    onDirtyChange?.(false)
   }
 
   return (

@@ -20,6 +20,7 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 export function ContactUsDialog() {
   const { toast } = useToast()
   const [isOpen, setIsOpen] = useState(false)
+  const [isDirty, setIsDirty] = useState(false)
 
   const [isSubmitContactUsLoading, , , SubmitContactUs] = useServerAction(
     SubmitContactUsAction
@@ -56,7 +57,12 @@ export function ContactUsDialog() {
           Contact Us
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto"
+        onInteractOutside={(e) => {
+          if (isDirty) e.preventDefault()
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Contact Us</DialogTitle>
           <DialogDescription>
@@ -67,6 +73,7 @@ export function ContactUsDialog() {
           onSubmit={handleSubmit}
           isLoading={isSubmitContactUsLoading}
           pageType="contact"
+          onDirtyChange={setIsDirty}
         />
       </DialogContent>
     </Dialog>
