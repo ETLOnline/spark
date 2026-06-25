@@ -607,7 +607,24 @@ export async function getCurrentUserRank(userId: string, communityId: string) {
     with: { user: true }
   })
 
-  return result ?? null
+  if (!result) return null
+
+  // Fetch the user ranked just above to calculate points needed for next rank
+  let pointsToNextRank = 0
+  if (result.rank > 1) {
+    const nextRankEntry = await db.query.leaderboardSnapshotsTable.findFirst({
+      where: and(
+        eq(leaderboardSnapshotsTable.community_id, communityId),
+        eq(leaderboardSnapshotsTable.rank, result.rank - 1)
+      ),
+      columns: { points: true }
+    })
+    if (nextRankEntry) {
+      pointsToNextRank = Math.max(0, nextRankEntry.points - result.points)
+    }
+  }
+
+  return { ...result, pointsToNextRank }
 }
 /**
  * Get all communities user is a member of
