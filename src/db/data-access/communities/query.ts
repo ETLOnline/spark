@@ -620,7 +620,7 @@ export async function getCurrentUserRank(userId: string, communityId: string) {
       columns: { points: true }
     })
     if (nextRankEntry) {
-      pointsToNextRank = Math.max(0, nextRankEntry.points - result.points)
+      pointsToNextRank = Math.max(0, nextRankEntry.points - result.points + 1)
     }
   }
 
