@@ -696,7 +696,12 @@ export default function TaskForm({
                                   (s) =>
                                     s.id && (
                                       <SelectItem key={s.id} value={s.id}>
-                                        {s.name}
+                                        <span
+                                          className="truncate"
+                                          title={s.name}
+                                        >
+                                          {s.name}
+                                        </span>
                                       </SelectItem>
                                     )
                                 )}
@@ -719,7 +724,12 @@ export default function TaskForm({
                               </div>
 
                               <StatusIcon status={selectedValue || ""} />
-                              <span>{selectedValue}</span>
+                              <span
+                                className="truncate min-w-auto"
+                                title={selectedValue}
+                              >
+                                {selectedValue}
+                              </span>
                             </div>
                           )
                         }}

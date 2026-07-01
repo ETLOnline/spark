@@ -194,7 +194,7 @@ export default function SprintTasks({
         </div>
 
         {/* Title */}
-        <div className="md:col-span-3 w-full pr-8 md:pr-0">
+        <div className="md:col-span-2 w-full pr-8 md:pr-0">
           <div
             className="font-semibold break-words whitespace-normal line-clamp-2 cursor-pointer"
             onClick={() => EditTask(task)}
@@ -205,18 +205,25 @@ export default function SprintTasks({
 
         {/* Badges Container (Uses md:contents to flatten into desktop grid, flex-wrap on mobile) */}
         <div className="flex flex-wrap items-center gap-2 w-full md:contents">
-          <div className="md:col-span-1 md:text-center">
+          <div className="md:col-span-2 md:text-center min-w-0 overflow-hidden">
             {task.parentTask ? (
-              <Badge variant={"outline"}>
+              <Badge variant={"outline"} className="max-w-full">
                 <IssueTypeIcon type={task.parentTask?.task_type} />
-                <span className="ml-1">{task.parentTask?.task_num}</span>
+                <span className="ml-1 truncate">
+                  {task.parentTask?.task_num}
+                </span>
               </Badge>
             ) : null}
           </div>
 
-          <div className="md:col-span-2 md:text-center">
-            <Badge variant={"outline"}>
-              {status.find((s) => s.id === task.status_id)?.name}
+          <div className="md:col-span-2 md:text-center min-w-0 overflow-hidden">
+            <Badge variant={"outline"} className="max-w-full">
+              <span
+                className="truncate block max-w-[160px]"
+                title={status.find((s) => s.id === task.status_id)?.name}
+              >
+                {status.find((s) => s.id === task.status_id)?.name}
+              </span>
             </Badge>
           </div>
 
@@ -234,42 +241,48 @@ export default function SprintTasks({
           </div>
 
           <div className="md:col-span-1 md:text-center text-sm font-medium">
-            <span className="md:hidden text-muted-foreground text-xs mr-1">
-              Pts:
-            </span>
-            {task.story_points && task.story_points !== "0"
-              ? task.story_points
-              : "-"}
+            <div className="flex items-center gap-1 md:truncate md:max-w-[50px] mx-auto">
+              <span className="md:hidden text-muted-foreground text-xs">
+                Pts:
+              </span>
+              {task.story_points && task.story_points !== "0"
+                ? task.story_points
+                : "-"}
+            </div>
           </div>
 
-          <div className="md:col-span-1 md:text-center flex items-center">
+          <div className="md:col-span-1 md:text-center">
             {task.assign_to ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Avatar className="h-8 w-8 cursor-pointer">
-                      <AvatarImage
-                        src={getInitials(
-                          `${task?.assignee?.first_name ?? ""} ${task?.assignee?.last_name ?? ""}`
-                        )}
-                        alt={task.assignee?.first_name ?? ""}
-                      />
-                      <AvatarFallback className="text-xs">
-                        {getInitials(
-                          `${task?.assignee?.first_name ?? ""} ${task?.assignee?.last_name ?? ""}`
-                        )}
-                      </AvatarFallback>
-                    </Avatar>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <span>
-                      {task.assignee?.first_name} {task.assignee?.last_name}
-                    </span>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <div className="flex justify-start md:justify-center items-center">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Avatar className="h-8 w-8 cursor-pointer">
+                        <AvatarImage
+                          src={getInitials(
+                            `${task?.assignee?.first_name ?? ""} ${task?.assignee?.last_name ?? ""}`
+                          )}
+                          alt={task.assignee?.first_name ?? ""}
+                        />
+                        <AvatarFallback className="text-xs">
+                          {getInitials(
+                            `${task?.assignee?.first_name ?? ""} ${task?.assignee?.last_name ?? ""}`
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <span>
+                        {task.assignee?.first_name} {task.assignee?.last_name}
+                      </span>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             ) : (
-              <CircleHelp className="h-5 w-5 text-muted-foreground" />
+              <div className="flex justify-start md:justify-center items-center">
+                <CircleHelp className="h-5 w-5 text-muted-foreground" />
+              </div>
             )}
           </div>
         </div>
