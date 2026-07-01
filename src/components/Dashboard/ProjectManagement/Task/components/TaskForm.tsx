@@ -631,7 +631,7 @@ export default function TaskForm({
                     isSprintCompleted={isSprintCompleted}
                     refetchComments={refetchComments}
                     setRefetchComments={setRefetchComments}
-                    projectUsers={defaultUsers.filter((user) => user !== null)}
+                    projectId={projectId}
                     isOpen={isTaskModelOpen}
                   />
                 </div>
