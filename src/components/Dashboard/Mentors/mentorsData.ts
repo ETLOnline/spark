@@ -2,8 +2,8 @@ import { MultiSelectOption } from "@/src/components/ui/multi-select"
 
 export type TierType = "Elite" | "Expert" | "Skilled" | "Rising" | "Starter"
 export type AvailabilityType = "Available" | "Limited" | "Busy"
-export type EngagementType = "One-on-One" | "Group" | "Both"
-export type SessionFormat = "Video Call" | "Chat" | "Async"
+export type SessionType = "One-on-One" | "Group" | "Both"
+export type EngagementType = "Skill Mentorship" | "FYP Supervision" | "Both"
 
 export const SKILL_OPTIONS: MultiSelectOption[] = [
   { label: "React", value: "React" },
@@ -31,16 +31,16 @@ export const TIER_OPTIONS: MultiSelectOption[] = [
   { label: "Starter", value: "Starter" }
 ]
 
-export const ENGAGEMENT_OPTIONS: MultiSelectOption[] = [
-  { label: "One-on-One", value: "One-on-One" },
+export const SESSION_TYPE_OPTIONS: MultiSelectOption[] = [
+  { label: "1:1 Only", value: "One-on-One" },
   { label: "Group", value: "Group" },
   { label: "Both", value: "Both" }
 ]
 
-export const FORMAT_OPTIONS: MultiSelectOption[] = [
-  { label: "Video Call", value: "Video Call" },
-  { label: "Chat", value: "Chat" },
-  { label: "Async (own schedule)", value: "Async" }
+export const ENGAGEMENT_TYPE_OPTIONS: MultiSelectOption[] = [
+  { label: "Skill Mentorship", value: "Skill Mentorship" },
+  { label: "FYP Supervision", value: "FYP Supervision" },
+  { label: "Both", value: "Both" }
 ]
 
 export interface MentorFiltersType {
@@ -48,9 +48,8 @@ export interface MentorFiltersType {
   availability: AvailabilityType[]
   tiers: TierType[]
   minRating: number
+  sessionTypes: SessionType[]
   engagementTypes: EngagementType[]
-  sessionFormats: SessionFormat[]
-  rpEligibleOnly: boolean
 }
 
 export const DEFAULT_FILTERS: MentorFiltersType = {
@@ -58,9 +57,8 @@ export const DEFAULT_FILTERS: MentorFiltersType = {
   availability: [],
   tiers: [],
   minRating: 0,
-  engagementTypes: [],
-  sessionFormats: [],
-  rpEligibleOnly: false
+  sessionTypes: [],
+  engagementTypes: []
 }
 
 export interface MentorData {
@@ -77,9 +75,8 @@ export interface MentorData {
   activeMentees: number
   rpRequired: number
   availability: AvailabilityType
+  sessionType: SessionType
   engagementType: EngagementType
-  sessionFormats: SessionFormat[]
-  rpEligible: boolean
 }
 
 export const MENTORS_DATA: MentorData[] = [
@@ -97,9 +94,8 @@ export const MENTORS_DATA: MentorData[] = [
     activeMentees: 12,
     rpRequired: 800,
     availability: "Available",
-    engagementType: "One-on-One",
-    sessionFormats: ["Video Call", "Chat"],
-    rpEligible: true
+    sessionType: "One-on-One",
+    engagementType: "Skill Mentorship"
   },
   {
     id: "2",
@@ -115,9 +111,8 @@ export const MENTORS_DATA: MentorData[] = [
     activeMentees: 8,
     rpRequired: 600,
     availability: "Limited",
-    engagementType: "Both",
-    sessionFormats: ["Video Call", "Async"],
-    rpEligible: true
+    sessionType: "Both",
+    engagementType: "Both"
   },
   {
     id: "3",
@@ -133,8 +128,7 @@ export const MENTORS_DATA: MentorData[] = [
     activeMentees: 5,
     rpRequired: 400,
     availability: "Busy",
-    engagementType: "Group",
-    sessionFormats: ["Chat", "Async"],
-    rpEligible: false
+    sessionType: "Group",
+    engagementType: "FYP Supervision"
   }
 ]

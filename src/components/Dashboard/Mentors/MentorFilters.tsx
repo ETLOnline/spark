@@ -4,7 +4,6 @@ import { useState } from "react"
 import { Filter } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import { Label } from "@/src/components/ui/label"
-import { Switch } from "@/src/components/ui/switch"
 import {
   Drawer,
   DrawerClose,
@@ -29,15 +28,15 @@ import MultiSelect, {
 import {
   TierType,
   AvailabilityType,
+  SessionType,
   EngagementType,
-  SessionFormat,
   MentorFiltersType,
   DEFAULT_FILTERS,
   SKILL_OPTIONS,
   AVAILABILITY_OPTIONS,
   TIER_OPTIONS,
-  ENGAGEMENT_OPTIONS,
-  FORMAT_OPTIONS
+  SESSION_TYPE_OPTIONS,
+  ENGAGEMENT_TYPE_OPTIONS
 } from "./mentorsData"
 
 export type { MentorFiltersType }
@@ -51,11 +50,10 @@ export default function MentorFilters({ onApplyFilters }: Props) {
   const [availability, setAvailability] = useState<MultiSelectOption[]>([])
   const [tiers, setTiers] = useState<MultiSelectOption[]>([])
   const [minRating, setMinRating] = useState("0")
+  const [sessionTypes, setSessionTypes] = useState<MultiSelectOption[]>([])
   const [engagementTypes, setEngagementTypes] = useState<MultiSelectOption[]>(
     []
   )
-  const [sessionFormats, setSessionFormats] = useState<MultiSelectOption[]>([])
-  const [rpEligibleOnly, setRpEligibleOnly] = useState(false)
 
   function applyFilters() {
     onApplyFilters({
@@ -63,9 +61,8 @@ export default function MentorFilters({ onApplyFilters }: Props) {
       availability: availability.map((a) => a.value) as AvailabilityType[],
       tiers: tiers.map((t) => t.value) as TierType[],
       minRating: parseFloat(minRating),
-      engagementTypes: engagementTypes.map((e) => e.value) as EngagementType[],
-      sessionFormats: sessionFormats.map((f) => f.value) as SessionFormat[],
-      rpEligibleOnly
+      sessionTypes: sessionTypes.map((s) => s.value) as SessionType[],
+      engagementTypes: engagementTypes.map((e) => e.value) as EngagementType[]
     })
   }
 
@@ -74,17 +71,16 @@ export default function MentorFilters({ onApplyFilters }: Props) {
     setAvailability([])
     setTiers([])
     setMinRating("0")
+    setSessionTypes([])
     setEngagementTypes([])
-    setSessionFormats([])
-    setRpEligibleOnly(false)
     onApplyFilters(DEFAULT_FILTERS)
   }
 
   return (
     <Drawer>
       <DrawerTrigger asChild>
-        <Button variant="outline" className=" w-full gap-2 ">
-          <Filter className="h-4 w-4 " />
+        <Button variant="outline" className="w-full gap-2">
+          <Filter className="h-4 w-4" />
           Filters
         </Button>
       </DrawerTrigger>
@@ -94,8 +90,8 @@ export default function MentorFilters({ onApplyFilters }: Props) {
             <DrawerHeader>
               <DrawerTitle>Filter Mentors</DrawerTitle>
               <DrawerDescription>
-                Filter by skills, availability, rating, tier, engagement type,
-                and session format.
+                Filter by skills, availability, rating, tier, session type, and
+                engagement type.
               </DrawerDescription>
             </DrawerHeader>
 
@@ -146,35 +142,22 @@ export default function MentorFilters({ onApplyFilters }: Props) {
               </div>
 
               <div className="space-y-2">
-                <Label>Engagement Type</Label>
+                <Label>Session Type</Label>
                 <MultiSelect
-                  options={ENGAGEMENT_OPTIONS}
-                  selected={engagementTypes}
-                  onChange={setEngagementTypes}
+                  options={SESSION_TYPE_OPTIONS}
+                  selected={sessionTypes}
+                  onChange={setSessionTypes}
                   placeholder="Select options"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Session Format</Label>
+                <Label>Engagement Type</Label>
                 <MultiSelect
-                  options={FORMAT_OPTIONS}
-                  selected={sessionFormats}
-                  onChange={setSessionFormats}
+                  options={ENGAGEMENT_TYPE_OPTIONS}
+                  selected={engagementTypes}
+                  onChange={setEngagementTypes}
                   placeholder="Select options"
-                />
-              </div>
-
-              <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
-                <div>
-                  <p className="text-sm font-medium">RP Eligible Only</p>
-                  <p className="text-xs text-muted-foreground">
-                    Show only mentors who accept RP
-                  </p>
-                </div>
-                <Switch
-                  checked={rpEligibleOnly}
-                  onCheckedChange={setRpEligibleOnly}
                 />
               </div>
             </div>

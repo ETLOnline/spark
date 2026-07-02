@@ -22,11 +22,11 @@ export default function MentorsListingPage() {
         m.company.toLowerCase().includes(q) ||
         m.tags.some((t) => t.toLowerCase().includes(q))
 
-      const matchesDrawerSkills =
+      const matchesSkills =
         drawerFilters.skills.length === 0 ||
         drawerFilters.skills.some((s) => m.tags.includes(s))
 
-      const matchesDrawerAvail =
+      const matchesAvailability =
         drawerFilters.availability.length === 0 ||
         drawerFilters.availability.includes(m.availability)
 
@@ -35,25 +35,22 @@ export default function MentorsListingPage() {
 
       const matchesRating = m.rating >= drawerFilters.minRating
 
-      const matchesEngagement =
+      const matchesSessionType =
+        drawerFilters.sessionTypes.length === 0 ||
+        drawerFilters.sessionTypes.includes(m.sessionType)
+
+      const matchesEngagementType =
         drawerFilters.engagementTypes.length === 0 ||
         drawerFilters.engagementTypes.includes(m.engagementType)
 
-      const matchesFormat =
-        drawerFilters.sessionFormats.length === 0 ||
-        drawerFilters.sessionFormats.some((f) => m.sessionFormats.includes(f))
-
-      const matchesRp = !drawerFilters.rpEligibleOnly || m.rpEligible
-
       return (
         matchesSearch &&
-        matchesDrawerSkills &&
-        matchesDrawerAvail &&
+        matchesSkills &&
+        matchesAvailability &&
         matchesTier &&
         matchesRating &&
-        matchesEngagement &&
-        matchesFormat &&
-        matchesRp
+        matchesSessionType &&
+        matchesEngagementType
       )
     })
   }, [search, drawerFilters])
