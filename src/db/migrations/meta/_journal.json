@@ -316,6 +316,13 @@
       "when": 1779116292296,
       "tag": "0044_2026_05_18_195808__create_contact_us_table",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1782993728647,
+      "tag": "0045_2026_07_02_200207__add_table_and_add_column_in_users_table",
+      "breakpoints": true
     }
   ]
 }

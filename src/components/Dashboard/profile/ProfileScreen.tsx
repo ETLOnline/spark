@@ -5,6 +5,7 @@ import ProfileBio from "@/src/components/Dashboard/profile/profile-bio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   CalendarIcon,
+  CalendarDays,
   Plus,
   PencilIcon,
   GraduationCap,
@@ -17,7 +18,12 @@ import {
   Instagram,
   Globe,
   Share2,
-  CopyIcon
+  CopyIcon,
+  Briefcase,
+  Building2,
+  Video,
+  Target,
+  CheckCircle2
 } from "lucide-react"
 import {
   SelectCertificate,
@@ -51,6 +57,10 @@ import Image from "next/image"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import EditSocialLinksModal from "./user/SocialLinksModal"
+import EditMentorModal from "./EditMentorModal"
+import { GetMentorAvailabilityAction } from "@/src/server-actions/Mentor/MentorActions"
+import { toLocalDateStr } from "@/src/lib/utils"
+import Link from "next/link"
 import { SocialLinkItem } from "./user/SocialLinkItem"
 import UserProfileCard from "./UserProfileCard"
 import TrustEngineCard from "./trust-engine/TrustEngineCard"
@@ -99,6 +109,17 @@ export default function ProfileScreen({
   )
   const [coverImage, setCoverImage] = useState(user.cover_image)
   const [referralLink, setReferralLink] = useState("")
+  const [mentorSlots, setMentorSlots] = useState<
+    {
+      id: number
+      date: string
+      repeat_type: string
+      repeat_end_date: string | null
+    }[]
+  >([])
+  const [, , , getMentorAvailability] = useServerAction(
+    GetMentorAvailabilityAction
+  )
   const authUser = useAtomValue(userStore.AuthUser)
 
   const displayUser = isMyProfile && authUser ? authUser : user
@@ -124,6 +145,26 @@ export default function ProfileScreen({
       setIsMyProfile(authUser.unique_id === user.unique_id)
     }
   }, [authUser, user])
+
+  // Fetch mentor slots for both owner and viewer — used to derive availability status
+  useEffect(() => {
+    if (!profile?.is_mentor_active) return
+    const fetchSlots = async () => {
+      const res = await getMentorAvailability(user.unique_id)
+      if (res?.success && res.data) {
+        setMentorSlots(res.data.filter((s) => s.is_active))
+      }
+    }
+    fetchSlots()
+  }, [profile?.is_mentor_active, user.unique_id])
+
+  // A mentor is "available" if they have at least one slot that hasn't expired
+  const todayStr = toLocalDateStr(new Date())
+  const isAvailable = mentorSlots.some((s) => {
+    if (s.repeat_type === "none") return s.date >= todayStr
+    // daily / weekly: available unless repeat_end_date is in the past
+    return !s.repeat_end_date || s.repeat_end_date >= todayStr
+  })
 
   useEffect(() => {
     const GetUserRecommendations = async () => {
@@ -458,6 +499,108 @@ export default function ProfileScreen({
                 </CardContent>
               </Card>
             )}
+            {/* Mentor Info — only shown when mentor setup is complete */}
+            {profile?.is_mentor_active && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span className="flex items-center gap-2">Mentorship</span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          isAvailable
+                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                            : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                        }`}
+                      >
+                        {isAvailable ? "Available" : "No Availability Set"}
+                      </span>
+                      {isMyProfile && (
+                        <EditMentorModal
+                          user={user}
+                          profile={profile as SelectProfile}
+                          setProfile={setProfile}
+                        />
+                      )}
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {/* Professional Title — always shown */}
+                  <div className="flex items-center gap-3">
+                    <Briefcase className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">
+                        Professional Title
+                      </p>
+                      <p className="text-sm font-medium break-words">
+                        {profile?.professional_title || "—"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Company — always shown */}
+                  <div className="flex items-center gap-3">
+                    <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">
+                        Company / Organisation
+                      </p>
+                      <p className="text-sm font-medium break-words">
+                        {profile?.company || "—"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Completed Sessions */}
+                  {(profile?.total_completed_sessions ?? 0) > 0 && (
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Completed Sessions
+                        </p>
+                        <p className="text-sm font-medium">
+                          {profile.total_completed_sessions}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mentor: manage their own availability */}
+                  {isMyProfile && (
+                    <Link href="/profile/availability" className="w-full">
+                      <Button
+                        variant="outline"
+                        className="w-full mt-2"
+                        size="sm"
+                      >
+                        <CalendarDays className="h-4 w-4 mr-2" />
+                        Manage Availability
+                      </Button>
+                    </Link>
+                  )}
+
+                  {/* Viewer: see mentor's availability when slots exist */}
+                  {!isMyProfile && mentorSlots.length > 0 && (
+                    <Link
+                      href={`/profile/${user.unique_id}/availability`}
+                      className="w-full"
+                    >
+                      <Button
+                        variant="outline"
+                        className="w-full mt-2"
+                        size="sm"
+                      >
+                        <CalendarDays className="h-4 w-4 mr-2" />
+                        View Availability
+                      </Button>
+                    </Link>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Education */}
             <Card>
               <CardHeader>
