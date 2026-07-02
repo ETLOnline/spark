@@ -22,20 +22,19 @@ import {
   SelectValue
 } from "@/src/components/ui/select"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
+import { Switch } from "@/src/components/ui/switch"
 import MultiSelect, {
   MultiSelectOption
 } from "@/src/components/ui/multi-select"
 import {
   TierType,
-  AvailabilityType,
-  SessionType,
+  SessionFormat,
   EngagementType,
   MentorFiltersType,
   DEFAULT_FILTERS,
   SKILL_OPTIONS,
-  AVAILABILITY_OPTIONS,
   TIER_OPTIONS,
-  SESSION_TYPE_OPTIONS,
+  SESSION_FORMAT_OPTIONS,
   ENGAGEMENT_TYPE_OPTIONS
 } from "./mentorsData"
 
@@ -47,32 +46,35 @@ interface Props {
 
 export default function MentorFilters({ onApplyFilters }: Props) {
   const [skills, setSkills] = useState<MultiSelectOption[]>([])
-  const [availability, setAvailability] = useState<MultiSelectOption[]>([])
+  const [availability, setAvailability] = useState("all")
   const [tiers, setTiers] = useState<MultiSelectOption[]>([])
   const [minRating, setMinRating] = useState("0")
-  const [sessionTypes, setSessionTypes] = useState<MultiSelectOption[]>([])
+  const [sessionFormats, setSessionFormats] = useState<MultiSelectOption[]>([])
   const [engagementTypes, setEngagementTypes] = useState<MultiSelectOption[]>(
     []
   )
+  const [rpEligibleOnly, setRpEligibleOnly] = useState(false)
 
   function applyFilters() {
     onApplyFilters({
       skills: skills.map((s) => s.value),
-      availability: availability.map((a) => a.value) as AvailabilityType[],
+      availability,
       tiers: tiers.map((t) => t.value) as TierType[],
       minRating: parseFloat(minRating),
-      sessionTypes: sessionTypes.map((s) => s.value) as SessionType[],
-      engagementTypes: engagementTypes.map((e) => e.value) as EngagementType[]
+      sessionFormats: sessionFormats.map((s) => s.value) as SessionFormat[],
+      engagementTypes: engagementTypes.map((e) => e.value) as EngagementType[],
+      rpEligibleOnly
     })
   }
 
   function clearFilters() {
     setSkills([])
-    setAvailability([])
+    setAvailability("all")
     setTiers([])
     setMinRating("0")
-    setSessionTypes([])
+    setSessionFormats([])
     setEngagementTypes([])
+    setRpEligibleOnly(false)
     onApplyFilters(DEFAULT_FILTERS)
   }
 
@@ -90,14 +92,14 @@ export default function MentorFilters({ onApplyFilters }: Props) {
             <DrawerHeader>
               <DrawerTitle>Filter Mentors</DrawerTitle>
               <DrawerDescription>
-                Filter by skills, availability, rating, tier, session type, and
-                engagement type.
+                Filter by skills, availability, rating, tier, session format,
+                and engagement type.
               </DrawerDescription>
             </DrawerHeader>
 
             <div className="p-4 space-y-4">
               <div className="space-y-2">
-                <Label>Skills</Label>
+                <Label>Skills / Expertise</Label>
                 <MultiSelect
                   options={SKILL_OPTIONS}
                   selected={skills}
@@ -108,12 +110,32 @@ export default function MentorFilters({ onApplyFilters }: Props) {
 
               <div className="space-y-2">
                 <Label>Availability</Label>
-                <MultiSelect
-                  options={AVAILABILITY_OPTIONS}
-                  selected={availability}
-                  onChange={setAvailability}
-                  placeholder="Select options"
-                />
+                <Select value={availability} onValueChange={setAvailability}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="available-now">Available now</SelectItem>
+                    <SelectItem value="available-this-week">
+                      Available this week
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Rating</Label>
+                <Select value={minRating} onValueChange={setMinRating}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">All</SelectItem>
+                    <SelectItem value="4">4+ stars</SelectItem>
+                    <SelectItem value="3">3+ stars</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -122,32 +144,7 @@ export default function MentorFilters({ onApplyFilters }: Props) {
                   options={TIER_OPTIONS}
                   selected={tiers}
                   onChange={setTiers}
-                  placeholder="Select options"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Minimum Rating</Label>
-                <Select value={minRating} onValueChange={setMinRating}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Any rating" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">Any rating</SelectItem>
-                    <SelectItem value="3.5">3.5+</SelectItem>
-                    <SelectItem value="4.0">4.0+</SelectItem>
-                    <SelectItem value="4.5">4.5+</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Session Type</Label>
-                <MultiSelect
-                  options={SESSION_TYPE_OPTIONS}
-                  selected={sessionTypes}
-                  onChange={setSessionTypes}
-                  placeholder="Select options"
+                  placeholder="Select tiers"
                 />
               </div>
 
@@ -158,6 +155,29 @@ export default function MentorFilters({ onApplyFilters }: Props) {
                   selected={engagementTypes}
                   onChange={setEngagementTypes}
                   placeholder="Select options"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Session Format</Label>
+                <MultiSelect
+                  options={SESSION_FORMAT_OPTIONS}
+                  selected={sessionFormats}
+                  onChange={setSessionFormats}
+                  placeholder="Select options"
+                />
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
+                <div>
+                  <p className="text-sm font-medium">My RP eligible only</p>
+                  <p className="text-xs text-muted-foreground">
+                    Show only mentors you have enough RPs to request
+                  </p>
+                </div>
+                <Switch
+                  checked={rpEligibleOnly}
+                  onCheckedChange={setRpEligibleOnly}
                 />
               </div>
             </div>

@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
 import { cn } from "@/src/lib/utils"
-import { MentorData, TierType, AvailabilityType } from "./mentorsData"
+import { MentorData } from "./mentorsData"
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -36,9 +36,7 @@ interface MentorCardProps {
 export default function MentorCard({ mentor }: MentorCardProps) {
   return (
     <Card className="flex flex-col overflow-visible hover:shadow-lg transition-shadow border border-border rounded-2xl">
-      <div className="bg-muted px-4 pt-4 pb-10 flex flex-col gap-3 rounded-t-2xl">
-        <div className="flex items-center justify-between"></div>
-      </div>
+      <div className="bg-muted px-4 pt-4 pb-10 flex flex-col gap-3 rounded-t-2xl"></div>
 
       <div className="flex justify-center -mt-10 relative z-10">
         <Avatar className="h-20 w-20 border-4 border-card">

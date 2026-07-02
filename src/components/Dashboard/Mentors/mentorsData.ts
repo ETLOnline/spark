@@ -1,8 +1,8 @@
 import { MultiSelectOption } from "@/src/components/ui/multi-select"
 
-export type TierType = "Elite" | "Expert" | "Skilled" | "Rising" | "Starter"
-export type AvailabilityType = "Available" | "Limited" | "Busy"
-export type SessionType = "One-on-One" | "Group" | "Both"
+export type TierType = "Starter" | "Intermediate" | "Advanced" | "Elite"
+export type AvailabilityType = "Available" | "Fully booked" | "On leave"
+export type SessionFormat = "One-on-One" | "Group" | "Both"
 export type EngagementType = "Skill Mentorship" | "FYP Supervision" | "Both"
 
 export const SKILL_OPTIONS: MultiSelectOption[] = [
@@ -17,22 +17,15 @@ export const SKILL_OPTIONS: MultiSelectOption[] = [
   { label: "Data Analysis", value: "Data Analysis" }
 ]
 
-export const AVAILABILITY_OPTIONS: MultiSelectOption[] = [
-  { label: "Available", value: "Available" },
-  { label: "Limited", value: "Limited" },
-  { label: "Busy", value: "Busy" }
-]
-
 export const TIER_OPTIONS: MultiSelectOption[] = [
-  { label: "Elite", value: "Elite" },
-  { label: "Expert", value: "Expert" },
-  { label: "Skilled", value: "Skilled" },
-  { label: "Rising", value: "Rising" },
-  { label: "Starter", value: "Starter" }
+  { label: "Starter", value: "Starter" },
+  { label: "Intermediate", value: "Intermediate" },
+  { label: "Advanced", value: "Advanced" },
+  { label: "Elite", value: "Elite" }
 ]
 
-export const SESSION_TYPE_OPTIONS: MultiSelectOption[] = [
-  { label: "1:1 Only", value: "One-on-One" },
+export const SESSION_FORMAT_OPTIONS: MultiSelectOption[] = [
+  { label: "One-on-One", value: "One-on-One" },
   { label: "Group", value: "Group" },
   { label: "Both", value: "Both" }
 ]
@@ -45,20 +38,22 @@ export const ENGAGEMENT_TYPE_OPTIONS: MultiSelectOption[] = [
 
 export interface MentorFiltersType {
   skills: string[]
-  availability: AvailabilityType[]
+  availability: string // "all" | "available-now" | "available-this-week"
   tiers: TierType[]
   minRating: number
-  sessionTypes: SessionType[]
+  sessionFormats: SessionFormat[]
   engagementTypes: EngagementType[]
+  rpEligibleOnly: boolean
 }
 
 export const DEFAULT_FILTERS: MentorFiltersType = {
   skills: [],
-  availability: [],
+  availability: "all",
   tiers: [],
   minRating: 0,
-  sessionTypes: [],
-  engagementTypes: []
+  sessionFormats: [],
+  engagementTypes: [],
+  rpEligibleOnly: false
 }
 
 export interface MentorData {
@@ -75,7 +70,7 @@ export interface MentorData {
   activeMentees: number
   rpRequired: number
   availability: AvailabilityType
-  sessionType: SessionType
+  sessionFormat: SessionFormat
   engagementType: EngagementType
 }
 
@@ -94,7 +89,7 @@ export const MENTORS_DATA: MentorData[] = [
     activeMentees: 12,
     rpRequired: 800,
     availability: "Available",
-    sessionType: "One-on-One",
+    sessionFormat: "One-on-One",
     engagementType: "Skill Mentorship"
   },
   {
@@ -105,13 +100,13 @@ export const MENTORS_DATA: MentorData[] = [
     title: "Product Manager",
     company: "Meta",
     tags: ["Product Strategy", "Agile", "UX Research"],
-    tier: "Expert",
+    tier: "Advanced",
     rating: 4.6,
     reviewCount: 31,
     activeMentees: 8,
     rpRequired: 600,
-    availability: "Limited",
-    sessionType: "Both",
+    availability: "Available",
+    sessionFormat: "Both",
     engagementType: "Both"
   },
   {
@@ -122,13 +117,15 @@ export const MENTORS_DATA: MentorData[] = [
     title: "Data Scientist",
     company: "Amazon",
     tags: ["Machine Learning", "Python", "Data Analysis"],
-    tier: "Skilled",
+    tier: "Intermediate",
     rating: 4.2,
     reviewCount: 19,
     activeMentees: 5,
     rpRequired: 400,
-    availability: "Busy",
-    sessionType: "Group",
+    availability: "Fully booked",
+    sessionFormat: "Group",
     engagementType: "FYP Supervision"
   }
 ]
+
+export const USER_RP_BALANCE = 500
