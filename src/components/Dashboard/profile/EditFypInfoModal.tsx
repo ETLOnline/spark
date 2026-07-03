@@ -29,6 +29,7 @@ import { toast } from "@/src/hooks/use-toast"
 import { UnsavedChangesDialog } from "../../common/unsavedChangesDialog"
 import { useConfirmClose } from "@/src/hooks/useConfirmClose"
 import { updateUserProfileAction } from "@/src/server-actions/profile/profile"
+import { FypStatus } from "./types/profile-types"
 
 interface Props {
   user: SelectUser
@@ -36,15 +37,10 @@ interface Props {
   setProfile: Dispatch<SetStateAction<SelectProfile | null | undefined>>
 }
 
-export const FYP_STATUS_OPTIONS = [
-  "Not Started",
-  "In Progress",
-  "Completed",
-  "On Hold"
-] as const
+export const FYP_STATUS_OPTIONS = Object.values(FypStatus)
 
 const fypInfoSchema = z.object({
-  fyp_status: z.enum(FYP_STATUS_OPTIONS).optional(),
+  fyp_status: z.nativeEnum(FypStatus).optional(),
   learning_goals: z.string().max(1000, "Maximum 1000 characters").optional()
 })
 

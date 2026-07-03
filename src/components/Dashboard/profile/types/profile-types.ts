@@ -33,3 +33,10 @@ export type Profile = {
   activities: Activity[]
   tags: InsertTag[]
 }
+
+export enum FypStatus {
+  NotStarted = "Not started",
+  IdeaPhase = "Idea phase",
+  Development = "Development",
+  FinalStage = "Final stage"
+}
