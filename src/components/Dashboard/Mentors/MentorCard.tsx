@@ -35,11 +35,11 @@ interface MentorCardProps {
 
 export default function MentorCard({ mentor }: MentorCardProps) {
   return (
-    <Card className="flex flex-col overflow-visible hover:shadow-lg transition-shadow border border-border rounded-2xl">
-      <div className="bg-muted px-4 pt-4 pb-10 flex flex-col gap-3 rounded-t-2xl"></div>
+    <Card className="flex flex-col overflow-hidden hover:shadow-lg transition-shadow border border-border rounded-2xl w-full">
+      <div className="bg-muted px-4 pt-4 pb-10 rounded-t-2xl" />
 
       <div className="flex justify-center -mt-10 relative z-10">
-        <Avatar className="h-20 w-20 border-4 border-card">
+        <Avatar className="h-20 w-20 border-4 border-card shrink-0">
           {mentor.photo ? (
             <AvatarImage src={mentor.photo} alt={mentor.name} />
           ) : null}
@@ -49,21 +49,25 @@ export default function MentorCard({ mentor }: MentorCardProps) {
         </Avatar>
       </div>
 
-      <CardContent className="bg-card rounded-b-2xl -mt-10 px-4 pt-12 pb-4 flex flex-col gap-3 flex-1">
+      <CardContent className="bg-card rounded-b-2xl -mt-10 px-4 pt-12 pb-4 flex flex-col gap-3 flex-1 min-w-0">
         {/* Name / title / company */}
         <div className="text-center">
-          <h3 className="font-bold text-base text-foreground">{mentor.name}</h3>
-          <p className="text-sm text-muted-foreground mt-0.5">{mentor.title}</p>
+          <h3 className="font-bold text-base text-foreground truncate">
+            {mentor.name}
+          </h3>
+          <p className="text-sm text-muted-foreground mt-0.5 truncate">
+            {mentor.title}
+          </p>
           <div className="flex items-center justify-center gap-1 mt-1">
-            <Building2 className="h-3 w-3 text-muted-foreground/70 flex-shrink-0" />
-            <span className="text-xs text-muted-foreground">
+            <Building2 className="h-3 w-3 text-muted-foreground/70 shrink-0" />
+            <span className="text-xs text-muted-foreground truncate">
               {mentor.company}
             </span>
           </div>
         </div>
 
         {/* Expertise tags */}
-        <div className="flex flex-wrap justify-center gap-1.5 min-h-[60px] content-start">
+        <div className="flex flex-wrap justify-center gap-1.5">
           {mentor.tags.slice(0, 3).map((tag) => (
             <Badge
               key={tag}
@@ -76,8 +80,8 @@ export default function MentorCard({ mentor }: MentorCardProps) {
         </div>
 
         {/* Stars + reviews */}
-        <div className="flex items-center justify-between border-t border-border pt-3">
-          <div className="flex items-center gap-1.5">
+        <div className="flex items-center justify-between border-t border-border pt-3 gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             <StarRating rating={mentor.rating} />
             <span className="text-sm font-semibold text-foreground">
               {mentor.rating.toFixed(1)}
@@ -89,13 +93,13 @@ export default function MentorCard({ mentor }: MentorCardProps) {
         </div>
 
         {/* Mentees */}
-        <div className="flex gap-1 text-muted-foreground text-sm">
-          <Users className="h-3.5 w-3.5" />
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <Users className="h-3.5 w-3.5 shrink-0" />
           <span>{mentor.activeMentees} active mentees</span>
         </div>
 
         {/* CTA */}
-        <Link href={`/profile/${mentor.id}`} className="mt-1">
+        <Link href={`/profile/${mentor.id}`} className="mt-auto">
           <Button size="sm" className="w-full gap-1.5">
             View Profile
             <ArrowRight className="h-3.5 w-3.5" />

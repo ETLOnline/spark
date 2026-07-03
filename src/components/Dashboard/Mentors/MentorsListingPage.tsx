@@ -46,7 +46,7 @@ export default function MentorsListingPage() {
   }, [search, drawerFilters])
 
   return (
-    <div className="bg-background">
+    <div className="bg-background overflow-x-hidden">
       {/* Page header */}
       <div className="px-3 py-3">
         <h1 className="text-xl font-bold tracking-tight">Mentors</h1>
@@ -59,8 +59,8 @@ export default function MentorsListingPage() {
       <div className="w-full px-3 pb-4 space-y-4">
         {/* Filter bar */}
         <div className="flex items-center gap-2">
-          <div className="relative w-96 shrink-0">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
               placeholder="Search mentors..."
               className="pl-10 w-full"
@@ -68,25 +68,21 @@ export default function MentorsListingPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="w-28 shrink-0">
+          <div className="shrink-0">
             <MentorFilters onApplyFilters={setDrawerFilters} />
           </div>
         </div>
 
-        {/* Results */}
-        <div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Showing{" "}
-            <span className="font-medium text-foreground">
-              {filtered.length}
-            </span>{" "}
-            {filtered.length === 1 ? "mentor" : "mentors"}
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filtered.map((mentor) => (
-              <MentorCard key={mentor.id} mentor={mentor} />
-            ))}
-          </div>
+        {/* Results count */}
+        <p className="text-sm text-muted-foreground">
+          Showing{" "}
+          <span className="font-medium text-foreground">{filtered.length}</span>{" "}
+          {filtered.length === 1 ? "mentor" : "mentors"}
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          {filtered.map((mentor) => (
+            <MentorCard key={mentor.id} mentor={mentor} />
+          ))}
         </div>
       </div>
     </div>
