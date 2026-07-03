@@ -104,6 +104,7 @@ export default function ProfileScreen({
   const authUser = useAtomValue(userStore.AuthUser)
 
   const displayUser = isMyProfile && authUser ? authUser : user
+  const isStudent = !!getUserRole(user)?.includes("Student")
 
   const [recommendationLoading, , , GetRecommendations] = useServerAction(
     GetRecommendationAction
@@ -462,16 +463,18 @@ export default function ProfileScreen({
             )}
 
             {/* FYP Status & Learning Goals */}
-            {isMyProfile && (
+            {isStudent && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     FYP & Learning Goals
-                    <EditFypInfoModal
-                      user={user}
-                      profile={profile as SelectProfile}
-                      setProfile={setProfile}
-                    />
+                    {isMyProfile && (
+                      <EditFypInfoModal
+                        user={user}
+                        profile={profile as SelectProfile}
+                        setProfile={setProfile}
+                      />
+                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
