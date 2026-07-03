@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Star, Users, Zap, Building2, ArrowRight } from "lucide-react"
+import { Star, Users, Building2, ArrowRight } from "lucide-react"
 import { Card, CardContent } from "@/src/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Badge } from "@/src/components/ui/badge"
@@ -88,16 +88,10 @@ export default function MentorCard({ mentor }: MentorCardProps) {
           </span>
         </div>
 
-        {/* Mentees + RP */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Users className="h-3.5 w-3.5" />
-            <span>{mentor.activeMentees} active mentees</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Zap className="h-3.5 w-3.5" />
-            <span>{mentor.rpRequired} RP req.</span>
-          </div>
+        {/* Mentees */}
+        <div className="flex gap-1 text-muted-foreground text-sm">
+          <Users className="h-3.5 w-3.5" />
+          <span>{mentor.activeMentees} active mentees</span>
         </div>
 
         {/* CTA */}

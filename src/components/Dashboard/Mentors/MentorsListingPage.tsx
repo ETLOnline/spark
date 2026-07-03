@@ -5,12 +5,7 @@ import { Search } from "lucide-react"
 import { Input } from "@/src/components/ui/input"
 import MentorCard from "./MentorCard"
 import MentorFilters from "./MentorFilters"
-import {
-  MENTORS_DATA,
-  MentorFiltersType,
-  DEFAULT_FILTERS,
-  USER_RP_BALANCE
-} from "./mentorsData"
+import { MENTORS_DATA, MentorFiltersType, DEFAULT_FILTERS } from "./mentorsData"
 
 export default function MentorsListingPage() {
   const [search, setSearch] = useState("")
@@ -32,37 +27,20 @@ export default function MentorsListingPage() {
         drawerFilters.skills.some((s) => m.tags.includes(s))
 
       const matchesAvailability =
-        drawerFilters.availability === "all" ||
-        (drawerFilters.availability === "available-now" &&
-          m.availability === "Available") ||
-        (drawerFilters.availability === "available-this-week" &&
-          m.availability === "Available")
-
-      const matchesTier =
-        drawerFilters.tiers.length === 0 || drawerFilters.tiers.includes(m.tier)
+        !drawerFilters.availability?.from || m.availability === "Available"
 
       const matchesRating = m.rating >= drawerFilters.minRating
-
-      const matchesSessionFormat =
-        drawerFilters.sessionFormats.length === 0 ||
-        drawerFilters.sessionFormats.includes(m.sessionFormat)
 
       const matchesEngagementType =
         drawerFilters.engagementTypes.length === 0 ||
         drawerFilters.engagementTypes.includes(m.engagementType)
 
-      const matchesRpEligible =
-        !drawerFilters.rpEligibleOnly || m.rpRequired <= USER_RP_BALANCE
-
       return (
         matchesSearch &&
         matchesSkills &&
         matchesAvailability &&
-        matchesTier &&
         matchesRating &&
-        matchesSessionFormat &&
-        matchesEngagementType &&
-        matchesRpEligible
+        matchesEngagementType
       )
     })
   }, [search, drawerFilters])

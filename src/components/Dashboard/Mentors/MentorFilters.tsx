@@ -2,8 +2,10 @@
 
 import { useState } from "react"
 import { Filter } from "lucide-react"
+import moment from "moment"
 import { Button } from "@/src/components/ui/button"
 import { Label } from "@/src/components/ui/label"
+import { Input } from "@/src/components/ui/input"
 import {
   Drawer,
   DrawerClose,
@@ -22,19 +24,15 @@ import {
   SelectValue
 } from "@/src/components/ui/select"
 import { ScrollArea } from "@/src/components/ui/scroll-area"
-import { Switch } from "@/src/components/ui/switch"
 import MultiSelect, {
   MultiSelectOption
 } from "@/src/components/ui/multi-select"
 import {
-  TierType,
-  SessionFormat,
   EngagementType,
+  AvailabilityRange,
   MentorFiltersType,
   DEFAULT_FILTERS,
   SKILL_OPTIONS,
-  TIER_OPTIONS,
-  SESSION_FORMAT_OPTIONS,
   ENGAGEMENT_TYPE_OPTIONS
 } from "./mentorsData"
 
@@ -44,37 +42,35 @@ interface Props {
   onApplyFilters: (filters: MentorFiltersType) => void
 }
 
+const TODAY = moment().format("YYYY-MM-DD")
+
 export default function MentorFilters({ onApplyFilters }: Props) {
   const [skills, setSkills] = useState<MultiSelectOption[]>([])
-  const [availability, setAvailability] = useState("all")
-  const [tiers, setTiers] = useState<MultiSelectOption[]>([])
+  const [availFrom, setAvailFrom] = useState("")
+  const [availTo, setAvailTo] = useState("")
   const [minRating, setMinRating] = useState("0")
-  const [sessionFormats, setSessionFormats] = useState<MultiSelectOption[]>([])
   const [engagementTypes, setEngagementTypes] = useState<MultiSelectOption[]>(
     []
   )
-  const [rpEligibleOnly, setRpEligibleOnly] = useState(false)
 
   function applyFilters() {
+    const availability: AvailabilityRange | undefined =
+      availFrom || availTo ? { from: availFrom, to: availTo } : undefined
+
     onApplyFilters({
       skills: skills.map((s) => s.value),
       availability,
-      tiers: tiers.map((t) => t.value) as TierType[],
-      minRating: parseFloat(minRating),
-      sessionFormats: sessionFormats.map((s) => s.value) as SessionFormat[],
-      engagementTypes: engagementTypes.map((e) => e.value) as EngagementType[],
-      rpEligibleOnly
+      minRating: Number(minRating),
+      engagementTypes: engagementTypes.map((e) => e.value) as EngagementType[]
     })
   }
 
   function clearFilters() {
     setSkills([])
-    setAvailability("all")
-    setTiers([])
+    setAvailFrom("")
+    setAvailTo("")
     setMinRating("0")
-    setSessionFormats([])
     setEngagementTypes([])
-    setRpEligibleOnly(false)
     onApplyFilters(DEFAULT_FILTERS)
   }
 
@@ -92,8 +88,7 @@ export default function MentorFilters({ onApplyFilters }: Props) {
             <DrawerHeader>
               <DrawerTitle>Filter Mentors</DrawerTitle>
               <DrawerDescription>
-                Filter by skills, availability, rating, tier, session format,
-                and engagement type.
+                Filter by skills, availability, rating, and engagement type.
               </DrawerDescription>
             </DrawerHeader>
 
@@ -110,18 +105,30 @@ export default function MentorFilters({ onApplyFilters }: Props) {
 
               <div className="space-y-2">
                 <Label>Availability</Label>
-                <Select value={availability} onValueChange={setAvailability}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="All" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="available-now">Available now</SelectItem>
-                    <SelectItem value="available-this-week">
-                      Available this week
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <span className="text-xs text-muted-foreground">From</span>
+                    <Input
+                      type="date"
+                      value={availFrom}
+                      min={TODAY}
+                      onChange={(e) => {
+                        const newFrom = e.target.value
+                        setAvailFrom(newFrom)
+                        if (availTo && newFrom > availTo) setAvailTo("")
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-xs text-muted-foreground">To</span>
+                    <Input
+                      type="date"
+                      value={availTo}
+                      min={availFrom || TODAY}
+                      onChange={(e) => setAvailTo(e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -139,45 +146,12 @@ export default function MentorFilters({ onApplyFilters }: Props) {
               </div>
 
               <div className="space-y-2">
-                <Label>Tier</Label>
-                <MultiSelect
-                  options={TIER_OPTIONS}
-                  selected={tiers}
-                  onChange={setTiers}
-                  placeholder="Select tiers"
-                />
-              </div>
-
-              <div className="space-y-2">
                 <Label>Engagement Type</Label>
                 <MultiSelect
                   options={ENGAGEMENT_TYPE_OPTIONS}
                   selected={engagementTypes}
                   onChange={setEngagementTypes}
                   placeholder="Select options"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Session Format</Label>
-                <MultiSelect
-                  options={SESSION_FORMAT_OPTIONS}
-                  selected={sessionFormats}
-                  onChange={setSessionFormats}
-                  placeholder="Select options"
-                />
-              </div>
-
-              <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
-                <div>
-                  <p className="text-sm font-medium">My RP eligible only</p>
-                  <p className="text-xs text-muted-foreground">
-                    Show only mentors you have enough RPs to request
-                  </p>
-                </div>
-                <Switch
-                  checked={rpEligibleOnly}
-                  onCheckedChange={setRpEligibleOnly}
                 />
               </div>
             </div>
