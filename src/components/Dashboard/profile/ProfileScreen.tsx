@@ -17,7 +17,8 @@ import {
   Instagram,
   Globe,
   Share2,
-  CopyIcon
+  CopyIcon,
+  Target
 } from "lucide-react"
 import {
   SelectCertificate,
@@ -62,6 +63,7 @@ import {
 import { Input } from "../../ui/input"
 import { Skeleton } from "../../ui/skeleton"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
+import EditFypInfoModal from "./EditFypInfoModal"
 
 type ProfileScreenProps = {
   tab?: string
@@ -458,6 +460,48 @@ export default function ProfileScreen({
                 </CardContent>
               </Card>
             )}
+
+            {/* FYP Status & Learning Goals */}
+            {isMyProfile && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    FYP & Learning Goals
+                    <EditFypInfoModal
+                      user={user}
+                      profile={profile as SelectProfile}
+                      setProfile={setProfile}
+                    />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <FlameKindling className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">
+                        FYP Status
+                      </p>
+                      <p className="text-sm font-medium break-words">
+                        {profile?.fyp_status || "—"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <Target className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">
+                        Learning Goals
+                      </p>
+                      <p className="text-sm font-medium break-words whitespace-pre-wrap">
+                        {profile?.learning_goals || "—"}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Education */}
             <Card>
               <CardHeader>
