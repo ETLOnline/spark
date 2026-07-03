@@ -64,8 +64,7 @@ export function StepThree({
 
       const finalData = {
         ...socialPlatforms,
-        is_profile_completed: 1,
-        ...(isMentor && { is_mentor_active: true })
+        is_profile_completed: 1
       }
 
       const res = await submitUserProfileData(
