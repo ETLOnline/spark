@@ -58,7 +58,7 @@ export default function MentorsListingPage() {
 
       <div className="w-full px-3 pb-4 space-y-4">
         {/* Filter bar */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-1/2">
           <div className="relative flex-1 min-w-0">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input

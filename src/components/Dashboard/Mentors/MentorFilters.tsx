@@ -33,6 +33,7 @@ import {
   MentorFiltersType,
   DEFAULT_FILTERS,
   SKILL_OPTIONS,
+  RATING_OPTIONS,
   ENGAGEMENT_TYPE_OPTIONS
 } from "./mentorsData"
 
@@ -105,7 +106,7 @@ export default function MentorFilters({ onApplyFilters }: Props) {
 
               <div className="space-y-2">
                 <Label>Availability</Label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
                   <div className="space-y-1">
                     <span className="text-xs text-muted-foreground">From</span>
                     <Input
@@ -138,9 +139,11 @@ export default function MentorFilters({ onApplyFilters }: Props) {
                     <SelectValue placeholder="All" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="0">All</SelectItem>
-                    <SelectItem value="4">4+ stars</SelectItem>
-                    <SelectItem value="3">3+ stars</SelectItem>
+                    {RATING_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

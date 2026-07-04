@@ -16,6 +16,12 @@ export const SKILL_OPTIONS: MultiSelectOption[] = [
   { label: "Data Analysis", value: "Data Analysis" }
 ]
 
+export const RATING_OPTIONS: { label: string; value: string }[] = [
+  { label: "All", value: "0" },
+  { label: "4+ stars", value: "4" },
+  { label: "3+ stars", value: "3" }
+]
+
 export const ENGAGEMENT_TYPE_OPTIONS: MultiSelectOption[] = [
   { label: "Skill Mentorship", value: "Skill Mentorship" },
   { label: "FYP Supervision", value: "FYP Supervision" },
