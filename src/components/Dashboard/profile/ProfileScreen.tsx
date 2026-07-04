@@ -63,6 +63,8 @@ import { toLocalDateStr } from "@/src/lib/utils"
 import Link from "next/link"
 import { SocialLinkItem } from "./user/SocialLinkItem"
 import UserProfileCard from "./UserProfileCard"
+import ProfileCompletionCard from "./ProfileCompletionCard"
+import useUserProfile from "./hooks/useUserProfile"
 import TrustEngineCard from "./trust-engine/TrustEngineCard"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
 import {
@@ -123,6 +125,8 @@ export default function ProfileScreen({
   const authUser = useAtomValue(userStore.AuthUser)
 
   const displayUser = isMyProfile && authUser ? authUser : user
+
+  const [, , , profileSkills, profileInterests] = useUserProfile()
 
   const [recommendationLoading, , , GetRecommendations] = useServerAction(
     GetRecommendationAction
@@ -338,6 +342,25 @@ export default function ProfileScreen({
               onFileChange={handleFileChange}
               isMyProfile={isMyProfile}
             />
+            {/* Profile Completion Card */}
+            {isMyProfile && (
+              <ProfileCompletionCard
+                user={displayUser}
+                profile={displayUser?.profile as SelectProfile}
+                skills={profileSkills}
+                interests={profileInterests}
+                isMentor={!!profile?.is_mentor_active}
+                hasAvailability={isAvailable}
+                onProfileUpdated={(payload) => {
+                  if (payload.profile) {
+                    setProfile(
+                      (prev) =>
+                        ({ ...prev, ...payload.profile }) as SelectProfile
+                    )
+                  }
+                }}
+              />
+            )}
             {/* Trust Engine Section  */}
 
             {isFeatureEnable && (
