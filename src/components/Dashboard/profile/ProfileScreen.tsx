@@ -41,7 +41,12 @@ import {
   CardTitle,
   CardContent
 } from "@/src/components/ui/card"
-import { generateUrl, getPagePath, getUserRole } from "@/src/utils/helpers"
+import {
+  generateUrl,
+  getPagePath,
+  getUserRole,
+  isMentor
+} from "@/src/utils/helpers"
 import { UpdateUserProfilePictureAction } from "@/src/server-actions/User/User"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import Loader from "../../common/Loader/Loader"
@@ -499,8 +504,8 @@ export default function ProfileScreen({
                 </CardContent>
               </Card>
             )}
-            {/* Mentor Info — only shown when mentor setup is complete */}
-            {profile?.is_mentor_active && (
+            {/* Mentor Info — shown to owner always; to others only when both fields are filled */}
+            {isMentor(user) && isMyProfile && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
@@ -561,7 +566,7 @@ export default function ProfileScreen({
                           Completed Sessions
                         </p>
                         <p className="text-sm font-medium">
-                          {profile.total_completed_sessions}
+                          {profile?.total_completed_sessions}
                         </p>
                       </div>
                     </div>
