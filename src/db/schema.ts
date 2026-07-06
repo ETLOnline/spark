@@ -176,6 +176,8 @@ export const profileTable = pgTable("profile", {
   number_of_ratings: integer().default(0),
   total_average_rating: varchar().default("0"),
   is_profile_completed: integer().notNull().default(0),
+  fyp_status: varchar("fyp_status"),
+  learning_goals: text("learning_goals"),
 
   professional_title: varchar("professional_title"),
   company: varchar("company"),

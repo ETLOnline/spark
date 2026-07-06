@@ -323,6 +323,13 @@
       "when": 1782993728647,
       "tag": "0045_2026_07_02_200207__add_table_and_add_column_in_users_table",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1783348996196,
+      "tag": "0046_2026_07_06_194312__added_fyp_status_and_learing_goals_in_profile",
+      "breakpoints": true
     }
   ]
 }
