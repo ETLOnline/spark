@@ -32,7 +32,6 @@ import {
   AvailabilityRange,
   MentorFiltersType,
   DEFAULT_FILTERS,
-  SKILL_OPTIONS,
   RATING_OPTIONS,
   ENGAGEMENT_TYPE_OPTIONS
 } from "./mentorsData"
@@ -40,12 +39,13 @@ import {
 export type { MentorFiltersType }
 
 interface Props {
+  skillOptions: MultiSelectOption[]
   onApplyFilters: (filters: MentorFiltersType) => void
 }
 
 const TODAY = moment().format("YYYY-MM-DD")
 
-export default function MentorFilters({ onApplyFilters }: Props) {
+export default function MentorFilters({ skillOptions, onApplyFilters }: Props) {
   const [skills, setSkills] = useState<MultiSelectOption[]>([])
   const [availFrom, setAvailFrom] = useState("")
   const [availTo, setAvailTo] = useState("")
@@ -97,7 +97,7 @@ export default function MentorFilters({ onApplyFilters }: Props) {
               <div className="space-y-2">
                 <Label>Skills / Expertise</Label>
                 <MultiSelect
-                  options={SKILL_OPTIONS}
+                  options={skillOptions}
                   selected={skills}
                   onChange={setSkills}
                   placeholder="Select skills"

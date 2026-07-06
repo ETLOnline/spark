@@ -55,29 +55,35 @@ export default function MentorCard({ mentor }: MentorCardProps) {
           <h3 className="font-bold text-base text-foreground truncate">
             {mentor.name}
           </h3>
-          <p className="text-sm text-muted-foreground mt-0.5 truncate">
-            {mentor.title}
-          </p>
-          <div className="flex items-center justify-center gap-1 mt-1">
-            <Building2 className="h-3 w-3 text-muted-foreground/70 shrink-0" />
-            <span className="text-xs text-muted-foreground truncate">
-              {mentor.company}
-            </span>
-          </div>
+          {mentor.title && (
+            <p className="text-sm text-muted-foreground mt-0.5 truncate">
+              {mentor.title}
+            </p>
+          )}
+          {mentor.company && (
+            <div className="flex items-center justify-center gap-1 mt-1">
+              <Building2 className="h-3 w-3 text-muted-foreground/70 shrink-0" />
+              <span className="text-xs text-muted-foreground truncate">
+                {mentor.company}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Expertise tags */}
-        <div className="flex flex-wrap justify-center gap-1.5">
-          {mentor.tags.slice(0, 3).map((tag) => (
-            <Badge
-              key={tag}
-              variant="secondary"
-              className="rounded-full text-xs px-2.5 py-0.5 font-normal"
-            >
-              {tag}
-            </Badge>
-          ))}
-        </div>
+        {mentor.tags.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-1.5">
+            {mentor.tags.slice(0, 3).map((tag) => (
+              <Badge
+                key={tag}
+                variant="secondary"
+                className="rounded-full text-xs px-2.5 py-0.5 font-normal"
+              >
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
 
         {/* Stars + reviews */}
         <div className="flex items-center justify-between border-t border-border pt-3 gap-2">
@@ -92,10 +98,10 @@ export default function MentorCard({ mentor }: MentorCardProps) {
           </span>
         </div>
 
-        {/* Mentees */}
+        {/* Completed sessions */}
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <Users className="h-3.5 w-3.5 shrink-0" />
-          <span>{mentor.activeMentees} active mentees</span>
+          <span>{mentor.completedSessions} completed sessions</span>
         </div>
 
         {/* CTA */}

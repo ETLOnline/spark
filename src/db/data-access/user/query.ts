@@ -353,3 +353,50 @@ export async function getSuperAdmins() {
     throw new Error("Failed to fetch super admins")
   }
 }
+
+export async function GetActiveMentorProfiles() {
+  try {
+    const result = await db.query.rolesTable.findFirst({
+      where: eq(rolesTable.name, "Mentor"),
+      with: {
+        users: {
+          with: {
+            user: {
+              with: {
+                profile: true,
+                userTags: {
+                  with: { tag: true }
+                }
+              }
+            }
+          }
+        }
+      }
+    })
+
+    const mentorUsers = (result?.users ?? [])
+      .map((u) => u.user)
+      .filter((u) => u?.profile?.is_mentor_active === true)
+
+    return mentorUsers
+      .filter((u): u is NonNullable<typeof u> => u !== null && u !== undefined)
+      .map((u) => ({
+        unique_id: u.unique_id,
+        first_name: u.first_name,
+        last_name: u.last_name,
+        profile_url: u.profile_url ?? null,
+        bio: u.profile?.bio ?? null,
+        professional_title: u.profile?.professional_title ?? null,
+        company: u.profile?.company ?? null,
+        total_average_rating: u.profile?.total_average_rating ?? "0",
+        number_of_ratings: u.profile?.number_of_ratings ?? 0,
+        total_completed_sessions: u.profile?.total_completed_sessions ?? 0,
+        tags: (u.userTags ?? [])
+          .map((ut) => ut.tag?.name)
+          .filter((name): name is string => Boolean(name))
+      }))
+  } catch (error: any) {
+    console.error("Error fetching active mentor profiles:", error)
+    throw new Error("Failed to fetch active mentor profiles")
+  }
+}
