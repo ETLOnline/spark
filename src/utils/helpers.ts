@@ -303,21 +303,6 @@ export function serializeUserPerms(userPerms: {
   }
 }
 
-/** Returns true if the user has a role with the given name. */
-export function hasRole(
-  user: SelectUser | null | undefined,
-  roleName: string
-): boolean {
-  return (
-    user?.roles?.some((r: SelectUserRole) => r.role?.name === roleName) ?? false
-  )
-}
-
-/** Convenience wrapper — true if the user has the "Mentor" role. */
-export function isMentor(user: SelectUser | null | undefined): boolean {
-  return hasRole(user, "Mentor")
-}
-
 export async function isSuperAdmin(user: SelectUser): Promise<boolean> {
   try {
     if (!user.roles || user.roles.length === 0) {
@@ -344,7 +329,11 @@ export const formatRelativeTime = (
     .fromNow()
 }
 
-export const getUserRole = (user: SelectUser, entity_id?: string) => {
+export const getUserRole = (
+  user: SelectUser | null | undefined,
+  entity_id?: string
+) => {
+  if (!user) return undefined
   if (user.roles && user.roles.length > 0) {
     if (user.roles.some((ur) => ur.role?.role_type === "SYSTEM")) {
       return user.roles.flatMap((ur) =>

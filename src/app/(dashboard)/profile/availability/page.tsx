@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { AvailabilityPageShell } from "@/src/components/Dashboard/profile/AvailabilityPageShell"
-import { isMentor } from "@/src/utils/helpers"
+import { getUserRole } from "@/src/utils/helpers"
 
 export default async function ManageAvailabilityPage() {
   const user = await AuthUserAction()
   if (!user) redirect("/sign-in")
 
-  if (!isMentor(user)) redirect("/profile")
+  if (!getUserRole(user)?.includes("Mentor")) redirect("/profile")
 
   return (
     <AvailabilityPageShell
