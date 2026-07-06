@@ -25,35 +25,10 @@ import {
   UpdateAvailabilityAction
 } from "@/src/server-actions/Mentor/MentorActions"
 import { toast } from "@/src/hooks/use-toast"
-import { cn, toLocalDateStr } from "@/src/lib/utils"
+import { cn } from "@/src/lib/utils"
 import { SelectMentorAvailability } from "@/src/db/schema"
-
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December"
-]
-
-// Full day names used for labels; abbreviated headers derived from them
-const DAYS = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday"
-]
-const DAY_HEADERS = DAYS.map((d) => d.slice(0, 3))
+import moment from "moment-timezone"
+import { DAY_HEADERS, DAYS, MONTH_NAMES } from "@/src/utils/constants"
 
 export const MIN_DURATION_MINS = 30
 
@@ -68,16 +43,9 @@ type SessionType = "1:1" | "group"
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-function parseLocalDate(str: string): Date {
-  const [y, m, d] = str.split("-").map(Number)
-  return new Date(y, m - 1, d)
-}
-
+/** Format a HH:mm string to 12-hour display. */
 function formatTime(time: string) {
-  const [h, m] = time.split(":").map(Number)
-  const period = h >= 12 ? "PM" : "AM"
-  const hour = h % 12 || 12
-  return `${hour}:${m.toString().padStart(2, "0")} ${period}`
+  return moment(time, "HH:mm").format("h:mm A")
 }
 
 /** Returns true if this slot should appear on `date`. */
@@ -86,43 +54,39 @@ function slotAppliesToDate(
   date: Date
 ): boolean {
   if (!slot.date) return false
-  const anchor = parseLocalDate(slot.date)
-  anchor.setHours(0, 0, 0, 0)
-  const d = new Date(date)
-  d.setHours(0, 0, 0, 0)
+  const anchor = moment(slot.date, "YYYY-MM-DD")
+  const d = moment(date).startOf("day")
 
-  if (d < anchor) return false
+  if (d.isBefore(anchor)) return false
 
   if (slot.repeat_end_date) {
-    const endDate = parseLocalDate(slot.repeat_end_date)
-    endDate.setHours(0, 0, 0, 0)
-    if (d > endDate) return false
+    const endDate = moment(slot.repeat_end_date, "YYYY-MM-DD")
+    if (d.isAfter(endDate)) return false
   }
 
-  if (slot.repeat_type === "none") return toLocalDateStr(d) === slot.date
+  if (slot.repeat_type === "none") return d.format("YYYY-MM-DD") === slot.date
   if (slot.repeat_type === "daily") return true
-  if (slot.repeat_type === "weekly") return d.getDay() === anchor.getDay()
+  if (slot.repeat_type === "weekly") return d.day() === anchor.day()
   return false
 }
 
 function repeatLabel(slot: SelectMentorAvailability) {
   if (slot.repeat_type === "weekly")
-    return `Every ${DAYS[parseLocalDate(slot.date).getDay()]}`
+    return `Every ${DAYS[moment(slot.date, "YYYY-MM-DD").day()]}`
   if (slot.repeat_type === "daily") return "Every day"
   return "One-time"
 }
 
 /** Last day of the month containing `dateStr`. */
 function endOfMonth(dateStr: string): string {
-  const d = parseLocalDate(dateStr)
-  return toLocalDateStr(new Date(d.getFullYear(), d.getMonth() + 1, 0))
+  return moment(dateStr, "YYYY-MM-DD").endOf("month").format("YYYY-MM-DD")
 }
 
 /** First occurrence of `targetDow` (0=Sun) on or after `fromDateStr`. */
 function nextOccurrence(fromDateStr: string, targetDow: number): string {
-  const d = parseLocalDate(fromDateStr)
-  d.setDate(d.getDate() + ((targetDow - d.getDay() + 7) % 7))
-  return toLocalDateStr(d)
+  const m = moment(fromDateStr, "YYYY-MM-DD")
+  const diff = (targetDow - m.day() + 7) % 7
+  return m.clone().add(diff, "days").format("YYYY-MM-DD")
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -133,11 +97,7 @@ interface MentorCalendarProps {
 }
 
 // Stable reference — computed once at module load, not on every render
-const TODAY = (() => {
-  const d = new Date()
-  d.setHours(0, 0, 0, 0)
-  return d
-})()
+const TODAY = moment().startOf("day").toDate()
 
 export function MentorCalendar({
   userId,
@@ -147,14 +107,14 @@ export function MentorCalendar({
 
   const [view, setView] = useState<ViewType>("month")
   const [currentDate, setCurrentDate] = useState(
-    new Date(today.getFullYear(), today.getMonth(), 1)
+    moment(today).startOf("month").toDate()
   )
   const [slots, setSlots] = useState<SelectMentorAvailability[]>([])
 
   // Popup state
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [isPopupOpen, setIsPopupOpen] = useState(false)
-  const [newDate, setNewDate] = useState(toLocalDateStr(today))
+  const [newDate, setNewDate] = useState(moment(today).format("YYYY-MM-DD"))
   const [newStart, setNewStart] = useState("09:00")
   const [newEnd, setNewEnd] = useState("10:00")
   const [newSession, setNewSession] = useState<SessionType>("1:1")
@@ -163,13 +123,14 @@ export function MentorCalendar({
   const [newRepeatEnd, setNewRepeatEnd] = useState("")
   const [slotError, setSlotError] = useState("")
   const [saving, setSaving] = useState(false)
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
 
   const [, , , getAvailability] = useServerAction(GetMentorAvailabilityAction)
   const [, , , updateAvailability] = useServerAction(UpdateAvailabilityAction)
 
   const loadSlots = useCallback(async () => {
     const res = await getAvailability(userId)
-    if (res?.success && res.data) setSlots(res.data.filter((s) => s.is_active))
+    if (res?.success) setSlots((res.data ?? []).filter((s) => s.is_active))
   }, [userId])
 
   useEffect(() => {
@@ -181,75 +142,65 @@ export function MentorCalendar({
   const goBack = () => {
     if (view === "month") {
       setCurrentDate(
-        new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
+        moment(currentDate).subtract(1, "month").startOf("month").toDate()
       )
     } else {
-      const d = new Date(currentDate)
-      d.setDate(d.getDate() - 7)
-      setCurrentDate(d)
+      setCurrentDate(moment(currentDate).subtract(7, "days").toDate())
     }
   }
 
   const goForward = () => {
     if (view === "month") {
       setCurrentDate(
-        new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
+        moment(currentDate).add(1, "month").startOf("month").toDate()
       )
     } else {
-      const d = new Date(currentDate)
-      d.setDate(d.getDate() + 7)
-      setCurrentDate(d)
+      setCurrentDate(moment(currentDate).add(7, "days").toDate())
     }
   }
 
   const goToday = () => {
     if (view === "month") {
-      setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1))
+      setCurrentDate(moment(today).startOf("month").toDate())
     } else {
-      const s = new Date(today)
-      s.setDate(today.getDate() - today.getDay())
-      setCurrentDate(s)
+      setCurrentDate(moment(today).startOf("week").toDate())
     }
   }
 
   const switchView = (v: ViewType) => {
     setView(v)
     if (v === "week") {
-      const s = new Date(today)
-      s.setDate(today.getDate() - today.getDay())
-      setCurrentDate(s)
+      setCurrentDate(moment(today).startOf("week").toDate())
     } else {
-      setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1))
+      setCurrentDate(moment(today).startOf("month").toDate())
     }
   }
 
   // ── Calendar cells ────────────────────────────────────────────────────────────
 
   const monthWeeks = useMemo(() => {
-    const y = currentDate.getFullYear(),
-      mo = currentDate.getMonth()
-    const first = new Date(y, mo, 1).getDay()
-    const dim = new Date(y, mo + 1, 0).getDate()
-    const prev = new Date(y, mo, 0).getDate()
+    const m = moment(currentDate).startOf("month")
+    const first = m.day()
+    const dim = m.daysInMonth()
+    const prevEnd = m.clone().subtract(1, "day")
     const cells: Date[] = []
     for (let i = first - 1; i >= 0; i--)
-      cells.push(new Date(y, mo - 1, prev - i))
-    for (let d = 1; d <= dim; d++) cells.push(new Date(y, mo, d))
+      cells.push(prevEnd.clone().subtract(i, "days").toDate())
+    for (let d = 1; d <= dim; d++) cells.push(m.clone().date(d).toDate())
     const rem = 42 - cells.length
-    for (let d = 1; d <= rem; d++) cells.push(new Date(y, mo + 1, d))
+    const nextStart = m.clone().add(1, "month").startOf("month")
+    for (let d = 1; d <= rem; d++)
+      cells.push(nextStart.clone().date(d).toDate())
     const weeks: Date[][] = []
     for (let i = 0; i < 42; i += 7) weeks.push(cells.slice(i, i + 7))
     return weeks
   }, [currentDate])
 
   const weekDays = useMemo(() => {
-    const s = new Date(currentDate)
-    s.setDate(s.getDate() - s.getDay())
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(s)
-      d.setDate(s.getDate() + i)
-      return d
-    })
+    const startOfWeek = moment(currentDate).startOf("week")
+    return Array.from({ length: 7 }, (_, i) =>
+      startOfWeek.clone().add(i, "days").toDate()
+    )
   }, [currentDate])
 
   // ── Slot helpers ──────────────────────────────────────────────────────────────
@@ -258,7 +209,8 @@ export function MentorCalendar({
     slots.filter((s) => slotAppliesToDate(s, date))
 
   const resetPopupForm = (date: Date) => {
-    const dateStr = toLocalDateStr(date)
+    setPendingDeleteId(null)
+    const dateStr = moment(date).format("YYYY-MM-DD")
     setNewDate(dateStr)
     setNewStart("09:00")
     setNewEnd("10:00")
@@ -290,13 +242,13 @@ export function MentorCalendar({
       return
     }
 
-    // Overlap check — two slots conflict if they share at least one day AND their times overlap
+    // Overlap check — slots conflict if they share a day, overlapping times, AND overlapping date ranges
     const timesOverlap = (s: SelectMentorAvailability) =>
       toMins(newStart) < toMins(s.end_time) &&
       toMins(s.start_time) < toMins(newEnd)
 
     const dayOverlaps = (s: SelectMentorAvailability, dow: number) => {
-      const sDow = parseLocalDate(s.date).getDay()
+      const sDow = moment(s.date, "YYYY-MM-DD").day()
       if (s.repeat_type === "daily") return true
       if (s.repeat_type === "none") {
         if (newRepeat === "none") return s.date === newDate
@@ -305,15 +257,28 @@ export function MentorCalendar({
       }
       if (s.repeat_type === "weekly") {
         if (newRepeat === "none")
-          return sDow === parseLocalDate(newDate).getDay()
+          return sDow === moment(newDate, "YYYY-MM-DD").day()
         if (newRepeat === "daily") return true
         if (newRepeat === "weekly") return sDow === dow
       }
       return false
     }
 
+    const dateRangesOverlap = (s: SelectMentorAvailability, dow: number) => {
+      const existingStart = s.date
+      const existingEnd = s.repeat_end_date ?? "9999-12-31"
+      const newFirst =
+        newRepeat === "weekly" ? nextOccurrence(newDate, dow) : newDate
+      const newLast =
+        newRepeat !== "none" ? newRepeatEnd || endOfMonth(newDate) : newDate
+      return newFirst <= existingEnd && existingStart <= newLast
+    }
+
     const hasConflict = (dow: number) =>
-      slots.some((s) => dayOverlaps(s, dow) && timesOverlap(s))
+      slots.some(
+        (s) =>
+          dayOverlaps(s, dow) && timesOverlap(s) && dateRangesOverlap(s, dow)
+      )
 
     if (newRepeat === "weekly") {
       const conflicting = newRepeatDays
@@ -324,7 +289,7 @@ export function MentorCalendar({
         return
       }
     } else {
-      if (hasConflict(parseLocalDate(newDate).getDay())) {
+      if (hasConflict(moment(newDate, "YYYY-MM-DD").day())) {
         setSlotError("This slot overlaps with an existing one")
         return
       }
@@ -381,21 +346,85 @@ export function MentorCalendar({
     setSaving(false)
   }
 
-  const handleRemoveSlot = async (slotId: number) => {
-    const remaining = slots
-      .filter((s) => s.id !== slotId)
-      .map((s) => ({
-        date: s.date,
-        start_time: s.start_time,
-        end_time: s.end_time,
-        session_type: s.session_type,
-        repeat_type: s.repeat_type,
-        repeat_end_date: s.repeat_end_date ?? null
-      }))
+  const serializeSlots = (list: SelectMentorAvailability[]) =>
+    list.map((s) => ({
+      date: s.date,
+      start_time: s.start_time,
+      end_time: s.end_time,
+      session_type: s.session_type,
+      repeat_type: s.repeat_type,
+      repeat_end_date: s.repeat_end_date ?? null
+    }))
+
+  /** Remove the entire recurring series (or a one-time slot). */
+  const handleDeleteSeries = async (slotId: number) => {
+    setPendingDeleteId(null)
+    setSlotError("")
+    const remaining = serializeSlots(slots.filter((s) => s.id !== slotId))
     const res = await updateAvailability({ mentorId: userId, slots: remaining })
     if (res?.success) {
-      setSlots((p) => p.filter((s) => s.id !== slotId))
+      setSlots([])
+      await loadSlots()
+      if (selectedDate) resetPopupForm(selectedDate)
       toast({ title: "Slot removed", duration: 2000 })
+    }
+  }
+
+  /** Remove only the occurrence on `date`, keeping the rest of the series intact. */
+  const handleDeleteOccurrence = async (slotId: number, date: Date) => {
+    setPendingDeleteId(null)
+    setSlotError("")
+    const slot = slots.find((s) => s.id === slotId)
+    if (!slot) return
+
+    const dow = moment(slot.date, "YYYY-MM-DD").day()
+    const occStr = moment(date).format("YYYY-MM-DD")
+
+    // Day before this occurrence → previous series ends here
+    const prevStr = moment(date).subtract(1, "day").format("YYYY-MM-DD")
+
+    // Day after this occurrence → next series starts here
+    const afterStr = moment(date).add(1, "day").format("YYYY-MM-DD")
+    const nextStr =
+      slot.repeat_type === "daily" ? afterStr : nextOccurrence(afterStr, dow)
+
+    const otherSlots = serializeSlots(slots.filter((s) => s.id !== slotId))
+    const additions: typeof otherSlots = []
+
+    // Keep everything BEFORE this occurrence (only if anchor < occurrence)
+    if (slot.date < occStr) {
+      additions.push({
+        date: slot.date,
+        start_time: slot.start_time,
+        end_time: slot.end_time,
+        session_type: slot.session_type,
+        repeat_type: slot.repeat_type,
+        repeat_end_date: prevStr
+      })
+    }
+
+    // Keep everything AFTER this occurrence (only if a next occurrence exists within the original end)
+    const originalEnd = slot.repeat_end_date ?? null
+    if (!originalEnd || nextStr <= originalEnd) {
+      additions.push({
+        date: nextStr,
+        start_time: slot.start_time,
+        end_time: slot.end_time,
+        session_type: slot.session_type,
+        repeat_type: slot.repeat_type,
+        repeat_end_date: originalEnd
+      })
+    }
+
+    const res = await updateAvailability({
+      mentorId: userId,
+      slots: [...otherSlots, ...additions]
+    })
+    if (res?.success) {
+      setSlots([])
+      await loadSlots()
+      if (selectedDate) resetPopupForm(selectedDate)
+      toast({ title: "Occurrence removed", duration: 2000 })
     }
   }
 
@@ -715,7 +744,10 @@ export function MentorCalendar({
                         <button
                           key={r}
                           type="button"
-                          onClick={() => setNewRepeat(r)}
+                          onClick={() => {
+                            setNewRepeat(r)
+                            setSlotError("")
+                          }}
                           className={toggleItemCls(
                             newRepeat === r,
                             i === 0,
@@ -802,34 +834,74 @@ export function MentorCalendar({
                   {slotsForSelected.map((slot) => (
                     <div
                       key={slot.id}
-                      className="flex items-center justify-between rounded-lg border border-foreground/8 px-3 py-2.5 text-sm"
+                      className="rounded-lg border border-foreground/8 text-sm overflow-hidden"
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        {slot.session_type === "group" ? (
-                          <Users className="h-4 w-4 text-muted-foreground shrink-0" />
-                        ) : (
-                          <Video className="h-4 w-4 text-muted-foreground shrink-0" />
-                        )}
-                        <div className="min-w-0">
-                          <p className="truncate">
-                            {formatTime(slot.start_time)} –{" "}
-                            {formatTime(slot.end_time)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {repeatLabel(slot)}
-                          </p>
+                      {/* Slot info row */}
+                      <div className="flex items-center justify-between px-3 py-2.5">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {slot.session_type === "group" ? (
+                            <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                          ) : (
+                            <Video className="h-4 w-4 text-muted-foreground shrink-0" />
+                          )}
+                          <div className="min-w-0">
+                            <p className="truncate">
+                              {formatTime(slot.start_time)} –{" "}
+                              {formatTime(slot.end_time)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {repeatLabel(slot)}
+                            </p>
+                          </div>
+                          <span className="text-xs text-muted-foreground border border-foreground/10 rounded px-1.5 py-0.5 shrink-0">
+                            {slot.session_type === "group" ? "Group" : "1-on-1"}
+                          </span>
                         </div>
-                        <span className="text-xs text-muted-foreground border border-foreground/10 rounded px-1.5 py-0.5 shrink-0">
-                          {slot.session_type === "group" ? "Group" : "1-on-1"}
-                        </span>
+                        {isMyProfile && (
+                          <button
+                            onClick={() => {
+                              if (slot.repeat_type === "none") {
+                                handleDeleteSeries(slot.id)
+                              } else {
+                                setPendingDeleteId(
+                                  pendingDeleteId === slot.id ? null : slot.id
+                                )
+                              }
+                            }}
+                            className="h-6 w-6 flex items-center justify-center shrink-0 rounded text-destructive hover:bg-destructive/10 transition-colors ml-2"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                       </div>
-                      {isMyProfile && (
-                        <button
-                          onClick={() => handleRemoveSlot(slot.id)}
-                          className="h-6 w-6 flex items-center justify-center shrink-0 rounded text-destructive hover:bg-destructive/10 transition-colors ml-2"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
+
+                      {/* Inline delete confirmation — only for recurring slots */}
+                      {isMyProfile && pendingDeleteId === slot.id && (
+                        <div className="flex items-center gap-2 px-3 py-2 border-t border-foreground/8 bg-destructive/5">
+                          <p className="text-xs text-muted-foreground flex-1">
+                            Remove:
+                          </p>
+                          <button
+                            onClick={() =>
+                              handleDeleteOccurrence(slot.id, selectedDate!)
+                            }
+                            className="text-xs px-2 py-1 rounded border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors whitespace-nowrap"
+                          >
+                            This date
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSeries(slot.id)}
+                            className="text-xs px-2 py-1 rounded bg-destructive text-destructive-foreground hover:bg-destructive/80 transition-colors whitespace-nowrap"
+                          >
+                            All dates
+                          </button>
+                          <button
+                            onClick={() => setPendingDeleteId(null)}
+                            className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
                       )}
                     </div>
                   ))}
