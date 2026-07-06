@@ -14,17 +14,17 @@ import { StepThree } from "./StepThree"
 import { OnboardingCompletion } from "../TrustEngine/OnboardingCompletion"
 import { DynamicIcon, IconName } from "lucide-react/dynamic"
 import { SelectUser } from "@/src/db/schema"
+import { getUserRole } from "@/src/utils/helpers"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
 import { useRouter } from "next/navigation"
-import { isMentor } from "@/src/utils/helpers"
 
 export default function ProfileCompletionForm() {
   const [step, setStep] = useState(1)
   const [user, setUser] = useState<SelectUser>()
   const [isTrustEngineEnabled, setIsTrustEngineEnabled] = useState(false)
 
-  const userIsMentor = isMentor(user)
+  const userIsMentor = !!getUserRole(user!)?.includes("Mentor")
   const totalSteps = 4
 
   useEffect(() => {
