@@ -180,7 +180,7 @@ function BacklogItems({ task }: Props) {
         </div>
 
         {/* Title */}
-        <div className="md:col-span-3 w-full pr-8 md:pr-0">
+        <div className="md:col-span-2 w-full pr-8 md:pr-0">
           <div
             className="font-medium break-words whitespace-normal line-clamp-2 cursor-pointer text-left"
             onClick={() => EditTask(task)}
@@ -192,18 +192,18 @@ function BacklogItems({ task }: Props) {
         {/* Wrapper for Badges and extra info */}
         <div className="flex flex-wrap items-center gap-2 w-full md:contents">
           {/* Parent Badge */}
-          <div className="md:col-span-1 md:text-center">
+          <div className="md:col-span-2 md:text-center min-w-0 overflow-hidden">
             {task.parentTask ? (
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger>
-                    <Badge variant={"outline"}>
+                  <TooltipTrigger className="max-w-full">
+                    <Badge variant={"outline"} className="max-w-full ">
                       <Link
                         href={`/project/${projectId}/task/${task.parentTask?.id}`}
-                        className="flex flex-row items-center gap-1"
+                        className="flex flex-row items-center gap-1 min-w-0"
                       >
                         <IssueTypeIcon type={task.parentTask.task_type} />
-                        <span className="ml-1">
+                        <span className="ml-1 truncate">
                           {task.parentTask?.task_num}
                         </span>
                       </Link>
@@ -216,9 +216,11 @@ function BacklogItems({ task }: Props) {
           </div>
 
           {/* Status Badge */}
-          <div className="md:col-span-2 md:text-center">
-            <Badge variant={"outline"}>
-              {status.find((s) => s.id === task.status_id)?.name}
+          <div className="md:col-span-2 md:text-center min-w-0 overflow-hidden">
+            <Badge variant={"outline"} className="max-w-full">
+              <span className="truncate">
+                {status.find((s) => s.id === task.status_id)?.name}
+              </span>
             </Badge>
           </div>
 

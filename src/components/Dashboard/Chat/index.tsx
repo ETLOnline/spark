@@ -74,18 +74,13 @@ import {
 } from "../../ui/emoji-picker"
 import "@/src/components/common/Tiptap/RichEditorFormat.css"
 import { toast } from "@/src/hooks/use-toast"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "../../ui/dropdown-menu"
 import { FileUpload } from "../../ui/file-upload"
 import Image from "next/image"
 import { useOnlineStatus } from "../../providers/OnlineStatusProvider"
 import { GetSpaceUsersAction } from "@/src/server-actions/Space/Space"
 import ImageLightbox from "../../common/LightBox"
 import ExpandableText from "../posts/ExpandableText"
+import MessageBubbleMenu from "./components/MessageBubbleMenu"
 
 interface ChatScreenProps {
   currentChatSSR: SelectChat | undefined
@@ -762,12 +757,6 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
     return otherUser ? users.has(otherUser.user_id) : false
   })()
 
-  const convertMentionsToHtml = (text: string) => {
-    return text.replace(/@\[\s*(.*?)\s*\]\((.*?)\)/g, (_, label, id) => {
-      return `<span data-type="mention" data-id="${id}" data-label="${label}">@${label}</span>`
-    })
-  }
-
   return (
     <>
       <div className="flex h-[calc(100dvh-7rem)] gap-4">
@@ -951,14 +940,47 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                             }`}
                           >
                             {isOnlyEmoji(message.message) ? (
-                              <div className="">
-                                {message.sender_id !== authUser?.unique_id &&
-                                currentChat.is_group ? (
-                                  <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">
-                                    ~ {message.sender?.first_name}
+                              /* ── EMOJI ── same flex-group pattern as bubble */
+                              <div className="flex group gap-2 min-w-0 max-w-[85%]">
+                                <div className="relative flex flex-col min-w-0">
+                                  {message.sender_id !== authUser?.unique_id &&
+                                  currentChat.is_group ? (
+                                    <p className="text-sm font-semibold mb-1 text-left text-muted-foreground">
+                                      ~ {message.sender?.first_name}
+                                    </p>
+                                  ) : null}
+                                  <p
+                                    className={`text-4xl transition-all duration-200 ${message.sender_id === authUser?.unique_id ? "group-hover:pr-6" : ""}`}
+                                  >
+                                    {message.message}
                                   </p>
-                                ) : null}
-                                <p className="text-4xl">{message.message}</p>
+                                  {!message.is_deleted &&
+                                    message.sender_id ===
+                                      authUser?.unique_id && (
+                                      <MessageBubbleMenu
+                                        message={message}
+                                        setEditingMessage={setEditingMessage}
+                                        setRichMessageContent={
+                                          setRichMessageContent
+                                        }
+                                        handleDelteMsg={handleDelteMsg}
+                                      />
+                                    )}
+                                </div>
+                                <div className="text-xs text-right hidden group-hover:block min-w-fit self-end">
+                                  <p>
+                                    {moment
+                                      .utc(message.created_at)
+                                      .local()
+                                      .format("hh:mm A")}
+                                  </p>
+                                  <p>
+                                    {moment
+                                      .utc(message.created_at)
+                                      .local()
+                                      .fromNow()}
+                                  </p>
+                                </div>
                               </div>
                             ) : (
                               <div className="flex group gap-2 min-w-0 max-w-[85%]">
@@ -1089,45 +1111,14 @@ export function ChatScreen({ currentChatSSR, allChatsSSR }: ChatScreenProps) {
                                     {!message.is_deleted &&
                                       message.sender_id ===
                                         authUser?.unique_id && (
-                                        <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                            <ChevronDown className="h-4 w-4 absolute top-2 right-2 cursor-pointer rounded opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200  " />
-                                          </DropdownMenuTrigger>
-
-                                          <DropdownMenuContent
-                                            align="end"
-                                            className="w-40"
-                                          >
-                                            {message.type === "text" && (
-                                              <DropdownMenuItem
-                                                onClick={() => {
-                                                  setEditingMessage(message)
-
-                                                  const formatted =
-                                                    convertMentionsToHtml(
-                                                      message.message
-                                                    )
-                                                  setRichMessageContent(
-                                                    formatted
-                                                  )
-                                                }}
-                                              >
-                                                <Edit className="mr-2 h-4 w-4" />{" "}
-                                                Edit
-                                              </DropdownMenuItem>
-                                            )}
-
-                                            <DropdownMenuItem
-                                              onClick={() =>
-                                                handleDelteMsg(message)
-                                              }
-                                              className="text-red-600"
-                                            >
-                                              <Trash2 className="mr-2 h-4 w-4" />{" "}
-                                              Delete
-                                            </DropdownMenuItem>
-                                          </DropdownMenuContent>
-                                        </DropdownMenu>
+                                        <MessageBubbleMenu
+                                          message={message}
+                                          setEditingMessage={setEditingMessage}
+                                          setRichMessageContent={
+                                            setRichMessageContent
+                                          }
+                                          handleDelteMsg={handleDelteMsg}
+                                        />
                                       )}
                                   </div>
                                 </div>
