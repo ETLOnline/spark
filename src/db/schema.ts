@@ -176,6 +176,13 @@ export const profileTable = pgTable("profile", {
   number_of_ratings: integer().default(0),
   total_average_rating: varchar().default("0"),
   is_profile_completed: integer().notNull().default(0),
+
+  professional_title: varchar("professional_title"),
+  company: varchar("company"),
+  is_mentor_active: boolean("is_mentor_active").notNull().default(false),
+  total_completed_sessions: integer("total_completed_sessions")
+    .notNull()
+    .default(0),
   ...timestamps
 })
 
@@ -191,6 +198,26 @@ export type InsertProfile = typeof profileTable.$inferInsert
 export type SelectProfile = typeof profileTable.$inferSelect & {
   user?: SelectUser
 }
+
+export const mentorAvailabilityTable = pgTable("mentor_availability", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  mentor_id: varchar("mentor_id")
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  date: varchar("date").notNull(), // YYYY-MM-DD  (the anchor / start date)
+  start_time: varchar("start_time").notNull(),
+  end_time: varchar("end_time").notNull(),
+  session_type: varchar("session_type").notNull().default("1:1"),
+  repeat_type: varchar("repeat_type").notNull().default("none"), // "none" | "daily" | "weekly"
+  repeat_end_date: varchar("repeat_end_date"), // YYYY-MM-DD, nullable
+  is_active: boolean("is_active").notNull().default(true),
+  ...timestamps
+})
+
+export type InsertMentorAvailability =
+  typeof mentorAvailabilityTable.$inferInsert
+export type SelectMentorAvailability =
+  typeof mentorAvailabilityTable.$inferSelect
 
 export const certificatesTable = pgTable("certificates", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
