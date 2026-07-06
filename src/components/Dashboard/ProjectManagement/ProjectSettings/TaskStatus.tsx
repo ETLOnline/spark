@@ -175,6 +175,16 @@ export default function TaskStatus() {
       return
     }
 
+    if (newStatus.trim().length > 80) {
+      toast({
+        title: "Error",
+        description: "Status name cannot exceed 80 characters",
+        variant: "destructive",
+        duration: 2000
+      })
+      return
+    }
+
     if (
       statuses.some(
         (status) => status.name.toLowerCase() === newStatus.trim().toLowerCase()
@@ -480,12 +490,20 @@ export default function TaskStatus() {
                   onSubmit={handleAddStatus}
                   className="flex flex-col sm:flex-row gap-2"
                 >
-                  <Input
-                    placeholder="Enter status name..."
-                    value={newStatus}
-                    onChange={(e) => setNewStatus(e.target.value)}
-                    className="w-full sm:max-w-sm"
-                  />
+                  <div className="w-full sm:max-w-sm space-y-1">
+                    <Input
+                      placeholder="Enter status name..."
+                      value={newStatus}
+                      onChange={(e) =>
+                        setNewStatus(e.target.value.slice(0, 80))
+                      }
+                      maxLength={80}
+                      className="w-full"
+                    />
+                    <p className="text-xs text-muted-foreground text-right">
+                      {newStatus.length}/80
+                    </p>
+                  </div>
                   <Button
                     type="submit"
                     size="sm"
@@ -614,7 +632,7 @@ export default function TaskStatus() {
                     <div key={index} className="flex items-center gap-2">
                       <div
                         key={index}
-                        className={`px-3 py-1.5 rounded-md text-sm border truncate max-w-[150px] sm:max-w-none ${
+                        className={`px-3 py-1.5 rounded-md text-sm border truncate max-w-[150px] sm:max-w-[200px] ${
                           projectDefaultStatuses.some(
                             (defaultStatus) =>
                               defaultStatus.name === status.name
@@ -683,7 +701,7 @@ export default function TaskStatus() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-yellow-500 shrink-0" />
-                <span className="truncate">
+                <span className="truncate max-w-[300px] sm:max-w-[400px]">
                   Delete Status:{" "}
                   {removedStatus.length > 0
                     ? removedStatus[0].name
@@ -716,7 +734,10 @@ export default function TaskStatus() {
                             <CircleHelp className="mx-auto" />
                           </TableCell>
                           <TableCell>
-                            <Badge variant={"secondary"}>
+                            <Badge
+                              variant={"secondary"}
+                              className="truncate max-w-[150px] sm:max-w-[200px]"
+                            >
                               {
                                 removedStatus.find(
                                   (s) => s.id === task.status_id
@@ -736,7 +757,7 @@ export default function TaskStatus() {
                       Select new status for these tickets:
                     </h3>
                     <Select value={newStatusId} onValueChange={setNewStatusId}>
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className="truncate max-w-lg sm:max-w-2xl w-full justify-between">
                         <SelectValue placeholder="Select a new status" />
                       </SelectTrigger>
                       <SelectContent>

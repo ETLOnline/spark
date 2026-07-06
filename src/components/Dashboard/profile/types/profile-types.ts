@@ -26,6 +26,8 @@ export type ProfileData = {
   bio: string
   skills: number[]
   interests: number[]
+  professional_title?: string
+  company?: string
 }
 
 export type Profile = {
