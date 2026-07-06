@@ -303,21 +303,6 @@ export function serializeUserPerms(userPerms: {
   }
 }
 
-/** Returns true if the user has a role with the given name. */
-export function hasRole(
-  user: SelectUser | null | undefined,
-  roleName: string
-): boolean {
-  return (
-    user?.roles?.some((r: SelectUserRole) => r.role?.name === roleName) ?? false
-  )
-}
-
-/** Convenience wrapper — true if the user has the "Mentor" role. */
-export function isMentor(user: SelectUser | null | undefined): boolean {
-  return hasRole(user, "Mentor")
-}
-
 export async function isSuperAdmin(user: SelectUser): Promise<boolean> {
   try {
     if (!user.roles || user.roles.length === 0) {
