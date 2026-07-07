@@ -55,9 +55,9 @@ export default function MentorCard({ mentor }: MentorCardProps) {
           <h3 className="font-bold text-base text-foreground truncate">
             {mentor.name}
           </h3>
-          {mentor.title && (
+          {mentor.professional_title && (
             <p className="text-sm text-muted-foreground mt-0.5 truncate">
-              {mentor.title}
+              {mentor.professional_title}
             </p>
           )}
           {mentor.company && (

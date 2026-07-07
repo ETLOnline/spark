@@ -40,7 +40,7 @@ export interface MentorData {
   name: string
   photo: string | null
   initials: string
-  title: string | null
+  professional_title: string | null
   company: string | null
   tags: string[]
   interests: string[]

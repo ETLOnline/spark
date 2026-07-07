@@ -31,7 +31,7 @@ export default function MentorsListingPage() {
             photo: m.profile_url ?? null,
             initials:
               `${m.first_name[0] ?? ""}${m.last_name[0] ?? ""}`.toUpperCase(),
-            title: m.profile?.professional_title ?? null,
+            professional_title: m.profile?.professional_title ?? null,
             company: m.profile?.company ?? null,
             bio: m.profile?.bio ?? null,
             tags: (m.userTags ?? [])
@@ -68,7 +68,7 @@ export default function MentorsListingPage() {
       const matchesSearch =
         !q ||
         m.name.toLowerCase().includes(q) ||
-        (m.title ?? "").toLowerCase().includes(q) ||
+        (m.professional_title ?? "").toLowerCase().includes(q) ||
         (m.company ?? "").toLowerCase().includes(q) ||
         (m.bio ?? "").toLowerCase().includes(q) ||
         m.tags.some((t) => t.toLowerCase().includes(q))
