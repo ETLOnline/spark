@@ -71,14 +71,9 @@ import {
   GetUserRewardBalanceAction
 } from "@/src/server-actions/Reward/Reward"
 import { Input } from "../../ui/input"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from "../../ui/tooltip"
 import { Skeleton } from "../../ui/skeleton"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
+import ViewAvailabilityButton from "./ViewAvailabilityButton"
 
 type ProfileScreenProps = {
   tab?: string
@@ -313,46 +308,6 @@ export default function ProfileScreen({
       setReferralLink(ReferralURL)
     }
   }, [isMyProfile])
-
-  const RP_THRESHOLD = 500
-  const canViewAvailability = viewerRp >= RP_THRESHOLD
-  const rpShortfall = RP_THRESHOLD - viewerRp
-
-  const viewAvailabilityButton =
-    !isMyProfile && mentorSlots.length > 0 ? (
-      canViewAvailability ? (
-        <Link
-          href={`/profile/${user.unique_id}/availability`}
-          className="w-full"
-        >
-          <Button variant="outline" className="w-full mt-2" size="sm">
-            <CalendarDays className="h-4 w-4 mr-2" />
-            View Availability
-          </Button>
-        </Link>
-      ) : (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="w-full mt-2 inline-block">
-                <Button
-                  variant="outline"
-                  className="w-full pointer-events-none opacity-50"
-                  size="sm"
-                  disabled
-                >
-                  <CalendarDays className="h-4 w-4 mr-2" />
-                  View Availability
-                </Button>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Earn {rpShortfall} more RP to unlock this mentor</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )
-    ) : null
 
   return (
     <>
@@ -643,7 +598,12 @@ export default function ProfileScreen({
                   )}
 
                   {/* Viewer: see mentor's availability when slots exist */}
-                  {viewAvailabilityButton}
+                  {!isMyProfile && mentorSlots.length > 0 && (
+                    <ViewAvailabilityButton
+                      mentorId={user.unique_id}
+                      viewerRp={viewerRp}
+                    />
+                  )}
                 </CardContent>
               </Card>
             )}
