@@ -76,9 +76,7 @@ export const getCompletionItems = ({
 }
 
 export const getCompletionPercentage = (items: CompletionItem[]): number => {
-  if (items.length === 0) return 100
   const completed = items.filter((item) => item.completed).length
+
   return Math.round((completed / items.length) * 100)
 }
-
-export type { SelectProfile, SelectUser }
