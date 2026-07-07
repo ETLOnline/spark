@@ -6,7 +6,7 @@ import { Input } from "@/src/components/ui/input"
 import { Skeleton } from "@/src/components/ui/skeleton"
 import MentorCard from "./MentorCard"
 import MentorFilters from "./MentorFilters"
-import { MentorData, MentorFiltersType, DEFAULT_FILTERS } from "./mentorsData"
+import { MentorData, MentorFiltersType, DEFAULT_FILTERS } from "./MentorTypes"
 import type { MultiSelectOption } from "@/src/components/ui/multi-select"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetActiveMentorsAction } from "@/src/server-actions/Mentor/MentorActions"
@@ -16,33 +16,49 @@ export default function MentorsListingPage() {
   const [drawerFilters, setDrawerFilters] =
     useState<MentorFiltersType>(DEFAULT_FILTERS)
 
-  const [loading, result, , fetchMentors] = useServerAction(
-    GetActiveMentorsAction
-  )
+  const [mentors, setMentors] = useState<MentorData[]>([])
+  const [loading, , , fetchMentors] = useServerAction(GetActiveMentorsAction)
 
   useEffect(() => {
-    fetchMentors()
+    const load = async () => {
+      try {
+        const result = await fetchMentors({ isActive: true })
+        if (!result?.success || !result.data) return
+        setMentors(
+          result.data.map((m) => ({
+            id: m.unique_id,
+            name: `${m.first_name} ${m.last_name}`.trim(),
+            photo: m.profile_url ?? null,
+            initials:
+              `${m.first_name[0] ?? ""}${m.last_name[0] ?? ""}`.toUpperCase(),
+            title: m.profile?.professional_title ?? null,
+            company: m.profile?.company ?? null,
+            bio: m.profile?.bio ?? null,
+            tags: (m.userTags ?? [])
+              .filter((ut) => ut.tag?.type === "skill" && !!ut.tag?.name)
+              .map((ut) => ut.tag!.name!),
+            interests: (m.userTags ?? [])
+              .filter((ut) => ut.tag?.type === "interest" && !!ut.tag?.name)
+              .map((ut) => ut.tag!.name!),
+            rating: Number(m.profile?.total_average_rating) || 0,
+            reviewCount: m.profile?.number_of_ratings ?? 0,
+            completedSessions: m.profile?.total_completed_sessions ?? 0
+          }))
+        )
+      } catch (error) {
+        console.error("Failed to load mentors:", error)
+      }
+    }
+    load()
   }, [])
-
-  const mentors: MentorData[] = useMemo(() => {
-    if (!result?.success || !result.data) return []
-    return result.data.map((m) => ({
-      id: m.unique_id,
-      name: `${m.first_name} ${m.last_name}`.trim(),
-      photo: m.profile_url,
-      initials: `${m.first_name[0] ?? ""}${m.last_name[0] ?? ""}`.toUpperCase(),
-      title: m.professional_title,
-      company: m.company,
-      bio: m.bio,
-      tags: m.tags,
-      rating: Number(m.total_average_rating) || 0,
-      reviewCount: m.number_of_ratings,
-      completedSessions: m.total_completed_sessions
-    }))
-  }, [result])
 
   const skillOptions: MultiSelectOption[] = useMemo(() => {
     const unique = [...new Set(mentors.flatMap((m) => m.tags))].sort()
+    return unique.map((t) => ({ label: t, value: t }))
+  }, [mentors])
+
+  const interestOptions: MultiSelectOption[] = useMemo(() => {
+    const unique = [...new Set(mentors.flatMap((m) => m.interests))].sort()
     return unique.map((t) => ({ label: t, value: t }))
   }, [mentors])
 
@@ -61,9 +77,13 @@ export default function MentorsListingPage() {
         drawerFilters.skills.length === 0 ||
         drawerFilters.skills.some((s) => m.tags.includes(s))
 
+      const matchesInterests =
+        drawerFilters.interests.length === 0 ||
+        drawerFilters.interests.some((i) => m.interests.includes(i))
+
       const matchesRating = m.rating >= drawerFilters.minRating
 
-      return matchesSearch && matchesSkills && matchesRating
+      return matchesSearch && matchesSkills && matchesInterests && matchesRating
     })
   }, [search, drawerFilters, mentors])
 
@@ -93,6 +113,7 @@ export default function MentorsListingPage() {
           <div className="shrink-0">
             <MentorFilters
               skillOptions={skillOptions}
+              interestOptions={interestOptions}
               onApplyFilters={setDrawerFilters}
             />
           </div>
@@ -101,10 +122,10 @@ export default function MentorsListingPage() {
         {/* Results count */}
         {!loading && (
           <p className="text-sm text-muted-foreground">
-            Showing{" "}
+            Showing
             <span className="font-medium text-foreground">
               {filtered.length}
-            </span>{" "}
+            </span>
             {filtered.length === 1 ? "mentor" : "mentors"}
           </p>
         )}

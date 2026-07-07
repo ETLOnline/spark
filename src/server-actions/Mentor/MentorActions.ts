@@ -9,7 +9,7 @@ import {
   updateUserProfile,
   SearchUserProfile
 } from "@/src/db/data-access/profile/query"
-import { GetActiveMentorProfiles } from "@/src/db/data-access/user/query"
+import { GetMentors } from "@/src/db/data-access/user/query"
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -116,12 +116,15 @@ export const UpdateAvailabilityAction = CreateServerAction(
   }
 )
 
-export const GetActiveMentorsAction = CreateServerAction(false, async () => {
-  try {
-    const mentors = await GetActiveMentorProfiles()
-    return { success: true, data: mentors }
-  } catch (error) {
-    console.error("GetActiveMentorsAction error:", error)
-    return { success: false, error: "Failed to fetch active mentors" }
+export const GetActiveMentorsAction = CreateServerAction(
+  false,
+  async ({ isActive }: { isActive?: boolean } = {}) => {
+    try {
+      const mentors = await GetMentors({ isActive })
+      return { success: true, data: mentors }
+    } catch (error) {
+      console.error("GetActiveMentorsAction error:", error)
+      return { success: false, error: "Failed to fetch active mentors" }
+    }
   }
-})
+)

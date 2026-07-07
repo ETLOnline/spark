@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
 import { cn } from "@/src/lib/utils"
-import { MentorData } from "./mentorsData"
+import { MentorData } from "./MentorTypes"
 
 function StarRating({ rating }: { rating: number }) {
   return (

@@ -21,6 +21,7 @@ export interface AvailabilityRange {
 
 export interface MentorFiltersType {
   skills: string[]
+  interests: string[]
   availability: AvailabilityRange | undefined
   minRating: number
   engagementTypes: EngagementType[]
@@ -28,6 +29,7 @@ export interface MentorFiltersType {
 
 export const DEFAULT_FILTERS: MentorFiltersType = {
   skills: [],
+  interests: [],
   availability: undefined,
   minRating: 0,
   engagementTypes: []
@@ -41,6 +43,7 @@ export interface MentorData {
   title: string | null
   company: string | null
   tags: string[]
+  interests: string[]
   bio: string | null
   rating: number
   reviewCount: number
