@@ -67,9 +67,16 @@ import TrustEngineCard from "./trust-engine/TrustEngineCard"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
 import {
   GetUserApprovedVerificationCountAction,
-  GetUserReviewedVerificationCountAction
+  GetUserReviewedVerificationCountAction,
+  GetUserRewardBalanceAction
 } from "@/src/server-actions/Reward/Reward"
 import { Input } from "../../ui/input"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "../../ui/tooltip"
 import { Skeleton } from "../../ui/skeleton"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 
@@ -140,15 +147,29 @@ export default function ProfileScreen({
     GetUserApprovedVerificationCountAction
   )
 
+  const [viewerRp, setViewerRp] = useState<number>(0)
+  const [, , , GetViewerRpBalance] = useServerAction(GetUserRewardBalanceAction)
+
   useEffect(() => {
     if (authUser && user) {
       setIsMyProfile(authUser.unique_id === user.unique_id)
     }
   }, [authUser, user])
 
+  useEffect(() => {
+    if (!authUser || isMyProfile) return
+    const fetchViewerRp = async () => {
+      const res = await GetViewerRpBalance(authUser.unique_id, 1)
+      if (res?.success && res.data) {
+        setViewerRp(res.data.current_balance ?? 0)
+      }
+    }
+    fetchViewerRp()
+  }, [authUser, isMyProfile])
+
   // Fetch mentor slots for both owner and viewer — used to derive availability status
   useEffect(() => {
-    if (!profile?.is_mentor_active) return
+    if (!getUserRole(user)?.includes("Mentor")) return
     const fetchSlots = async () => {
       const res = await getMentorAvailability(user.unique_id)
       if (res?.success && res.data) {
@@ -156,7 +177,7 @@ export default function ProfileScreen({
       }
     }
     fetchSlots()
-  }, [profile?.is_mentor_active, user.unique_id])
+  }, [user.unique_id])
 
   // A mentor is "available" if they have at least one slot that hasn't expired
   const todayStr = toLocalDateStr(new Date())
@@ -292,6 +313,46 @@ export default function ProfileScreen({
       setReferralLink(ReferralURL)
     }
   }, [isMyProfile])
+
+  const RP_THRESHOLD = 500
+  const canViewAvailability = viewerRp >= RP_THRESHOLD
+  const rpShortfall = RP_THRESHOLD - viewerRp
+
+  const viewAvailabilityButton =
+    !isMyProfile && mentorSlots.length > 0 ? (
+      canViewAvailability ? (
+        <Link
+          href={`/profile/${user.unique_id}/availability`}
+          className="w-full"
+        >
+          <Button variant="outline" className="w-full mt-2" size="sm">
+            <CalendarDays className="h-4 w-4 mr-2" />
+            View Availability
+          </Button>
+        </Link>
+      ) : (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="w-full mt-2 inline-block">
+                <Button
+                  variant="outline"
+                  className="w-full pointer-events-none opacity-50"
+                  size="sm"
+                  disabled
+                >
+                  <CalendarDays className="h-4 w-4 mr-2" />
+                  View Availability
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Earn {rpShortfall} more RP to unlock this mentor</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )
+    ) : null
 
   return (
     <>
@@ -500,7 +561,7 @@ export default function ProfileScreen({
               </Card>
             )}
             {/* Mentor Info — shown to owner always; to others only when both fields are filled */}
-            {!!getUserRole(user)?.includes("Mentor") && isMyProfile && (
+            {!!getUserRole(user)?.includes("Mentor") && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
@@ -582,21 +643,7 @@ export default function ProfileScreen({
                   )}
 
                   {/* Viewer: see mentor's availability when slots exist */}
-                  {!isMyProfile && mentorSlots.length > 0 && (
-                    <Link
-                      href={`/profile/${user.unique_id}/availability`}
-                      className="w-full"
-                    >
-                      <Button
-                        variant="outline"
-                        className="w-full mt-2"
-                        size="sm"
-                      >
-                        <CalendarDays className="h-4 w-4 mr-2" />
-                        View Availability
-                      </Button>
-                    </Link>
-                  )}
+                  {viewAvailabilityButton}
                 </CardContent>
               </Card>
             )}
