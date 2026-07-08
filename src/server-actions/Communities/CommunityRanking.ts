@@ -99,7 +99,8 @@ export const GetCurrentUserRankAction = CreateServerAction(
         rpPoints: rankData.points,
         trend: (rankData.trend || "neutral") as "up" | "down" | "neutral",
         change: rankData.rank_change || 0,
-        pointsGained: rankData.points_gained || 0
+        pointsGained: rankData.points_gained || 0,
+        pointsToNextRank: rankData.pointsToNextRank ?? 0
       }
 
       return {

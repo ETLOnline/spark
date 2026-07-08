@@ -6,8 +6,9 @@ import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   AttachChannelUserAction,
   DeleteChannelAction,
-  LeaveChannelAction
+  DettachChannelUserAction
 } from "@/src/server-actions/Channel/Channel"
+import { getRoleByEntityTypeAndIdAction } from "@/src/server-actions/UserRoles/UserRole"
 import { channelStore } from "@/src/store/channel/channelStore"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useRouter } from "next/navigation"
@@ -66,8 +67,9 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
   const [joinLoading, joinResult, joinError, joinChannel] = useServerAction(
     AttachChannelUserAction
   )
-  const [leaveLoading, leaveResult, leaveError, leaveChannel] =
-    useServerAction(LeaveChannelAction)
+  const [leaveLoading, leaveResult, leaveError, leaveChannel] = useServerAction(
+    DettachChannelUserAction
+  )
 
   useEffect(() => {
     const isMember = isEntityUser(channel, currentUserId as string)
@@ -98,7 +100,30 @@ const ChannelsContextMenu: React.FC<ChannelProps> = ({
     if (!channel.id || !currentUserId) return
 
     try {
-      const res = await leaveChannel(channel.id, currentUserId)
+      const currentMember = channel.users?.find(
+        (member) => member.user_id === currentUserId
+      )
+
+      const rolesRes = await getRoleByEntityTypeAndIdAction(
+        "CHANNEL",
+        channel.id
+      )
+      const scopedRoles = rolesRes?.data ?? []
+
+      const memberRole = scopedRoles.find(
+        (role) => role.name === currentMember?.role
+      )
+
+      if (!memberRole) {
+        toast({
+          title: "Error",
+          description: "Could not find your role in this channel.",
+          variant: "destructive"
+        })
+        return
+      }
+
+      const res = await leaveChannel(channel.id, currentUserId, memberRole.id)
 
       if (res?.success) {
         setIsChannelMember(false)

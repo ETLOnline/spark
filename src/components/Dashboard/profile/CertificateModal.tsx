@@ -27,8 +27,7 @@ import {
 } from "@/src/server-actions/Certificates/certificate"
 import { SelectCertificate } from "@/src/db/schema"
 import { toast } from "@/src/hooks/use-toast"
-import { desc } from "drizzle-orm"
-import { set, z } from "zod"
+import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import moment from "moment"
 import { UnsavedChangesDialog } from "../../common/unsavedChangesDialog"
@@ -216,15 +215,6 @@ const CertificateModal = ({
       isDirty: isChanged,
       onClose: () => setIsDialogOpen(false)
     })
-  const title = form.watch("title")
-  const institute = form.watch("institute")
-  const year = form.watch("year")
-
-  useEffect(() => {
-    if (title || institute || year) {
-      form.trigger(["title", "institute", "year"])
-    }
-  }, [title, institute, year, isDialogOpen])
 
   return (
     <>
@@ -308,16 +298,26 @@ const CertificateModal = ({
               </div>
             </div>
             <DialogFooter>
-              <Button
-                variant="outline"
-                loading={DeleteCertificateLoading}
-                onClick={() =>
-                  handleDeleteCertificate(selectedCertificate?.id || 0)
-                }
-                type="button"
-              >
-                Delete
-              </Button>
+              {selectedCertificate ? (
+                <Button
+                  variant="outline"
+                  loading={DeleteCertificateLoading}
+                  onClick={() =>
+                    handleDeleteCertificate(selectedCertificate?.id || 0)
+                  }
+                  type="button"
+                >
+                  Delete
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() => handleClose(false)}
+                  type="button"
+                >
+                  Cancel
+                </Button>
+              )}
 
               <Button
                 loading={createCertificateLoading || updateCertificateLoading}
