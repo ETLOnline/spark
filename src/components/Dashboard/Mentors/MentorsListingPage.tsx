@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { Search } from "lucide-react"
+import { Search, X } from "lucide-react"
 import { Input } from "@/src/components/ui/input"
+import { Button } from "@/src/components/ui/button"
 import { Skeleton } from "@/src/components/ui/skeleton"
 import MentorCard from "./MentorCard"
 import MentorFilters from "./MentorFilters"
@@ -16,7 +17,6 @@ export default function MentorsListingPage() {
   const [search, setSearch] = useState("")
   const [drawerFilters, setDrawerFilters] =
     useState<MentorFiltersType>(DEFAULT_FILTERS)
-
   const [mentors, setMentors] = useState<SelectUser[]>([])
   const [loading, , , fetchMentors] = useServerAction(GetActiveMentorsAction)
 
@@ -108,6 +108,13 @@ export default function MentorsListingPage() {
     })
   }, [search, drawerFilters, mentors])
 
+  const hasActiveFilters =
+    drawerFilters.skills.length > 0 ||
+    drawerFilters.interests.length > 0 ||
+    drawerFilters.availability !== undefined ||
+    drawerFilters.minRating > 0 ||
+    drawerFilters.engagementTypes.length > 0
+
   return (
     <div className="bg-background overflow-x-hidden">
       <div className="px-3 py-3">
@@ -137,6 +144,19 @@ export default function MentorsListingPage() {
               onApplyFilters={setDrawerFilters}
             />
           </div>
+          {hasActiveFilters && (
+            <Button
+              size="sm"
+              className="shrink-0 gap-1 bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => {
+                setDrawerFilters(DEFAULT_FILTERS)
+                // setFilterKey((k) => k + 1)
+              }}
+            >
+              <X className="h-3.5 w-3.5" />
+              Reset
+            </Button>
+          )}
         </div>
 
         {/* Results count */}
