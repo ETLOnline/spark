@@ -9,9 +9,9 @@ export const RATING_OPTIONS: { label: string; value: string }[] = [
 ]
 
 export const ENGAGEMENT_TYPE_OPTIONS: MultiSelectOption[] = [
-  { label: "Skill Mentorship", value: "Skill Mentorship" },
-  { label: "FYP Supervision", value: "FYP Supervision" },
-  { label: "Both", value: "Both" }
+  { label: "Skill Mentorship", value: "skill mentorship" },
+  { label: "FYP Supervision", value: "fyp supervision" },
+  { label: "Both", value: "both" }
 ]
 
 export interface AvailabilityRange {
@@ -33,19 +33,4 @@ export const DEFAULT_FILTERS: MentorFiltersType = {
   availability: undefined,
   minRating: 0,
   engagementTypes: []
-}
-
-export interface MentorData {
-  id: string
-  name: string
-  photo: string | null
-  initials: string
-  professional_title: string | null
-  company: string | null
-  tags: string[]
-  interests: string[]
-  bio: string | null
-  rating: number
-  reviewCount: number
-  completedSessions: number
 }

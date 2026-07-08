@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
 import { cn } from "@/src/lib/utils"
-import { MentorData } from "./MentorTypes"
+import type { SelectUser } from "@/src/db/schema"
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -30,21 +30,31 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 interface MentorCardProps {
-  mentor: MentorData
+  mentor: SelectUser
 }
 
 export default function MentorCard({ mentor }: MentorCardProps) {
+  const name = `${mentor.first_name} ${mentor.last_name}`.trim()
+  const initials =
+    `${mentor.first_name?.[0] ?? ""}${mentor.last_name?.[0] ?? ""}`.toUpperCase()
+  const tags = (mentor.userTags ?? [])
+    .filter((ut) => ut.tag?.type === "skill" && !!ut.tag?.name)
+    .map((ut) => ut.tag!.name!)
+  const rating = Number(mentor.profile?.total_average_rating) || 0
+  const reviewCount = mentor.profile?.number_of_ratings ?? 0
+  const completedSessions = mentor.profile?.total_completed_sessions ?? 0
+
   return (
     <Card className="flex flex-col overflow-hidden hover:shadow-lg transition-shadow border border-border rounded-2xl w-full">
       <div className="bg-muted px-4 pt-4 pb-10 rounded-t-2xl" />
 
       <div className="flex justify-center -mt-10 relative z-10">
         <Avatar className="h-20 w-20 border-4 border-card shrink-0">
-          {mentor.photo ? (
-            <AvatarImage src={mentor.photo} alt={mentor.name} />
+          {mentor.profile_url ? (
+            <AvatarImage src={mentor.profile_url} alt={name} />
           ) : null}
           <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
-            {mentor.initials}
+            {initials}
           </AvatarFallback>
         </Avatar>
       </div>
@@ -53,27 +63,27 @@ export default function MentorCard({ mentor }: MentorCardProps) {
         {/* Name / title / company */}
         <div className="text-center">
           <h3 className="font-bold text-base text-foreground truncate">
-            {mentor.name}
+            {name}
           </h3>
-          {mentor.professional_title && (
+          {mentor.profile?.professional_title && (
             <p className="text-sm text-muted-foreground mt-0.5 truncate">
-              {mentor.professional_title}
+              {mentor.profile.professional_title}
             </p>
           )}
-          {mentor.company && (
+          {mentor.profile?.company && (
             <div className="flex items-center justify-center gap-1 mt-1">
               <Building2 className="h-3 w-3 text-muted-foreground/70 shrink-0" />
               <span className="text-xs text-muted-foreground truncate">
-                {mentor.company}
+                {mentor.profile.company}
               </span>
             </div>
           )}
         </div>
 
         {/* Expertise tags */}
-        {mentor.tags.length > 0 && (
+        {tags.length > 0 && (
           <div className="flex flex-wrap justify-center gap-1.5">
-            {mentor.tags.slice(0, 3).map((tag) => (
+            {tags.slice(0, 3).map((tag) => (
               <Badge
                 key={tag}
                 variant="secondary"
@@ -88,24 +98,24 @@ export default function MentorCard({ mentor }: MentorCardProps) {
         {/* Stars + reviews */}
         <div className="flex items-center justify-between border-t border-border pt-3 gap-2">
           <div className="flex items-center gap-1.5 shrink-0">
-            <StarRating rating={mentor.rating} />
+            <StarRating rating={rating} />
             <span className="text-sm font-semibold text-foreground">
-              {mentor.rating.toFixed(1)}
+              {rating.toFixed(1)}
             </span>
           </div>
           <span className="text-xs text-muted-foreground">
-            {mentor.reviewCount} reviews
+            {reviewCount} reviews
           </span>
         </div>
 
         {/* Completed sessions */}
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <Users className="h-3.5 w-3.5 shrink-0" />
-          <span>{mentor.completedSessions} completed sessions</span>
+          <span>{completedSessions} completed sessions</span>
         </div>
 
         {/* CTA */}
-        <Link href={`/profile/${mentor.id}`} className="mt-auto">
+        <Link href={`/profile/${mentor.unique_id}`} className="mt-auto">
           <Button size="sm" className="w-full gap-1.5">
             View Profile
             <ArrowRight className="h-3.5 w-3.5" />

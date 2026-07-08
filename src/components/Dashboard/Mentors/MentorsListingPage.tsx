@@ -6,17 +6,18 @@ import { Input } from "@/src/components/ui/input"
 import { Skeleton } from "@/src/components/ui/skeleton"
 import MentorCard from "./MentorCard"
 import MentorFilters from "./MentorFilters"
-import { MentorData, MentorFiltersType, DEFAULT_FILTERS } from "./MentorTypes"
+import { MentorFiltersType, DEFAULT_FILTERS } from "./MentorTypes"
 import type { MultiSelectOption } from "@/src/components/ui/multi-select"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetActiveMentorsAction } from "@/src/server-actions/Mentor/MentorActions"
+import type { SelectUser } from "@/src/db/schema"
 
 export default function MentorsListingPage() {
   const [search, setSearch] = useState("")
   const [drawerFilters, setDrawerFilters] =
     useState<MentorFiltersType>(DEFAULT_FILTERS)
 
-  const [mentors, setMentors] = useState<MentorData[]>([])
+  const [mentors, setMentors] = useState<SelectUser[]>([])
   const [loading, , , fetchMentors] = useServerAction(GetActiveMentorsAction)
 
   useEffect(() => {
@@ -24,27 +25,7 @@ export default function MentorsListingPage() {
       try {
         const result = await fetchMentors({ isActive: true })
         if (!result?.success || !result.data) return
-        setMentors(
-          result.data.map((m) => ({
-            id: m.unique_id,
-            name: `${m.first_name} ${m.last_name}`.trim(),
-            photo: m.profile_url ?? null,
-            initials:
-              `${m.first_name[0] ?? ""}${m.last_name[0] ?? ""}`.toUpperCase(),
-            professional_title: m.profile?.professional_title ?? null,
-            company: m.profile?.company ?? null,
-            bio: m.profile?.bio ?? null,
-            tags: (m.userTags ?? [])
-              .filter((ut) => ut.tag?.type === "skill" && !!ut.tag?.name)
-              .map((ut) => ut.tag!.name!),
-            interests: (m.userTags ?? [])
-              .filter((ut) => ut.tag?.type === "interest" && !!ut.tag?.name)
-              .map((ut) => ut.tag!.name!),
-            rating: Number(m.profile?.total_average_rating) || 0,
-            reviewCount: m.profile?.number_of_ratings ?? 0,
-            completedSessions: m.profile?.total_completed_sessions ?? 0
-          }))
-        )
+        setMentors(result.data)
       } catch (error) {
         console.error("Failed to load mentors:", error)
       }
@@ -53,35 +34,60 @@ export default function MentorsListingPage() {
   }, [])
 
   const skillOptions: MultiSelectOption[] = useMemo(() => {
-    const unique = [...new Set(mentors.flatMap((m) => m.tags))].sort()
+    const unique = [
+      ...new Set(
+        mentors.flatMap((m) =>
+          (m.userTags ?? [])
+            .filter((ut) => ut.tag?.type === "skill" && !!ut.tag?.name)
+            .map((ut) => ut.tag!.name!)
+        )
+      )
+    ].sort()
     return unique.map((t) => ({ label: t, value: t }))
   }, [mentors])
 
   const interestOptions: MultiSelectOption[] = useMemo(() => {
-    const unique = [...new Set(mentors.flatMap((m) => m.interests))].sort()
+    const unique = [
+      ...new Set(
+        mentors.flatMap((m) =>
+          (m.userTags ?? [])
+            .filter((ut) => ut.tag?.type === "interest" && !!ut.tag?.name)
+            .map((ut) => ut.tag!.name!)
+        )
+      )
+    ].sort()
     return unique.map((t) => ({ label: t, value: t }))
   }, [mentors])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return mentors.filter((m) => {
+      const name = `${m.first_name} ${m.last_name}`.toLowerCase()
+      const skills = (m.userTags ?? [])
+        .filter((ut) => ut.tag?.type === "skill" && !!ut.tag?.name)
+        .map((ut) => ut.tag!.name!)
+      const interests = (m.userTags ?? [])
+        .filter((ut) => ut.tag?.type === "interest" && !!ut.tag?.name)
+        .map((ut) => ut.tag!.name!)
+
       const matchesSearch =
         !q ||
-        m.name.toLowerCase().includes(q) ||
-        (m.professional_title ?? "").toLowerCase().includes(q) ||
-        (m.company ?? "").toLowerCase().includes(q) ||
-        (m.bio ?? "").toLowerCase().includes(q) ||
-        m.tags.some((t) => t.toLowerCase().includes(q))
+        name.includes(q) ||
+        (m.profile?.professional_title ?? "").toLowerCase().includes(q) ||
+        (m.profile?.company ?? "").toLowerCase().includes(q) ||
+        (m.profile?.bio ?? "").toLowerCase().includes(q) ||
+        skills.some((t) => t.toLowerCase().includes(q))
 
       const matchesSkills =
         drawerFilters.skills.length === 0 ||
-        drawerFilters.skills.some((s) => m.tags.includes(s))
+        drawerFilters.skills.some((s) => skills.includes(s))
 
       const matchesInterests =
         drawerFilters.interests.length === 0 ||
-        drawerFilters.interests.some((i) => m.interests.includes(i))
+        drawerFilters.interests.some((i) => interests.includes(i))
 
-      const matchesRating = m.rating >= drawerFilters.minRating
+      const rating = Number(m.profile?.total_average_rating) || 0
+      const matchesRating = rating >= drawerFilters.minRating
 
       return matchesSearch && matchesSkills && matchesInterests && matchesRating
     })
@@ -150,7 +156,7 @@ export default function MentorsListingPage() {
         {!loading && filtered.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {filtered.map((mentor) => (
-              <MentorCard key={mentor.id} mentor={mentor} />
+              <MentorCard key={mentor.unique_id} mentor={mentor} />
             ))}
           </div>
         )}
