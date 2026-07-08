@@ -45,10 +45,11 @@ import { InviteUserDialog } from "../UserListAndInvite/UserInviteDialog"
 import { usePermissionChecker } from "@/src/hooks/usePermissionChecker"
 import {
   AttachCommunityUserAction,
-  LeaveCommunityAction
+  DetachCommunityUserAction
 } from "@/src/server-actions/Community/Community"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
+import { getRoleByEntityTypeAndIdAction } from "@/src/server-actions/UserRoles/UserRole"
 import { isEntityUser } from "@/src/utils/clientHelper"
 import { getInitials } from "@/src/utils/helpers"
 import CreateShortcut from "../common/Shortcut/components/CreateShortcut"
@@ -106,7 +107,7 @@ export default function CommunityDetailsClient({
   const [joinLoading, joinResult, joinError, attachCommunityUser] =
     useServerAction(AttachCommunityUserAction)
   const [leaveLoading, leaveResult, leaveError, leaveCommunity] =
-    useServerAction(LeaveCommunityAction)
+    useServerAction(DetachCommunityUserAction)
   const [loadingChannels, setLoadingChannels] = useState(true)
   const [channels, setChannels] = useAtom(channelStore.channels)
   const [pagination, setPagination] = useState<PaginationType | null>(null)
@@ -329,7 +330,34 @@ export default function CommunityDetailsClient({
     if (!community.id || !currentUserId) return
 
     try {
-      const res = await leaveCommunity(community.id, currentUserId)
+      const currentMember = community?.users?.find(
+        (member) => member.user_id === currentUserId
+      )
+
+      const rolesRes = await getRoleByEntityTypeAndIdAction(
+        "COMMUNITY",
+        community.id
+      )
+      const scopedRoles = rolesRes?.data ?? []
+
+      const memberRole = scopedRoles.find(
+        (role) => role.name === currentMember?.role
+      )
+
+      if (!memberRole) {
+        toast({
+          title: "Error",
+          description: "Could not find your role in this community.",
+          variant: "destructive"
+        })
+        return
+      }
+
+      const res = await leaveCommunity(
+        community.id,
+        currentUserId,
+        memberRole.id
+      )
 
       if (res?.success) {
         toast({
@@ -510,7 +538,7 @@ export default function CommunityDetailsClient({
           <Badge variant="outline" className="text-xs">
             {community?.category}
           </Badge>
-          <div className="flex flex-row items-center gap-2">
+          <div className="flex flex-row flex-wrap items-center gap-2">
             {canInviteUser && (
               <Button
                 variant="outline"

@@ -578,14 +578,10 @@ export default function ProfileScreen({
                     {isMyProfile && (
                       <Button
                         size={"sm"}
-                        variant={certificates?.length ? "edit" : "outline"}
+                        variant={"outline"}
                         onClick={() => setIsQualificationModalOpen(true)}
                       >
-                        {certificates?.length ? (
-                          "Edit"
-                        ) : (
-                          <Plus className="h-4 w-4" />
-                        )}
+                        <Plus className="h-4 w-4" />
                       </Button>
                     )}
                     <CertificateModal
