@@ -4,7 +4,6 @@ import Link from "next/link"
 import { Star, Users, Building2, ArrowRight } from "lucide-react"
 import { Card, CardContent } from "@/src/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
 import { cn } from "@/src/lib/utils"
 import type { SelectUser } from "@/src/db/schema"
@@ -79,21 +78,6 @@ export default function MentorCard({ mentor }: MentorCardProps) {
             </div>
           )}
         </div>
-
-        {/* Expertise tags */}
-        {tags.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-1.5">
-            {tags.slice(0, 3).map((tag) => (
-              <Badge
-                key={tag}
-                variant="secondary"
-                className="rounded-full text-xs px-2.5 py-0.5 font-normal"
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
 
         {/* Stars + reviews */}
         <div className="flex items-center justify-between border-t border-border pt-3 gap-2">
