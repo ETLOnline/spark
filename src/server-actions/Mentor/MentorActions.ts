@@ -17,6 +17,7 @@ interface SaveMentorSetupPayload {
   userId: string
   professional_title: string
   company: string
+  engagement_type: string
 }
 
 interface AvailabilitySlot {
@@ -37,7 +38,8 @@ export const SaveMentorSetupAction = CreateServerAction(
     try {
       await updateUserProfile(payload.userId, {
         professional_title: payload.professional_title,
-        company: payload.company
+        company: payload.company,
+        engagement_type: payload.engagement_type || "both"
       })
       return { success: true }
     } catch (error) {
@@ -118,9 +120,21 @@ export const UpdateAvailabilityAction = CreateServerAction(
 
 export const GetActiveMentorsAction = CreateServerAction(
   false,
-  async ({ isActive }: { isActive?: boolean } = {}) => {
+  async ({
+    isActive,
+    availabilityFrom,
+    availabilityTo
+  }: {
+    isActive?: boolean
+    availabilityFrom?: string
+    availabilityTo?: string
+  } = {}) => {
     try {
-      const mentors = await GetMentors({ isActive })
+      const mentors = await GetMentors({
+        isActive,
+        availabilityFrom,
+        availabilityTo
+      })
       return { success: true, data: mentors }
     } catch (error) {
       console.error("GetActiveMentorsAction error:", error)

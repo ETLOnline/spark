@@ -330,6 +330,13 @@
       "when": 1783348996196,
       "tag": "0046_2026_07_06_194312__added_fyp_status_and_learing_goals_in_profile",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1783509522854,
+      "tag": "0047_2026_07_08_161839__add_engagement_field_to_profile_table",
+      "breakpoints": true
     }
   ]
 }

@@ -1,8 +1,22 @@
-import { and, eq, ilike, inArray, SQL, sql, SQLWrapper } from "drizzle-orm"
+import {
+  and,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  isNull,
+  lte,
+  or,
+  SQL,
+  sql,
+  SQLWrapper
+} from "drizzle-orm"
 import { db } from "../.."
 import {
   InsertUser,
+  mentorAvailabilityTable,
   rolesTable,
+  SelectUser,
   userContactsTable,
   userRolesTable,
   usersTable
@@ -235,7 +249,15 @@ export async function UpdateUserName(
   }
 }
 
-export async function GetMentors({ isActive }: { isActive?: boolean } = {}) {
+export async function GetMentors({
+  isActive,
+  availabilityFrom,
+  availabilityTo
+}: {
+  isActive?: boolean
+  availabilityFrom?: string
+  availabilityTo?: string
+} = {}): Promise<SelectUser[]> {
   try {
     const result = await db.query.rolesTable.findFirst({
       where: eq(rolesTable.name, "Mentor"),
@@ -245,11 +267,7 @@ export async function GetMentors({ isActive }: { isActive?: boolean } = {}) {
             user: {
               with: {
                 profile: true,
-                userTags: {
-                  with: {
-                    tag: true
-                  }
-                }
+                userTags: { with: { tag: true } }
               }
             }
           }
@@ -257,11 +275,61 @@ export async function GetMentors({ isActive }: { isActive?: boolean } = {}) {
       }
     })
 
-    const users = result?.users.map((u) => u.user) || []
+    let users = (result?.users.map((u) => u.user) ?? []).filter(
+      Boolean
+    ) as SelectUser[]
 
-    return isActive
-      ? users.filter((u) => u?.profile?.is_mentor_active === true)
-      : users
+    if (isActive) {
+      users = users.filter((u) => u.profile?.is_mentor_active === true)
+    }
+
+    if (users.length === 0) return []
+
+    if (availabilityFrom || availabilityTo) {
+      // Single slot: must fall within the requested range
+      const noneClause = and(
+        eq(mentorAvailabilityTable.repeat_type, "none"),
+        availabilityFrom
+          ? gte(mentorAvailabilityTable.date, availabilityFrom)
+          : undefined,
+        availabilityTo
+          ? lte(mentorAvailabilityTable.date, availabilityTo)
+          : undefined
+      )
+
+      // Recurring slots (daily/weekly): range must overlap with [from, to]
+      const recurClause = and(
+        inArray(mentorAvailabilityTable.repeat_type, ["daily", "weekly"]),
+        availabilityTo
+          ? lte(mentorAvailabilityTable.date, availabilityTo)
+          : undefined,
+        availabilityFrom
+          ? or(
+              isNull(mentorAvailabilityTable.repeat_end_date),
+              gte(mentorAvailabilityTable.repeat_end_date, availabilityFrom)
+            )
+          : undefined
+      )
+
+      const qualifying = await db
+        .selectDistinct({ mentor_id: mentorAvailabilityTable.mentor_id })
+        .from(mentorAvailabilityTable)
+        .where(
+          and(
+            eq(mentorAvailabilityTable.is_active, true),
+            inArray(
+              mentorAvailabilityTable.mentor_id,
+              users.map((u) => u.unique_id)
+            ),
+            or(noneClause, recurClause)
+          )
+        )
+
+      const qualifyingIds = new Set(qualifying.map((q) => q.mentor_id))
+      users = users.filter((u) => qualifyingIds.has(u.unique_id))
+    }
+
+    return users
   } catch (error: any) {
     console.error("Error fetching mentors:", error)
     throw new Error("Failed to fetch mentors")

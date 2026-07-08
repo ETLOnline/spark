@@ -23,15 +23,19 @@ export default function MentorsListingPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const result = await fetchMentors({ isActive: true })
+        const result = await fetchMentors({
+          isActive: true,
+          availabilityFrom: drawerFilters.availability?.from,
+          availabilityTo: drawerFilters.availability?.to
+        })
         if (!result?.success || !result.data) return
-        setMentors(result.data)
+        setMentors(result.data as SelectUser[])
       } catch (error) {
         console.error("Failed to load mentors:", error)
       }
     }
     load()
-  }, [])
+  }, [drawerFilters.availability])
 
   const skillOptions: MultiSelectOption[] = useMemo(() => {
     const unique = [
@@ -63,12 +67,14 @@ export default function MentorsListingPage() {
     const q = search.trim().toLowerCase()
     return mentors.filter((m) => {
       const name = `${m.first_name} ${m.last_name}`.toLowerCase()
-      const skills = (m.userTags ?? [])
+      const tags = (m.userTags ?? [])
         .filter((ut) => ut.tag?.type === "skill" && !!ut.tag?.name)
         .map((ut) => ut.tag!.name!)
       const interests = (m.userTags ?? [])
         .filter((ut) => ut.tag?.type === "interest" && !!ut.tag?.name)
         .map((ut) => ut.tag!.name!)
+      const rating = Number(m.profile?.total_average_rating) || 0
+      const engagementType = m.profile?.engagement_type ?? ""
 
       const matchesSearch =
         !q ||
@@ -76,26 +82,34 @@ export default function MentorsListingPage() {
         (m.profile?.professional_title ?? "").toLowerCase().includes(q) ||
         (m.profile?.company ?? "").toLowerCase().includes(q) ||
         (m.profile?.bio ?? "").toLowerCase().includes(q) ||
-        skills.some((t) => t.toLowerCase().includes(q))
+        tags.some((t) => t.toLowerCase().includes(q))
 
       const matchesSkills =
         drawerFilters.skills.length === 0 ||
-        drawerFilters.skills.some((s) => skills.includes(s))
+        drawerFilters.skills.some((s) => tags.includes(s))
 
       const matchesInterests =
         drawerFilters.interests.length === 0 ||
         drawerFilters.interests.some((i) => interests.includes(i))
 
-      const rating = Number(m.profile?.total_average_rating) || 0
       const matchesRating = rating >= drawerFilters.minRating
 
-      return matchesSearch && matchesSkills && matchesInterests && matchesRating
+      const matchesEngagementType =
+        drawerFilters.engagementTypes.length === 0 ||
+        drawerFilters.engagementTypes.includes(engagementType as any)
+
+      return (
+        matchesSearch &&
+        matchesSkills &&
+        matchesInterests &&
+        matchesRating &&
+        matchesEngagementType
+      )
     })
   }, [search, drawerFilters, mentors])
 
   return (
     <div className="bg-background overflow-x-hidden">
-      {/* Page header */}
       <div className="px-3 py-3">
         <h1 className="text-xl font-bold tracking-tight">Mentors</h1>
         <p className="text-muted-foreground text-xs">
@@ -127,9 +141,9 @@ export default function MentorsListingPage() {
 
         {/* Results count */}
         {!loading && (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground ">
             Showing
-            <span className="font-medium text-foreground">
+            <span className="font-medium text-foreground mx-1">
               {filtered.length}
             </span>
             {filtered.length === 1 ? "mentor" : "mentors"}

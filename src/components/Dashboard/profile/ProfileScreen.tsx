@@ -596,6 +596,19 @@ export default function ProfileScreen({
                     </div>
                   </div>
 
+                  {/* Engagement Type */}
+                  <div className="flex items-center gap-3">
+                    <Video className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">
+                        Engagement Type
+                      </p>
+                      <p className="text-sm font-medium break-words capitalize">
+                        {profile?.engagement_type || "—"}
+                      </p>
+                    </div>
+                  </div>
+
                   {/* Completed Sessions */}
                   {(profile?.total_completed_sessions ?? 0) > 0 && (
                     <div className="flex items-center gap-3">
