@@ -4,17 +4,15 @@ import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import {
   GetMentorAvailability,
+  GetMentors,
   ReplaceMentorAvailability,
+  type GetMentorFilters,
   type MentorAvailabilitySlotInput
 } from "@/src/db/data-access/mentor/query"
 import {
   updateUserProfile,
   SearchUserProfile
 } from "@/src/db/data-access/profile/query"
-import {
-  GetMentors,
-  type GetMentorFilters
-} from "@/src/db/data-access/user/query"
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 

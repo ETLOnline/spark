@@ -14,7 +14,7 @@ import type { PaginationType } from "@/src/components/common/types/pagination.ty
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetActiveMentorsAction } from "@/src/server-actions/Mentor/MentorActions"
 import type { SelectUser } from "@/src/db/schema"
-import type { GetMentorFilters } from "@/src/db/data-access/user/query"
+import type { GetMentorFilters } from "@/src/db/data-access/mentor/query"
 
 export default function MentorsListingPage() {
   const [search, setSearch] = useState("")
