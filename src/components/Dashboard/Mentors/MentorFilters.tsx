@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { Filter } from "lucide-react"
 import moment from "moment"
 import { Button } from "@/src/components/ui/button"
@@ -44,7 +44,9 @@ interface Props {
   onApplyFilters: (filters: MentorFiltersType) => void
 }
 
-const TODAY = moment().format("YYYY-MM-DD")
+const TODAY = moment().format("YYYY-MM-DDTHH:mm")
+
+const preventDrawerDrag = (e: React.PointerEvent) => e.stopPropagation()
 
 export default function MentorFilters({
   skillOptions,
@@ -101,7 +103,41 @@ export default function MentorFilters({
               </DrawerDescription>
             </DrawerHeader>
 
-            <div className="p-4 space-y-4">
+            <div className="px-4 space-y-4">
+              {/* Availability */}
+              <div className="space-y-2">
+                <Label>Availability</Label>
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <span className="text-xs text-muted-foreground">From</span>
+                    <Input
+                      type="datetime-local"
+                      value={availFrom}
+                      min={TODAY}
+                      className="w-full"
+                      onPointerDownCapture={preventDrawerDrag}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        setAvailFrom(val)
+                        if (availTo && val > availTo) setAvailTo("")
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-xs text-muted-foreground">To</span>
+                    <Input
+                      type="datetime-local"
+                      value={availTo}
+                      min={availFrom || TODAY}
+                      className="w-full"
+                      onPointerDownCapture={preventDrawerDrag}
+                      onChange={(e) => setAvailTo(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Skills */}
               <div className="space-y-2">
                 <Label>Skills / Expertise</Label>
                 <MultiSelect
@@ -112,6 +148,7 @@ export default function MentorFilters({
                 />
               </div>
 
+              {/* Interests */}
               <div className="space-y-2">
                 <Label>Interests</Label>
                 <MultiSelect
@@ -122,34 +159,7 @@ export default function MentorFilters({
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Availability</Label>
-                <div className="space-y-2">
-                  <div className="space-y-1">
-                    <span className="text-xs text-muted-foreground">From</span>
-                    <Input
-                      type="date"
-                      value={availFrom}
-                      min={TODAY}
-                      onChange={(e) => {
-                        const newFrom = e.target.value
-                        setAvailFrom(newFrom)
-                        if (availTo && newFrom > availTo) setAvailTo("")
-                      }}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-xs text-muted-foreground">To</span>
-                    <Input
-                      type="date"
-                      value={availTo}
-                      min={availFrom || TODAY}
-                      onChange={(e) => setAvailTo(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-
+              {/* Rating */}
               <div className="space-y-2">
                 <Label>Rating</Label>
                 <Select value={minRating} onValueChange={setMinRating}>
@@ -166,6 +176,7 @@ export default function MentorFilters({
                 </Select>
               </div>
 
+              {/* Engagement Type */}
               <div className="space-y-2">
                 <Label>Engagement Type</Label>
                 <MultiSelect

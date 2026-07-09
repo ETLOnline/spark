@@ -1,41 +1,76 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { Search, X } from "lucide-react"
+import { Search } from "lucide-react"
 import { Input } from "@/src/components/ui/input"
-import { Button } from "@/src/components/ui/button"
 import { Skeleton } from "@/src/components/ui/skeleton"
 import MentorCard from "./MentorCard"
 import MentorFilters from "./MentorFilters"
 import { MentorFiltersType, DEFAULT_FILTERS } from "./MentorTypes"
 import type { MultiSelectOption } from "@/src/components/ui/multi-select"
+import PaginationComponent from "@/src/components/common/Pagination"
+import type { PaginationType } from "@/src/components/common/types/pagination.type"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetActiveMentorsAction } from "@/src/server-actions/Mentor/MentorActions"
 import type { SelectUser } from "@/src/db/schema"
 
 export default function MentorsListingPage() {
   const [search, setSearch] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
   const [drawerFilters, setDrawerFilters] =
     useState<MentorFiltersType>(DEFAULT_FILTERS)
-  const [mentors, setMentors] = useState<SelectUser[]>([])
+  const [mentorData, setMentorData] = useState<{
+    mentors: SelectUser[]
+    pagination: PaginationType
+  }>({
+    mentors: [],
+    pagination: {
+      total: 0,
+      page: 1,
+      limit: 12,
+      totalPages: 0
+    }
+  })
   const [loading, , , fetchMentors] = useServerAction(GetActiveMentorsAction)
 
+  // Fetch mentors with all filters and pagination
   useEffect(() => {
     const load = async () => {
       try {
         const result = await fetchMentors({
-          isActive: true,
           availabilityFrom: drawerFilters.availability?.from,
-          availabilityTo: drawerFilters.availability?.to
+          availabilityTo: drawerFilters.availability?.to,
+          searchedItem: search || undefined,
+          skills:
+            drawerFilters.skills.length > 0 ? drawerFilters.skills : undefined,
+          interests:
+            drawerFilters.interests.length > 0
+              ? drawerFilters.interests
+              : undefined,
+          minRating:
+            drawerFilters.minRating > 0 ? drawerFilters.minRating : undefined,
+          engagementTypes:
+            drawerFilters.engagementTypes.length > 0
+              ? drawerFilters.engagementTypes
+              : undefined,
+          page: currentPage,
+          limit: 12,
+          isActive: true
         })
         if (!result?.success || !result.data) return
-        setMentors(result.data as SelectUser[])
+        setMentorData((prev) => ({
+          mentors: result.data,
+          pagination: result.pagination ?? prev.pagination
+        }))
       } catch (error) {
         console.error("Failed to load mentors:", error)
       }
     }
     load()
-  }, [drawerFilters.availability])
+  }, [drawerFilters, search, currentPage])
+
+  const mentors = mentorData.mentors
+  const pagination = mentorData.pagination
 
   const skillOptions: MultiSelectOption[] = useMemo(() => {
     const unique = [
@@ -63,57 +98,10 @@ export default function MentorsListingPage() {
     return unique.map((t) => ({ label: t, value: t }))
   }, [mentors])
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    return mentors.filter((m) => {
-      const name = `${m.first_name} ${m.last_name}`.toLowerCase()
-      const tags = (m.userTags ?? [])
-        .filter((ut) => ut.tag?.type === "skill" && !!ut.tag?.name)
-        .map((ut) => ut.tag!.name!)
-      const interests = (m.userTags ?? [])
-        .filter((ut) => ut.tag?.type === "interest" && !!ut.tag?.name)
-        .map((ut) => ut.tag!.name!)
-      const rating = Number(m.profile?.total_average_rating) || 0
-      const engagementType = m.profile?.engagement_type ?? ""
-
-      const matchesSearch =
-        !q ||
-        name.includes(q) ||
-        (m.profile?.professional_title ?? "").toLowerCase().includes(q) ||
-        (m.profile?.company ?? "").toLowerCase().includes(q) ||
-        (m.profile?.bio ?? "").toLowerCase().includes(q) ||
-        tags.some((t) => t.toLowerCase().includes(q))
-
-      const matchesSkills =
-        drawerFilters.skills.length === 0 ||
-        drawerFilters.skills.some((s) => tags.includes(s))
-
-      const matchesInterests =
-        drawerFilters.interests.length === 0 ||
-        drawerFilters.interests.some((i) => interests.includes(i))
-
-      const matchesRating = rating >= drawerFilters.minRating
-
-      const matchesEngagementType =
-        drawerFilters.engagementTypes.length === 0 ||
-        drawerFilters.engagementTypes.includes(engagementType as any)
-
-      return (
-        matchesSearch &&
-        matchesSkills &&
-        matchesInterests &&
-        matchesRating &&
-        matchesEngagementType
-      )
-    })
-  }, [search, drawerFilters, mentors])
-
-  const hasActiveFilters =
-    drawerFilters.skills.length > 0 ||
-    drawerFilters.interests.length > 0 ||
-    drawerFilters.availability !== undefined ||
-    drawerFilters.minRating > 0 ||
-    drawerFilters.engagementTypes.length > 0
+  const handleApplyFilters = (filters: MentorFiltersType) => {
+    setDrawerFilters(filters)
+    setCurrentPage(1) // Reset to first page when filters change
+  }
 
   return (
     <div className="bg-background overflow-x-hidden">
@@ -134,29 +122,19 @@ export default function MentorsListingPage() {
               placeholder="Search mentors..."
               className="pl-10 w-full"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                setCurrentPage(1)
+              }}
             />
           </div>
           <div className="shrink-0">
             <MentorFilters
               skillOptions={skillOptions}
               interestOptions={interestOptions}
-              onApplyFilters={setDrawerFilters}
+              onApplyFilters={handleApplyFilters}
             />
           </div>
-          {hasActiveFilters && (
-            <Button
-              size="sm"
-              className="shrink-0 gap-1 bg-red-600 hover:bg-red-700 text-white"
-              onClick={() => {
-                setDrawerFilters(DEFAULT_FILTERS)
-                // setFilterKey((k) => k + 1)
-              }}
-            >
-              <X className="h-3.5 w-3.5" />
-              Reset
-            </Button>
-          )}
         </div>
 
         {/* Results count */}
@@ -164,9 +142,9 @@ export default function MentorsListingPage() {
           <p className="text-sm text-muted-foreground ">
             Showing
             <span className="font-medium text-foreground mx-1">
-              {filtered.length}
+              {mentors.length}
             </span>
-            {filtered.length === 1 ? "mentor" : "mentors"}
+            {pagination.total === 1 ? "mentor" : "mentors"}
           </p>
         )}
 
@@ -180,19 +158,27 @@ export default function MentorsListingPage() {
         )}
 
         {/* Empty state */}
-        {!loading && filtered.length === 0 && (
+        {!loading && mentors.length === 0 && (
           <p className="text-center text-muted-foreground py-12 text-sm">
             No mentors found.
           </p>
         )}
 
         {/* Mentor grid */}
-        {!loading && filtered.length > 0 && (
+        {!loading && mentors.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {filtered.map((mentor) => (
+            {mentors.map((mentor) => (
               <MentorCard key={mentor.unique_id} mentor={mentor} />
             ))}
           </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && pagination.totalPages > 1 && (
+          <PaginationComponent
+            pagination={pagination}
+            onPageChange={setCurrentPage}
+          />
         )}
       </div>
     </div>

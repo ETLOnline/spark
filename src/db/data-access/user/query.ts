@@ -1,6 +1,9 @@
 import {
   and,
+  asc,
+  count,
   eq,
+  exists,
   gte,
   ilike,
   inArray,
@@ -15,10 +18,13 @@ import { db } from "../.."
 import {
   InsertUser,
   mentorAvailabilityTable,
+  profileTable,
   rolesTable,
   SelectUser,
+  tagsTable,
   userContactsTable,
   userRolesTable,
+  userTagsTable,
   usersTable
 } from "../../schema"
 
@@ -249,89 +255,241 @@ export async function UpdateUserName(
   }
 }
 
-export async function GetMentors({
-  isActive,
-  availabilityFrom,
-  availabilityTo
-}: {
+export interface GetMentorFilters {
+  page?: number
+  limit?: number
   isActive?: boolean
   availabilityFrom?: string
   availabilityTo?: string
-} = {}): Promise<SelectUser[]> {
-  try {
-    const result = await db.query.rolesTable.findFirst({
-      where: eq(rolesTable.name, "Mentor"),
-      with: {
-        users: {
-          with: {
-            user: {
-              with: {
-                profile: true,
-                userTags: { with: { tag: true } }
-              }
-            }
-          }
-        }
-      }
-    })
+  searchedItem?: string
+  skills?: string[]
+  interests?: string[]
+  minRating?: number
+  engagementTypes?: string[]
+}
 
-    let users = (result?.users.map((u) => u.user) ?? []).filter(
-      Boolean
-    ) as SelectUser[]
+const buildExistsCondition = (query: SQLWrapper) => exists(query)
 
-    if (isActive) {
-      users = users.filter((u) => u.profile?.is_mentor_active === true)
-    }
+const buildMentorRoleCondition = (mentorRoleId: number) =>
+  eq(userRolesTable.role_id, mentorRoleId)
 
-    if (users.length === 0) return []
+const buildActiveMentorCondition = (isActive?: boolean) => {
+  if (!isActive) return undefined
 
-    if (availabilityFrom || availabilityTo) {
-      // Single slot: must fall within the requested range
-      const noneClause = and(
-        eq(mentorAvailabilityTable.repeat_type, "none"),
-        availabilityFrom
-          ? gte(mentorAvailabilityTable.date, availabilityFrom)
-          : undefined,
-        availabilityTo
-          ? lte(mentorAvailabilityTable.date, availabilityTo)
-          : undefined
+  return buildExistsCondition(
+    db
+      .select({ id: profileTable.user_id })
+      .from(profileTable)
+      .where(
+        and(
+          eq(profileTable.user_id, userRolesTable.user_id),
+          eq(profileTable.is_mentor_active, true)
+        )
       )
+  )
+}
 
-      // Recurring slots (daily/weekly): range must overlap with [from, to]
-      const recurClause = and(
-        inArray(mentorAvailabilityTable.repeat_type, ["daily", "weekly"]),
-        availabilityTo
-          ? lte(mentorAvailabilityTable.date, availabilityTo)
-          : undefined,
-        availabilityFrom
-          ? or(
-              isNull(mentorAvailabilityTable.repeat_end_date),
-              gte(mentorAvailabilityTable.repeat_end_date, availabilityFrom)
-            )
-          : undefined
-      )
+const buildSearchMentorCondition = (searchedItem?: string) => {
+  if (!searchedItem?.trim()) return undefined
 
-      const qualifying = await db
-        .selectDistinct({ mentor_id: mentorAvailabilityTable.mentor_id })
-        .from(mentorAvailabilityTable)
+  const q = `%${searchedItem.trim()}%`
+
+  return or(
+    buildExistsCondition(
+      db
+        .select({ id: usersTable.unique_id })
+        .from(usersTable)
         .where(
           and(
-            eq(mentorAvailabilityTable.is_active, true),
-            inArray(
-              mentorAvailabilityTable.mentor_id,
-              users.map((u) => u.unique_id)
-            ),
-            or(noneClause, recurClause)
+            eq(usersTable.unique_id, userRolesTable.user_id),
+            or(ilike(usersTable.first_name, q), ilike(usersTable.last_name, q))
           )
         )
+    ),
+    buildExistsCondition(
+      db
+        .select({ id: profileTable.id })
+        .from(profileTable)
+        .where(
+          and(
+            eq(profileTable.user_id, userRolesTable.user_id),
+            or(
+              ilike(profileTable.professional_title, q),
+              ilike(profileTable.company, q),
+              ilike(profileTable.bio, q)
+            )
+          )
+        )
+    )
+  )
+}
 
-      const qualifyingIds = new Set(qualifying.map((q) => q.mentor_id))
-      users = users.filter((u) => qualifyingIds.has(u.unique_id))
+const buildRatingCondition = (minRating?: number) => {
+  if (!minRating) return undefined
+
+  return buildExistsCondition(
+    db
+      .select({ id: profileTable.id })
+      .from(profileTable)
+      .where(
+        and(
+          eq(profileTable.user_id, userRolesTable.user_id),
+          sql`${profileTable.total_average_rating}::numeric >= ${minRating}`
+        )
+      )
+  )
+}
+
+const buildEngagementTypeCondition = (engagementTypes?: string[]) => {
+  if (!engagementTypes?.length) return undefined
+
+  return buildExistsCondition(
+    db
+      .select({ id: profileTable.id })
+      .from(profileTable)
+      .where(
+        and(
+          eq(profileTable.user_id, userRolesTable.user_id),
+          inArray(profileTable.engagement_type, engagementTypes)
+        )
+      )
+  )
+}
+
+const buildTagCondition = (tagType: "skill" | "interest", tags?: string[]) => {
+  if (!tags?.length) return undefined
+
+  return buildExistsCondition(
+    db
+      .select({ id: userTagsTable.id })
+      .from(userTagsTable)
+      .innerJoin(tagsTable, eq(userTagsTable.tag_id, tagsTable.id))
+      .where(
+        and(
+          eq(userTagsTable.user_id, userRolesTable.user_id),
+          eq(tagsTable.type, tagType),
+          inArray(tagsTable.name, tags)
+        )
+      )
+  )
+}
+
+const buildAvailabilityCondition = (
+  availabilityFrom?: string,
+  availabilityTo?: string
+) => {
+  if (!availabilityFrom && !availabilityTo) return undefined
+
+  const slotStart = sql<string>`${mentorAvailabilityTable.date} || 'T' || ${mentorAvailabilityTable.start_time}`
+  const slotEnd = sql<string>`${mentorAvailabilityTable.date} || 'T' || ${mentorAvailabilityTable.end_time}`
+
+  const noneClause = and(
+    eq(mentorAvailabilityTable.repeat_type, "none"),
+    availabilityFrom ? gte(slotEnd, availabilityFrom) : undefined,
+    availabilityTo ? lte(slotStart, availabilityTo) : undefined
+  )
+
+  const recurClause = and(
+    inArray(mentorAvailabilityTable.repeat_type, ["daily", "weekly"]),
+    availabilityFrom ? gte(slotEnd, availabilityFrom) : undefined,
+    availabilityTo ? lte(slotStart, availabilityTo) : undefined,
+    availabilityFrom
+      ? or(
+          isNull(mentorAvailabilityTable.repeat_end_date),
+          gte(mentorAvailabilityTable.repeat_end_date, availabilityFrom)
+        )
+      : undefined
+  )
+
+  return buildExistsCondition(
+    db
+      .select({ id: mentorAvailabilityTable.id })
+      .from(mentorAvailabilityTable)
+      .where(
+        and(
+          eq(mentorAvailabilityTable.mentor_id, userRolesTable.user_id),
+          eq(mentorAvailabilityTable.is_active, true),
+          or(noneClause, recurClause)
+        )
+      )
+  )
+}
+
+export async function GetMentors(filters?: GetMentorFilters) {
+  try {
+    const page = filters?.page ?? 1
+    const limit = filters?.limit ?? 12
+    const offset = (page - 1) * limit
+
+    // Get Mentor role ID
+    const mentorRole = await db.query.rolesTable.findFirst({
+      where: eq(rolesTable.name, "Mentor"),
+      columns: { id: true }
+    })
+
+    if (!mentorRole) {
+      return {
+        mentors: [],
+        pagination: { total: 0, page, limit, totalPages: 0 }
+      }
     }
 
-    return users
-  } catch (error: any) {
-    console.error("Error fetching mentors:", error)
+    const where = and(
+      buildMentorRoleCondition(mentorRole.id),
+      ...([
+        buildActiveMentorCondition(filters?.isActive),
+        buildSearchMentorCondition(filters?.searchedItem),
+        buildRatingCondition(filters?.minRating),
+        buildEngagementTypeCondition(filters?.engagementTypes),
+        buildTagCondition("skill", filters?.skills),
+        buildTagCondition("interest", filters?.interests),
+        buildAvailabilityCondition(
+          filters?.availabilityFrom,
+          filters?.availabilityTo
+        )
+      ].filter(Boolean) as SQL[])
+    )
+
+    const [filteredUserIds, [{ value: totalCount }]] = await Promise.all([
+      db
+        .select({ userId: userRolesTable.user_id })
+        .from(userRolesTable)
+        .where(where)
+        .orderBy(asc(userRolesTable.user_id))
+        .limit(limit)
+        .offset(offset),
+      db.select({ value: count() }).from(userRolesTable).where(where)
+    ])
+
+    const userIds = filteredUserIds.map((r) => r.userId)
+
+    const mentors =
+      userIds.length > 0
+        ? await db.query.usersTable.findMany({
+            where: inArray(usersTable.unique_id, userIds),
+            orderBy: asc(usersTable.unique_id),
+            with: {
+              profile: true,
+              userTags: {
+                with: {
+                  tag: true
+                }
+              }
+            }
+          })
+        : []
+
+    return {
+      mentors,
+      pagination: {
+        total: Number(totalCount) || 0,
+        page,
+        limit,
+        totalPages: Math.ceil((Number(totalCount) || 0) / limit)
+      }
+    }
+  } catch (err) {
+    console.error("GetMentors error:", err)
     throw new Error("Failed to fetch mentors")
   }
 }
