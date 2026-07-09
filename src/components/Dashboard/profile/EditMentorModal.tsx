@@ -22,6 +22,14 @@ import { toast } from "@/src/hooks/use-toast"
 import { UnsavedChangesDialog } from "../../common/unsavedChangesDialog"
 import { useConfirmClose } from "@/src/hooks/useConfirmClose"
 import { SaveMentorSetupAction } from "@/src/server-actions/Mentor/MentorActions"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "../../ui/select"
+import { ENGAGEMENT_TYPE_OPTIONS } from "@/src/components/Dashboard/Mentors/MentorTypes"
 
 interface Props {
   user: SelectUser
@@ -37,7 +45,8 @@ const mentorSchema = z.object({
   company: z
     .string()
     .min(1, "Company is required")
-    .max(100, "Maximum 100 characters")
+    .max(100, "Maximum 100 characters"),
+  engagement_type: z.string().min(1, "Engagement type is required")
 })
 
 type MentorFormValues = z.infer<typeof mentorSchema>
@@ -58,7 +67,8 @@ function EditMentorModal({ user, profile, setProfile }: Props) {
     if (!isDialogOpen) return
     form.reset({
       professional_title: profile?.professional_title || "",
-      company: profile?.company || ""
+      company: profile?.company || "",
+      engagement_type: profile?.engagement_type || "both"
     })
   }, [isDialogOpen])
 
@@ -74,7 +84,8 @@ function EditMentorModal({ user, profile, setProfile }: Props) {
           ? {
               ...prev,
               professional_title: data.professional_title,
-              company: data.company
+              company: data.company,
+              engagement_type: data.engagement_type
             }
           : prev
       )
@@ -161,6 +172,36 @@ function EditMentorModal({ user, profile, setProfile }: Props) {
                 {errors.company && (
                   <span className="text-red-500 text-sm">
                     {errors.company.message}
+                  </span>
+                )}
+              </div>
+
+              {/* Engagement Type */}
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="engagement_type" className="font-semibold">
+                  Engagement Type
+                </Label>
+                <Controller
+                  name="engagement_type"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger id="engagement_type" className="w-full">
+                        <SelectValue placeholder="Select engagement type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ENGAGEMENT_TYPE_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.engagement_type && (
+                  <span className="text-red-500 text-sm">
+                    {errors.engagement_type.message}
                   </span>
                 )}
               </div>

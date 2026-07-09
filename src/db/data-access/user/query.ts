@@ -90,8 +90,8 @@ export async function FindUserWildCard(wildcard: string) {
       where: (usersTable, { or }) =>
         or(
           ilike(
-            sql`${usersTable.first_name} || ' ' || ${usersTable.last_name}`,
-            `%${wildcard}%`
+            sql`trim(${usersTable.first_name}) || ' ' || trim(${usersTable.last_name})`,
+            `%${wildcard.trim()}%`
           )
         )
     })
@@ -232,39 +232,6 @@ export async function UpdateUserName(
     return result[0]
   } catch (error: any) {
     throw new Error(error.message)
-  }
-}
-
-export async function GetMentors({ isActive }: { isActive?: boolean } = {}) {
-  try {
-    const result = await db.query.rolesTable.findFirst({
-      where: eq(rolesTable.name, "Mentor"),
-      with: {
-        users: {
-          with: {
-            user: {
-              with: {
-                profile: true,
-                userTags: {
-                  with: {
-                    tag: true
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    })
-
-    const users = result?.users.map((u) => u.user) || []
-
-    return isActive
-      ? users.filter((u) => u?.profile?.is_mentor_active === true)
-      : users
-  } catch (error: any) {
-    console.error("Error fetching mentors:", error)
-    throw new Error("Failed to fetch mentors")
   }
 }
 

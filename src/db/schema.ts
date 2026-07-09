@@ -181,6 +181,7 @@ export const profileTable = pgTable("profile", {
 
   professional_title: varchar("professional_title"),
   company: varchar("company"),
+  engagement_type: varchar("engagement_type"),
   is_mentor_active: boolean("is_mentor_active").notNull().default(false),
   total_completed_sessions: integer("total_completed_sessions")
     .notNull()

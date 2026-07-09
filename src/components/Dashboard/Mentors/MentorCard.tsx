@@ -36,9 +36,6 @@ export default function MentorCard({ mentor }: MentorCardProps) {
   const name = `${mentor.first_name} ${mentor.last_name}`.trim()
   const initials =
     `${mentor.first_name?.[0] ?? ""}${mentor.last_name?.[0] ?? ""}`.toUpperCase()
-  const tags = (mentor.userTags ?? [])
-    .filter((ut) => ut.tag?.type === "skill" && !!ut.tag?.name)
-    .map((ut) => ut.tag!.name!)
   const rating = Number(mentor.profile?.total_average_rating) || 0
   const reviewCount = mentor.profile?.number_of_ratings ?? 0
   const completedSessions = mentor.profile?.total_completed_sessions ?? 0
