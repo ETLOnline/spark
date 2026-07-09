@@ -32,21 +32,27 @@ import {
   AvailabilityRange,
   MentorFiltersType,
   DEFAULT_FILTERS,
-  SKILL_OPTIONS,
   RATING_OPTIONS,
   ENGAGEMENT_TYPE_OPTIONS
-} from "./mentorsData"
+} from "./MentorTypes"
 
 export type { MentorFiltersType }
 
 interface Props {
+  skillOptions: MultiSelectOption[]
+  interestOptions: MultiSelectOption[]
   onApplyFilters: (filters: MentorFiltersType) => void
 }
 
 const TODAY = moment().format("YYYY-MM-DD")
 
-export default function MentorFilters({ onApplyFilters }: Props) {
+export default function MentorFilters({
+  skillOptions,
+  interestOptions,
+  onApplyFilters
+}: Props) {
   const [skills, setSkills] = useState<MultiSelectOption[]>([])
+  const [interests, setInterests] = useState<MultiSelectOption[]>([])
   const [availFrom, setAvailFrom] = useState("")
   const [availTo, setAvailTo] = useState("")
   const [minRating, setMinRating] = useState("0")
@@ -60,6 +66,7 @@ export default function MentorFilters({ onApplyFilters }: Props) {
 
     onApplyFilters({
       skills: skills.map((s) => s.value),
+      interests: interests.map((i) => i.value),
       availability,
       minRating: Number(minRating),
       engagementTypes: engagementTypes.map((e) => e.value) as EngagementType[]
@@ -68,6 +75,7 @@ export default function MentorFilters({ onApplyFilters }: Props) {
 
   function clearFilters() {
     setSkills([])
+    setInterests([])
     setAvailFrom("")
     setAvailTo("")
     setMinRating("0")
@@ -97,10 +105,20 @@ export default function MentorFilters({ onApplyFilters }: Props) {
               <div className="space-y-2">
                 <Label>Skills / Expertise</Label>
                 <MultiSelect
-                  options={SKILL_OPTIONS}
+                  options={skillOptions}
                   selected={skills}
                   onChange={setSkills}
                   placeholder="Select skills"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Interests</Label>
+                <MultiSelect
+                  options={interestOptions}
+                  selected={interests}
+                  onChange={setInterests}
+                  placeholder="Select interests"
                 />
               </div>
 

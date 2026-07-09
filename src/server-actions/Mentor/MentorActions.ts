@@ -5,7 +5,11 @@ import { db } from "@/src/db"
 import { mentorAvailabilityTable } from "@/src/db/schema"
 import { eq } from "drizzle-orm"
 import { AuthUserAction } from "../User/AuthUserAction"
-import { updateUserProfile } from "@/src/db/data-access/profile/query"
+import {
+  updateUserProfile,
+  SearchUserProfile
+} from "@/src/db/data-access/profile/query"
+import { GetMentors } from "@/src/db/data-access/user/query"
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -95,10 +99,32 @@ export const UpdateAvailabilityAction = CreateServerAction(
         }
       })
 
+      const profile = await SearchUserProfile(mentorId)
+      const hasTitle = !!profile?.professional_title?.trim()
+      const hasCompany = !!profile?.company?.trim()
+      const hasSlots = slots.length > 0
+
+      await updateUserProfile(mentorId, {
+        is_mentor_active: hasTitle && hasCompany && hasSlots
+      })
+
       return { success: true }
     } catch (error) {
       console.error("UpdateAvailabilityAction error:", error)
       return { error: "Failed to update availability" }
+    }
+  }
+)
+
+export const GetActiveMentorsAction = CreateServerAction(
+  false,
+  async ({ isActive }: { isActive?: boolean } = {}) => {
+    try {
+      const mentors = await GetMentors({ isActive })
+      return { success: true, data: mentors }
+    } catch (error) {
+      console.error("GetActiveMentorsAction error:", error)
+      return { success: false, error: "Failed to fetch active mentors" }
     }
   }
 )
