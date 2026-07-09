@@ -1,7 +1,7 @@
 import {
   and,
   asc,
-  count,
+  countDistinct,
   eq,
   exists,
   gte,
@@ -270,89 +270,17 @@ export interface GetMentorFilters {
 
 const buildExistsCondition = (query: SQLWrapper) => exists(query)
 
-const buildMentorRoleCondition = (mentorRoleId: number) =>
-  eq(userRolesTable.role_id, mentorRoleId)
-
-const buildActiveMentorCondition = (isActive?: boolean) => {
-  if (!isActive) return undefined
-
-  return buildExistsCondition(
-    db
-      .select({ id: profileTable.user_id })
-      .from(profileTable)
-      .where(
-        and(
-          eq(profileTable.user_id, userRolesTable.user_id),
-          eq(profileTable.is_mentor_active, true)
-        )
-      )
-  )
-}
-
-const buildSearchMentorCondition = (searchedItem?: string) => {
+const buildSearchCondition = (searchedItem?: string) => {
   if (!searchedItem?.trim()) return undefined
 
   const q = `%${searchedItem.trim()}%`
 
   return or(
-    buildExistsCondition(
-      db
-        .select({ id: usersTable.unique_id })
-        .from(usersTable)
-        .where(
-          and(
-            eq(usersTable.unique_id, userRolesTable.user_id),
-            or(ilike(usersTable.first_name, q), ilike(usersTable.last_name, q))
-          )
-        )
-    ),
-    buildExistsCondition(
-      db
-        .select({ id: profileTable.id })
-        .from(profileTable)
-        .where(
-          and(
-            eq(profileTable.user_id, userRolesTable.user_id),
-            or(
-              ilike(profileTable.professional_title, q),
-              ilike(profileTable.company, q),
-              ilike(profileTable.bio, q)
-            )
-          )
-        )
-    )
-  )
-}
-
-const buildRatingCondition = (minRating?: number) => {
-  if (!minRating) return undefined
-
-  return buildExistsCondition(
-    db
-      .select({ id: profileTable.id })
-      .from(profileTable)
-      .where(
-        and(
-          eq(profileTable.user_id, userRolesTable.user_id),
-          sql`${profileTable.total_average_rating}::numeric >= ${minRating}`
-        )
-      )
-  )
-}
-
-const buildEngagementTypeCondition = (engagementTypes?: string[]) => {
-  if (!engagementTypes?.length) return undefined
-
-  return buildExistsCondition(
-    db
-      .select({ id: profileTable.id })
-      .from(profileTable)
-      .where(
-        and(
-          eq(profileTable.user_id, userRolesTable.user_id),
-          inArray(profileTable.engagement_type, engagementTypes)
-        )
-      )
+    ilike(usersTable.first_name, q),
+    ilike(usersTable.last_name, q),
+    ilike(profileTable.professional_title, q),
+    ilike(profileTable.company, q),
+    ilike(profileTable.bio, q)
   )
 }
 
@@ -435,12 +363,18 @@ export async function GetMentors(filters?: GetMentorFilters) {
     }
 
     const where = and(
-      buildMentorRoleCondition(mentorRole.id),
+      eq(userRolesTable.role_id, mentorRole.id),
       ...([
-        buildActiveMentorCondition(filters?.isActive),
-        buildSearchMentorCondition(filters?.searchedItem),
-        buildRatingCondition(filters?.minRating),
-        buildEngagementTypeCondition(filters?.engagementTypes),
+        filters?.isActive !== undefined
+          ? eq(profileTable.is_mentor_active, filters.isActive)
+          : undefined,
+        filters?.minRating
+          ? sql`${profileTable.total_average_rating}::numeric >= ${filters.minRating}`
+          : undefined,
+        filters?.engagementTypes?.length
+          ? inArray(profileTable.engagement_type, filters.engagementTypes)
+          : undefined,
+        buildSearchCondition(filters?.searchedItem),
         buildTagCondition("skill", filters?.skills),
         buildTagCondition("interest", filters?.interests),
         buildAvailabilityCondition(
@@ -450,42 +384,54 @@ export async function GetMentors(filters?: GetMentorFilters) {
       ].filter(Boolean) as SQL[])
     )
 
-    const [filteredUserIds, [{ value: totalCount }]] = await Promise.all([
+    const [mentorRows, totalCountResult] = await Promise.all([
       db
-        .select({ userId: userRolesTable.user_id })
+        .select({ user: usersTable, profile: profileTable })
         .from(userRolesTable)
+        .innerJoin(usersTable, eq(usersTable.unique_id, userRolesTable.user_id))
+        .innerJoin(
+          profileTable,
+          eq(profileTable.user_id, userRolesTable.user_id)
+        )
         .where(where)
+        .groupBy(userRolesTable.user_id, usersTable.unique_id, profileTable.id)
         .orderBy(asc(userRolesTable.user_id))
         .limit(limit)
         .offset(offset),
-      db.select({ value: count() }).from(userRolesTable).where(where)
+      db
+        .select({ value: countDistinct(userRolesTable.user_id) })
+        .from(userRolesTable)
+        .innerJoin(usersTable, eq(usersTable.unique_id, userRolesTable.user_id))
+        .innerJoin(
+          profileTable,
+          eq(profileTable.user_id, userRolesTable.user_id)
+        )
+        .where(where)
     ])
 
-    const userIds = filteredUserIds.map((r) => r.userId)
+    const totalCount = totalCountResult[0]?.value ?? 0
+    const userIds = mentorRows.map((row) => row.user.unique_id)
 
-    const mentors =
-      userIds.length > 0
-        ? await db.query.usersTable.findMany({
-            where: inArray(usersTable.unique_id, userIds),
-            orderBy: asc(usersTable.unique_id),
-            with: {
-              profile: true,
-              userTags: {
-                with: {
-                  tag: true
-                }
-              }
-            }
-          })
-        : []
+    const userTags = userIds.length
+      ? await db.query.userTagsTable.findMany({
+          where: inArray(userTagsTable.user_id, userIds),
+          with: { tag: true }
+        })
+      : []
+
+    const mentors = mentorRows.map((row) => ({
+      ...row.user,
+      profile: row.profile,
+      userTags: userTags.filter((ut) => ut.user_id === row.user.unique_id)
+    }))
 
     return {
       mentors,
       pagination: {
-        total: Number(totalCount) || 0,
+        total: totalCount,
         page,
         limit,
-        totalPages: Math.ceil((Number(totalCount) || 0) / limit)
+        totalPages: Math.ceil(totalCount / limit)
       }
     }
   } catch (err) {
