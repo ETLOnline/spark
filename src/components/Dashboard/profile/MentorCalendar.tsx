@@ -266,7 +266,10 @@ export function MentorCalendar({
 
     const dateRangesOverlap = (s: SelectMentorAvailability, dow: number) => {
       const existingStart = s.date
-      const existingEnd = s.repeat_end_date ?? "9999-12-31"
+      // A one-time slot only occupies its own date — it doesn't repeat, so
+      // it must not be treated as extending indefinitely into the future.
+      const existingEnd =
+        s.repeat_type === "none" ? s.date : (s.repeat_end_date ?? "9999-12-31")
       const newFirst =
         newRepeat === "weekly" ? nextOccurrence(newDate, dow) : newDate
       const newLast =

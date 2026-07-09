@@ -1,10 +1,12 @@
 "use server"
 
 import { CreateServerAction } from ".."
-import { db } from "@/src/db"
-import { mentorAvailabilityTable } from "@/src/db/schema"
-import { eq } from "drizzle-orm"
 import { AuthUserAction } from "../User/AuthUserAction"
+import {
+  GetMentorAvailability,
+  ReplaceMentorAvailability,
+  type MentorAvailabilitySlotInput
+} from "@/src/db/data-access/mentor/query"
 import {
   updateUserProfile,
   SearchUserProfile
@@ -17,15 +19,6 @@ interface SaveMentorSetupPayload {
   userId: string
   professional_title: string
   company: string
-}
-
-interface AvailabilitySlot {
-  date: string // YYYY-MM-DD (anchor / start date)
-  start_time: string
-  end_time: string
-  session_type: string
-  repeat_type: string // "none" | "daily" | "weekly"
-  repeat_end_date?: string | null
 }
 
 // ── Actions ────────────────────────────────────────────────────────────────────
@@ -52,10 +45,7 @@ export const GetMentorAvailabilityAction = CreateServerAction(
   true,
   async (mentorId: string) => {
     try {
-      const slots = await db
-        .select()
-        .from(mentorAvailabilityTable)
-        .where(eq(mentorAvailabilityTable.mentor_id, mentorId))
+      const slots = await GetMentorAvailability(mentorId)
 
       return { success: true, data: slots }
     } catch (error) {
@@ -68,7 +58,10 @@ export const GetMentorAvailabilityAction = CreateServerAction(
 /** Replace all slots for a mentor atomically (delete + reinsert in one transaction). */
 export const UpdateAvailabilityAction = CreateServerAction(
   true,
-  async (payload: { mentorId: string; slots: AvailabilitySlot[] }) => {
+  async (payload: {
+    mentorId: string
+    slots: MentorAvailabilitySlotInput[]
+  }) => {
     try {
       const { mentorId, slots } = payload
 
@@ -78,26 +71,7 @@ export const UpdateAvailabilityAction = CreateServerAction(
         return { error: "Unauthorised" }
       }
 
-      await db.transaction(async (tx) => {
-        await tx
-          .delete(mentorAvailabilityTable)
-          .where(eq(mentorAvailabilityTable.mentor_id, mentorId))
-
-        if (slots.length > 0) {
-          await tx.insert(mentorAvailabilityTable).values(
-            slots.map((slot) => ({
-              mentor_id: mentorId,
-              date: slot.date,
-              start_time: slot.start_time,
-              end_time: slot.end_time,
-              session_type: slot.session_type,
-              repeat_type: slot.repeat_type,
-              repeat_end_date: slot.repeat_end_date ?? null,
-              is_active: true
-            }))
-          )
-        }
-      })
+      await ReplaceMentorAvailability(mentorId, slots)
 
       const profile = await SearchUserProfile(mentorId)
       const hasTitle = !!profile?.professional_title?.trim()

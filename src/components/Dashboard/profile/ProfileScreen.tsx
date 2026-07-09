@@ -69,11 +69,13 @@ import TrustEngineCard from "./trust-engine/TrustEngineCard"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
 import {
   GetUserApprovedVerificationCountAction,
-  GetUserReviewedVerificationCountAction
+  GetUserReviewedVerificationCountAction,
+  GetUserRewardBalanceAction
 } from "@/src/server-actions/Reward/Reward"
 import { Input } from "../../ui/input"
 import { Skeleton } from "../../ui/skeleton"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
+import ViewAvailabilityButton from "./ViewAvailabilityButton"
 import EditFypInfoModal from "./EditFypInfoModal"
 
 type ProfileScreenProps = {
@@ -148,11 +150,25 @@ export default function ProfileScreen({
     GetUserApprovedVerificationCountAction
   )
 
+  const [viewerRp, setViewerRp] = useState<number>(0)
+  const [, , , GetViewerRpBalance] = useServerAction(GetUserRewardBalanceAction)
+
   useEffect(() => {
     if (authUser && user) {
       setIsMyProfile(authUser.unique_id === user.unique_id)
     }
   }, [authUser, user])
+
+  useEffect(() => {
+    if (!authUser || isMyProfile) return
+    const fetchViewerRp = async () => {
+      const res = await GetViewerRpBalance(authUser.unique_id, 1)
+      if (res?.success && res.data) {
+        setViewerRp(res.data.current_balance ?? 0)
+      }
+    }
+    fetchViewerRp()
+  }, [authUser, isMyProfile])
 
   // Fetch mentor slots for both owner and viewer — used to derive availability status
   useEffect(() => {
@@ -613,19 +629,10 @@ export default function ProfileScreen({
 
                   {/* Viewer: see mentor's availability when slots exist */}
                   {!isMyProfile && mentorSlots.length > 0 && (
-                    <Link
-                      href={`/profile/${user.unique_id}/availability`}
-                      className="w-full"
-                    >
-                      <Button
-                        variant="outline"
-                        className="w-full mt-2"
-                        size="sm"
-                      >
-                        <CalendarDays className="h-4 w-4 mr-2" />
-                        View Availability
-                      </Button>
-                    </Link>
+                    <ViewAvailabilityButton
+                      mentorId={user.unique_id}
+                      viewerRp={viewerRp}
+                    />
                   )}
                 </CardContent>
               </Card>
