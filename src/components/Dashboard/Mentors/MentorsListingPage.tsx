@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
+import { useDebouncedCallback } from "use-debounce"
 import { Search } from "lucide-react"
 import { Input } from "@/src/components/ui/input"
 import { Skeleton } from "@/src/components/ui/skeleton"
@@ -17,7 +18,13 @@ import type { GetMentorFilters } from "@/src/db/data-access/user/query"
 
 export default function MentorsListingPage() {
   const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
+
+  const updateDebouncedSearch = useDebouncedCallback((value: string) => {
+    setDebouncedSearch(value)
+    setCurrentPage(1)
+  }, 800)
   const [drawerFilters, setDrawerFilters] =
     useState<MentorFiltersType>(DEFAULT_FILTERS)
   const [mentorData, setMentorData] = useState<{
@@ -41,7 +48,7 @@ export default function MentorsListingPage() {
         const filters: GetMentorFilters = {
           availabilityFrom: drawerFilters.availability?.from,
           availabilityTo: drawerFilters.availability?.to,
-          searchedItem: search || undefined,
+          searchedItem: debouncedSearch || undefined,
           skills:
             drawerFilters.skills.length > 0 ? drawerFilters.skills : undefined,
           interests:
@@ -70,7 +77,7 @@ export default function MentorsListingPage() {
       }
     }
     load()
-  }, [drawerFilters, search, currentPage])
+  }, [drawerFilters, debouncedSearch, currentPage])
 
   const mentors = mentorData.mentors
   const pagination = mentorData.pagination
@@ -127,7 +134,7 @@ export default function MentorsListingPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value)
-                setCurrentPage(1)
+                updateDebouncedSearch(e.target.value)
               }}
             />
           </div>

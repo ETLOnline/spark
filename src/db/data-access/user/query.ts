@@ -110,8 +110,8 @@ export async function FindUserWildCard(wildcard: string) {
       where: (usersTable, { or }) =>
         or(
           ilike(
-            sql`${usersTable.first_name} || ' ' || ${usersTable.last_name}`,
-            `%${wildcard}%`
+            sql`trim(${usersTable.first_name}) || ' ' || trim(${usersTable.last_name})`,
+            `%${wildcard.trim()}%`
           )
         )
     })
@@ -280,7 +280,19 @@ const buildSearchCondition = (searchedItem?: string) => {
     ilike(usersTable.last_name, q),
     ilike(profileTable.professional_title, q),
     ilike(profileTable.company, q),
-    ilike(profileTable.bio, q)
+    ilike(profileTable.bio, q),
+    buildExistsCondition(
+      db
+        .select({ id: userTagsTable.id })
+        .from(userTagsTable)
+        .innerJoin(tagsTable, eq(userTagsTable.tag_id, tagsTable.id))
+        .where(
+          and(
+            eq(userTagsTable.user_id, userRolesTable.user_id),
+            ilike(tagsTable.name, q)
+          )
+        )
+    )
   )
 }
 
