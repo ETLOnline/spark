@@ -13,6 +13,7 @@ import type { PaginationType } from "@/src/components/common/types/pagination.ty
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { GetActiveMentorsAction } from "@/src/server-actions/Mentor/MentorActions"
 import type { SelectUser } from "@/src/db/schema"
+import type { GetMentorFilters } from "@/src/db/data-access/user/query"
 
 export default function MentorsListingPage() {
   const [search, setSearch] = useState("")
@@ -37,7 +38,7 @@ export default function MentorsListingPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const result = await fetchMentors({
+        const filters: GetMentorFilters = {
           availabilityFrom: drawerFilters.availability?.from,
           availabilityTo: drawerFilters.availability?.to,
           searchedItem: search || undefined,
@@ -56,7 +57,9 @@ export default function MentorsListingPage() {
           page: currentPage,
           limit: 12,
           isActive: true
-        })
+        }
+
+        const result = await fetchMentors(filters)
         if (!result?.success || !result.data) return
         setMentorData((prev) => ({
           mentors: result.data,

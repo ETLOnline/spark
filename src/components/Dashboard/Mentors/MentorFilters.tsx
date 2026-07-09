@@ -44,9 +44,21 @@ interface Props {
   onApplyFilters: (filters: MentorFiltersType) => void
 }
 
-const TODAY = moment().format("YYYY-MM-DDTHH:mm")
+const TODAY = moment().format("YYYY-MM-DD")
 
 const preventDrawerDrag = (e: React.PointerEvent) => e.stopPropagation()
+
+// A datetime-local input only reports a value once both date AND time are
+// filled in, so picking just a date leaves the time stuck at "--:--" with
+// no way for JS to react. Splitting into a date input + an optional time
+// input lets the date register on its own, defaulting the time.
+const splitDateTime = (value: string) => {
+  const [date = "", time = ""] = value.split("T")
+  return { date, time }
+}
+
+const combineDateTime = (date: string, time: string, fallbackTime: string) =>
+  date ? `${date}T${time || fallbackTime}` : ""
 
 export default function MentorFilters({
   skillOptions,
@@ -109,30 +121,80 @@ export default function MentorFilters({
                 <Label>Availability</Label>
                 <div className="space-y-2">
                   <div className="space-y-1">
-                    <span className="text-xs text-muted-foreground">From</span>
-                    <Input
-                      type="datetime-local"
-                      value={availFrom}
-                      min={TODAY}
-                      className="w-full"
-                      onPointerDownCapture={preventDrawerDrag}
-                      onChange={(e) => {
-                        const val = e.target.value
-                        setAvailFrom(val)
-                        if (availTo && val > availTo) setAvailTo("")
-                      }}
-                    />
+                    <span className="text-xs text-muted-foreground">
+                      From (time optional)
+                    </span>
+                    <div className="flex gap-2">
+                      <Input
+                        type="date"
+                        value={splitDateTime(availFrom).date}
+                        min={TODAY}
+                        className="flex-1"
+                        onPointerDownCapture={preventDrawerDrag}
+                        onChange={(e) => {
+                          const next = combineDateTime(
+                            e.target.value,
+                            splitDateTime(availFrom).time,
+                            "00:00"
+                          )
+                          setAvailFrom(next)
+                          if (availTo && next > availTo) setAvailTo("")
+                        }}
+                      />
+                      <Input
+                        type="time"
+                        value={splitDateTime(availFrom).time}
+                        className="w-28"
+                        onPointerDownCapture={preventDrawerDrag}
+                        onChange={(e) => {
+                          const next = combineDateTime(
+                            splitDateTime(availFrom).date,
+                            e.target.value,
+                            "00:00"
+                          )
+                          setAvailFrom(next)
+                          if (availTo && next > availTo) setAvailTo("")
+                        }}
+                      />
+                    </div>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-xs text-muted-foreground">To</span>
-                    <Input
-                      type="datetime-local"
-                      value={availTo}
-                      min={availFrom || TODAY}
-                      className="w-full"
-                      onPointerDownCapture={preventDrawerDrag}
-                      onChange={(e) => setAvailTo(e.target.value)}
-                    />
+                    <span className="text-xs text-muted-foreground">
+                      To (time optional)
+                    </span>
+                    <div className="flex gap-2">
+                      <Input
+                        type="date"
+                        value={splitDateTime(availTo).date}
+                        min={splitDateTime(availFrom).date || TODAY}
+                        className="flex-1"
+                        onPointerDownCapture={preventDrawerDrag}
+                        onChange={(e) =>
+                          setAvailTo(
+                            combineDateTime(
+                              e.target.value,
+                              splitDateTime(availTo).time,
+                              "23:59"
+                            )
+                          )
+                        }
+                      />
+                      <Input
+                        type="time"
+                        value={splitDateTime(availTo).time}
+                        className="w-28"
+                        onPointerDownCapture={preventDrawerDrag}
+                        onChange={(e) =>
+                          setAvailTo(
+                            combineDateTime(
+                              splitDateTime(availTo).date,
+                              e.target.value,
+                              "23:59"
+                            )
+                          )
+                        }
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
