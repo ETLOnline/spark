@@ -235,7 +235,7 @@ export async function UpdateUserName(
   }
 }
 
-export async function GetMentors() {
+export async function GetMentors({ isActive }: { isActive?: boolean } = {}) {
   try {
     const result = await db.query.rolesTable.findFirst({
       where: eq(rolesTable.name, "Mentor"),
@@ -257,7 +257,11 @@ export async function GetMentors() {
       }
     })
 
-    return result?.users.map((u) => u.user) || []
+    const users = result?.users.map((u) => u.user) || []
+
+    return isActive
+      ? users.filter((u) => u?.profile?.is_mentor_active === true)
+      : users
   } catch (error: any) {
     console.error("Error fetching mentors:", error)
     throw new Error("Failed to fetch mentors")

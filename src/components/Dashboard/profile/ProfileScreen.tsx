@@ -19,10 +19,10 @@ import {
   Globe,
   Share2,
   CopyIcon,
+  Target,
   Briefcase,
   Building2,
   Video,
-  Target,
   CheckCircle2
 } from "lucide-react"
 import {
@@ -63,15 +63,20 @@ import { toLocalDateStr } from "@/src/lib/utils"
 import Link from "next/link"
 import { SocialLinkItem } from "./user/SocialLinkItem"
 import UserProfileCard from "./UserProfileCard"
+import ProfileCompletionCard from "./ProfileCompletionCard"
+import useUserProfile from "./hooks/useUserProfile"
 import TrustEngineCard from "./trust-engine/TrustEngineCard"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
 import {
   GetUserApprovedVerificationCountAction,
-  GetUserReviewedVerificationCountAction
+  GetUserReviewedVerificationCountAction,
+  GetUserRewardBalanceAction
 } from "@/src/server-actions/Reward/Reward"
 import { Input } from "../../ui/input"
 import { Skeleton } from "../../ui/skeleton"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
+import ViewAvailabilityButton from "./ViewAvailabilityButton"
+import EditFypInfoModal from "./EditFypInfoModal"
 
 type ProfileScreenProps = {
   tab?: string
@@ -123,6 +128,11 @@ export default function ProfileScreen({
   const authUser = useAtomValue(userStore.AuthUser)
 
   const displayUser = isMyProfile && authUser ? authUser : user
+  const isStudent = !!getUserRole(user)?.includes("Student")
+
+  const isMentor = !!getUserRole(user)?.includes("Mentor")
+
+  const [, , , profileSkills, profileInterests] = useUserProfile()
 
   const [recommendationLoading, , , GetRecommendations] = useServerAction(
     GetRecommendationAction
@@ -140,15 +150,29 @@ export default function ProfileScreen({
     GetUserApprovedVerificationCountAction
   )
 
+  const [viewerRp, setViewerRp] = useState<number>(0)
+  const [, , , GetViewerRpBalance] = useServerAction(GetUserRewardBalanceAction)
+
   useEffect(() => {
     if (authUser && user) {
       setIsMyProfile(authUser.unique_id === user.unique_id)
     }
   }, [authUser, user])
 
+  useEffect(() => {
+    if (!authUser || isMyProfile) return
+    const fetchViewerRp = async () => {
+      const res = await GetViewerRpBalance(authUser.unique_id, 1)
+      if (res?.success && res.data) {
+        setViewerRp(res.data.current_balance ?? 0)
+      }
+    }
+    fetchViewerRp()
+  }, [authUser, isMyProfile])
+
   // Fetch mentor slots for both owner and viewer — used to derive availability status
   useEffect(() => {
-    if (!profile?.is_mentor_active) return
+    if (!isMentor) return
     const fetchSlots = async () => {
       const res = await getMentorAvailability(user.unique_id)
       if (res?.success && res.data) {
@@ -156,7 +180,7 @@ export default function ProfileScreen({
       }
     }
     fetchSlots()
-  }, [profile?.is_mentor_active, user.unique_id])
+  }, [isMentor, user.unique_id])
 
   // A mentor is "available" if they have at least one slot that hasn't expired
   const todayStr = toLocalDateStr(new Date())
@@ -338,8 +362,8 @@ export default function ProfileScreen({
               onFileChange={handleFileChange}
               isMyProfile={isMyProfile}
             />
-            {/* Trust Engine Section  */}
 
+            {/* Trust Engine Section  */}
             {isFeatureEnable && (
               <TrustEngineCard user={user} isMyProfile={isMyProfile} />
             )}
@@ -459,48 +483,70 @@ export default function ProfileScreen({
               </Card>
             )}
 
-            {/* Referral Link */}
+            {/* Profile Completion Card */}
+
             {isMyProfile && (
+              <ProfileCompletionCard
+                user={displayUser}
+                profile={displayUser?.profile as SelectProfile}
+                skills={profileSkills}
+                interests={profileInterests}
+                isMentor={isMentor}
+                hasAvailability={isAvailable}
+                onProfileUpdated={(payload) => {
+                  if (payload.profile) {
+                    setProfile(
+                      (prev) =>
+                        ({ ...prev, ...payload.profile }) as SelectProfile
+                    )
+                  }
+                }}
+              />
+            )}
+            {isStudent && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Referral Link</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    FYP & Learning Goals
+                    {isMyProfile && (
+                      <EditFypInfoModal
+                        user={user}
+                        profile={profile as SelectProfile}
+                        setProfile={setProfile}
+                      />
+                    )}
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Share2 className="h-5 w-5 text-gray-500" />
-                      <h1 className="text-gray-400">Link</h1>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <FlameKindling className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">
+                        FYP Status
+                      </p>
+                      <p className="text-sm font-medium break-words">
+                        {profile?.fyp_status || "—"}
+                      </p>
                     </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                    <span className="truncate text-sm text-muted-foreground flex-1">
-                      {referralLink ? (
-                        <Input
-                          type="text"
-                          className="w-full"
-                          value={referralLink}
-                          readOnly
-                        />
-                      ) : (
-                        <Skeleton className="h-8 w-full sm:w-32" />
-                      )}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full sm:w-auto mt-2 sm:mt-0"
-                      onClick={CopyReferralLink}
-                      disabled={!referralLink}
-                    >
-                      <CopyIcon className="h-4 w-4 mr-2 sm:mr-0" />
-                      <span className="sm:hidden">Copy Link</span>
-                    </Button>
+
+                  <div className="flex items-start gap-3">
+                    <Target className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">
+                        Learning Goals
+                      </p>
+                      <p className="text-sm font-medium break-words whitespace-pre-wrap">
+                        {profile?.learning_goals || "—"}
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             )}
+
             {/* Mentor Info — shown to owner always; to others only when both fields are filled */}
-            {!!getUserRole(user)?.includes("Mentor") && isMyProfile && (
+            {isMentor && isMyProfile && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
@@ -583,19 +629,10 @@ export default function ProfileScreen({
 
                   {/* Viewer: see mentor's availability when slots exist */}
                   {!isMyProfile && mentorSlots.length > 0 && (
-                    <Link
-                      href={`/profile/${user.unique_id}/availability`}
-                      className="w-full"
-                    >
-                      <Button
-                        variant="outline"
-                        className="w-full mt-2"
-                        size="sm"
-                      >
-                        <CalendarDays className="h-4 w-4 mr-2" />
-                        View Availability
-                      </Button>
-                    </Link>
+                    <ViewAvailabilityButton
+                      mentorId={user.unique_id}
+                      viewerRp={viewerRp}
+                    />
                   )}
                 </CardContent>
               </Card>
@@ -783,6 +820,47 @@ export default function ProfileScreen({
                 )}
               </CardContent>
             </Card>
+
+            {/* Referral Link */}
+            {isMyProfile && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Referral Link</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Share2 className="h-5 w-5 text-gray-500" />
+                      <h1 className="text-gray-400">Link</h1>
+                    </div>
+                  </div>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <span className="truncate text-sm text-muted-foreground flex-1">
+                      {referralLink ? (
+                        <Input
+                          type="text"
+                          className="w-full"
+                          value={referralLink}
+                          readOnly
+                        />
+                      ) : (
+                        <Skeleton className="h-8 w-full sm:w-32" />
+                      )}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full sm:w-auto mt-2 sm:mt-0"
+                      onClick={CopyReferralLink}
+                      disabled={!referralLink}
+                    >
+                      <CopyIcon className="h-4 w-4 mr-2 sm:mr-0" />
+                      <span className="sm:hidden">Copy Link</span>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>
