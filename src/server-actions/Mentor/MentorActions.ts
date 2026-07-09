@@ -2,12 +2,16 @@
 
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
-import { updateUserProfile } from "@/src/db/data-access/profile/query"
 import {
   GetMentorAvailability,
   ReplaceMentorAvailability,
   type MentorAvailabilitySlotInput
 } from "@/src/db/data-access/mentor/query"
+import {
+  updateUserProfile,
+  SearchUserProfile
+} from "@/src/db/data-access/profile/query"
+import { GetMentors } from "@/src/db/data-access/user/query"
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -69,10 +73,32 @@ export const UpdateAvailabilityAction = CreateServerAction(
 
       await ReplaceMentorAvailability(mentorId, slots)
 
+      const profile = await SearchUserProfile(mentorId)
+      const hasTitle = !!profile?.professional_title?.trim()
+      const hasCompany = !!profile?.company?.trim()
+      const hasSlots = slots.length > 0
+
+      await updateUserProfile(mentorId, {
+        is_mentor_active: hasTitle && hasCompany && hasSlots
+      })
+
       return { success: true }
     } catch (error) {
       console.error("UpdateAvailabilityAction error:", error)
       return { error: "Failed to update availability" }
+    }
+  }
+)
+
+export const GetActiveMentorsAction = CreateServerAction(
+  false,
+  async ({ isActive }: { isActive?: boolean } = {}) => {
+    try {
+      const mentors = await GetMentors({ isActive })
+      return { success: true, data: mentors }
+    } catch (error) {
+      console.error("GetActiveMentorsAction error:", error)
+      return { success: false, error: "Failed to fetch active mentors" }
     }
   }
 )
