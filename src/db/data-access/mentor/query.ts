@@ -19,6 +19,7 @@ import {
   mentorAvailabilityTable,
   profileTable,
   rolesTable,
+  sessionRequestsTable,
   tagsTable,
   userRolesTable,
   userTagsTable,
@@ -276,4 +277,78 @@ export async function GetMentors(filters?: GetMentorFilters) {
     console.error("GetMentors error:", err)
     throw new Error("Failed to fetch mentors")
   }
+}
+
+// ── Session Requests ────────────────────────────────────────────────────────────
+
+export interface CreateSessionRequestInput {
+  mentorId: string
+  menteeId: string
+  availabilitySlotId: number
+  sessionDate: string
+  startTime: string
+  endTime: string
+  sessionType: string
+  topic: string
+  description?: string | null
+}
+
+/**
+ * A mentee can only have one *pending* request per exact slot occurrence —
+ * once mentor accept/reject exists, a rejected request can be re-requested.
+ */
+export async function HasPendingSessionRequest(
+  menteeId: string,
+  availabilitySlotId: number,
+  sessionDate: string
+) {
+  const existing = await db
+    .select({ id: sessionRequestsTable.id })
+    .from(sessionRequestsTable)
+    .where(
+      and(
+        eq(sessionRequestsTable.mentee_id, menteeId),
+        eq(sessionRequestsTable.availability_slot_id, availabilitySlotId),
+        eq(sessionRequestsTable.session_date, sessionDate),
+        eq(sessionRequestsTable.status, "pending")
+      )
+    )
+    .limit(1)
+
+  return existing.length > 0
+}
+
+export async function CreateSessionRequest(input: CreateSessionRequestInput) {
+  const [request] = await db
+    .insert(sessionRequestsTable)
+    .values({
+      mentor_id: input.mentorId,
+      mentee_id: input.menteeId,
+      availability_slot_id: input.availabilitySlotId,
+      session_date: input.sessionDate,
+      start_time: input.startTime,
+      end_time: input.endTime,
+      session_type: input.sessionType,
+      topic: input.topic,
+      description: input.description ?? null
+    })
+    .returning()
+
+  return request
+}
+
+/** All of this mentee's requests toward a specific mentor — used to mark Pending dates on the calendar. */
+export async function GetSessionRequestsForMenteeAndMentor(
+  menteeId: string,
+  mentorId: string
+) {
+  return await db
+    .select()
+    .from(sessionRequestsTable)
+    .where(
+      and(
+        eq(sessionRequestsTable.mentee_id, menteeId),
+        eq(sessionRequestsTable.mentor_id, mentorId)
+      )
+    )
 }

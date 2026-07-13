@@ -222,6 +222,30 @@ export type InsertMentorAvailability =
 export type SelectMentorAvailability =
   typeof mentorAvailabilityTable.$inferSelect
 
+export const sessionRequestsTable = pgTable("session_requests", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  mentor_id: varchar("mentor_id")
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  mentee_id: varchar("mentee_id")
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  availability_slot_id: integer("availability_slot_id")
+    .notNull()
+    .references(() => mentorAvailabilityTable.id, { onDelete: "cascade" }),
+  session_date: varchar("session_date").notNull(),
+  start_time: varchar("start_time").notNull(),
+  end_time: varchar("end_time").notNull(),
+  session_type: varchar("session_type").notNull(),
+  topic: varchar("topic").notNull(),
+  description: varchar("description"),
+  status: varchar("status").notNull().default("pending"),
+  ...timestamps
+})
+
+export type InsertSessionRequest = typeof sessionRequestsTable.$inferInsert
+export type SelectSessionRequest = typeof sessionRequestsTable.$inferSelect
+
 export const certificatesTable = pgTable("certificates", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   user_id: varchar("user_id")

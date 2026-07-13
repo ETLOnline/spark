@@ -337,6 +337,13 @@
       "when": 1783509522854,
       "tag": "0047_2026_07_08_161839__add_engagement_field_to_profile_table",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1783959152029,
+      "tag": "0048_2026_07_13_211231__create_session_requests_table",
+      "breakpoints": true
     }
   ]
 }

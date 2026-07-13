@@ -7,8 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/src/components/ui/tooltip"
-
-const RP_THRESHOLD = 500
+import { RP_THRESHOLD } from "@/src/utils/constants"
 
 type Props = {
   mentorId: string

@@ -3,8 +3,11 @@
 import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import {
+  CreateSessionRequest,
   GetMentorAvailability,
   GetMentors,
+  GetSessionRequestsForMenteeAndMentor,
+  HasPendingSessionRequest,
   ReplaceMentorAvailability,
   type GetMentorFilters,
   type MentorAvailabilitySlotInput
@@ -13,6 +16,12 @@ import {
   updateUserProfile,
   SearchUserProfile
 } from "@/src/db/data-access/profile/query"
+import { GetUserRewardBalance } from "@/src/db/data-access/reward/query"
+import {
+  REPUTATION_POINTS_REWARD_ID,
+  RP_THRESHOLD
+} from "@/src/utils/constants"
+import { MIN_DURATION_MINS, toMins } from "@/src/utils/time"
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -106,6 +115,104 @@ export const GetActiveMentorsAction = CreateServerAction(
     } catch (error) {
       console.error("GetActiveMentorsAction error:", error)
       return { success: false, error: "Failed to fetch active mentors" }
+    }
+  }
+)
+
+// ── Session Requests ────────────────────────────────────────────────────────────
+
+interface CreateSessionRequestPayload {
+  mentorId: string
+  availabilitySlotId: number
+  sessionDate: string
+  startTime: string
+  endTime: string
+  topic: string
+  description?: string
+}
+
+/** Mentee submits a request for a specific occurrence of a mentor's availability slot. */
+export const CreateSessionRequestAction = CreateServerAction(
+  true,
+  async (payload: CreateSessionRequestPayload) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) return { error: "Unauthorised" }
+
+      if (!payload.topic?.trim()) {
+        return { error: "Topic is required" }
+      }
+
+      const balance = await GetUserRewardBalance(
+        authUser.unique_id,
+        REPUTATION_POINTS_REWARD_ID
+      )
+      const currentBalance = balance?.current_balance ?? 0
+      if (currentBalance < RP_THRESHOLD) {
+        return { error: "Not enough RP to request a session" }
+      }
+
+      const slots = await GetMentorAvailability(payload.mentorId)
+      const slot = slots.find((s) => s.id === payload.availabilitySlotId)
+      if (!slot || !slot.is_active) {
+        return { error: "This slot is no longer available" }
+      }
+
+      const requestedStart = toMins(payload.startTime)
+      const requestedEnd = toMins(payload.endTime)
+      if (
+        requestedEnd - requestedStart < MIN_DURATION_MINS ||
+        requestedStart < toMins(slot.start_time) ||
+        requestedEnd > toMins(slot.end_time)
+      ) {
+        return { error: "Selected time is outside the mentor's availability" }
+      }
+
+      const alreadyRequested = await HasPendingSessionRequest(
+        authUser.unique_id,
+        payload.availabilitySlotId,
+        payload.sessionDate
+      )
+      if (alreadyRequested) {
+        return { error: "You already have a pending request for this slot" }
+      }
+
+      const request = await CreateSessionRequest({
+        mentorId: payload.mentorId,
+        menteeId: authUser.unique_id,
+        availabilitySlotId: payload.availabilitySlotId,
+        sessionDate: payload.sessionDate,
+        startTime: payload.startTime,
+        endTime: payload.endTime,
+        sessionType: slot.session_type,
+        topic: payload.topic.trim(),
+        description: payload.description?.trim() || null
+      })
+
+      return { success: true, data: request }
+    } catch (error) {
+      console.error("CreateSessionRequestAction error:", error)
+      return { error: "Failed to submit session request" }
+    }
+  }
+)
+
+/** Fetch the current mentee's own session requests toward a given mentor. */
+export const GetMySessionRequestsForMentorAction = CreateServerAction(
+  true,
+  async (mentorId: string) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) return { error: "Unauthorised" }
+
+      const requests = await GetSessionRequestsForMenteeAndMentor(
+        authUser.unique_id,
+        mentorId
+      )
+      return { success: true, data: requests }
+    } catch (error) {
+      console.error("GetMySessionRequestsForMentorAction error:", error)
+      return { error: "Failed to fetch session requests" }
     }
   }
 )

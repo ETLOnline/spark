@@ -4,6 +4,20 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
+import { Textarea } from "@/src/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/src/components/ui/select"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/src/components/ui/tooltip"
 import {
   Dialog,
   DialogContent,
@@ -13,6 +27,7 @@ import {
 import {
   ChevronLeft,
   ChevronRight,
+  Clock,
   Plus,
   RefreshCw,
   Users,
@@ -21,21 +36,25 @@ import {
 } from "lucide-react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
+  CreateSessionRequestAction,
   GetMentorAvailabilityAction,
+  GetMySessionRequestsForMentorAction,
   UpdateAvailabilityAction
 } from "@/src/server-actions/Mentor/MentorActions"
+import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
+import { GetUserRewardBalanceAction } from "@/src/server-actions/Reward/Reward"
 import { toast } from "@/src/hooks/use-toast"
 import { cn } from "@/src/lib/utils"
-import { SelectMentorAvailability } from "@/src/db/schema"
+import { SelectMentorAvailability, SelectSessionRequest } from "@/src/db/schema"
 import moment from "moment-timezone"
-import { DAY_HEADERS, DAYS, MONTH_NAMES } from "@/src/utils/constants"
-
-export const MIN_DURATION_MINS = 30
-
-export function toMins(time: string) {
-  const [h, m] = time.split(":").map(Number)
-  return h * 60 + m
-}
+import {
+  DAY_HEADERS,
+  DAYS,
+  MONTH_NAMES,
+  REPUTATION_POINTS_REWARD_ID,
+  RP_THRESHOLD
+} from "@/src/utils/constants"
+import { MIN_DURATION_MINS, toMins } from "@/src/utils/time"
 
 type ViewType = "month" | "week"
 type RepeatType = "none" | "daily" | "weekly"
@@ -46,6 +65,39 @@ type SessionType = "1:1" | "group"
 /** Format a HH:mm string to 12-hour display. */
 function formatTime(time: string) {
   return moment(time, "HH:mm").format("h:mm A")
+}
+
+function minsToTime(mins: number) {
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
+}
+
+function formatDuration(mins: number) {
+  if (mins < 60) return `${mins} min`
+  const hours = mins / 60
+  return `${hours % 1 === 0 ? hours : hours.toFixed(1)} hr`
+}
+
+/** Start times a mentee can pick, stepped every hour, leaving room for at least a 1-hour session. */
+function getStartTimeOptions(slot: SelectMentorAvailability) {
+  const options: string[] = []
+  const startMin = toMins(slot.start_time)
+  const endMin = toMins(slot.end_time)
+  for (let t = startMin; t <= endMin - 60; t += 60) {
+    options.push(minsToTime(t))
+  }
+  return options
+}
+
+/** Durations that fit between `startTime` and the slot's end, in clean 1-hour steps — scales to however long the mentor made themselves available. */
+function getDurationOptions(slot: SelectMentorAvailability, startTime: string) {
+  const remaining = toMins(slot.end_time) - toMins(startTime)
+  const options: number[] = []
+  for (let d = 60; d <= remaining; d += 60) {
+    options.push(d)
+  }
+  return options
 }
 
 /** Returns true if this slot should appear on `date`. */
@@ -125,8 +177,28 @@ export function MentorCalendar({
   const [saving, setSaving] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
 
+  // Request-a-session form state (viewer only)
+  const [viewerRp, setViewerRp] = useState(0)
+  const [myRequests, setMyRequests] = useState<SelectSessionRequest[]>([])
+  const [requestFormSlot, setRequestFormSlot] =
+    useState<SelectMentorAvailability | null>(null)
+  const [requestStartTime, setRequestStartTime] = useState("")
+  const [requestDuration, setRequestDuration] = useState(60)
+  const [requestTopic, setRequestTopic] = useState("")
+  const [requestDescription, setRequestDescription] = useState("")
+  const [requestError, setRequestError] = useState("")
+  const [requestSubmitting, setRequestSubmitting] = useState(false)
+
   const [, , , getAvailability] = useServerAction(GetMentorAvailabilityAction)
   const [, , , updateAvailability] = useServerAction(UpdateAvailabilityAction)
+  const [, , , getAuthUser] = useServerAction(AuthUserAction)
+  const [, , , getViewerRpBalance] = useServerAction(GetUserRewardBalanceAction)
+  const [, , , getMyRequests] = useServerAction(
+    GetMySessionRequestsForMentorAction
+  )
+  const [, , , createSessionRequest] = useServerAction(
+    CreateSessionRequestAction
+  )
 
   const loadSlots = useCallback(async () => {
     const res = await getAvailability(userId)
@@ -136,6 +208,28 @@ export function MentorCalendar({
   useEffect(() => {
     loadSlots()
   }, [loadSlots])
+
+  const loadMyRequests = useCallback(async () => {
+    const res = await getMyRequests(userId)
+    if (res?.success) setMyRequests(res.data ?? [])
+  }, [userId])
+
+  useEffect(() => {
+    if (isMyProfile) return
+    const fetchViewerContext = async () => {
+      const authUser = await getAuthUser()
+      if (!authUser) return
+      const balanceRes = await getViewerRpBalance(
+        authUser.unique_id,
+        REPUTATION_POINTS_REWARD_ID
+      )
+      if (balanceRes?.success) {
+        setViewerRp(balanceRes.data?.current_balance ?? 0)
+      }
+    }
+    fetchViewerContext()
+    loadMyRequests()
+  }, [isMyProfile, loadMyRequests])
 
   // ── Navigation ────────────────────────────────────────────────────────────────
 
@@ -208,8 +302,20 @@ export function MentorCalendar({
   const getSlotsForDate = (date: Date) =>
     slots.filter((s) => slotAppliesToDate(s, date))
 
+  const myPendingRequestFor = (slotId: number, date: Date) => {
+    const dateStr = moment(date).format("YYYY-MM-DD")
+    return myRequests.find(
+      (r) =>
+        r.availability_slot_id === slotId &&
+        r.session_date === dateStr &&
+        r.status === "pending"
+    )
+  }
+
   const resetPopupForm = (date: Date) => {
     setPendingDeleteId(null)
+    setRequestFormSlot(null)
+    setRequestError("")
     const dateStr = moment(date).format("YYYY-MM-DD")
     setNewDate(dateStr)
     setNewStart("09:00")
@@ -347,6 +453,53 @@ export function MentorCalendar({
       })
     }
     setSaving(false)
+  }
+
+  const openRequestForm = (slot: SelectMentorAvailability) => {
+    setRequestFormSlot(slot)
+    setRequestTopic("")
+    setRequestDescription("")
+    setRequestError("")
+    setRequestStartTime(slot.start_time)
+    const fitting = getDurationOptions(slot, slot.start_time)
+    setRequestDuration(fitting[0] ?? 60)
+  }
+
+  const handleRequestStartTimeChange = (value: string) => {
+    setRequestStartTime(value)
+    if (!requestFormSlot) return
+    const fitting = getDurationOptions(requestFormSlot, value)
+    if (!fitting.includes(requestDuration)) {
+      setRequestDuration(fitting[0] ?? 60)
+    }
+  }
+
+  const handleSubmitRequest = async () => {
+    if (!requestFormSlot || !selectedDate) return
+    if (!requestTopic.trim()) {
+      setRequestError("Topic is required")
+      return
+    }
+
+    setRequestSubmitting(true)
+    const res = await createSessionRequest({
+      mentorId: userId,
+      availabilitySlotId: requestFormSlot.id,
+      sessionDate: moment(selectedDate).format("YYYY-MM-DD"),
+      startTime: requestStartTime,
+      endTime: minsToTime(toMins(requestStartTime) + requestDuration),
+      topic: requestTopic,
+      description: requestDescription
+    })
+    setRequestSubmitting(false)
+
+    if (res?.success) {
+      await loadMyRequests()
+      setRequestFormSlot(null)
+      toast({ title: "Session request sent", duration: 2000 })
+    } else {
+      setRequestError(res?.error ?? "Failed to send request")
+    }
   }
 
   const serializeSlots = (list: SelectMentorAvailability[]) =>
@@ -497,20 +650,34 @@ export function MentorCalendar({
             {date.getDate()}
           </span>
         </div>
-        {daySlots.slice(0, 2).map((slot) => (
-          <div
-            key={slot.id}
-            title={`${slot.session_type === "group" ? "Group" : "1-on-1"} · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`}
-            className="text-[10px] leading-tight truncate rounded px-1 py-0.5 bg-primary/20 text-primary font-medium flex items-center gap-0.5"
-          >
-            {slot.session_type === "group" ? (
-              <Users className="h-2.5 w-2.5 shrink-0" />
-            ) : (
-              <Video className="h-2.5 w-2.5 shrink-0" />
-            )}
-            {formatTime(slot.start_time)}
-          </div>
-        ))}
+        {daySlots.slice(0, 2).map((slot) => {
+          const pending = !isMyProfile && myPendingRequestFor(slot.id, date)
+          return (
+            <div
+              key={slot.id}
+              title={
+                pending
+                  ? `Pending request · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
+                  : `${slot.session_type === "group" ? "Group" : "1-on-1"} · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
+              }
+              className={cn(
+                "text-[10px] leading-tight truncate rounded px-1 py-0.5 font-medium flex items-center gap-0.5",
+                pending
+                  ? "bg-amber-500/20 text-amber-600"
+                  : "bg-primary/20 text-primary"
+              )}
+            >
+              {pending ? (
+                <Clock className="h-2.5 w-2.5 shrink-0" />
+              ) : slot.session_type === "group" ? (
+                <Users className="h-2.5 w-2.5 shrink-0" />
+              ) : (
+                <Video className="h-2.5 w-2.5 shrink-0" />
+              )}
+              {pending ? "Pending" : formatTime(slot.start_time)}
+            </div>
+          )
+        })}
         {daySlots.length > 2 && (
           <span className="text-[10px] text-muted-foreground px-1">
             +{daySlots.length - 2} more
@@ -644,295 +811,472 @@ export function MentorCalendar({
         <DialogContent className="sm:max-w-[420px] p-0 gap-0 flex flex-col max-h-[90dvh]">
           <DialogHeader className="px-5 pt-5 pb-3 shrink-0">
             <DialogTitle className="text-lg font-semibold">
-              {isMyProfile
-                ? "New Availability Slot"
-                : `${selectedDayName} Availability`}
+              {requestFormSlot
+                ? "Request a Session"
+                : isMyProfile
+                  ? "New Availability Slot"
+                  : `${selectedDayName} Availability`}
             </DialogTitle>
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto px-5 pb-3 space-y-3">
-            {isMyProfile && (
+            {requestFormSlot ? (
               <>
-                {/* Session Type */}
+                {/* Session Type (inherited from the slot, not editable) */}
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1.5 block">
                     Session Type
                   </Label>
-                  <div className="flex rounded-md border border-foreground/10 overflow-hidden">
-                    {(["1:1", "group"] as SessionType[]).map((t, i) => (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => setNewSession(t)}
-                        className={cn(
-                          "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
-                          i > 0 && "border-l border-foreground/10",
-                          newSession === t
-                            ? "bg-primary text-primary-foreground"
-                            : "hover:bg-muted text-muted-foreground"
-                        )}
-                      >
-                        {t === "group" ? (
-                          <Users className="h-3.5 w-3.5" />
-                        ) : (
-                          <Video className="h-3.5 w-3.5" />
-                        )}
-                        {t === "1:1" ? "1-on-1" : "Group"}
-                      </button>
-                    ))}
+                  <div className="flex items-center gap-2 text-sm px-3 py-2 rounded-md border border-foreground/10 bg-muted/40">
+                    {requestFormSlot.session_type === "group" ? (
+                      <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                    ) : (
+                      <Video className="h-3.5 w-3.5 text-muted-foreground" />
+                    )}
+                    {requestFormSlot.session_type === "group"
+                      ? "Group"
+                      : "1-on-1"}
+                    <span className="text-muted-foreground ml-auto">
+                      Open {formatTime(requestFormSlot.start_time)} –{" "}
+                      {formatTime(requestFormSlot.end_time)}
+                    </span>
                   </div>
                 </div>
 
-                {/* Date */}
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1.5 block">
-                    Date
-                  </Label>
-                  <Input
-                    type="date"
-                    value={newDate}
-                    onChange={(e) => {
-                      setNewDate(e.target.value)
-                      if (e.target.value)
-                        setNewRepeatEnd(endOfMonth(e.target.value))
-                    }}
-                  />
-                </div>
-
-                {/* Start / End */}
+                {/* Start Time / Duration */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1.5 block">
-                      Start
+                      Start Time
                     </Label>
-                    <Input
-                      type="time"
-                      value={newStart}
-                      onChange={(e) => {
-                        setNewStart(e.target.value)
-                        setSlotError("")
-                      }}
-                      className={cn(slotError && "border-destructive")}
-                    />
+                    <Select
+                      value={requestStartTime}
+                      onValueChange={handleRequestStartTimeChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getStartTimeOptions(requestFormSlot).map((t) => (
+                          <SelectItem key={t} value={t}>
+                            {formatTime(t)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1.5 block">
-                      End
+                      Duration
                     </Label>
-                    <Input
-                      type="time"
-                      value={newEnd}
-                      onChange={(e) => {
-                        setNewEnd(e.target.value)
-                        setSlotError("")
-                      }}
-                      className={cn(slotError && "border-destructive")}
-                    />
+                    <Select
+                      value={String(requestDuration)}
+                      onValueChange={(v) => setRequestDuration(Number(v))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getDurationOptions(
+                          requestFormSlot,
+                          requestStartTime
+                        ).map((d) => (
+                          <SelectItem key={d} value={String(d)}>
+                            {formatDuration(d)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
-
-                {slotError && (
-                  <p className="text-destructive text-xs">{slotError}</p>
-                )}
-
-                {/* Repeat */}
-                <div className="flex items-center justify-between rounded-lg border border-foreground/8 px-3 py-2.5">
-                  <div className="flex items-center gap-2.5 text-sm">
-                    <RefreshCw className="h-4 w-4 text-muted-foreground" />
-                    <span>Repeat</span>
-                  </div>
-                  <div className="flex rounded-md border border-foreground/10 overflow-hidden">
-                    {(["none", "daily", "weekly"] as RepeatType[]).map(
-                      (r, i) => (
-                        <button
-                          key={r}
-                          type="button"
-                          onClick={() => {
-                            setNewRepeat(r)
-                            setSlotError("")
-                          }}
-                          className={toggleItemCls(
-                            newRepeat === r,
-                            i === 0,
-                            "px-2.5 py-1"
-                          )}
-                        >
-                          {r === "none"
-                            ? "None"
-                            : r === "daily"
-                              ? "Daily"
-                              : "Weekly"}
-                        </button>
-                      )
-                    )}
-                  </div>
-                </div>
-
-                {/* Day-of-week picker */}
-                {newRepeat === "weekly" && (
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1.5 block">
-                      Repeat on
-                    </Label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {DAY_HEADERS.map((label, dow) => {
-                        const active = newRepeatDays.includes(dow)
-                        return (
-                          <button
-                            key={dow}
-                            type="button"
-                            onClick={() => {
-                              setSlotError("")
-                              setNewRepeatDays((prev) =>
-                                prev.includes(dow)
-                                  ? prev.filter((d) => d !== dow)
-                                  : [...prev, dow]
-                              )
-                            }}
-                            className={cn(
-                              "flex-1 min-w-[36px] py-1.5 text-[11px] font-semibold rounded-md border transition-colors",
-                              active
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "border-foreground/10 text-muted-foreground hover:bg-muted"
-                            )}
-                          >
-                            {label}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Repeat until */}
-                {newRepeat !== "none" && (
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1.5 block">
-                      Repeat until{" "}
-                      <span className="opacity-60">(optional)</span>
-                    </Label>
-                    <Input
-                      type="date"
-                      value={newRepeatEnd}
-                      min={newDate}
-                      onChange={(e) => setNewRepeatEnd(e.target.value)}
-                    />
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Slot list */}
-            {slotsForSelected.length > 0 && (
-              <div className="pt-1 space-y-1.5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {isMyProfile ? "Existing Slots" : "Available Times"}
-                  {slotsForSelected.length > 2 && (
-                    <span className="ml-1.5 normal-case font-normal opacity-60">
-                      ({slotsForSelected.length})
-                    </span>
+                <p className="text-xs text-muted-foreground -mt-1">
+                  Your session: {formatTime(requestStartTime)} –{" "}
+                  {formatTime(
+                    minsToTime(toMins(requestStartTime) + requestDuration)
                   )}
                 </p>
-                <div className="space-y-1.5 max-h-[152px] overflow-y-auto pr-0.5">
-                  {slotsForSelected.map((slot) => (
-                    <div
-                      key={slot.id}
-                      className="rounded-lg border border-foreground/8 text-sm overflow-hidden"
-                    >
-                      {/* Slot info row */}
-                      <div className="flex items-center justify-between px-3 py-2.5">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          {slot.session_type === "group" ? (
-                            <Users className="h-4 w-4 text-muted-foreground shrink-0" />
-                          ) : (
-                            <Video className="h-4 w-4 text-muted-foreground shrink-0" />
-                          )}
-                          <div className="min-w-0">
-                            <p className="truncate">
-                              {formatTime(slot.start_time)} –{" "}
-                              {formatTime(slot.end_time)}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {repeatLabel(slot)}
-                            </p>
-                          </div>
-                          <span className="text-xs text-muted-foreground border border-foreground/10 rounded px-1.5 py-0.5 shrink-0">
-                            {slot.session_type === "group" ? "Group" : "1-on-1"}
-                          </span>
-                        </div>
-                        {isMyProfile && (
+
+                {/* Topic */}
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">
+                    Topic
+                  </Label>
+                  <Input
+                    value={requestTopic}
+                    placeholder="What do you want to discuss?"
+                    onChange={(e) => {
+                      setRequestTopic(e.target.value)
+                      setRequestError("")
+                    }}
+                    className={cn(requestError && "border-destructive")}
+                  />
+                </div>
+
+                {/* Description */}
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">
+                    Description <span className="opacity-60">(optional)</span>
+                  </Label>
+                  <Textarea
+                    value={requestDescription}
+                    placeholder="Add context, background, or specific questions"
+                    onChange={(e) => setRequestDescription(e.target.value)}
+                    rows={4}
+                  />
+                </div>
+
+                {requestError && (
+                  <p className="text-destructive text-xs">{requestError}</p>
+                )}
+              </>
+            ) : (
+              <>
+                {isMyProfile && (
+                  <>
+                    {/* Session Type */}
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">
+                        Session Type
+                      </Label>
+                      <div className="flex rounded-md border border-foreground/10 overflow-hidden">
+                        {(["1:1", "group"] as SessionType[]).map((t, i) => (
                           <button
-                            onClick={() => {
-                              if (slot.repeat_type === "none") {
-                                handleDeleteSeries(slot.id)
-                              } else {
-                                setPendingDeleteId(
-                                  pendingDeleteId === slot.id ? null : slot.id
-                                )
-                              }
-                            }}
-                            className="h-6 w-6 flex items-center justify-center shrink-0 rounded text-destructive hover:bg-destructive/10 transition-colors ml-2"
+                            key={t}
+                            type="button"
+                            onClick={() => setNewSession(t)}
+                            className={cn(
+                              "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
+                              i > 0 && "border-l border-foreground/10",
+                              newSession === t
+                                ? "bg-primary text-primary-foreground"
+                                : "hover:bg-muted text-muted-foreground"
+                            )}
                           >
-                            <X className="h-3.5 w-3.5" />
+                            {t === "group" ? (
+                              <Users className="h-3.5 w-3.5" />
+                            ) : (
+                              <Video className="h-3.5 w-3.5" />
+                            )}
+                            {t === "1:1" ? "1-on-1" : "Group"}
                           </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Date */}
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">
+                        Date
+                      </Label>
+                      <Input
+                        type="date"
+                        value={newDate}
+                        onChange={(e) => {
+                          setNewDate(e.target.value)
+                          if (e.target.value)
+                            setNewRepeatEnd(endOfMonth(e.target.value))
+                        }}
+                      />
+                    </div>
+
+                    {/* Start / End */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1.5 block">
+                          Start
+                        </Label>
+                        <Input
+                          type="time"
+                          value={newStart}
+                          onChange={(e) => {
+                            setNewStart(e.target.value)
+                            setSlotError("")
+                          }}
+                          className={cn(slotError && "border-destructive")}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1.5 block">
+                          End
+                        </Label>
+                        <Input
+                          type="time"
+                          value={newEnd}
+                          onChange={(e) => {
+                            setNewEnd(e.target.value)
+                            setSlotError("")
+                          }}
+                          className={cn(slotError && "border-destructive")}
+                        />
+                      </div>
+                    </div>
+
+                    {slotError && (
+                      <p className="text-destructive text-xs">{slotError}</p>
+                    )}
+
+                    {/* Repeat */}
+                    <div className="flex items-center justify-between rounded-lg border border-foreground/8 px-3 py-2.5">
+                      <div className="flex items-center gap-2.5 text-sm">
+                        <RefreshCw className="h-4 w-4 text-muted-foreground" />
+                        <span>Repeat</span>
+                      </div>
+                      <div className="flex rounded-md border border-foreground/10 overflow-hidden">
+                        {(["none", "daily", "weekly"] as RepeatType[]).map(
+                          (r, i) => (
+                            <button
+                              key={r}
+                              type="button"
+                              onClick={() => {
+                                setNewRepeat(r)
+                                setSlotError("")
+                              }}
+                              className={toggleItemCls(
+                                newRepeat === r,
+                                i === 0,
+                                "px-2.5 py-1"
+                              )}
+                            >
+                              {r === "none"
+                                ? "None"
+                                : r === "daily"
+                                  ? "Daily"
+                                  : "Weekly"}
+                            </button>
+                          )
                         )}
                       </div>
-
-                      {/* Inline delete confirmation — only for recurring slots */}
-                      {isMyProfile && pendingDeleteId === slot.id && (
-                        <div className="flex items-center gap-2 px-3 py-2 border-t border-foreground/8 bg-destructive/5">
-                          <p className="text-xs text-muted-foreground flex-1">
-                            Remove:
-                          </p>
-                          <button
-                            onClick={() =>
-                              handleDeleteOccurrence(slot.id, selectedDate!)
-                            }
-                            className="text-xs px-2 py-1 rounded border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors whitespace-nowrap"
-                          >
-                            This date
-                          </button>
-                          <button
-                            onClick={() => handleDeleteSeries(slot.id)}
-                            className="text-xs px-2 py-1 rounded bg-destructive text-destructive-foreground hover:bg-destructive/80 transition-colors whitespace-nowrap"
-                          >
-                            All dates
-                          </button>
-                          <button
-                            onClick={() => setPendingDeleteId(null)}
-                            className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      )}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
-            {!isMyProfile && slotsForSelected.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No availability set for this day
-              </p>
+                    {/* Day-of-week picker */}
+                    {newRepeat === "weekly" && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1.5 block">
+                          Repeat on
+                        </Label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {DAY_HEADERS.map((label, dow) => {
+                            const active = newRepeatDays.includes(dow)
+                            return (
+                              <button
+                                key={dow}
+                                type="button"
+                                onClick={() => {
+                                  setSlotError("")
+                                  setNewRepeatDays((prev) =>
+                                    prev.includes(dow)
+                                      ? prev.filter((d) => d !== dow)
+                                      : [...prev, dow]
+                                  )
+                                }}
+                                className={cn(
+                                  "flex-1 min-w-[36px] py-1.5 text-[11px] font-semibold rounded-md border transition-colors",
+                                  active
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "border-foreground/10 text-muted-foreground hover:bg-muted"
+                                )}
+                              >
+                                {label}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Repeat until */}
+                    {newRepeat !== "none" && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1.5 block">
+                          Repeat until{" "}
+                          <span className="opacity-60">(optional)</span>
+                        </Label>
+                        <Input
+                          type="date"
+                          value={newRepeatEnd}
+                          min={newDate}
+                          onChange={(e) => setNewRepeatEnd(e.target.value)}
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Slot list */}
+                {slotsForSelected.length > 0 && (
+                  <div className="pt-1 space-y-1.5">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {isMyProfile ? "Existing Slots" : "Available Times"}
+                      {slotsForSelected.length > 2 && (
+                        <span className="ml-1.5 normal-case font-normal opacity-60">
+                          ({slotsForSelected.length})
+                        </span>
+                      )}
+                    </p>
+                    <div className="space-y-1.5 max-h-[152px] overflow-y-auto pr-0.5">
+                      {slotsForSelected.map((slot) => (
+                        <div
+                          key={slot.id}
+                          className="rounded-lg border border-foreground/8 text-sm overflow-hidden"
+                        >
+                          {/* Slot info row */}
+                          <div className="flex items-center justify-between px-3 py-2.5">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              {slot.session_type === "group" ? (
+                                <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                              ) : (
+                                <Video className="h-4 w-4 text-muted-foreground shrink-0" />
+                              )}
+                              <div className="min-w-0">
+                                <p className="truncate">
+                                  {formatTime(slot.start_time)} –{" "}
+                                  {formatTime(slot.end_time)}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {repeatLabel(slot)}
+                                </p>
+                              </div>
+                              <span className="text-xs text-muted-foreground border border-foreground/10 rounded px-1.5 py-0.5 shrink-0">
+                                {slot.session_type === "group"
+                                  ? "Group"
+                                  : "1-on-1"}
+                              </span>
+                            </div>
+                            {isMyProfile && (
+                              <button
+                                onClick={() => {
+                                  if (slot.repeat_type === "none") {
+                                    handleDeleteSeries(slot.id)
+                                  } else {
+                                    setPendingDeleteId(
+                                      pendingDeleteId === slot.id
+                                        ? null
+                                        : slot.id
+                                    )
+                                  }
+                                }}
+                                className="h-6 w-6 flex items-center justify-center shrink-0 rounded text-destructive hover:bg-destructive/10 transition-colors ml-2"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Request action — viewer only */}
+                          {!isMyProfile &&
+                            (myPendingRequestFor(slot.id, selectedDate!) ? (
+                              <div className="flex items-center gap-1.5 px-3 py-2 border-t border-foreground/8 text-xs text-amber-600 font-medium">
+                                <Clock className="h-3 w-3" />
+                                Request pending
+                              </div>
+                            ) : viewerRp < RP_THRESHOLD ? (
+                              <div className="px-3 py-2 border-t border-foreground/8">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="w-full inline-block">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          disabled
+                                          className="w-full pointer-events-none opacity-50"
+                                        >
+                                          Request this Slot
+                                        </Button>
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>
+                                        Earn {RP_THRESHOLD - viewerRp} more RP
+                                        to request a session
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            ) : (
+                              <div className="px-3 py-2 border-t border-foreground/8">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={() => openRequestForm(slot)}
+                                >
+                                  Request this Slot
+                                </Button>
+                              </div>
+                            ))}
+
+                          {/* Inline delete confirmation — only for recurring slots */}
+                          {isMyProfile && pendingDeleteId === slot.id && (
+                            <div className="flex items-center gap-2 px-3 py-2 border-t border-foreground/8 bg-destructive/5">
+                              <p className="text-xs text-muted-foreground flex-1">
+                                Remove:
+                              </p>
+                              <button
+                                onClick={() =>
+                                  handleDeleteOccurrence(slot.id, selectedDate!)
+                                }
+                                className="text-xs px-2 py-1 rounded border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors whitespace-nowrap"
+                              >
+                                This date
+                              </button>
+                              <button
+                                onClick={() => handleDeleteSeries(slot.id)}
+                                className="text-xs px-2 py-1 rounded bg-destructive text-destructive-foreground hover:bg-destructive/80 transition-colors whitespace-nowrap"
+                              >
+                                All dates
+                              </button>
+                              <button
+                                onClick={() => setPendingDeleteId(null)}
+                                className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {!isMyProfile && slotsForSelected.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No availability set for this day
+                  </p>
+                )}
+              </>
             )}
           </div>
 
           <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-foreground/8 shrink-0">
             <button
-              onClick={() => setIsPopupOpen(false)}
+              onClick={() =>
+                requestFormSlot
+                  ? setRequestFormSlot(null)
+                  : setIsPopupOpen(false)
+              }
               className="px-4 py-2 text-sm font-medium hover:text-foreground text-muted-foreground transition-colors"
             >
-              {isMyProfile ? "Cancel" : "Close"}
+              {requestFormSlot ? "Back" : isMyProfile ? "Cancel" : "Close"}
             </button>
-            {isMyProfile && (
+            {isMyProfile && !requestFormSlot && (
               <Button
                 onClick={handleAddSlot}
                 loading={saving}
                 className="h-9 px-5 text-sm rounded-lg"
               >
                 Add Slot
+              </Button>
+            )}
+            {requestFormSlot && (
+              <Button
+                onClick={handleSubmitRequest}
+                loading={requestSubmitting}
+                className="h-9 px-5 text-sm rounded-lg"
+              >
+                Send Request
               </Button>
             )}
           </div>
