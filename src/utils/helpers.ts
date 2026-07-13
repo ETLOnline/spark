@@ -329,7 +329,11 @@ export const formatRelativeTime = (
     .fromNow()
 }
 
-export const getUserRole = (user: SelectUser, entity_id?: string) => {
+export const getUserRole = (
+  user: SelectUser | null | undefined,
+  entity_id?: string
+) => {
+  if (!user) return undefined
   if (user.roles && user.roles.length > 0) {
     if (user.roles.some((ur) => ur.role?.role_type === "SYSTEM")) {
       return user.roles.flatMap((ur) =>
