@@ -23,7 +23,8 @@ import {
   Briefcase,
   Building2,
   Video,
-  CheckCircle2
+  CheckCircle2,
+  Inbox
 } from "lucide-react"
 import {
   SelectCertificate,
@@ -645,6 +646,20 @@ export default function ProfileScreen({
                         >
                           <CalendarDays className="h-4 w-4 mr-2" />
                           Manage Availability
+                        </Button>
+                      </Link>
+                    )}
+
+                    {/* Mentor: review incoming session requests */}
+                    {isMyProfile && (
+                      <Link href="/profile/session-requests" className="w-full">
+                        <Button
+                          variant="outline"
+                          className="w-full mt-2"
+                          size="sm"
+                        >
+                          <Inbox className="h-4 w-4 mr-2" />
+                          Session Requests
                         </Button>
                       </Link>
                     )}

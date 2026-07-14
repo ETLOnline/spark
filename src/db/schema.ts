@@ -131,6 +131,12 @@ export const usersRelations = relations(usersTable, ({ many, one }) => ({
   }),
   testedTasks: many(taskTable, {
     relationName: "taskTester"
+  }),
+  mentorSessionRequests: many(sessionRequestsTable, {
+    relationName: "sessionRequestToMentor"
+  }),
+  menteeSessionRequests: many(sessionRequestsTable, {
+    relationName: "sessionRequestToMentee"
   })
 }))
 
@@ -242,6 +248,22 @@ export const sessionRequestsTable = pgTable("session_requests", {
   status: varchar("status").notNull().default("pending"),
   ...timestamps
 })
+
+export const sessionRequestsRelations = relations(
+  sessionRequestsTable,
+  ({ one }) => ({
+    mentor: one(usersTable, {
+      fields: [sessionRequestsTable.mentor_id],
+      references: [usersTable.unique_id],
+      relationName: "sessionRequestToMentor"
+    }),
+    mentee: one(usersTable, {
+      fields: [sessionRequestsTable.mentee_id],
+      references: [usersTable.unique_id],
+      relationName: "sessionRequestToMentee"
+    })
+  })
+)
 
 export type InsertSessionRequest = typeof sessionRequestsTable.$inferInsert
 export type SelectSessionRequest = typeof sessionRequestsTable.$inferSelect

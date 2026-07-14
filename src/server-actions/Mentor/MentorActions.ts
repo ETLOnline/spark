@@ -6,6 +6,7 @@ import {
   CreateSessionRequest,
   GetMentorAvailability,
   GetMentors,
+  GetPendingSessionRequestsForMentor,
   GetSessionRequestsForMenteeAndMentor,
   HasPendingSessionRequest,
   ReplaceMentorAvailability,
@@ -212,6 +213,25 @@ export const GetMySessionRequestsForMentorAction = CreateServerAction(
       return { success: true, data: requests }
     } catch (error) {
       console.error("GetMySessionRequestsForMentorAction error:", error)
+      return { error: "Failed to fetch session requests" }
+    }
+  }
+)
+
+/** Fetch the pending session requests a mentor has received, for their Requests inbox. */
+export const GetPendingSessionRequestsForMentorAction = CreateServerAction(
+  true,
+  async (mentorId: string) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser || authUser.unique_id !== mentorId) {
+        return { error: "Unauthorised" }
+      }
+
+      const requests = await GetPendingSessionRequestsForMentor(mentorId)
+      return { success: true, data: requests }
+    } catch (error) {
+      console.error("GetPendingSessionRequestsForMentorAction error:", error)
       return { error: "Failed to fetch session requests" }
     }
   }
