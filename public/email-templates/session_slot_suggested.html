@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New Session Slots Suggested</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f8fafc;
+        line-height: 1.6;
+        color: #1e293b;
+      }
+
+      .email-wrapper {
+        padding: 32px 16px;
+        min-height: 100vh;
+      }
+
+      .email-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 24px;
+        box-shadow:
+          0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+      }
+
+      /* ── Header ── */
+      .header {
+        background: linear-gradient(
+          135deg,
+          hsl(174, 78%, 62%) 0%,
+          hsl(174, 78%, 45%) 100%
+        );
+        color: hsl(0, 0%, 10%);
+        padding: 48px 32px;
+        text-align: center;
+        position: relative;
+      }
+      .header::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: 0.2;
+        background-image:
+          linear-gradient(
+            30deg,
+            rgba(255, 255, 255, 0.3) 12%,
+            transparent 12.5%,
+            transparent 87%,
+            rgba(255, 255, 255, 0.3) 87.5%
+          ),
+          linear-gradient(
+            150deg,
+            rgba(255, 255, 255, 0.3) 12%,
+            transparent 12.5%,
+            transparent 87%,
+            rgba(255, 255, 255, 0.3) 87.5%
+          );
+        background-size: 26px 46px;
+        background-position:
+          0 0,
+          13px 23px;
+        pointer-events: none;
+      }
+      .logo-container {
+        margin-bottom: 24px;
+        position: relative;
+        z-index: 1;
+      }
+      .logo-image {
+        height: 70px;
+      }
+      .header h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 800;
+        position: relative;
+        z-index: 1;
+        letter-spacing: -0.025em;
+      }
+      .header p {
+        margin: 8px 0 0;
+        opacity: 0.8;
+        font-size: 15px;
+        position: relative;
+        z-index: 1;
+        font-weight: 500;
+      }
+
+      /* ── Content ── */
+      .content {
+        padding: 40px 32px;
+      }
+
+      .greeting {
+        font-size: 16px;
+        color: #334155;
+        margin-bottom: 8px;
+      }
+
+      .intro {
+        font-size: 15px;
+        color: #475569;
+        margin-bottom: 32px;
+      }
+
+      /* ── Session info card ── */
+      .session-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 28px;
+      }
+      .session-card h3 {
+        margin: 0 0 16px;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #94a3b8;
+      }
+      .session-field {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .session-field:last-child {
+        margin-bottom: 0;
+      }
+      .field-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #64748b;
+        width: 90px;
+        flex-shrink: 0;
+      }
+      .field-value {
+        font-size: 14px;
+        color: #1e293b;
+        font-weight: 500;
+      }
+
+      /* ── Suggestion message ── */
+      .suggestion-box {
+        background: hsl(174, 78%, 96%);
+        border-left: 4px solid hsl(174, 78%, 45%);
+        border-radius: 0 12px 12px 0;
+        padding: 16px 20px;
+        margin-bottom: 28px;
+      }
+      .suggestion-box p {
+        margin: 0;
+        font-size: 14px;
+        color: #1e293b;
+        line-height: 1.65;
+        font-style: italic;
+      }
+      .suggestion-label {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: hsl(174, 78%, 30%);
+        margin-bottom: 6px;
+      }
+
+      /* ── Slots ── */
+      .slots-section {
+        margin-bottom: 32px;
+      }
+      .slots-section h3 {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0 0 14px;
+      }
+      .slot-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 14px 18px;
+        margin-bottom: 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
+      .slot-icon {
+        width: 38px;
+        height: 38px;
+        background: hsl(174, 78%, 92%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+      .slot-details {
+        flex: 1;
+      }
+      .slot-date {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1e293b;
+      }
+      .slot-time {
+        font-size: 13px;
+        color: #64748b;
+        margin-top: 2px;
+      }
+
+      /* ── Expiry notice ── */
+      .expiry-notice {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        border-radius: 12px;
+        padding: 14px 18px;
+        margin-bottom: 32px;
+      }
+      .expiry-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+      .expiry-text {
+        font-size: 13px;
+        color: #92400e;
+        line-height: 1.5;
+      }
+      .expiry-text strong {
+        font-weight: 700;
+      }
+
+      /* ── CTA ── */
+      .cta-section {
+        text-align: center;
+        margin: 8px 0 40px;
+      }
+      .cta-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(
+          135deg,
+          hsl(174, 78%, 62%) 0%,
+          hsl(174, 78%, 45%) 100%
+        );
+        color: hsl(0, 0%, 10%);
+        text-decoration: none;
+        padding: 16px 36px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 15px;
+        box-shadow: 0 4px 6px -1px rgba(81, 236, 220, 0.5);
+      }
+      .cta-button::after {
+        content: "→";
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      /* ── Footer ── */
+      .footer {
+        background: #f8fafc;
+        padding: 28px 32px;
+        text-align: center;
+        border-top: 1px solid #e2e8f0;
+      }
+      .footer p {
+        margin: 0 0 8px;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      .footer p:last-child {
+        margin-bottom: 0;
+        font-weight: 500;
+      }
+      .footer a {
+        color: hsl(174, 78%, 35%);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      /* ── Responsive ── */
+      @media only screen and (max-width: 640px) {
+        .email-wrapper {
+          padding: 16px 8px;
+        }
+        .header {
+          padding: 32px 20px;
+        }
+        .header h1 {
+          font-size: 22px;
+        }
+        .content,
+        .footer {
+          padding: 28px 20px;
+        }
+        .slot-item {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-wrapper">
+      <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+          <div class="logo-container">
+            <img src="{{logoUrl}}" alt="Spark Logo" class="logo-image" />
+          </div>
+          <h1>New Slots Suggested 📅</h1>
+          <p>Your mentor proposed alternative session times</p>
+        </div>
+
+        <!-- Body -->
+        <div class="content">
+          <p class="greeting">Hi {{menteeName}},</p>
+          <p class="intro">
+            <strong>{{mentorName}}</strong> was unable to accommodate the
+            originally requested time for your session on
+            <strong>{{topic}}</strong>, but has suggested the following
+            alternative slots for you to choose from.
+          </p>
+
+          {{#if suggestionMessage}}
+          <div class="suggestion-box">
+            <div class="suggestion-label">Message from {{mentorName}}</div>
+            <p>{{suggestionMessage}}</p>
+          </div>
+          {{/if}}
+
+          <!-- Slot count info -->
+          <div class="slots-section">
+            <h3>Proposed Time Slots</h3>
+            <div class="slot-item">
+              <div class="slot-icon">🗓️</div>
+              <div class="slot-details">
+                <div class="slot-date">
+                  {{slotCount}} alternative slot(s) available
+                </div>
+                <div class="slot-time">
+                  Log in to view dates and times and choose one
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Expiry warning -->
+          <div class="expiry-notice">
+            <div class="expiry-icon">⏳</div>
+            <div class="expiry-text">
+              <strong>This offer expires in 48 hours.</strong>
+              Please log in and respond before
+              <strong>{{expiresAt}}</strong> or the request will be
+              automatically closed.
+            </div>
+          </div>
+
+          <div class="cta-section">
+            <a href="{{sessionLink}}" class="cta-button">View &amp; Respond</a>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+          <p>
+            You're receiving this because you submitted a mentorship session
+            request on Spark.
+          </p>
+          <p>© Spark Platform</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

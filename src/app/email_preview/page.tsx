@@ -54,6 +54,11 @@ const emailTemplates = [
     value: "new_feedback_admin",
     label: "New Feedback (Admin)",
     file: "new_feedback_admin.html"
+  },
+  {
+    value: "session_slot_suggested",
+    label: "Session Slot Suggested (Mentee)",
+    file: "session_slot_suggested.html"
   }
 ]
 

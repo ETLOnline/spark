@@ -14,6 +14,7 @@ import {
   sql,
   SQLWrapper
 } from "drizzle-orm"
+import moment from "moment"
 import { db } from "../.."
 import {
   mentorAvailabilityTable,
@@ -293,10 +294,6 @@ export interface CreateSessionRequestInput {
   description?: string | null
 }
 
-/**
- * A mentee can only have one *pending* request per exact slot occurrence —
- * once mentor accept/reject exists, a rejected request can be re-requested.
- */
 export async function HasPendingSessionRequest(
   menteeId: string,
   availabilitySlotId: number,
@@ -351,4 +348,38 @@ export async function GetSessionRequestsForMenteeAndMentor(
         eq(sessionRequestsTable.mentor_id, mentorId)
       )
     )
+}
+export async function SuggestSlots(
+  requestId: number,
+  mentorId: string,
+  slotIds: number[],
+  message: string | null
+) {
+  const expiresAt = moment().add(48, "hours").toISOString()
+
+  const [updated] = await db
+    .update(sessionRequestsTable)
+    .set({
+      status: "slot_suggested",
+      suggested_slot_ids: slotIds,
+      suggestion_message: message,
+      suggestion_expires_at: expiresAt
+    })
+    .where(
+      and(
+        eq(sessionRequestsTable.id, requestId),
+        eq(sessionRequestsTable.mentor_id, mentorId),
+        eq(sessionRequestsTable.status, "pending")
+      )
+    )
+    .returning()
+
+  if (!updated) return null
+
+  return (
+    (await db.query.sessionRequestsTable.findFirst({
+      where: eq(sessionRequestsTable.id, requestId),
+      with: { mentee: true, mentor: true }
+    })) ?? null
+  )
 }

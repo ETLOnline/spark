@@ -240,11 +240,39 @@ export const sessionRequestsTable = pgTable("session_requests", {
   topic: varchar("topic").notNull(),
   description: varchar("description"),
   status: varchar("status").notNull().default("pending"),
+  // Populated when mentor suggests alternative slots
+  suggestion_message: text("suggestion_message"),
+  suggested_slot_ids: jsonb("suggested_slot_ids").$type<number[]>(),
+  suggestion_expires_at: varchar("suggestion_expires_at"),
   ...timestamps
 })
 
+export const sessionRequestsRelations = relations(
+  sessionRequestsTable,
+  ({ one }) => ({
+    mentor: one(usersTable, {
+      fields: [sessionRequestsTable.mentor_id],
+      references: [usersTable.unique_id],
+      relationName: "sessionRequestToMentor"
+    }),
+    mentee: one(usersTable, {
+      fields: [sessionRequestsTable.mentee_id],
+      references: [usersTable.unique_id],
+      relationName: "sessionRequestToMentee"
+    }),
+    availabilitySlot: one(mentorAvailabilityTable, {
+      fields: [sessionRequestsTable.availability_slot_id],
+      references: [mentorAvailabilityTable.id],
+      relationName: "sessionRequestToSlot"
+    })
+  })
+)
+
 export type InsertSessionRequest = typeof sessionRequestsTable.$inferInsert
-export type SelectSessionRequest = typeof sessionRequestsTable.$inferSelect
+export type SelectSessionRequest = typeof sessionRequestsTable.$inferSelect & {
+  mentor?: SelectUser
+  mentee?: SelectUser
+}
 
 export const certificatesTable = pgTable("certificates", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),

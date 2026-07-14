@@ -17,5 +17,6 @@ export enum NotificationEvent {
   FEEDBACK_SUBMITTED = "feedback_submitted",
   NEW_FEEDBACK_ADMIN = "new_feedback_admin",
   CONTACT_US_SUBMITTED = "contact_us_submitted",
-  NEW_CONTACT_US_ADMIN = "new_contact_us_admin"
+  NEW_CONTACT_US_ADMIN = "new_contact_us_admin",
+  SESSION_SLOT_SUGGESTED = "session_slot_suggested"
 }

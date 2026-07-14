@@ -9,9 +9,13 @@ import {
   GetSessionRequestsForMenteeAndMentor,
   HasPendingSessionRequest,
   ReplaceMentorAvailability,
+  SuggestSlots,
   type GetMentorFilters,
   type MentorAvailabilitySlotInput
 } from "@/src/db/data-access/mentor/query"
+import { notifySessionSlotSuggested } from "@/src/services/notify/mentor/session"
+import { NotificationEvent } from "@/src/services/notify/types/events"
+import { SendMentorSlotSuggestionNotification } from "@/src/services/notifications/Mentor/utils"
 import {
   updateUserProfile,
   SearchUserProfile
@@ -213,6 +217,48 @@ export const GetMySessionRequestsForMentorAction = CreateServerAction(
     } catch (error) {
       console.error("GetMySessionRequestsForMentorAction error:", error)
       return { error: "Failed to fetch session requests" }
+    }
+  }
+)
+
+interface SuggestNewSlotPayload {
+  requestId: number
+  slotIds: number[]
+  suggestionMessage?: string
+}
+
+export const SuggestNewSlotAction = CreateServerAction(
+  true,
+  async (payload: SuggestNewSlotPayload) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) return { error: "Unauthorised" }
+
+      if (!payload.slotIds?.length) {
+        return { error: "At least one slot must be provided" }
+      }
+
+      const updated = await SuggestSlots(
+        payload.requestId,
+        authUser.unique_id,
+        payload.slotIds,
+        payload.suggestionMessage?.trim() || null
+      )
+
+      if (!updated) {
+        return { error: "Request not found or cannot be updated" }
+      }
+
+      await notifySessionSlotSuggested(
+        NotificationEvent.SESSION_SLOT_SUGGESTED,
+        updated
+      )
+      await SendMentorSlotSuggestionNotification(updated)
+
+      return { success: true, data: updated }
+    } catch (error) {
+      console.error("SuggestNewSlotAction error:", error)
+      return { error: "Failed to suggest new slot" }
     }
   }
 )
