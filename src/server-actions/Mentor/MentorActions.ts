@@ -4,6 +4,7 @@ import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import {
   CreateSessionRequest,
+  DeletePendingSessionRequestsForSlot,
   GetMentorAvailability,
   GetMentors,
   GetSessionRequestsForMenteeAndMentor,
@@ -170,8 +171,10 @@ export const CreateSessionRequestAction = CreateServerAction(
 
       const alreadyRequested = await HasPendingSessionRequest(
         authUser.unique_id,
-        payload.availabilitySlotId,
-        payload.sessionDate
+        payload.mentorId,
+        payload.sessionDate,
+        requestedStart,
+        requestedEnd
       )
       if (alreadyRequested) {
         return { error: "You already have a pending request for this slot" }
@@ -213,6 +216,40 @@ export const GetMySessionRequestsForMentorAction = CreateServerAction(
     } catch (error) {
       console.error("GetMySessionRequestsForMentorAction error:", error)
       return { error: "Failed to fetch session requests" }
+    }
+  }
+)
+
+/**
+ * Mentor removes a slot they offered — clears any pending requests that were
+ * made against it. Pass sessionDate for a single-occurrence delete, or omit
+ * it when the whole recurring series is removed. Accepted requests are left
+ * alone; only "pending" ones are cleared.
+ */
+export const DeleteSessionRequestsForRemovedSlotAction = CreateServerAction(
+  true,
+  async (payload: {
+    mentorId: string
+    startTime: string
+    endTime: string
+    sessionDate?: string
+  }) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser || authUser.unique_id !== payload.mentorId) {
+        return { error: "Unauthorised" }
+      }
+
+      const deleted = await DeletePendingSessionRequestsForSlot(
+        payload.mentorId,
+        payload.startTime,
+        payload.endTime,
+        payload.sessionDate
+      )
+      return { success: true, data: deleted }
+    } catch (error) {
+      console.error("DeleteSessionRequestsForRemovedSlotAction error:", error)
+      return { error: "Failed to clean up session requests" }
     }
   }
 )
