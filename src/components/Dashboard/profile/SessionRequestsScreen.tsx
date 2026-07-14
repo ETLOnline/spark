@@ -13,7 +13,11 @@ import {
   DialogTitle
 } from "@/src/components/ui/dialog"
 import { useServerAction } from "@/src/hooks/useServerAction"
-import { GetPendingSessionRequestsForMentorAction } from "@/src/server-actions/Mentor/MentorActions"
+import {
+  GetPendingSessionRequestsForMentorAction,
+  RespondToSessionRequestAction
+} from "@/src/server-actions/Mentor/MentorActions"
+import { toast } from "@/src/hooks/use-toast"
 import { SelectSessionRequest } from "@/src/db/schema"
 
 interface MenteeInfo {
@@ -53,6 +57,9 @@ export function SessionRequestsScreen({ mentorId }: Props) {
   const [, , , getPendingRequests] = useServerAction(
     GetPendingSessionRequestsForMentorAction
   )
+  const [responding, , , respondToRequest] = useServerAction(
+    RespondToSessionRequestAction
+  )
 
   const loadRequests = useCallback(async () => {
     setLoading(true)
@@ -64,6 +71,26 @@ export function SessionRequestsScreen({ mentorId }: Props) {
   useEffect(() => {
     loadRequests()
   }, [loadRequests])
+
+  const handleRespond = async (status: "accepted" | "rejected") => {
+    if (!selectedRequest) return
+    const res = await respondToRequest(selectedRequest.id, status)
+    if (res?.success) {
+      setRequests((prev) => prev.filter((r) => r.id !== selectedRequest.id))
+      setSelectedRequest(null)
+      toast({
+        title: status === "accepted" ? "Request accepted" : "Request rejected",
+        duration: 3000
+      })
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Something went wrong",
+        description: res?.error ?? "Please try again.",
+        duration: 3000
+      })
+    }
+  }
 
   return (
     <div className="flex flex-col h-full overflow-y-auto p-4 gap-3">
@@ -185,12 +212,23 @@ export function SessionRequestsScreen({ mentorId }: Props) {
                 </span>
               </div>
 
-              {/* Accept / Reject — wired up in SW-363 */}
+              {/* Accept / Reject */}
               <div className="flex items-center justify-end gap-2 pt-2">
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  loading={responding}
+                  onClick={() => handleRespond("rejected")}
+                >
                   Reject
                 </Button>
-                <Button size="sm">Accept</Button>
+                <Button
+                  size="sm"
+                  loading={responding}
+                  onClick={() => handleRespond("accepted")}
+                >
+                  Accept
+                </Button>
               </div>
             </div>
           )}

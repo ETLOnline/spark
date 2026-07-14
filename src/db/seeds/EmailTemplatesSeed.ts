@@ -84,6 +84,11 @@ const templatesToSeed: NewEmailTemplate[] = [
     name: NotificationEvent.NEW_CONTACT_US_ADMIN,
     subject: "New Contact Us Message: {{subject}}",
     body: loadTemplate("admin_message_received.html")
+  },
+  {
+    name: NotificationEvent.NEW_SESSION_REQUEST,
+    subject: "New Session Request from {{menteeName}}",
+    body: loadTemplate("new_session_request.html")
   }
 ]
 

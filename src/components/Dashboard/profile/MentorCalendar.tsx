@@ -28,6 +28,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  Lock,
   Plus,
   RefreshCw,
   Users,
@@ -37,6 +38,7 @@ import {
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateSessionRequestAction,
+  GetAcceptedSessionRequestsForMentorAction,
   GetMentorAvailabilityAction,
   GetMySessionRequestsForMentorAction,
   UpdateAvailabilityAction
@@ -180,6 +182,9 @@ export function MentorCalendar({
   // Request-a-session form state (viewer only)
   const [viewerRp, setViewerRp] = useState(0)
   const [myRequests, setMyRequests] = useState<SelectSessionRequest[]>([])
+  const [bookedRequests, setBookedRequests] = useState<SelectSessionRequest[]>(
+    []
+  )
   const [requestFormSlot, setRequestFormSlot] =
     useState<SelectMentorAvailability | null>(null)
   const [requestStartTime, setRequestStartTime] = useState("")
@@ -195,6 +200,9 @@ export function MentorCalendar({
   const [, , , getViewerRpBalance] = useServerAction(GetUserRewardBalanceAction)
   const [, , , getMyRequests] = useServerAction(
     GetMySessionRequestsForMentorAction
+  )
+  const [, , , getBookedRequests] = useServerAction(
+    GetAcceptedSessionRequestsForMentorAction
   )
   const [, , , createSessionRequest] = useServerAction(
     CreateSessionRequestAction
@@ -214,6 +222,11 @@ export function MentorCalendar({
     if (res?.success) setMyRequests(res.data ?? [])
   }, [userId])
 
+  const loadBookedRequests = useCallback(async () => {
+    const res = await getBookedRequests(userId)
+    if (res?.success) setBookedRequests(res.data ?? [])
+  }, [userId])
+
   useEffect(() => {
     if (isMyProfile) return
     const fetchViewerContext = async () => {
@@ -229,7 +242,8 @@ export function MentorCalendar({
     }
     fetchViewerContext()
     loadMyRequests()
-  }, [isMyProfile, loadMyRequests])
+    loadBookedRequests()
+  }, [isMyProfile, loadMyRequests, loadBookedRequests])
 
   // ── Navigation ────────────────────────────────────────────────────────────────
 
@@ -309,6 +323,13 @@ export function MentorCalendar({
         r.availability_slot_id === slotId &&
         r.session_date === dateStr &&
         r.status === "pending"
+    )
+  }
+
+  const isSlotBooked = (slotId: number, date: Date) => {
+    const dateStr = moment(date).format("YYYY-MM-DD")
+    return bookedRequests.some(
+      (r) => r.availability_slot_id === slotId && r.session_date === dateStr
     )
   }
 
@@ -651,30 +672,42 @@ export function MentorCalendar({
           </span>
         </div>
         {daySlots.slice(0, 2).map((slot) => {
-          const pending = !isMyProfile && myPendingRequestFor(slot.id, date)
+          const booked = !isMyProfile && isSlotBooked(slot.id, date)
+          const pending =
+            !booked && !isMyProfile && myPendingRequestFor(slot.id, date)
           return (
             <div
               key={slot.id}
               title={
-                pending
-                  ? `Pending request · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
-                  : `${slot.session_type === "group" ? "Group" : "1-on-1"} · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
+                booked
+                  ? `Booked · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
+                  : pending
+                    ? `Pending request · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
+                    : `${slot.session_type === "group" ? "Group" : "1-on-1"} · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
               }
               className={cn(
                 "text-[10px] leading-tight truncate rounded px-1 py-0.5 font-medium flex items-center gap-0.5",
-                pending
-                  ? "bg-amber-500/20 text-amber-600"
-                  : "bg-primary/20 text-primary"
+                booked
+                  ? "bg-foreground/10 text-muted-foreground"
+                  : pending
+                    ? "bg-amber-500/20 text-amber-600"
+                    : "bg-primary/20 text-primary"
               )}
             >
-              {pending ? (
+              {booked ? (
+                <Lock className="h-2.5 w-2.5 shrink-0" />
+              ) : pending ? (
                 <Clock className="h-2.5 w-2.5 shrink-0" />
               ) : slot.session_type === "group" ? (
                 <Users className="h-2.5 w-2.5 shrink-0" />
               ) : (
                 <Video className="h-2.5 w-2.5 shrink-0" />
               )}
-              {pending ? "Pending" : formatTime(slot.start_time)}
+              {booked
+                ? "Booked"
+                : pending
+                  ? "Pending"
+                  : formatTime(slot.start_time)}
             </div>
           )
         })}
@@ -1164,7 +1197,12 @@ export function MentorCalendar({
 
                           {/* Request action — viewer only */}
                           {!isMyProfile &&
-                            (myPendingRequestFor(slot.id, selectedDate!) ? (
+                            (isSlotBooked(slot.id, selectedDate!) ? (
+                              <div className="flex items-center gap-1.5 px-3 py-2 border-t border-foreground/8 text-xs text-muted-foreground font-medium">
+                                <Lock className="h-3 w-3" />
+                                Booked
+                              </div>
+                            ) : myPendingRequestFor(slot.id, selectedDate!) ? (
                               <div className="flex items-center gap-1.5 px-3 py-2 border-t border-foreground/8 text-xs text-amber-600 font-medium">
                                 <Clock className="h-3 w-3" />
                                 Request pending

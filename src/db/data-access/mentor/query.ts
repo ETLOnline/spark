@@ -16,6 +16,7 @@ import {
   SQLWrapper
 } from "drizzle-orm"
 import { db } from "../.."
+import { toMins } from "@/src/utils/time"
 import {
   mentorAvailabilityTable,
   profileTable,
@@ -367,5 +368,65 @@ export async function GetPendingSessionRequestsForMentor(mentorId: string) {
         with: { profile: true }
       }
     }
+  })
+}
+
+export async function GetSessionRequestById(requestId: number) {
+  return await db.query.sessionRequestsTable.findFirst({
+    where: eq(sessionRequestsTable.id, requestId)
+  })
+}
+
+export async function UpdateSessionRequestStatus(
+  requestId: number,
+  status: "accepted" | "rejected"
+) {
+  const [request] = await db
+    .update(sessionRequestsTable)
+    .set({ status })
+    .where(eq(sessionRequestsTable.id, requestId))
+    .returning()
+
+  return request
+}
+
+/** All accepted bookings for a mentor — used to grey out already-booked times on the calendar. */
+export async function GetAcceptedSessionRequestsForMentor(mentorId: string) {
+  return await db
+    .select()
+    .from(sessionRequestsTable)
+    .where(
+      and(
+        eq(sessionRequestsTable.mentor_id, mentorId),
+        eq(sessionRequestsTable.status, "accepted")
+      )
+    )
+}
+
+/** True if an accepted booking already overlaps this exact date/time range for the mentor. */
+export async function HasAcceptedOverlap(
+  mentorId: string,
+  sessionDate: string,
+  startMins: number,
+  endMins: number
+) {
+  const accepted = await db
+    .select({
+      start_time: sessionRequestsTable.start_time,
+      end_time: sessionRequestsTable.end_time
+    })
+    .from(sessionRequestsTable)
+    .where(
+      and(
+        eq(sessionRequestsTable.mentor_id, mentorId),
+        eq(sessionRequestsTable.session_date, sessionDate),
+        eq(sessionRequestsTable.status, "accepted")
+      )
+    )
+
+  return accepted.some((booking) => {
+    const bookedStart = toMins(booking.start_time)
+    const bookedEnd = toMins(booking.end_time)
+    return startMins < bookedEnd && bookedStart < endMins
   })
 }
