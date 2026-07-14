@@ -15,6 +15,7 @@ import { cn } from "@/src/lib/utils"
 import { SelectMentorAvailability, SelectSessionRequest } from "@/src/db/schema"
 import { DAY_HEADERS, MONTH_NAMES } from "@/src/utils/constants"
 import {
+  countOverlappingRequests,
   formatTime,
   getSlotsForDate,
   isSlotFullyBooked,
@@ -29,6 +30,8 @@ interface MentorCalendarGridProps {
   isMyProfile: boolean
   myRequests: SelectSessionRequest[]
   bookedRequests: SelectSessionRequest[]
+  mentorPendingRequests: SelectSessionRequest[]
+  mentorAcceptedRequests: SelectSessionRequest[]
   onSelectDate: (date: Date) => void
   onNewSlotClick: () => void
 }
@@ -39,6 +42,8 @@ export function MentorCalendarGrid({
   isMyProfile,
   myRequests,
   bookedRequests,
+  mentorPendingRequests,
+  mentorAcceptedRequests,
   onSelectDate,
   onNewSlotClick
 }: MentorCalendarGridProps) {
@@ -160,6 +165,15 @@ export function MentorCalendarGrid({
             !booked &&
             !isMyProfile &&
             myPendingRequestFor(slot, date, myRequests)
+
+          // Mentor's own view: surface activity from ALL mentees at a glance.
+          const pendingCount = isMyProfile
+            ? countOverlappingRequests(slot, date, mentorPendingRequests)
+            : 0
+          const acceptedCount = isMyProfile
+            ? countOverlappingRequests(slot, date, mentorAcceptedRequests)
+            : 0
+
           return (
             <div
               key={slot.id}
@@ -168,10 +182,12 @@ export function MentorCalendarGrid({
                   ? `Booked · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
                   : pending
                     ? `Pending request · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
-                    : `${slot.session_type === "group" ? "Group" : "1-on-1"} · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
+                    : isMyProfile && pendingCount > 0
+                      ? `${pendingCount} pending request${pendingCount > 1 ? "s" : ""} · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
+                      : `${slot.session_type === "group" ? "Group" : "1-on-1"} · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
               }
               className={cn(
-                "text-[10px] leading-tight truncate rounded px-1 py-0.5 font-medium flex items-center gap-0.5",
+                "text-[10px] leading-tight rounded px-1 py-0.5 font-medium flex items-center gap-1",
                 booked
                   ? "bg-foreground/10 text-muted-foreground"
                   : pending
@@ -188,11 +204,21 @@ export function MentorCalendarGrid({
               ) : (
                 <Video className="h-2.5 w-2.5 shrink-0" />
               )}
-              {booked
-                ? "Booked"
-                : pending
-                  ? "Pending"
-                  : formatTime(slot.start_time)}
+              <span className="truncate">
+                {booked
+                  ? "Booked"
+                  : pending
+                    ? "Pending"
+                    : formatTime(slot.start_time)}
+              </span>
+              {isMyProfile && pendingCount > 0 && (
+                <span className="ml-auto shrink-0 flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-amber-500 text-white text-[10px] font-bold leading-none">
+                  {pendingCount}
+                </span>
+              )}
+              {isMyProfile && pendingCount === 0 && acceptedCount > 0 && (
+                <span className="ml-auto shrink-0 h-2.5 w-2.5 rounded-full bg-emerald-500" />
+              )}
             </div>
           )
         })}

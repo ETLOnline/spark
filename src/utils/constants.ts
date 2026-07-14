@@ -340,6 +340,12 @@ export const REPUTATION_POINTS_REWARD_ID = 1
 /** Minimum RP a mentee needs to view a mentor's availability or request a session. */
 export const RP_THRESHOLD = 500
 
+/** Max length for a session request's Topic field. */
+export const SESSION_REQUEST_TOPIC_MAX_LENGTH = 100
+
+/** Max length for a session request's Description field. */
+export const SESSION_REQUEST_DESCRIPTION_MAX_LENGTH = 500
+
 export const MONTH_NAMES = [
   "January",
   "February",

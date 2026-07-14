@@ -25,7 +25,9 @@ import {
 import { GetUserRewardBalance } from "@/src/db/data-access/reward/query"
 import {
   REPUTATION_POINTS_REWARD_ID,
-  RP_THRESHOLD
+  RP_THRESHOLD,
+  SESSION_REQUEST_DESCRIPTION_MAX_LENGTH,
+  SESSION_REQUEST_TOPIC_MAX_LENGTH
 } from "@/src/utils/constants"
 import { MIN_DURATION_MINS, toMins } from "@/src/utils/time"
 import { SendSystemNotification } from "@/src/services/system-notification/SystemNotification.utils"
@@ -150,6 +152,19 @@ export const CreateSessionRequestAction = CreateServerAction(
 
       if (!payload.topic?.trim()) {
         return { error: "Topic is required" }
+      }
+      if (payload.topic.trim().length > SESSION_REQUEST_TOPIC_MAX_LENGTH) {
+        return {
+          error: `Topic must be ${SESSION_REQUEST_TOPIC_MAX_LENGTH} characters or fewer`
+        }
+      }
+      if (
+        (payload.description?.length ?? 0) >
+        SESSION_REQUEST_DESCRIPTION_MAX_LENGTH
+      ) {
+        return {
+          error: `Description must be ${SESSION_REQUEST_DESCRIPTION_MAX_LENGTH} characters or fewer`
+        }
       }
 
       const balance = await GetUserRewardBalance(

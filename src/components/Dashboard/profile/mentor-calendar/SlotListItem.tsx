@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { CheckCircle2, Clock, Lock, Users, Video, X } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
 import {
@@ -11,6 +12,7 @@ import {
 import { RP_THRESHOLD } from "@/src/utils/constants"
 import { SelectMentorAvailability, SelectSessionRequest } from "@/src/db/schema"
 import {
+  countOverlappingRequests,
   formatTime,
   isSlotFullyBooked,
   myAcceptedRequestsFor,
@@ -25,6 +27,8 @@ interface SlotListItemProps {
   selectedDate: Date
   myRequests: SelectSessionRequest[]
   bookedRequests: SelectSessionRequest[]
+  mentorPendingRequests: SelectSessionRequest[]
+  mentorAcceptedRequests: SelectSessionRequest[]
   viewerRp: number
   pendingDeleteId: number | null
   onTogglePendingDelete: (slotId: number | null) => void
@@ -39,6 +43,8 @@ export function SlotListItem({
   selectedDate,
   myRequests,
   bookedRequests,
+  mentorPendingRequests,
+  mentorAcceptedRequests,
   viewerRp,
   pendingDeleteId,
   onTogglePendingDelete,
@@ -46,6 +52,12 @@ export function SlotListItem({
   onDeleteOccurrence,
   onRequestSlot
 }: SlotListItemProps) {
+  const mentorPendingCount = isMyProfile
+    ? countOverlappingRequests(slot, selectedDate, mentorPendingRequests)
+    : 0
+  const mentorAcceptedCount = isMyProfile
+    ? countOverlappingRequests(slot, selectedDate, mentorAcceptedRequests)
+    : 0
   return (
     <div className="rounded-lg border border-foreground/8 text-sm overflow-hidden">
       {/* Slot info row */}
@@ -83,6 +95,27 @@ export function SlotListItem({
           </button>
         )}
       </div>
+
+      {/* Mentor's own view: activity from all mentees, linking to the inbox to act on it */}
+      {isMyProfile && (mentorPendingCount > 0 || mentorAcceptedCount > 0) && (
+        <Link
+          href="/profile/session-requests"
+          className="flex items-center gap-3 px-3 py-2 border-t border-foreground/8 text-xs hover:bg-foreground/[0.02] transition-colors"
+        >
+          {mentorPendingCount > 0 && (
+            <span className="flex items-center gap-1 text-amber-600 font-medium">
+              <Clock className="h-3 w-3" />
+              {mentorPendingCount} pending
+            </span>
+          )}
+          {mentorAcceptedCount > 0 && (
+            <span className="flex items-center gap-1 text-emerald-500 font-medium">
+              <CheckCircle2 className="h-3 w-3" />
+              {mentorAcceptedCount} confirmed
+            </span>
+          )}
+        </Link>
+      )}
 
       {/* Confirmed sessions THIS mentee already has here */}
       {!isMyProfile &&
