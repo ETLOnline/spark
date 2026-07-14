@@ -236,9 +236,13 @@ export const sessionRequestsTable = pgTable("session_requests", {
   mentee_id: varchar("mentee_id")
     .notNull()
     .references(() => usersTable.unique_id, { onDelete: "cascade" }),
-  availability_slot_id: integer("availability_slot_id")
-    .notNull()
-    .references(() => mentorAvailabilityTable.id, { onDelete: "cascade" }),
+  // No FK constraint on purpose: a mentor editing their availability replaces
+  // every slot row with a fresh id (see ReplaceMentorAvailability), so this
+  // column is informational only. The request's own
+  // session_date/start_time/end_time/session_type are the source of truth,
+  // and availability is re-checked live against current slots wherever it
+  // matters — nothing about this row should ever be touched by a slot delete.
+  availability_slot_id: integer("availability_slot_id"),
   session_date: varchar("session_date").notNull(),
   start_time: varchar("start_time").notNull(),
   end_time: varchar("end_time").notNull(),

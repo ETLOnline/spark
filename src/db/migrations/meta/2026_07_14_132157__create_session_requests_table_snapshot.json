@@ -1,5 +1,5 @@
 {
-  "id": "c33633a1-cff6-474a-800a-a913214e4b48",
+  "id": "98431a5f-c868-4032-88d6-a362a81d26e2",
   "prevId": "edc1ab7f-125c-4e62-bd5a-49f1ca192133",
   "version": "7",
   "dialect": "postgresql",
@@ -3671,7 +3671,7 @@
           "name": "availability_slot_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "session_date": {
           "name": "session_date",
@@ -3753,15 +3753,6 @@
           "tableTo": "users",
           "columnsFrom": ["mentee_id"],
           "columnsTo": ["unique_id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "session_requests_availability_slot_id_mentor_availability_id_fk": {
-          "name": "session_requests_availability_slot_id_mentor_availability_id_fk",
-          "tableFrom": "session_requests",
-          "tableTo": "mentor_availability",
-          "columnsFrom": ["availability_slot_id"],
-          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
