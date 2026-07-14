@@ -8,9 +8,9 @@ import {
   GetAcceptedSessionRequestsForMentor,
   GetMentorAvailability,
   GetMentors,
-  GetPendingSessionRequestsForMentor,
   GetSessionRequestById,
   GetSessionRequestsForMenteeAndMentor,
+  GetSessionRequestsForMentorByStatus,
   HasAcceptedOverlap,
   HasPendingSessionRequest,
   ReplaceMentorAvailability,
@@ -258,20 +258,23 @@ export const GetMySessionRequestsForMentorAction = CreateServerAction(
   }
 )
 
-/** Fetch the pending session requests a mentor has received, for their Requests inbox. */
-export const GetPendingSessionRequestsForMentorAction = CreateServerAction(
+/** Fetch a mentor's session requests for one status tab (Pending/Accepted/Rejected) of their Requests inbox. */
+export const GetSessionRequestsForMentorByStatusAction = CreateServerAction(
   true,
-  async (mentorId: string) => {
+  async (mentorId: string, status: "pending" | "accepted" | "rejected") => {
     try {
       const authUser = await AuthUserAction()
       if (!authUser || authUser.unique_id !== mentorId) {
         return { error: "Unauthorised" }
       }
 
-      const requests = await GetPendingSessionRequestsForMentor(mentorId)
+      const requests = await GetSessionRequestsForMentorByStatus(
+        mentorId,
+        status
+      )
       return { success: true, data: requests }
     } catch (error) {
-      console.error("GetPendingSessionRequestsForMentorAction error:", error)
+      console.error("GetSessionRequestsForMentorByStatusAction error:", error)
       return { error: "Failed to fetch session requests" }
     }
   }

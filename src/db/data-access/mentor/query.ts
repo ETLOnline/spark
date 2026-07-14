@@ -366,12 +366,15 @@ export async function GetSessionRequestsForMenteeAndMentor(
     )
 }
 
-/** A mentor's pending session requests, newest first, with the requesting mentee's profile joined in. */
-export async function GetPendingSessionRequestsForMentor(mentorId: string) {
+/** A mentor's session requests filtered by status, newest first, with the requesting mentee's profile joined in. */
+export async function GetSessionRequestsForMentorByStatus(
+  mentorId: string,
+  status: "pending" | "accepted" | "rejected"
+) {
   return await db.query.sessionRequestsTable.findMany({
     where: and(
       eq(sessionRequestsTable.mentor_id, mentorId),
-      eq(sessionRequestsTable.status, "pending")
+      eq(sessionRequestsTable.status, status)
     ),
     orderBy: desc(sessionRequestsTable.created_at),
     with: {
