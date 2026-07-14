@@ -37,6 +37,7 @@ import {
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateSessionRequestAction,
+  DeleteSessionRequestsForRemovedSlotAction,
   GetMentorAvailabilityAction,
   GetMySessionRequestsForMentorAction,
   UpdateAvailabilityAction
@@ -191,6 +192,9 @@ export function MentorCalendar({
 
   const [, , , getAvailability] = useServerAction(GetMentorAvailabilityAction)
   const [, , , updateAvailability] = useServerAction(UpdateAvailabilityAction)
+  const [, , , deleteSessionRequestsForSlot] = useServerAction(
+    DeleteSessionRequestsForRemovedSlotAction
+  )
   const [, , , getAuthUser] = useServerAction(AuthUserAction)
   const [, , , getViewerRpBalance] = useServerAction(GetUserRewardBalanceAction)
   const [, , , getMyRequests] = useServerAction(
@@ -302,13 +306,19 @@ export function MentorCalendar({
   const getSlotsForDate = (date: Date) =>
     slots.filter((s) => slotAppliesToDate(s, date))
 
-  const myPendingRequestFor = (slotId: number, date: Date) => {
+  // Matches by date + time overlap rather than availability_slot_id — editing
+  // availability replaces every slot row with a fresh id, so a stale id match
+  // would silently stop showing "Pending" even though the request still exists.
+  const myPendingRequestFor = (slot: SelectMentorAvailability, date: Date) => {
     const dateStr = moment(date).format("YYYY-MM-DD")
+    const slotStart = toMins(slot.start_time)
+    const slotEnd = toMins(slot.end_time)
     return myRequests.find(
       (r) =>
-        r.availability_slot_id === slotId &&
         r.session_date === dateStr &&
-        r.status === "pending"
+        r.status === "pending" &&
+        toMins(r.start_time) < slotEnd &&
+        slotStart < toMins(r.end_time)
     )
   }
 
@@ -516,9 +526,17 @@ export function MentorCalendar({
   const handleDeleteSeries = async (slotId: number) => {
     setPendingDeleteId(null)
     setSlotError("")
+    const slot = slots.find((s) => s.id === slotId)
     const remaining = serializeSlots(slots.filter((s) => s.id !== slotId))
     const res = await updateAvailability({ mentorId: userId, slots: remaining })
     if (res?.success) {
+      if (slot) {
+        await deleteSessionRequestsForSlot({
+          mentorId: userId,
+          startTime: slot.start_time,
+          endTime: slot.end_time
+        })
+      }
       setSlots([])
       await loadSlots()
       if (selectedDate) resetPopupForm(selectedDate)
@@ -577,6 +595,12 @@ export function MentorCalendar({
       slots: [...otherSlots, ...additions]
     })
     if (res?.success) {
+      await deleteSessionRequestsForSlot({
+        mentorId: userId,
+        startTime: slot.start_time,
+        endTime: slot.end_time,
+        sessionDate: occStr
+      })
       setSlots([])
       await loadSlots()
       if (selectedDate) resetPopupForm(selectedDate)
@@ -651,7 +675,7 @@ export function MentorCalendar({
           </span>
         </div>
         {daySlots.slice(0, 2).map((slot) => {
-          const pending = !isMyProfile && myPendingRequestFor(slot.id, date)
+          const pending = !isMyProfile && myPendingRequestFor(slot, date)
           return (
             <div
               key={slot.id}
@@ -1164,7 +1188,7 @@ export function MentorCalendar({
 
                           {/* Request action — viewer only */}
                           {!isMyProfile &&
-                            (myPendingRequestFor(slot.id, selectedDate!) ? (
+                            (myPendingRequestFor(slot, selectedDate!) ? (
                               <div className="flex items-center gap-1.5 px-3 py-2 border-t border-foreground/8 text-xs text-amber-600 font-medium">
                                 <Clock className="h-3 w-3" />
                                 Request pending

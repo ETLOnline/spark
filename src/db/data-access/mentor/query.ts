@@ -16,6 +16,7 @@ import {
   SQLWrapper
 } from "drizzle-orm"
 import { db } from "../.."
+import { toMins } from "@/src/utils/time"
 import {
   mentorAvailabilityTable,
   profileTable,
@@ -295,28 +296,39 @@ export interface CreateSessionRequestInput {
 }
 
 /**
- * A mentee can only have one *pending* request per exact slot occurrence —
+ * A mentee can only have one *pending* request per overlapping date/time —
  * once mentor accept/reject exists, a rejected request can be re-requested.
+ *
+ * Matches by mentor/date/time overlap rather than availability_slot_id:
+ * editing availability replaces every slot row with a fresh id, so an id
+ * match would let a mentee silently re-request a slot they already have a
+ * pending request against, just because the mentor touched their calendar.
  */
 export async function HasPendingSessionRequest(
   menteeId: string,
-  availabilitySlotId: number,
-  sessionDate: string
+  mentorId: string,
+  sessionDate: string,
+  startMins: number,
+  endMins: number
 ) {
   const existing = await db
-    .select({ id: sessionRequestsTable.id })
+    .select({
+      start_time: sessionRequestsTable.start_time,
+      end_time: sessionRequestsTable.end_time
+    })
     .from(sessionRequestsTable)
     .where(
       and(
         eq(sessionRequestsTable.mentee_id, menteeId),
-        eq(sessionRequestsTable.availability_slot_id, availabilitySlotId),
+        eq(sessionRequestsTable.mentor_id, mentorId),
         eq(sessionRequestsTable.session_date, sessionDate),
         eq(sessionRequestsTable.status, "pending")
       )
     )
-    .limit(1)
 
-  return existing.length > 0
+  return existing.some(
+    (r) => startMins < toMins(r.end_time) && toMins(r.start_time) < endMins
+  )
 }
 
 export async function CreateSessionRequest(input: CreateSessionRequestInput) {
@@ -368,4 +380,50 @@ export async function GetPendingSessionRequestsForMentor(mentorId: string) {
       }
     }
   })
+}
+
+/**
+ * Deletes pending requests that overlap a slot the mentor is removing.
+ * Pass `sessionDate` to clear just that one occurrence; omit it to clear
+ * every pending request at this time-of-day (deleting the whole series).
+ * Accepted requests are never touched — an accepted booking is a commitment
+ * regardless of later availability edits.
+ */
+export async function DeletePendingSessionRequestsForSlot(
+  mentorId: string,
+  startTime: string,
+  endTime: string,
+  sessionDate?: string
+) {
+  const candidates = await db
+    .select({
+      id: sessionRequestsTable.id,
+      start_time: sessionRequestsTable.start_time,
+      end_time: sessionRequestsTable.end_time
+    })
+    .from(sessionRequestsTable)
+    .where(
+      and(
+        eq(sessionRequestsTable.mentor_id, mentorId),
+        eq(sessionRequestsTable.status, "pending"),
+        sessionDate
+          ? eq(sessionRequestsTable.session_date, sessionDate)
+          : undefined
+      )
+    )
+
+  const startMins = toMins(startTime)
+  const endMins = toMins(endTime)
+  const idsToDelete = candidates
+    .filter(
+      (r) => startMins < toMins(r.end_time) && toMins(r.start_time) < endMins
+    )
+    .map((r) => r.id)
+
+  if (idsToDelete.length === 0) return []
+
+  return await db
+    .delete(sessionRequestsTable)
+    .where(inArray(sessionRequestsTable.id, idsToDelete))
+    .returning()
 }
