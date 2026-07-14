@@ -1,4 +1,4 @@
-import { and, eq, inArray, SQLWrapper } from "drizzle-orm"
+import { and, eq, inArray, isNull, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
 import {
   channelsTable,
@@ -18,6 +18,8 @@ export type spaceQueryFilters = {
   limit?: number
   channel_id?: string
   channel_slug?: string
+  created_by?: string
+  isIndependent?: boolean
 }
 
 export async function CreateSpace(spaceData: InsertSpace) {
@@ -73,6 +75,14 @@ export async function GetSpaces(filters?: spaceQueryFilters) {
 
       if (filters.channel_id) {
         whereClauses.push(eq(spacesTable.channel_id, filters.channel_id))
+      }
+
+      if (filters.created_by) {
+        whereClauses.push(eq(spacesTable.created_by, filters.created_by))
+      }
+
+      if (filters.isIndependent) {
+        whereClauses.push(isNull(spacesTable.channel_id))
       }
     }
 
@@ -197,6 +207,22 @@ export async function IsSlugAvailable(
   }
 }
 
+export async function IsIndependentSpaceSlugAvailable(
+  slug: string
+): Promise<boolean> {
+  try {
+    const searchedSlug = await db
+      .select()
+      .from(spacesTable)
+      .where(
+        and(eq(spacesTable.space_slug, slug), isNull(spacesTable.channel_id))
+      )
+    return !searchedSlug.length
+  } catch (e: any) {
+    throw new Error(e.message)
+  }
+}
+
 export async function UpdateSpace(
   spaceID: string,
   updatedSpaceData: Partial<SelectSpace>
@@ -256,7 +282,7 @@ export async function attachSpaceFeatures(
 export async function attachSpaceUser(
   spaceId: string,
   userId: string,
-  channel_user_id: number,
+  channel_user_id: number | null,
   spaceRole?: string
 ) {
   try {
