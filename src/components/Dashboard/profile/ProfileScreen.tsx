@@ -644,7 +644,7 @@ export default function ProfileScreen({
                           className="w-full mt-2"
                           size="sm"
                         >
-                          <CalendarDays className="h-4 w-4 mr-2" />
+                          <CalendarDays className="h-4 w-4 mr-2 text-muted-foreground" />
                           Manage Availability
                         </Button>
                       </Link>
@@ -658,13 +658,13 @@ export default function ProfileScreen({
                           className="w-full mt-2"
                           size="sm"
                         >
-                          <Inbox className="h-4 w-4 mr-2" />
+                          <Inbox className="h-4 w-4 mr-2 text-muted-foreground" />
                           Session Requests
                         </Button>
                       </Link>
                     )}
 
-                    {/* Viewer: see mentor's availability when slots exist */}
+                    {/* Viewer: see mentor's availability + jump straight to requesting a session */}
                     {!isMyProfile && mentorSlots.length > 0 && (
                       <ViewAvailabilityButton
                         mentorId={user.unique_id}
