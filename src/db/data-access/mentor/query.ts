@@ -1,6 +1,7 @@
 import {
   and,
   asc,
+  count,
   countDistinct,
   desc,
   eq,
@@ -366,23 +367,45 @@ export async function GetSessionRequestsForMenteeAndMentor(
     )
 }
 
-/** A mentor's session requests filtered by status, newest first, with the requesting mentee's profile joined in. */
+/** A mentor's session requests filtered by status, newest first, with the requesting mentee's profile joined in — paginated. */
 export async function GetSessionRequestsForMentorByStatus(
   mentorId: string,
-  status: "pending" | "accepted" | "rejected"
+  status: "pending" | "accepted" | "rejected",
+  page = 1,
+  limit = 10
 ) {
-  return await db.query.sessionRequestsTable.findMany({
-    where: and(
-      eq(sessionRequestsTable.mentor_id, mentorId),
-      eq(sessionRequestsTable.status, status)
-    ),
-    orderBy: desc(sessionRequestsTable.created_at),
-    with: {
-      mentee: {
-        with: { profile: true }
+  const offset = (page - 1) * limit
+  const where = and(
+    eq(sessionRequestsTable.mentor_id, mentorId),
+    eq(sessionRequestsTable.status, status)
+  )
+
+  const [requests, totalCountResult] = await Promise.all([
+    db.query.sessionRequestsTable.findMany({
+      where,
+      orderBy: desc(sessionRequestsTable.created_at),
+      limit,
+      offset,
+      with: {
+        mentee: {
+          with: { profile: true }
+        }
       }
+    }),
+    db.select({ value: count() }).from(sessionRequestsTable).where(where)
+  ])
+
+  const total = totalCountResult[0]?.value ?? 0
+
+  return {
+    requests,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
     }
-  })
+  }
 }
 
 export async function GetSessionRequestById(requestId: number) {

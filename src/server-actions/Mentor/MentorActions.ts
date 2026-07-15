@@ -276,18 +276,29 @@ export const GetMySessionRequestsForMentorAction = CreateServerAction(
 /** Fetch a mentor's session requests for one status tab (Pending/Accepted/Rejected) of their Requests inbox. */
 export const GetSessionRequestsForMentorByStatusAction = CreateServerAction(
   true,
-  async (mentorId: string, status: "pending" | "accepted" | "rejected") => {
+  async (
+    mentorId: string,
+    status: "pending" | "accepted" | "rejected",
+    page = 1,
+    limit = 10
+  ) => {
     try {
       const authUser = await AuthUserAction()
       if (!authUser || authUser.unique_id !== mentorId) {
         return { error: "Unauthorised" }
       }
 
-      const requests = await GetSessionRequestsForMentorByStatus(
+      const result = await GetSessionRequestsForMentorByStatus(
         mentorId,
-        status
+        status,
+        page,
+        limit
       )
-      return { success: true, data: requests }
+      return {
+        success: true,
+        data: result.requests,
+        pagination: result.pagination
+      }
     } catch (error) {
       console.error("GetSessionRequestsForMentorByStatusAction error:", error)
       return { error: "Failed to fetch session requests" }
