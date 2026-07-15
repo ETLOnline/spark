@@ -375,7 +375,7 @@ export async function SuggestSlots(
 ) {
   const expiresAt = moment().add(48, "hours").toISOString()
 
-  const [updated] = await db
+  const result = await db
     .update(sessionRequestsTable)
     .set({
       status: "slot_suggested",
@@ -390,9 +390,9 @@ export async function SuggestSlots(
         eq(sessionRequestsTable.status, "pending")
       )
     )
-    .returning()
+    .returning({ id: sessionRequestsTable.id })
 
-  if (!updated) return null
+  if (!result.length) return null
 
   return (
     (await db.query.sessionRequestsTable.findFirst({

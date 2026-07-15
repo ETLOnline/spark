@@ -3,9 +3,16 @@
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import moment from "moment-timezone"
-import { CalendarDays, MessageSquare, Users, Video } from "lucide-react"
+import {
+  CalendarDays,
+  MessageSquare,
+  Users,
+  Video,
+  ChevronLeft
+} from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Button } from "@/src/components/ui/button"
+import { Textarea } from "@/src/components/ui/textarea"
 import {
   Dialog,
   DialogContent,
@@ -14,8 +21,10 @@ import {
 } from "@/src/components/ui/dialog"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
+  GetMentorAvailabilityAction,
   GetSessionRequestsForMentorByStatusAction,
-  RespondToSessionRequestAction
+  RespondToSessionRequestAction,
+  SuggestNewSlotAction
 } from "@/src/server-actions/Mentor/MentorActions"
 import { toast } from "@/src/hooks/use-toast"
 import { cn } from "@/src/lib/utils"
@@ -47,6 +56,16 @@ type SessionRequestWithMentee = SelectSessionRequest & { mentee: MenteeInfo }
 
 type StatusTab = "pending" | "accepted" | "rejected"
 
+interface AvailabilitySlot {
+  id: number
+  date: string
+  start_time: string
+  end_time: string
+  session_type: string
+  repeat_type: string
+  repeat_end_date: string | null
+}
+
 function formatSlot(request: SessionRequestWithMentee) {
   const date = moment(request.session_date, "YYYY-MM-DD").format(
     "dddd, MMM D, YYYY"
@@ -54,6 +73,82 @@ function formatSlot(request: SessionRequestWithMentee) {
   const start = moment(request.start_time, "HH:mm").format("h:mm A")
   const end = moment(request.end_time, "HH:mm").format("h:mm A")
   return `${date} · ${start} – ${end}`
+}
+
+interface SlotOccurrence {
+  key: string // unique key for selection
+  slotId: number
+  displayDate: string // YYYY-MM-DD of this specific occurrence
+  start_time: string
+  end_time: string
+  session_type: string
+  repeat_type: string
+}
+
+function formatOccurrence(occ: SlotOccurrence) {
+  const date = moment(occ.displayDate, "YYYY-MM-DD").format("ddd, MMM D, YYYY")
+  const start = moment(occ.start_time, "HH:mm").format("h:mm A")
+  const end = moment(occ.end_time, "HH:mm").format("h:mm A")
+  return `${date} · ${start} – ${end}`
+}
+
+/** Expand slots into upcoming occurrences after `afterDate` (exclusive). */
+function expandSlotOccurrences(
+  slots: AvailabilitySlot[],
+  afterDate: string
+): SlotOccurrence[] {
+  const results: SlotOccurrence[] = []
+  const after = moment(afterDate, "YYYY-MM-DD")
+
+  for (const slot of slots) {
+    const slotStart = moment(slot.date, "YYYY-MM-DD")
+    const endDate = slot.repeat_end_date
+      ? moment(slot.repeat_end_date, "YYYY-MM-DD")
+      : moment(afterDate, "YYYY-MM-DD").add(60, "days") // default: show 60 days ahead
+
+    if (slot.repeat_type === "none") {
+      if (slotStart.isAfter(after)) {
+        results.push({
+          key: `${slot.id}-${slot.date}`,
+          slotId: slot.id,
+          displayDate: slot.date,
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          session_type: slot.session_type,
+          repeat_type: slot.repeat_type
+        })
+      }
+      continue
+    }
+
+    // recurring — generate next occurrences after `after`
+    const maxOccurrences = slot.repeat_type === "daily" ? 5 : 3
+    let count = 0
+    const cursor = after.clone().add(1, "day")
+
+    while (count < maxOccurrences && !cursor.isAfter(endDate)) {
+      const applies =
+        slot.repeat_type === "daily" ||
+        (slot.repeat_type === "weekly" && cursor.day() === slotStart.day())
+
+      if (applies && !cursor.isBefore(slotStart)) {
+        const dateStr = cursor.format("YYYY-MM-DD")
+        results.push({
+          key: `${slot.id}-${dateStr}`,
+          slotId: slot.id,
+          displayDate: dateStr,
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          session_type: slot.session_type,
+          repeat_type: slot.repeat_type
+        })
+        count++
+      }
+      cursor.add(1, "day")
+    }
+  }
+
+  return results
 }
 
 interface Props {
@@ -74,12 +169,25 @@ export function SessionRequestsScreen({ mentorId }: Props) {
   const [selectedRequest, setSelectedRequest] =
     useState<SessionRequestWithMentee | null>(null)
 
+  // Suggest slot state
+  const [suggestMode, setSuggestMode] = useState(false)
+  const [slotOccurrences, setSlotOccurrences] = useState<SlotOccurrence[]>([])
+  const [loadingSlots, setLoadingSlots] = useState(false)
+  const [selectedOccurrenceKeys, setSelectedOccurrenceKeys] = useState<
+    string[]
+  >([])
+  const [suggestionMessage, setSuggestionMessage] = useState("")
+
   const [, , , getRequestsByStatus] = useServerAction(
     GetSessionRequestsForMentorByStatusAction
   )
   const [responding, , , respondToRequest] = useServerAction(
     RespondToSessionRequestAction
   )
+  const [, , , getMentorAvailability] = useServerAction(
+    GetMentorAvailabilityAction
+  )
+  const [suggesting, , , suggestNewSlot] = useServerAction(SuggestNewSlotAction)
 
   const loadRequests = useCallback(async () => {
     setLoading(true)
@@ -122,6 +230,68 @@ export function SessionRequestsScreen({ mentorId }: Props) {
         description: res?.error ?? "Please try again.",
         duration: 3000
       })
+    }
+  }
+
+  const handleSuggestClick = async () => {
+    if (!selectedRequest) return
+    setLoadingSlots(true)
+    setSuggestMode(true)
+    const res = await getMentorAvailability(mentorId)
+    if (res?.success && res.data) {
+      const occurrences = expandSlotOccurrences(
+        res.data as AvailabilitySlot[],
+        selectedRequest.session_date
+      )
+      setSlotOccurrences(occurrences)
+    }
+    setLoadingSlots(false)
+  }
+
+  const handleOccurrenceToggle = (key: string) => {
+    setSelectedOccurrenceKeys((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    )
+  }
+
+  const handleSuggestSubmit = async () => {
+    if (!selectedRequest || selectedOccurrenceKeys.length === 0) return
+    const slotIds = [
+      ...new Set(
+        slotOccurrences
+          .filter((o) => selectedOccurrenceKeys.includes(o.key))
+          .map((o) => o.slotId)
+      )
+    ]
+
+    const res = await suggestNewSlot({
+      requestId: selectedRequest.id,
+      slotIds,
+      suggestionMessage: suggestionMessage.trim() || undefined
+    })
+    if (res?.success) {
+      setSelectedRequest(null)
+      setSuggestMode(false)
+      setSelectedOccurrenceKeys([])
+      setSuggestionMessage("")
+      await loadRequests()
+      toast({ title: "Suggestion sent to mentee", duration: 3000 })
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Failed to send suggestion",
+        description: res?.error ?? "Please try again.",
+        duration: 3000
+      })
+    }
+  }
+
+  const handleDialogClose = (open: boolean) => {
+    if (!open) {
+      setSelectedRequest(null)
+      setSuggestMode(false)
+      setSelectedOccurrenceKeys([])
+      setSuggestionMessage("")
     }
   }
 
@@ -205,16 +375,23 @@ export function SessionRequestsScreen({ mentorId }: Props) {
         </TabsContent>
       </Tabs>
 
-      <Dialog
-        open={!!selectedRequest}
-        onOpenChange={(open) => !open && setSelectedRequest(null)}
-      >
+      <Dialog open={!!selectedRequest} onOpenChange={handleDialogClose}>
         <DialogContent className="sm:max-w-[440px] max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Session Request</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              {suggestMode && (
+                <button
+                  onClick={() => setSuggestMode(false)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+              )}
+              {suggestMode ? "Suggest New Slot" : "Session Request"}
+            </DialogTitle>
           </DialogHeader>
 
-          {selectedRequest && (
+          {selectedRequest && !suggestMode && (
             <div className="space-y-4">
               {/* Mentee mini profile */}
               <Link
@@ -274,7 +451,7 @@ export function SessionRequestsScreen({ mentorId }: Props) {
                 </span>
               </div>
 
-              {/* Accept / Reject — only actionable while still pending */}
+              {/* Accept / Reject / Suggest — only actionable while still pending */}
               {selectedRequest.status === "pending" ? (
                 <div className="flex items-center justify-end gap-2 pt-2">
                   <Button
@@ -284,6 +461,14 @@ export function SessionRequestsScreen({ mentorId }: Props) {
                     onClick={() => handleRespond("rejected")}
                   >
                     Reject
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={responding}
+                    onClick={handleSuggestClick}
+                  >
+                    Suggest New Slot
                   </Button>
                   <Button
                     size="sm"
@@ -307,6 +492,112 @@ export function SessionRequestsScreen({ mentorId }: Props) {
                     : "Rejected"}
                 </p>
               )}
+            </div>
+          )}
+
+          {/* Suggest New Slot view */}
+          {selectedRequest && suggestMode && (
+            <div className="space-y-4">
+              <p className="text-xs text-muted-foreground">
+                Select one or more of your available slots to suggest to the
+                mentee.
+              </p>
+
+              {/* Slot list */}
+              <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
+                {loadingSlots && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Loading slots…
+                  </p>
+                )}
+                {!loadingSlots && slotOccurrences.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No available slots after the requested date.
+                  </p>
+                )}
+                {slotOccurrences.map((occ) => {
+                  const selected = selectedOccurrenceKeys.includes(occ.key)
+                  return (
+                    <button
+                      key={occ.key}
+                      onClick={() => handleOccurrenceToggle(occ.key)}
+                      className={cn(
+                        "flex items-center gap-3 text-left px-3 py-2.5 rounded-md border text-sm transition-colors",
+                        selected
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-foreground/10 hover:bg-foreground/[0.03]"
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "h-4 w-4 rounded border shrink-0 flex items-center justify-center",
+                          selected
+                            ? "border-primary bg-primary"
+                            : "border-foreground/30"
+                        )}
+                      >
+                        {selected && (
+                          <svg
+                            className="h-2.5 w-2.5 text-primary-foreground"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={3}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate">{formatOccurrence(occ)}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {occ.session_type === "group" ? "Group" : "1-on-1"}
+                          {occ.repeat_type !== "none" &&
+                            ` · ${occ.repeat_type}`}
+                        </p>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Optional message */}
+              <div>
+                <p className="text-xs text-muted-foreground mb-1.5">
+                  Message <span className="text-foreground/40">(optional)</span>
+                </p>
+                <Textarea
+                  placeholder="e.g. This slot is taken, please choose from the options below."
+                  value={suggestionMessage}
+                  onChange={(e) => setSuggestionMessage(e.target.value)}
+                  rows={3}
+                  className="resize-none text-sm"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-2 pt-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSuggestMode(false)}
+                  disabled={suggesting}
+                >
+                  Back
+                </Button>
+                <Button
+                  size="sm"
+                  loading={suggesting}
+                  disabled={selectedOccurrenceKeys.length === 0}
+                  onClick={handleSuggestSubmit}
+                >
+                  Send Suggestion
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
