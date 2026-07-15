@@ -80,13 +80,16 @@ function formatDuration(mins: number) {
   return `${hours % 1 === 0 ? hours : hours.toFixed(1)} hr`
 }
 
-/** Start times a mentee can pick, stepped every hour, leaving room for at least a 1-hour session. */
-function getStartTimeOptions(slot: SelectMentorAvailability) {
+/** Start times a mentee can pick, stepped every hour, leaving room for at least a 1-hour session. `minAllowedMins` excludes times that have already passed today. */
+function getStartTimeOptions(
+  slot: SelectMentorAvailability,
+  minAllowedMins = 0
+) {
   const options: string[] = []
   const startMin = toMins(slot.start_time)
   const endMin = toMins(slot.end_time)
   for (let t = startMin; t <= endMin - 60; t += 60) {
-    options.push(minsToTime(t))
+    if (t >= minAllowedMins) options.push(minsToTime(t))
   }
   return options
 }
@@ -108,19 +111,31 @@ function slotAppliesToDate(
 ): boolean {
   if (!slot.date) return false
   const anchor = moment(slot.date, "YYYY-MM-DD")
-  const d = moment(date).startOf("day")
+  const calendarDate = moment(date).startOf("day")
 
-  if (d.isBefore(anchor)) return false
+  if (calendarDate.isBefore(anchor)) return false
 
   if (slot.repeat_end_date) {
     const endDate = moment(slot.repeat_end_date, "YYYY-MM-DD")
-    if (d.isAfter(endDate)) return false
+    if (calendarDate.isAfter(endDate)) return false
   }
 
-  if (slot.repeat_type === "none") return d.format("YYYY-MM-DD") === slot.date
+  if (slot.repeat_type === "none")
+    return calendarDate.format("YYYY-MM-DD") === slot.date
   if (slot.repeat_type === "daily") return true
-  if (slot.repeat_type === "weekly") return d.day() === anchor.day()
+  if (slot.repeat_type === "weekly") return calendarDate.day() === anchor.day()
   return false
+}
+
+/** True if `date` is strictly before today (date-level, ignoring time-of-day). */
+function isPastDate(date: Date): boolean {
+  return moment(date).startOf("day").isBefore(moment().startOf("day"))
+}
+
+/** Minutes-of-day before which a mentee can no longer pick a start time on `date` — 0 for any future date, "right now" for today. */
+function minAllowedStartMinsFor(date: Date): number {
+  if (!moment(date).isSame(moment(), "day")) return 0
+  return moment().hours() * 60 + moment().minutes()
 }
 
 function repeatLabel(slot: SelectMentorAvailability) {
@@ -205,8 +220,9 @@ export function MentorCalendar({
   )
 
   const loadSlots = useCallback(async () => {
-    const res = await getAvailability(userId)
-    if (res?.success) setSlots((res.data ?? []).filter((s) => s.is_active))
+    const availabilityRes = await getAvailability(userId)
+    if (availabilityRes?.success)
+      setSlots((availabilityRes.data ?? []).filter((s) => s.is_active))
   }, [userId])
 
   useEffect(() => {
@@ -214,8 +230,8 @@ export function MentorCalendar({
   }, [loadSlots])
 
   const loadMyRequests = useCallback(async () => {
-    const res = await getMyRequests(userId)
-    if (res?.success) setMyRequests(res.data ?? [])
+    const myRequestsRes = await getMyRequests(userId)
+    if (myRequestsRes?.success) setMyRequests(myRequestsRes.data ?? [])
   }, [userId])
 
   useEffect(() => {
@@ -338,13 +354,22 @@ export function MentorCalendar({
   }
 
   const openPopup = (date: Date) => {
-    if (!isMyProfile && getSlotsForDate(date).length === 0) return
+    if (
+      !isMyProfile &&
+      (getSlotsForDate(date).length === 0 || isPastDate(date))
+    )
+      return
     setSelectedDate(date)
     resetPopupForm(date)
     setIsPopupOpen(true)
   }
 
   const handleAddSlot = async () => {
+    const anchorStart = moment(`${newDate} ${newStart}`, "YYYY-MM-DD HH:mm")
+    if (anchorStart.isBefore(moment())) {
+      setSlotError("Cannot add availability in the past")
+      return
+    }
     if (toMins(newEnd) <= toMins(newStart)) {
       setSlotError("End time must be after start time")
       return
@@ -448,11 +473,11 @@ export function MentorCalendar({
       repeat_end_date: s.repeat_end_date ?? null
     }))
 
-    const res = await updateAvailability({
+    const addSlotRes = await updateAvailability({
       mentorId: userId,
       slots: [...existing, ...newSlots]
     })
-    if (res?.success) {
+    if (addSlotRes?.success) {
       await loadSlots()
       toast({ title: "Slot added", duration: 2000 })
     } else {
@@ -470,8 +495,11 @@ export function MentorCalendar({
     setRequestTopic("")
     setRequestDescription("")
     setRequestError("")
-    setRequestStartTime(slot.start_time)
-    const fitting = getDurationOptions(slot, slot.start_time)
+    const minAllowed = selectedDate ? minAllowedStartMinsFor(selectedDate) : 0
+    const startOptions = getStartTimeOptions(slot, minAllowed)
+    const firstStart = startOptions[0] ?? slot.start_time
+    setRequestStartTime(firstStart)
+    const fitting = getDurationOptions(slot, firstStart)
     setRequestDuration(fitting[0] ?? 60)
   }
 
@@ -492,7 +520,7 @@ export function MentorCalendar({
     }
 
     setRequestSubmitting(true)
-    const res = await createSessionRequest({
+    const createRequestRes = await createSessionRequest({
       mentorId: userId,
       availabilitySlotId: requestFormSlot.id,
       sessionDate: moment(selectedDate).format("YYYY-MM-DD"),
@@ -503,12 +531,12 @@ export function MentorCalendar({
     })
     setRequestSubmitting(false)
 
-    if (res?.success) {
+    if (createRequestRes?.success) {
       await loadMyRequests()
       setRequestFormSlot(null)
       toast({ title: "Session request sent", duration: 2000 })
     } else {
-      setRequestError(res?.error ?? "Failed to send request")
+      setRequestError(createRequestRes?.error ?? "Failed to send request")
     }
   }
 
@@ -528,8 +556,11 @@ export function MentorCalendar({
     setSlotError("")
     const slot = slots.find((s) => s.id === slotId)
     const remaining = serializeSlots(slots.filter((s) => s.id !== slotId))
-    const res = await updateAvailability({ mentorId: userId, slots: remaining })
-    if (res?.success) {
+    const deleteSeriesRes = await updateAvailability({
+      mentorId: userId,
+      slots: remaining
+    })
+    if (deleteSeriesRes?.success) {
       if (slot) {
         await deleteSessionRequestsForSlot({
           mentorId: userId,
@@ -590,11 +621,11 @@ export function MentorCalendar({
       })
     }
 
-    const res = await updateAvailability({
+    const deleteOccurrenceRes = await updateAvailability({
       mentorId: userId,
       slots: [...otherSlots, ...additions]
     })
-    if (res?.success) {
+    if (deleteOccurrenceRes?.success) {
       await deleteSessionRequestsForSlot({
         mentorId: userId,
         startTime: slot.start_time,
@@ -649,7 +680,7 @@ export function MentorCalendar({
 
   const renderCell = (date: Date, inMonth: boolean) => {
     const daySlots = getSlotsForDate(date)
-    const clickable = isMyProfile || daySlots.length > 0
+    const clickable = isMyProfile || (daySlots.length > 0 && !isPastDate(date))
     return (
       <div
         key={date.toISOString()}
@@ -881,7 +912,12 @@ export function MentorCalendar({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {getStartTimeOptions(requestFormSlot).map((t) => (
+                        {getStartTimeOptions(
+                          requestFormSlot,
+                          selectedDate
+                            ? minAllowedStartMinsFor(selectedDate)
+                            : 0
+                        ).map((t) => (
                           <SelectItem key={t} value={t}>
                             {formatTime(t)}
                           </SelectItem>
@@ -995,6 +1031,7 @@ export function MentorCalendar({
                       <Input
                         type="date"
                         value={newDate}
+                        min={moment(today).format("YYYY-MM-DD")}
                         onChange={(e) => {
                           setNewDate(e.target.value)
                           if (e.target.value)
@@ -1188,7 +1225,15 @@ export function MentorCalendar({
 
                           {/* Request action — viewer only */}
                           {!isMyProfile &&
-                            (myPendingRequestFor(slot, selectedDate!) ? (
+                            (getStartTimeOptions(
+                              slot,
+                              minAllowedStartMinsFor(selectedDate!)
+                            ).length === 0 ? (
+                              <div className="flex items-center gap-1.5 px-3 py-2 border-t border-foreground/8 text-xs text-muted-foreground font-medium">
+                                <Clock className="h-3 w-3" />
+                                This time has passed
+                              </div>
+                            ) : myPendingRequestFor(slot, selectedDate!) ? (
                               <div className="flex items-center gap-1.5 px-3 py-2 border-t border-foreground/8 text-xs text-amber-600 font-medium">
                                 <Clock className="h-3 w-3" />
                                 Request pending

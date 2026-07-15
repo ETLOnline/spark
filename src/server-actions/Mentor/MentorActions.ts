@@ -23,6 +23,7 @@ import {
   RP_THRESHOLD
 } from "@/src/utils/constants"
 import { MIN_DURATION_MINS, toMins } from "@/src/utils/time"
+import moment from "moment-timezone"
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -142,6 +143,14 @@ export const CreateSessionRequestAction = CreateServerAction(
 
       if (!payload.topic?.trim()) {
         return { error: "Topic is required" }
+      }
+
+      const requestedStartDateTime = moment(
+        `${payload.sessionDate} ${payload.startTime}`,
+        "YYYY-MM-DD HH:mm"
+      )
+      if (requestedStartDateTime.isBefore(moment())) {
+        return { error: "Cannot request a session in the past" }
       }
 
       const balance = await GetUserRewardBalance(
