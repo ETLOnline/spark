@@ -31,8 +31,12 @@ import {
 } from "@/src/utils/constants"
 import { MIN_DURATION_MINS, toMins } from "@/src/utils/time"
 import { SendSystemNotification } from "@/src/services/system-notification/SystemNotification.utils"
+import { sendPushNotification } from "@/src/services/notifications/PushNotification.utils"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
-import { createSessionRequestEmailNotification } from "@/src/services/notify/sessionRequest/sessionRequest"
+import {
+  createSessionRequestEmailNotification,
+  createSessionResponseEmailNotification
+} from "@/src/services/notify/sessionRequest/sessionRequest"
 import moment from "moment-timezone"
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -236,16 +240,22 @@ export const CreateSessionRequestAction = CreateServerAction(
 
       const menteeName = `${authUser.first_name} ${authUser.last_name}`.trim()
       const requestsInboxUrl = createAbsoluteUrl("/profile/session-requests")
+      const newRequestTemplate = {
+        title: "New session request",
+        body: `${menteeName} wants to discuss "${request.topic}"`,
+        deep_link: requestsInboxUrl,
+        icon: authUser.profile_url || ""
+      }
 
       await SendSystemNotification({
         user_id: authUser.unique_id,
         receivers: [payload.mentorId],
-        template: {
-          title: "New session request",
-          body: `${menteeName} wants to discuss "${request.topic}"`,
-          deep_link: requestsInboxUrl,
-          icon: authUser.profile_url || ""
-        }
+        template: newRequestTemplate
+      })
+
+      await sendPushNotification({
+        receivers: [payload.mentorId],
+        template: newRequestTemplate
       })
 
       await createSessionRequestEmailNotification(
@@ -348,24 +358,33 @@ export const RespondToSessionRequestAction = CreateServerAction(
       const updated = await UpdateSessionRequestStatus(requestId, status)
 
       const mentorName = `${authUser.first_name} ${authUser.last_name}`.trim()
+      const responseTemplate = {
+        title:
+          status === "accepted"
+            ? "Session request accepted"
+            : "Session request declined",
+        body:
+          status === "accepted"
+            ? `${mentorName} accepted your session request: "${request.topic}"`
+            : `${mentorName} declined your session request: "${request.topic}"`,
+        deep_link: createAbsoluteUrl(
+          `/profile/${request.mentor_id}/availability`
+        ),
+        icon: authUser.profile_url || ""
+      }
+
       await SendSystemNotification({
         user_id: authUser.unique_id,
         receivers: [request.mentee_id],
-        template: {
-          title:
-            status === "accepted"
-              ? "Session request accepted"
-              : "Session request declined",
-          body:
-            status === "accepted"
-              ? `${mentorName} accepted your session request: "${request.topic}"`
-              : `${mentorName} declined your session request: "${request.topic}"`,
-          deep_link: createAbsoluteUrl(
-            `/profile/${request.mentor_id}/availability`
-          ),
-          icon: authUser.profile_url || ""
-        }
+        template: responseTemplate
       })
+
+      await sendPushNotification({
+        receivers: [request.mentee_id],
+        template: responseTemplate
+      })
+
+      await createSessionResponseEmailNotification(request, mentorName, status)
 
       return { success: true, data: updated }
     } catch (error) {
