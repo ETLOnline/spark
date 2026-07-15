@@ -18,6 +18,7 @@ import {
   countOverlappingRequests,
   formatTime,
   getSlotsForDate,
+  isPastDate,
   isSlotFullyBooked,
   myPendingRequestFor,
   toggleItemCls,
@@ -133,7 +134,7 @@ export function MentorCalendarGrid({
 
   const renderCell = (date: Date, inMonth: boolean) => {
     const daySlots = getSlotsForDate(slots, date)
-    const clickable = isMyProfile || daySlots.length > 0
+    const clickable = isMyProfile || (daySlots.length > 0 && !isPastDate(date))
     return (
       <div
         key={date.toISOString()}

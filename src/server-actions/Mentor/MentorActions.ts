@@ -33,6 +33,7 @@ import { MIN_DURATION_MINS, toMins } from "@/src/utils/time"
 import { SendSystemNotification } from "@/src/services/system-notification/SystemNotification.utils"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
 import { createSessionRequestEmailNotification } from "@/src/services/notify/sessionRequest/sessionRequest"
+import moment from "moment-timezone"
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -165,6 +166,14 @@ export const CreateSessionRequestAction = CreateServerAction(
         return {
           error: `Description must be ${SESSION_REQUEST_DESCRIPTION_MAX_LENGTH} characters or fewer`
         }
+      }
+
+      const requestedStartDateTime = moment(
+        `${payload.sessionDate} ${payload.startTime}`,
+        "YYYY-MM-DD HH:mm"
+      )
+      if (requestedStartDateTime.isBefore(moment())) {
+        return { error: "Cannot request a session in the past" }
       }
 
       const balance = await GetUserRewardBalance(
