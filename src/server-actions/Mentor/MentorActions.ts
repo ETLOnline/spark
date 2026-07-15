@@ -25,7 +25,9 @@ import {
 import { GetUserRewardBalance } from "@/src/db/data-access/reward/query"
 import {
   REPUTATION_POINTS_REWARD_ID,
-  RP_THRESHOLD
+  RP_THRESHOLD,
+  SESSION_REQUEST_DESCRIPTION_MAX_LENGTH,
+  SESSION_REQUEST_TOPIC_MAX_LENGTH
 } from "@/src/utils/constants"
 import { MIN_DURATION_MINS, toMins } from "@/src/utils/time"
 import { SendSystemNotification } from "@/src/services/system-notification/SystemNotification.utils"
@@ -151,6 +153,19 @@ export const CreateSessionRequestAction = CreateServerAction(
       if (!payload.topic?.trim()) {
         return { error: "Topic is required" }
       }
+      if (payload.topic.trim().length > SESSION_REQUEST_TOPIC_MAX_LENGTH) {
+        return {
+          error: `Topic must be ${SESSION_REQUEST_TOPIC_MAX_LENGTH} characters or fewer`
+        }
+      }
+      if (
+        (payload.description?.length ?? 0) >
+        SESSION_REQUEST_DESCRIPTION_MAX_LENGTH
+      ) {
+        return {
+          error: `Description must be ${SESSION_REQUEST_DESCRIPTION_MAX_LENGTH} characters or fewer`
+        }
+      }
 
       const balance = await GetUserRewardBalance(
         authUser.unique_id,
@@ -261,18 +276,29 @@ export const GetMySessionRequestsForMentorAction = CreateServerAction(
 /** Fetch a mentor's session requests for one status tab (Pending/Accepted/Rejected) of their Requests inbox. */
 export const GetSessionRequestsForMentorByStatusAction = CreateServerAction(
   true,
-  async (mentorId: string, status: "pending" | "accepted" | "rejected") => {
+  async (
+    mentorId: string,
+    status: "pending" | "accepted" | "rejected",
+    page = 1,
+    limit = 10
+  ) => {
     try {
       const authUser = await AuthUserAction()
       if (!authUser || authUser.unique_id !== mentorId) {
         return { error: "Unauthorised" }
       }
 
-      const requests = await GetSessionRequestsForMentorByStatus(
+      const result = await GetSessionRequestsForMentorByStatus(
         mentorId,
-        status
+        status,
+        page,
+        limit
       )
-      return { success: true, data: requests }
+      return {
+        success: true,
+        data: result.requests,
+        pagination: result.pagination
+      }
     } catch (error) {
       console.error("GetSessionRequestsForMentorByStatusAction error:", error)
       return { error: "Failed to fetch session requests" }

@@ -22,6 +22,10 @@ import {
   TimeRange
 } from "./mentorCalendarUtils"
 import { toMins } from "@/src/utils/time"
+import {
+  SESSION_REQUEST_DESCRIPTION_MAX_LENGTH,
+  SESSION_REQUEST_TOPIC_MAX_LENGTH
+} from "@/src/utils/constants"
 
 interface SessionRequestFormProps {
   slot: SelectMentorAvailability
@@ -119,12 +123,16 @@ export function SessionRequestForm({
 
       {/* Topic */}
       <div>
-        <Label className="text-xs text-muted-foreground mb-1.5 block">
-          Topic
-        </Label>
+        <div className="flex items-center justify-between mb-1.5">
+          <Label className="text-xs text-muted-foreground">Topic</Label>
+          <span className="text-xs text-muted-foreground">
+            {topic.length}/{SESSION_REQUEST_TOPIC_MAX_LENGTH}
+          </span>
+        </div>
         <Input
           value={topic}
           placeholder="What do you want to discuss?"
+          maxLength={SESSION_REQUEST_TOPIC_MAX_LENGTH}
           onChange={(e) => onTopicChange(e.target.value)}
           className={cn(error && "border-destructive")}
         />
@@ -132,12 +140,18 @@ export function SessionRequestForm({
 
       {/* Description */}
       <div>
-        <Label className="text-xs text-muted-foreground mb-1.5 block">
-          Description <span className="opacity-60">(optional)</span>
-        </Label>
+        <div className="flex items-center justify-between mb-1.5">
+          <Label className="text-xs text-muted-foreground">
+            Description <span className="opacity-60">(optional)</span>
+          </Label>
+          <span className="text-xs text-muted-foreground">
+            {description.length}/{SESSION_REQUEST_DESCRIPTION_MAX_LENGTH}
+          </span>
+        </div>
         <Textarea
           value={description}
           placeholder="Add context, background, or specific questions"
+          maxLength={SESSION_REQUEST_DESCRIPTION_MAX_LENGTH}
           onChange={(e) => onDescriptionChange(e.target.value)}
           rows={4}
         />

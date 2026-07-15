@@ -15,6 +15,7 @@ import {
   GetAcceptedSessionRequestsForMentorAction,
   GetMentorAvailabilityAction,
   GetMySessionRequestsForMentorAction,
+  GetSessionRequestsForMentorByStatusAction,
   UpdateAvailabilityAction
 } from "@/src/server-actions/Mentor/MentorActions"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
@@ -80,6 +81,14 @@ export function MentorCalendar({
   const [bookedRequests, setBookedRequests] = useState<SelectSessionRequest[]>(
     []
   )
+
+  // Activity across ALL mentees, shown on the mentor's own calendar
+  const [mentorPendingRequests, setMentorPendingRequests] = useState<
+    SelectSessionRequest[]
+  >([])
+  const [mentorAcceptedRequests, setMentorAcceptedRequests] = useState<
+    SelectSessionRequest[]
+  >([])
   const [requestFormSlot, setRequestFormSlot] =
     useState<SelectMentorAvailability | null>(null)
   const [requestStartTime, setRequestStartTime] = useState("")
@@ -105,6 +114,9 @@ export function MentorCalendar({
   const [, , , createSessionRequest] = useServerAction(
     CreateSessionRequestAction
   )
+  const [, , , getRequestsByStatus] = useServerAction(
+    GetSessionRequestsForMentorByStatusAction
+  )
 
   const loadSlots = useCallback(async () => {
     const res = await getAvailability(userId)
@@ -125,6 +137,15 @@ export function MentorCalendar({
     if (res?.success) setBookedRequests(res.data ?? [])
   }, [userId])
 
+  const loadMentorActivity = useCallback(async () => {
+    const [pendingRes, acceptedRes] = await Promise.all([
+      getRequestsByStatus(userId, "pending"),
+      getRequestsByStatus(userId, "accepted")
+    ])
+    if (pendingRes?.success) setMentorPendingRequests(pendingRes.data ?? [])
+    if (acceptedRes?.success) setMentorAcceptedRequests(acceptedRes.data ?? [])
+  }, [userId])
+
   useEffect(() => {
     if (isMyProfile) return
     const fetchViewerContext = async () => {
@@ -142,6 +163,11 @@ export function MentorCalendar({
     loadMyRequests()
     loadBookedRequests()
   }, [isMyProfile, loadMyRequests, loadBookedRequests])
+
+  useEffect(() => {
+    if (!isMyProfile) return
+    loadMentorActivity()
+  }, [isMyProfile, loadMentorActivity])
 
   const resetPopupForm = (date: Date) => {
     setPendingDeleteId(null)
@@ -169,6 +195,8 @@ export function MentorCalendar({
     if (!isMyProfile) {
       loadMyRequests()
       loadBookedRequests()
+    } else {
+      loadMentorActivity()
     }
   }
 
@@ -470,6 +498,8 @@ export function MentorCalendar({
         isMyProfile={isMyProfile}
         myRequests={myRequests}
         bookedRequests={bookedRequests}
+        mentorPendingRequests={mentorPendingRequests}
+        mentorAcceptedRequests={mentorAcceptedRequests}
         onSelectDate={openPopup}
         onNewSlotClick={() => openPopup(today)}
       />
@@ -557,6 +587,8 @@ export function MentorCalendar({
                           selectedDate={selectedDate!}
                           myRequests={myRequests}
                           bookedRequests={bookedRequests}
+                          mentorPendingRequests={mentorPendingRequests}
+                          mentorAcceptedRequests={mentorAcceptedRequests}
                           viewerRp={viewerRp}
                           pendingDeleteId={pendingDeleteId}
                           onTogglePendingDelete={setPendingDeleteId}

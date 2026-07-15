@@ -27,6 +27,10 @@ import {
   TabsTrigger
 } from "@/src/components/ui/tabs"
 import AcceptSessionRequestDialog from "./AcceptSessionRequestDialog"
+import PaginationComponent from "@/src/components/common/Pagination"
+import type { PaginationType } from "@/src/components/common/types/pagination.type"
+
+const REQUESTS_PAGE_SIZE = 10
 
 interface MenteeInfo {
   unique_id: string
@@ -61,7 +65,14 @@ interface Props {
 
 export function SessionRequestsScreen({ mentorId }: Props) {
   const [activeStatus, setActiveStatus] = useState<StatusTab>("pending")
+  const [currentPage, setCurrentPage] = useState(1)
   const [requests, setRequests] = useState<SessionRequestWithMentee[]>([])
+  const [pagination, setPagination] = useState<PaginationType>({
+    total: 0,
+    page: 1,
+    limit: REQUESTS_PAGE_SIZE,
+    totalPages: 0
+  })
   const [loading, setLoading] = useState(true)
   const [selectedRequest, setSelectedRequest] =
     useState<SessionRequestWithMentee | null>(null)
@@ -76,22 +87,34 @@ export function SessionRequestsScreen({ mentorId }: Props) {
 
   const loadRequests = useCallback(async () => {
     setLoading(true)
-    const res = await getRequestsByStatus(mentorId, activeStatus)
-    if (res?.success)
+    const res = await getRequestsByStatus(
+      mentorId,
+      activeStatus,
+      currentPage,
+      REQUESTS_PAGE_SIZE
+    )
+    if (res?.success) {
       setRequests((res.data as SessionRequestWithMentee[]) ?? [])
+      if (res.pagination) setPagination(res.pagination)
+    }
     setLoading(false)
-  }, [mentorId, activeStatus])
+  }, [mentorId, activeStatus, currentPage])
 
   useEffect(() => {
     loadRequests()
   }, [loadRequests])
 
+  const handleStatusTabChange = (status: StatusTab) => {
+    setActiveStatus(status)
+    setCurrentPage(1)
+  }
+
   const handleRespond = async (status: "accepted" | "rejected") => {
     if (!selectedRequest) return
     const res = await respondToRequest(selectedRequest.id, status)
     if (res?.success) {
-      setRequests((prev) => prev.filter((r) => r.id !== selectedRequest.id))
       setSelectedRequest(null)
+      await loadRequests()
       toast({
         title: status === "accepted" ? "Request accepted" : "Request rejected",
         duration: 3000
@@ -117,7 +140,7 @@ export function SessionRequestsScreen({ mentorId }: Props) {
     <div className="flex flex-col h-full overflow-y-auto p-4 gap-3">
       <Tabs
         value={activeStatus}
-        onValueChange={(v) => setActiveStatus(v as StatusTab)}
+        onValueChange={(v) => handleStatusTabChange(v as StatusTab)}
       >
         <TabsList>
           <TabsTrigger value="pending">Pending</TabsTrigger>
@@ -174,6 +197,15 @@ export function SessionRequestsScreen({ mentorId }: Props) {
               </div>
             </button>
           ))}
+
+          {!loading && pagination.totalPages > 1 && (
+            <div className="flex justify-center pt-2">
+              <PaginationComponent
+                pagination={pagination}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 

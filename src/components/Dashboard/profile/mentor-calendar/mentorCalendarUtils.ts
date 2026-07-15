@@ -207,6 +207,24 @@ export function getBookedRangesForSlot(
     .map((r) => ({ start: toMins(r.start_time), end: toMins(r.end_time) }))
 }
 
+/** How many requests (of any mentee) overlap this slot's window on this date —
+ * used on the mentor's own calendar so they can see activity at a glance. */
+export function countOverlappingRequests(
+  slot: SelectMentorAvailability,
+  date: Date,
+  requests: SelectSessionRequest[]
+) {
+  const dateStr = moment(date).format("YYYY-MM-DD")
+  const slotStart = toMins(slot.start_time)
+  const slotEnd = toMins(slot.end_time)
+  return requests.filter(
+    (r) =>
+      r.session_date === dateStr &&
+      toMins(r.start_time) < slotEnd &&
+      slotStart < toMins(r.end_time)
+  ).length
+}
+
 /** A slot only counts as "fully booked" once every hour in it is taken — a
  * single accepted hour inside a longer window shouldn't block the rest of it. */
 export function isSlotFullyBooked(
