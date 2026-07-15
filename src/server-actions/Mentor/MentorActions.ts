@@ -337,6 +337,27 @@ export const RespondToSessionRequestAction = CreateServerAction(
       }
 
       const updated = await UpdateSessionRequestStatus(requestId, status)
+
+      const mentorName = `${authUser.first_name} ${authUser.last_name}`.trim()
+      await SendSystemNotification({
+        user_id: authUser.unique_id,
+        receivers: [request.mentee_id],
+        template: {
+          title:
+            status === "accepted"
+              ? "Session request accepted"
+              : "Session request declined",
+          body:
+            status === "accepted"
+              ? `${mentorName} accepted your session request: "${request.topic}"`
+              : `${mentorName} declined your session request: "${request.topic}"`,
+          deep_link: createAbsoluteUrl(
+            `/profile/${request.mentor_id}/availability`
+          ),
+          icon: authUser.profile_url || ""
+        }
+      })
+
       return { success: true, data: updated }
     } catch (error) {
       console.error("RespondToSessionRequestAction error:", error)
