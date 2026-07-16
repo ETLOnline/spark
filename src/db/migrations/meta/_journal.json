@@ -351,6 +351,13 @@
       "when": 1784030894574,
       "tag": "0049_2026_07_14_170813__add_suggestion_fields_to_session_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1784217787577,
+      "tag": "0050_2026_07_16_210305__remove_suggestion_expires_at_filed",
+      "breakpoints": true
     }
   ]
 }

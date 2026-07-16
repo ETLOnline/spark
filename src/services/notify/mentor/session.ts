@@ -23,8 +23,7 @@ export async function notifySessionSlotSuggested(
     topic: request.topic,
     suggestionMessage: request.suggestion_message ?? "",
     slotCount: (request.suggested_slot_ids ?? []).length,
-    sessionLink,
-    expiresAt: request.suggestion_expires_at ?? ""
+    sessionLink
   }
 
   await AddToQueue({

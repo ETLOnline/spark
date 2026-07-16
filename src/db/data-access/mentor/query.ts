@@ -16,7 +16,6 @@ import {
   sql,
   SQLWrapper
 } from "drizzle-orm"
-import moment from "moment"
 import { db } from "../.."
 import { toMins } from "@/src/utils/time"
 import {
@@ -373,15 +372,12 @@ export async function SuggestSlots(
   slotIds: string[], // occurrence keys: "slotId-YYYY-MM-DD"
   message: string | null
 ) {
-  const expiresAt = moment().add(48, "hours").toISOString()
-
   const [updated] = await db
     .update(sessionRequestsTable)
     .set({
       status: "slot_suggested",
       suggested_slot_ids: sql`${JSON.stringify(slotIds)}::jsonb`,
-      suggestion_message: message,
-      suggestion_expires_at: expiresAt
+      suggestion_message: message
     })
     .where(
       and(
@@ -569,33 +565,8 @@ export async function ResubmitSessionRequest(
   sessionDate: string,
   startTime: string,
   endTime: string
-): Promise<
-  { expired: true } | { expired: false; data: Record<string, unknown> } | null
-> {
-  // Read the request first to check expiry before updating
-  const existing = await db.query.sessionRequestsTable.findFirst({
-    where: and(
-      eq(sessionRequestsTable.id, requestId),
-      eq(sessionRequestsTable.mentee_id, menteeId),
-      eq(sessionRequestsTable.status, "slot_suggested")
-    ),
-    columns: { suggestion_expires_at: true }
-  })
-
-  if (!existing) return null
-
-  if (
-    existing.suggestion_expires_at &&
-    moment().isAfter(moment(existing.suggestion_expires_at))
-  ) {
-    await db
-      .update(sessionRequestsTable)
-      .set({ status: "expired" })
-      .where(eq(sessionRequestsTable.id, requestId))
-    return { expired: true }
-  }
-
-  const result = await db
+): Promise<Record<string, unknown> | null> {
+  const [result] = await db
     .update(sessionRequestsTable)
     .set({
       status: "resubmitted",
@@ -604,8 +575,7 @@ export async function ResubmitSessionRequest(
       start_time: startTime,
       end_time: endTime,
       suggested_slot_ids: null,
-      suggestion_message: null,
-      suggestion_expires_at: null
+      suggestion_message: null
     })
     .where(
       and(
@@ -616,10 +586,10 @@ export async function ResubmitSessionRequest(
     )
     .returning({
       id: sessionRequestsTable.id,
-      mentor_id: sessionRequestsTable.mentor_id
+      mentor_id: sessionRequestsTable.mentor_id,
+      topic: sessionRequestsTable.topic
     })
 
-  if (!result.length) return null
-
-  return { expired: false, data: result[0] }
+  if (!result) return null
+  return result
 }

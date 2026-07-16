@@ -17,7 +17,7 @@ export const SendMentorSlotSuggestionNotification = async (
       receivers: [request.mentee_id],
       template: {
         title: `${mentorName} suggested new slots`,
-        body: `${mentorName} suggested new session slots for "${request.topic}". Please review and respond within 48 hours.`,
+        body: `${mentorName} suggested new session slots for "${request.topic}". Please review and respond.`,
         deep_link: createAbsoluteUrl(`/mentors`),
         icon: request.mentor?.profile_url || ""
       }

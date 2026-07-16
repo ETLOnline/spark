@@ -262,7 +262,6 @@ export const sessionRequestsTable = pgTable("session_requests", {
   // Populated when mentor suggests alternative slots
   suggestion_message: text("suggestion_message"),
   suggested_slot_ids: jsonb("suggested_slot_ids").$type<number[]>(),
-  suggestion_expires_at: varchar("suggestion_expires_at"),
   ...timestamps
 })
 

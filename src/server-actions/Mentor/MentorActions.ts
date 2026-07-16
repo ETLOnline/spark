@@ -610,30 +610,20 @@ export const ResubmitSessionRequestAction = CreateServerAction(
         return { error: "Request not found or cannot be resubmitted" }
       }
 
-      // Backend expiry check — no cron job needed
-      if (result.expired) {
-        return {
-          error:
-            "The suggestion has expired (48-hour window passed). The request has been closed."
-        }
-      }
-
-      const updated = result.data as any
-
       // Notify mentor that mentee resubmitted
       const menteeName = `${authUser.first_name} ${authUser.last_name}`.trim()
       await SendSystemNotification({
         user_id: authUser.unique_id,
-        receivers: [updated.mentor_id],
+        receivers: [result.mentor_id as string],
         template: {
           title: "Mentee resubmitted a session request",
-          body: `${menteeName} selected a new slot for "${updated.topic}". Please review and respond.`,
+          body: `${menteeName} selected a new slot for "${result.topic}". Please review and respond.`,
           deep_link: createAbsoluteUrl(`/profile/session-requests`),
           icon: authUser.profile_url || ""
         }
       })
 
-      return { success: true, data: updated }
+      return { success: true, data: result }
     } catch (error) {
       console.error("ResubmitSessionRequestAction error:", error)
       return { error: "Failed to resubmit session request" }
