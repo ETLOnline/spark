@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, SQLWrapper } from "drizzle-orm"
+import { and, eq, inArray, isNull, or, SQLWrapper } from "drizzle-orm"
 import { db } from "../.."
 import {
   channelsTable,
@@ -20,6 +20,7 @@ export type spaceQueryFilters = {
   channel_slug?: string
   created_by?: string
   isIndependent?: boolean
+  forUserId?: string
 }
 
 export async function CreateSpace(spaceData: InsertSpace) {
@@ -83,6 +84,29 @@ export async function GetSpaces(filters?: spaceQueryFilters) {
 
       if (filters.isIndependent) {
         whereClauses.push(isNull(spacesTable.channel_id))
+      }
+
+      if (filters.forUserId) {
+        const memberSpaceRows = await db
+          .select({ space_id: SpaceUsersTable.space_id })
+          .from(SpaceUsersTable)
+          .where(
+            and(
+              eq(SpaceUsersTable.user_id, filters.forUserId),
+              eq(SpaceUsersTable.status, "active")
+            )
+          )
+        const memberSpaceIds = memberSpaceRows.map((row) => row.space_id)
+
+        // Spaces the user created, or was added to as a member
+        whereClauses.push(
+          memberSpaceIds.length
+            ? or(
+                eq(spacesTable.created_by, filters.forUserId),
+                inArray(spacesTable.id, memberSpaceIds)
+              )
+            : eq(spacesTable.created_by, filters.forUserId)
+        )
       }
     }
 

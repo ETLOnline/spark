@@ -36,7 +36,7 @@ import {
   SelectTag,
   SelectUser
 } from "@/src/db/schema"
-import { GetSpacesByCreatorAction } from "@/src/server-actions/Space/Space"
+import { GetSpacesForUserAction } from "@/src/server-actions/Space/Space"
 import { ExtendedRecommendations, Profile } from "./types/profile-types"
 import { Button } from "@/src/components/ui/button"
 import { useToast } from "@/src/hooks/use-toast"
@@ -131,8 +131,8 @@ export default function ProfileScreen({
   const [, , , getMentorAvailability] = useServerAction(
     GetMentorAvailabilityAction
   )
-  const [mentorSpaces, setMentorSpaces] = useState<SelectSpace[]>([])
-  const [, , , getSpacesByCreator] = useServerAction(GetSpacesByCreatorAction)
+  const [activeSpaces, setActiveSpaces] = useState<SelectSpace[]>([])
+  const [, , , getSpacesForUser] = useServerAction(GetSpacesForUserAction)
   const authUser = useAtomValue(userStore.AuthUser)
 
   const displayUser = isMyProfile && authUser ? authUser : user
@@ -193,17 +193,17 @@ export default function ProfileScreen({
     fetchSlots()
   }, [isMentor, user.unique_id])
 
-  // Independent spaces the mentor created — only relevant on their own profile
+  // Independent spaces the user created or is a member of — only relevant on their own profile
   useEffect(() => {
-    if (!isMentor || !isMyProfile) return
-    const fetchMentorSpaces = async () => {
-      const res = await getSpacesByCreator(user.unique_id)
+    if (!isMyProfile) return
+    const fetchActiveSpaces = async () => {
+      const res = await getSpacesForUser(user.unique_id)
       if (res?.success && res.data) {
-        setMentorSpaces(res.data.spaces)
+        setActiveSpaces(res.data.spaces)
       }
     }
-    fetchMentorSpaces()
-  }, [isMentor, isMyProfile, user.unique_id])
+    fetchActiveSpaces()
+  }, [isMyProfile, user.unique_id])
 
   // A mentor is "available" if they have at least one slot that hasn't expired
   const todayStr = toLocalDateStr(new Date())
@@ -693,8 +693,8 @@ export default function ProfileScreen({
                 </Card>
               )}
 
-            {/* Mentor: active independent spaces */}
-            {isMyProfile && mentorSpaces.length > 0 && (
+            {/* Active independent spaces: owned (mentor) or joined as a member (all other roles) */}
+            {isMyProfile && activeSpaces.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -703,14 +703,14 @@ export default function ProfileScreen({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {mentorSpaces.slice(0, 3).map((space) => (
+                  {activeSpaces.slice(0, 3).map((space) => (
                     <Link
                       key={space.id}
-                      href={`/mentorship/${user.unique_id}/spaces/${encodeURIComponent(space.space_slug)}`}
-                      className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-accent transition-colors"
+                      href={`/mentorship/${space.created_by}/spaces/${encodeURIComponent(space.space_slug)}`}
+                      className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
                     >
                       <span className="truncate">{space.space_name}</span>
-                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                      <ArrowRight className="h-3.5 w-3.5 flex-shrink-0" />
                     </Link>
                   ))}
 
