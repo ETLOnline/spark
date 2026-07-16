@@ -3,13 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import moment from "moment-timezone"
-import {
-  CalendarDays,
-  MessageSquare,
-  Users,
-  Video,
-  ChevronLeft
-} from "lucide-react"
+import { CalendarDays, MessageSquare, Users, Video } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Button } from "@/src/components/ui/button"
 import { Textarea } from "@/src/components/ui/textarea"
@@ -169,8 +163,8 @@ export function SessionRequestsScreen({ mentorId }: Props) {
   const [selectedRequest, setSelectedRequest] =
     useState<SessionRequestWithMentee | null>(null)
 
-  // Suggest slot state
-  const [suggestMode, setSuggestMode] = useState(false)
+  // Suggest slot — separate dialog
+  const [suggestDialogOpen, setSuggestDialogOpen] = useState(false)
   const [slotOccurrences, setSlotOccurrences] = useState<SlotOccurrence[]>([])
   const [loadingSlots, setLoadingSlots] = useState(false)
   const [selectedOccurrenceKeys, setSelectedOccurrenceKeys] = useState<
@@ -236,7 +230,7 @@ export function SessionRequestsScreen({ mentorId }: Props) {
   const handleSuggestClick = async () => {
     if (!selectedRequest) return
     setLoadingSlots(true)
-    setSuggestMode(true)
+    setSuggestDialogOpen(true)
     const res = await getMentorAvailability(mentorId)
     if (res?.success && res.data) {
       const occurrences = expandSlotOccurrences(
@@ -256,22 +250,14 @@ export function SessionRequestsScreen({ mentorId }: Props) {
 
   const handleSuggestSubmit = async () => {
     if (!selectedRequest || selectedOccurrenceKeys.length === 0) return
-    const slotIds = [
-      ...new Set(
-        slotOccurrences
-          .filter((o) => selectedOccurrenceKeys.includes(o.key))
-          .map((o) => o.slotId)
-      )
-    ]
-
     const res = await suggestNewSlot({
       requestId: selectedRequest.id,
-      slotIds,
+      slotIds: selectedOccurrenceKeys,
       suggestionMessage: suggestionMessage.trim() || undefined
     })
     if (res?.success) {
       setSelectedRequest(null)
-      setSuggestMode(false)
+      setSuggestDialogOpen(false)
       setSelectedOccurrenceKeys([])
       setSuggestionMessage("")
       await loadRequests()
@@ -289,7 +275,6 @@ export function SessionRequestsScreen({ mentorId }: Props) {
   const handleDialogClose = (open: boolean) => {
     if (!open) {
       setSelectedRequest(null)
-      setSuggestMode(false)
       setSelectedOccurrenceKeys([])
       setSuggestionMessage("")
     }
@@ -359,6 +344,16 @@ export function SessionRequestsScreen({ mentorId }: Props) {
                     <CalendarDays className="h-3 w-3 shrink-0" />
                     {formatSlot(request)}
                   </p>
+                  {request.status === "slot_suggested" && (
+                    <span className="inline-block mt-1.5 text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600">
+                      Suggestion Sent
+                    </span>
+                  )}
+                  {request.status === "resubmitted" && (
+                    <span className="inline-block mt-1.5 text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-500">
+                      Resubmitted
+                    </span>
+                  )}
                 </div>
               </div>
             </button>
@@ -375,23 +370,14 @@ export function SessionRequestsScreen({ mentorId }: Props) {
         </TabsContent>
       </Tabs>
 
+      {/* ── Request detail dialog ── */}
       <Dialog open={!!selectedRequest} onOpenChange={handleDialogClose}>
         <DialogContent className="sm:max-w-[440px] max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {suggestMode && (
-                <button
-                  onClick={() => setSuggestMode(false)}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-              )}
-              {suggestMode ? "Suggest New Slot" : "Session Request"}
-            </DialogTitle>
+            <DialogTitle>Session Request</DialogTitle>
           </DialogHeader>
 
-          {selectedRequest && !suggestMode && (
+          {selectedRequest && (
             <div className="space-y-4">
               {/* Mentee mini profile */}
               <Link
@@ -438,7 +424,7 @@ export function SessionRequestsScreen({ mentorId }: Props) {
                 </div>
               )}
 
-              {/* Requested slot + session type */}
+              {/* Slot info */}
               <div className="flex items-center gap-2 text-sm px-3 py-2 rounded-md border border-foreground/10 bg-muted/40">
                 {selectedRequest.session_type === "group" ? (
                   <Users className="h-3.5 w-3.5 text-muted-foreground" />
@@ -451,8 +437,8 @@ export function SessionRequestsScreen({ mentorId }: Props) {
                 </span>
               </div>
 
-              {/* Accept / Reject / Suggest — only actionable while still pending */}
-              {selectedRequest.status === "pending" ? (
+              {/* Actions based on status */}
+              {selectedRequest.status === "pending" && (
                 <div className="flex items-center justify-end gap-2 pt-2">
                   <Button
                     variant="outline"
@@ -478,7 +464,46 @@ export function SessionRequestsScreen({ mentorId }: Props) {
                     Accept
                   </Button>
                 </div>
-              ) : (
+              )}
+
+              {selectedRequest.status === "slot_suggested" && (
+                <div className="flex items-center justify-between pt-2">
+                  <p className="text-xs text-amber-600 font-medium">
+                    Waiting for mentee to select a slot…
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    loading={responding}
+                    onClick={() => handleRespond("rejected")}
+                  >
+                    Reject
+                  </Button>
+                </div>
+              )}
+
+              {selectedRequest.status === "resubmitted" && (
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    loading={responding}
+                    onClick={() => handleRespond("rejected")}
+                  >
+                    Reject
+                  </Button>
+                  <Button
+                    size="sm"
+                    loading={responding}
+                    onClick={() => handleRespond("accepted")}
+                  >
+                    Accept
+                  </Button>
+                </div>
+              )}
+
+              {(selectedRequest.status === "accepted" ||
+                selectedRequest.status === "rejected") && (
                 <p
                   className={cn(
                     "text-sm font-medium text-right pt-2",
@@ -494,112 +519,127 @@ export function SessionRequestsScreen({ mentorId }: Props) {
               )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
 
-          {/* Suggest New Slot view */}
-          {selectedRequest && suggestMode && (
-            <div className="space-y-4">
-              <p className="text-xs text-muted-foreground">
-                Select one or more of your available slots to suggest to the
-                mentee.
-              </p>
+      {/* ── Suggest New Slot dialog (separate) ── */}
+      <Dialog
+        open={suggestDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSuggestDialogOpen(false)
+            setSelectedOccurrenceKeys([])
+            setSuggestionMessage("")
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[440px] max-h-[90dvh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Suggest New Slot</DialogTitle>
+          </DialogHeader>
 
-              {/* Slot list */}
-              <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
-                {loadingSlots && (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Loading slots…
-                  </p>
-                )}
-                {!loadingSlots && slotOccurrences.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No available slots after the requested date.
-                  </p>
-                )}
-                {slotOccurrences.map((occ) => {
-                  const selected = selectedOccurrenceKeys.includes(occ.key)
-                  return (
-                    <button
-                      key={occ.key}
-                      onClick={() => handleOccurrenceToggle(occ.key)}
+          <div className="space-y-4">
+            <p className="text-xs text-muted-foreground">
+              Select one or more of your available slots to suggest to the
+              mentee.
+            </p>
+
+            <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
+              {loadingSlots && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Loading slots…
+                </p>
+              )}
+              {!loadingSlots && slotOccurrences.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No available slots after the requested date.
+                </p>
+              )}
+              {slotOccurrences.map((occ) => {
+                const selected = selectedOccurrenceKeys.includes(occ.key)
+                return (
+                  <button
+                    key={occ.key}
+                    onClick={() => handleOccurrenceToggle(occ.key)}
+                    className={cn(
+                      "flex items-center gap-3 text-left px-3 py-2.5 rounded-md border text-sm transition-colors",
+                      selected
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-foreground/10 hover:bg-foreground/[0.03]"
+                    )}
+                  >
+                    <div
                       className={cn(
-                        "flex items-center gap-3 text-left px-3 py-2.5 rounded-md border text-sm transition-colors",
+                        "h-4 w-4 rounded border shrink-0 flex items-center justify-center",
                         selected
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-foreground/10 hover:bg-foreground/[0.03]"
+                          ? "border-primary bg-primary"
+                          : "border-foreground/30"
                       )}
                     >
-                      <div
-                        className={cn(
-                          "h-4 w-4 rounded border shrink-0 flex items-center justify-center",
-                          selected
-                            ? "border-primary bg-primary"
-                            : "border-foreground/30"
-                        )}
-                      >
-                        {selected && (
-                          <svg
-                            className="h-2.5 w-2.5 text-primary-foreground"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={3}
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate">{formatOccurrence(occ)}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {occ.session_type === "group" ? "Group" : "1-on-1"}
-                          {occ.repeat_type !== "none" &&
-                            ` · ${occ.repeat_type}`}
-                        </p>
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-
-              {/* Optional message */}
-              <div>
-                <p className="text-xs text-muted-foreground mb-1.5">
-                  Message <span className="text-foreground/40">(optional)</span>
-                </p>
-                <Textarea
-                  placeholder="e.g. This slot is taken, please choose from the options below."
-                  value={suggestionMessage}
-                  onChange={(e) => setSuggestionMessage(e.target.value)}
-                  rows={3}
-                  className="resize-none text-sm"
-                />
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center justify-end gap-2 pt-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSuggestMode(false)}
-                  disabled={suggesting}
-                >
-                  Back
-                </Button>
-                <Button
-                  size="sm"
-                  loading={suggesting}
-                  disabled={selectedOccurrenceKeys.length === 0}
-                  onClick={handleSuggestSubmit}
-                >
-                  Send Suggestion
-                </Button>
-              </div>
+                      {selected && (
+                        <svg
+                          className="h-2.5 w-2.5 text-primary-foreground"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={3}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate">{formatOccurrence(occ)}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {occ.session_type === "group" ? "Group" : "1-on-1"}
+                        {occ.repeat_type !== "none" && ` · ${occ.repeat_type}`}
+                      </p>
+                    </div>
+                  </button>
+                )
+              })}
             </div>
-          )}
+
+            <div>
+              <p className="text-xs text-muted-foreground mb-1.5">
+                Message <span className="text-foreground/40">(optional)</span>
+              </p>
+              <Textarea
+                placeholder="e.g. This slot is taken, please choose from the options below."
+                value={suggestionMessage}
+                onChange={(e) => setSuggestionMessage(e.target.value)}
+                rows={3}
+                className="resize-none text-sm"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSuggestDialogOpen(false)
+                  setSelectedOccurrenceKeys([])
+                  setSuggestionMessage("")
+                }}
+                disabled={suggesting}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                loading={suggesting}
+                disabled={selectedOccurrenceKeys.length === 0}
+                onClick={handleSuggestSubmit}
+              >
+                Send Suggestion
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

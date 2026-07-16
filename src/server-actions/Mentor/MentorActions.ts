@@ -8,12 +8,14 @@ import {
   GetAcceptedSessionRequestsForMentor,
   GetMentorAvailability,
   GetMentors,
+  GetPendingSessionRequestsForMentor,
   GetSessionRequestById,
   GetSessionRequestsForMenteeAndMentor,
   GetSessionRequestsForMentorByStatus,
   HasAcceptedOverlap,
   HasPendingSessionRequest,
   ReplaceMentorAvailability,
+  ResubmitSessionRequest,
   SuggestSlots,
   UpdateSessionRequestStatus,
   type GetMentorFilters,
@@ -332,6 +334,24 @@ export const GetAcceptedSessionRequestsForMentorAction = CreateServerAction(
   }
 )
 
+/** Fetch a mentor's pending requests — used for badge counts on the mentor's own calendar. */
+export const GetPendingSessionRequestsForMentorAction = CreateServerAction(
+  true,
+  async (mentorId: string) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser || authUser.unique_id !== mentorId) {
+        return { error: "Unauthorised" }
+      }
+      const requests = await GetPendingSessionRequestsForMentor(mentorId)
+      return { success: true, data: requests }
+    } catch (error) {
+      console.error("GetPendingSessionRequestsForMentorAction error:", error)
+      return { error: "Failed to fetch pending requests" }
+    }
+  }
+)
+
 /** Mentor accepts or rejects a pending session request. */
 export const RespondToSessionRequestAction = CreateServerAction(
   true,
@@ -344,7 +364,7 @@ export const RespondToSessionRequestAction = CreateServerAction(
       if (!request || request.mentor_id !== authUser.unique_id) {
         return { error: "Unauthorised" }
       }
-      if (request.status !== "pending") {
+      if (request.status !== "pending" && request.status !== "resubmitted") {
         return { error: "This request has already been responded to" }
       }
 
@@ -415,7 +435,7 @@ export const DeleteSessionRequestsForRemovedSlotAction = CreateServerAction(
 /** Mentor suggests alternative slots to the mentee. */
 interface SuggestNewSlotPayload {
   requestId: number
-  slotIds: number[]
+  slotIds: string[]
   suggestionMessage?: string
 }
 
@@ -451,6 +471,66 @@ export const SuggestNewSlotAction = CreateServerAction(
     } catch (error) {
       console.error("SuggestNewSlotAction error:", error)
       return { error: "Failed to suggest new slot" }
+    }
+  }
+)
+
+/** Mentee picks one of the suggested slots and resubmits the request. */
+interface ResubmitSessionRequestPayload {
+  requestId: number
+  slotId: number
+  sessionDate: string
+  startTime: string
+  endTime: string
+}
+
+export const ResubmitSessionRequestAction = CreateServerAction(
+  true,
+  async (payload: ResubmitSessionRequestPayload) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) return { error: "Unauthorised" }
+
+      const result = await ResubmitSessionRequest(
+        payload.requestId,
+        authUser.unique_id,
+        payload.slotId,
+        payload.sessionDate,
+        payload.startTime,
+        payload.endTime
+      )
+
+      if (!result) {
+        return { error: "Request not found or cannot be resubmitted" }
+      }
+
+      // Backend expiry check — no cron job needed
+      if (result.expired) {
+        return {
+          error:
+            "The suggestion has expired (48-hour window passed). The request has been closed."
+        }
+      }
+
+      const updated = result.data as any
+
+      // Notify mentor that mentee resubmitted
+      const menteeName = `${authUser.first_name} ${authUser.last_name}`.trim()
+      await SendSystemNotification({
+        user_id: authUser.unique_id,
+        receivers: [updated.mentor_id],
+        template: {
+          title: "Mentee resubmitted a session request",
+          body: `${menteeName} selected a new slot for "${updated.topic}". Please review and respond.`,
+          deep_link: createAbsoluteUrl(`/profile/session-requests`),
+          icon: authUser.profile_url || ""
+        }
+      })
+
+      return { success: true, data: updated }
+    } catch (error) {
+      console.error("ResubmitSessionRequestAction error:", error)
+      return { error: "Failed to resubmit session request" }
     }
   }
 )

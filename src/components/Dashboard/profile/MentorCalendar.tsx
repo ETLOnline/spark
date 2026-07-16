@@ -28,8 +28,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  Lock,
   Plus,
   RefreshCw,
+  Sparkles,
   Users,
   Video,
   X
@@ -37,8 +39,11 @@ import {
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateSessionRequestAction,
+  GetAcceptedSessionRequestsForMentorAction,
   GetMentorAvailabilityAction,
   GetMySessionRequestsForMentorAction,
+  GetPendingSessionRequestsForMentorAction,
+  ResubmitSessionRequestAction,
   UpdateAvailabilityAction
 } from "@/src/server-actions/Mentor/MentorActions"
 import { AuthUserAction } from "@/src/server-actions/User/AuthUserAction"
@@ -189,6 +194,13 @@ export function MentorCalendar({
   const [requestError, setRequestError] = useState("")
   const [requestSubmitting, setRequestSubmitting] = useState(false)
 
+  const [acceptedRequests, setAcceptedRequests] = useState<
+    SelectSessionRequest[]
+  >([])
+  const [mentorPendingRequests, setMentorPendingRequests] = useState<
+    SelectSessionRequest[]
+  >([])
+
   const [, , , getAvailability] = useServerAction(GetMentorAvailabilityAction)
   const [, , , updateAvailability] = useServerAction(UpdateAvailabilityAction)
   const [, , , getAuthUser] = useServerAction(AuthUserAction)
@@ -199,6 +211,48 @@ export function MentorCalendar({
   const [, , , createSessionRequest] = useServerAction(
     CreateSessionRequestAction
   )
+  const [resubmitSubmitting, , , resubmitSessionRequest] = useServerAction(
+    ResubmitSessionRequestAction
+  )
+  const [, , , getAcceptedRequests] = useServerAction(
+    GetAcceptedSessionRequestsForMentorAction
+  )
+  const [, , , getMentorPendingRequests] = useServerAction(
+    GetPendingSessionRequestsForMentorAction
+  )
+
+  // Resubmit state — mentee picks a suggested slot
+  const [resubmitFormSlot, setResubmitFormSlot] =
+    useState<SelectMentorAvailability | null>(null)
+  const [resubmitOriginalRequestId, setResubmitOriginalRequestId] = useState<
+    number | null
+  >(null)
+  const [resubmitError, setResubmitError] = useState("")
+
+  // Set of occurrence keys ("slotId-YYYY-MM-DD") from all slot_suggested requests.
+  const suggestedOccurrenceKeys = useMemo(() => {
+    const keys = new Set<string>()
+    myRequests
+      .filter((r) => r.status === "slot_suggested")
+      .forEach((r) => {
+        ;((r.suggested_slot_ids ?? []) as unknown as string[]).forEach((k) =>
+          keys.add(k)
+        )
+      })
+    return keys
+  }, [myRequests])
+
+  /** Returns the slot_suggested request for this exact slot + date occurrence, if any. */
+  const getSuggestedRequestForSlot = (slotId: number, date: Date) => {
+    const key = `${slotId}-${moment(date).format("YYYY-MM-DD")}`
+    return (
+      myRequests.find(
+        (r) =>
+          r.status === "slot_suggested" &&
+          ((r.suggested_slot_ids ?? []) as unknown as string[]).includes(key)
+      ) ?? null
+    )
+  }
 
   const loadSlots = useCallback(async () => {
     const res = await getAvailability(userId)
@@ -214,8 +268,24 @@ export function MentorCalendar({
     if (res?.success) setMyRequests(res.data ?? [])
   }, [userId])
 
+  const loadAcceptedRequests = useCallback(async () => {
+    const res = await getAcceptedRequests(userId)
+    if (res?.success)
+      setAcceptedRequests((res.data as SelectSessionRequest[]) ?? [])
+  }, [userId])
+
+  const loadMentorPendingRequests = useCallback(async () => {
+    const res = await getMentorPendingRequests(userId)
+    if (res?.success)
+      setMentorPendingRequests((res.data as SelectSessionRequest[]) ?? [])
+  }, [userId])
+
   useEffect(() => {
-    if (isMyProfile) return
+    loadAcceptedRequests()
+    if (isMyProfile) {
+      loadMentorPendingRequests()
+      return
+    }
     const fetchViewerContext = async () => {
       const authUser = await getAuthUser()
       if (!authUser) return
@@ -229,7 +299,12 @@ export function MentorCalendar({
     }
     fetchViewerContext()
     loadMyRequests()
-  }, [isMyProfile, loadMyRequests])
+  }, [
+    isMyProfile,
+    loadMyRequests,
+    loadAcceptedRequests,
+    loadMentorPendingRequests
+  ])
 
   // ── Navigation ────────────────────────────────────────────────────────────────
 
@@ -302,14 +377,57 @@ export function MentorCalendar({
   const getSlotsForDate = (date: Date) =>
     slots.filter((s) => slotAppliesToDate(s, date))
 
-  const myPendingRequestFor = (slotId: number, date: Date) => {
+  const myPendingRequestFor = (slot: SelectMentorAvailability, date: Date) => {
     const dateStr = moment(date).format("YYYY-MM-DD")
+    const slotStart = toMins(slot.start_time)
+    const slotEnd = toMins(slot.end_time)
     return myRequests.find(
       (r) =>
-        r.availability_slot_id === slotId &&
         r.session_date === dateStr &&
-        r.status === "pending"
+        r.status === "pending" &&
+        toMins(r.start_time) < slotEnd &&
+        slotStart < toMins(r.end_time)
     )
+  }
+
+  /** Returns this mentee's accepted (booked) request overlapping this slot+date, if any. */
+  const myAcceptedRequestFor = (slot: SelectMentorAvailability, date: Date) => {
+    const dateStr = moment(date).format("YYYY-MM-DD")
+    const slotStart = toMins(slot.start_time)
+    const slotEnd = toMins(slot.end_time)
+    return myRequests.find(
+      (r) =>
+        r.session_date === dateStr &&
+        r.status === "accepted" &&
+        toMins(r.start_time) < slotEnd &&
+        slotStart < toMins(r.end_time)
+    )
+  }
+
+  /** True if any accepted booking overlaps this slot+date (used to block unavailable slots). */
+  const isSlotBooked = (slot: SelectMentorAvailability, date: Date) => {
+    const dateStr = moment(date).format("YYYY-MM-DD")
+    const slotStart = toMins(slot.start_time)
+    const slotEnd = toMins(slot.end_time)
+    return acceptedRequests.some(
+      (r) =>
+        r.session_date === dateStr &&
+        toMins(r.start_time) < slotEnd &&
+        slotStart < toMins(r.end_time)
+    )
+  }
+
+  /** Count of pending/resubmitted requests for this slot+date (mentor's own calendar only). */
+  const pendingCountForSlot = (slot: SelectMentorAvailability, date: Date) => {
+    const dateStr = moment(date).format("YYYY-MM-DD")
+    const slotStart = toMins(slot.start_time)
+    const slotEnd = toMins(slot.end_time)
+    return mentorPendingRequests.filter(
+      (r) =>
+        r.session_date === dateStr &&
+        toMins(r.start_time) < slotEnd &&
+        slotStart < toMins(r.end_time)
+    ).length
   }
 
   const resetPopupForm = (date: Date) => {
@@ -463,6 +581,38 @@ export function MentorCalendar({
     setRequestStartTime(slot.start_time)
     const fitting = getDurationOptions(slot, slot.start_time)
     setRequestDuration(fitting[0] ?? 60)
+  }
+
+  const openResubmitForm = (
+    slot: SelectMentorAvailability,
+    originalRequestId: number
+  ) => {
+    setResubmitFormSlot(slot)
+    setResubmitOriginalRequestId(originalRequestId)
+    setResubmitError("")
+    setRequestStartTime(slot.start_time)
+    const fitting = getDurationOptions(slot, slot.start_time)
+    setRequestDuration(fitting[0] ?? 60)
+  }
+
+  const confirmSuggestedSlot = async () => {
+    if (!resubmitFormSlot || !selectedDate || !resubmitOriginalRequestId) return
+    const endTime = minsToTime(toMins(requestStartTime) + requestDuration)
+    const res = await resubmitSessionRequest({
+      requestId: resubmitOriginalRequestId,
+      slotId: resubmitFormSlot.id,
+      sessionDate: moment(selectedDate).format("YYYY-MM-DD"),
+      startTime: requestStartTime,
+      endTime
+    })
+    if (res?.success) {
+      await loadMyRequests()
+      setResubmitFormSlot(null)
+      setResubmitOriginalRequestId(null)
+      toast({ title: "Session request resubmitted", duration: 2000 })
+    } else {
+      setResubmitError(res?.error ?? "Failed to resubmit")
+    }
   }
 
   const handleRequestStartTimeChange = (value: string) => {
@@ -651,30 +801,83 @@ export function MentorCalendar({
           </span>
         </div>
         {daySlots.slice(0, 2).map((slot) => {
-          const pending = !isMyProfile && myPendingRequestFor(slot.id, date)
+          // ── Mentee view chip states ──────────────────────────────────────────
+          const myAccepted = !isMyProfile && myAcceptedRequestFor(slot, date)
+          const suggested =
+            !isMyProfile &&
+            suggestedOccurrenceKeys.has(
+              `${slot.id}-${moment(date).format("YYYY-MM-DD")}`
+            )
+          const pending = !isMyProfile && myPendingRequestFor(slot, date)
+          const bookedByOthers =
+            !isMyProfile && !myAccepted && isSlotBooked(slot, date)
+
+          // ── Mentor own-calendar indicators ──────────────────────────────────
+          const mentorBooked = isMyProfile && isSlotBooked(slot, date)
+          const mentorPending = isMyProfile
+            ? pendingCountForSlot(slot, date)
+            : 0
+
+          const timeLabel = formatTime(slot.start_time)
+
           return (
             <div
               key={slot.id}
               title={
-                pending
-                  ? `Pending request · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
-                  : `${slot.session_type === "group" ? "Group" : "1-on-1"} · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
+                myAccepted
+                  ? `Booked · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
+                  : suggested
+                    ? `Suggested slot · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
+                    : pending
+                      ? `Pending request · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
+                      : bookedByOthers
+                        ? `Booked · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
+                        : `${slot.session_type === "group" ? "Group" : "1-on-1"} · ${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
               }
               className={cn(
-                "text-[10px] leading-tight truncate rounded px-1 py-0.5 font-medium flex items-center gap-0.5",
-                pending
-                  ? "bg-amber-500/20 text-amber-600"
-                  : "bg-primary/20 text-primary"
+                "text-[10px] leading-tight rounded px-1 py-0.5 font-medium flex items-center gap-0.5",
+                myAccepted
+                  ? "bg-emerald-500/20 text-emerald-600"
+                  : suggested
+                    ? "bg-purple-500/20 text-purple-600"
+                    : pending
+                      ? "bg-amber-500/20 text-amber-600"
+                      : bookedByOthers
+                        ? "bg-foreground/10 text-muted-foreground"
+                        : "bg-primary/20 text-primary"
               )}
             >
-              {pending ? (
+              {myAccepted ? (
+                <Lock className="h-2.5 w-2.5 shrink-0" />
+              ) : suggested ? (
+                <Sparkles className="h-2.5 w-2.5 shrink-0" />
+              ) : pending ? (
                 <Clock className="h-2.5 w-2.5 shrink-0" />
+              ) : bookedByOthers ? (
+                <Lock className="h-2.5 w-2.5 shrink-0" />
               ) : slot.session_type === "group" ? (
                 <Users className="h-2.5 w-2.5 shrink-0" />
               ) : (
                 <Video className="h-2.5 w-2.5 shrink-0" />
               )}
-              {pending ? "Pending" : formatTime(slot.start_time)}
+              <span className="truncate">
+                {myAccepted || bookedByOthers
+                  ? "Booked"
+                  : suggested
+                    ? "Suggested"
+                    : pending
+                      ? "Pending"
+                      : timeLabel}
+              </span>
+              {/* Mentor own-calendar: booked dot + pending badge */}
+              {mentorBooked && (
+                <span className="ml-auto h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+              )}
+              {!mentorBooked && mentorPending > 0 && (
+                <span className="ml-auto text-[9px] bg-amber-500 text-white rounded-full h-3.5 w-3.5 flex items-center justify-center shrink-0 leading-none">
+                  {mentorPending}
+                </span>
+              )}
             </div>
           )
         })}
@@ -811,16 +1014,99 @@ export function MentorCalendar({
         <DialogContent className="sm:max-w-[420px] p-0 gap-0 flex flex-col max-h-[90dvh]">
           <DialogHeader className="px-5 pt-5 pb-3 shrink-0">
             <DialogTitle className="text-lg font-semibold">
-              {requestFormSlot
-                ? "Request a Session"
-                : isMyProfile
-                  ? "New Availability Slot"
-                  : `${selectedDayName} Availability`}
+              {resubmitFormSlot
+                ? "Suggested Slot"
+                : requestFormSlot
+                  ? "Request a Session"
+                  : isMyProfile
+                    ? "New Availability Slot"
+                    : `${selectedDayName} Availability`}
             </DialogTitle>
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto px-5 pb-3 space-y-3">
-            {requestFormSlot ? (
+            {resubmitFormSlot ? (
+              <>
+                {/* Resubmit — time picker for the selected suggested slot */}
+                <p className="text-xs text-purple-500 font-medium flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Suggested slot — pick your preferred time
+                </p>
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">
+                    Session Type
+                  </Label>
+                  <div className="flex items-center gap-2 text-sm px-3 py-2 rounded-md border border-foreground/10 bg-muted/40">
+                    {resubmitFormSlot.session_type === "group" ? (
+                      <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                    ) : (
+                      <Video className="h-3.5 w-3.5 text-muted-foreground" />
+                    )}
+                    {resubmitFormSlot.session_type === "group"
+                      ? "Group"
+                      : "1-on-1"}
+                    <span className="text-muted-foreground ml-auto">
+                      Open {formatTime(resubmitFormSlot.start_time)} –{" "}
+                      {formatTime(resubmitFormSlot.end_time)}
+                    </span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">
+                      Start Time
+                    </Label>
+                    <Select
+                      value={requestStartTime}
+                      onValueChange={handleRequestStartTimeChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getStartTimeOptions(resubmitFormSlot).map((t) => (
+                          <SelectItem key={t} value={t}>
+                            {formatTime(t)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">
+                      Duration
+                    </Label>
+                    <Select
+                      value={String(requestDuration)}
+                      onValueChange={(v) => setRequestDuration(Number(v))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getDurationOptions(
+                          resubmitFormSlot,
+                          requestStartTime
+                        ).map((d) => (
+                          <SelectItem key={d} value={String(d)}>
+                            {formatDuration(d)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground -mt-1">
+                  Your session: {formatTime(requestStartTime)} –{" "}
+                  {formatTime(
+                    minsToTime(toMins(requestStartTime) + requestDuration)
+                  )}
+                </p>
+                {resubmitError && (
+                  <p className="text-destructive text-xs">{resubmitError}</p>
+                )}
+              </>
+            ) : requestFormSlot ? (
               <>
                 {/* Session Type (inherited from the slot, not editable) */}
                 <div>
@@ -1106,7 +1392,17 @@ export function MentorCalendar({
                 {slotsForSelected.length > 0 && (
                   <div className="pt-1 space-y-1.5">
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {isMyProfile ? "Existing Slots" : "Available Times"}
+                      {isMyProfile
+                        ? "Existing Slots"
+                        : !isMyProfile &&
+                            selectedDate &&
+                            slotsForSelected.some((s) =>
+                              suggestedOccurrenceKeys.has(
+                                `${s.id}-${moment(selectedDate).format("YYYY-MM-DD")}`
+                              )
+                            )
+                          ? "Suggested Slots"
+                          : "Available Times"}
                       {slotsForSelected.length > 2 && (
                         <span className="ml-1.5 normal-case font-normal opacity-60">
                           ({slotsForSelected.length})
@@ -1164,12 +1460,66 @@ export function MentorCalendar({
 
                           {/* Request action — viewer only */}
                           {!isMyProfile &&
-                            (myPendingRequestFor(slot.id, selectedDate!) ? (
+                            !isSlotBooked(slot, selectedDate!) &&
+                            getSuggestedRequestForSlot(
+                              slot.id,
+                              selectedDate!
+                            ) !== null && (
+                              <div className="px-3 py-2 border-t border-foreground/8">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={() => {
+                                    const req = getSuggestedRequestForSlot(
+                                      slot.id,
+                                      selectedDate!
+                                    )
+                                    if (req) openResubmitForm(slot, req.id)
+                                  }}
+                                >
+                                  <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                                  Suggest Slot
+                                </Button>
+                              </div>
+                            )}
+                          {!isMyProfile &&
+                            myAcceptedRequestFor(slot, selectedDate!) && (
+                              <div className="flex items-center gap-1.5 px-3 py-2 border-t border-foreground/8 text-xs text-emerald-600 font-medium">
+                                <Lock className="h-3 w-3" />
+                                Session booked
+                              </div>
+                            )}
+                          {!isMyProfile &&
+                            !myAcceptedRequestFor(slot, selectedDate!) &&
+                            isSlotBooked(slot, selectedDate!) && (
+                              <div className="flex items-center gap-1.5 px-3 py-2 border-t border-foreground/8 text-xs text-muted-foreground font-medium">
+                                <Lock className="h-3 w-3" />
+                                Already booked
+                              </div>
+                            )}
+                          {!isMyProfile &&
+                            !myAcceptedRequestFor(slot, selectedDate!) &&
+                            !isSlotBooked(slot, selectedDate!) &&
+                            getSuggestedRequestForSlot(
+                              slot.id,
+                              selectedDate!
+                            ) === null &&
+                            myPendingRequestFor(slot, selectedDate!) && (
                               <div className="flex items-center gap-1.5 px-3 py-2 border-t border-foreground/8 text-xs text-amber-600 font-medium">
                                 <Clock className="h-3 w-3" />
                                 Request pending
                               </div>
-                            ) : viewerRp < RP_THRESHOLD ? (
+                            )}
+                          {!isMyProfile &&
+                            !myAcceptedRequestFor(slot, selectedDate!) &&
+                            !isSlotBooked(slot, selectedDate!) &&
+                            getSuggestedRequestForSlot(
+                              slot.id,
+                              selectedDate!
+                            ) === null &&
+                            !myPendingRequestFor(slot, selectedDate!) &&
+                            viewerRp < RP_THRESHOLD && (
                               <div className="px-3 py-2 border-t border-foreground/8">
                                 <TooltipProvider>
                                   <Tooltip>
@@ -1194,7 +1544,16 @@ export function MentorCalendar({
                                   </Tooltip>
                                 </TooltipProvider>
                               </div>
-                            ) : (
+                            )}
+                          {!isMyProfile &&
+                            !myAcceptedRequestFor(slot, selectedDate!) &&
+                            !isSlotBooked(slot, selectedDate!) &&
+                            getSuggestedRequestForSlot(
+                              slot.id,
+                              selectedDate!
+                            ) === null &&
+                            !myPendingRequestFor(slot, selectedDate!) &&
+                            viewerRp >= RP_THRESHOLD && (
                               <div className="px-3 py-2 border-t border-foreground/8">
                                 <Button
                                   variant="outline"
@@ -1205,7 +1564,7 @@ export function MentorCalendar({
                                   Request this Slot
                                 </Button>
                               </div>
-                            ))}
+                            )}
 
                           {/* Inline delete confirmation — only for recurring slots */}
                           {isMyProfile && pendingDeleteId === slot.id && (
@@ -1252,16 +1611,26 @@ export function MentorCalendar({
 
           <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-foreground/8 shrink-0">
             <button
-              onClick={() =>
-                requestFormSlot
-                  ? setRequestFormSlot(null)
-                  : setIsPopupOpen(false)
-              }
+              onClick={() => {
+                if (resubmitFormSlot) {
+                  setResubmitFormSlot(null)
+                  setResubmitOriginalRequestId(null)
+                  setResubmitError("")
+                } else if (requestFormSlot) {
+                  setRequestFormSlot(null)
+                } else {
+                  setIsPopupOpen(false)
+                }
+              }}
               className="px-4 py-2 text-sm font-medium hover:text-foreground text-muted-foreground transition-colors"
             >
-              {requestFormSlot ? "Back" : isMyProfile ? "Cancel" : "Close"}
+              {resubmitFormSlot || requestFormSlot
+                ? "Back"
+                : isMyProfile
+                  ? "Cancel"
+                  : "Close"}
             </button>
-            {isMyProfile && !requestFormSlot && (
+            {isMyProfile && !requestFormSlot && !resubmitFormSlot && (
               <Button
                 onClick={handleAddSlot}
                 loading={saving}
@@ -1277,6 +1646,15 @@ export function MentorCalendar({
                 className="h-9 px-5 text-sm rounded-lg"
               >
                 Send Request
+              </Button>
+            )}
+            {resubmitFormSlot && (
+              <Button
+                onClick={confirmSuggestedSlot}
+                loading={resubmitSubmitting}
+                className="h-9 px-5 text-sm rounded-lg"
+              >
+                Confirm Selection
               </Button>
             )}
           </div>
