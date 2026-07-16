@@ -7,6 +7,7 @@ import {
   DeletePendingSessionRequestsForSlot,
   GetMentorAvailability,
   GetMentors,
+  GetPendingSessionRequestsForMentor,
   GetSessionRequestsForMenteeAndMentor,
   HasPendingSessionRequest,
   ReplaceMentorAvailability,
@@ -229,6 +230,24 @@ export const GetMySessionRequestsForMentorAction = CreateServerAction(
   }
 )
 
+/** Fetch the pending session requests a mentor has received, for their Requests inbox. */
+export const GetPendingSessionRequestsForMentorAction = CreateServerAction(
+  true,
+  async (mentorId: string) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser || authUser.unique_id !== mentorId) {
+        return { error: "Unauthorised" }
+      }
+
+      const requests = await GetPendingSessionRequestsForMentor(mentorId)
+      return { success: true, data: requests }
+    } catch (error) {
+      console.error("GetPendingSessionRequestsForMentorAction error:", error)
+      return { error: "Failed to fetch session requests" }
+    }
+  }
+)
 /**
  * Mentor removes a slot they offered — clears any pending requests that were
  * made against it. Pass sessionDate for a single-occurrence delete, or omit

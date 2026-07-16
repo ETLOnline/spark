@@ -2,6 +2,7 @@ import {
   and,
   asc,
   countDistinct,
+  desc,
   eq,
   exists,
   gte,
@@ -363,6 +364,22 @@ export async function GetSessionRequestsForMenteeAndMentor(
         eq(sessionRequestsTable.mentor_id, mentorId)
       )
     )
+}
+
+/** A mentor's pending session requests, newest first, with the requesting mentee's profile joined in. */
+export async function GetPendingSessionRequestsForMentor(mentorId: string) {
+  return await db.query.sessionRequestsTable.findMany({
+    where: and(
+      eq(sessionRequestsTable.mentor_id, mentorId),
+      eq(sessionRequestsTable.status, "pending")
+    ),
+    orderBy: desc(sessionRequestsTable.created_at),
+    with: {
+      mentee: {
+        with: { profile: true }
+      }
+    }
+  })
 }
 
 /**
