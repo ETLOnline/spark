@@ -1137,7 +1137,7 @@ export default function HomePage() {
                   transition={{ duration: 0.6, delay: 0.6 }}
                   viewport={{ once: true }}
                 >
-                  <Link href="/">
+                  <Link href="/mentors">
                     <Button className="bg-primary  hover:bg-primary/90 px-8 py-6 text-lg shadow-lg hover:scale-105 transition-transform duration-300">
                       Find a Mentor
                     </Button>
