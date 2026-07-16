@@ -334,6 +334,12 @@ export const trustEngineFeatures = [
 
 export const EntityUpdateBroadCast = "broadcast-entity-update"
 
+/** Reputation Points reward_id in the rewards/reward-balance tables (see RewardsSeed.ts). */
+export const REPUTATION_POINTS_REWARD_ID = 1
+
+/** Minimum RP a mentee needs to view a mentor's availability or request a session. */
+export const RP_THRESHOLD = 500
+
 export const MONTH_NAMES = [
   "January",
   "February",

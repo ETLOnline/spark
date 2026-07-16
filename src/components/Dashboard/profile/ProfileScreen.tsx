@@ -42,6 +42,7 @@ import {
   CardContent
 } from "@/src/components/ui/card"
 import { generateUrl, getPagePath, getUserRole } from "@/src/utils/helpers"
+import { REPUTATION_POINTS_REWARD_ID } from "@/src/utils/constants"
 import { UpdateUserProfilePictureAction } from "@/src/server-actions/User/User"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import Loader from "../../common/Loader/Loader"
@@ -162,7 +163,10 @@ export default function ProfileScreen({
   useEffect(() => {
     if (!authUser || isMyProfile) return
     const fetchViewerRp = async () => {
-      const res = await GetViewerRpBalance(authUser.unique_id, 1)
+      const res = await GetViewerRpBalance(
+        authUser.unique_id,
+        REPUTATION_POINTS_REWARD_ID
+      )
       if (res?.success && res.data) {
         setViewerRp(res.data.current_balance ?? 0)
       }
@@ -546,110 +550,115 @@ export default function ProfileScreen({
             )}
 
             {/* Mentor Info — shown to owner always; to others only when both fields are filled */}
-            {isMentor && isMyProfile && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="flex items-center gap-2">Mentorship</span>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          isAvailable
-                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                            : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
-                        }`}
-                      >
-                        {isAvailable ? "Available" : "No Availability Set"}
+            {isMentor &&
+              (isMyProfile ||
+                (!!profile?.professional_title?.trim() &&
+                  !!profile?.company?.trim())) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        Mentorship
                       </span>
-                      {isMyProfile && (
-                        <EditMentorModal
-                          user={user}
-                          profile={profile as SelectProfile}
-                          setProfile={setProfile}
-                        />
-                      )}
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {/* Professional Title — always shown */}
-                  <div className="flex items-center gap-3">
-                    <Briefcase className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">
-                        Professional Title
-                      </p>
-                      <p className="text-sm font-medium break-words">
-                        {profile?.professional_title || "—"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Company — always shown */}
-                  <div className="flex items-center gap-3">
-                    <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">
-                        Company / Organisation
-                      </p>
-                      <p className="text-sm font-medium break-words">
-                        {profile?.company || "—"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Engagement Type */}
-                  <div className="flex items-center gap-3">
-                    <Video className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">
-                        Engagement Type
-                      </p>
-                      <p className="text-sm font-medium break-words capitalize">
-                        {profile?.engagement_type || "—"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Completed Sessions */}
-                  {(profile?.total_completed_sessions ?? 0) > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            isAvailable
+                              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                              : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                          }`}
+                        >
+                          {isAvailable ? "Available" : "No Availability Set"}
+                        </span>
+                        {isMyProfile && (
+                          <EditMentorModal
+                            user={user}
+                            profile={profile as SelectProfile}
+                            setProfile={setProfile}
+                          />
+                        )}
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {/* Professional Title — always shown */}
                     <div className="flex items-center gap-3">
-                      <CheckCircle2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <div>
+                      <Briefcase className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <div className="min-w-0">
                         <p className="text-xs text-muted-foreground">
-                          Completed Sessions
+                          Professional Title
                         </p>
-                        <p className="text-sm font-medium">
-                          {profile?.total_completed_sessions}
+                        <p className="text-sm font-medium break-words">
+                          {profile?.professional_title || "—"}
                         </p>
                       </div>
                     </div>
-                  )}
 
-                  {/* Mentor: manage their own availability */}
-                  {isMyProfile && (
-                    <Link href="/profile/availability" className="w-full">
-                      <Button
-                        variant="outline"
-                        className="w-full mt-2"
-                        size="sm"
-                      >
-                        <CalendarDays className="h-4 w-4 mr-2" />
-                        Manage Availability
-                      </Button>
-                    </Link>
-                  )}
+                    {/* Company — always shown */}
+                    <div className="flex items-center gap-3">
+                      <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">
+                          Company / Organisation
+                        </p>
+                        <p className="text-sm font-medium break-words">
+                          {profile?.company || "—"}
+                        </p>
+                      </div>
+                    </div>
 
-                  {/* Viewer: see mentor's availability when slots exist */}
-                  {!isMyProfile && mentorSlots.length > 0 && (
-                    <ViewAvailabilityButton
-                      mentorId={user.unique_id}
-                      viewerRp={viewerRp}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            )}
+                    {/* Engagement Type */}
+                    <div className="flex items-center gap-3">
+                      <Video className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">
+                          Engagement Type
+                        </p>
+                        <p className="text-sm font-medium break-words capitalize">
+                          {profile?.engagement_type || "—"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Completed Sessions */}
+                    {(profile?.total_completed_sessions ?? 0) > 0 && (
+                      <div className="flex items-center gap-3">
+                        <CheckCircle2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Completed Sessions
+                          </p>
+                          <p className="text-sm font-medium">
+                            {profile?.total_completed_sessions}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Mentor: manage their own availability */}
+                    {isMyProfile && (
+                      <Link href="/profile/availability" className="w-full">
+                        <Button
+                          variant="outline"
+                          className="w-full mt-2"
+                          size="sm"
+                        >
+                          <CalendarDays className="h-4 w-4 mr-2" />
+                          Manage Availability
+                        </Button>
+                      </Link>
+                    )}
+
+                    {/* Viewer: see mentor's availability when slots exist */}
+                    {!isMyProfile && mentorSlots.length > 0 && (
+                      <ViewAvailabilityButton
+                        mentorId={user.unique_id}
+                        viewerRp={viewerRp}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
             {/* Education */}
             <Card>

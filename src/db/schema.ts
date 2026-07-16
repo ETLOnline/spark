@@ -222,6 +222,34 @@ export type InsertMentorAvailability =
 export type SelectMentorAvailability =
   typeof mentorAvailabilityTable.$inferSelect
 
+export const sessionRequestsTable = pgTable("session_requests", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  mentor_id: varchar("mentor_id")
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  mentee_id: varchar("mentee_id")
+    .notNull()
+    .references(() => usersTable.unique_id, { onDelete: "cascade" }),
+  // No FK constraint on purpose: a mentor editing their availability replaces
+  // every slot row with a fresh id (see ReplaceMentorAvailability), so this
+  // column is informational only. The request's own
+  // session_date/start_time/end_time/session_type are the source of truth,
+  // and availability is re-checked live against current slots wherever it
+  // matters — nothing about this row should ever be touched by a slot delete.
+  availability_slot_id: integer("availability_slot_id"),
+  session_date: varchar("session_date").notNull(),
+  start_time: varchar("start_time").notNull(),
+  end_time: varchar("end_time").notNull(),
+  session_type: varchar("session_type").notNull(),
+  topic: varchar("topic").notNull(),
+  description: varchar("description"),
+  status: varchar("status").notNull().default("pending"),
+  ...timestamps
+})
+
+export type InsertSessionRequest = typeof sessionRequestsTable.$inferInsert
+export type SelectSessionRequest = typeof sessionRequestsTable.$inferSelect
+
 export const certificatesTable = pgTable("certificates", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   user_id: varchar("user_id")
