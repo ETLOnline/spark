@@ -228,6 +228,15 @@ export type InsertMentorAvailability =
 export type SelectMentorAvailability =
   typeof mentorAvailabilityTable.$inferSelect
 
+export const mentorAvailabilityRelations = relations(
+  mentorAvailabilityTable,
+  ({ many }) => ({
+    sessionRequests: many(sessionRequestsTable, {
+      relationName: "mentorAvailabilityToRequests"
+    })
+  })
+)
+
 export const sessionRequestsTable = pgTable("session_requests", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   mentor_id: varchar("mentor_id")
@@ -274,6 +283,11 @@ export const sessionRequestsRelations = relations(
       fields: [sessionRequestsTable.availability_slot_id],
       references: [mentorAvailabilityTable.id],
       relationName: "sessionRequestToSlot"
+    }),
+    mentorAvailability: one(mentorAvailabilityTable, {
+      fields: [sessionRequestsTable.mentor_id],
+      references: [mentorAvailabilityTable.mentor_id],
+      relationName: "mentorAvailabilityToRequests"
     })
   })
 )

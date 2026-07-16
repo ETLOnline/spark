@@ -475,6 +475,27 @@ export async function GetAcceptedSessionRequestsForMentor(mentorId: string) {
     )
 }
 
+export async function GetMentorSuggestableSlots(mentorId: string) {
+  const slotsWithRequests = await db.query.mentorAvailabilityTable.findMany({
+    where: eq(mentorAvailabilityTable.mentor_id, mentorId),
+    with: {
+      sessionRequests: {
+        where: (sr, { eq }) => eq(sr.status, "accepted"),
+        columns: {
+          session_date: true,
+          start_time: true,
+          end_time: true
+        }
+      }
+    }
+  })
+
+  const slots = slotsWithRequests.map(({ sessionRequests: _, ...slot }) => slot)
+  const acceptedBookings = slotsWithRequests[0]?.sessionRequests ?? []
+
+  return { slots, acceptedBookings }
+}
+
 /** All pending + resubmitted requests for a mentor — used for calendar badge counts. */
 export async function GetPendingSessionRequestsForMentor(mentorId: string) {
   return await db

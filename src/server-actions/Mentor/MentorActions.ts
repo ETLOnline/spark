@@ -7,6 +7,7 @@ import {
   DeletePendingSessionRequestsForSlot,
   GetAcceptedSessionRequestsForMentor,
   GetMentorAvailability,
+  GetMentorSuggestableSlots,
   GetMentors,
   GetPendingSessionRequestsForMentor,
   GetSessionRequestById,
@@ -54,6 +55,16 @@ interface SaveMentorSetupPayload {
   engagement_type: string
 }
 
+export interface SlotOccurrence {
+  key: string
+  slotId: number
+  displayDate: string
+  start_time: string
+  end_time: string
+  session_type: string
+  repeat_type: string
+}
+
 // ── Actions ────────────────────────────────────────────────────────────────────
 
 /** Save mentor professional_title and company. */
@@ -84,6 +95,66 @@ export const GetMentorAvailabilityAction = CreateServerAction(
     } catch (error) {
       console.error("GetMentorAvailabilityAction error:", error)
       return { error: "Failed to fetch availability" }
+    }
+  }
+)
+
+export const GetMentorSuggestableSlotsAction = CreateServerAction(
+  true,
+  async (payload: { mentorId: string; afterDate: string }) => {
+    try {
+      const { slots } = await GetMentorSuggestableSlots(payload.mentorId)
+
+      const after = moment(payload.afterDate, "YYYY-MM-DD")
+      const occurrences: SlotOccurrence[] = []
+
+      for (const slot of slots) {
+        const slotStart = moment(slot.date, "YYYY-MM-DD")
+        const endDate = slot.repeat_end_date
+          ? moment(slot.repeat_end_date, "YYYY-MM-DD")
+          : moment(payload.afterDate, "YYYY-MM-DD").add(60, "days")
+
+        if (slot.repeat_type === "none") {
+          if (slotStart.isAfter(after)) {
+            occurrences.push({
+              key: `${slot.id}-${slot.date}`,
+              slotId: slot.id,
+              displayDate: slot.date,
+              start_time: slot.start_time,
+              end_time: slot.end_time,
+              session_type: slot.session_type,
+              repeat_type: slot.repeat_type
+            })
+          }
+          continue
+        }
+
+        const cursor = after.clone().add(1, "day")
+
+        while (!cursor.isAfter(endDate)) {
+          const applies =
+            slot.repeat_type === "daily" ||
+            (slot.repeat_type === "weekly" && cursor.day() === slotStart.day())
+
+          if (applies && !cursor.isBefore(slotStart)) {
+            occurrences.push({
+              key: `${slot.id}-${cursor.format("YYYY-MM-DD")}`,
+              slotId: slot.id,
+              displayDate: cursor.format("YYYY-MM-DD"),
+              start_time: slot.start_time,
+              end_time: slot.end_time,
+              session_type: slot.session_type,
+              repeat_type: slot.repeat_type
+            })
+          }
+          cursor.add(1, "day")
+        }
+      }
+
+      return { success: true, data: occurrences }
+    } catch (error) {
+      console.error("GetMentorSuggestableSlotsAction error:", error)
+      return { error: "Failed to fetch available slots" }
     }
   }
 )

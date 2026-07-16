@@ -15,10 +15,11 @@ import {
 } from "@/src/components/ui/dialog"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
-  GetMentorAvailabilityAction,
+  GetMentorSuggestableSlotsAction,
   GetSessionRequestsForMentorByStatusAction,
   RespondToSessionRequestAction,
-  SuggestNewSlotAction
+  SuggestNewSlotAction,
+  type SlotOccurrence
 } from "@/src/server-actions/Mentor/MentorActions"
 import { toast } from "@/src/hooks/use-toast"
 import { cn } from "@/src/lib/utils"
@@ -50,16 +51,6 @@ type SessionRequestWithMentee = SelectSessionRequest & { mentee: MenteeInfo }
 
 type StatusTab = "pending" | "accepted" | "rejected"
 
-interface AvailabilitySlot {
-  id: number
-  date: string
-  start_time: string
-  end_time: string
-  session_type: string
-  repeat_type: string
-  repeat_end_date: string | null
-}
-
 function formatSlot(request: SessionRequestWithMentee) {
   const date = moment(request.session_date, "YYYY-MM-DD").format(
     "dddd, MMM D, YYYY"
@@ -69,80 +60,11 @@ function formatSlot(request: SessionRequestWithMentee) {
   return `${date} · ${start} – ${end}`
 }
 
-interface SlotOccurrence {
-  key: string // unique key for selection
-  slotId: number
-  displayDate: string // YYYY-MM-DD of this specific occurrence
-  start_time: string
-  end_time: string
-  session_type: string
-  repeat_type: string
-}
-
 function formatOccurrence(occ: SlotOccurrence) {
   const date = moment(occ.displayDate, "YYYY-MM-DD").format("ddd, MMM D, YYYY")
   const start = moment(occ.start_time, "HH:mm").format("h:mm A")
   const end = moment(occ.end_time, "HH:mm").format("h:mm A")
   return `${date} · ${start} – ${end}`
-}
-
-/** Expand slots into upcoming occurrences after `afterDate` (exclusive). */
-function expandSlotOccurrences(
-  slots: AvailabilitySlot[],
-  afterDate: string
-): SlotOccurrence[] {
-  const results: SlotOccurrence[] = []
-  const after = moment(afterDate, "YYYY-MM-DD")
-
-  for (const slot of slots) {
-    const slotStart = moment(slot.date, "YYYY-MM-DD")
-    const endDate = slot.repeat_end_date
-      ? moment(slot.repeat_end_date, "YYYY-MM-DD")
-      : moment(afterDate, "YYYY-MM-DD").add(60, "days") // default: show 60 days ahead
-
-    if (slot.repeat_type === "none") {
-      if (slotStart.isAfter(after)) {
-        results.push({
-          key: `${slot.id}-${slot.date}`,
-          slotId: slot.id,
-          displayDate: slot.date,
-          start_time: slot.start_time,
-          end_time: slot.end_time,
-          session_type: slot.session_type,
-          repeat_type: slot.repeat_type
-        })
-      }
-      continue
-    }
-
-    // recurring — generate next occurrences after `after`
-    const maxOccurrences = slot.repeat_type === "daily" ? 5 : 3
-    let count = 0
-    const cursor = after.clone().add(1, "day")
-
-    while (count < maxOccurrences && !cursor.isAfter(endDate)) {
-      const applies =
-        slot.repeat_type === "daily" ||
-        (slot.repeat_type === "weekly" && cursor.day() === slotStart.day())
-
-      if (applies && !cursor.isBefore(slotStart)) {
-        const dateStr = cursor.format("YYYY-MM-DD")
-        results.push({
-          key: `${slot.id}-${dateStr}`,
-          slotId: slot.id,
-          displayDate: dateStr,
-          start_time: slot.start_time,
-          end_time: slot.end_time,
-          session_type: slot.session_type,
-          repeat_type: slot.repeat_type
-        })
-        count++
-      }
-      cursor.add(1, "day")
-    }
-  }
-
-  return results
 }
 
 interface Props {
@@ -178,8 +100,8 @@ export function SessionRequestsScreen({ mentorId }: Props) {
   const [responding, , , respondToRequest] = useServerAction(
     RespondToSessionRequestAction
   )
-  const [, , , getMentorAvailability] = useServerAction(
-    GetMentorAvailabilityAction
+  const [, , , getSuggestableSlots] = useServerAction(
+    GetMentorSuggestableSlotsAction
   )
   const [suggesting, , , suggestNewSlot] = useServerAction(SuggestNewSlotAction)
 
@@ -231,13 +153,12 @@ export function SessionRequestsScreen({ mentorId }: Props) {
     if (!selectedRequest) return
     setLoadingSlots(true)
     setSuggestDialogOpen(true)
-    const res = await getMentorAvailability(mentorId)
+    const res = await getSuggestableSlots({
+      mentorId,
+      afterDate: selectedRequest.session_date
+    })
     if (res?.success && res.data) {
-      const occurrences = expandSlotOccurrences(
-        res.data as AvailabilitySlot[],
-        selectedRequest.session_date
-      )
-      setSlotOccurrences(occurrences)
+      setSlotOccurrences(res.data as SlotOccurrence[])
     }
     setLoadingSlots(false)
   }
