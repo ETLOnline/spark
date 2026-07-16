@@ -122,7 +122,8 @@ export const CreateGroupChatAction = CreateServerAction(
       const spaceURL = GetSpaceURL(
         space?.channel?.channel_slug || "",
         space?.space_slug || "",
-        "chat"
+        "chat",
+        space?.created_by
       )
 
       await AddRewardAction(

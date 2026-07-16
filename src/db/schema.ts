@@ -1114,7 +1114,7 @@ export const projectTable = pgTable("project", {
   description: varchar(),
   project_startDate: varchar().notNull(),
   project_targetDate: varchar().notNull(),
-  channel_id: varchar().notNull(),
+  channel_id: varchar(),
   space_id: varchar("space_id", { length: 36 }).references(
     () => spacesTable.id,
     { onDelete: "cascade" }

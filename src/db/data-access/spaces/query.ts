@@ -123,10 +123,36 @@ export async function GetSpaces(filters?: spaceQueryFilters) {
 
 export async function GetSpaceBySlug(
   spaceSlug: string,
-  channelSlug: string,
+  channelSlug?: string | null,
   withSpaceUsers?: boolean
 ) {
   try {
+    if (!channelSlug) {
+      // Independent space (no channel) - look it up directly by slug.
+      const space = await db.query.spacesTable.findFirst({
+        where: and(
+          eq(spacesTable.space_slug, spaceSlug),
+          isNull(spacesTable.channel_id)
+        ),
+        with: {
+          features: {
+            with: {
+              feature: true
+            }
+          },
+          owner: true,
+          users: withSpaceUsers
+            ? {
+                with: {
+                  user: true
+                }
+              }
+            : undefined
+        }
+      })
+      return space ?? null
+    }
+
     const channel = await db.query.channelsTable.findFirst({
       where: eq(channelsTable.channel_slug, channelSlug),
       with: {

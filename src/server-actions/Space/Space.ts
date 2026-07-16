@@ -99,7 +99,9 @@ export const CreateSpaceAction = CreateServerAction(
 
       const spaceURL = GetSpaceURL(
         spaceWithRelations?.channel?.channel_slug || "",
-        spaceWithRelations?.space_slug || ""
+        spaceWithRelations?.space_slug || "",
+        undefined,
+        spaceWithRelations?.created_by
       )
 
       await AddRewardAction(
@@ -167,11 +169,13 @@ export const CreateIndependentSpaceAction = CreateServerAction(
 
 export const GetSpacesByCreatorAction = CreateServerAction(
   true,
-  async (creatorId: string) => {
+  async (creatorId: string, page?: number, limit?: number) => {
     try {
       const result = await GetSpaces({
         created_by: creatorId,
-        isIndependent: true
+        isIndependent: true,
+        page,
+        limit
       })
       return { success: true, data: result }
     } catch (error) {
@@ -327,7 +331,11 @@ export const DeleteSpaceAction = CreateServerAction(
 
 export const GetSpaceBySlugAction = CreateServerAction(
   true,
-  async (spaceSlug: string, channelSlug: string, withSpaceUsers?: boolean) => {
+  async (
+    spaceSlug: string,
+    channelSlug?: string | null,
+    withSpaceUsers?: boolean
+  ) => {
     try {
       const space = await GetSpaceBySlug(spaceSlug, channelSlug, withSpaceUsers)
       return { success: true, data: space }

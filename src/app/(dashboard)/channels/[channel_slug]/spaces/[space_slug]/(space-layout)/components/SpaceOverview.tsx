@@ -77,7 +77,9 @@ function SpaceOverview({
         if (response?.success && response?.data) {
           const spaceURL = GetSpaceURL(
             space.channel?.channel_slug || "",
-            space.space_slug
+            space.space_slug,
+            undefined,
+            space.created_by
           )
 
           await AddRewardAction(

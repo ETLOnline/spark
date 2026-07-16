@@ -1,5 +1,5 @@
 {
-  "id": "5898a677-98a1-440a-b0ee-f3d4668b2287",
+  "id": "fdcbf4dd-f8d9-4d40-b1a3-7523ad612861",
   "prevId": "98431a5f-c868-4032-88d6-a362a81d26e2",
   "version": "7",
   "dialect": "postgresql",
@@ -3207,7 +3207,7 @@
           "name": "channel_id",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "space_id": {
           "name": "space_id",
