@@ -3,7 +3,7 @@ import { getEmailTemplateByName } from "@/src/db/data-access/emails/query"
 import Handlebars from "handlebars"
 
 const mailer = new MailService()
-export async function processNewSessionRequestNotification(job: {
+export async function processSessionRequestEmailNotification(job: {
   sendingTo: string[]
   event: string
   payload: any
