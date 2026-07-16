@@ -481,6 +481,19 @@ export default function HomePage() {
     setMounted(true)
   }, [])
 
+  // After the page mounts (content is in the DOM), scroll to the hash section
+  // if one is present. This handles navigation from other pages like /privacy.
+  useEffect(() => {
+    if (!mounted) return
+    const hash = window.location.hash
+    if (!hash) return
+    const id = hash.replace("#", "")
+    const el = document.getElementById(id)
+    if (el) {
+      setTimeout(() => el.scrollIntoView({ behavior: "smooth" }), 100)
+    }
+  }, [mounted])
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTestimonial((prev) => (prev + 1) % testimonials.length)

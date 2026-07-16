@@ -1,7 +1,6 @@
 "use server"
 
 import {
-  GetMentors,
   GetRandomUsers,
   getUserContacts,
   GetUserFilters,
@@ -12,6 +11,7 @@ import {
   UpdateCoverImage,
   getSuperAdmins
 } from "@/src/db/data-access/user/query"
+import { GetMentors } from "@/src/db/data-access/mentor/query"
 import { CreateServerAction } from ".."
 import { AddUserTag } from "@/src/db/data-access/tag/query"
 import { ProfileData } from "@/src/components/Dashboard/profile/types/profile-types"
@@ -50,13 +50,20 @@ export const SaveUserProfileAction = CreateServerAction(
         })
       }
 
-      // Check if user profile already exist the update it otherwise create new profile
+      // Build profile update payload — always includes bio; mentor fields when present
+      const profileUpdate: Record<string, any> = { bio: profileData.bio }
+      if (profileData.professional_title !== undefined)
+        profileUpdate.professional_title = profileData.professional_title
+      if (profileData.company !== undefined)
+        profileUpdate.company = profileData.company
+
+      // Check if user profile already exists; update it otherwise create new profile
       if (userProfile) {
-        await updateUserProfile(profileData.userId, { bio: profileData.bio })
+        await updateUserProfile(profileData.userId, profileUpdate)
       } else {
         await createUserProfile({
           user_id: profileData.userId,
-          bio: profileData.bio
+          ...profileUpdate
         })
       }
 

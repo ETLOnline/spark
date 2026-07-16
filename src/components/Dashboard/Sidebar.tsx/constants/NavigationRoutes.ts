@@ -12,7 +12,8 @@ import {
   Newspaper,
   Send,
   User,
-  Group
+  Group,
+  GraduationCap
 } from "lucide-react"
 
 export const siteRoutes: SiteRoutes = {
@@ -74,6 +75,11 @@ export const siteRoutes: SiteRoutes = {
       title: "Communities",
       url: "/communities",
       icon: Group
+    },
+    {
+      title: "Mentors",
+      url: "/mentors",
+      icon: GraduationCap
     }
   ],
   testNav: [

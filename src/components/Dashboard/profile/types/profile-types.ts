@@ -26,10 +26,19 @@ export type ProfileData = {
   bio: string
   skills: number[]
   interests: number[]
+  professional_title?: string
+  company?: string
 }
 
 export type Profile = {
   rewards: Reward[]
   activities: Activity[]
   tags: InsertTag[]
+}
+
+export enum FypStatus {
+  NotStarted = "Not started",
+  IdeaPhase = "Idea phase",
+  Development = "Development",
+  FinalStage = "Final stage"
 }

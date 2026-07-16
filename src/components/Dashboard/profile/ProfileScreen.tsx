@@ -5,6 +5,7 @@ import ProfileBio from "@/src/components/Dashboard/profile/profile-bio"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import {
   CalendarIcon,
+  CalendarDays,
   Plus,
   PencilIcon,
   GraduationCap,
@@ -17,7 +18,12 @@ import {
   Instagram,
   Globe,
   Share2,
-  CopyIcon
+  CopyIcon,
+  Target,
+  Briefcase,
+  Building2,
+  Video,
+  CheckCircle2
 } from "lucide-react"
 import {
   SelectCertificate,
@@ -51,17 +57,26 @@ import Image from "next/image"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
 import EditSocialLinksModal from "./user/SocialLinksModal"
+import EditMentorModal from "./EditMentorModal"
+import { GetMentorAvailabilityAction } from "@/src/server-actions/Mentor/MentorActions"
+import { toLocalDateStr } from "@/src/lib/utils"
+import Link from "next/link"
 import { SocialLinkItem } from "./user/SocialLinkItem"
 import UserProfileCard from "./UserProfileCard"
+import ProfileCompletionCard from "./ProfileCompletionCard"
+import useUserProfile from "./hooks/useUserProfile"
 import TrustEngineCard from "./trust-engine/TrustEngineCard"
 import { getFeatureFlagAction } from "@/src/server-actions/FeatureFlag/FeatureFlag"
 import {
   GetUserApprovedVerificationCountAction,
-  GetUserReviewedVerificationCountAction
+  GetUserReviewedVerificationCountAction,
+  GetUserRewardBalanceAction
 } from "@/src/server-actions/Reward/Reward"
 import { Input } from "../../ui/input"
 import { Skeleton } from "../../ui/skeleton"
 import { createAbsoluteUrl } from "@/src/utils/clientHelper"
+import ViewAvailabilityButton from "./ViewAvailabilityButton"
+import EditFypInfoModal from "./EditFypInfoModal"
 
 type ProfileScreenProps = {
   tab?: string
@@ -99,9 +114,25 @@ export default function ProfileScreen({
   )
   const [coverImage, setCoverImage] = useState(user.cover_image)
   const [referralLink, setReferralLink] = useState("")
+  const [mentorSlots, setMentorSlots] = useState<
+    {
+      id: number
+      date: string
+      repeat_type: string
+      repeat_end_date: string | null
+    }[]
+  >([])
+  const [, , , getMentorAvailability] = useServerAction(
+    GetMentorAvailabilityAction
+  )
   const authUser = useAtomValue(userStore.AuthUser)
 
   const displayUser = isMyProfile && authUser ? authUser : user
+  const isStudent = !!getUserRole(user)?.includes("Student")
+
+  const isMentor = !!getUserRole(user)?.includes("Mentor")
+
+  const [, , , profileSkills, profileInterests] = useUserProfile()
 
   const [recommendationLoading, , , GetRecommendations] = useServerAction(
     GetRecommendationAction
@@ -119,11 +150,45 @@ export default function ProfileScreen({
     GetUserApprovedVerificationCountAction
   )
 
+  const [viewerRp, setViewerRp] = useState<number>(0)
+  const [, , , GetViewerRpBalance] = useServerAction(GetUserRewardBalanceAction)
+
   useEffect(() => {
     if (authUser && user) {
       setIsMyProfile(authUser.unique_id === user.unique_id)
     }
   }, [authUser, user])
+
+  useEffect(() => {
+    if (!authUser || isMyProfile) return
+    const fetchViewerRp = async () => {
+      const res = await GetViewerRpBalance(authUser.unique_id, 1)
+      if (res?.success && res.data) {
+        setViewerRp(res.data.current_balance ?? 0)
+      }
+    }
+    fetchViewerRp()
+  }, [authUser, isMyProfile])
+
+  // Fetch mentor slots for both owner and viewer — used to derive availability status
+  useEffect(() => {
+    if (!isMentor) return
+    const fetchSlots = async () => {
+      const res = await getMentorAvailability(user.unique_id)
+      if (res?.success && res.data) {
+        setMentorSlots(res.data.filter((s) => s.is_active))
+      }
+    }
+    fetchSlots()
+  }, [isMentor, user.unique_id])
+
+  // A mentor is "available" if they have at least one slot that hasn't expired
+  const todayStr = toLocalDateStr(new Date())
+  const isAvailable = mentorSlots.some((s) => {
+    if (s.repeat_type === "none") return s.date >= todayStr
+    // daily / weekly: available unless repeat_end_date is in the past
+    return !s.repeat_end_date || s.repeat_end_date >= todayStr
+  })
 
   useEffect(() => {
     const GetUserRecommendations = async () => {
@@ -297,8 +362,8 @@ export default function ProfileScreen({
               onFileChange={handleFileChange}
               isMyProfile={isMyProfile}
             />
-            {/* Trust Engine Section  */}
 
+            {/* Trust Engine Section  */}
             {isFeatureEnable && (
               <TrustEngineCard user={user} isMyProfile={isMyProfile} />
             )}
@@ -418,46 +483,174 @@ export default function ProfileScreen({
               </Card>
             )}
 
-            {/* Referral Link */}
+            {/* Profile Completion Card */}
+
             {isMyProfile && (
+              <ProfileCompletionCard
+                user={displayUser}
+                profile={displayUser?.profile as SelectProfile}
+                skills={profileSkills}
+                interests={profileInterests}
+                isMentor={isMentor}
+                hasAvailability={isAvailable}
+                onProfileUpdated={(payload) => {
+                  if (payload.profile) {
+                    setProfile(
+                      (prev) =>
+                        ({ ...prev, ...payload.profile }) as SelectProfile
+                    )
+                  }
+                }}
+              />
+            )}
+            {isStudent && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Referral Link</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    FYP & Learning Goals
+                    {isMyProfile && (
+                      <EditFypInfoModal
+                        user={user}
+                        profile={profile as SelectProfile}
+                        setProfile={setProfile}
+                      />
+                    )}
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Share2 className="h-5 w-5 text-gray-500" />
-                      <h1 className="text-gray-400">Link</h1>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <FlameKindling className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">
+                        FYP Status
+                      </p>
+                      <p className="text-sm font-medium break-words">
+                        {profile?.fyp_status || "—"}
+                      </p>
                     </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                    <span className="truncate text-sm text-muted-foreground flex-1">
-                      {referralLink ? (
-                        <Input
-                          type="text"
-                          className="w-full"
-                          value={referralLink}
-                          readOnly
-                        />
-                      ) : (
-                        <Skeleton className="h-8 w-full sm:w-32" />
-                      )}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full sm:w-auto mt-2 sm:mt-0"
-                      onClick={CopyReferralLink}
-                      disabled={!referralLink}
-                    >
-                      <CopyIcon className="h-4 w-4 mr-2 sm:mr-0" />
-                      <span className="sm:hidden">Copy Link</span>
-                    </Button>
+
+                  <div className="flex items-start gap-3">
+                    <Target className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">
+                        Learning Goals
+                      </p>
+                      <p className="text-sm font-medium break-words whitespace-pre-wrap">
+                        {profile?.learning_goals || "—"}
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             )}
+
+            {/* Mentor Info — shown to owner always; to others only when both fields are filled */}
+            {isMentor && isMyProfile && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span className="flex items-center gap-2">Mentorship</span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          isAvailable
+                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                            : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                        }`}
+                      >
+                        {isAvailable ? "Available" : "No Availability Set"}
+                      </span>
+                      {isMyProfile && (
+                        <EditMentorModal
+                          user={user}
+                          profile={profile as SelectProfile}
+                          setProfile={setProfile}
+                        />
+                      )}
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {/* Professional Title — always shown */}
+                  <div className="flex items-center gap-3">
+                    <Briefcase className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">
+                        Professional Title
+                      </p>
+                      <p className="text-sm font-medium break-words">
+                        {profile?.professional_title || "—"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Company — always shown */}
+                  <div className="flex items-center gap-3">
+                    <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">
+                        Company / Organisation
+                      </p>
+                      <p className="text-sm font-medium break-words">
+                        {profile?.company || "—"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Engagement Type */}
+                  <div className="flex items-center gap-3">
+                    <Video className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">
+                        Engagement Type
+                      </p>
+                      <p className="text-sm font-medium break-words capitalize">
+                        {profile?.engagement_type || "—"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Completed Sessions */}
+                  {(profile?.total_completed_sessions ?? 0) > 0 && (
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Completed Sessions
+                        </p>
+                        <p className="text-sm font-medium">
+                          {profile?.total_completed_sessions}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mentor: manage their own availability */}
+                  {isMyProfile && (
+                    <Link href="/profile/availability" className="w-full">
+                      <Button
+                        variant="outline"
+                        className="w-full mt-2"
+                        size="sm"
+                      >
+                        <CalendarDays className="h-4 w-4 mr-2" />
+                        Manage Availability
+                      </Button>
+                    </Link>
+                  )}
+
+                  {/* Viewer: see mentor's availability when slots exist */}
+                  {!isMyProfile && mentorSlots.length > 0 && (
+                    <ViewAvailabilityButton
+                      mentorId={user.unique_id}
+                      viewerRp={viewerRp}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Education */}
             <Card>
               <CardHeader>
@@ -578,14 +771,10 @@ export default function ProfileScreen({
                     {isMyProfile && (
                       <Button
                         size={"sm"}
-                        variant={certificates?.length ? "edit" : "outline"}
+                        variant={"outline"}
                         onClick={() => setIsQualificationModalOpen(true)}
                       >
-                        {certificates?.length ? (
-                          "Edit"
-                        ) : (
-                          <Plus className="h-4 w-4" />
-                        )}
+                        <Plus className="h-4 w-4" />
                       </Button>
                     )}
                     <CertificateModal
@@ -644,6 +833,47 @@ export default function ProfileScreen({
                 )}
               </CardContent>
             </Card>
+
+            {/* Referral Link */}
+            {isMyProfile && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Referral Link</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Share2 className="h-5 w-5 text-gray-500" />
+                      <h1 className="text-gray-400">Link</h1>
+                    </div>
+                  </div>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <span className="truncate text-sm text-muted-foreground flex-1">
+                      {referralLink ? (
+                        <Input
+                          type="text"
+                          className="w-full"
+                          value={referralLink}
+                          readOnly
+                        />
+                      ) : (
+                        <Skeleton className="h-8 w-full sm:w-32" />
+                      )}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full sm:w-auto mt-2 sm:mt-0"
+                      onClick={CopyReferralLink}
+                      disabled={!referralLink}
+                    >
+                      <CopyIcon className="h-4 w-4 mr-2 sm:mr-0" />
+                      <span className="sm:hidden">Copy Link</span>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>

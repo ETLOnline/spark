@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import { useToast } from "@/src/hooks/use-toast"
 import { SelectTaskComment, SelectUser } from "@/src/db/schema"
+import { GetProjectUsersAction } from "@/src/server-actions/ProjectManagement/projectManagement"
 import { Card, CardContent } from "@/src/components/ui/card"
 import { useAtomValue } from "jotai"
 import { userStore } from "@/src/store/user/userStore"
@@ -41,7 +42,7 @@ interface TaskCommentFormProps {
   isSprintCompleted?: boolean
   refetchComments?: boolean
   setRefetchComments?: Dispatch<SetStateAction<boolean>>
-  projectUsers: SelectUser[]
+  projectId: string
   isOpen: boolean | undefined
 }
 const COMMENTS_PER_LOAD = 4
@@ -51,11 +52,12 @@ export function TaskComment({
   isSprintCompleted,
   refetchComments,
   setRefetchComments,
-  projectUsers,
+  projectId,
   isOpen
 }: TaskCommentFormProps) {
   const authUser = useAtomValue(userStore.AuthUser)
   const userId = authUser?.unique_id
+  const [mentionUsers, setMentionUsers] = useState<SelectUser[]>([])
   const { toast } = useToast()
   const [commentContent, setCommentContent] = useState("")
   const [isAddingComment, setIsAddingComment] = useState(false)
@@ -104,6 +106,17 @@ export function TaskComment({
 
     GetComments(true)
   }, [taskId, isOpen])
+
+  useEffect(() => {
+    if (!projectId) return
+    GetProjectUsersAction(projectId).then((res) => {
+      if (res?.success && res?.data) {
+        setMentionUsers(
+          res.data.map((u) => u.user).filter(Boolean) as SelectUser[]
+        )
+      }
+    })
+  }, [projectId])
 
   useEffect(() => {
     if (offset > 0) GetComments()
@@ -187,7 +200,7 @@ export function TaskComment({
     setOffset((prev) => prev + COMMENTS_PER_LOAD)
   }
 
-  const availableUsers = projectUsers.filter(
+  const availableUsers = mentionUsers.filter(
     (user) => user.unique_id !== authUser?.unique_id
   )
 

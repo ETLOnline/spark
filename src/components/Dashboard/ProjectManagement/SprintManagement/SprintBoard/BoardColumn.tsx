@@ -45,8 +45,13 @@ function BoardColumn({
       ref={setNodeRef}
       className="w-[85vw] sm:w-[320px] shrink-0 snap-center bg-muted/50 p-2 pb-4 rounded-xl space-y-2"
     >
-      <div className="flex flex-row gap-2 items-center p-2">
-        <div className="font-medium text-center">{status?.name}</div>
+      <div className="flex flex-row gap-2 items-center p-2 min-w-0">
+        <div
+          className="font-medium truncate min-w-0 max-w-[220px]"
+          title={status?.name}
+        >
+          {status?.name}
+        </div>
         {taskCount === 0 ? null : (
           <div className="text-xs text-center bg-primary rounded px-2 py-0.5 text-black">
             {taskCount}

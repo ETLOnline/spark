@@ -16,21 +16,19 @@ import {
   SheetTitle,
   SheetTrigger
 } from "../ui/sheet"
-import { useRouter } from "next/navigation"
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const menuItems = [
-    { title: "Community", href: "#community" },
-    { title: "Mentors", href: "#mentors" },
-    { title: "Enterprise", href: "#enterprise" },
-    { title: "Architecture", href: "#architecture" },
-    { title: "Features", href: "#features" },
-    { title: "Roadmap", href: "#roadmap" }
+    { title: "Community", href: "/#community" },
+    { title: "Mentors", href: "/#mentors" },
+    { title: "Enterprise", href: "/#enterprise" },
+    { title: "Architecture", href: "/#architecture" },
+    { title: "Features", href: "/#features" },
+    { title: "Roadmap", href: "/#roadmap" }
   ]
 
-  const router = useRouter()
   return (
     <Suspense>
       <motion.nav
@@ -69,7 +67,7 @@ function Header() {
                   </SheetContent>
                 </Sheet>
               </div>
-              <div className="flex items-center space-x-1">
+              <Link href="/" className="flex items-center space-x-1">
                 <div className="relative">
                   <Image
                     src="/logo/spark-logo-animated-themed.gif"
@@ -81,7 +79,7 @@ function Header() {
                 <span className="text-xl font-bold bg-gradient-to-r from-primary via-primary-hover to-foreground bg-clip-text text-transparent">
                   SPARK
                 </span>
-              </div>
+              </Link>
             </div>
 
             <div className="hidden lg:flex items-center gap-6">

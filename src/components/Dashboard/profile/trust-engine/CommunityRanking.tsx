@@ -125,17 +125,7 @@ export function CommunityRanking({
     (c) => c.id === selectedCommunityId
   )
 
-  const pointsToNextRank =
-    leaderboardData && userRank
-      ? (() => {
-          const nextRankUser = leaderboardData.find(
-            (u) => u.rank === userRank.rank - 1
-          )
-          return nextRankUser
-            ? Math.max(0, nextRankUser.rpPoints - userRank.rpPoints)
-            : 0
-        })()
-      : 0
+  const pointsToNextRank = userRank?.pointsToNextRank ?? 0
 
   const rankGrowth = userRank?.pointsGained || 0
 
