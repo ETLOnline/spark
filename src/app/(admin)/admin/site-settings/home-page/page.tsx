@@ -51,7 +51,7 @@ function HomeSiteSettingsPage() {
 
       const mentors = await GetMentorsAction()
       if (mentors?.success && mentors.data) {
-        setMentors(mentors.data)
+        setMentors(mentors.data.mentors)
       }
 
       const communities = await GetCommunitiesAction()

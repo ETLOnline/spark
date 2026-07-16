@@ -4,14 +4,15 @@ import { CreateServerAction } from ".."
 import { AuthUserAction } from "../User/AuthUserAction"
 import {
   GetMentorAvailability,
+  GetMentors,
   ReplaceMentorAvailability,
+  type GetMentorFilters,
   type MentorAvailabilitySlotInput
 } from "@/src/db/data-access/mentor/query"
 import {
   updateUserProfile,
   SearchUserProfile
 } from "@/src/db/data-access/profile/query"
-import { GetMentors } from "@/src/db/data-access/user/query"
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -19,6 +20,7 @@ interface SaveMentorSetupPayload {
   userId: string
   professional_title: string
   company: string
+  engagement_type: string
 }
 
 // ── Actions ────────────────────────────────────────────────────────────────────
@@ -30,7 +32,8 @@ export const SaveMentorSetupAction = CreateServerAction(
     try {
       await updateUserProfile(payload.userId, {
         professional_title: payload.professional_title,
-        company: payload.company
+        company: payload.company,
+        engagement_type: payload.engagement_type || "both"
       })
       return { success: true }
     } catch (error) {
@@ -92,10 +95,14 @@ export const UpdateAvailabilityAction = CreateServerAction(
 
 export const GetActiveMentorsAction = CreateServerAction(
   false,
-  async ({ isActive }: { isActive?: boolean } = {}) => {
+  async (filters: GetMentorFilters = {}) => {
     try {
-      const mentors = await GetMentors({ isActive })
-      return { success: true, data: mentors }
+      const result = await GetMentors(filters)
+      return {
+        success: true,
+        data: result.mentors,
+        pagination: result.pagination
+      }
     } catch (error) {
       console.error("GetActiveMentorsAction error:", error)
       return { success: false, error: "Failed to fetch active mentors" }

@@ -1,7 +1,6 @@
 "use server"
 
 import {
-  GetMentors,
   GetRandomUsers,
   getUserContacts,
   GetUserFilters,
@@ -12,6 +11,7 @@ import {
   UpdateCoverImage,
   getSuperAdmins
 } from "@/src/db/data-access/user/query"
+import { GetMentors } from "@/src/db/data-access/mentor/query"
 import { CreateServerAction } from ".."
 import { AddUserTag } from "@/src/db/data-access/tag/query"
 import { ProfileData } from "@/src/components/Dashboard/profile/types/profile-types"
