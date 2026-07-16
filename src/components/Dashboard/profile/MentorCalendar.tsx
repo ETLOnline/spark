@@ -20,6 +20,7 @@ import { Sparkles, Users, Video } from "lucide-react"
 import { useServerAction } from "@/src/hooks/useServerAction"
 import {
   CreateSessionRequestAction,
+  DeleteSessionRequestsForRemovedSlotAction,
   GetAcceptedSessionRequestsForMentorAction,
   GetMentorAvailabilityAction,
   GetMySessionRequestsForMentorAction,
@@ -46,6 +47,7 @@ import {
   getSlotsForDate,
   getStartTimeOptions,
   getUnavailableRangesForRequest,
+  isPastDate,
   minsToTime,
   nextOccurrence,
   RepeatType,
@@ -125,6 +127,9 @@ export function MentorCalendar({
   )
   const [, , , getMentorPendingRequests] = useServerAction(
     GetPendingSessionRequestsForMentorAction
+  )
+  const [, , , deleteSessionRequestsForSlot] = useServerAction(
+    DeleteSessionRequestsForRemovedSlotAction
   )
 
   // Resubmit state — mentee picks a suggested slot
@@ -228,13 +233,22 @@ export function MentorCalendar({
   }
 
   const openPopup = (date: Date) => {
-    if (!isMyProfile && getSlotsForDate(slots, date).length === 0) return
+    if (
+      !isMyProfile &&
+      (getSlotsForDate(slots, date).length === 0 || isPastDate(date))
+    )
+      return
     setSelectedDate(date)
     resetPopupForm(date)
     setIsPopupOpen(true)
   }
 
   const handleAddSlot = async () => {
+    const anchorStart = moment(`${newDate} ${newStart}`, "YYYY-MM-DD HH:mm")
+    if (anchorStart.isBefore(moment())) {
+      setSlotError("Cannot add availability in the past")
+      return
+    }
     if (toMins(newEnd) <= toMins(newStart)) {
       setSlotError("End time must be after start time")
       return
@@ -473,9 +487,17 @@ export function MentorCalendar({
   const handleDeleteSeries = async (slotId: number) => {
     setPendingDeleteId(null)
     setSlotError("")
+    const slot = slots.find((s) => s.id === slotId)
     const remaining = serializeSlots(slots.filter((s) => s.id !== slotId))
     const res = await updateAvailability({ mentorId: userId, slots: remaining })
     if (res?.success) {
+      if (slot) {
+        await deleteSessionRequestsForSlot({
+          mentorId: userId,
+          startTime: slot.start_time,
+          endTime: slot.end_time
+        })
+      }
       setSlots([])
       await loadSlots()
       if (selectedDate) resetPopupForm(selectedDate)
@@ -534,6 +556,12 @@ export function MentorCalendar({
       slots: [...otherSlots, ...additions]
     })
     if (res?.success) {
+      await deleteSessionRequestsForSlot({
+        mentorId: userId,
+        startTime: slot.start_time,
+        endTime: slot.end_time,
+        sessionDate: occStr
+      })
       setSlots([])
       await loadSlots()
       if (selectedDate) resetPopupForm(selectedDate)
