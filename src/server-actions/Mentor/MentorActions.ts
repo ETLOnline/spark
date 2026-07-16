@@ -7,7 +7,6 @@ import {
   DeletePendingSessionRequestsForSlot,
   GetAcceptedSessionRequestsForMentor,
   GetMentorAvailability,
-  GetMentorSuggestableSlots,
   GetMentors,
   GetPendingSessionRequestsForMentor,
   GetSessionRequestById,
@@ -103,10 +102,21 @@ export const GetMentorSuggestableSlotsAction = CreateServerAction(
   true,
   async (payload: { mentorId: string; afterDate: string }) => {
     try {
-      const { slots } = await GetMentorSuggestableSlots(payload.mentorId)
+      const [slots, acceptedBookings] = await Promise.all([
+        GetMentorAvailability(payload.mentorId),
+        GetAcceptedSessionRequestsForMentor(payload.mentorId)
+      ])
 
       const after = moment(payload.afterDate, "YYYY-MM-DD")
       const occurrences: SlotOccurrence[] = []
+
+      const isBooked = (dateStr: string, slotStart: string, slotEnd: string) =>
+        acceptedBookings.some(
+          (r) =>
+            r.session_date === dateStr &&
+            toMins(r.start_time) < toMins(slotEnd) &&
+            toMins(slotStart) < toMins(r.end_time)
+        )
 
       for (const slot of slots) {
         const slotStart = moment(slot.date, "YYYY-MM-DD")
@@ -115,7 +125,10 @@ export const GetMentorSuggestableSlotsAction = CreateServerAction(
           : moment(payload.afterDate, "YYYY-MM-DD").add(60, "days")
 
         if (slot.repeat_type === "none") {
-          if (slotStart.isAfter(after)) {
+          if (
+            slotStart.isAfter(after) &&
+            !isBooked(slot.date, slot.start_time, slot.end_time)
+          ) {
             occurrences.push({
               key: `${slot.id}-${slot.date}`,
               slotId: slot.id,
@@ -137,15 +150,18 @@ export const GetMentorSuggestableSlotsAction = CreateServerAction(
             (slot.repeat_type === "weekly" && cursor.day() === slotStart.day())
 
           if (applies && !cursor.isBefore(slotStart)) {
-            occurrences.push({
-              key: `${slot.id}-${cursor.format("YYYY-MM-DD")}`,
-              slotId: slot.id,
-              displayDate: cursor.format("YYYY-MM-DD"),
-              start_time: slot.start_time,
-              end_time: slot.end_time,
-              session_type: slot.session_type,
-              repeat_type: slot.repeat_type
-            })
+            const dateStr = cursor.format("YYYY-MM-DD")
+            if (!isBooked(dateStr, slot.start_time, slot.end_time)) {
+              occurrences.push({
+                key: `${slot.id}-${dateStr}`,
+                slotId: slot.id,
+                displayDate: dateStr,
+                start_time: slot.start_time,
+                end_time: slot.end_time,
+                session_type: slot.session_type,
+                repeat_type: slot.repeat_type
+              })
+            }
           }
           cursor.add(1, "day")
         }
