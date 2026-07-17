@@ -1,6 +1,6 @@
 {
-  "id": "5eb687dc-fc82-4041-ab87-138611b0817d",
-  "prevId": "98431a5f-c868-4032-88d6-a362a81d26e2",
+  "id": "e078108c-618a-4e08-8cf5-a054367f6e92",
+  "prevId": "fdcbf4dd-f8d9-4d40-b1a3-7523ad612861",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -3207,7 +3207,7 @@
           "name": "channel_id",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "space_id": {
           "name": "space_id",
@@ -4156,7 +4156,7 @@
           "name": "channel_id",
           "type": "varchar(36)",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "created_by": {
           "name": "created_by",
