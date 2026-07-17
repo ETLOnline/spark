@@ -5,12 +5,16 @@ import { AuthUserAction } from "../User/AuthUserAction"
 import {
   CreateSessionRequest,
   DeletePendingSessionRequestsForSlot,
+  GetAcceptedSessionRequestsForMentor,
   GetMentorAvailability,
   GetMentors,
-  GetPendingSessionRequestsForMentor,
+  GetSessionRequestById,
   GetSessionRequestsForMenteeAndMentor,
+  GetSessionRequestsForMentorByStatus,
+  HasAcceptedOverlap,
   HasPendingSessionRequest,
   ReplaceMentorAvailability,
+  UpdateSessionRequestStatus,
   type GetMentorFilters,
   type MentorAvailabilitySlotInput
 } from "@/src/db/data-access/mentor/query"
@@ -21,9 +25,18 @@ import {
 import { GetUserRewardBalance } from "@/src/db/data-access/reward/query"
 import {
   REPUTATION_POINTS_REWARD_ID,
-  RP_THRESHOLD
+  RP_THRESHOLD,
+  SESSION_REQUEST_DESCRIPTION_MAX_LENGTH,
+  SESSION_REQUEST_TOPIC_MAX_LENGTH
 } from "@/src/utils/constants"
 import { MIN_DURATION_MINS, toMins } from "@/src/utils/time"
+import { SendSystemNotification } from "@/src/services/system-notification/SystemNotification.utils"
+import { sendPushNotification } from "@/src/services/notifications/PushNotification.utils"
+import { createAbsoluteUrl } from "@/src/utils/clientHelper"
+import {
+  createSessionRequestEmailNotification,
+  createSessionResponseEmailNotification
+} from "@/src/services/notify/sessionRequest/sessionRequest"
 import moment from "moment-timezone"
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -145,6 +158,19 @@ export const CreateSessionRequestAction = CreateServerAction(
       if (!payload.topic?.trim()) {
         return { error: "Topic is required" }
       }
+      if (payload.topic.trim().length > SESSION_REQUEST_TOPIC_MAX_LENGTH) {
+        return {
+          error: `Topic must be ${SESSION_REQUEST_TOPIC_MAX_LENGTH} characters or fewer`
+        }
+      }
+      if (
+        (payload.description?.length ?? 0) >
+        SESSION_REQUEST_DESCRIPTION_MAX_LENGTH
+      ) {
+        return {
+          error: `Description must be ${SESSION_REQUEST_DESCRIPTION_MAX_LENGTH} characters or fewer`
+        }
+      }
 
       const requestedStartDateTime = moment(
         `${payload.sessionDate} ${payload.startTime}`,
@@ -190,6 +216,16 @@ export const CreateSessionRequestAction = CreateServerAction(
         return { error: "You already have a pending request for this slot" }
       }
 
+      const alreadyBooked = await HasAcceptedOverlap(
+        payload.mentorId,
+        payload.sessionDate,
+        requestedStart,
+        requestedEnd
+      )
+      if (alreadyBooked) {
+        return { error: "This time has already been booked" }
+      }
+
       const request = await CreateSessionRequest({
         mentorId: payload.mentorId,
         menteeId: authUser.unique_id,
@@ -201,6 +237,32 @@ export const CreateSessionRequestAction = CreateServerAction(
         topic: payload.topic.trim(),
         description: payload.description?.trim() || null
       })
+
+      const menteeName = `${authUser.first_name} ${authUser.last_name}`.trim()
+      const requestsInboxUrl = createAbsoluteUrl("/profile/session-requests")
+      const newRequestTemplate = {
+        title: "New session request",
+        body: `${menteeName} wants to discuss "${request.topic}"`,
+        deep_link: requestsInboxUrl,
+        icon: authUser.profile_url || ""
+      }
+
+      await SendSystemNotification({
+        user_id: authUser.unique_id,
+        receivers: [payload.mentorId],
+        template: newRequestTemplate
+      })
+
+      await sendPushNotification({
+        receivers: [payload.mentorId],
+        template: newRequestTemplate
+      })
+
+      await createSessionRequestEmailNotification(
+        payload.mentorId,
+        request,
+        menteeName
+      )
 
       return { success: true, data: request }
     } catch (error) {
@@ -230,24 +292,108 @@ export const GetMySessionRequestsForMentorAction = CreateServerAction(
   }
 )
 
-/** Fetch the pending session requests a mentor has received, for their Requests inbox. */
-export const GetPendingSessionRequestsForMentorAction = CreateServerAction(
+/** Fetch a mentor's session requests for one status tab (Pending/Accepted/Rejected) of their Requests inbox. */
+export const GetSessionRequestsForMentorByStatusAction = CreateServerAction(
   true,
-  async (mentorId: string) => {
+  async (
+    mentorId: string,
+    status: "pending" | "accepted" | "rejected",
+    page = 1,
+    limit = 10
+  ) => {
     try {
       const authUser = await AuthUserAction()
       if (!authUser || authUser.unique_id !== mentorId) {
         return { error: "Unauthorised" }
       }
 
-      const requests = await GetPendingSessionRequestsForMentor(mentorId)
-      return { success: true, data: requests }
+      const result = await GetSessionRequestsForMentorByStatus(
+        mentorId,
+        status,
+        page,
+        limit
+      )
+      return {
+        success: true,
+        data: result.requests,
+        pagination: result.pagination
+      }
     } catch (error) {
-      console.error("GetPendingSessionRequestsForMentorAction error:", error)
+      console.error("GetSessionRequestsForMentorByStatusAction error:", error)
       return { error: "Failed to fetch session requests" }
     }
   }
 )
+
+/** Fetch a mentor's accepted bookings — used to grey out already-booked times on the calendar. */
+export const GetAcceptedSessionRequestsForMentorAction = CreateServerAction(
+  true,
+  async (mentorId: string) => {
+    try {
+      const requests = await GetAcceptedSessionRequestsForMentor(mentorId)
+      return { success: true, data: requests }
+    } catch (error) {
+      console.error("GetAcceptedSessionRequestsForMentorAction error:", error)
+      return { error: "Failed to fetch booked sessions" }
+    }
+  }
+)
+
+/** Mentor accepts or rejects a pending session request. */
+export const RespondToSessionRequestAction = CreateServerAction(
+  true,
+  async (requestId: number, status: "accepted" | "rejected") => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser) return { error: "Unauthorised" }
+
+      const request = await GetSessionRequestById(requestId)
+      if (!request || request.mentor_id !== authUser.unique_id) {
+        return { error: "Unauthorised" }
+      }
+      if (request.status !== "pending") {
+        return { error: "This request has already been responded to" }
+      }
+
+      const updated = await UpdateSessionRequestStatus(requestId, status)
+
+      const mentorName = `${authUser.first_name} ${authUser.last_name}`.trim()
+      const responseTemplate = {
+        title:
+          status === "accepted"
+            ? "Session request accepted"
+            : "Session request declined",
+        body:
+          status === "accepted"
+            ? `${mentorName} accepted your session request: "${request.topic}"`
+            : `${mentorName} declined your session request: "${request.topic}"`,
+        deep_link: createAbsoluteUrl(
+          `/profile/${request.mentor_id}/availability`
+        ),
+        icon: authUser.profile_url || ""
+      }
+
+      await SendSystemNotification({
+        user_id: authUser.unique_id,
+        receivers: [request.mentee_id],
+        template: responseTemplate
+      })
+
+      await sendPushNotification({
+        receivers: [request.mentee_id],
+        template: responseTemplate
+      })
+
+      await createSessionResponseEmailNotification(request, mentorName, status)
+
+      return { success: true, data: updated }
+    } catch (error) {
+      console.error("RespondToSessionRequestAction error:", error)
+      return { error: "Failed to respond to session request" }
+    }
+  }
+)
+
 /**
  * Mentor removes a slot they offered — clears any pending requests that were
  * made against it. Pass sessionDate for a single-occurrence delete, or omit
