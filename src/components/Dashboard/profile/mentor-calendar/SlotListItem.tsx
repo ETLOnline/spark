@@ -186,6 +186,7 @@ export function SlotListItem({
                       disabled
                       className="w-full pointer-events-none opacity-50"
                     >
+                      <Lock className="h-3.5 w-3.5 mr-1.5" />
                       Request this Slot
                     </Button>
                   </span>
