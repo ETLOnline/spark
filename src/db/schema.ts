@@ -244,11 +244,11 @@ export const sessionRequestsTable = pgTable("session_requests", {
   topic: varchar("topic").notNull(),
   description: varchar("description"),
   status: varchar("status").notNull().default("pending"),
-  // Set only when the mentee requests the slot on its recurring basis —
-  // mirrors the availability slot's own repeat_type/repeat_end_date at
-  // request time rather than letting the mentee pick an independent cadence.
   repeat_type: varchar("repeat_type").notNull().default("none"), // "none" | "daily" | "weekly"
-  repeat_end_date: varchar("repeat_end_date"), // YYYY-MM-DD, nullable
+  repeat_end_date: varchar("repeat_end_date"),
+  space_id: varchar("space_id", { length: 36 }).references(
+    () => spacesTable.id
+  ),
   ...timestamps
 })
 
@@ -264,6 +264,11 @@ export const sessionRequestsRelations = relations(
       fields: [sessionRequestsTable.mentee_id],
       references: [usersTable.unique_id],
       relationName: "sessionRequestToMentee"
+    }),
+    space: one(spacesTable, {
+      fields: [sessionRequestsTable.space_id],
+      references: [spacesTable.id],
+      relationName: "sessionRequestToSpace"
     })
   })
 )

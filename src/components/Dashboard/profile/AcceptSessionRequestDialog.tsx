@@ -146,6 +146,8 @@ export default function AcceptSessionRequestDialog({
     if (executingAction || !request) return
     setExecutingAction(true)
 
+    let spaceIdToLink: string | null = null
+
     try {
       if (option === "create") {
         if (!spaceName.trim() || !description.trim() || slugError) {
@@ -175,6 +177,7 @@ export default function AcceptSessionRequestDialog({
           })
           return
         }
+        spaceIdToLink = created.data.id
 
         const attached = await attachSpaceUser(
           created.data.id,
@@ -202,6 +205,7 @@ export default function AcceptSessionRequestDialog({
         const isAlreadyMember = selectedSpace?.users?.some(
           (u) => u.user_id === request.mentee.unique_id
         )
+        spaceIdToLink = selectedSpaceId
 
         if (!isAlreadyMember) {
           const attached = await attachSpaceUser(
@@ -219,7 +223,7 @@ export default function AcceptSessionRequestDialog({
         }
       }
 
-      const res = await respondToRequest(request.id, "accepted")
+      const res = await respondToRequest(request.id, "accepted", spaceIdToLink)
       if (res?.success) {
         onAccepted(request.id)
       } else {

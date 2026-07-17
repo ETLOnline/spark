@@ -5,6 +5,7 @@ import { AuthUserAction } from "../User/AuthUserAction"
 import {
   CreateSessionRequest,
   DeletePendingSessionRequestsForSlot,
+  GetAcceptedSessionRequestsForMentee,
   GetAcceptedSessionRequestsForMentor,
   GetMentorAvailability,
   GetMentors,
@@ -393,10 +394,33 @@ export const GetAcceptedSessionRequestsForMentorAction = CreateServerAction(
   }
 )
 
-/** Mentor accepts or rejects a pending session request. */
+/** A mentee's own accepted bookings — private, only the mentee themselves can fetch this. */
+export const GetAcceptedSessionRequestsForMenteeAction = CreateServerAction(
+  true,
+  async (menteeId: string) => {
+    try {
+      const authUser = await AuthUserAction()
+      if (!authUser || authUser.unique_id !== menteeId) {
+        return { error: "Unauthorised" }
+      }
+      const requests = await GetAcceptedSessionRequestsForMentee(menteeId)
+      return { success: true, data: requests }
+    } catch (error) {
+      console.error("GetAcceptedSessionRequestsForMenteeAction error:", error)
+      return { error: "Failed to fetch booked sessions" }
+    }
+  }
+)
+
+/** Mentor accepts or rejects a pending session request. Pass `spaceId` when
+ * accepting with a workspace attached, so the session can link straight to it. */
 export const RespondToSessionRequestAction = CreateServerAction(
   true,
-  async (requestId: number, status: "accepted" | "rejected") => {
+  async (
+    requestId: number,
+    status: "accepted" | "rejected",
+    spaceId?: string | null
+  ) => {
     try {
       const authUser = await AuthUserAction()
       if (!authUser) return { error: "Unauthorised" }
@@ -409,7 +433,11 @@ export const RespondToSessionRequestAction = CreateServerAction(
         return { error: "This request has already been responded to" }
       }
 
-      const updated = await UpdateSessionRequestStatus(requestId, status)
+      const updated = await UpdateSessionRequestStatus(
+        requestId,
+        status,
+        spaceId
+      )
 
       const mentorName = `${authUser.first_name} ${authUser.last_name}`.trim()
       const responseTemplate = {

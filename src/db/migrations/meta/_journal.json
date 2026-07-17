@@ -358,6 +358,13 @@
       "when": 1784274545575,
       "tag": "0050_2026_07_17_124904__add_repeat_fields_to_session_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1784302717062,
+      "tag": "0051_2026_07_17_203836__add_space_id_column_session_request",
+      "breakpoints": true
     }
   ]
 }

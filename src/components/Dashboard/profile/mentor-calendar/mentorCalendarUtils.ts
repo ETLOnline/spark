@@ -320,3 +320,116 @@ export function getUnavailableRangesForRequest(
     ...myPendingRanges
   ]
 }
+
+// ── Session summary (upcoming/past occurrence lookup) ───────────────────────────
+
+/** Days to look ahead/behind for an open-ended (no repeat_end_date) recurring
+ * request — bounds an otherwise-unbounded search to a sane window. */
+const OPEN_ENDED_SEARCH_DAYS = 730
+
+/** The next start-datetime for this request on/after `now`, or null if the
+ * request (or its recurrence) has no more occurrences left. */
+function findNextOccurrence(r: SelectSessionRequest, now: moment.Moment) {
+  const anchorDt = moment(
+    `${r.session_date} ${r.start_time}`,
+    "YYYY-MM-DD HH:mm"
+  )
+  if (r.repeat_type === "none") {
+    return anchorDt.isSameOrAfter(now) ? anchorDt : null
+  }
+
+  const step = r.repeat_type === "daily" ? 1 : 7
+  const end = r.repeat_end_date
+    ? moment(r.repeat_end_date, "YYYY-MM-DD")
+    : moment(r.session_date, "YYYY-MM-DD").add(OPEN_ENDED_SEARCH_DAYS, "days")
+
+  // Fast-forward close to `now` in whole periods, then step forward one
+  // period at a time until we pass `now` (at most one period of iteration).
+  let cursor = moment(r.session_date, "YYYY-MM-DD")
+  const daysUntilNow = now.clone().startOf("day").diff(cursor, "days")
+  if (daysUntilNow > 0) {
+    cursor.add(Math.floor(daysUntilNow / step) * step, "days")
+  }
+  while (!cursor.isAfter(end)) {
+    const dt = moment(
+      `${cursor.format("YYYY-MM-DD")} ${r.start_time}`,
+      "YYYY-MM-DD HH:mm"
+    )
+    if (dt.isSameOrAfter(now)) return dt
+    cursor = cursor.clone().add(step, "days")
+  }
+  return null
+}
+
+/** The most recent start-datetime for this request strictly before `now`,
+ * or null if it never occurred before `now`. */
+function findLastPastOccurrence(r: SelectSessionRequest, now: moment.Moment) {
+  const anchorDt = moment(
+    `${r.session_date} ${r.start_time}`,
+    "YYYY-MM-DD HH:mm"
+  )
+  if (r.repeat_type === "none") {
+    return anchorDt.isBefore(now) ? anchorDt : null
+  }
+
+  const step = r.repeat_type === "daily" ? 1 : 7
+  const anchorDate = moment(r.session_date, "YYYY-MM-DD")
+  const cap = r.repeat_end_date
+    ? moment.min(moment(r.repeat_end_date, "YYYY-MM-DD"), now.clone())
+    : now.clone()
+  if (cap.isBefore(anchorDate, "day")) return null
+
+  let cursor = anchorDate.clone()
+  const daysUntilCap = cap.clone().startOf("day").diff(cursor, "days")
+  if (daysUntilCap > 0) {
+    cursor.add(Math.floor(daysUntilCap / step) * step, "days")
+  }
+  let result: moment.Moment | null = null
+  while (!cursor.isAfter(cap, "day")) {
+    const dt = moment(
+      `${cursor.format("YYYY-MM-DD")} ${r.start_time}`,
+      "YYYY-MM-DD HH:mm"
+    )
+    if (dt.isBefore(now)) result = dt
+    cursor = cursor.clone().add(step, "days")
+  }
+  return result
+}
+
+export interface SessionOccurrence {
+  request: SelectSessionRequest
+  occurrence: moment.Moment
+}
+
+/** Buckets a set of accepted requests into up to 3 upcoming occurrences —
+ * falling back to up to 3 most recent past occurrences when nothing is
+ * upcoming, and an empty list when there are no sessions at all. */
+export function summarizeMentorSessions(
+  acceptedRequests: SelectSessionRequest[]
+): { mode: "upcoming" | "past" | "none"; items: SessionOccurrence[] } {
+  const now = moment()
+
+  const upcoming = acceptedRequests
+    .map((request) => {
+      const occurrence = findNextOccurrence(request, now)
+      return occurrence ? { request, occurrence } : null
+    })
+    .filter((v): v is SessionOccurrence => v !== null)
+    .sort((a, b) => a.occurrence.valueOf() - b.occurrence.valueOf())
+    .slice(0, 3)
+
+  if (upcoming.length > 0) return { mode: "upcoming", items: upcoming }
+
+  const past = acceptedRequests
+    .map((request) => {
+      const occurrence = findLastPastOccurrence(request, now)
+      return occurrence ? { request, occurrence } : null
+    })
+    .filter((v): v is SessionOccurrence => v !== null)
+    .sort((a, b) => b.occurrence.valueOf() - a.occurrence.valueOf())
+    .slice(0, 3)
+
+  if (past.length > 0) return { mode: "past", items: past }
+
+  return { mode: "none", items: [] }
+}

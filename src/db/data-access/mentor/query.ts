@@ -441,28 +441,57 @@ export async function GetSessionRequestById(requestId: number) {
 
 export async function UpdateSessionRequestStatus(
   requestId: number,
-  status: "accepted" | "rejected"
+  status: "accepted" | "rejected",
+  spaceId?: string | null
 ) {
   const [request] = await db
     .update(sessionRequestsTable)
-    .set({ status })
+    .set({ status, ...(spaceId !== undefined ? { space_id: spaceId } : {}) })
     .where(eq(sessionRequestsTable.id, requestId))
     .returning()
 
   return request
 }
 
-/** All accepted bookings for a mentor — used to grey out already-booked times on the calendar. */
+/** All accepted bookings for a mentor — used to grey out already-booked times
+ * on the calendar, and (via the joined space) to link the mentor's session
+ * card straight into the workspace created for it, if any. */
 export async function GetAcceptedSessionRequestsForMentor(mentorId: string) {
-  return await db
-    .select()
-    .from(sessionRequestsTable)
-    .where(
-      and(
-        eq(sessionRequestsTable.mentor_id, mentorId),
-        eq(sessionRequestsTable.status, "accepted")
-      )
-    )
+  return await db.query.sessionRequestsTable.findMany({
+    where: and(
+      eq(sessionRequestsTable.mentor_id, mentorId),
+      eq(sessionRequestsTable.status, "accepted")
+    ),
+    with: {
+      space: {
+        columns: { id: true, space_slug: true }
+      }
+    }
+  })
+}
+
+/** A mentee's own accepted bookings across every mentor — used to show their
+ * next upcoming session(s) on their own profile. */
+export async function GetAcceptedSessionRequestsForMentee(menteeId: string) {
+  return await db.query.sessionRequestsTable.findMany({
+    where: and(
+      eq(sessionRequestsTable.mentee_id, menteeId),
+      eq(sessionRequestsTable.status, "accepted")
+    ),
+    with: {
+      mentor: {
+        columns: {
+          unique_id: true,
+          first_name: true,
+          last_name: true,
+          profile_url: true
+        }
+      },
+      space: {
+        columns: { id: true, space_slug: true }
+      }
+    }
+  })
 }
 
 /** True if an accepted booking already overlaps this occurrence for the mentor —
