@@ -19,6 +19,7 @@ import {
   formatDuration,
   formatTime,
   getDurationOptions,
+  getRepeatUntilOptions,
   getStartTimeOptions,
   minsToTime,
   repeatLabel,
@@ -29,6 +30,9 @@ import {
   SESSION_REQUEST_DESCRIPTION_MAX_LENGTH,
   SESSION_REQUEST_TOPIC_MAX_LENGTH
 } from "@/src/utils/constants"
+
+// Sentinel for "no end date" — distinct from real YYYY-MM-DD option values.
+const NO_END_VALUE = "__no_end__"
 
 interface SessionRequestFormProps {
   slot: SelectMentorAvailability
@@ -171,21 +175,31 @@ export function SessionRequestForm({
               <Label className="text-xs text-muted-foreground mb-1.5 block">
                 Repeat until <span className="opacity-60">(optional)</span>
               </Label>
-              <Input
-                type="date"
-                value={repeatEndDate}
-                min={sessionDateStr}
-                max={slot.repeat_end_date ?? undefined}
-                step={slot.repeat_type === "weekly" ? 7 : undefined}
-                onChange={(e) => onRepeatEndDateChange(e.target.value)}
-                className="w-full"
-              />
+              <Select
+                value={repeatEndDate || NO_END_VALUE}
+                onValueChange={(v) =>
+                  onRepeatEndDateChange(v === NO_END_VALUE ? "" : v)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {!slot.repeat_end_date && (
+                    <SelectItem value={NO_END_VALUE}>
+                      No end date (matches mentor's availability)
+                    </SelectItem>
+                  )}
+                  {getRepeatUntilOptions(slot, sessionDateStr).map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {moment(d, "YYYY-MM-DD").format("ddd, MMM D, YYYY")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground mt-1">
-                Leave as-is to match the mentor's full availability window
-                {slot.repeat_end_date
-                  ? ` (through ${slot.repeat_end_date})`
-                  : ""}
-                .
+                Only dates matching the mentor's recurring pattern can be
+                selected.
               </p>
             </div>
           )}

@@ -130,6 +130,30 @@ export function nextOccurrence(fromDateStr: string, targetDow: number): string {
   return m.clone().add(diff, "days").format("YYYY-MM-DD")
 }
 
+/** Every valid "repeat until" date for a recurring request against `slot` —
+ * every occurrence of the slot's own cadence from `anchorDateStr` through
+ * its repeat_end_date (or a 1-year cap if the slot itself is open-ended).
+ * Used to restrict the "Repeat until" picker to dates that actually exist
+ * for this slot, since a plain date input can't disable arbitrary days. */
+export function getRepeatUntilOptions(
+  slot: SelectMentorAvailability,
+  anchorDateStr: string
+): string[] {
+  if (slot.repeat_type === "none") return []
+  const stepDays = slot.repeat_type === "daily" ? 1 : 7
+  const end = slot.repeat_end_date
+    ? moment(slot.repeat_end_date, "YYYY-MM-DD")
+    : moment(anchorDateStr, "YYYY-MM-DD").add(1, "year")
+
+  const options: string[] = []
+  let cursor = moment(anchorDateStr, "YYYY-MM-DD")
+  while (!cursor.isAfter(end)) {
+    options.push(cursor.format("YYYY-MM-DD"))
+    cursor = cursor.clone().add(stepDays, "days")
+  }
+  return options
+}
+
 /** Reusable pill/segment toggle class helper — shared by the view toggle and the repeat toggle. */
 export function toggleItemCls(
   active: boolean,
