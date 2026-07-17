@@ -942,9 +942,10 @@ export const spacesTable = pgTable("spaces", {
   space_slug: varchar().notNull(),
   space_name: varchar().notNull(),
   description: varchar(),
-  channel_id: varchar("channel_id", { length: 36 })
-    .references(() => channelsTable.id, { onDelete: "cascade" })
-    .notNull(),
+  channel_id: varchar("channel_id", { length: 36 }).references(
+    () => channelsTable.id,
+    { onDelete: "cascade" }
+  ),
   created_by: varchar().notNull(),
   ownerId: varchar(),
   space_type: varchar(),
@@ -981,7 +982,7 @@ export type SelectSpace = InferSelectModel<typeof spacesTable> & {
   posts?: SelectPost[]
   features?: SelectSpaceFeature[]
   owner?: SelectUser | null
-  channel?: SelectChannel
+  channel?: SelectChannel | null
   users?: SelectSpaceUser[]
 }
 
@@ -1138,7 +1139,7 @@ export const projectTable = pgTable("project", {
   description: varchar(),
   project_startDate: varchar().notNull(),
   project_targetDate: varchar().notNull(),
-  channel_id: varchar().notNull(),
+  channel_id: varchar(),
   space_id: varchar("space_id", { length: 36 }).references(
     () => spacesTable.id,
     { onDelete: "cascade" }

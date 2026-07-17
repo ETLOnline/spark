@@ -344,6 +344,13 @@
       "when": 1784017318610,
       "tag": "0048_2026_07_14_132157__create_session_requests_table",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1784194897227,
+      "tag": "0049_2026_07_16_144133__make_channel_id_nullable_in_space_and_proect_table",
+      "breakpoints": true
     }
   ]
 }

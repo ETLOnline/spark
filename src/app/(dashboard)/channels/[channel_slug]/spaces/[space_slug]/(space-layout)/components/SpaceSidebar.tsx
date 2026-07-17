@@ -117,10 +117,14 @@ function SpaceSidebar({ space }: Props) {
             duration: 3000
           })
 
-          const encodedChannelSlug = encodeURIComponent(
-            space.channel?.channel_slug ?? ""
-          )
-          router.push(`/channels/${encodedChannelSlug}/spaces`)
+          if (space.channel?.channel_slug) {
+            const encodedChannelSlug = encodeURIComponent(
+              space.channel.channel_slug
+            )
+            router.push(`/channels/${encodedChannelSlug}/spaces`)
+          } else {
+            router.push("/profile")
+          }
         }
       } catch (error) {
         toast({
@@ -155,6 +159,9 @@ function SpaceSidebar({ space }: Props) {
   const encodedChannelSlug = encodeURIComponent(
     space.channel?.channel_slug ?? ""
   )
+  const basePath = space.channel?.channel_slug
+    ? `/channels/${encodedChannelSlug}/spaces/${encodedSpaceSlug}`
+    : `/mentorship/${space.created_by}/spaces/${encodedSpaceSlug}`
 
   const canViewChat = permissionChecker?.canAccess("space.chat.view") ?? false
   const canViewPost =
@@ -187,7 +194,7 @@ function SpaceSidebar({ space }: Props) {
   })
 
   function getFeatureUrl(feature_slug: string) {
-    return `/channels/${encodedChannelSlug}/spaces/${encodedSpaceSlug}?page-type=${feature_slug}`
+    return `${basePath}?page-type=${feature_slug}`
   }
 
   const SidebarContent = () => (
@@ -267,16 +274,11 @@ function SpaceSidebar({ space }: Props) {
       </div>
 
       {/* space overview */}
-      <Link
-        href={`/channels/${encodedChannelSlug}/spaces/${encodedSpaceSlug}`}
-        onClick={() => setIsOpen(false)}
-      >
+      <Link href={basePath} onClick={() => setIsOpen(false)}>
         <SidebarMenuItem
           className={`flex flex-row items-center gap-2 p-2 rounded
            ${
-             !pageType.get("page-type") &&
-             pathname ===
-               `/channels/${encodedChannelSlug}/spaces/${encodedSpaceSlug}`
+             !pageType.get("page-type") && pathname === basePath
                ? "bg-sidebar-accent text-sidebar-accent-foreground"
                : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
            }`}
