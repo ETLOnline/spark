@@ -26,6 +26,7 @@ import {
   TabsList,
   TabsTrigger
 } from "@/src/components/ui/tabs"
+import AcceptSessionRequestDialog from "./AcceptSessionRequestDialog"
 import PaginationComponent from "@/src/components/common/Pagination"
 import type { PaginationType } from "@/src/components/common/types/pagination.type"
 
@@ -43,7 +44,9 @@ interface MenteeInfo {
   } | null
 }
 
-type SessionRequestWithMentee = SelectSessionRequest & { mentee: MenteeInfo }
+export type SessionRequestWithMentee = SelectSessionRequest & {
+  mentee: MenteeInfo
+}
 
 type StatusTab = "pending" | "accepted" | "rejected"
 
@@ -73,6 +76,7 @@ export function SessionRequestsScreen({ mentorId }: Props) {
   const [loading, setLoading] = useState(true)
   const [selectedRequest, setSelectedRequest] =
     useState<SessionRequestWithMentee | null>(null)
+  const [showWorkspaceDialog, setShowWorkspaceDialog] = useState(false)
 
   const [, , , getRequestsByStatus] = useServerAction(
     GetSessionRequestsForMentorByStatusAction
@@ -287,8 +291,7 @@ export function SessionRequestsScreen({ mentorId }: Props) {
                   </Button>
                   <Button
                     size="sm"
-                    loading={responding}
-                    onClick={() => handleRespond("accepted")}
+                    onClick={() => setShowWorkspaceDialog(true)}
                   >
                     Accept
                   </Button>
@@ -311,6 +314,19 @@ export function SessionRequestsScreen({ mentorId }: Props) {
           )}
         </DialogContent>
       </Dialog>
+
+      <AcceptSessionRequestDialog
+        open={showWorkspaceDialog}
+        onOpenChange={setShowWorkspaceDialog}
+        request={selectedRequest}
+        mentorId={mentorId}
+        onAccepted={(requestId) => {
+          setRequests((prev) => prev.filter((r) => r.id !== requestId))
+          setSelectedRequest(null)
+          setShowWorkspaceDialog(false)
+          toast({ title: "Request accepted", duration: 3000 })
+        }}
+      />
     </div>
   )
 }

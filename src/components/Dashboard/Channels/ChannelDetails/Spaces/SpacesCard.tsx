@@ -30,6 +30,9 @@ interface Props {
 function SpacesCard({ space, setIsChannelMember }: Props) {
   const user = useAtomValue(userStore.AuthUser)
   const encodedSpaceSlug = encodeURIComponent(space.space_slug)
+  const spaceHref = space.channel?.channel_slug
+    ? `./spaces/${encodedSpaceSlug}`
+    : `/mentorship/${space.created_by}/spaces/${encodedSpaceSlug}`
   const { permissionChecker } = usePermissionChecker(
     "scoped",
     "SPACE",
@@ -119,7 +122,7 @@ function SpacesCard({ space, setIsChannelMember }: Props) {
           {space.membersCount} {space.membersCount === 1 ? 'Member' : 'Members'}
           0 Members
         </Badge> */}
-        <Link href={`./spaces/${encodedSpaceSlug}`}>
+        <Link href={spaceHref}>
           <Button>
             Launch Space <ArrowRight />
           </Button>
