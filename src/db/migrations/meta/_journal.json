@@ -344,6 +344,13 @@
       "when": 1784017318610,
       "tag": "0048_2026_07_14_132157__create_session_requests_table",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1784273009274,
+      "tag": "0049_2026_07_17_122328__add_repeat_fields_to_session_requests",
+      "breakpoints": true
     }
   ]
 }

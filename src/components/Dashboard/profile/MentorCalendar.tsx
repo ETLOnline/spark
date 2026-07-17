@@ -96,6 +96,8 @@ export function MentorCalendar({
   const [requestDuration, setRequestDuration] = useState(60)
   const [requestTopic, setRequestTopic] = useState("")
   const [requestDescription, setRequestDescription] = useState("")
+  const [requestRecurring, setRequestRecurring] = useState(false)
+  const [requestRepeatEndDate, setRequestRepeatEndDate] = useState("")
   const [requestError, setRequestError] = useState("")
   const [requestSubmitting, setRequestSubmitting] = useState(false)
 
@@ -320,6 +322,7 @@ export function MentorCalendar({
       slots: [...existing, ...newSlots]
     })
     if (addSlotRes?.success) {
+      setSlotError("")
       await loadSlots()
       toast({ title: "Slot added", duration: 2000 })
     } else {
@@ -336,6 +339,8 @@ export function MentorCalendar({
     setRequestFormSlot(slot)
     setRequestTopic("")
     setRequestDescription("")
+    setRequestRecurring(false)
+    setRequestRepeatEndDate(slot.repeat_end_date ?? "")
     setRequestError("")
     const unavailableRanges = selectedDate
       ? getUnavailableRangesForRequest(
@@ -378,6 +383,8 @@ export function MentorCalendar({
       return
     }
 
+    const recurring = requestFormSlot.repeat_type !== "none" && requestRecurring
+
     setRequestSubmitting(true)
     const createRequestRes = await createSessionRequest({
       mentorId: userId,
@@ -386,7 +393,9 @@ export function MentorCalendar({
       startTime: requestStartTime,
       endTime: minsToTime(toMins(requestStartTime) + requestDuration),
       topic: requestTopic,
-      description: requestDescription
+      description: requestDescription,
+      recurring,
+      repeatEndDate: recurring ? requestRepeatEndDate || null : null
     })
     setRequestSubmitting(false)
 
@@ -556,6 +565,13 @@ export function MentorCalendar({
                 }}
                 description={requestDescription}
                 onDescriptionChange={setRequestDescription}
+                recurring={requestRecurring}
+                onRecurringChange={setRequestRecurring}
+                sessionDateStr={
+                  selectedDate ? moment(selectedDate).format("YYYY-MM-DD") : ""
+                }
+                repeatEndDate={requestRepeatEndDate}
+                onRepeatEndDateChange={setRequestRepeatEndDate}
                 error={requestError}
               />
             ) : (

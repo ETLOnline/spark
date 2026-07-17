@@ -1,8 +1,20 @@
 import moment from "moment-timezone"
 import { SelectMentorAvailability, SelectSessionRequest } from "@/src/db/schema"
 import { DAYS } from "@/src/utils/constants"
-import { toMins } from "@/src/utils/time"
+import { recurrencesOverlap, toMins } from "@/src/utils/time"
 import { cn } from "@/src/lib/utils"
+
+/** True if a session request's own recurrence (one-time/daily/weekly) includes `dateStr`. */
+function requestAppliesToDate(r: SelectSessionRequest, dateStr: string) {
+  return recurrencesOverlap(
+    {
+      date: r.session_date,
+      repeat_type: r.repeat_type,
+      repeat_end_date: r.repeat_end_date
+    },
+    { date: dateStr, repeat_type: "none" }
+  )
+}
 
 export type ViewType = "month" | "week"
 export type RepeatType = "none" | "daily" | "weekly"
@@ -150,7 +162,7 @@ export function myPendingRequestFor(
   const slotEnd = toMins(slot.end_time)
   return myRequests.find(
     (r) =>
-      r.session_date === dateStr &&
+      requestAppliesToDate(r, dateStr) &&
       r.status === "pending" &&
       toMins(r.start_time) < slotEnd &&
       slotStart < toMins(r.end_time)
@@ -169,7 +181,7 @@ export function myAcceptedRequestsFor(
   const slotEnd = toMins(slot.end_time)
   return myRequests.filter(
     (r) =>
-      r.session_date === dateStr &&
+      requestAppliesToDate(r, dateStr) &&
       r.status === "accepted" &&
       toMins(r.start_time) < slotEnd &&
       slotStart < toMins(r.end_time)
@@ -193,7 +205,7 @@ export function othersBookedRequestsFor(
   )
   return bookedRequests.filter(
     (r) =>
-      r.session_date === dateStr &&
+      requestAppliesToDate(r, dateStr) &&
       !myAcceptedIds.has(r.id) &&
       toMins(r.start_time) < slotEnd &&
       slotStart < toMins(r.end_time)
@@ -211,7 +223,7 @@ export function getBookedRangesForSlot(
   return bookedRequests
     .filter(
       (r) =>
-        r.session_date === dateStr &&
+        requestAppliesToDate(r, dateStr) &&
         toMins(r.start_time) < slotEnd &&
         slotStart < toMins(r.end_time)
     )
@@ -230,7 +242,7 @@ export function countOverlappingRequests(
   const slotEnd = toMins(slot.end_time)
   return requests.filter(
     (r) =>
-      r.session_date === dateStr &&
+      requestAppliesToDate(r, dateStr) &&
       toMins(r.start_time) < slotEnd &&
       slotStart < toMins(r.end_time)
   ).length
@@ -269,7 +281,7 @@ export function getUnavailableRangesForRequest(
     .filter(
       (r) =>
         r.status === "pending" &&
-        r.session_date === dateStr &&
+        requestAppliesToDate(r, dateStr) &&
         overlapsSlot(r.start_time, r.end_time)
     )
     .map((r) => ({ start: toMins(r.start_time), end: toMins(r.end_time) }))

@@ -236,20 +236,19 @@ export const sessionRequestsTable = pgTable("session_requests", {
   mentee_id: varchar("mentee_id")
     .notNull()
     .references(() => usersTable.unique_id, { onDelete: "cascade" }),
-  // No FK constraint on purpose: a mentor editing their availability replaces
-  // every slot row with a fresh id (see ReplaceMentorAvailability), so this
-  // column is informational only. The request's own
-  // session_date/start_time/end_time/session_type are the source of truth,
-  // and availability is re-checked live against current slots wherever it
-  // matters — nothing about this row should ever be touched by a slot delete.
   availability_slot_id: integer("availability_slot_id"),
-  session_date: varchar("session_date").notNull(),
+  session_date: varchar("session_date").notNull(), // YYYY-MM-DD (the anchor / first occurrence)
   start_time: varchar("start_time").notNull(),
   end_time: varchar("end_time").notNull(),
   session_type: varchar("session_type").notNull(),
   topic: varchar("topic").notNull(),
   description: varchar("description"),
   status: varchar("status").notNull().default("pending"),
+  // Set only when the mentee requests the slot on its recurring basis —
+  // mirrors the availability slot's own repeat_type/repeat_end_date at
+  // request time rather than letting the mentee pick an independent cadence.
+  repeat_type: varchar("repeat_type").notNull().default("none"), // "none" | "daily" | "weekly"
+  repeat_end_date: varchar("repeat_end_date"), // YYYY-MM-DD, nullable
   ...timestamps
 })
 
