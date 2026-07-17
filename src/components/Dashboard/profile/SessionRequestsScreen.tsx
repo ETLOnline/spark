@@ -3,7 +3,13 @@
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import moment from "moment-timezone"
-import { CalendarDays, MessageSquare, Users, Video } from "lucide-react"
+import {
+  CalendarDays,
+  MessageSquare,
+  RefreshCw,
+  Users,
+  Video
+} from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Button } from "@/src/components/ui/button"
 import {
@@ -20,6 +26,7 @@ import {
 import { toast } from "@/src/hooks/use-toast"
 import { cn } from "@/src/lib/utils"
 import { SelectSessionRequest } from "@/src/db/schema"
+import { countOccurrences } from "@/src/utils/time"
 import {
   Tabs,
   TabsContent,
@@ -57,6 +64,26 @@ function formatSlot(request: SessionRequestWithMentee) {
   const start = moment(request.start_time, "HH:mm").format("h:mm A")
   const end = moment(request.end_time, "HH:mm").format("h:mm A")
   return `${date} · ${start} – ${end}`
+}
+
+/** "Every Monday · 3 sessions · through Jul 31, 2026" — null for a one-time request. */
+function formatRecurrence(request: SessionRequestWithMentee) {
+  if (request.repeat_type === "none") return null
+  const cadence =
+    request.repeat_type === "daily"
+      ? "Every day"
+      : `Every ${moment(request.session_date, "YYYY-MM-DD").format("dddd")}`
+  const count = countOccurrences({
+    date: request.session_date,
+    repeat_type: request.repeat_type,
+    repeat_end_date: request.repeat_end_date
+  })
+  const countLabel =
+    count === Infinity ? "ongoing" : `${count} session${count === 1 ? "" : "s"}`
+  const untilLabel = request.repeat_end_date
+    ? ` · through ${moment(request.repeat_end_date, "YYYY-MM-DD").format("MMM D, YYYY")}`
+    : ""
+  return `${cadence} · ${countLabel}${untilLabel}`
 }
 
 interface Props {
@@ -193,6 +220,12 @@ export function SessionRequestsScreen({ mentorId }: Props) {
                     <CalendarDays className="h-3 w-3 shrink-0" />
                     {formatSlot(request)}
                   </p>
+                  {formatRecurrence(request) && (
+                    <p className="text-xs text-primary flex items-center gap-1 mt-1">
+                      <RefreshCw className="h-3 w-3 shrink-0" />
+                      {formatRecurrence(request)}
+                    </p>
+                  )}
                 </div>
               </div>
             </button>
@@ -277,6 +310,13 @@ export function SessionRequestsScreen({ mentorId }: Props) {
                   {formatSlot(selectedRequest)}
                 </span>
               </div>
+
+              {formatRecurrence(selectedRequest) && (
+                <div className="flex items-center gap-2 text-sm px-3 py-2 rounded-md border border-primary/20 bg-primary/5 text-primary">
+                  <RefreshCw className="h-3.5 w-3.5 shrink-0" />
+                  {formatRecurrence(selectedRequest)}
+                </div>
+              )}
 
               {/* Accept / Reject — only actionable while still pending */}
               {selectedRequest.status === "pending" ? (

@@ -41,3 +41,17 @@ export function recurrencesOverlap(a: RecurrencePattern, b: RecurrencePattern) {
     moment(a.date, "YYYY-MM-DD").day() === moment(b.date, "YYYY-MM-DD").day()
   )
 }
+
+/** Total number of occurrences (inclusive of the anchor date) this pattern
+ * covers — 1 for a one-time pattern, Infinity for an open-ended recurring
+ * pattern with no repeat_end_date. */
+export function countOccurrences(p: RecurrencePattern): number {
+  if (p.repeat_type === "none") return 1
+  if (!p.repeat_end_date) return Infinity
+  const days = moment(p.repeat_end_date, "YYYY-MM-DD").diff(
+    moment(p.date, "YYYY-MM-DD"),
+    "days"
+  )
+  const step = p.repeat_type === "daily" ? 1 : 7
+  return Math.max(1, Math.floor(days / step) + 1)
+}
